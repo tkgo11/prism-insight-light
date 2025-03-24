@@ -90,34 +90,9 @@ def markdown_to_html(md_file_path, add_css=True):
         str: 변환된 HTML 문자열
     """
     try:
-        # 마크다운 파일이 있는 디렉토리 경로 얻기
-        base_dir = os.path.dirname(os.path.abspath(md_file_path))
-
         # 마크다운 파일 읽기
         with open(md_file_path, 'r', encoding='utf-8') as f:
             md_content = f.read()
-
-        # 이미지 경로를 절대 경로로 변환 (정규식 이용)
-        import re
-
-        # HTML 이미지 태그 찾기
-        img_tags_pattern = r'<img\s+src="data:image/png;base64,[^"]+"\s+[^>]+>'
-        img_tags = re.findall(img_tags_pattern, md_content)
-
-        # 임시 플레이스홀더로 대체
-        for i, tag in enumerate(img_tags):
-            placeholder = f"___HTML_IMG_TAG_{i}___"
-            md_content = md_content.replace(tag, placeholder)
-
-        # 나머지 이미지 처리 (기존 코드)
-        def replace_image_path(match):
-            img_path = match.group(2)
-            if not os.path.isabs(img_path):
-                img_path = os.path.abspath(os.path.join(base_dir, img_path))
-            return f'![{match.group(1)}]({img_path})'
-
-        # 마크다운의 이미지 링크 패턴을 찾아 절대 경로로 변환
-        md_content = re.sub(r'!\[(.*?)\]\((.*?)\)', replace_image_path, md_content)
 
         # 마크다운을 HTML로 변환 (확장 기능 활성화)
         html = markdown.markdown(
@@ -127,16 +102,9 @@ def markdown_to_html(md_file_path, add_css=True):
                 'markdown.extensions.fenced_code',
                 'markdown.extensions.nl2br',
                 'markdown.extensions.sane_lists',
-                'markdown.extensions.toc',
-                'markdown.extensions.attr_list',  # 속성 지원
-                'markdown.extensions.extra'       # 추가 기능 (HTML 포함)
+                'markdown.extensions.toc'
             ]
         )
-
-        # HTML 이미지 태그 다시 복원
-        for i, tag in enumerate(img_tags):
-            placeholder = f"___HTML_IMG_TAG_{i}___"
-            html = html.replace(placeholder, tag)
 
         # 완전한 HTML 문서로 만들기
         if add_css:

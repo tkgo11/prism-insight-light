@@ -684,70 +684,14 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
 본 보고서를 참고하여 발생하는 투자 결과에 대한 책임은 투자자 본인에게 있습니다.
 """
 
-        # 차트 저장 경로 설정
-        charts_dir = os.path.join("charts", f"{company_code}_{reference_date}")
-        os.makedirs(charts_dir, exist_ok=True)
-
-        # 섹션별로 추가
-        base_sections = ["price_volume_analysis", "investor_trading_analysis", "company_status", "company_overview", "news_analysis", "investment_strategy"]
+        # 최종 보고서 조합
+        section_order = ["price_volume_analysis", "investor_trading_analysis", "company_status", "company_overview", "news_analysis", "investment_strategy"]
         final_report = disclaimer + "\n\n" + executive_summary + "\n\n"
 
-        ##fixme : 아래가 null인듯. 그리고 base64로 안되면 다른 방법 찾자.
-        try:
-            # 차트 이미지 생성
-            price_chart_html = get_chart_as_base64_html(
-                company_code, company_name, create_price_chart, '가격 차트', width=900, dpi=80, image_format='jpg', compress=True,
-                days=730, adjusted=True
-            )
-
-            volume_chart_html = get_chart_as_base64_html(
-                company_code, company_name, create_trading_volume_chart, '거래량 차트', width=900, dpi=80, image_format='jpg', compress=True,
-                days=730
-            )
-
-            market_cap_chart_html = get_chart_as_base64_html(
-                company_code, company_name, create_market_cap_chart, '시가총액 추이', width=900, dpi=80, image_format='jpg', compress=True,
-                days=730
-            )
-
-            fundamentals_chart_html = get_chart_as_base64_html(
-                company_code, company_name, create_fundamentals_chart, '기본 지표', width=900, dpi=80, image_format='jpg', compress=True,
-                days=730
-            )
-        except Exception as e:
-            logger.error(f"차트 생성 중 오류 발생: {str(e)}")
-            price_chart_html = None
-            volume_chart_html = None
-            market_cap_chart_html = None
-            fundamentals_chart_html = None
-
-        for section in base_sections:
+        # 섹션별로 추가
+        for section in section_order:
             if section in section_reports:
                 final_report += section_reports[section] + "\n\n"
-
-                # price_volume_analysis 섹션 다음에 가격 차트와 거래량 차트 추가
-                if section == "price_volume_analysis" and (price_chart_html or volume_chart_html):
-                    final_report += "\n## 가격 및 거래량 차트\n\n"
-
-                    if price_chart_html:
-                        final_report += f"### 가격 차트\n\n"
-                        final_report += price_chart_html + "\n\n"
-
-                    if volume_chart_html:
-                        final_report += f"### 거래량 차트\n\n"
-                        final_report += volume_chart_html + "\n\n"
-
-                # company_status 섹션 다음에 시가총액 차트와 기본 지표 차트 추가
-                elif section == "company_status" and (market_cap_chart_html or fundamentals_chart_html):
-                    final_report += "\n## 시가총액 및 기본 지표 차트\n\n"
-
-                    if market_cap_chart_html:
-                        final_report += f"### 시가총액 추이\n\n"
-                        final_report += market_cap_chart_html + "\n\n"
-
-                    if fundamentals_chart_html:
-                        final_report += f"### 기본 지표 분석\n\n"
-                        final_report += fundamentals_chart_html + "\n\n"
 
         # 최종 마크다운 정리
         final_report = clean_markdown(final_report)
