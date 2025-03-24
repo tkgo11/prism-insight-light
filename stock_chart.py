@@ -95,7 +95,7 @@ def configure_korean_font():
         # Linux 폰트 경로
         font_paths = [
             '/usr/share/fonts/google-nanum/NanumGothic.ttf',
-            '/usr/share/fonts/nanum/NanumGothic.ttf',
+            '/usr/share/fonts/nanum/NanumGothicCoding.ttf',
             '/usr/share/fonts/korean/NanumGothic.ttf',
             '/usr/share/fonts/truetype/nanum/NanumGothic.ttf',
             '/usr/share/fonts/NanumGothic.ttf'
