@@ -444,7 +444,7 @@ class StockTrackingAgent:
                 5. 포트폴리오 맥락에서 이 종목을 선택하는 이유를 설명해주세요.
                 
                 ### 응답 형식:
-                JSON 형식으로 다음과 같이 응답해주세요:
+                JSON 형식으로 다음과 같이 응답해주세요. 아래 양식을 정확히 지켜주세요.:
                 {{
                     "portfolio_analysis": "현재 포트폴리오 상황 요약 (슬랏 수, 산업군 분포 등)",
                     "buy_score": 1~10 사이의 점수,
@@ -471,19 +471,27 @@ class StockTrackingAgent:
                 # 마크다운 코드 블록에서 JSON 추출 시도 (```json ... ```)
                 markdown_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', response, re.DOTALL)
                 if markdown_match:
-                    scenario_json = json.loads(markdown_match.group(1))
+                    json_str = markdown_match.group(1)
+                    # 마지막 쉼표 제거
+                    json_str = re.sub(r',(\s*})', r'\1', json_str)
+                    scenario_json = json.loads(json_str)
                     logger.info(f"마크다운 코드 블록에서 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
 
                 # 일반 JSON 객체 추출 시도
                 json_match = re.search(r'({[\s\S]*?})(?:\s*$|\n\n)', response, re.DOTALL)
                 if json_match:
-                    scenario_json = json.loads(json_match.group(1))
+                    json_str = json_match.group(1)
+                    # 마지막 쉼표 제거
+                    json_str = re.sub(r',(\s*})', r'\1', json_str)
+                    scenario_json = json.loads(json_str)
                     logger.info(f"일반 JSON 형식에서 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
 
                 # 전체 응답이 JSON인 경우
-                scenario_json = json.loads(response)
+                # 마지막 쉼표 제거
+                clean_response = re.sub(r',(\s*})', r'\1', response)
+                scenario_json = json.loads(clean_response)
                 logger.info(f"전체 응답 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
                 return scenario_json
 
@@ -494,6 +502,8 @@ class StockTrackingAgent:
                 # 추가 복구 시도: 원본 응답에서 중괄호 사이의 내용을 추출
                 try:
                     clean_response = re.sub(r'```(?:json)?|```', '', response).strip()
+                    # 마지막 쉼표 제거
+                    clean_response = re.sub(r',(\s*})', r'\1', clean_response)
                     scenario_json = json.loads(clean_response)
                     logger.info(f"추가 복구로 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
@@ -1135,10 +1145,9 @@ class StockTrackingAgent:
 
                 return False
 
-            # 누적된 메시지가 없으면 요약 보고서 생성
-            if not self.message_queue:
-                summary = await self.generate_report_summary()
-                self.message_queue.append(summary)
+            #요약 보고서 생성
+            summary = await self.generate_report_summary()
+            self.message_queue.append(summary)
 
             # 각 메시지 전송
             success = True
