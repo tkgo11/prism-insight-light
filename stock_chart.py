@@ -21,6 +21,9 @@ import matplotlib as mpl
 import base64
 from io import BytesIO
 
+import matplotlib
+matplotlib.use('Agg')  # 그래픽 백엔드를 Agg(비인터랙티브)로 명시적 설정
+
 # 한글 폰트 설정을 위한 매우 강력한 방법
 def configure_korean_font():
     """한글 폰트 설정을 위한 강력한 함수"""
