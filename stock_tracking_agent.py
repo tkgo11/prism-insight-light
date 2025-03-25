@@ -532,24 +532,24 @@ class StockTrackingAgent:
             "considerations": "분석 실패"
         }
 
-    async def analyze_report(self, report_path: str) -> Dict[str, Any]:
+    async def analyze_report(self, pdf_report_path: str) -> Dict[str, Any]:
         """
         주식 분석 보고서를 분석하여 매매 의사결정
 
         Args:
-            report_path: 분석 보고서 파일 경로
+            pdf_report_path: pdf 분석 보고서 파일 경로
 
         Returns:
             Dict: 매매 의사결정 결과
         """
         try:
-            logger.info(f"보고서 분석 시작: {report_path}")
+            logger.info(f"보고서 분석 시작: {pdf_report_path}")
 
             # 파일 경로에서 종목 코드와 이름 추출
-            ticker, company_name = await self._extract_ticker_info(report_path)
+            ticker, company_name = await self._extract_ticker_info(pdf_report_path)
 
             if not ticker or not company_name:
-                logger.error(f"종목 정보 추출 실패: {report_path}")
+                logger.error(f"종목 정보 추출 실패: {pdf_report_path}")
                 return {"success": False, "error": "종목 정보 추출 실패"}
 
             # 이미 보유 중인 종목인지 확인
@@ -565,8 +565,8 @@ class StockTrackingAgent:
                 return {"success": False, "error": "현재 주가 조회 실패"}
 
             # 보고서 내용 읽기
-            with open(report_path, 'r', encoding='utf-8') as f:
-                report_content = f.read()
+            from pdf_converter import pdf_to_markdown_text
+            report_content = pdf_to_markdown_text(pdf_report_path)
 
             # 매매 시나리오 추출
             scenario = await self._extract_trading_scenario(report_content)
@@ -1032,18 +1032,18 @@ class StockTrackingAgent:
             error_msg = f"보고서 생성 중 오류가 발생했습니다: {str(e)}"
             return error_msg
 
-    async def process_reports(self, report_paths: List[str]) -> Tuple[int, int]:
+    async def process_reports(self, pdf_report_paths: List[str]) -> Tuple[int, int]:
         """
         분석 보고서를 처리하여 매매 의사결정 수행
 
         Args:
-            report_paths: 분석 보고서 파일 경로 리스트
+            pdf_report_paths: pdf 분석 보고서 파일 경로 리스트
 
         Returns:
             Tuple[int, int]: 매수 건수, 매도 건수
         """
         try:
-            logger.info(f"총 {len(report_paths)}개 보고서 처리 시작")
+            logger.info(f"총 {len(pdf_report_paths)}개 보고서 처리 시작")
 
             # 매수, 매도 카운터
             buy_count = 0
@@ -1061,12 +1061,12 @@ class StockTrackingAgent:
                 logger.info("매도된 종목이 없습니다.")
 
             # 2. 새로운 보고서 분석 및 매수 의사결정
-            for report_path in report_paths:
+            for pdf_report_path in pdf_report_paths:
                 # 보고서 분석
-                analysis_result = await self.analyze_report(report_path)
+                analysis_result = await self.analyze_report(pdf_report_path)
 
                 if not analysis_result.get("success", False):
-                    logger.error(f"보고서 분석 실패: {report_path} - {analysis_result.get('error', '알 수 없는 오류')}")
+                    logger.error(f"보고서 분석 실패: {pdf_report_path} - {analysis_result.get('error', '알 수 없는 오류')}")
                     continue
 
                 # 이미 보유 중인 종목이면 스킵
@@ -1177,12 +1177,12 @@ class StockTrackingAgent:
             logger.error(traceback.format_exc())
             return False
 
-    async def run(self, report_paths: List[str], chat_id: str = None) -> bool:
+    async def run(self, pdf_report_paths: List[str], chat_id: str = None) -> bool:
         """
         주식 트래킹 시스템 메인 실행 함수
 
         Args:
-            report_paths: 분석 보고서 파일 경로 리스트
+            pdf_report_paths: 분석 보고서 파일 경로 리스트
             chat_id: 텔레그램 채널 ID (설정되지 않으면 메시지를 전송하지 않음)
 
         Returns:
@@ -1196,7 +1196,7 @@ class StockTrackingAgent:
 
             try:
                 # 보고서 처리
-                buy_count, sell_count = await self.process_reports(report_paths)
+                buy_count, sell_count = await self.process_reports(pdf_report_paths)
 
                 # 텔레그램 메시지 전송
                 if chat_id:
