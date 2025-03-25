@@ -584,8 +584,8 @@ if __name__ == "__main__":
         import time
         import os
         import signal
-        time.sleep(1800)  # 30분 대기
-        logger.warning("30분 타임아웃 도달: 프로세스 강제 종료")
+        time.sleep(3600)  # 60분 대기
+        logger.warning("60분 타임아웃 도달: 프로세스 강제 종료")
         os.kill(os.getpid(), signal.SIGTERM)
 
     # 백그라운드 스레드로 타이머 시작

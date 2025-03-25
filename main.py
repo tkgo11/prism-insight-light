@@ -684,6 +684,7 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
 본 보고서를 참고하여 발생하는 투자 결과에 대한 책임은 투자자 본인에게 있습니다.
 """
 
+        import os
         # 차트 저장 경로 설정
         charts_dir = os.path.join("charts", f"{company_code}_{reference_date}")
         os.makedirs(charts_dir, exist_ok=True)
@@ -692,7 +693,6 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
         base_sections = ["price_volume_analysis", "investor_trading_analysis", "company_status", "company_overview", "news_analysis", "investment_strategy"]
         final_report = disclaimer + "\n\n" + executive_summary + "\n\n"
 
-        ##fixme : 아래가 null인듯. 그리고 base64로 안되면 다른 방법 찾자.
         try:
             # 차트 이미지 생성
             price_chart_html = get_chart_as_base64_html(
@@ -764,10 +764,10 @@ if __name__ == "__main__":
     import os
     import signal
 
-    # 30분 후에 프로세스를 종료하는 타이머 함수
+    # 60분 후에 프로세스를 종료하는 타이머 함수
     def exit_after_timeout():
-        time.sleep(1800)  # 30분 대기
-        print("30분 타임아웃 도달: 프로세스 강제 종료")
+        time.sleep(3600)  # 60분 대기
+        print("60분 타임아웃 도달: 프로세스 강제 종료")
         os.kill(os.getpid(), signal.SIGTERM)
 
     # 백그라운드 스레드로 타이머 시작
