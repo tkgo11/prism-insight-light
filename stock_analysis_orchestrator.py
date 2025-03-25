@@ -165,17 +165,17 @@ class StockAnalysisOrchestrator:
 
         return pdf_paths
 
-    async def generate_telegram_messages(self, report_paths):
+    async def generate_telegram_messages(self, report_pdf_paths):
         """
         텔레그램 메시지 생성
 
         Args:
-            report_paths (list): 보고서 파일 경로 리스트
+            report_pdf_paths (list): 보고서 파일(pdf) 경로 리스트
 
         Returns:
             list: 생성된 텔레그램 메시지 파일 경로 리스트
         """
-        logger.info(f"{len(report_paths)}개 보고서 텔레그램 메시지 생성 시작")
+        logger.info(f"{len(report_pdf_paths)}개 보고서 텔레그램 메시지 생성 시작")
 
         # 텔레그램 요약 생성기 모듈 임포트
         from telegram_summary_agent import TelegramSummaryGenerator
@@ -184,13 +184,13 @@ class StockAnalysisOrchestrator:
         generator = TelegramSummaryGenerator()
 
         message_paths = []
-        for report_path in report_paths:
+        for report_pdf_path in report_pdf_paths:
             try:
                 # 텔레그램 메시지 생성
-                await generator.process_report(str(report_path), str(TELEGRAM_MSGS_DIR))
+                await generator.process_report(str(report_pdf_path), str(TELEGRAM_MSGS_DIR))
 
                 # 생성된 메시지 파일 경로 추정
-                report_file = Path(report_path)
+                report_file = Path(report_pdf_path)
                 ticker = report_file.stem.split('_')[0]
                 company_name = report_file.stem.split('_')[1]
 
@@ -203,7 +203,7 @@ class StockAnalysisOrchestrator:
                     logger.warning(f"텔레그램 메시지 파일이 예상 경로에 없습니다: {message_path}")
 
             except Exception as e:
-                logger.error(f"{report_path} 텔레그램 메시지 생성 중 오류: {str(e)}")
+                logger.error(f"{report_pdf_path} 텔레그램 메시지 생성 중 오류: {str(e)}")
 
         return message_paths
 
@@ -440,7 +440,7 @@ class StockAnalysisOrchestrator:
             pdf_paths = await self.convert_to_pdf(report_paths)
 
             # 4. 텔레그램 메시지 생성
-            message_paths = await self.generate_telegram_messages(report_paths)
+            message_paths = await self.generate_telegram_messages(pdf_paths)
 
             # 5. 텔레그램 메시지 및 PDF 전송
             await self.send_telegram_messages(message_paths, pdf_paths)

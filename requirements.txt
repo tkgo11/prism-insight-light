@@ -44,3 +44,6 @@ seaborn~=0.13.2
 mplfinance~=0.12.10b0
 
 tenacity
+
+PyPDF2
+html2text

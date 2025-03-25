@@ -50,7 +50,7 @@ class TelegramSummaryGenerator:
         """
         파일 이름에서 종목코드, 종목명, 날짜 등을 추출
         """
-        pattern = r'(\d+)_(.+)_(\d{8})_.*\.md'
+        pattern = r'(\d+)_(.+)_(\d{8})_.*\.pdf'
         match = re.match(pattern, filename)
 
         if match:
@@ -320,7 +320,7 @@ class TelegramSummaryGenerator:
             logger.error(f"텔레그램 메시지 저장 실패: {e}")
             raise
 
-    async def process_report(self, report_path, output_dir="telegram_messages"):
+    async def process_report(self, report_pdf_path, output_dir="telegram_messages"):
         """
         보고서 파일을 처리하여 텔레그램 요약 메시지 생성
         """
@@ -329,13 +329,14 @@ class TelegramSummaryGenerator:
             os.makedirs(output_dir, exist_ok=True)
 
             # 파일 이름에서 메타데이터 추출
-            filename = os.path.basename(report_path)
+            filename = os.path.basename(report_pdf_path)
             metadata = self.extract_metadata_from_filename(filename)
 
             logger.info(f"처리 중: {filename} - {metadata['stock_name']}({metadata['stock_code']})")
 
             # 보고서 내용 읽기
-            report_content = await self.read_report(report_path)
+            from pdf_converter import pdf_to_markdown_text
+            report_content = pdf_to_markdown_text(report_pdf_path)
 
             # 트리거 유형과 모드 결정
             trigger_type, trigger_mode = self.determine_trigger_type(
@@ -366,14 +367,14 @@ class TelegramSummaryGenerator:
             logger.error(f"보고서 처리 중 오류 발생: {e}")
             raise
 
-async def process_all_reports(reports_dir="reports", output_dir="telegram_messages", date_filter=None):
+async def process_all_reports(reports_dir="pdf_reports", output_dir="telegram_messages", date_filter=None):
     """
     지정된 디렉토리 내의 모든 보고서 파일을 처리
     """
     # 텔레그램 요약 생성기 초기화
     generator = TelegramSummaryGenerator()
 
-    # 보고서 디렉토리 확인
+    # PDF 보고서 디렉토리 확인
     reports_path = Path(reports_dir)
     if not reports_path.exists() or not reports_path.is_dir():
         logger.error(f"보고서 디렉토리가 존재하지 않습니다: {reports_dir}")
@@ -421,13 +422,13 @@ async def main():
 
         # 특정 보고서만 처리
         if args.report:
-            report_path = args.report
-            if not os.path.exists(report_path):
-                logger.error(f"지정된 보고서 파일이 존재하지 않습니다: {report_path}")
+            report_pdf_path = args.report
+            if not os.path.exists(report_pdf_path):
+                logger.error(f"지정된 보고서 파일이 존재하지 않습니다: {report_pdf_path}")
                 return
 
             generator = TelegramSummaryGenerator()
-            telegram_message = await generator.process_report(report_path, args.output_dir)
+            telegram_message = await generator.process_report(report_pdf_path, args.output_dir)
 
             # 생성된 메시지 출력
             print("\n생성된 텔레그램 메시지:")
@@ -443,7 +444,7 @@ async def main():
             elif args.date:
                 date_filter = args.date
 
-            # 모든 보고서 처리
+            # 모든 pdf 보고서 처리
             await process_all_reports(
                 reports_dir=args.reports_dir,
                 output_dir=args.output_dir,

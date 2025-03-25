@@ -6,14 +6,14 @@
 2. 텔레그램 요약 메시지 생성
 3. 텔레그램 채널로 메시지 전송
 """
+import argparse
+import asyncio
+import logging
 import os
 import sys
-import asyncio
-import argparse
-import logging
-from datetime import datetime
-from pathlib import Path
 import traceback
+from datetime import datetime
+
 from dotenv import load_dotenv
 
 # .env 파일 로드
@@ -65,7 +65,7 @@ async def run_pipeline(args):
         if args.generate or args.all:
             logger.info("텔레그램 요약 메시지 생성 시작")
 
-            # 특정 보고서만 처리
+            # 특정 PDF 보고서만 처리
             if args.report:
                 report_path = args.report
                 if not os.path.exists(report_path):
