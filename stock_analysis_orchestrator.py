@@ -17,6 +17,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
+import subprocess
 
 # 로거 설정
 logging.basicConfig(
@@ -498,6 +499,7 @@ class StockAnalysisOrchestrator:
         모든 종목에 대해 보고서를 단순 직렬로 생성합니다.
         한 번에 하나의 종목만 처리하여 OpenAI rate limit 문제를 방지합니다.
         """
+
         logger.info(f"총 {len(tickers)}개 종목 보고서 생성 시작 (직렬 처리)")
 
         successful_reports = []
@@ -544,8 +546,22 @@ class StockAnalysisOrchestrator:
                 import traceback
                 logger.error(traceback.format_exc())
 
+
         logger.info(f"보고서 생성 완료: 총 {len(successful_reports)}/{len(tickers)}개 성공")
+
+        # 모든 보고서 생성 후 서버 프로세스 정리
+        try:
+            logger.info("mcp-server-webresearch 프로세스 정리 시작")
+            subprocess.run(["pkill", "-f", "mcp-server-webresearch"])
+            logger.info("mcp-server-webresearch 프로세스 정리 완료")
+        except Exception as e:
+            logger.error(f"프로세스 정리 중 오류 발생: {str(e)}")
+
         return successful_reports
+
+def clean_existing_processes():
+    import subprocess
+    subprocess.run(["pkill", "-f", "mcp-server-webresearch"])
 
 async def main():
     """
@@ -568,6 +584,9 @@ async def main():
         await orchestrator.run_full_pipeline("afternoon", args.account_type)
 
 if __name__ == "__main__":
+    # 기존 프로세스 정리
+    clean_existing_processes()
+
     # 휴일 체크
     from check_market_day import is_market_day
 

@@ -1,6 +1,8 @@
 import asyncio
 import re
 from datetime import datetime, timedelta
+import subprocess
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from mcp_agent.agents.agent import Agent
 from mcp_agent.app import MCPApp
@@ -42,12 +44,59 @@ def clean_markdown(text: str) -> str:
 
     return text
 
+def cleanup_webresearch_processes():
+    """mcp-server-webresearch 프로세스 정리"""
+    try:
+        subprocess.run(["pkill", "-f", "mcp-server-webresearch"], check=False)
+        print("mcp-server-webresearch 프로세스 정리 완료")
+    except Exception as e:
+        print(f"프로세스 정리 중 오류 발생: {str(e)}")
 
 def get_wise_report_url(report_type: str, company_code: str) -> str:
     """WiseReport URL 생성"""
     return WISE_REPORT_BASE + URLS[report_type].format(company_code)
 
+
+@retry(
+    stop=stop_after_attempt(2),  # 최대 2번 시도 (초기 + 1번 재시도)
+    wait=wait_exponential(multiplier=1, min=10, max=30),  # 지수적으로 증가하는 대기 시간
+    retry=retry_if_exception_type(Exception)  # 모든 예외에 대해 재시도
+)
+async def generate_report(agent, section, company_name, company_code, reference_date, logger):
+    """에이전트를 사용하여 보고서 생성 - 재시도 로직 포함"""
+    llm = await agent.attach_llm(OpenAIAugmentedLLM)
+    report = await llm.generate_str(
+        message=f"""{company_name}({company_code})의 {section} 분석 보고서를 작성해주세요.
+                                
+                                ## 분석 및 보고서 작성 지침:
+                                1. 데이터 수집부터 분석까지 모든 과정을 수행하세요.
+                                2. 보고서는 충분히 상세하되 핵심 정보에 집중하세요.
+                                3. 일반 개인 투자자가 쉽게 이해할 수 있는 수준으로 작성하세요.
+                                4. 투자 결정에 직접적으로 도움이 되는 실용적인 내용에 집중하세요.
+                                5. 실제 수집된 데이터에만 기반하여 분석하고, 없는 데이터는 추측하지 마세요.
+                                
+                                ## 형식 요구사항:
+                                1. 보고서 시작 시 제목을 넣기 전에 반드시 개행문자를 2번 넣어 시작하세요 (\\n\\n).
+                                2. 섹션 제목과 구조는 에이전트 지침에 명시된 형식을 따르세요.
+                                3. 가독성을 위해 적절히 단락을 나누고, 중요한 내용은 강조하세요.
+                                
+                                ##분석일: {reference_date}(YYYYMMDD 형식)
+                                """,
+        request_params=RequestParams(
+            model="gpt-4o",
+            maxTokens=8000,
+            max_iterations=3,
+            parallel_tool_calls=True,
+            use_history=True
+        )
+    )
+    logger.info(f"Completed {section} - {len(report)} characters")
+    return report
+
 async def analyze_stock(company_code: str = "000660", company_name: str = "SK하이닉스", reference_date: str = None):
+    # 실행 전 기존 webresearch 프로세스 정리
+    cleanup_webresearch_processes()
+
     # reference_date가 없으면 오늘 날짜를 사용
     if reference_date is None:
         reference_date = datetime.now().strftime("%Y%m%d")
@@ -504,73 +553,11 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
 
                 try:
                     agent = report_writers[section]
-
-                    llm = await agent.attach_llm(OpenAIAugmentedLLM)
-                    report = await llm.generate_str(
-                        message=f"""{company_name}({company_code})의 {section} 분석 보고서를 작성해주세요.
-                                
-                                ## 분석 및 보고서 작성 지침:
-                                1. 데이터 수집부터 분석까지 모든 과정을 수행하세요.
-                                2. 보고서는 충분히 상세하되 핵심 정보에 집중하세요.
-                                3. 일반 개인 투자자가 쉽게 이해할 수 있는 수준으로 작성하세요.
-                                4. 투자 결정에 직접적으로 도움이 되는 실용적인 내용에 집중하세요.
-                                5. 실제 수집된 데이터에만 기반하여 분석하고, 없는 데이터는 추측하지 마세요.
-                                
-                                ## 형식 요구사항:
-                                1. 보고서 시작 시 제목을 넣기 전에 반드시 개행문자를 2번 넣어 시작하세요 (\\n\\n).
-                                2. 섹션 제목과 구조는 에이전트 지침에 명시된 형식을 따르세요.
-                                3. 가독성을 위해 적절히 단락을 나누고, 중요한 내용은 강조하세요.
-                                
-                                ##분석일: {reference_date}(YYYYMMDD 형식)
-                                """,
-                        request_params=RequestParams(
-                            model="gpt-4o",
-                            maxTokens=8000,
-                            max_iterations=3,
-                            parallel_tool_calls=True,
-                            use_history=True
-                        )
-                    )
+                    report = await generate_report(agent, section, company_name, company_code, reference_date, logger)
                     section_reports[section] = report
-                    logger.info(f"Completed {section} - {len(report)} characters")
                 except Exception as e:
-                    logger.error(f"Error processing {section}: {e}")
-                    # 실패하면 30초 후 한 번 더 시도
-                    await asyncio.sleep(30)
-                    try:
-                        agent = report_writers[section]
-                        llm = await agent.attach_llm(OpenAIAugmentedLLM)
-                        report = await llm.generate_str(
-
-                            message=f"""{company_name}({company_code})의 {section} 분석 보고서를 작성해주세요.
-                                
-                                ## 분석 및 보고서 작성 지침:
-                                1. 데이터 수집부터 분석까지 모든 과정을 수행하세요.
-                                2. 보고서는 충분히 상세하되 핵심 정보에 집중하세요.
-                                3. 일반 개인 투자자가 쉽게 이해할 수 있는 수준으로 작성하세요.
-                                4. 투자 결정에 직접적으로 도움이 되는 실용적인 내용에 집중하세요.
-                                5. 실제 수집된 데이터에만 기반하여 분석하고, 없는 데이터는 추측하지 마세요.
-                                
-                                ## 형식 요구사항:
-                                1. 보고서 시작 시 제목을 넣기 전에 반드시 개행문자를 2번 넣어 시작하세요 (\\n\\n).
-                                2. 섹션 제목과 구조는 에이전트 지침에 명시된 형식을 따르세요.
-                                3. 가독성을 위해 적절히 단락을 나누고, 중요한 내용은 강조하세요.
-                                
-                                ##분석일: {reference_date}(YYYYMMDD 형식)
-                                """,
-                            request_params=RequestParams(
-                                model="gpt-4o",
-                                maxTokens=8000,
-                                max_iterations=3,
-                                parallel_tool_calls=True,
-                                use_history=True
-                            )
-                        )
-                        section_reports[section] = report
-                        logger.info(f"Retry completed {section} - {len(report)} characters")
-                    except Exception as retry_e:
-                        logger.error(f"Retry also failed for {section}: {retry_e}")
-                        section_reports[section] = f"분석 실패: {section}"
+                    logger.error(f"Final failure processing {section}: {e}")
+                    section_reports[section] = f"분석 실패: {section}"
 
         # 2. 다른 보고서들의 내용을 통합
         combined_reports = ""
@@ -764,6 +751,9 @@ if __name__ == "__main__":
     import os
     import signal
 
+    # 실행 전 기존 프로세스 정리
+    cleanup_webresearch_processes()
+
     # 60분 후에 프로세스를 종료하는 타이머 함수
     def exit_after_timeout():
         time.sleep(3600)  # 60분 대기
@@ -777,11 +767,14 @@ if __name__ == "__main__":
     start = time.time()
 
     # 특정 날짜를 기준으로 분석 실행
-    result = asyncio.run(analyze_stock(company_code="005380", company_name="현대차", reference_date="20250324"))
+    result = asyncio.run(analyze_stock(company_code="005380", company_name="현대차", reference_date="20250325"))
 
     # 결과 저장
     with open(f"현대차_분석보고서_{datetime.now().strftime('%Y%m%d')}_gpt4o.md", "w", encoding="utf-8") as f:
         f.write(result)
+
+    # 실행 후 정리
+    cleanup_webresearch_processes()
 
     end = time.time()
     print(f"총 실행 시간: {end - start:.2f}초")
