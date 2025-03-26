@@ -292,6 +292,7 @@ class TelegramSummaryGenerator:
 
         # 정규식으로도 찾지 못한 경우, 기본 메시지 반환
         logger.warning("응답에서 유효한 텔레그램 메시지를 추출할 수 없습니다.")
+        logger.warning(f"정규식으로 추출하지 못한 원본 메시지 : {response_str[:100]}...")
 
         # 기본 메시지 생성
         default_message = f"""📊 {metadata['stock_name']}({metadata['stock_code']}) - 분석 요약
