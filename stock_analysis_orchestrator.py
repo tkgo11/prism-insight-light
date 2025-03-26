@@ -451,7 +451,8 @@ class StockAnalysisOrchestrator:
                     logger.info("주식 트래킹 시스템 배치 실행 시작")
 
                     # 트래킹 에이전트 임포트
-                    from stock_tracking_agent import StockTrackingAgent, app as tracking_app
+                    from stock_tracking_enhanced_agent import EnhancedStockTrackingAgent as StockTrackingAgent
+                    from stock_tracking_agent import app as tracking_app
 
                     # 환경 변수에서 채널 ID 및 봇 토큰 가져오기
                     from dotenv import load_dotenv

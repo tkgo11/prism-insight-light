@@ -47,3 +47,5 @@ tenacity
 
 PyPDF2
 html2text
+
+scipy
