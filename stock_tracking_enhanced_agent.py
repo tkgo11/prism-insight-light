@@ -28,9 +28,6 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         self.market_condition = 0
         # 변동성 테이블 (종목별 변동성 저장)
         self.volatility_table = {}
-        # 부분 매도 설정 (첫 매도 비율, 남은 수량 보유 기준)
-        self.partial_sell_ratio = 0.5
-        self.remaining_hold_criteria = 1.05  # 목표가의 5% 이상 상승 시
 
     async def initialize(self):
         """필요한 테이블 생성 및 초기화"""
@@ -44,19 +41,6 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 kosdaq_index REAL,
                 condition INTEGER,  -- 1: 강세장, 0: 중립, -1: 약세장
                 volatility REAL
-            )
-        """)
-
-        # 부분 매도 추적 테이블 생성
-        self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS partial_sales (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ticker TEXT NOT NULL,
-                initial_quantity INTEGER NOT NULL,
-                remaining_quantity INTEGER NOT NULL,
-                initial_buy_price REAL NOT NULL,
-                avg_sell_price REAL,
-                last_sell_date TEXT
             )
         """)
 
@@ -360,102 +344,6 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             logger.error(traceback.format_exc())
             return 0, 0
 
-    async def buy_stock(self, ticker, company_name, current_price, scenario):
-        """개선된 주식 매수 처리"""
-        try:
-            # 기본 매수 체크 (슬랏 여유 공간, 중복 종목 여부)
-            if await self._is_ticker_in_holdings(ticker):
-                logger.warning(f"{ticker}({company_name}) 이미 보유 중인 종목입니다.")
-                return False
-
-            current_slots = await self._get_current_slots_count()
-            if current_slots >= self.max_slots:
-                logger.warning(f"보유 종목이 이미 최대치({self.max_slots}개)입니다.")
-                return False
-
-            # 시장 상태에 따른 매수 점수 기준 조정
-            min_score = 8  # 기본 기준
-
-            # 약세장에서는 더 높은 기준, 강세장에서는 낮은 기준
-            if self.market_condition == -1:  # 약세장
-                min_score = 9  # 더 엄격한 기준
-            elif self.market_condition == 1:  # 강세장
-                min_score = 7  # 더 완화된 기준
-
-            # 슬랏이 많이 차있을수록 더 높은 기준 적용
-            if current_slots >= 7:  # 70% 이상 찼을 경우
-                min_score += 1
-
-            # 매수 점수가 기준 미달이면 매수 중단
-            buy_score = scenario.get("buy_score", 0)
-            if buy_score < min_score:
-                logger.info(f"매수 보류: {company_name}({ticker}) - 매수 점수 부족 ({buy_score} < {min_score})")
-                return False
-
-            # 동적 목표가 및 손절가 계산
-            dynamic_target_price = await self._dynamic_target_price(ticker, current_price)
-            dynamic_stop_loss = await self._dynamic_stop_loss(ticker, current_price)
-
-            # 시나리오 업데이트
-            scenario["target_price"] = dynamic_target_price
-            scenario["stop_loss"] = dynamic_stop_loss
-
-            # 현재 시간
-            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # 보유종목 테이블에 추가
-            self.cursor.execute(
-                """
-                INSERT INTO stock_holdings 
-                (ticker, company_name, buy_price, buy_date, current_price, last_updated, scenario, target_price, stop_loss) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    ticker,
-                    company_name,
-                    current_price,
-                    now,
-                    current_price,
-                    now,
-                    json.dumps(scenario, ensure_ascii=False),
-                    dynamic_target_price,
-                    dynamic_stop_loss
-                )
-            )
-
-            # 부분 매도 추적을 위한 초기화 (초기 수량은 1로 가정)
-            self.cursor.execute(
-                """
-                INSERT INTO partial_sales
-                (ticker, initial_quantity, remaining_quantity, initial_buy_price, avg_sell_price)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (ticker, 1, 1, current_price, 0)
-            )
-
-            self.conn.commit()
-
-            # 매수 내역 메시지
-            market_condition_text = "강세장" if self.market_condition == 1 else "약세장" if self.market_condition == -1 else "중립"
-            message = f"📈 매수: {company_name}({ticker})\n" \
-                      f"매수가: {current_price:,.0f}원\n" \
-                      f"목표가: {dynamic_target_price:,.0f}원 (동적 계산)\n" \
-                      f"손절가: {dynamic_stop_loss:,.0f}원 (동적 계산)\n" \
-                      f"시장 상태: {market_condition_text}\n" \
-                      f"투자기간: {scenario.get('investment_period', '단기')}\n" \
-                      f"산업군: {scenario.get('sector', '알 수 없음')}\n" \
-                      f"투자근거: {scenario.get('rationale', '정보 없음')}"
-
-            self.message_queue.append(message)
-            logger.info(f"{ticker}({company_name}) 매수 완료")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"{ticker} 매수 처리 중 오류: {str(e)}")
-            logger.error(traceback.format_exc())
-            return False
-
     async def _analyze_trend(self, ticker, days=14):
         """종목의 단기 추세 분석"""
         try:
@@ -526,14 +414,6 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             except:
                 pass
 
-            # 부분 매도 정보 확인
-            self.cursor.execute(
-                "SELECT remaining_quantity FROM partial_sales WHERE ticker = ?",
-                (ticker,)
-            )
-            row = self.cursor.fetchone()
-            remaining_quantity = row[0] if row else 1
-
             # 종목의 추세 분석
             trend = await self._analyze_trend(ticker)
 
@@ -545,33 +425,12 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                         return False, "손절 유예 (강한 상승 추세)"
                 return True, f"손절매 조건 도달 (손절가: {stop_loss:,.0f}원)"
 
-            # 2. 목표가 도달 확인 - 부분 매도 전략 적용
+            # 2. 목표가 도달 확인
             if target_price > 0 and current_price >= target_price:
-                # 이미 부분 매도된 경우, 추세에 따라 결정
-                if remaining_quantity < 1:
-                    # 강한 상승 추세면 계속 보유
-                    if trend >= 2:
-                        return False, "목표가 달성 후 강한 추세로 추가 보유"
-                    # 약한 상승 또는 중립 추세면 계속 보유 (현재가가 목표가보다 추가 상승한 경우)
-                    elif trend >= 0 and current_price > target_price * self.remaining_hold_criteria:
-                        return False, f"목표가 대비 {((current_price/target_price)-1)*100:.2f}% 추가 상승으로 보유 유지"
-                    # 하락 추세면 전량 매도
-                    else:
-                        return True, f"목표가 달성 이후 하락 추세 감지, 전량 매도"
-                # 처음 목표가 도달 시 부분 매도
-                else:
-                    # 부분 매도 처리
-                    await self._execute_partial_sell(ticker, current_price)
-                    # 부분 매도 메시지
-                    message = f"📈 부분매도: {company_name}({ticker})\n" \
-                              f"매수가: {buy_price:,.0f}원\n" \
-                              f"매도가: {current_price:,.0f}원\n" \
-                              f"수익률: +{profit_rate:.2f}%\n" \
-                              f"매도비율: {self.partial_sell_ratio*100:.0f}%\n" \
-                              f"사유: 목표가 도달 부분 매도"
-                    self.message_queue.append(message)
-
-                    return False, f"목표가 달성으로 {self.partial_sell_ratio*100:.0f}% 부분 매도 완료, 잔여 보유"
+                # 강한 상승 추세면 계속 보유
+                if trend >= 2:
+                    return False, "목표가 달성했으나 강한 상승 추세로 보유 유지"
+                return True, f"목표가 달성 (목표가: {target_price:,.0f}원)"
 
             # 3. 투자 기간별 매도 조건 - 추세 고려
             if investment_period == "단기":
@@ -627,52 +486,5 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             return False, f"계속 보유 (추세: {trend_text}, 수익률: {profit_rate:.2f}%)"
 
         except Exception as e:
-            logger.error(f"{ticker if 'ticker' in locals() else '알 수 없는 종목'} 매도 분석 중 오류: {str(e)}")
+            logger.error(f"매도 분석 중 오류: {str(e)}")
             return False, "분석 오류"
-
-    async def _execute_partial_sell(self, ticker, current_price):
-        """부분 매도 실행"""
-        try:
-            self.cursor.execute(
-                "SELECT initial_quantity, remaining_quantity, initial_buy_price, avg_sell_price FROM partial_sales WHERE ticker = ?",
-                (ticker,)
-            )
-            row = self.cursor.fetchone()
-
-            if not row:
-                return False
-
-            initial_quantity = row[0]
-            remaining_quantity = row[1]
-            initial_buy_price = row[2]
-            avg_sell_price = row[3] or 0
-
-            # 매도할 수량 계산
-            sell_quantity = remaining_quantity * self.partial_sell_ratio
-            new_remaining = remaining_quantity - sell_quantity
-
-            # 평균 매도가 업데이트
-            if avg_sell_price == 0:
-                new_avg_sell_price = current_price
-            else:
-                total_sold = initial_quantity - remaining_quantity
-                new_avg_sell_price = (avg_sell_price * total_sold + current_price * sell_quantity) / (total_sold + sell_quantity)
-
-            # 부분 매도 정보 업데이트
-            self.cursor.execute(
-                """
-                UPDATE partial_sales
-                SET remaining_quantity = ?, avg_sell_price = ?, last_sell_date = ?
-                WHERE ticker = ?
-                """,
-                (new_remaining, new_avg_sell_price, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ticker)
-            )
-            self.conn.commit()
-
-            logger.info(f"{ticker} 부분 매도 실행: {sell_quantity:.2f}주, 잔여: {new_remaining:.2f}주")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"{ticker} 부분 매도 실행 중 오류: {str(e)}")
-            return False
