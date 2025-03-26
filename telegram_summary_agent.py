@@ -50,7 +50,7 @@ class TelegramSummaryGenerator:
         """
         파일 이름에서 종목코드, 종목명, 날짜 등을 추출
         """
-        pattern = r'(\d+)_(.+)_(\d{8})_.*\.pdf'
+        pattern = r'(\w+)_(.+)_(\d{8})_.*\.pdf'
         match = re.match(pattern, filename)
 
         if match:
