@@ -198,13 +198,7 @@ class TelegramAIBot:
             logger.warning(f"메시지가 없는 업데이트 수신: {update}")
             return
 
-        await update.message.reply_text(
-            "안녕하세요! 저는 주식 분석 AI 봇입니다.\n\n"
-            "다음 명령어를 사용해보세요:\n"
-            "/start - 봇 시작하기\n"
-            "/help - 도움말 보기\n"
-            "/evaluate - 보유 종목 평가 시작하기"
-        )
+        return
 
     async def handle_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """시작 명령어 처리"""
