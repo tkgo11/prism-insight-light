@@ -245,11 +245,26 @@ class TelegramAIBot:
             bool: 구독 여부
         """
         try:
+            # 채널 정보 확인
+            chat_info = await self.application.bot.get_chat(int(os.getenv("TELEGRAM_CHANNEL_ID")))
+            logger.info(f"채널 정보: {vars(chat_info)}")
+
+            # 운영자 ID 허용 리스트
+            admin_ids_str = os.getenv("TELEGRAM_ADMIN_IDS", "")
+            admin_ids = [int(id_str) for id_str in admin_ids_str.split(",") if id_str.strip()]
+
+            # 운영자인 경우 항상 허용
+            if user_id in admin_ids:
+                logger.info(f"운영자 {user_id} 접근 허용")
+                return True
+
             member = await self.application.bot.get_chat_member(
                 int(os.getenv("TELEGRAM_CHANNEL_ID")), user_id
             )
             # 상태 확인 및 로깅 추가
             logger.info(f"사용자 {user_id}의 채널 멤버십 상태: {member.status}")
+            # member 객체 전체 확인
+            logger.info(f"멤버 객체 전체 내용: {vars(member)}")
 
             # 채널 멤버, 관리자, 생성자/소유자 모두 허용
             # 'creator'는 초기 버전에서 사용, 일부 버전에서는 'owner'로 변경될 수 있음
