@@ -938,7 +938,7 @@ class StockTrackingAgent:
             successful_trades = self.cursor.fetchone()[0] or 0
 
             # 메시지 생성
-            message = f"📊 AI 주식 시뮬레이션 리포트 ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n\n"
+            message = f"📊 프리즘 시뮬레이터 | 실시간 포트폴리오 ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n\n"
 
             # 1. 포트폴리오 요약
             message += f"🔸 현재 보유 종목: {len(holdings) if holdings else 0}/{self.max_slots}개\n"

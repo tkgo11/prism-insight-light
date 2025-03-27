@@ -257,7 +257,7 @@ class StockAnalysisOrchestrator:
         """
         트리거 실행 결과 정보를 텔레그램 채널로 즉시 전송
         """
-        logger.info(f"트리거 알림 전송 시작 - 모드: {mode}, 계정 타입: {account_type}")
+        logger.info(f"프리즘 시그널 얼럿 전송 시작 - 모드: {mode}, 계정 타입: {account_type}")
 
         try:
             # JSON 파일 읽기
@@ -296,10 +296,10 @@ class StockAnalysisOrchestrator:
                 success = await bot_agent.send_message(chat_id, message)
 
                 if success:
-                    logger.info("트리거 알림 전송 성공")
+                    logger.info("프리즘 시그널 얼럿 전송 성공")
                     return True
                 else:
-                    logger.error("트리거 알림 전송 실패")
+                    logger.error("프리즘 시그널 얼럿 전송 실패")
                     return False
 
             except Exception as e:
@@ -307,7 +307,7 @@ class StockAnalysisOrchestrator:
                 return False
 
         except Exception as e:
-            logger.error(f"트리거 알림 생성 중 오류: {str(e)}")
+            logger.error(f"프리즘 시그널 얼럿 생성 중 오류: {str(e)}")
             return False
 
     def _create_trigger_alert_message(self, mode, account_type, results, trade_date):
@@ -319,10 +319,10 @@ class StockAnalysisOrchestrator:
 
         # 모드에 따른 제목 설정
         if mode == "morning":
-            title = "🔔 오전 트리거 알림"
+            title = "🔔 오전 프리즘 시그널 얼럿"
             time_desc = "장 시작 후 10분 시점"
         else:
-            title = "🔔 오후 트리거 알림"
+            title = "🔔 오후 프리즘 시그널 얼럿"
             time_desc = "장 마감 후"
 
         # 계정 등급 표시
@@ -423,9 +423,9 @@ class StockAnalysisOrchestrator:
                 logger.info(f"트리거 결과 파일 확인됨: {results_file}")
                 alert_sent = await self.send_trigger_alert(mode, account_type, results_file)
                 if alert_sent:
-                    logger.info("트리거 알림 전송 완료")
+                    logger.info("프리즘 시그널 얼럿 전송 완료")
                 else:
-                    logger.warning("트리거 알림 전송 실패")
+                    logger.warning("프리즘 시그널 얼럿 전송 실패")
             else:
                 logger.warning(f"트리거 결과 파일이 없습니다: {results_file}")
 
