@@ -259,14 +259,6 @@ class TelegramAIBot:
             )
             # 상태 확인 및 로깅 추가
             logger.info(f"사용자 {user_id}의 채널 멤버십 상태: {member.status}")
-            # 객체 자체를 문자열로 로깅
-            logger.info(f"멤버 객체: {member}")
-            # 속성 목록 로깅
-            logger.info(f"멤버 객체 속성: {dir(member)}")
-            # 채널 정보 확인
-            chat_info = await self.application.bot.get_chat(int(os.getenv("TELEGRAM_CHANNEL_ID")))
-            logger.info(f"채널 정보: {chat_info}")
-            logger.info(f"채널 객체 속성: {dir(chat_info)}")
 
             # 채널 멤버, 관리자, 생성자/소유자 모두 허용
             # 'creator'는 초기 버전에서 사용, 일부 버전에서는 'owner'로 변경될 수 있음
