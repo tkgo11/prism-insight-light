@@ -204,10 +204,10 @@ class TelegramAIBot:
         """시작 명령어 처리"""
         user = update.effective_user
         await update.message.reply_text(
-            f"안녕하세요, {user.first_name}님! 저는 주식 분석 AI 봇입니다.\n\n"
+            f"안녕하세요, {user.first_name}님! 저는 프리즘 어드바이 봇입니다.\n\n"
             "저는 보유하신 종목에 대한 평가를 제공합니다.\n"
             "/evaluate 명령어를 사용하여 평가를 시작할 수 있습니다.\n\n"
-            "이 봇은 '주식 AI 분석기' 채널 구독자만 사용할 수 있습니다.\n"
+            "이 봇은 '프리즘 인사이트' 채널 구독자만 사용할 수 있습니다.\n"
             "채널에서는 장 시작과 마감 시 AI가 선별한 특징주 3개를 소개하고,\n"
             "각 종목에 대한 AI에이전트가 작성한 고퀄리티의 상세 분석 보고서를 제공합니다.\n\n"
             "다음 링크를 구독한 후 봇을 사용해주세요: https://t.me/stock_ai_agent"
@@ -216,7 +216,7 @@ class TelegramAIBot:
     async def handle_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """도움말 명령어 처리"""
         await update.message.reply_text(
-            "📊 <b>주식 분석 AI 봇 도움말</b> 📊\n\n"
+            "📊 <b>프리즘 어드바이저 봇 도움말</b> 📊\n\n"
             "<b>기본 명령어:</b>\n"
             "/start - 봇 시작\n"
             "/help - 도움말 보기\n"
@@ -248,10 +248,22 @@ class TelegramAIBot:
             member = await self.application.bot.get_chat_member(
                 int(os.getenv("TELEGRAM_CHANNEL_ID")), user_id
             )
-            # 최신 버전에서는 상수 속성 대신 문자열 비교
-            return member.status in ['member', 'administrator', 'creator', 'owner']
+            # 상태 확인 및 로깅 추가
+            logger.info(f"사용자 {user_id}의 채널 멤버십 상태: {member.status}")
+
+            # 채널 멤버, 관리자, 생성자/소유자 모두 허용
+            # 'creator'는 초기 버전에서 사용, 일부 버전에서는 'owner'로 변경될 수 있음
+            valid_statuses = ['member', 'administrator', 'creator', 'owner']
+
+            # 채널 소유자인 경우 항상 허용
+            if member.status == 'creator' or getattr(member, 'is_owner', False):
+                return True
+
+            return member.status in valid_statuses
         except Exception as e:
             logger.error(f"채널 구독 확인 중 오류: {e}")
+            # 디버깅을 위해 예외 상세 정보 로깅
+            logger.error(f"상세 오류: {traceback.format_exc()}")
             return False
 
     async def handle_evaluate_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
