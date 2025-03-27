@@ -11,7 +11,8 @@ import os
 import logging
 import markdown
 import tempfile
-from pathlib import Path
+import PyPDF2
+import html2text
 
 # 로거 설정
 logging.basicConfig(level=logging.INFO,
@@ -176,7 +177,7 @@ def markdown_to_html(md_file_path, add_css=True):
 def markdown_to_pdf_pdfkit(md_file_path, pdf_file_path):
     """
     pdfkit(wkhtmltopdf)를 사용하여 마크다운을 PDF로 변환
-    
+
     Linux 설치 방법: dnf install wkhtmltopdf
 
     Args:
@@ -347,7 +348,7 @@ def markdown_to_pdf_reportlab(md_file_path, pdf_file_path):
 def markdown_to_pdf_mdpdf(md_file_path, pdf_file_path):
     """
     mdpdf 라이브러리를 사용하여 마크다운을 PDF로 변환
-    
+
     설치: pip install mdpdf
 
     Args:
@@ -357,13 +358,13 @@ def markdown_to_pdf_mdpdf(md_file_path, pdf_file_path):
     try:
         # mdpdf 임포트 (설치 필요: pip install mdpdf)
         from mdpdf import MarkdownPdf
-        
+
         # 마크다운을 PDF로 변환
         md = MarkdownPdf()
         md.convert(md_file_path, pdf_file_path)
-        
+
         logger.info(f"mdpdf로 PDF 변환 완료: {pdf_file_path}")
-        
+
     except ImportError:
         logger.error("mdpdf 라이브러리가 설치되지 않았습니다. pip install mdpdf로 설치하세요.")
         raise
@@ -405,6 +406,29 @@ def markdown_to_pdf(md_file_path, pdf_file_path, method='pdfkit'):
         logger.error(f"PDF 변환 실패: {str(e)}")
         raise
 
+
+# PDF에서 텍스트 추출
+def extract_text_from_pdf(pdf_path):
+    with open(pdf_path, 'rb') as file:
+        reader = PyPDF2.PdfReader(file)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text()
+    return text
+
+# 텍스트를 마크다운으로 변환
+def convert_to_markdown(text):
+    h = html2text.HTML2Text()
+    h.ignore_links = False
+    markdown_text = h.handle(text)
+    return markdown_text
+
+# PDF to markdown_text
+def pdf_to_markdown_text(pdf_path):
+    text = extract_text_from_pdf(pdf_path)
+    return convert_to_markdown(text)
+
+
 if __name__ == "__main__":
     # 테스트 코드
     import sys
@@ -418,3 +442,6 @@ if __name__ == "__main__":
     method = sys.argv[3] if len(sys.argv) > 3 else 'auto'
 
     markdown_to_pdf(md_file, pdf_file, method)
+
+    markdown_text_content = pdf_to_markdown_text(pdf_file)
+    print(f"markdown_text_content: {markdown_text_content}")

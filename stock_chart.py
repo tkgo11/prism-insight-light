@@ -20,9 +20,18 @@ import platform
 import matplotlib as mpl
 import base64
 from io import BytesIO
+import logging
 
 import matplotlib
 matplotlib.use('Agg')  # 그래픽 백엔드를 Agg(비인터랙티브)로 명시적 설정
+
+# 로거 설정
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 # 한글 폰트 설정을 위한 매우 강력한 방법
 def configure_korean_font():
@@ -59,7 +68,7 @@ def configure_korean_font():
                 plt.rcParams['font.family'] = 'AppleSDGothicNeo'
                 mpl.rcParams['font.family'] = 'AppleSDGothicNeo'
 
-                print(f"한글 폰트 설정 완료: {path}")
+                logger.info(f"한글 폰트 설정 완료: {path}")
                 return path
 
         # 경로로 찾기 실패시, 이름으로 시도
@@ -75,7 +84,7 @@ def configure_korean_font():
                     KOREAN_FONT_PATH = font_path
                     KOREAN_FONT_PROP = fm.FontProperties(family=font_name)
 
-                    print(f"한글 폰트 설정 완료 (이름): {font_name}, 경로: {font_path}")
+                    logger.info(f"한글 폰트 설정 완료 (이름): {font_name}, 경로: {font_path}")
                     return font_path
             except:
                 continue
@@ -86,7 +95,7 @@ def configure_korean_font():
             plt.rcParams['font.family'] = 'Malgun Gothic'
             mpl.rcParams['font.family'] = 'Malgun Gothic'
             KOREAN_FONT_PROP = fm.FontProperties(family='Malgun Gothic')
-            print("한글 폰트 설정 완료: Malgun Gothic (Windows)")
+            logger.info("한글 폰트 설정 완료: Malgun Gothic (Windows)")
             return "Malgun Gothic"
         except:
             pass
@@ -112,10 +121,10 @@ def configure_korean_font():
                 plt.rcParams['font.family'] = 'NanumGothic'
                 mpl.rcParams['font.family'] = 'NanumGothic'
 
-                print(f"한글 폰트 설정 완료: {path}")
+                logger.info(f"한글 폰트 설정 완료: {path}")
                 return path
 
-    print("⚠️ 한글 폰트 설정 실패: 한글이 제대로 표시되지 않을 수 있습니다.")
+    logger.info("⚠️ 한글 폰트 설정 실패: 한글이 제대로 표시되지 않을 수 있습니다.")
     return None
 
 # 전역 변수 초기화
@@ -144,70 +153,75 @@ def get_chart_as_base64_html(ticker, company_name, chart_function, chart_name, w
     Returns:
         HTML 이미지 태그가 포함된 문자열
     """
-    # 차트 생성 매개변수 설정
-    chart_kwargs = {
-        'ticker': ticker,
-        'company_name': company_name,
-        'save_path': None
-    }
-    chart_kwargs.update(kwargs)
+    try:
+        # 차트 생성 매개변수 설정
+        chart_kwargs = {
+            'ticker': ticker,
+            'company_name': company_name,
+            'save_path': None
+        }
+        chart_kwargs.update(kwargs)
 
-    # 차트 생성
-    fig = chart_function(**chart_kwargs)
+        # 차트 생성
+        fig = chart_function(**chart_kwargs)
 
-    if fig is None:
-        return None
+        if fig is None:
+            return None
 
-    # 이미지를 메모리에 저장 (압축 설정 적용)
-    buffer = BytesIO()
+        # 이미지를 메모리에 저장 (압축 설정 적용)
+        buffer = BytesIO()
 
-    # 이미지 형식에 따라 저장 옵션 설정
-    save_kwargs = {
-        'format': image_format,
-        'bbox_inches': 'tight',
-        'dpi': dpi
-    }
+        # 이미지 형식에 따라 저장 옵션 설정
+        save_kwargs = {
+            'format': image_format,
+            'bbox_inches': 'tight',
+            'dpi': dpi
+        }
 
-    if image_format.lower() == 'png' and compress:
-        save_kwargs['transparent'] = False
-        save_kwargs['facecolor'] = 'white'
-        save_kwargs['compress_level'] = 9  # 최대 압축 (0-9)
+        if image_format.lower() == 'png' and compress:
+            save_kwargs['transparent'] = False
+            save_kwargs['facecolor'] = 'white'
+            save_kwargs['compress_level'] = 9  # 최대 압축 (0-9)
 
-    # quality 매개변수 없이 저장
-    fig.savefig(buffer, **save_kwargs)
+        # quality 매개변수 없이 저장
+        fig.savefig(buffer, **save_kwargs)
 
-    plt.close(fig)  # 메모리 누수 방지
-    buffer.seek(0)
+        plt.close(fig)  # 메모리 누수 방지
+        buffer.seek(0)
 
-    # 추가 이미지 압축 (PIL 사용)
-    if compress and image_format.lower() in ['jpg', 'jpeg']:
-        try:
-            from PIL import Image
-            # 버퍼에서 이미지 읽기
-            img = Image.open(buffer)
-            # 새 버퍼에 압축하여 저장
-            new_buffer = BytesIO()
-            img.save(new_buffer, format='JPEG', quality=85, optimize=True)
-            buffer = new_buffer
-            buffer.seek(0)
-        except ImportError:
-            # PIL 라이브러리가 없으면 그냥 진행
-            pass
+        # 추가 이미지 압축 (PIL 사용)
+        if compress and image_format.lower() in ['jpg', 'jpeg']:
+            try:
+                from PIL import Image
+                # 버퍼에서 이미지 읽기
+                img = Image.open(buffer)
+                # 새 버퍼에 압축하여 저장
+                new_buffer = BytesIO()
+                img.save(new_buffer, format='JPEG', quality=85, optimize=True)
+                buffer = new_buffer
+                buffer.seek(0)
+            except ImportError:
+                # PIL 라이브러리가 없으면 그냥 진행
+                pass
 
-    # Base64로 인코딩
-    img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        # Base64로 인코딩
+        img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-    # 파일 크기 디버깅용 (선택적)
-    # size_kb = len(buffer.getvalue()) / 1024
-    # print(f"Chart '{chart_name}' size: {size_kb:.1f} KB")
+        # 파일 크기 디버깅용 (선택적)
+        # size_kb = len(buffer.getvalue()) / 1024
+        # logger.info(f"Chart '{chart_name}' size: {size_kb:.1f} KB")
 
-    # 이미지 형식에 따른 MIME 타입 설정
-    content_type = f"image/{image_format.lower()}"
-    if image_format.lower() == 'jpg':
-        content_type = 'image/jpeg'
+        # 이미지 형식에 따른 MIME 타입 설정
+        content_type = f"image/{image_format.lower()}"
+        if image_format.lower() == 'jpg':
+            content_type = 'image/jpeg'
 
-    # HTML 이미지 태그 생성
-    return f'<img src="data:{content_type};base64,{img_str}" alt="{company_name} {chart_name}" width="{width}" />'
+        # HTML 이미지 태그 생성
+        return f'<img src="data:{content_type};base64,{img_str}" alt="{company_name} {chart_name}" width="{width}" />'
+
+    except Exception as e:
+        logger.error(f"차트 생성 중 오류 발생: {str(e)}")
+        return  None
 
 # mplfinance에서 한글 표시하기 위한 사용자 지정 스타일
 def create_mpf_style(base_mpl_style='seaborn-v0_8-whitegrid'):
@@ -331,7 +345,7 @@ def create_price_chart(ticker, company_name=None, days=730, save_path=None, adju
     df = get_market_ohlcv_by_date(start_date, end_date, ticker, adjusted=adjusted)
 
     if df is None or len(df) == 0:
-        print(f"{ticker}에 대한 데이터가 없습니다.")
+        logger.info(f"{ticker}에 대한 데이터가 없습니다.")
         return None
 
     # 인덱스가 datetime인지 확인
@@ -557,7 +571,7 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
     df = get_market_cap_by_date(start_date, end_date, ticker)
 
     if df is None or len(df) == 0:
-        print(f"{ticker}에 대한 시가총액 데이터가 없습니다.")
+        logger.info(f"{ticker}에 대한 시가총액 데이터가 없습니다.")
         return None
 
     # 인덱스가 datetime인지 확인
@@ -770,7 +784,7 @@ def create_fundamentals_chart(ticker, company_name=None, days=730, save_path=Non
     df = get_market_fundamental_by_date(start_date, end_date, ticker)
 
     if df is None or len(df) == 0:
-        print(f"{ticker}에 대한 기본 지표 데이터가 없습니다.")
+        logger.info(f"{ticker}에 대한 기본 지표 데이터가 없습니다.")
         return None
 
     # 인덱스가 datetime인지 확인
@@ -1099,14 +1113,14 @@ def create_trading_volume_chart(ticker, company_name=None, days=730, save_path=N
     df_volume = get_market_trading_volume_by_investor(start_date, end_date, ticker)
 
     if df_volume is None or len(df_volume) == 0:
-        print(f"{ticker}에 대한 거래량 데이터가 없습니다.")
+        logger.info(f"{ticker}에 대한 거래량 데이터가 없습니다.")
         return None
 
     # 일별 순매수 데이터 가져오기
     df_daily = get_market_trading_volume_by_date(start_date, end_date, ticker)
 
     if df_daily is None or len(df_daily) == 0:
-        print(f"{ticker}에 대한 일별 거래량 데이터가 없습니다.")
+        logger.info(f"{ticker}에 대한 일별 거래량 데이터가 없습니다.")
         return None
 
     # 차트 생성
@@ -1338,7 +1352,7 @@ def create_comprehensive_report(ticker, company_name=None, days=730, output_dir=
         create_price_chart(ticker, company_name, days, save_path=price_path)
         report_paths['price_chart'] = price_path
     except Exception as e:
-        print(f"가격 차트 생성 오류: {e}")
+        logger.info(f"가격 차트 생성 오류: {e}")
 
     # 시가총액 차트 생성
     marketcap_path = os.path.join(report_dir, f"{ticker}_marketcap.png")
@@ -1346,7 +1360,7 @@ def create_comprehensive_report(ticker, company_name=None, days=730, output_dir=
         create_market_cap_chart(ticker, company_name, days, save_path=marketcap_path)
         report_paths['market_cap_chart'] = marketcap_path
     except Exception as e:
-        print(f"시가총액 차트 생성 오류: {e}")
+        logger.info(f"시가총액 차트 생성 오류: {e}")
 
     # 기본 지표 차트 생성
     fundamentals_path = os.path.join(report_dir, f"{ticker}_fundamentals.png")
@@ -1354,7 +1368,7 @@ def create_comprehensive_report(ticker, company_name=None, days=730, output_dir=
         create_fundamentals_chart(ticker, company_name, days, save_path=fundamentals_path)
         report_paths['fundamentals_chart'] = fundamentals_path
     except Exception as e:
-        print(f"기본 지표 차트 생성 오류: {e}")
+        logger.info(f"기본 지표 차트 생성 오류: {e}")
 
     # 거래량 차트 생성 (더 짧은 기간 사용)
     volume_path = os.path.join(report_dir, f"{ticker}_volume.png")
@@ -1362,7 +1376,7 @@ def create_comprehensive_report(ticker, company_name=None, days=730, output_dir=
         create_trading_volume_chart(ticker, company_name, min(60, days), save_path=volume_path)
         report_paths['trading_volume_chart'] = volume_path
     except Exception as e:
-        print(f"거래량 차트 생성 오류: {e}")
+        logger.info(f"거래량 차트 생성 오류: {e}")
 
     return report_paths
 
@@ -1384,35 +1398,35 @@ def check_font_available():
     all_korean_fonts = list(set(possible_korean_fonts + korean_fonts))
 
     if not all_korean_fonts:
-        print("⚠️ 경고: 시스템에 한글 폰트가 없습니다!")
-        print("다음 방법으로 한글 폰트를 설치해주세요:")
+        logger.info("⚠️ 경고: 시스템에 한글 폰트가 없습니다!")
+        logger.info("다음 방법으로 한글 폰트를 설치해주세요:")
 
         if platform.system() == 'Windows':
-            print("Windows는 기본적으로 '맑은 고딕' 폰트가 설치되어 있어야 합니다.")
+            logger.info("Windows는 기본적으로 '맑은 고딕' 폰트가 설치되어 있어야 합니다.")
         elif platform.system() == 'Darwin':  # macOS
-            print("macOS에서 다음 한글 폰트를 설치해보세요:")
-            print("- 나눔고딕 (https://hangeul.naver.com/font)")
-            print("- 또는 macOS에 기본 내장된 'Apple SD Gothic Neo'를 사용해보세요.")
+            logger.info("macOS에서 다음 한글 폰트를 설치해보세요:")
+            logger.info("- 나눔고딕 (https://hangeul.naver.com/font)")
+            logger.info("- 또는 macOS에 기본 내장된 'Apple SD Gothic Neo'를 사용해보세요.")
         else:  # Linux
             if os.path.exists('/etc/rocky-release'):  # Rocky Linux인 경우
-                print("Rocky Linux 8 한글 폰트 설치 방법:")
-                print("sudo dnf install google-nanum-fonts")
+                logger.info("Rocky Linux 8 한글 폰트 설치 방법:")
+                logger.info("sudo dnf install google-nanum-fonts")
             else:  # 기타 Linux
-                print("Linux: 나눔고딕 폰트 설치 방법")
-                print("Ubuntu/Debian: sudo apt-get install fonts-nanum")
-                print("CentOS/RHEL: sudo dnf install google-nanum-fonts")
-                print("또는 나눔고딕 폰트를 다운로드하여 ~/.fonts 폴더에 복사")
+                logger.info("Linux: 나눔고딕 폰트 설치 방법")
+                logger.info("Ubuntu/Debian: sudo apt-get install fonts-nanum")
+                logger.info("CentOS/RHEL: sudo dnf install google-nanum-fonts")
+                logger.info("또는 나눔고딕 폰트를 다운로드하여 ~/.fonts 폴더에 복사")
 
-        print("\n폰트 설치 후 다음 명령어로 matplotlib 폰트 캐시를 갱신하세요:")
-        print("import matplotlib.font_manager as fm")
-        print("fm.fontManager.rebuild()  # 최신 버전의 matplotlib")
-        print("# 또는 fm._rebuild()  # 구버전의 matplotlib")
+        logger.info("\n폰트 설치 후 다음 명령어로 matplotlib 폰트 캐시를 갱신하세요:")
+        logger.info("import matplotlib.font_manager as fm")
+        logger.info("fm.fontManager.rebuild()  # 최신 버전의 matplotlib")
+        logger.info("# 또는 fm._rebuild()  # 구버전의 matplotlib")
     else:
-        print(f"사용 가능한 한글 폰트 {len(all_korean_fonts)}개 발견:")
+        logger.info(f"사용 가능한 한글 폰트 {len(all_korean_fonts)}개 발견:")
         for i, font in enumerate(all_korean_fonts[:10]):  # 최대 10개만 표시
-            print(f"  {i+1}. {font}")
+            logger.info(f"  {i+1}. {font}")
         if len(all_korean_fonts) > 10:
-            print(f"  ... 외 {len(all_korean_fonts)-10}개")
+            logger.info(f"  ... 외 {len(all_korean_fonts)-10}개")
 
     return all_korean_fonts
 
@@ -1430,9 +1444,9 @@ def main():
     # 종합 보고서 생성
     report_paths = create_comprehensive_report(ticker, company_name)
 
-    print(f"다음 차트가 포함된 보고서가 생성되었습니다:")
+    logger.info(f"다음 차트가 포함된 보고서가 생성되었습니다:")
     for chart_type, path in report_paths.items():
-        print(f"- {chart_type}: {path}")
+        logger.info(f"- {chart_type}: {path}")
 
     # 개별 차트 예시
     # 주석 해제하여 개별 차트 생성 및 표시

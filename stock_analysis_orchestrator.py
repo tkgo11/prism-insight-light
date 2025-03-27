@@ -17,6 +17,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
+import subprocess
 
 # 로거 설정
 logging.basicConfig(
@@ -164,17 +165,17 @@ class StockAnalysisOrchestrator:
 
         return pdf_paths
 
-    async def generate_telegram_messages(self, report_paths):
+    async def generate_telegram_messages(self, report_pdf_paths):
         """
         텔레그램 메시지 생성
 
         Args:
-            report_paths (list): 보고서 파일 경로 리스트
+            report_pdf_paths (list): 보고서 파일(pdf) 경로 리스트
 
         Returns:
             list: 생성된 텔레그램 메시지 파일 경로 리스트
         """
-        logger.info(f"{len(report_paths)}개 보고서 텔레그램 메시지 생성 시작")
+        logger.info(f"{len(report_pdf_paths)}개 보고서 텔레그램 메시지 생성 시작")
 
         # 텔레그램 요약 생성기 모듈 임포트
         from telegram_summary_agent import TelegramSummaryGenerator
@@ -183,13 +184,13 @@ class StockAnalysisOrchestrator:
         generator = TelegramSummaryGenerator()
 
         message_paths = []
-        for report_path in report_paths:
+        for report_pdf_path in report_pdf_paths:
             try:
                 # 텔레그램 메시지 생성
-                await generator.process_report(str(report_path), str(TELEGRAM_MSGS_DIR))
+                await generator.process_report(str(report_pdf_path), str(TELEGRAM_MSGS_DIR))
 
                 # 생성된 메시지 파일 경로 추정
-                report_file = Path(report_path)
+                report_file = Path(report_pdf_path)
                 ticker = report_file.stem.split('_')[0]
                 company_name = report_file.stem.split('_')[1]
 
@@ -202,7 +203,7 @@ class StockAnalysisOrchestrator:
                     logger.warning(f"텔레그램 메시지 파일이 예상 경로에 없습니다: {message_path}")
 
             except Exception as e:
-                logger.error(f"{report_path} 텔레그램 메시지 생성 중 오류: {str(e)}")
+                logger.error(f"{report_pdf_path} 텔레그램 메시지 생성 중 오류: {str(e)}")
 
         return message_paths
 
@@ -439,18 +440,19 @@ class StockAnalysisOrchestrator:
             pdf_paths = await self.convert_to_pdf(report_paths)
 
             # 4. 텔레그램 메시지 생성
-            message_paths = await self.generate_telegram_messages(report_paths)
+            message_paths = await self.generate_telegram_messages(pdf_paths)
 
             # 5. 텔레그램 메시지 및 PDF 전송
             await self.send_telegram_messages(message_paths, pdf_paths)
 
             # 6. 트랙킹 시스템 배치
-            if report_paths:
+            if pdf_paths:
                 try:
                     logger.info("주식 트래킹 시스템 배치 실행 시작")
 
                     # 트래킹 에이전트 임포트
-                    from stock_tracking_agent import StockTrackingAgent, app as tracking_app
+                    from stock_tracking_enhanced_agent import EnhancedStockTrackingAgent as StockTrackingAgent
+                    from stock_tracking_agent import app as tracking_app
 
                     # 환경 변수에서 채널 ID 및 봇 토큰 가져오기
                     from dotenv import load_dotenv
@@ -472,7 +474,7 @@ class StockAnalysisOrchestrator:
                         tracking_agent = StockTrackingAgent(telegram_token=telegram_token)
 
                         # 보고서 경로와 채널 ID 전달
-                        tracking_success = await tracking_agent.run(report_paths, chat_id)
+                        tracking_success = await tracking_agent.run(pdf_paths, chat_id)
 
                         if tracking_success:
                             logger.info("트래킹 시스템 배치 실행 완료")
@@ -498,6 +500,7 @@ class StockAnalysisOrchestrator:
         모든 종목에 대해 보고서를 단순 직렬로 생성합니다.
         한 번에 하나의 종목만 처리하여 OpenAI rate limit 문제를 방지합니다.
         """
+
         logger.info(f"총 {len(tickers)}개 종목 보고서 생성 시작 (직렬 처리)")
 
         successful_reports = []
@@ -544,8 +547,22 @@ class StockAnalysisOrchestrator:
                 import traceback
                 logger.error(traceback.format_exc())
 
+
         logger.info(f"보고서 생성 완료: 총 {len(successful_reports)}/{len(tickers)}개 성공")
+
+        # 모든 보고서 생성 후 서버 프로세스 정리
+        try:
+            logger.info("mcp-server-webresearch 프로세스 정리 시작")
+            subprocess.run(["pkill", "-f", "mcp-server-webresearch"])
+            logger.info("mcp-server-webresearch 프로세스 정리 완료")
+        except Exception as e:
+            logger.error(f"프로세스 정리 중 오류 발생: {str(e)}")
+
         return successful_reports
+
+def clean_existing_processes():
+    import subprocess
+    subprocess.run(["pkill", "-f", "mcp-server-webresearch"])
 
 async def main():
     """
@@ -568,6 +585,9 @@ async def main():
         await orchestrator.run_full_pipeline("afternoon", args.account_type)
 
 if __name__ == "__main__":
+    # 기존 프로세스 정리
+    clean_existing_processes()
+
     # 휴일 체크
     from check_market_day import is_market_day
 
@@ -584,8 +604,8 @@ if __name__ == "__main__":
         import time
         import os
         import signal
-        time.sleep(1800)  # 30분 대기
-        logger.warning("30분 타임아웃 도달: 프로세스 강제 종료")
+        time.sleep(3600)  # 60분 대기
+        logger.warning("60분 타임아웃 도달: 프로세스 강제 종료")
         os.kill(os.getpid(), signal.SIGTERM)
 
     # 백그라운드 스레드로 타이머 시작
