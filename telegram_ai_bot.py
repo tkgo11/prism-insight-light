@@ -612,8 +612,7 @@ class TelegramAIBot:
                             """,
                     request_params=RequestParams(
                         model="gpt-4o-mini",
-                        maxTokens=1500,
-                        max_iterations=5
+                        maxTokens=1500
                     )
                 )
                 app_logger.info(f"응답 생성 결과: {str(response)}")
