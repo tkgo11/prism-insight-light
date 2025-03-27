@@ -390,6 +390,9 @@ class TelegramAIBot:
                 ticker, ticker_name, avg_price, period, tone, background, latest_report
             )
 
+            # 서버 프로세스 정리 추가
+            self.cleanup_server_processes()
+
             # 응답이 비어있는지 확인
             if not response or not response.strip():
                 response = "죄송합니다. 응답 생성 중 오류가 발생했습니다. 다시 시도해주세요."
@@ -549,8 +552,7 @@ class TelegramAIBot:
                                     - 종목 이름: {ticker_name}
                                     - 평균 매수가: {avg_price}원
                                     - 보유 기간: {period}개월
-                                    - 원하는 피드백 스타일: {tone}
-                                    - 지금까지 매매 배경 또는 히스토리(Optional): {background_text}
+                                    - 원하는 피드백 스타일: {tone} {background_text}
                                     
                                     ## 데이터 수집 및 분석 단계
                                     1. get_stock_ohlcv 툴을 사용하여 종목({ticker})의 최신 주가 데이터를 조회하세요.
@@ -601,28 +603,9 @@ class TelegramAIBot:
                     with open(report_path, 'r', encoding='utf-8') as f:
                         report_content = f.read()
 
-                # 배경 정보 포함 (있는 경우)
-                background_msg = f"\n- 사용자의 매매 배경/히스토리: {background}" if background else ""
-
-                # 응답 생성
+                # 응답 생성 - 주의: 중복된 지시사항은 제거하고 agent의 instruction 참조
                 response = await llm.generate_str(
-                    message=f"""현재 날짜({current_date}) 기준으로 보유한 주식 종목에 대한 평가와 조언을 사용자가 요청한 스타일로 해줘.
-    
-                            ## 평가 정보
-                            - 종목 코드: {ticker}
-                            - 종목 이름: {ticker_name}
-                            - 평균 매수가: {avg_price}원
-                            - 보유 기간: {period}개월
-                            - 원하는 피드백 스타일: {tone}{background_msg}
-    
-                            ## 분석 지침
-                            1. get_stock_ohlcv 툴을 사용하여 {ticker} 종목의 최신 주가 데이터를 조회하세요.
-                            2. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요:
-                               - "{ticker_name} 기업 최근 뉴스 및 실적"
-                               - "{ticker_name} 소속 업종 동향"
-                               - "국내 증시 현황 및 전망"
-                            3. 필요시 get_stock_fundamental과 get_stock_market_cap 툴을 사용하여 추가 데이터를 수집하세요.
-                            4. 수집한 모든 정보를 바탕으로 종합적인 평가와 조언을 제공하세요.
+                    message=f"""보고서를 바탕으로 종목 평가 응답을 생성해 주세요.
     
                             ## 참고 자료
                             {report_content if report_content else "관련 보고서가 없습니다. 시장 데이터 조회와 perplexity 검색을 통해 최신 정보를 수집하여 평가해주세요."}
@@ -630,13 +613,10 @@ class TelegramAIBot:
                     request_params=RequestParams(
                         model="gpt-4o-mini",
                         maxTokens=1500,
-                        max_iterations=3  # 충분한 데이터 수집을 위해 반복 횟수 증가
+                        max_iterations=5
                     )
                 )
-                app_logger.error(f"응답 생성 결과: {str(response)}")
-
-                # 서버 프로세스 정리 추가
-                self.cleanup_server_processes()
+                app_logger.info(f"응답 생성 결과: {str(response)}")
 
                 return response
 
