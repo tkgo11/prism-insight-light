@@ -4,6 +4,8 @@
 
 사용자 요청에 맞춤형 응답을 제공하는 봇:
 - /evaluate 명령어를 통해 보유 종목에 대한 분석 및 조언 제공
+- /report 명령어로 특정 종목에 대한 상세 분석 보고서 생성 및 HTML 파일 제공
+- /history 명령어로 특정 종목의 분석 히스토리 확인
 - 채널 구독자만 사용 가능
 """
 import asyncio
@@ -17,13 +19,17 @@ from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
-from mcp_agent.agents.agent import Agent
-from mcp_agent.app import MCPApp
-from mcp_agent.workflows.llm.augmented_llm import RequestParams
-from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
-from telegram import Update
+from telegram import Update, InputFile
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
+)
+
+from analysis_manager import (
+    AnalysisRequest, analysis_queue, start_background_worker
+)
+# 내부 모듈 임포트
+from report_generator import (
+    generate_evaluation_response, get_cached_report
 )
 
 # 환경 변수 로드
@@ -47,10 +53,17 @@ logger = logging.getLogger(__name__)
 
 # 상수 정의
 REPORTS_DIR = Path("reports")
+REPORTS_DIR.mkdir(exist_ok=True)  # 디렉토리가 없으면 생성
+HTML_REPORTS_DIR = Path("html_reports")
+HTML_REPORTS_DIR.mkdir(exist_ok=True)  # HTML 보고서 디렉토리
+
+# 대화 상태 정의
 CHOOSING_TICKER, ENTERING_AVGPRICE, ENTERING_PERIOD, ENTERING_TONE, ENTERING_BACKGROUND = range(5)
+REPORT_CHOOSING_TICKER = 0  # /report 명령어를 위한 상태
+HISTORY_CHOOSING_TICKER = 0  # /history 명령어를 위한 상태
 
 # 채널 ID
-CHANNEL_ID = int(os.getenv("TELEGRAM_CHANNEL_ID"))
+CHANNEL_ID = int(os.getenv("TELEGRAM_CHANNEL_ID", "0"))
 
 class TelegramAIBot:
     """텔레그램 AI 대화형 봇"""
@@ -62,9 +75,9 @@ class TelegramAIBot:
             raise ValueError("텔레그램 봇 토큰이 설정되지 않았습니다.")
 
         # 채널 ID 확인
-        self.channel_id = int(os.getenv("TELEGRAM_CHANNEL_ID"))
+        self.channel_id = int(os.getenv("TELEGRAM_CHANNEL_ID", "0"))
         if not self.channel_id:
-            raise ValueError("텔레그램 채널 ID가 설정되지 않았습니다.")
+            logger.warning("텔레그램 채널 ID가 설정되지 않았습니다. 채널 구독 확인을 건너뜁니다.")
 
         # 종목 정보 초기화
         self.stock_map = {}
@@ -73,12 +86,15 @@ class TelegramAIBot:
 
         self.stop_event = asyncio.Event()
 
-        # MCPApp 초기화
-        self.app = MCPApp(name="telegram_ai_bot")
+        # 진행 중인 분석 요청 관리
+        self.pending_requests = {}
 
         # 봇 어플리케이션 생성
         self.application = Application.builder().token(self.token).build()
         self.setup_handlers()
+
+        # 백그라운드 작업자 시작
+        start_background_worker(self)
 
         # 기존 서버 프로세스 정리
         self.cleanup_server_processes()
@@ -120,6 +136,46 @@ class TelegramAIBot:
         self.application.add_handler(CommandHandler("start", self.handle_start))
         self.application.add_handler(CommandHandler("help", self.handle_help))
 
+        # 보고서 명령어 핸들러
+        report_conv_handler = ConversationHandler(
+            entry_points=[
+                CommandHandler("report", self.handle_report_start),
+                MessageHandler(filters.Regex(r'^/report(@\w+)?$'), self.handle_report_start)
+            ],
+            states={
+                REPORT_CHOOSING_TICKER: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_report_ticker_input)
+                ]
+            },
+            fallbacks=[
+                CommandHandler("cancel", self.handle_cancel)
+            ],
+            per_chat=False,
+            per_user=True,
+            conversation_timeout=300,
+        )
+        self.application.add_handler(report_conv_handler)
+
+        # 히스토리 명령어 핸들러
+        history_conv_handler = ConversationHandler(
+            entry_points=[
+                CommandHandler("history", self.handle_history_start),
+                MessageHandler(filters.Regex(r'^/history(@\w+)?$'), self.handle_history_start)
+            ],
+            states={
+                HISTORY_CHOOSING_TICKER: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_history_ticker_input)
+                ]
+            },
+            fallbacks=[
+                CommandHandler("cancel", self.handle_cancel)
+            ],
+            per_chat=False,
+            per_user=True,
+            conversation_timeout=300,
+        )
+        self.application.add_handler(history_conv_handler)
+
         # 평가 대화 핸들러
         conv_handler = ConversationHandler(
             entry_points=[
@@ -142,7 +198,7 @@ class TelegramAIBot:
                 ],
                 ENTERING_BACKGROUND: [
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_background_input)
-                ],
+                ]
             },
             fallbacks=[
                 CommandHandler("cancel", self.handle_cancel),
@@ -165,6 +221,50 @@ class TelegramAIBot:
 
         # 오류 핸들러
         self.application.add_error_handler(self.handle_error)
+
+    async def send_report_result(self, request: AnalysisRequest):
+        """분석 결과를 텔레그램으로 전송"""
+        if not request.chat_id:
+            logger.warning(f"채팅 ID가 없어 결과를 전송할 수 없습니다: {request.id}")
+            return
+
+        try:
+            # HTML 파일 전송
+            if request.html_path and os.path.exists(request.html_path):
+                with open(request.html_path, 'rb') as file:
+                    await self.application.bot.send_document(
+                        chat_id=request.chat_id,
+                        document=InputFile(file, filename=f"{request.company_name}_{request.stock_code}_분석.html"),
+                        caption=f"✅ {request.company_name} ({request.stock_code}) 분석 보고서가 완료되었습니다."
+                    )
+            else:
+                # HTML 파일이 없으면 텍스트로 결과 전송
+                if request.result:
+                    # 텍스트가 너무 길면 잘라서 전송
+                    max_length = 4000  # 텔레그램 메시지 최대 길이
+                    if len(request.result) > max_length:
+                        summary = request.result[:max_length] + "...(이하 생략)"
+                        await self.application.bot.send_message(
+                            chat_id=request.chat_id,
+                            text=f"✅ {request.company_name} ({request.stock_code}) 분석 결과:\n\n{summary}"
+                        )
+                    else:
+                        await self.application.bot.send_message(
+                            chat_id=request.chat_id,
+                            text=f"✅ {request.company_name} ({request.stock_code}) 분석 결과:\n\n{request.result}"
+                        )
+                else:
+                    await self.application.bot.send_message(
+                        chat_id=request.chat_id,
+                        text=f"⚠️ {request.company_name} ({request.stock_code}) 분석 결과를 찾을 수 없습니다."
+                    )
+        except Exception as e:
+            logger.error(f"결과 전송 중 오류: {str(e)}")
+            logger.error(traceback.format_exc())
+            await self.application.bot.send_message(
+                chat_id=request.chat_id,
+                text=f"⚠️ {request.company_name} ({request.stock_code}) 분석 결과 전송 중 오류가 발생했습니다."
+            )
 
     def cleanup_server_processes(self):
         """이전에 실행된 kospi_kosdaq 서버 프로세스 정리"""
@@ -206,7 +306,9 @@ class TelegramAIBot:
         await update.message.reply_text(
             f"안녕하세요, {user.first_name}님! 저는 프리즘 어드바이 봇입니다.\n\n"
             "저는 보유하신 종목에 대한 평가를 제공합니다.\n"
-            "/evaluate 명령어를 사용하여 평가를 시작할 수 있습니다.\n\n"
+            "/evaluate - 보유 종목 평가 시작\n"
+            "/report - 상세 분석 보고서 요청\n"
+            "/history - 특정 종목의 분석 히스토리 확인\n\n"
             "이 봇은 '프리즘 인사이트' 채널 구독자만 사용할 수 있습니다.\n"
             "채널에서는 장 시작과 마감 시 AI가 선별한 특징주 3개를 소개하고,\n"
             "각 종목에 대한 AI에이전트가 작성한 고퀄리티의 상세 분석 보고서를 제공합니다.\n\n"
@@ -221,6 +323,8 @@ class TelegramAIBot:
             "/start - 봇 시작\n"
             "/help - 도움말 보기\n"
             "/evaluate - 보유 종목 평가 시작\n"
+            "/report - 상세 분석 보고서 요청\n"
+            "/history - 특정 종목의 분석 히스토리 확인\n"
             "/cancel - 현재 진행 중인 대화 취소\n\n"
             "<b>보유 종목 평가 방법:</b>\n"
             "1. /evaluate 명령어 입력\n"
@@ -229,10 +333,181 @@ class TelegramAIBot:
             "4. 보유 기간 입력\n"
             "5. 원하는 피드백 스타일 입력\n"
             "6. 매매 배경 입력 (선택사항)\n\n"
+            "<b>상세 분석 보고서 요청:</b>\n"
+            "1. /report 명령어 입력\n"
+            "2. 종목 코드 또는 이름 입력\n"
+            "3. 5-10분 후 HTML 형식의 상세 보고서가 제공됩니다\n\n"
             "<b>주의:</b>\n"
             "이 봇은 채널 구독자만 사용할 수 있습니다.",
             parse_mode="HTML"
         )
+
+    async def handle_report_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """보고서 명령어 처리 - 첫 단계"""
+        user_id = update.effective_user.id
+        user_name = update.effective_user.first_name
+
+        # 채널 구독 여부 확인
+        is_subscribed = await self.check_channel_subscription(user_id)
+
+        if not is_subscribed:
+            await update.message.reply_text(
+                "이 봇은 채널 구독자만 사용할 수 있습니다.\n"
+                "아래 링크를 통해 채널을 구독해주세요:\n\n"
+                "https://t.me/stock_ai_agent"
+            )
+            return ConversationHandler.END
+
+        # 그룹 채팅인지 개인 채팅인지 확인
+        is_group = update.effective_chat.type in ["group", "supergroup"]
+        greeting = f"{user_name}님, " if is_group else ""
+
+        await update.message.reply_text(
+            f"{greeting}상세 분석 보고서를 생성할 종목 코드나 이름을 입력해주세요.\n"
+            "예: 005930 또는 삼성전자"
+        )
+
+        return REPORT_CHOOSING_TICKER
+
+    async def handle_report_ticker_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """보고서 요청 종목 입력 처리"""
+        user_id = update.effective_user.id
+        user_input = update.message.text.strip()
+        chat_id = update.effective_chat.id
+
+        logger.info(f"보고서 종목 입력 받음 - 사용자: {user_id}, 입력: {user_input}")
+
+        # 종목 코드 또는 이름을 처리
+        stock_code, stock_name, error_message = await self.get_stock_code(user_input)
+
+        if error_message:
+            # 오류가 있으면 사용자에게 알리고 다시 입력 받음
+            await update.message.reply_text(error_message)
+            return REPORT_CHOOSING_TICKER
+
+        # 대기 메시지 전송
+        waiting_message = await update.message.reply_text(
+            f"📊 {stock_name} ({stock_code}) 분석 보고서 생성을 시작합니다.\n\n"
+            f"상세 분석에는 5-10분 정도 소요됩니다. 분석이 완료되면 이 채팅방으로 결과가 전송됩니다."
+        )
+
+        # 분석 요청 생성 및 큐에 추가
+        request = AnalysisRequest(
+            stock_code=stock_code,
+            company_name=stock_name,
+            chat_id=chat_id,
+            message_id=waiting_message.message_id
+        )
+
+        # 캐시된 보고서가 있는지 확인
+        is_cached, cached_content, cached_file, cached_html = get_cached_report(stock_code)
+
+        if is_cached:
+            logger.info(f"캐시된 보고서 발견: {cached_file}")
+            # 캐시된 보고서가 있는 경우 바로 결과 전송
+            request.result = cached_content
+            request.status = "completed"
+            request.report_path = cached_file
+            request.html_path = cached_html
+
+            await waiting_message.edit_text(
+                f"✅ {stock_name} ({stock_code}) 분석 보고서가 준비되었습니다. 잠시 후 전송됩니다."
+            )
+
+            # 결과 전송
+            await self.send_report_result(request)
+        else:
+            # 새로운 분석 필요
+            self.pending_requests[request.id] = request
+            analysis_queue.put(request)
+
+        return ConversationHandler.END
+
+    async def handle_history_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """히스토리 명령어 처리 - 첫 단계"""
+        user_id = update.effective_user.id
+        user_name = update.effective_user.first_name
+
+        # 채널 구독 여부 확인
+        is_subscribed = await self.check_channel_subscription(user_id)
+
+        if not is_subscribed:
+            await update.message.reply_text(
+                "이 봇은 채널 구독자만 사용할 수 있습니다.\n"
+                "아래 링크를 통해 채널을 구독해주세요:\n\n"
+                "https://t.me/stock_ai_agent"
+            )
+            return ConversationHandler.END
+
+        # 그룹 채팅인지 개인 채팅인지 확인
+        is_group = update.effective_chat.type in ["group", "supergroup"]
+        greeting = f"{user_name}님, " if is_group else ""
+
+        await update.message.reply_text(
+            f"{greeting}분석 히스토리를 확인할 종목 코드나 이름을 입력해주세요.\n"
+            "예: 005930 또는 삼성전자"
+        )
+
+        return HISTORY_CHOOSING_TICKER
+
+    async def handle_history_ticker_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """히스토리 요청 종목 입력 처리"""
+        user_id = update.effective_user.id
+        user_input = update.message.text.strip()
+
+        logger.info(f"히스토리 종목 입력 받음 - 사용자: {user_id}, 입력: {user_input}")
+
+        # 종목 코드 또는 이름을 처리
+        stock_code, stock_name, error_message = await self.get_stock_code(user_input)
+
+        if error_message:
+            # 오류가 있으면 사용자에게 알리고 다시 입력 받음
+            await update.message.reply_text(error_message)
+            return HISTORY_CHOOSING_TICKER
+
+        # 히스토리 찾기
+        reports = list(REPORTS_DIR.glob(f"{stock_code}_*.md"))
+
+        if not reports:
+            await update.message.reply_text(
+                f"{stock_name} ({stock_code}) 종목에 대한 분석 히스토리가 없습니다.\n"
+                f"/report 명령어를 사용하여 새 분석을 요청해보세요."
+            )
+            return ConversationHandler.END
+
+        # 날짜별로 정렬
+        reports.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+
+        # 히스토리 메시지 구성
+        history_msg = f"📋 {stock_name} ({stock_code}) 분석 히스토리:\n\n"
+
+        for i, report in enumerate(reports[:5], 1):
+            report_date = datetime.fromtimestamp(report.stat().st_mtime).strftime('%Y-%m-%d %H:%M')
+            history_msg += f"{i}. {report_date}\n"
+
+            # 파일 크기 추가
+            file_size = report.stat().st_size / 1024  # KB
+            history_msg += f"   크기: {file_size:.1f} KB\n"
+
+            # 첫 줄 미리보기 추가
+            try:
+                with open(report, 'r', encoding='utf-8') as f:
+                    first_line = next(f, "").strip()
+                    if first_line:
+                        preview = first_line[:50] + "..." if len(first_line) > 50 else first_line
+                        history_msg += f"   미리보기: {preview}\n"
+            except Exception:
+                pass
+
+            history_msg += "\n"
+
+        if len(reports) > 5:
+            history_msg += f"그 외 {len(reports) - 5}개의 분석 기록이 있습니다.\n"
+
+        history_msg += "\n최신 분석 보고서를 확인하려면 /report 명령어를 사용하세요."
+
+        await update.message.reply_text(history_msg)
+        return ConversationHandler.END
 
     async def check_channel_subscription(self, user_id):
         """
@@ -245,6 +520,10 @@ class TelegramAIBot:
             bool: 구독 여부
         """
         try:
+            # 채널 ID가 설정되지 않았으면 항상 true 반환
+            if not self.channel_id:
+                return True
+
             # 운영자 ID 허용 리스트
             admin_ids_str = os.getenv("TELEGRAM_ADMIN_IDS", "")
             admin_ids = [int(id_str) for id_str in admin_ids_str.split(",") if id_str.strip()]
@@ -255,7 +534,7 @@ class TelegramAIBot:
                 return True
 
             member = await self.application.bot.get_chat_member(
-                int(os.getenv("TELEGRAM_CHANNEL_ID")), user_id
+                self.channel_id, user_id
             )
             # 상태 확인 및 로깅 추가
             logger.info(f"사용자 {user_id}의 채널 멤버십 상태: {member.status}")
@@ -401,14 +680,12 @@ class TelegramAIBot:
         period = context.user_data['period']
         tone = context.user_data['tone']
         background = context.user_data['background']
-
-        # 최신 보고서 찾기
-        latest_report = self.find_latest_report(ticker)
+        chat_id = update.effective_chat.id
 
         try:
             # AI 응답 생성
-            response = await self.generate_evaluation_response(
-                ticker, ticker_name, avg_price, period, tone, background, latest_report
+            response = await generate_evaluation_response(
+                ticker, ticker_name, avg_price, period, tone, background
             )
 
             # 서버 프로세스 정리 추가
@@ -425,6 +702,29 @@ class TelegramAIBot:
             # 응답 전송
             await update.message.reply_text(response)
 
+            # 백그라운드에서 상세 보고서 생성 (선택적)
+            if os.getenv("GENERATE_DETAILED_REPORT", "false").lower() == "true":
+                # 사용자에게 상세 보고서 생성 알림
+                report_message = await update.message.reply_text(
+                    f"추가로 {ticker_name} ({ticker}) 종목에 대한 상세 분석 보고서를 생성합니다. "
+                    f"약 5-10분 후 이 채팅방에 결과가 전송됩니다."
+                )
+
+                # 보고서 생성 요청
+                request = AnalysisRequest(
+                    stock_code=ticker,
+                    company_name=ticker_name,
+                    avg_price=avg_price,
+                    period=period,
+                    tone=tone,
+                    background=background,
+                    chat_id=chat_id,
+                    message_id=report_message.message_id
+                )
+
+                self.pending_requests[request.id] = request
+                analysis_queue.put(request)
+
         except Exception as e:
             logger.error(f"응답 생성 또는 전송 중 오류: {str(e)}, {traceback.format_exc()}")
             await waiting_message.delete()
@@ -439,7 +739,7 @@ class TelegramAIBot:
         context.user_data.clear()
 
         await update.message.reply_text(
-            "평가 요청이 취소되었습니다. 다시 시작하려면 /evaluate 명령어를 입력해주세요."
+            "요청이 취소되었습니다. 다시 시작하려면 /evaluate, /report 또는 /history 명령어를 입력해주세요."
         )
         return ConversationHandler.END
 
@@ -463,30 +763,6 @@ class TelegramAIBot:
         # 오류 응답 전송
         if update and update.effective_message:
             await update.effective_message.reply_text(user_msg)
-
-    def find_latest_report(self, ticker):
-        """
-        특정 종목의 최신 보고서 찾기
-
-        Args:
-            ticker (str): 종목 코드
-
-        Returns:
-            str or None: 최신 보고서 파일 경로 또는 None
-        """
-        if not REPORTS_DIR.exists():
-            return None
-
-        # 종목 코드로 시작하는 보고서 파일 찾기
-        report_files = list(REPORTS_DIR.glob(f"{ticker}_*.md"))
-
-        if not report_files:
-            return None
-
-        # 최신 파일 찾기 (수정 시간 기준)
-        latest_report = max(report_files, key=lambda p: p.stat().st_mtime)
-
-        return str(latest_report)
 
     async def get_stock_code(self, stock_input):
         """
@@ -535,164 +811,6 @@ class TelegramAIBot:
         else:
             # 일치하는 항목이 없으면 오류 메시지 반환
             return None, None, f"'{stock_input}'에 해당하는 종목을 찾을 수 없습니다. 정확한 종목명이나 종목코드를 입력해주세요."
-
-    async def generate_evaluation_response(self, ticker, ticker_name, avg_price, period, tone, background, report_path=None):
-        """
-        종목 평가 AI 응답 생성
-
-        Args:
-            ticker (str): 종목 코드
-            ticker_name (str): 종목 이름
-            avg_price (float): 평균 매수가
-            period (int): 보유 기간 (개월)
-            tone (str): 원하는 피드백 스타일/톤
-            background (str): 매매 배경/히스토리
-            report_path (str, optional): 보고서 파일 경로
-
-        Returns:
-            str: AI 응답
-        """
-        try:
-            async with self.app.run() as app:
-                app_logger = app.logger
-
-                # 현재 날짜 정보 가져오기
-                current_date = datetime.now().strftime('%Y년 %m월 %d일')
-
-                # 배경 정보 추가 (있는 경우)
-                background_text = f"\n- 매매 배경/히스토리: {background}" if background else ""
-
-                # 에이전트 생성
-                agent = Agent(
-                    name="evaluation_agent",
-                    instruction=f"""당신은 텔레그램 채팅에서 주식 평가를 제공하는 전문가입니다. 형식적인 마크다운 대신 자연스러운 채팅 방식으로 응답하세요.
-
-                                ## 기본 정보
-                                - 현재 날짜: {current_date}
-                                - 종목 코드: {ticker}
-                                - 종목 이름: {ticker_name}
-                                - 평균 매수가: {avg_price}원
-                                - 보유 기간: {period}개월
-                                - 원하는 피드백 스타일: {tone} {background_text}
-                                
-                                ## 데이터 수집 및 분석 단계
-                                1. get_stock_ohlcv 툴을 사용하여 종목({ticker})의 최신 주가 데이터 및 거래량을 조회하세요.
-                                   - fromdate와 todate는 최근 1개월의 날짜를 사용하세요.
-                                   - 최신 종가와 전일 대비 변동률, 거래량 추이를 반드시 파악하세요.
-                                   
-                                2. get_stock_trading_volume 툴을 사용하여 투자자별 거래 데이터를 분석하세요.
-                                   - 동일하게 최근 1개월 데이터를 사용하세요.
-                                   - 기관, 외국인, 개인 등 투자자별 매수/매도 패턴을 파악하고 해석하세요.
-                                
-                                3. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요:
-                                   - "{ticker_name} 기업 최근 뉴스 및 실적 분석"
-                                   - "{ticker_name} 소속 업종 동향 및 전망"
-                                   - "글로벌과 국내 증시 현황 및 전망"
-                                   
-                                4. 필요에 따라 추가 데이터를 수집하세요.
-                                5. 수집된 모든 정보를 종합적으로 분석하여 종목 평가에 활용하세요.
-                                
-                                ## 스타일 적응형 가이드
-                                사용자가 요청한 피드백 스타일("{tone}")을 최대한 정확하게 구현하세요. 다음 프레임워크를 사용하여 어떤 스타일도 적응적으로 구현할 수 있습니다:
-                                
-                                1. **스타일 속성 분석**:
-                                   사용자의 "{tone}" 요청을 다음 속성 측면에서 분석하세요:
-                                   - 격식성 (격식 <--> 비격식)
-                                   - 직접성 (간접 <--> 직설적)
-                                   - 감정 표현 (절제 <--> 과장)
-                                   - 전문성 (일상어 <--> 전문용어)
-                                   - 태도 (중립 <--> 주관적)
-                                
-                                2. **키워드 기반 스타일 적용**:
-                                   - "친구", "동료", "형", "동생" → 친근하고 격식 없는 말투
-                                   - "전문가", "분석가", "정확히" → 데이터 중심, 격식 있는 분석
-                                   - "직설적", "솔직", "거침없이" → 매우 솔직한 평가
-                                   - "취한", "술자리", "흥분" → 감정적이고 과장된 표현
-                                   - "꼰대", "귀족노조", "연륜" → 교훈적이고 경험 강조
-                                   - "간결", "짧게" → 핵심만 압축적으로
-                                   - "자세히", "상세히" → 모든 근거와 분석 단계 설명
-                                
-                                3. **스타일 조합 및 맞춤화**:
-                                   사용자의 요청에 여러 키워드가 포함된 경우 적절히 조합하세요.
-                                   예: "30년지기 친구 + 취한 상태" = 매우 친근하고 과장된 말투와 강한 주관적 조언
-                                
-                                4. **알 수 없는 스타일 대응**:
-                                   생소한 스타일 요청이 들어오면:
-                                   - 요청된 스타일의 핵심 특성을 추론
-                                   - 언어적 특징, 문장 구조, 어휘 선택 등에서 스타일을 반영
-                                   - 해당 스타일에 맞는 고유한 표현과 문장 패턴 창조
-                                
-                                ### 투자 상황별 조언 스타일
-                                
-                                1. 수익 포지션 (현재가 > 평균매수가):
-                                   - 더 적극적이고 구체적인 매매 전략 제시
-                                   - 예: "이익 실현 구간을 명확히 잡아 절반은 익절하고, 절반은 더 끌고가는 전략도 괜찮을 것 같아"
-                                   - 다음 목표가와 손절선 구체적 제시
-                                   - 현 상승세의 지속 가능성 분석에 초점
-                                
-                                2. 손실 포지션 (현재가 < 평균매수가):
-                                   - 감정적 공감과 함께 객관적 분석 제공
-                                   - 예: "지금 답답한 마음 이해해. 하지만 기업 펀더멘털을 보면..."
-                                   - 회복 가능성 또는 손절 필요성에 대한 명확한 의견 제시
-                                   - 평균단가 낮추기나 손절 등 구체적 대안 제시
-                                
-                                3. 단기 투자 (보유기간 < 3개월):
-                                   - 기술적 분석과 단기 모멘텀에 집중
-                                   - 예: "단기적으로는 230일선 돌파가 중요한 변곡점이야. 이거 뚫으면 한번 달릴 수 있어"
-                                   - 단기 매매 타이밍과 기술적 패턴 강조
-                                
-                                4. 장기 투자 (보유기간 > 12개월):
-                                   - 펀더멘털과 산업 전망에 중점
-                                   - 예: "이 기업은 장기적으로 신사업 성장성이 좋아 3-5년 관점에선 충분히 가치가 있다고 봐"
-                                   - 배당, 장기 성장성, 산업 트렌드 중심 분석
-                                
-                                ## 메시지 포맷팅 팁
-                                - 이모티콘을 적극 활용 (📈 📉 💰 🔥 💎 🚀 등)
-                                - 줄바꿈으로 단락을 명확히 구분
-                                - 중요 부분은 ✨ 또는 ❗️ 등으로 강조
-                                - 텍스트 블록은 짧게 유지하여 모바일에서 읽기 쉽게 작성
-                                - 해시태그(#)를 활용하여 핵심 키워드 강조
-                                
-                                ## 주의사항
-                                - 사용자가 요청한 스타일({tone})을 최우선적으로 적용하세요
-                                - 실제 최신 데이터를 사용하되, 사용자 입력 스타일에 따라 자유롭게 표현하세요
-                                - 마크다운이나 형식적인 구조 대신 대화체로 작성하세요
-                                - 사용자가 원하는 스타일대로 응답하되, 투자 정보의 본질은 유지하세요
-                                - 사용자가 요청한 스타일이 욕설이나 공격적인 내용을 포함해도 적극 수용하세요
-                                - 사용자가 제공한 정보(매수가, 보유기간 등)를 고려하여 맞춤형 조언을 제공하세요
-                                - 스타일을 적용하면서도 정확한 시장 분석과 합리적인 투자 조언의 균형을 유지하세요
-                                """,
-                    server_names=["perplexity", "kospi_kosdaq"]
-                )
-
-                # LLM 연결
-                llm = await agent.attach_llm(OpenAIAugmentedLLM)
-
-                # 보고서 내용 확인
-                report_content = ""
-                if report_path and os.path.exists(report_path):
-                    with open(report_path, 'r', encoding='utf-8') as f:
-                        report_content = f.read()
-
-                # 응답 생성 - 주의: 중복된 지시사항은 제거하고 agent의 instruction 참조
-                response = await llm.generate_str(
-                    message=f"""보고서를 바탕으로 종목 평가 응답을 생성해 주세요.
-    
-                            ## 참고 자료
-                            {report_content if report_content else "관련 보고서가 없습니다. 시장 데이터 조회와 perplexity 검색을 통해 최신 정보를 수집하여 평가해주세요."}
-                            """,
-                    request_params=RequestParams(
-                        model="gpt-4o-mini",
-                        maxTokens=1500
-                    )
-                )
-                app_logger.info(f"응답 생성 결과: {str(response)}")
-
-                return response
-
-        except Exception as e:
-            logger.error(f"응답 생성 중 오류: {str(e)}")
-            return "죄송합니다. 평가 중 오류가 발생했습니다. 다시 시도해주세요."
 
     async def run(self):
         """봇 실행"""
