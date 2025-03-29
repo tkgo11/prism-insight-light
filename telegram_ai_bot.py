@@ -75,6 +75,11 @@ class TelegramAIBot:
         if not self.token:
             raise ValueError("텔레그램 봇 토큰이 설정되지 않았습니다.")
 
+        # HTML 보고서 디렉토리 명시적 생성
+        if not HTML_REPORTS_DIR.exists():
+            HTML_REPORTS_DIR.mkdir(exist_ok=True)
+            logger.info(f"HTML 보고서 디렉토리 생성: {HTML_REPORTS_DIR}")
+
         # 채널 ID 확인
         self.channel_id = int(os.getenv("TELEGRAM_CHANNEL_ID", "0"))
         if not self.channel_id:
@@ -818,20 +823,30 @@ class TelegramAIBot:
 
     async def process_results(self):
         """결과 큐에서 처리할 항목 확인"""
+        logger.info("결과 처리 태스크 시작")
         while not self.stop_event.is_set():
-            while not self.result_queue.empty():
-                request_id = self.result_queue.get()
-                if request_id in self.pending_requests:
-                    request = self.pending_requests[request_id]
-                    try:
+            try:
+                while not self.result_queue.empty():
+                    request_id = self.result_queue.get()
+                    logger.info(f"결과 큐에서 항목 가져옴: {request_id}")
+
+                    if request_id in self.pending_requests:
+                        request = self.pending_requests[request_id]
                         # 결과 전송 (메인 이벤트 루프에서 실행되므로 안전)
                         await self.send_report_result(request)
-                    except Exception as e:
-                        logger.error(f"결과 처리 중 오류: {str(e)}")
-                        logger.error(traceback.format_exc())
-                    finally:
-                        # 큐 작업 완료 표시
-                        self.result_queue.task_done()
+                        logger.info(f"결과 전송 완료: {request.id} ({request.company_name})")
+                    else:
+                        logger.warning(f"요청 ID가 pending_requests에 없음: {request_id}")
+
+                    # 큐 작업 완료 표시
+                    self.result_queue.task_done()
+
+                # 로그 감소를 위해 일정 시간마다만 로깅
+                if datetime.now().second % 30 == 0:  # 30초마다 한 번씩 로깅
+                    logger.debug("결과 처리 태스크 실행 중...")
+            except Exception as e:
+                logger.error(f"결과 처리 중 오류: {str(e)}")
+                logger.error(traceback.format_exc())
 
             # 잠시 대기
             await asyncio.sleep(1)
@@ -863,19 +878,6 @@ class TelegramAIBot:
             self.cleanup_server_processes()
 
             logger.info("텔레그램 AI 대화형 봇이 종료되었습니다.")
-
-async def process_results(self):
-    """결과 큐에서 처리할 항목 확인"""
-    while not self.stop_event.is_set():
-        while not self.result_queue.empty():
-            request_id = self.result_queue.get()
-            if request_id in self.pending_requests:
-                request = self.pending_requests[request_id]
-                # 결과 전송 (메인 이벤트 루프에서 실행되므로 안전)
-                await self.send_report_result(request)
-
-        # 잠시 대기
-        await asyncio.sleep(1)
 
 async def shutdown(sig, loop, *args):
     """Cleanup tasks tied to the service's shutdown."""
