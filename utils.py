@@ -28,15 +28,6 @@ def clean_markdown(text: str) -> str:
     return text
 
 
-def cleanup_webresearch_processes():
-    """mcp-server-webresearch 프로세스 정리"""
-    try:
-        subprocess.run(["pkill", "-f", "mcp-server-webresearch"], check=False)
-        print("mcp-server-webresearch 프로세스 정리 완료")
-    except Exception as e:
-        print(f"프로세스 정리 중 오류 발생: {str(e)}")
-
-
 def get_wise_report_url(report_type: str, company_code: str) -> str:
     """WiseReport URL 생성"""
     return WISE_REPORT_BASE + URLS[report_type].format(company_code)

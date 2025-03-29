@@ -1,9 +1,9 @@
-import asyncio
 import os
 from datetime import datetime, timedelta
 
 from mcp_agent.app import MCPApp
-from utils import cleanup_webresearch_processes, clean_markdown, get_wise_report_url
+
+from agents import get_agent_directory
 from report_generation import generate_report, generate_summary, generate_investment_strategy, get_disclaimer
 from stock_chart import (
     create_price_chart,
@@ -12,7 +12,7 @@ from stock_chart import (
     create_fundamentals_chart,
     get_chart_as_base64_html
 )
-from agents import get_agent_directory
+from utils import clean_markdown
 
 
 async def analyze_stock(company_code: str = "000660", company_name: str = "SK하이닉스", reference_date: str = None):
@@ -29,7 +29,6 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
     """
     # 1. 초기 설정 및 전처리
     app = MCPApp(name="stock_analysis")
-    cleanup_webresearch_processes()  # 실행 전 기존 webresearch 프로세스 정리
 
     # reference_date가 없으면 오늘 날짜를 사용
     if reference_date is None:

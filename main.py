@@ -5,13 +5,9 @@ import os
 import signal
 from datetime import datetime
 
-from utils import cleanup_webresearch_processes
 from analysis import analyze_stock
 
 if __name__ == "__main__":
-    # 실행 전 기존 프로세스 정리
-    cleanup_webresearch_processes()
-
     # 60분 후에 프로세스를 종료하는 타이머 함수
     def exit_after_timeout():
         time.sleep(3600)  # 60분 대기
@@ -30,9 +26,6 @@ if __name__ == "__main__":
     # 결과 저장
     with open(f"현대차_분석보고서_{datetime.now().strftime('%Y%m%d')}_gpt4o.md", "w", encoding="utf-8") as f:
         f.write(result)
-
-    # 실행 후 정리
-    cleanup_webresearch_processes()
 
     end = time.time()
     print(f"총 실행 시간: {end - start:.2f}초")
