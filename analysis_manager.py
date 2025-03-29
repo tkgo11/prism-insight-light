@@ -7,7 +7,6 @@ import traceback
 import uuid
 from datetime import datetime
 from queue import Queue
-from threading import Thread
 
 from report_generator import (
     generate_evaluation_response, generate_report_response,
@@ -42,8 +41,8 @@ class AnalysisRequest:
         self.message_id = message_id  # 상태 업데이트를 위한 메시지 ID
 
 
+# analysis_manager.py에서 수정
 def start_background_worker(bot_instance):
-    """백그라운드 작업자 시작"""
     def worker():
         while True:
             try:
@@ -53,21 +52,62 @@ def start_background_worker(bot_instance):
                 # 요청 상태 업데이트
                 bot_instance.pending_requests[request.id] = request
 
-                # 분석 수행
-                asyncio.run(process_analysis_request(bot_instance, request))
+                # 메시지 업데이트 없이 분석만 수행
+                report_result = asyncio.run(perform_analysis_only(request))
 
-                # 작업 완료 표시
-                analysis_queue.task_done()
+                # 결과 저장
+                if report_result:
+                    request.result = report_result
+                    request.status = "completed"
+
+                    # 파일 저장 (이는 비동기 작업이 아니므로 괜찮음)
+                    md_path = save_report(
+                        request.stock_code, request.company_name, report_result
+                    )
+                    request.report_path = md_path
+
+                    html_path = save_html_report(
+                        request.stock_code, request.company_name, report_result
+                    )
+                    request.html_path = html_path
+                else:
+                    request.status = "failed"
+
+                # 결과 처리를 위한 큐에 추가
+                bot_instance.result_queue.put(request.id)
 
             except Exception as e:
                 logger.error(f"작업자: 요청 처리 중 오류 발생 - {str(e)}")
                 logger.error(traceback.format_exc())
+            finally:
+                analysis_queue.task_done()
 
-    # 워커 스레드 시작 (3개의 동시 작업자)
-    for i in range(3):
-        Thread(target=worker, daemon=True, name=f"AnalysisWorker-{i}").start()
-        logger.info(f"작업자 스레드 {i} 시작됨")
+async def perform_analysis_only(request: AnalysisRequest):
+    """분석만 수행하고 텔레그램 통신은 하지 않는 함수"""
+    try:
+        # 캐시된 보고서 확인
+        is_cached, cached_content, _, _ = get_cached_report(request.stock_code)
 
+        if is_cached:
+            return cached_content
+
+        # 보고서 생성
+        if request.avg_price and request.period:  # evaluate 명령의 경우
+            response = await generate_evaluation_response(
+                request.stock_code, request.company_name,
+                request.avg_price, request.period,
+                request.tone, request.background
+            )
+        else:  # report 명령의 경우
+            response = await generate_report_response(
+                request.stock_code, request.company_name
+            )
+
+        return response
+    except Exception as e:
+        logger.error(f"분석 처리 중 오류: {str(e)}")
+        logger.error(traceback.format_exc())
+        return None
 
 async def process_analysis_request(bot_instance, request: AnalysisRequest):
     """분석 요청 처리"""

@@ -17,6 +17,7 @@ import signal
 import traceback
 from datetime import datetime
 from pathlib import Path
+from queue import Queue
 
 from dotenv import load_dotenv
 from telegram import Update, InputFile
@@ -88,6 +89,9 @@ class TelegramAIBot:
 
         # 진행 중인 분석 요청 관리
         self.pending_requests = {}
+
+        # 결과 처리 큐 추가
+        self.result_queue = Queue()
 
         # 봇 어플리케이션 생성
         self.application = Application.builder().token(self.token).build()
@@ -812,12 +816,35 @@ class TelegramAIBot:
             # 일치하는 항목이 없으면 오류 메시지 반환
             return None, None, f"'{stock_input}'에 해당하는 종목을 찾을 수 없습니다. 정확한 종목명이나 종목코드를 입력해주세요."
 
+    async def process_results(self):
+        """결과 큐에서 처리할 항목 확인"""
+        while not self.stop_event.is_set():
+            while not self.result_queue.empty():
+                request_id = self.result_queue.get()
+                if request_id in self.pending_requests:
+                    request = self.pending_requests[request_id]
+                    try:
+                        # 결과 전송 (메인 이벤트 루프에서 실행되므로 안전)
+                        await self.send_report_result(request)
+                    except Exception as e:
+                        logger.error(f"결과 처리 중 오류: {str(e)}")
+                        logger.error(traceback.format_exc())
+                    finally:
+                        # 큐 작업 완료 표시
+                        self.result_queue.task_done()
+
+            # 잠시 대기
+            await asyncio.sleep(1)
+
     async def run(self):
         """봇 실행"""
         # 봇 실행
         await self.application.initialize()
         await self.application.start()
         await self.application.updater.start_polling()
+
+        # 결과 처리를 위한 작업 추가
+        asyncio.create_task(self.process_results())
 
         logger.info("텔레그램 AI 대화형 봇이 시작되었습니다.")
 
@@ -837,6 +864,18 @@ class TelegramAIBot:
 
             logger.info("텔레그램 AI 대화형 봇이 종료되었습니다.")
 
+async def process_results(self):
+    """결과 큐에서 처리할 항목 확인"""
+    while not self.stop_event.is_set():
+        while not self.result_queue.empty():
+            request_id = self.result_queue.get()
+            if request_id in self.pending_requests:
+                request = self.pending_requests[request_id]
+                # 결과 전송 (메인 이벤트 루프에서 실행되므로 안전)
+                await self.send_report_result(request)
+
+        # 잠시 대기
+        await asyncio.sleep(1)
 
 async def shutdown(sig, loop, *args):
     """Cleanup tasks tied to the service's shutdown."""
