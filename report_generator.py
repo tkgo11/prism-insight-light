@@ -184,9 +184,15 @@ async def run():
             company_name="{company_name}", 
             reference_date="{reference_date}"
         )
+        # 구분자를 사용하여 결과 출력의 시작과 끝을 표시
+        print("RESULT_START")
         print(json.dumps({{"success": True, "result": result}}))
+        print("RESULT_END")
     except Exception as e:
+        # 구분자를 사용하여 에러 출력의 시작과 끝을 표시
+        print("RESULT_START")
         print(json.dumps({{"success": False, "error": str(e)}}))
+        print("RESULT_END")
 
 if __name__ == "__main__":
     asyncio.run(run())
@@ -196,19 +202,39 @@ if __name__ == "__main__":
         logger.info(f"외부 프로세스 실행: {stock_code}")
         process = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # 10분 타임아웃
 
-        # 출력 파싱
+        # 출력 초기화 - 경고 방지를 위해 변수 미리 선언
+        output = ""
+
+        # 출력 파싱 - 구분자를 사용하여 실제 JSON 출력 부분만 추출
         try:
-            output = json.loads(process.stdout.strip())
-            if output.get('success', False):
-                result = output.get('result', '')
-                logger.info(f"외부 프로세스 결과: {len(result)} 글자")
-                return result
+            output = process.stdout
+            # 로그 출력에서 RESULT_START와 RESULT_END 사이의 JSON 데이터만 추출
+            if "RESULT_START" in output and "RESULT_END" in output:
+                result_start = output.find("RESULT_START") + len("RESULT_START")
+                result_end = output.find("RESULT_END")
+                json_str = output[result_start:result_end].strip()
+
+                # JSON 파싱
+                parsed_output = json.loads(json_str)
+
+                if parsed_output.get('success', False):
+                    result = parsed_output.get('result', '')
+                    logger.info(f"외부 프로세스 결과: {len(result)} 글자")
+                    return result
+                else:
+                    error = parsed_output.get('error', '알 수 없는 오류')
+                    logger.error(f"외부 프로세스 오류: {error}")
+                    return f"분석 중 오류가 발생했습니다: {error}"
             else:
-                error = output.get('error', '알 수 없는 오류')
-                logger.error(f"외부 프로세스 오류: {error}")
-                return f"분석 중 오류가 발생했습니다: {error}"
-        except json.JSONDecodeError:
-            logger.error(f"외부 프로세스 출력 파싱 실패: {process.stdout[:500]}")
+                # 구분자를 찾을 수 없는 경우 - 프로세스 실행 자체에 문제가 있을 수 있음
+                logger.error(f"외부 프로세스 출력에서 결과 구분자를 찾을 수 없습니다: {output[:500]}")
+                # stderr에 에러 로그가 있는지 확인
+                if process.stderr:
+                    logger.error(f"외부 프로세스 에러 출력: {process.stderr[:500]}")
+                return f"분석 결과를 찾을 수 없습니다. 로그를 확인하세요."
+        except json.JSONDecodeError as e:
+            logger.error(f"외부 프로세스 출력 파싱 실패: {e}")
+            logger.error(f"출력 내용: {output[:1000]}")
             return f"분석 결과 파싱 중 오류가 발생했습니다. 로그를 확인하세요."
 
     except subprocess.TimeoutExpired:
