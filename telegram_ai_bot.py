@@ -349,7 +349,7 @@ class TelegramAIBot:
             "<b>상세 분석 보고서 요청:</b>\n"
             "1. /report 명령어 입력\n"
             "2. 종목 코드 또는 이름 입력\n"
-            "3. 5-10분 후 HTML 형식의 상세 보고서가 제공됩니다\n\n"
+            "3. 5-10분 후 HTML 형식의 상세 보고서가 제공됩니다(요청이 많을 경우 더 길어짐)\n\n"
             "<b>주의:</b>\n"
             "이 봇은 채널 구독자만 사용할 수 있습니다.",
             parse_mode="HTML"
@@ -400,8 +400,10 @@ class TelegramAIBot:
 
         # 대기 메시지 전송
         waiting_message = await update.message.reply_text(
-            f"📊 {stock_name} ({stock_code}) 분석 보고서 생성을 시작합니다.\n\n"
-            f"상세 분석에는 5-10분 정도 소요됩니다. 분석이 완료되면 이 채팅방으로 결과가 전송됩니다."
+            f"📊 {stock_name} ({stock_code}) 분석 보고서 생성 요청이 등록되었습니다.\n\n"
+            f"요청은 도착 순서대로 처리되며, 한 건당 분석에 약 5-10분이 소요됩니다.\n\n"
+            f"다른 사용자의 요청이 많을 경우 대기 시간이 길어질 수 있습니다.\n\n "
+            f"완료되면 바로 알려드리겠습니다."
         )
 
         # 분석 요청 생성 및 큐에 추가
@@ -717,29 +719,6 @@ class TelegramAIBot:
 
             # 응답 전송
             await update.message.reply_text(response)
-
-            # 백그라운드에서 상세 보고서 생성 (선택적)
-            if os.getenv("GENERATE_DETAILED_REPORT", "false").lower() == "true":
-                # 사용자에게 상세 보고서 생성 알림
-                report_message = await update.message.reply_text(
-                    f"추가로 {ticker_name} ({ticker}) 종목에 대한 상세 분석 보고서를 생성합니다. "
-                    f"약 5-10분 후 이 채팅방에 결과가 전송됩니다."
-                )
-
-                # 보고서 생성 요청
-                request = AnalysisRequest(
-                    stock_code=ticker,
-                    company_name=ticker_name,
-                    avg_price=avg_price,
-                    period=period,
-                    tone=tone,
-                    background=background,
-                    chat_id=chat_id,
-                    message_id=report_message.message_id
-                )
-
-                self.pending_requests[request.id] = request
-                analysis_queue.put(request)
 
         except Exception as e:
             logger.error(f"응답 생성 또는 전송 중 오류: {str(e)}, {traceback.format_exc()}")
