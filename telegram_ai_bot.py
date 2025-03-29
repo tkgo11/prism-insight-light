@@ -275,7 +275,8 @@ class TelegramAIBot:
                 text=f"⚠️ {request.company_name} ({request.stock_code}) 분석 결과 전송 중 오류가 발생했습니다."
             )
 
-    def cleanup_server_processes(self):
+    @staticmethod
+    def cleanup_server_processes():
         """이전에 실행된 kospi_kosdaq 서버 프로세스 정리"""
         try:
             import subprocess
@@ -300,7 +301,8 @@ class TelegramAIBot:
         except Exception as e:
             logger.error(f"서버 프로세스 정리 중 오류: {str(e)}")
 
-    async def handle_default_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    @staticmethod
+    async def handle_default_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """일반 메시지는 /help 또는 /start 안내"""
         # update.message이 None인지 확인
         if update.message is None:
@@ -309,7 +311,8 @@ class TelegramAIBot:
 
         return
 
-    async def handle_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    @staticmethod
+    async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """시작 명령어 처리"""
         user = update.effective_user
         await update.message.reply_text(
@@ -324,7 +327,8 @@ class TelegramAIBot:
             "다음 링크를 구독한 후 봇을 사용해주세요: https://t.me/stock_ai_agent"
         )
 
-    async def handle_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    @staticmethod
+    async def handle_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """도움말 명령어 처리"""
         await update.message.reply_text(
             "📊 <b>프리즘 어드바이저 봇 도움말</b> 📊\n\n"
@@ -622,7 +626,8 @@ class TelegramAIBot:
         logger.info(f"상태 전환: ENTERING_AVGPRICE - 사용자: {user_id}")
         return ENTERING_AVGPRICE
 
-    async def handle_avgprice_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    @staticmethod
+    async def handle_avgprice_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """평균 매수가 입력 처리"""
         try:
             avg_price = float(update.message.text.strip().replace(',', ''))
@@ -641,7 +646,8 @@ class TelegramAIBot:
             )
             return ENTERING_AVGPRICE
 
-    async def handle_period_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    @staticmethod
+    async def handle_period_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """보유 기간 입력 처리"""
         try:
             period = int(update.message.text.strip())
@@ -661,7 +667,8 @@ class TelegramAIBot:
             )
             return ENTERING_PERIOD
 
-    async def handle_tone_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    @staticmethod
+    async def handle_tone_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """원하는 피드백 스타일/톤 입력 처리"""
         tone = update.message.text.strip()
         context.user_data['tone'] = tone
@@ -742,7 +749,8 @@ class TelegramAIBot:
         # 대화 종료
         return ConversationHandler.END
 
-    async def handle_cancel(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    @staticmethod
+    async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """대화 취소 처리"""
         # 사용자 데이터 초기화
         context.user_data.clear()
@@ -752,7 +760,8 @@ class TelegramAIBot:
         )
         return ConversationHandler.END
 
-    async def handle_error(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    @staticmethod
+    async def handle_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """오류 처리"""
         error_msg = str(context.error)
         logger.error(f"오류 발생: {error_msg}")
@@ -826,7 +835,9 @@ class TelegramAIBot:
         logger.info("결과 처리 태스크 시작")
         while not self.stop_event.is_set():
             try:
-                while not self.result_queue.empty():
+                # 큐가 비어있지 않으면 처리
+                if not self.result_queue.empty():
+                    # 내부 반복 없이 한 번에 하나의 요청만 처리
                     request_id = self.result_queue.get()
                     logger.info(f"결과 큐에서 항목 가져옴: {request_id}")
 
@@ -840,10 +851,10 @@ class TelegramAIBot:
 
                     # 큐 작업 완료 표시
                     self.result_queue.task_done()
-
-                # 로그 감소를 위해 일정 시간마다만 로깅
-                if datetime.now().second % 30 == 0:  # 30초마다 한 번씩 로깅
-                    logger.debug("결과 처리 태스크 실행 중...")
+                
+                # 잠시 대기 (CPU 사용률 감소)
+                await asyncio.sleep(0.5)
+                
             except Exception as e:
                 logger.error(f"결과 처리 중 오류: {str(e)}")
                 logger.error(traceback.format_exc())
@@ -879,7 +890,7 @@ class TelegramAIBot:
 
             logger.info("텔레그램 AI 대화형 봇이 종료되었습니다.")
 
-async def shutdown(sig, loop, *args):
+async def shutdown(sig, loop):
     """Cleanup tasks tied to the service's shutdown."""
     logger.info(f"Received signal {sig.name}, shutting down...")
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]

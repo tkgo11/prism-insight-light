@@ -3,6 +3,9 @@
 """
 import logging
 import os
+import sys
+import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -153,73 +156,69 @@ def save_html_report(stock_code: str, company_name: str, markdown_content: str) 
     return save_html_report_from_content(stock_code, company_name, html_content)
 
 
-from typing import Optional
-
 def generate_report_response_sync(stock_code: str, company_name: str) -> str:
     """
     종목 상세 보고서를 동기 방식으로 생성 (백그라운드 스레드에서 호출됨)
-
-    Args:
-        stock_code (str): 종목 코드
-        company_name (str): 종목 이름
-
-    Returns:
-        str: 분석 보고서 내용
     """
-    import asyncio
-    from datetime import datetime
-
     try:
         logger.info(f"동기식 보고서 생성 시작: {stock_code} ({company_name})")
-
+        
         # 현재 날짜를 YYYYMMDD 형식으로 변환
         reference_date = datetime.now().strftime("%Y%m%d")
+        
+        # 별도의 프로세스로 분석 수행
+        # 이 방법은 새로운 Python 프로세스를 생성하여 분석을 수행하므로 이벤트 루프 충돌 없음
+        cmd = [
+            sys.executable,  # 현재 Python 인터프리터
+            "-c",
+            f"""
+import asyncio
+import json
+import sys
+from analysis import analyze_stock
 
-        # 새로운 이벤트 루프 생성하여 비동기 함수 실행
-        # 이 방법은 비동기 함수를 동기적으로 실행하기 위한 것입니다
-        def run_async_analyze() -> Optional[str]:
-            # 새 이벤트 루프 생성
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+async def run():
+    try:
+        result = await analyze_stock(
+            company_code="{stock_code}", 
+            company_name="{company_name}", 
+            reference_date="{reference_date}"
+        )
+        print(json.dumps({{"success": True, "result": result}}))
+    except Exception as e:
+        print(json.dumps({{"success": False, "error": str(e)}}))
 
-            try:
-                # main.py의 analyze_stock 함수 임포트
-                from main import analyze_stock
-
-                # 비동기 함수 실행
-                return loop.run_until_complete(
-                    analyze_stock(
-                        company_code=stock_code,
-                        company_name=company_name,
-                        reference_date=reference_date
-                    )
-                )
-            except Exception as e:
-                logger.error(f"analyze_stock 함수 실행 중 오류: {str(e)}")
-                return None
-            finally:
-                # 이벤트 루프 닫기
-                loop.close()
-
-        # 비동기 함수 실행
-        logger.info(f"analyze_stock 함수 호출 시작: {stock_code}")
-        report = run_async_analyze()
-
-        # None 또는 빈 문자열 체크
-        if report is None or not isinstance(report, str) or not report.strip():
-            error_msg = f"{company_name} ({stock_code}) 분석 결과가 없거나, 문자열이 아니거나, 비어있습니다."
-            logger.warning(error_msg)
-            return error_msg
-
-        logger.info(f"analyze_stock 결과: {len(report)} 글자")
-        return report
-
+if __name__ == "__main__":
+    asyncio.run(run())
+            """
+        ]
+        
+        logger.info(f"외부 프로세스 실행: {stock_code}")
+        process = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # 10분 타임아웃
+        
+        # 출력 파싱
+        try:
+            output = json.loads(process.stdout.strip())
+            if output.get('success', False):
+                result = output.get('result', '')
+                logger.info(f"외부 프로세스 결과: {len(result)} 글자")
+                return result
+            else:
+                error = output.get('error', '알 수 없는 오류')
+                logger.error(f"외부 프로세스 오류: {error}")
+                return f"분석 중 오류가 발생했습니다: {error}"
+        except json.JSONDecodeError:
+            logger.error(f"외부 프로세스 출력 파싱 실패: {process.stdout[:500]}")
+            return f"분석 결과 파싱 중 오류가 발생했습니다. 로그를 확인하세요."
+            
+    except subprocess.TimeoutExpired:
+        logger.error(f"외부 프로세스 타임아웃: {stock_code}")
+        return f"분석 시간이 초과되었습니다. 다시 시도해주세요."
     except Exception as e:
         logger.error(f"동기식 보고서 생성 중 오류: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
-        error_message = f"보고서 생성 중 오류가 발생했습니다: {str(e)}"
-        return error_message
+        return f"보고서 생성 중 오류가 발생했습니다: {str(e)}"
 
 
 async def generate_evaluation_response(ticker, ticker_name, avg_price, period, tone, background, report_path=None):
@@ -384,3 +383,69 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
         import traceback
         logger.error(traceback.format_exc())
         return "죄송합니다. 평가 중 오류가 발생했습니다. 다시 시도해주세요."
+
+
+async def generate_report_response(stock_code: str, company_name: str) -> str:
+    """
+    종목 상세 보고서 생성 (main.py의 analyze_stock 함수 사용)
+
+    Args:
+        stock_code (str): 종목 코드
+        company_name (str): 종목 이름
+
+    Returns:
+        str: 분석 보고서 내용
+    """
+    try:
+        # 현재 날짜를 YYYYMMDD 형식으로 변환
+        reference_date = datetime.now().strftime("%Y%m%d")
+
+        # 별도 프로세스로 분석 수행 (이벤트 루프 충돌 방지)
+        cmd = [
+            sys.executable,  # 현재 Python 인터프리터
+            "-c",
+            f"""
+import asyncio
+import json
+import sys
+from analysis import analyze_stock
+
+async def run():
+    try:
+        result = await analyze_stock(
+            company_code="{stock_code}", 
+            company_name="{company_name}", 
+            reference_date="{reference_date}"
+        )
+        print(json.dumps({{"success": True, "result": result}}))
+    except Exception as e:
+        print(json.dumps({{"success": False, "error": str(e)}}))
+
+if __name__ == "__main__":
+    asyncio.run(run())
+            """
+        ]
+        
+        logger.info(f"외부 프로세스 실행 (비동기): {stock_code}")
+        process = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # 10분 타임아웃
+        
+        # 출력 파싱
+        try:
+            output = json.loads(process.stdout.strip())
+            if output.get('success', False):
+                result = output.get('result', '')
+                logger.info(f"외부 프로세스 결과 (비동기): {len(result)} 글자")
+                return result
+            else:
+                error = output.get('error', '알 수 없는 오류')
+                logger.error(f"외부 프로세스 오류 (비동기): {error}")
+                return f"분석 중 오류가 발생했습니다: {error}"
+        except json.JSONDecodeError:
+            logger.error(f"외부 프로세스 출력 파싱 실패 (비동기): {process.stdout[:500]}")
+            return f"분석 결과 파싱 중 오류가 발생했습니다. 로그를 확인하세요."
+
+    except Exception as e:
+        logger.error(f"analyze_stock 호출 중 오류: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return f"보고서 생성 중 오류가 발생했습니다: {str(e)}"
