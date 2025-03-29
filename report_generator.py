@@ -166,88 +166,35 @@ def generate_report_response_sync(stock_code: str, company_name: str) -> str:
         # 현재 날짜를 YYYYMMDD 형식으로 변환
         reference_date = datetime.now().strftime("%Y%m%d")
 
-        # 로그 파일 경로 설정 - 경고 해결을 위해 수정
-        log_file = None
-
-        # logging.handlers 모듈 명시적 임포트
-        from logging.handlers import RotatingFileHandler
-
-        for handler in logging.getLogger().handlers:
-            # getattr 사용으로 안전하게 속성 접근
-            if isinstance(handler, logging.FileHandler):
-                log_file = getattr(handler, 'baseFilename', None)
-                if log_file:
-                    break
-            # RotatingFileHandler 명시적 체크
-            elif isinstance(handler, RotatingFileHandler):
-                log_file = getattr(handler, 'baseFilename', None)
-                if log_file:
-                    break
-
-        log_config = ""
-        if log_file:
-            log_config = f"""
-import logging
-from logging.handlers import RotatingFileHandler
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - [SUBPROCESS] - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        RotatingFileHandler(
-            "{log_file}",
-            maxBytes=10*1024*1024,
-            backupCount=5
-        )
-    ]
-)
-logger = logging.getLogger()
-            """
-
-        # 외부 프로세스 코드 스크립트 생성 - 중괄호 이스케이프 처리
-        script = f"""
-{log_config}
+        # 별도의 프로세스로 분석 수행
+        # 이 방법은 새로운 Python 프로세스를 생성하여 분석을 수행하므로 이벤트 루프 충돌 없음
+        cmd = [
+            sys.executable,  # 현재 Python 인터프리터
+            "-c",
+            f"""
 import asyncio
 import json
 import sys
-import traceback
 from analysis import analyze_stock
 
 async def run():
     try:
-        logger.info("[외부 프로세스] {stock_code} ({company_name}) 분석 시작")
         result = await analyze_stock(
             company_code="{stock_code}", 
             company_name="{company_name}", 
             reference_date="{reference_date}"
         )
-        logger.info("[외부 프로세스] {stock_code} 분석 완료, 결과 크기: " + str(len(result)) + " 글자")
         print(json.dumps({{"success": True, "result": result}}))
     except Exception as e:
-        error_msg = str(e)
-        logger.error("[외부 프로세스] 분석 중 오류: " + error_msg)
-        logger.error("[외부 프로세스] " + traceback.format_exc())
-        print(json.dumps({{"success": False, "error": error_msg}}))
+        print(json.dumps({{"success": False, "error": str(e)}}))
 
 if __name__ == "__main__":
-    logger.info("[외부 프로세스] 분석 작업 시작: {stock_code}")
     asyncio.run(run())
-    logger.info("[외부 프로세스] 프로세스 종료")
-"""
-
-        # 별도의 프로세스로 분석 수행
-        cmd = [
-            sys.executable,  # 현재 Python 인터프리터
-            "-c",
-            script
+            """
         ]
 
         logger.info(f"외부 프로세스 실행: {stock_code}")
         process = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # 10분 타임아웃
-
-        # 표준 오류 (stderr) 출력이 있으면 로깅
-        if process.stderr:
-            logger.warning(f"외부 프로세스 stderr: {process.stderr}")
 
         # 출력 파싱
         try:
