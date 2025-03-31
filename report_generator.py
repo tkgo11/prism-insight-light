@@ -14,7 +14,6 @@ from mcp_agent.agents.agent import Agent
 from mcp_agent.app import MCPApp
 from mcp_agent.workflows.llm.augmented_llm import RequestParams
 from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
-from mcp_agent.workflows.llm.augmented_llm_anthropic import AnthropicAugmentedLLM
 
 # 로거 설정
 logger = logging.getLogger(__name__)
@@ -367,6 +366,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                             - 중요 부분은 ✨ 또는 ❗️ 등으로 강조
                             - 텍스트 블록은 짧게 유지하여 모바일에서 읽기 쉽게 작성
                             - 해시태그(#)를 활용하여 핵심 키워드 강조
+                            - 절대 마크다운 형식으로 쓰지 말고, 텔레그램 메시지로 보낸다고 생각하고 사람처럼 자연스럽게 말할 것
                             
                             ## 주의사항
                             - 사용자가 요청한 스타일({tone})을 최우선적으로 적용하세요
@@ -381,7 +381,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
             )
 
             # LLM 연결
-            llm = await agent.attach_llm(AnthropicAugmentedLLM)
+            llm = await agent.attach_llm(OpenAIAugmentedLLM)
 
             # 보고서 내용 확인
             report_content = ""
@@ -397,8 +397,8 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                         {report_content if report_content else "관련 보고서가 없습니다. 시장 데이터 조회와 perplexity 검색을 통해 최신 정보를 수집하여 평가해주세요."}
                         """,
                 request_params=RequestParams(
-                    model="claude-3-7-sonnet-latest",
-                    maxTokens=1500
+                    model="gpt-4o",
+                    maxTokens=2000
                 )
             )
             app_logger.info(f"응답 생성 결과: {str(response)}")
