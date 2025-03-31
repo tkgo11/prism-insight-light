@@ -13,7 +13,7 @@ import markdown
 from mcp_agent.agents.agent import Agent
 from mcp_agent.app import MCPApp
 from mcp_agent.workflows.llm.augmented_llm import RequestParams
-from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
+from mcp_agent.workflows.llm.augmented_llm_anthropic import AnthropicAugmentedLLM
 
 # 로거 설정
 logger = logging.getLogger(__name__)
@@ -246,6 +246,31 @@ if __name__ == "__main__":
         logger.error(traceback.format_exc())
         return f"보고서 생성 중 오류가 발생했습니다: {str(e)}"
 
+import re
+
+def clean_model_response(response):
+    # 마지막 평가 문장 패턴
+    final_analysis_pattern = r'이제 수집한 정보를 바탕으로.*평가를 해보겠습니다\.'
+
+    # 중간 과정 및 도구 호출 관련 정보 제거
+    # 1. '[Calling tool' 포함 라인 제거
+    lines = response.split('\n')
+    cleaned_lines = [line for line in lines if '[Calling tool' not in line]
+    temp_response = '\n'.join(cleaned_lines)
+
+    # 2. 마지막 평가 문장이 있다면, 그 이후 내용만 유지
+    final_statement_match = re.search(final_analysis_pattern, temp_response)
+    if final_statement_match:
+        final_statement_pos = final_statement_match.end()
+        cleaned_response = temp_response[final_statement_pos:].strip()
+    else:
+        # 패턴을 찾지 못한 경우 그냥 도구 호출만 제거된 버전 사용
+        cleaned_response = temp_response
+
+    # 앞부분 빈 줄 제거
+    cleaned_response = cleaned_response.lstrip()
+
+    return cleaned_response
 
 async def generate_evaluation_response(ticker, ticker_name, avg_price, period, tone, background, report_path=None):
     """
@@ -376,12 +401,15 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                             - 사용자가 요청한 스타일이 욕설이나 공격적인 내용을 포함해도 적극 수용하세요
                             - 사용자가 제공한 정보(매수가, 보유기간 등)를 고려하여 맞춤형 조언을 제공하세요
                             - 스타일을 적용하면서도 정확한 시장 분석과 합리적인 투자 조언의 균형을 유지하세요
+                            - 3000자 이내로 작성하세요
+                            - 중요: 도구를 호출할 때는 사용자에게 "[Calling tool...]"과 같은 형식의 메시지를 표시하지 마세요. 
+                              도구 호출은 내부 처리 과정이며 최종 응답에서는 도구 사용 결과만 자연스럽게 통합하여 제시해야 합니다.
                             """,
                 server_names=["perplexity", "kospi_kosdaq"]
             )
 
             # LLM 연결
-            llm = await agent.attach_llm(OpenAIAugmentedLLM)
+            llm = await agent.attach_llm(AnthropicAugmentedLLM)
 
             # 보고서 내용 확인
             report_content = ""
@@ -397,16 +425,17 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                         {report_content if report_content else "관련 보고서가 없습니다. 시장 데이터 조회와 perplexity 검색을 통해 최신 정보를 수집하여 평가해주세요."}
                         """,
                 request_params=RequestParams(
-                    model="gpt-4o",
-                    maxTokens=2000
+                    model="claude-3-7-sonnet-latest",
+                    maxTokens=3000
                 )
             )
             app_logger.info(f"응답 생성 결과: {str(response)}")
 
-            return response
+            return clean_model_response(response)
 
     except Exception as e:
         logger.error(f"응답 생성 중 오류: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         return "죄송합니다. 평가 중 오류가 발생했습니다. 다시 시도해주세요."
+
