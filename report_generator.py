@@ -14,6 +14,7 @@ from mcp_agent.agents.agent import Agent
 from mcp_agent.app import MCPApp
 from mcp_agent.workflows.llm.augmented_llm import RequestParams
 from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
+from mcp_agent.workflows.llm.augmented_llm_anthropic import AnthropicAugmentedLLM
 
 # 로거 설정
 logger = logging.getLogger(__name__)
@@ -380,7 +381,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
             )
 
             # LLM 연결
-            llm = await agent.attach_llm(OpenAIAugmentedLLM)
+            llm = await agent.attach_llm(AnthropicAugmentedLLM)
 
             # 보고서 내용 확인
             report_content = ""
@@ -396,7 +397,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                         {report_content if report_content else "관련 보고서가 없습니다. 시장 데이터 조회와 perplexity 검색을 통해 최신 정보를 수집하여 평가해주세요."}
                         """,
                 request_params=RequestParams(
-                    model="gpt-4o-mini",
+                    model="claude-3-7-sonnet-latest",
                     maxTokens=1500
                 )
             )
