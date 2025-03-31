@@ -271,7 +271,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
             app_logger = app_instance.logger
 
             # 현재 날짜 정보 가져오기
-            current_date = datetime.now().strftime('%Y년 %m월 %d일')
+            current_date = datetime.now().strftime('%Y%m%d')
 
             # 배경 정보 추가 (있는 경우)
             background_text = f"\n- 매매 배경/히스토리: {background}" if background else ""
@@ -282,7 +282,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                 instruction=f"""당신은 텔레그램 채팅에서 주식 평가를 제공하는 전문가입니다. 형식적인 마크다운 대신 자연스러운 채팅 방식으로 응답하세요.
 
                             ## 기본 정보
-                            - 현재 날짜: {current_date}
+                            - 현재 날짜: {current_date} (YYYYMMDD형식)
                             - 종목 코드: {ticker}
                             - 종목 이름: {ticker_name}
                             - 평균 매수가: {avg_price}원
@@ -291,11 +291,11 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                             
                             ## 데이터 수집 및 분석 단계
                             1. get_stock_ohlcv 툴을 사용하여 종목({ticker})의 최신 주가 데이터 및 거래량을 조회하세요.
-                               - fromdate와 todate는 최근 1개월의 날짜를 사용하세요. (날짜 포맷은 YYYYMMDD로 변환해야 합니다)
+                               - fromdate와 todate는 최근 1개월의 날짜를 사용하세요. (fromdate, todate 포맷은 YYYYMMDD입니다)
                                - 최신 종가와 전일 대비 변동률, 거래량 추이를 반드시 파악하세요.
                                
                             2. get_stock_trading_volume 툴을 사용하여 투자자별 거래 데이터를 분석하세요.
-                               - 동일하게 최근 1개월 데이터를 사용하세요. (날짜 포맷은 YYYYMMDD로 변환해야 합니다)
+                               - 동일하게 최근 1개월 데이터를 사용하세요. (fromdate, todate 포맷은 YYYYMMDD입니다)
                                - 기관, 외국인, 개인 등 투자자별 매수/매도 패턴을 파악하고 해석하세요.
                             
                             3. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요:
