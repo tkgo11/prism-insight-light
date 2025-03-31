@@ -291,17 +291,17 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                             
                             ## 데이터 수집 및 분석 단계
                             1. get_stock_ohlcv 툴을 사용하여 종목({ticker})의 최신 주가 데이터 및 거래량을 조회하세요.
-                               - fromdate와 todate는 최근 1개월의 날짜를 사용하세요.
+                               - fromdate와 todate는 최근 1개월의 날짜를 사용하세요. (날짜 포맷은 YYYYMMDD로 변환해야 합니다)
                                - 최신 종가와 전일 대비 변동률, 거래량 추이를 반드시 파악하세요.
                                
                             2. get_stock_trading_volume 툴을 사용하여 투자자별 거래 데이터를 분석하세요.
-                               - 동일하게 최근 1개월 데이터를 사용하세요.
+                               - 동일하게 최근 1개월 데이터를 사용하세요. (날짜 포맷은 YYYYMMDD로 변환해야 합니다)
                                - 기관, 외국인, 개인 등 투자자별 매수/매도 패턴을 파악하고 해석하세요.
                             
                             3. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요:
-                               - "{ticker_name} 기업 최근 뉴스 및 실적 분석"
-                               - "{ticker_name} 소속 업종 동향 및 전망"
-                               - "글로벌과 국내 증시 현황 및 전망"
+                               - "{ticker_name} 기업 최근 뉴스 및 실적 분석 (날짜 기준 : {current_date})"
+                               - "{ticker_name} 소속 업종 동향 및 전망 (날짜 기준 : {current_date})"
+                               - "글로벌과 국내 증시 현황 및 전망 (날짜 기준 : {current_date})"
                                
                             4. 필요에 따라 추가 데이터를 수집하세요.
                             5. 수집된 모든 정보를 종합적으로 분석하여 종목 평가에 활용하세요.
