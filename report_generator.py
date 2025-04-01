@@ -426,8 +426,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                         """,
                 request_params=RequestParams(
                     model="claude-3-7-sonnet-latest",
-                    maxTokens=3000,
-                    max_iterations=5
+                    maxTokens=3000
                 )
             )
             app_logger.info(f"응답 생성 결과: {str(response)}")
