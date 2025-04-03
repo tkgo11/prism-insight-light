@@ -278,7 +278,7 @@ def markdown_to_html(md_file_path, add_css=True, add_theme=False, logo_path=None
             
             footer_template = """
                 <div class="report-footer">
-                    <p>© 2025 프리즘 인사이트. 모든 권리 보유.</p>
+                    <p>© 2025 Prism Insight. All rights reserved.</p>
                 </div>
             </div>
             """
