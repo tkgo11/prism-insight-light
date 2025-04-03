@@ -19,7 +19,7 @@ import re
 import sqlite3
 import sys
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 
@@ -295,6 +295,81 @@ class StockTrackingAgent:
                 pass
             return 0.0
 
+    async def _get_trading_value_rank_change(self, ticker: str) -> Tuple[float, str]:
+        """
+        종목의 거래대금 랭킹 변화를 계산
+
+        Args:
+            ticker: 종목 코드
+
+        Returns:
+            Tuple[float, str]: 랭킹 변화율, 분석 결과 메시지
+        """
+        try:
+            from pykrx.stock import stock_api
+            import datetime
+            import pandas as pd
+
+            # 오늘 날짜
+            today = datetime.datetime.now().strftime("%Y%m%d")
+
+            # 최근 2개 영업일 구하기
+            recent_date = stock_api.get_nearest_business_day_in_a_week(today, prev=True)
+            previous_date_obj = datetime.datetime.strptime(recent_date, "%Y%m%d") - timedelta(days=1)
+            previous_date = stock_api.get_nearest_business_day_in_a_week(
+                previous_date_obj.strftime("%Y%m%d"),
+                prev=True
+            )
+
+            logger.info(f"최근 영업일: {recent_date}, 이전 영업일: {previous_date}")
+
+            # 해당 거래일의 OHLCV 데이터 가져오기 (거래대금 포함)
+            recent_df = stock_api.get_market_ohlcv_by_ticker(recent_date)
+            previous_df = stock_api.get_market_ohlcv_by_ticker(previous_date)
+
+            # 거래대금으로 정렬하여 랭킹 생성
+            recent_rank = recent_df.sort_values(by="거래대금", ascending=False).reset_index()
+            previous_rank = previous_df.sort_values(by="거래대금", ascending=False).reset_index()
+
+            # 티커에 대한 랭킹 찾기
+            if ticker in recent_rank['티커'].values:
+                recent_ticker_rank = recent_rank[recent_rank['티커'] == ticker].index[0] + 1
+            else:
+                recent_ticker_rank = 0
+
+            if ticker in previous_rank['티커'].values:
+                previous_ticker_rank = previous_rank[previous_rank['티커'] == ticker].index[0] + 1
+            else:
+                previous_ticker_rank = 0
+
+            # 랭킹이 없을 경우 리턴
+            if recent_ticker_rank == 0 or previous_ticker_rank == 0:
+                return 0, f"거래대금 랭킹 정보 없음"
+
+            # 랭킹 변화 계산
+            rank_change = previous_ticker_rank - recent_ticker_rank  # 양수면 순위 상승, 음수면 순위 하락
+            rank_change_percentage = (rank_change / previous_ticker_rank) * 100
+
+            # 랭킹 정보 및 거래대금 데이터
+            recent_value = int(recent_df.loc[ticker, "거래대금"]) if ticker in recent_df.index else 0
+            previous_value = int(previous_df.loc[ticker, "거래대금"]) if ticker in previous_df.index else 0
+            value_change_percentage = ((recent_value - previous_value) / previous_value * 100) if previous_value > 0 else 0
+
+            result_msg = (
+                f"거래대금 랭킹: {recent_ticker_rank}위 (이전: {previous_ticker_rank}위, "
+                f"변화: {'▲' if rank_change > 0 else '▼' if rank_change < 0 else '='}{abs(rank_change)}), "
+                f"거래대금: {recent_value:,}원 (이전: {previous_value:,}원, "
+                f"변화: {'▲' if value_change_percentage > 0 else '▼' if value_change_percentage < 0 else '='}{abs(value_change_percentage):.1f}%)"
+            )
+
+            logger.info(f"{ticker} {result_msg}")
+            return rank_change_percentage, result_msg
+
+        except Exception as e:
+            logger.error(f"{ticker} 거래대금 랭킹 분석 중 오류: {str(e)}")
+            logger.error(traceback.format_exc())
+            return 0, "거래대금 랭킹 분석 실패"
+
     async def _is_ticker_in_holdings(self, ticker: str) -> bool:
         """
         종목이 이미 보유 중인지 확인
@@ -369,12 +444,13 @@ class StockTrackingAgent:
             logger.error(f"산업군 다양성 확인 중 오류: {str(e)}")
             return True  # 오류 발생 시 기본적으로 제한하지 않음
 
-    async def _extract_trading_scenario(self, report_content: str) -> Dict[str, Any]:
+    async def _extract_trading_scenario(self, report_content: str, rank_change_msg: str = "") -> Dict[str, Any]:
         """
         보고서에서 매매 시나리오 추출
 
         Args:
             report_content: 분석 보고서 내용
+            rank_change_msg: 거래대금 랭킹 변화 정보
 
         Returns:
             Dict: 매매 시나리오 정보
@@ -427,6 +503,9 @@ class StockTrackingAgent:
                 ### 현재 포트폴리오 상황:
                 {portfolio_info}
                 
+                ### 거래대금 분석:
+                {rank_change_msg}
+                
                 ### 분석 요구사항:
                 1. 이 종목에 대한 매수 적정성을 평가해주세요 (1~10점).
                    - 9~10점: 매우 확실한 매수 기회 (명확한 근거 필요)
@@ -438,6 +517,9 @@ class StockTrackingAgent:
                    - 현재 보유 종목이 7개 이상인 경우 매수 점수 8점 이상인 경우만 '진입'
                    - 동일 산업군이 이미 많이 있다면 관망을 고려하세요
                    - 불확실성이 조금이라도 있다면 반드시 '관망'으로 결정하세요
+                   - 거래대금 랭킹이 상승한 경우 매수 고려 요인으로 반영하세요
+                   - 거래대금 랭킹이 30% 이상 상승했다면 매수 점수를 1점 상향 조정하세요
+                   - 거래대금 랭킹이 30% 이상 하락했다면 매수 점수를 1점 하향 조정하세요
                 
                 3. 목표가, 손절가, 투자 기간, 투자 근거를 제시해주세요.
                 4. 이 종목의 산업군(섹터)을 한 단어로 명시해주세요.
@@ -461,8 +543,7 @@ class StockTrackingAgent:
                 {report_content}
                 """,
                 request_params=RequestParams(
-                    model="gpt-4o-mini",
-                    max_iterations=3
+                    model="gpt-4o"
                 )
             )
 
@@ -564,12 +645,15 @@ class StockTrackingAgent:
                 logger.error(f"{ticker} 현재 주가 조회 실패")
                 return {"success": False, "error": "현재 주가 조회 실패"}
 
+            # 거래대금 랭킹 변화 분석 추가
+            rank_change_percentage, rank_change_msg = await self._get_trading_value_rank_change(ticker)
+
             # 보고서 내용 읽기
             from pdf_converter import pdf_to_markdown_text
             report_content = pdf_to_markdown_text(pdf_report_path)
 
-            # 매매 시나리오 추출
-            scenario = await self._extract_trading_scenario(report_content)
+            # 매매 시나리오 추출 (거래대금 랭킹 정보 전달)
+            scenario = await self._extract_trading_scenario(report_content, rank_change_msg)
 
             # 산업군 다양성 확인
             sector = scenario.get("sector", "알 수 없음")
@@ -584,7 +668,9 @@ class StockTrackingAgent:
                 "scenario": scenario,
                 "decision": scenario.get("decision", "관망"),
                 "sector": sector,
-                "sector_diverse": is_sector_diverse
+                "sector_diverse": is_sector_diverse,
+                "rank_change_percentage": rank_change_percentage,  # 추가된 부분
+                "rank_change_msg": rank_change_msg  # 추가된 부분
             }
 
         except Exception as e:
@@ -592,7 +678,7 @@ class StockTrackingAgent:
             logger.error(traceback.format_exc())
             return {"success": False, "error": str(e)}
 
-    async def buy_stock(self, ticker: str, company_name: str, current_price: float, scenario: Dict[str, Any]) -> bool:
+    async def buy_stock(self, ticker: str, company_name: str, current_price: float, scenario: Dict[str, Any], rank_change_msg: str = "") -> bool:
         """
         주식 매수 처리
 
@@ -601,6 +687,7 @@ class StockTrackingAgent:
             company_name: 종목 이름
             current_price: 현재 주가
             scenario: 매매 시나리오 정보
+            rank_change_msg: 거래대금 랭킹 변화 정보
 
         Returns:
             bool: 매수 성공 여부
@@ -647,8 +734,13 @@ class StockTrackingAgent:
                       f"목표가: {scenario.get('target_price', 0):,.0f}원\n" \
                       f"손절가: {scenario.get('stop_loss', 0):,.0f}원\n" \
                       f"투자기간: {scenario.get('investment_period', '단기')}\n" \
-                      f"산업군: {scenario.get('sector', '알 수 없음')}\n" \
-                      f"투자근거: {scenario.get('rationale', '정보 없음')}"
+                      f"산업군: {scenario.get('sector', '알 수 없음')}\n"
+
+            # 거래대금 랭킹 정보가 있으면 추가
+            if rank_change_msg:
+                message += f"거래대금 분석: {rank_change_msg}\n"
+
+            message += f"투자근거: {scenario.get('rationale', '정보 없음')}"
 
             self.message_queue.append(message)
             logger.info(f"{ticker}({company_name}) 매수 완료")
@@ -1081,6 +1173,8 @@ class StockTrackingAgent:
                 scenario = analysis_result.get("scenario", {})
                 sector = analysis_result.get("sector", "알 수 없음")
                 sector_diverse = analysis_result.get("sector_diverse", True)
+                rank_change_msg = analysis_result.get("rank_change_msg", "")
+                rank_change_percentage = analysis_result.get("rank_change_percentage", 0)
 
                 # 산업군 다양성 체크 실패 시 스킵
                 if not sector_diverse:
@@ -1098,9 +1192,19 @@ class StockTrackingAgent:
                 # 진입 결정이면 매수 처리
                 buy_score = scenario.get("buy_score", 0)
                 logger.info(f"매수 점수 체크: {company_name}({ticker}) - 점수: {buy_score}, 최소 요구 점수: {min_score}")
-                if analysis_result.get("decision") == "진입" and buy_score >= min_score:
+
+                # 거래대금 랭킹 상승 시 가중치 부여
+                rank_bonus = 0
+                if rank_change_percentage >= 30:
+                    rank_bonus = 1
+                    logger.info(f"거래대금 랭킹 큰 폭 상승으로 매수 점수 +1 보너스: {company_name}({ticker})")
+
+                effective_buy_score = buy_score + rank_bonus
+                logger.info(f"최종 매수 점수: {effective_buy_score} (기본: {buy_score}, 랭킹 보너스: {rank_bonus})")
+
+                if analysis_result.get("decision") == "진입" and effective_buy_score >= min_score:
                     # 매수 처리
-                    buy_success = await self.buy_stock(ticker, company_name, current_price, scenario)
+                    buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
 
                     if buy_success:
                         buy_count += 1
@@ -1109,8 +1213,8 @@ class StockTrackingAgent:
                         logger.warning(f"매수 실패: {company_name}({ticker})")
                 else:
                     reason = ""
-                    if scenario.get("buy_score", 0) < min_score:
-                        reason = f"매수 점수 부족 ({scenario.get('buy_score', 0)} < {min_score})"
+                    if effective_buy_score < min_score:
+                        reason = f"매수 점수 부족 ({effective_buy_score} < {min_score})"
                     elif analysis_result.get("decision") != "진입":
                         reason = f"진입 결정 아님 (결정: {analysis_result.get('decision')})"
 
@@ -1177,7 +1281,7 @@ class StockTrackingAgent:
             logger.error(traceback.format_exc())
             return False
 
-    async def run(self, pdf_report_paths: List[str], chat_id: str = None) -> bool:
+    async def run(self, pdf_report_paths: List[str], chat_id: str = None) -> bool | None:
         """
         주식 트래킹 시스템 메인 실행 함수
 

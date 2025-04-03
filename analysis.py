@@ -80,14 +80,11 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
         # 7. 투자 전략 생성
         try:
             logger.info(f"Processing investment_strategy for {company_name}...")
-            investment_strategy_agent = get_agent_directory(
-                company_name, company_code, reference_date, ["investment_strategy"]
-            )["investment_strategy"]
-            
+
             investment_strategy = await generate_investment_strategy(
                 section_reports, combined_reports, company_name, company_code, reference_date, logger
             )
-            section_reports["investment_strategy"] = investment_strategy
+            section_reports["investment_strategy"] = investment_strategy.lstrip('\n')
             logger.info(f"Completed investment_strategy - {len(investment_strategy)} characters")
         except Exception as e:
             logger.error(f"Error processing investment_strategy: {e}")
