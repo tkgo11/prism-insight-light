@@ -154,7 +154,7 @@ class StockAnalysisOrchestrator:
                 pdf_file = PDF_REPORTS_DIR / f"{report_file.stem}.pdf"
 
                 # 마크다운을 PDF로 변환
-                markdown_to_pdf(report_path, pdf_file)
+                markdown_to_pdf(report_path, pdf_file, 'pdfkit', add_theme=True, enable_watermark=False)
 
                 logger.info(f"PDF 변환 완료: {pdf_file}")
                 pdf_paths.append(pdf_file)
