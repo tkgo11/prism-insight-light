@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import stats
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 from datetime import datetime, timedelta
 from stock_tracking_agent import StockTrackingAgent
 import logging
@@ -344,6 +344,30 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             logger.error(traceback.format_exc())
             return 0, 0
 
+    async def buy_stock(self, ticker: str, company_name: str, current_price: float, scenario: Dict[str, Any], rank_change_msg: str = "") -> bool:
+        """
+        주식 매수 처리 (부모 클래스 메서드 오버라이드)
+        """
+        try:
+            # 시나리오에 목표가/손절가가 없거나 0이면 동적으로 계산
+            if scenario.get('target_price', 0) <= 0:
+                target_price = await self._dynamic_target_price(ticker, current_price)
+                scenario['target_price'] = target_price
+                logger.info(f"{ticker} 동적 목표가 계산: {target_price:,.0f}원")
+
+            if scenario.get('stop_loss', 0) <= 0:
+                stop_loss = await self._dynamic_stop_loss(ticker, current_price)
+                scenario['stop_loss'] = stop_loss
+                logger.info(f"{ticker} 동적 손절가 계산: {stop_loss:,.0f}원")
+
+            # 부모 클래스의 buy_stock 메서드 호출
+            return await super().buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
+
+        except Exception as e:
+            logger.error(f"{ticker} 매수 처리 중 오류: {str(e)}")
+            logger.error(traceback.format_exc())
+            return False
+
     async def _analyze_trend(self, ticker, days=14):
         """종목의 단기 추세 분석"""
         try:
@@ -417,70 +441,62 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             # 종목의 추세 분석
             trend = await self._analyze_trend(ticker)
 
-            # 1. 손절매 조건 확인
+            # 매도 의사결정 우선순위에 따라 조건 체크
+
+            # 1. 손절매 조건 확인 (가장 높은 우선순위)
             if stop_loss > 0 and current_price <= stop_loss:
-                # 강한 추세에서는 손절 유예
-                if trend >= 2:  # 강한 상승 추세
-                    if profit_rate > -7:  # 손실이 7% 미만이면 계속 보유
-                        return False, "손절 유예 (강한 상승 추세)"
+                # 강한 상승 추세에서는 손절 유예 (예외 케이스)
+                if trend >= 2 and profit_rate > -7:  # 강한 상승 추세 & 손실이 7% 미만
+                    return False, "손절 유예 (강한 상승 추세)"
                 return True, f"손절매 조건 도달 (손절가: {stop_loss:,.0f}원)"
 
             # 2. 목표가 도달 확인
             if target_price > 0 and current_price >= target_price:
-                # 강한 상승 추세면 계속 보유
+                # 강한 상승 추세면 계속 보유 (예외 케이스)
                 if trend >= 2:
                     return False, "목표가 달성했으나 강한 상승 추세로 보유 유지"
                 return True, f"목표가 달성 (목표가: {target_price:,.0f}원)"
 
-            # 3. 투자 기간별 매도 조건 - 추세 고려
-            if investment_period == "단기":
-                # 단기 투자의 경우 (15일 이상 보유 + 5% 이상 수익)
-                if days_passed >= 15 and profit_rate >= 5:
-                    # 강한 상승 추세면 계속 보유
-                    if trend >= 2:
-                        return False, "단기 투자 목표 달성했으나 강한 상승 추세로 보유 유지"
-                    return True, f"단기 투자 목표 달성 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
-
-                # 단기 투자 손실 방어 (10일 이상 + 3% 이상 손실)
-                if days_passed >= 10 and profit_rate <= -3:
-                    # 강한 상승 추세로 전환되었으면 유예
-                    if trend >= 2:
-                        return False, "손실 상태이나 강한 상승 추세 전환으로 보유 유지"
-                    return True, f"단기 투자 손실 방어 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
-
-            # 4. 시장 상태와 추세를 고려한 매도 조건
-            # 약세장에서 하락 추세이면 수익이 나고 있을 때 빠르게 매도
+            # 3. 시장 상태와 추세에 따른 매도 조건 (시장 환경 고려)
             if self.market_condition == -1 and trend < 0 and profit_rate > 3:
                 return True, f"약세장 + 하락 추세에서 수익 확보 (수익률: {profit_rate:.2f}%)"
 
-            # 5. 기존 매도 조건 유지하되 추세 고려
-            # 10% 이상 수익 시 매도 (강한 상승 추세가 아닌 경우만)
+            # 4. 투자 기간별 조건 (투자 유형에 따른 분화)
+            if investment_period == "단기":
+                # 단기 투자 수익 목표 달성
+                if days_passed >= 15 and profit_rate >= 5 and trend < 2:
+                    return True, f"단기 투자 목표 달성 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
+
+                # 단기 투자 손실 방어 (단, 강한 상승 추세면 유지)
+                if days_passed >= 10 and profit_rate <= -3 and trend < 2:
+                    return True, f"단기 투자 손실 방어 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
+
+            # 5. 일반적인 수익 목표 달성 (특별한 기간이 아닌 일반 투자)
             if profit_rate >= 10 and trend < 2:
                 return True, f"수익률 10% 이상 달성 (현재 수익률: {profit_rate:.2f}%)"
 
-            # 5% 이상 손실 시 매도 (강한 상승 추세가 아닌 경우만)
-            if profit_rate <= -5 and trend < 2:
-                return True, f"손실 -5% 이상 발생 (현재 수익률: {profit_rate:.2f}%)"
-
-            # 30일 이상 보유 시 손실이면 매도 (강한 상승 추세가 아닌 경우만)
+            # 6. 장기 보유 후 상태 점검 (시간 경과에 따른 판단)
+            # 손절가보다 높지만 장기간 손실이 지속되는 경우
             if days_passed >= 30 and profit_rate < 0 and trend < 1:
                 return True, f"30일 이상 보유 중이며 손실 상태 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
-            # 60일 이상 보유 시 3% 이상 수익이면 매도 (강한 상승 추세가 아닌 경우만)
             if days_passed >= 60 and profit_rate >= 3 and trend < 1:
                 return True, f"60일 이상 보유 중이며 3% 이상 수익 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
-            # 장기 투자 케이스 (90일 이상 보유 + 손실 상태)
+            # 7. 투자 유형별 장기 점검 (투자 기간 특화)
             if investment_period == "장기" and days_passed >= 90 and profit_rate < 0 and trend < 1:
                 return True, f"장기 투자 손실 정리 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
+            # 8. 손절가는 아니지만 급격한 손실 발생 (비상 대응)
+            # 일반 손실 매도 조건은 손절가 이하가 아닌 경우에만 적용
+            # 손절가가 설정되지 않았거나(0) 손절가보다 현재가가 높으면서 큰 손실(-5% 이상)이 있는 경우
+            if (stop_loss == 0 or current_price > stop_loss) and profit_rate <= -5 and trend < 1:
+                return True, f"심각한 손실 발생 (현재 수익률: {profit_rate:.2f}%)"
+
             # 기본적으로 계속 보유
             trend_text = {
-                2: "강한 상승 추세",
-                1: "약한 상승 추세",
-                0: "중립 추세",
-                -1: "약한 하락 추세",
-                -2: "강한 하락 추세"
+                2: "강한 상승 추세", 1: "약한 상승 추세", 0: "중립 추세",
+                -1: "약한 하락 추세", -2: "강한 하락 추세"
             }.get(trend, "알 수 없는 추세")
 
             return False, f"계속 보유 (추세: {trend_text}, 수익률: {profit_rate:.2f}%)"
