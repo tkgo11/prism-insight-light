@@ -543,7 +543,7 @@ class StockTrackingAgent:
                 {report_content}
                 """,
                 request_params=RequestParams(
-                    model="gpt-4o"
+                    model="gpt-4.1"
                 )
             )
 

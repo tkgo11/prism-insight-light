@@ -236,7 +236,7 @@ class TelegramSummaryGenerator:
         response = await evaluator_optimizer.generate_str(
             message=prompt_message,
             request_params=RequestParams(
-                model="gpt-4o",
+                model="gpt-4.1",
                 max_iterations=2
             )
         )
