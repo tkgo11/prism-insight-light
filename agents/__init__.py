@@ -25,7 +25,7 @@ def get_agent_directory(company_name, company_code, reference_date, base_section
     # 날짜 계산
     from datetime import datetime, timedelta
     ref_date = datetime.strptime(reference_date, "%Y%m%d")
-    max_years = 1
+    max_years = 3
     max_years_ago = (ref_date - timedelta(days=365*max_years)).strftime("%Y%m%d")
     
     agent_creators = {
