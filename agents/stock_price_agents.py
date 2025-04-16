@@ -1,13 +1,13 @@
 from mcp_agent.agents.agent import Agent
 
-def create_price_volume_analysis_agent(company_name, company_code, reference_date, max_years_ago):
+def create_price_volume_analysis_agent(company_name, company_code, reference_date, max_years_ago, max_years):
     """주가 및 거래량 분석 에이전트 생성"""
     return Agent(
         name="price_volume_analysis_agent",
         instruction=f"""당신은 주식 기술적 분석 전문가입니다. 주어진 종목의 주가 데이터와 거래량 데이터를 분석하여 기술적 분석 보고서를 작성해야 합니다.
 
                         ## 수집해야 할 데이터
-                        1. 주가/거래량 데이터: get_stock_ohlcv tool을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집
+                        1. 주가/거래량 데이터: tool call(name : kospi_kosdaq-get_stock_ohlcv)을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집 (수집 기간(년) : {max_years})
                 
                         ## 분석 요소
                         1. 주가 추세 및 패턴 분석 (상승/하락/횡보, 차트 패턴)
@@ -39,6 +39,7 @@ def create_price_volume_analysis_agent(company_name, company_code, reference_dat
                         - 주요 지지선/저항선, 매매 포인트 등 중요 가격대는 구체적 수치로 제시
                 
                         ## 주의사항
+                        - 반드시 tool call을 해야 합니다
                         - 할루시네이션 방지를 위해 실제 데이터에서 확인된 내용만 포함
                         - 확실하지 않은 내용은 "가능성이 있습니다", "~로 보입니다" 등으로 표현
                         - 투자 권유가 아닌 정보 제공 관점에서 작성
@@ -63,14 +64,14 @@ def create_price_volume_analysis_agent(company_name, company_code, reference_dat
     )
 
 
-def create_investor_trading_analysis_agent(company_name, company_code, reference_date, max_years_ago):
+def create_investor_trading_analysis_agent(company_name, company_code, reference_date, max_years_ago, max_years):
     """투자자 거래 동향 분석 에이전트 생성"""
     return Agent(
         name="investor_trading_analysis_agent",
         instruction=f"""당신은 주식 시장에서 투자자별 거래 데이터 분석 전문가입니다. 주어진 종목의 투자자별(기관/외국인/개인) 거래 데이터를 분석하여 투자자 동향 보고서를 작성해야 합니다.
 
                         ## 수집해야 할 데이터
-                        1. 투자자별 거래 데이터: get_stock_trading_volume tool을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집
+                        1. 투자자별 거래 데이터: tool call(name : kospi_kosdaq-get_stock_trading_volume)을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집 (수집 기간(년) : {max_years})
                 
                         ## 분석 요소
                         1. 투자자별(기관/외국인/개인) 매매 패턴 분석
@@ -102,6 +103,7 @@ def create_investor_trading_analysis_agent(company_name, company_code, reference
                         - 주요 매매 패턴과 시점은 구체적 날짜와 수치로 제시
                 
                         ## 주의사항
+                        - 반드시 tool call을 해야 합니다
                         - 할루시네이션 방지를 위해 실제 데이터에서 확인된 내용만 포함
                         - 확실하지 않은 내용은 "가능성이 있습니다", "~로 보입니다" 등으로 표현
                         - 투자 권유가 아닌 정보 제공 관점에서 작성

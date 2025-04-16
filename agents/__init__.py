@@ -25,15 +25,15 @@ def get_agent_directory(company_name, company_code, reference_date, base_section
     # 날짜 계산
     from datetime import datetime, timedelta
     ref_date = datetime.strptime(reference_date, "%Y%m%d")
-    max_years = 3
+    max_years = 2
     max_years_ago = (ref_date - timedelta(days=365*max_years)).strftime("%Y%m%d")
     
     agent_creators = {
         "price_volume_analysis": lambda: create_price_volume_analysis_agent(
-            company_name, company_code, reference_date, max_years_ago
+            company_name, company_code, reference_date, max_years_ago, max_years
         ),
         "investor_trading_analysis": lambda: create_investor_trading_analysis_agent(
-            company_name, company_code, reference_date, max_years_ago
+            company_name, company_code, reference_date, max_years_ago, max_years
         ),
         "company_status": lambda: create_company_status_agent(
             company_name, company_code, reference_date, urls

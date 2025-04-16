@@ -34,15 +34,6 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
     if reference_date is None:
         reference_date = datetime.now().strftime("%Y%m%d")
 
-    year = reference_date[:4]
-
-    # 날짜 객체로 변환
-    ref_date = datetime.strptime(reference_date, "%Y%m%d")
-
-    # 기간 계산
-    max_years = 1
-    max_years_ago = (ref_date - timedelta(days=365*max_years)).strftime("%Y%m%d")
-    six_months_ago = (ref_date - timedelta(days=180)).strftime("%Y%m%d")
 
     async with app.run() as parallel_app:
         logger = parallel_app.logger
@@ -57,7 +48,7 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
         # 4. 에이전트 가져오기
         agents = get_agent_directory(company_name, company_code, reference_date, base_sections)
 
-        # 5. 기본 분석 순차적으로 실행 (Anthropic rate limit 대처를 위해 병렬 대신 순차 실행)
+        # 5. 기본 분석 순차적으로 실행 (rate limit 대처를 위해 병렬 대신 순차 실행)
         for section in base_sections:
             if section in agents:
                 logger.info(f"Processing {section} for {company_name}...")
