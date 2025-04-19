@@ -1196,8 +1196,11 @@ class StockTrackingAgent:
                 # 거래대금 랭킹 상승 시 가중치 부여
                 rank_bonus = 0
                 if rank_change_percentage >= 30:
-                    rank_bonus = 1
-                    logger.info(f"거래대금 랭킹 큰 폭 상승으로 매수 점수 +1 보너스: {company_name}({ticker})")
+                    rank_bonus = 2  # 1에서 2로 증가
+                    logger.info(f"거래대금 랭킹 큰 폭 상승으로 매수 점수 +2 보너스: {company_name}({ticker})")
+                elif rank_change_percentage >= 15:
+                    rank_bonus = 1  # 중간 수준 상승에도 보너스 추가
+                    logger.info(f"거래대금 랭킹 상승으로 매수 점수 +1 보너스: {company_name}({ticker})")
 
                 effective_buy_score = buy_score + rank_bonus
                 logger.info(f"최종 매수 점수: {effective_buy_score} (기본: {buy_score}, 랭킹 보너스: {rank_bonus})")

@@ -275,6 +275,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 scenario = analysis_result.get("scenario", {})
                 sector = analysis_result.get("sector", "알 수 없음")
                 sector_diverse = analysis_result.get("sector_diverse", True)
+                rank_change_percentage = analysis_result.get("rank_change_percentage", 0)
+                rank_change_msg = analysis_result.get("rank_change_msg", "")
 
                 # 현재 보유 슬랏 수에 따라 매수 점수 기준 동적 조정
                 current_slots = await self._get_current_slots_count()
@@ -297,14 +299,29 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 decision = analysis_result.get("decision")
                 logger.info(f"매수 점수 체크: {company_name}({ticker}) - 점수: {buy_score}, 최소 요구 점수: {min_score}")
 
+                # 거래대금 랭킹 상승 시 가중치 부여 (새로 추가)
+                rank_bonus = 0
+                if rank_change_percentage >= 30:
+                    rank_bonus = 2  # 큰 폭 상승 시 2점 보너스
+                    logger.info(f"거래대금 랭킹 큰 폭 상승으로 매수 점수 +2 보너스: {company_name}({ticker})")
+                elif rank_change_percentage >= 15:
+                    rank_bonus = 1  # 중간 수준 상승 시 1점 보너스
+                    logger.info(f"거래대금 랭킹 상승으로 매수 점수 +1 보너스: {company_name}({ticker})")
+
+                effective_buy_score = buy_score + rank_bonus
+                logger.info(f"최종 매수 점수: {effective_buy_score} (기본: {buy_score}, 랭킹 보너스: {rank_bonus})")
+
                 # 매수하지 않는 경우 (관망/점수 부족/산업군 제약) 메시지 생성
-                if decision != "진입" or buy_score < min_score or not sector_diverse:
+                if decision != "진입" or effective_buy_score < min_score or not sector_diverse:
                     # 매수하지 않는 이유 결정
                     reason = ""
                     if not sector_diverse:
                         reason = f"산업군 '{sector}' 과다 투자 방지"
-                    elif buy_score < min_score:
-                        reason = f"매수 점수 부족 ({buy_score} < {min_score})"
+                    elif effective_buy_score < min_score:
+                        if decision == "진입":
+                            decision = "관망"  # "진입"에서 "관망"으로 변경
+                            logger.info(f"매수 점수 부족으로 결정 변경: {company_name}({ticker}) - 진입 → 관망 (점수: {effective_buy_score} < {min_score})")
+                        reason = f"매수 점수 부족 ({effective_buy_score} < {min_score})"
                     elif decision != "진입":
                         reason = f"분석 결정이 '관망'"
 
@@ -314,7 +331,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     # 관망 메시지 생성
                     skip_message = f"⚠️ 매수 보류: {company_name}({ticker})\n" \
                                    f"현재가: {current_price:,.0f}원\n" \
-                                   f"매수 점수: {buy_score}/10\n" \
+                                   f"매수 점수: {buy_score}/10 (보너스: +{rank_bonus})\n" \
                                    f"결정: {decision}\n" \
                                    f"시장 상태: {market_condition_text}\n" \
                                    f"산업군: {scenario.get('sector', '알 수 없음')}\n" \
@@ -326,9 +343,9 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     continue
 
                 # 진입 결정이면 매수 처리
-                if decision == "진입" and buy_score >= min_score and sector_diverse:
+                if decision == "진입" and effective_buy_score >= min_score and sector_diverse:
                     # 매수 처리
-                    buy_success = await self.buy_stock(ticker, company_name, current_price, scenario)
+                    buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
 
                     if buy_success:
                         buy_count += 1
