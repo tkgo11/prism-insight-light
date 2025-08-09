@@ -30,7 +30,7 @@ async def generate_report(agent, section, company_name, company_code, reference_
                                 ##분석일: {reference_date}(YYYYMMDD 형식)
                                 """,
         request_params=RequestParams(
-            model="gpt-5",
+            model="gpt-4.1",
             maxTokens=16000,
             max_iterations=3,
             parallel_tool_calls=True,
@@ -88,7 +88,7 @@ async def generate_summary(section_reports, company_name, company_code, referenc
                     {all_reports}
                     """,
             request_params=RequestParams(
-                model="gpt-5",
+                model="gpt-4.1",
                 maxTokens=6000,
                 max_iterations=2,
                 parallel_tool_calls=True,
@@ -195,7 +195,7 @@ async def generate_investment_strategy(section_reports, combined_reports, compan
             - 투자자가 행동으로 옮길 수 있는 실질적인 전략 제시에 초점을 맞추세요
             """,
             request_params=RequestParams(
-                model="gpt-5",
+                model="gpt-4.1",
                 maxTokens=16000,
                 max_iterations=3,
                 parallel_tool_calls=True,

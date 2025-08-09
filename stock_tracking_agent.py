@@ -543,7 +543,8 @@ class StockTrackingAgent:
                 {report_content}
                 """,
                 request_params=RequestParams(
-                    model="gpt-5"
+                    model="gpt-5",
+                    maxTokens=6000
                 )
             )
 
