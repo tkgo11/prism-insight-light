@@ -31,7 +31,7 @@ async def generate_report(agent, section, company_name, company_code, reference_
                                 """,
         request_params=RequestParams(
             model="gpt-5",
-            maxTokens=8000,
+            maxTokens=16000,
             max_iterations=3,
             parallel_tool_calls=True,
             use_history=True
@@ -89,7 +89,7 @@ async def generate_summary(section_reports, company_name, company_code, referenc
                     """,
             request_params=RequestParams(
                 model="gpt-5",
-                maxTokens=2000,
+                maxTokens=6000,
                 max_iterations=2,
                 parallel_tool_calls=True,
                 use_history=True
@@ -196,7 +196,7 @@ async def generate_investment_strategy(section_reports, combined_reports, compan
             """,
             request_params=RequestParams(
                 model="gpt-5",
-                maxTokens=8000,
+                maxTokens=16000,
                 max_iterations=3,
                 parallel_tool_calls=True,
                 use_history=True
