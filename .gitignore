@@ -2,3 +2,6 @@
 .env
 *.env
 .env.local
+mcp_agent.config.yaml
+mcp_agent.secrets.yaml
+config.py

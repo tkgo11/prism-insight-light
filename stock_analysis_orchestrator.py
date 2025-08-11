@@ -522,7 +522,7 @@ class StockAnalysisOrchestrator:
 
             try:
                 # main.py에서 직접 함수 임포트
-                from main import analyze_stock
+                from cores.main import analyze_stock
 
                 # 이미 비동기 환경이므로 직접 await 사용
                 logger.info(f"[{idx}/{len(tickers)}] analyze_stock 함수 호출 시작")

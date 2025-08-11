@@ -1,21 +1,16 @@
 import streamlit as st
-import pandas as pd
 from datetime import datetime
 import re
-import asyncio
-import os
 from pathlib import Path
 import markdown
 import base64
-from main import analyze_stock
 from email_sender import send_email
-from concurrent.futures import ProcessPoolExecutor
 from queue import Queue
 from threading import Thread
 import uuid
 
 # 보고서 저장 디렉토리 설정
-REPORTS_DIR = Path("reports")
+REPORTS_DIR = Path("../../reports")
 REPORTS_DIR.mkdir(exist_ok=True)
 
 # 작업 큐 및 스레드 풀 설정

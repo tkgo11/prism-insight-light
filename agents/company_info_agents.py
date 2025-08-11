@@ -1,5 +1,5 @@
 from mcp_agent.agents.agent import Agent
-from utils import get_wise_report_url
+
 
 def create_company_status_agent(company_name, company_code, reference_date, urls):
     """기업 현황 분석 에이전트 생성"""

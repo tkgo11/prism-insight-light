@@ -1,0 +1,59 @@
+$schema: ../../schema/mcp-agent.config.schema.json
+
+execution_engine: asyncio
+logger:
+  type: console
+  level: info
+  batch_size: 100
+  flush_interval: 2
+  max_queue_size: 2048
+  http_endpoint:
+  http_headers:
+  http_timeout: 5
+
+mcp:
+  servers:
+    webresearch:
+      command: "npx"
+      args: [ "-y", "@mzxrai/mcp-webresearch@latest" ]
+      read_timeout_seconds: 120
+
+    firecrawl:
+        command: "npx"
+        args: [ "-y", "firecrawl-mcp" ]
+        env:
+          FIRECRAWL_API_KEY: "example key"
+
+    kospi_kosdaq:
+      command: "python3"
+      args:
+        [
+          "-m",
+          "kospi_kosdaq_stock_server"
+        ]
+
+    perplexity:
+      command: "node"
+      args:
+        [
+          "perplexity-ask/dist/index.js"
+        ]
+      env:
+        PERPLEXITY_API_KEY: "example key"
+
+    sqlite:
+      command: "uv"
+      args:
+        [
+          "--directory",
+          "sqlite",
+          "run",
+          "mcp-server-sqlite",
+          "--db-path",
+          "stock_tracking_db"
+        ]
+
+openai:
+  # Secrets (API keys, etc.) are stored in an mcp_agent.secrets.yaml file which can be gitignored
+  default_model: gpt-5
+  reasoning_effort: low

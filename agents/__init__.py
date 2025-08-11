@@ -1,5 +1,3 @@
-from mcp_agent.agents.agent import Agent
-
 def get_agent_directory(company_name, company_code, reference_date, base_sections):
     """각 섹션별 에이전트 디렉토리를 반환"""
     from agents.stock_price_agents import (
@@ -14,7 +12,7 @@ def get_agent_directory(company_name, company_code, reference_date, base_section
         create_news_analysis_agent,
         create_investment_strategy_agent
     )
-    from utils import get_wise_report_url
+    from cores.utils import get_wise_report_url
     
     # URL 매핑 생성
     urls = {k: get_wise_report_url(k, company_code) for k in [

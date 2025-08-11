@@ -98,7 +98,7 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
             executive_summary = "# 핵심 투자 포인트\n\n분석 요약을 생성하는 데 문제가 발생했습니다."
 
         # 10. 차트 생성
-        charts_dir = os.path.join("charts", f"{company_code}_{reference_date}")
+        charts_dir = os.path.join("../charts", f"{company_code}_{reference_date}")
         os.makedirs(charts_dir, exist_ok=True)
 
         try:

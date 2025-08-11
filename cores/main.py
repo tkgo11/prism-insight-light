@@ -5,7 +5,7 @@ import os
 import signal
 from datetime import datetime
 
-from analysis import analyze_stock
+from cores.analysis import analyze_stock
 
 if __name__ == "__main__":
     # 60분 후에 프로세스를 종료하는 타이머 함수
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     result = asyncio.run(analyze_stock(company_code="035420", company_name="NAVER", reference_date="20250809"))
 
     # 결과 저장
-    with open(f"NAVER_분석보고서_{datetime.now().strftime('%Y%m%d')}_gpt5.md", "w", encoding="utf-8") as f:
+    with open(f"NAVER_분석보고서2_{datetime.now().strftime('%Y%m%d')}_gpt5.md", "w", encoding="utf-8") as f:
         f.write(result)
 
     end = time.time()

@@ -25,7 +25,7 @@ async def test_specific_functions():
         await agent.initialize()
 
         # 테스트할 보고서 파일
-        report_path = "reports/013700_까뮤이앤씨_20250311_morning_gpt4o.md"
+        report_path = "../reports/013700_까뮤이앤씨_20250311_morning_gpt4o.md"
 
         # 1. 종목 정보 추출 테스트
         ticker, company_name = await agent._extract_ticker_info(report_path)
