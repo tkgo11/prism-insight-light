@@ -1,14 +1,14 @@
 def get_agent_directory(company_name, company_code, reference_date, base_sections):
     """각 섹션별 에이전트 디렉토리를 반환"""
-    from agents.stock_price_agents import (
+    from cores.agents.stock_price_agents import (
         create_price_volume_analysis_agent,
         create_investor_trading_analysis_agent
     )
-    from agents.company_info_agents import (
+    from cores.agents.company_info_agents import (
         create_company_status_agent,
         create_company_overview_agent
     )
-    from agents.news_strategy_agents import (
+    from cores.agents.news_strategy_agents import (
         create_news_analysis_agent,
         create_investment_strategy_agent
     )
