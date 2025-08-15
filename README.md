@@ -1,3 +1,15 @@
+<div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+  <img src="docs/images/prism-insight-logo.jpeg" alt="PRISM-INSIGHT Logo" width="300" style="margin-bottom: 20px;">
+
+  <div style="text-align: center;">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+    <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
+    <img src="https://img.shields.io/badge/OpenAI-GPT--4.1-green.svg" alt="OpenAI">
+    <img src="https://img.shields.io/badge/OpenAI-GPT--5-green.svg" alt="OpenAI">
+    <img src="https://img.shields.io/badge/Anthropic-Claude--Sonnet--4-green.svg" alt="Anthropic">
+  </div>
+</div>
+
 # 🔍 PRISM-INSIGHT
 
 AI 기반 주식 분석 및 매매 시뮬레이션 시스템
@@ -6,12 +18,38 @@ AI 기반 주식 분석 및 매매 시뮬레이션 시스템
 
 PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을 핵심으로 하는 시스템입니다. 텔레그램 채널을 통해 매일 급등주를 자동으로 포착하고, 전문가 수준의 애널리스트 리포트를 생성하여 매매 시뮬레이션을 수행합니다.
 
+## 📈 '25.08.15 기준 매매 시뮬레이터 실적
+- 최초 시작일 : 2025.03.15
+- 총 거래 건수: 35건
+- 수익 거래: 14건
+- 손실 거래: 21건
+- 승률: 40.00%
+- **누적 수익률: 251.39%**
+
 ### 🎯 주요 기능
 
 - **🤖 AI 종합 분석 (핵심)**: GPT-4.1 기반 다중 에이전트 시스템을 통한 전문가급 주식 분석
+  <img src="docs/images/report-thumbnail.png" alt="분석 리포트 썸네일" width="500">
+
+  (데모 영상 : https://github.com/user-attachments/assets/24463218-2def-4c8a-8f3b-708f19998231)
+
+
+
 - **📊 급등주 자동 포착**: 시간대별(오전/오후) 시장 트렌드 분석을 통한 관심종목 선별
+<img src="docs/images/trigger.png" alt="급등주 포착" width="500">
+
+
 - **📱 텔레그램 자동 전송**: 분석 결과를 텔레그램 채널로 실시간 전송
+<img src="docs/images/summary.png" alt="요약 전송" width="500">
+
+
 - **📈 매매 시뮬레이션**: GPT-5 기반 생성된 리포트를 활용한 투자 전략 시뮬레이션
+<img src="docs/images/simulation1.png" alt="시뮬레이션1" width="500">
+
+<img src="docs/images/simulation2.png" alt="시뮬레이션2" width="500">
+
+<img src="docs/images/dashboard.jpg" alt="시뮬레이션 실적" width="500">
+
 - **🎨 시각화**: 주가, 거래량, 시가총액 등 다양한 차트 생성
 
 ### 🧠 AI 모델 활용
@@ -19,6 +57,13 @@ PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을
 - **핵심 분석**: OpenAI GPT-4.1 (종합 주식 분석 에이전트)
 - **매매 시뮬레이션**: OpenAI GPT-5 (투자 전략 시뮬레이션)
 - **텔레그램 대화**: Anthropic Claude (봇과의 상호작용)
+
+### 💡 사용한 MCP Servers
+
+- **[kospi_kosdaq](https://github.com/dragon1086/kospi-kosdaq-stock-server)**: 주식 보고서 작성 시 KRX(한국거래소) 주식 데이터 담당 MCP 서버
+- **[firecrawl](https://github.com/mendableai/firecrawl-mcp-server)**: 주식 보고서 작성 시 웹크롤링 전문 MCP 서버
+- **[perplexity](https://github.com/perplexityai/modelcontextprotocol/tree/main)**: 주식 보고서 작성 시 웹검색 전문 MCP 서버
+- **[sqlite](https://github.com/modelcontextprotocol/servers-archived/tree/HEAD/src/sqlite)**: 매매 시뮬레이션 내역 내부 DB 저장 전문 MCP 서버
 
 ## 🏗️ 시스템 아키텍처
 
@@ -42,7 +87,7 @@ PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을
 
 - Python 3.10+
 - OpenAI API 키 (GPT-4.1, GPT-5)
-- Anthropic API 키 (Claude3.7)
+- Anthropic API 키 (Claude-Sonnet-4)
 - 텔레그램 봇 토큰 및 채널 ID
 - wkhtmltopdf (PDF 변환용)
 
