@@ -518,7 +518,7 @@ class StockAnalysisOrchestrator:
 
             # 출력 파일 경로 설정
             reference_date = datetime.now().strftime("%Y%m%d")
-            output_file = str(REPORTS_DIR / f"{ticker}_{company_name}_{reference_date}_{mode}_gpt5.md")
+            output_file = str(REPORTS_DIR / f"{ticker}_{company_name}_{reference_date}_{mode}_gpt4.1.md")
 
             try:
                 # main.py에서 직접 함수 임포트
