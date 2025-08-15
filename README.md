@@ -36,19 +36,19 @@ PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을
 
 
 - **📊 급등주 자동 포착**: 시간대별(오전/오후) 시장 트렌드 분석을 통한 관심종목 선별
-<img src="docs/images/trigger.png" alt="급등주 포착" width="500">
+  <img src="docs/images/trigger.png" alt="급등주 포착" width="500">
 
 
 - **📱 텔레그램 자동 전송**: 분석 결과를 텔레그램 채널로 실시간 전송
-<img src="docs/images/summary.png" alt="요약 전송" width="500">
+  <img src="docs/images/summary.png" alt="요약 전송" width="500">
 
 
 - **📈 매매 시뮬레이션**: GPT-5 기반 생성된 리포트를 활용한 투자 전략 시뮬레이션
-<img src="docs/images/simulation1.png" alt="시뮬레이션1" width="500">
+  <img src="docs/images/simulation1.png" alt="시뮬레이션1" width="500">
 
-<img src="docs/images/simulation2.png" alt="시뮬레이션2" width="500">
+  <img src="docs/images/simulation2.png" alt="시뮬레이션2" width="500">
 
-<img src="docs/images/dashboard.jpg" alt="시뮬레이션 실적" width="500">
+  <img src="docs/images/dashboard.jpg" alt="시뮬레이션 실적" width="500">
 
 - **🎨 시각화**: 주가, 거래량, 시가총액 등 다양한 차트 생성
 
