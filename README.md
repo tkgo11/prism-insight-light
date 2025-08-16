@@ -32,9 +32,7 @@ PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을
 ### 🎯 주요 기능
 
 - **🤖 AI 종합 분석 (핵심)**: GPT-4.1 기반 다중 에이전트 시스템을 통한 전문가급 주식 분석
-  <img src="docs/images/report-thumbnail.png" alt="분석 리포트 썸네일" width="500">
-
-  (데모 영상 : https://github.com/user-attachments/assets/24463218-2def-4c8a-8f3b-708f19998231)
+  [![분석 리포트 데모](https://img.youtube.com/vi/4WNtaaZug74/maxresdefault.jpg)](https://youtu.be/4WNtaaZug74)
 
 
 
