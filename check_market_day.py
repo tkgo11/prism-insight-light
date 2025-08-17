@@ -6,7 +6,7 @@ import logging
 
 # 로깅 설정
 logging.basicConfig(
-    filename='/root/kospi-kosdaq-stock-analyzer/stock_scheduler.log',
+    filename='/root/prism-insight/stock_scheduler.log',
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )

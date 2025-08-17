@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 로그 파일 경로
-LOG_DIR="/root/kospi-kosdaq-stock-analyzer"
+LOG_DIR="/root/prism-insight"
 DAYS_TO_KEEP=7
 
 # 스크립트 실행 시간 기록

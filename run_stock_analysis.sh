@@ -7,8 +7,8 @@ export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
 # 로그 파일 설정
-LOG_FILE="/root/kospi-kosdaq-stock-analyzer/stock_scheduler.log"
-SCRIPT_DIR="/root/kospi-kosdaq-stock-analyzer"
+LOG_FILE="/root/prism-insight/stock_scheduler.log"
+SCRIPT_DIR="/root/prism-insight"
 
 # 로그 함수
 log() {
