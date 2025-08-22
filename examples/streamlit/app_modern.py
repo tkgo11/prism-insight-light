@@ -560,8 +560,8 @@ class ModernStockAnalysisApp:
                 subprocess.Popen([
                     "python", "-c",
                     f'''
-import asyncio, json, os
-from main import analyze_stock
+import asyncio, json, os, sys
+from cores.main import analyze_stock
 
 # 요청 정보 로드
 with open("{request_file}", "r") as f:
