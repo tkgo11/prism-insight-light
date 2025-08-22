@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 import markdown
 import base64
-from email_sender import send_email
+from examples.streamlit.email_sender import send_email
 from queue import Queue
 from threading import Thread
 import uuid
