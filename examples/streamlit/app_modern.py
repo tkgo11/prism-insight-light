@@ -10,7 +10,7 @@ from threading import Thread
 import uuid
 
 # 보고서 저장 디렉토리 설정
-REPORTS_DIR = Path("../../reports")
+REPORTS_DIR = Path(__file__).parent.parent.parent / "reports"
 REPORTS_DIR.mkdir(exist_ok=True)
 
 # 작업 큐 및 스레드 풀 설정
