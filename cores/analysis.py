@@ -4,15 +4,15 @@ from datetime import datetime
 from mcp_agent.app import MCPApp
 
 from cores.agents import get_agent_directory
-from report_generation import generate_report, generate_summary, generate_investment_strategy, get_disclaimer
-from stock_chart import (
+from cores.report_generation import generate_report, generate_summary, generate_investment_strategy, get_disclaimer
+from cores.stock_chart import (
     create_price_chart,
     create_trading_volume_chart,
     create_market_cap_chart,
     create_fundamentals_chart,
     get_chart_as_base64_html
 )
-from utils import clean_markdown
+from cores.utils import clean_markdown
 
 
 async def analyze_stock(company_code: str = "000660", company_name: str = "SK하이닉스", reference_date: str = None):
