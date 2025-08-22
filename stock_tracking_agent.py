@@ -730,7 +730,7 @@ class StockTrackingAgent:
             self.conn.commit()
 
             # 매수 내역 메시지 추가
-            message = f"📈 매수: {company_name}({ticker})\n" \
+            message = f"📈 신규 매수: {company_name}({ticker})\n" \
                       f"매수가: {current_price:,.0f}원\n" \
                       f"목표가: {scenario.get('target_price', 0):,.0f}원\n" \
                       f"손절가: {scenario.get('stop_loss', 0):,.0f}원\n" \
