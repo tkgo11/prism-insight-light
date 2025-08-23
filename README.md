@@ -129,6 +129,12 @@ sudo apt-get install wkhtmltopdf
 sudo yum install wkhtmltopdf
 ```
 
+6. **perplexity-ask MCP 서버 설치**
+```bash
+cd perplexity-ask
+npm install
+```
+
 ### 필수 설정 파일
 
 프로젝트 실행을 위해 다음 4개 설정 파일을 반드시 구성해야 합니다:
