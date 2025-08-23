@@ -4,6 +4,14 @@ import re
 from pathlib import Path
 import markdown
 import base64
+import sys
+import os
+
+# 현재 파일의 디렉토리를 Python path에 추가
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
 from email_sender import send_email
 from queue import Queue
 from threading import Thread
