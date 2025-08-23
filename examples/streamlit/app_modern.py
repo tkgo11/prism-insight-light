@@ -553,13 +553,18 @@ class ModernStockAnalysisApp:
                 import tempfile
                 import json
 
+                # 프로젝트 루트 디렉토리와 streamlit 디렉토리 경로
+                project_root = str(Path(__file__).parent.parent.parent.absolute())
+                streamlit_dir = str(Path(__file__).parent.absolute())
+
                 # 요청 정보를 임시 파일에 저장
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
                     request_info = {
                         'stock_code': request.stock_code,
                         'company_name': request.company_name,
                         'reference_date': request.reference_date,
-                        'output_file': f"reports/{request.stock_code}_{request.company_name}_{request.reference_date}_gpt4o.md"
+                        'output_file': f"reports/{request.stock_code}_{request.company_name}_{request.reference_date}_gpt4.1.md",
+                        'email': request.email
                     }
                     json.dump(request_info, f)
                     request_file = f.name
@@ -569,7 +574,32 @@ class ModernStockAnalysisApp:
                     "python", "-c",
                     f'''
 import asyncio, json, os, sys
-from cores.main import analyze_stock
+
+# Python path 설정
+project_root = "{project_root}"
+streamlit_dir = "{streamlit_dir}"
+sys.path.insert(0, project_root)
+sys.path.insert(0, streamlit_dir)
+
+# 작업 디렉토리 변경
+os.chdir(project_root)
+
+print(f"Working directory: {{os.getcwd()}}")
+print(f"Python path: {{sys.path[:3]}}")
+
+try:
+    from cores.main import analyze_stock
+    print("Successfully imported analyze_stock")
+except ImportError as e:
+    print(f"Failed to import analyze_stock: {{e}}")
+    exit(1)
+
+try:
+    from email_sender import send_email
+    print("Successfully imported send_email")
+except ImportError as e:
+    print(f"Failed to import send_email: {{e}}")
+    exit(1)
 
 # 요청 정보 로드
 with open("{request_file}", "r") as f:
@@ -577,23 +607,37 @@ with open("{request_file}", "r") as f:
 
 # 분석 실행
 async def run():
-    report = await analyze_stock(
-        company_code=info["stock_code"],
-        company_name=info["company_name"],
-        reference_date=info["reference_date"]
-    )
-    # 결과 저장
-    with open(info["output_file"], "w", encoding="utf-8") as f:
-        f.write(report)
-    # 이메일 전송 
-    from email_sender import send_email
-    send_email("{request.email}", report)
-    # 임시 파일 삭제
-    os.remove("{request_file}")
+    try:
+        print(f"Starting analysis for {{info['company_name']}} ({{info['stock_code']}})")
+        report = await analyze_stock(
+            company_code=info["stock_code"],
+            company_name=info["company_name"],
+            reference_date=info["reference_date"]
+        )
+        
+        # 결과 저장
+        with open(info["output_file"], "w", encoding="utf-8") as f:
+            f.write(report)
+        print(f"Report saved to {{info['output_file']}}")
+        
+        # 이메일 전송 
+        if send_email(info["email"], report):
+            print(f"Email sent successfully to {{info['email']}}")
+        else:
+            print(f"Failed to send email to {{info['email']}}")
+        
+        # 임시 파일 삭제
+        os.remove("{request_file}")
+        print("Analysis completed successfully")
+        
+    except Exception as e:
+        print(f"Error during analysis: {{e}}")
+        import traceback
+        traceback.print_exc()
 
 asyncio.run(run())
 '''
-                ])
+                ], cwd=project_root)
 
                 request.result = f"분석이 시작되었습니다. 완료 후 이메일로 결과가 전송됩니다."
 
