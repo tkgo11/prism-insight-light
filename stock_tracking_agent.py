@@ -128,9 +128,9 @@ class StockTrackingAgent:
             - 이 종목은 현재 포트폴리오와 적절한 분산효과를 제공하는가?
             
             **모멘텀 요소 특별 고려사항:**
-            - 최근 거래량이 평소보다 크게 증가한 경우: 긍정적 요소로 고려 (tool call(name : kospi_kosdaq-get_stock_ohlcv) 사용하여 최근데이터 조회)
-            - 투자자별 거래량에서 기관/외인 매수 우위: 긍정적 신호 (tool call(name : kospi_kosdaq-get_stock_trading_volume) 사용하여 최근데이터 조회)
-            - 개인 투자자 대비 기관 투자자 순매수 증가: 신뢰도 높은 신호 (tool call(name : kospi_kosdaq-get_stock_trading_volume) 사용하여 최근데이터 조회)
+            - 최근 거래량이 평소보다 크게 증가한 경우: 긍정적 요소로 고려
+            - 투자자별 거래량에서 기관/외인 매수 우위: 긍정적 신호
+            - 개인 투자자 대비 기관 투자자 순매수 증가: 신뢰도 높은 신호
             - 이러한 모멘텀 신호들이 확인될 때는 기존 매수 기준을 다소 완화하여 적용
             
             분석 보고서의 '투자 전략 및 의견' 섹션에 특히 주목하세요.
