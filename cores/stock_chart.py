@@ -33,10 +33,10 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
-# 한글 폰트 설정을 위한 매우 강력한 방법
 def configure_korean_font():
-    """한글 폰트 설정을 위한 강력한 함수"""
+    """한글 폰트 설정을 위한 강력한 함수 - Rocky Linux 8 & Ubuntu 22.04 지원"""
     global KOREAN_FONT_PATH, KOREAN_FONT_PROP
+    import glob  # 와일드카드 경로 처리용
 
     system = platform.system()
 
@@ -59,17 +59,24 @@ def configure_korean_font():
         # 폰트 파일이 존재하는지 확인
         for path in font_paths:
             if os.path.exists(path):
-                # 폰트 매니저에 등록
-                fm.fontManager.addfont(path)
-                KOREAN_FONT_PATH = path
-                KOREAN_FONT_PROP = fm.FontProperties(fname=path)
+                try:
+                    # 폰트 매니저에 등록
+                    fm.fontManager.addfont(path)
+                    KOREAN_FONT_PATH = path
+                    KOREAN_FONT_PROP = fm.FontProperties(fname=path)
 
-                # matplotlib 설정
-                plt.rcParams['font.family'] = 'AppleSDGothicNeo'
-                mpl.rcParams['font.family'] = 'AppleSDGothicNeo'
+                    # matplotlib 설정
+                    plt.rcParams['font.family'] = 'AppleSDGothicNeo'
+                    mpl.rcParams['font.family'] = 'AppleSDGothicNeo'
 
-                logger.info(f"한글 폰트 설정 완료: {path}")
-                return path
+                    logger.info(f"한글 폰트 설정 완료: {path}")
+                    return path
+                except (OSError, IOError) as e:
+                    logger.debug(f"macOS 폰트 파일 접근 실패: {path} -> {e}")
+                    continue
+                except (ValueError, TypeError) as e:
+                    logger.debug(f"macOS 폰트 포맷 오류: {path} -> {e}")
+                    continue
 
         # 경로로 찾기 실패시, 이름으로 시도
         korean_font_list = ['AppleSDGothicNeo-Regular', 'Apple SD Gothic Neo', 'AppleGothic', 'Malgun Gothic', 'NanumGothic']
@@ -86,7 +93,11 @@ def configure_korean_font():
 
                     logger.info(f"한글 폰트 설정 완료 (이름): {font_name}, 경로: {font_path}")
                     return font_path
-            except:
+            except (AttributeError, KeyError) as e:
+                logger.debug(f"macOS 폰트 속성 오류: {font_name} -> {e}")
+                continue
+            except (OSError, IOError) as e:
+                logger.debug(f"macOS 폰트 파일 오류: {font_name} -> {e}")
                 continue
 
     elif system == 'Windows':
@@ -97,34 +108,161 @@ def configure_korean_font():
             KOREAN_FONT_PROP = fm.FontProperties(family='Malgun Gothic')
             logger.info("한글 폰트 설정 완료: Malgun Gothic (Windows)")
             return "Malgun Gothic"
-        except:
-            pass
+        except (AttributeError, KeyError) as e:
+            logger.debug(f"Windows 폰트 설정 실패: {e}")
+        except (OSError, RuntimeError) as e:
+            logger.debug(f"Windows 폰트 시스템 오류: {e}")
 
-    else:  # Linux
-        # Linux 폰트 경로
-        font_paths = [
+    else:  # Linux (Rocky Linux 8 & Ubuntu 22.04+ 지원)
+        # 배포판별 폰트 경로 설정
+        font_paths = []
+
+        # Rocky Linux 8 / CentOS 8 / RHEL 8 경로
+        rocky_paths = [
             '/usr/share/fonts/google-nanum/NanumGothic.ttf',
             '/usr/share/fonts/nanum/NanumGothicCoding.ttf',
             '/usr/share/fonts/korean/NanumGothic.ttf',
-            '/usr/share/fonts/truetype/nanum/NanumGothic.ttf',
-            '/usr/share/fonts/NanumGothic.ttf'
         ]
 
+        # Ubuntu 22.04 / Debian 계열 경로
+        ubuntu_paths = [
+            '/usr/share/fonts/truetype/nanum/NanumGothic.ttf',
+            '/usr/share/fonts/truetype/nanum/NanumBarunGothic.ttf',
+            '/usr/share/fonts/truetype/nanum/NanumMyeongjo.ttf',
+            '/usr/share/fonts/opentype/nanum/NanumGothic.ttf',
+            '/usr/share/fonts/nanum/NanumGothic.ttf',
+        ]
+
+        # 공통 경로 (다양한 설치 방법 지원)
+        common_paths = [
+            '/usr/share/fonts/NanumGothic.ttf',
+            '/usr/local/share/fonts/NanumGothic.ttf',
+            '/home/*/fonts/NanumGothic.ttf',
+            '/home/*/.fonts/NanumGothic.ttf',
+            '/home/*/.local/share/fonts/NanumGothic.ttf',
+        ]
+
+        # 모든 경로 합치기 (Rocky → Ubuntu → 공통 순서)
+        font_paths = rocky_paths + ubuntu_paths + common_paths
+
+        # 폰트 파일 검색 (와일드카드 지원)
         for path in font_paths:
-            if os.path.exists(path):
-                # 폰트 매니저에 등록
-                fm.fontManager.addfont(path)
-                KOREAN_FONT_PATH = path
-                KOREAN_FONT_PROP = fm.FontProperties(fname=path)
+            try:
+                # 와일드카드 경로 처리 (/home/* 등)
+                if '*' in path:
+                    matching_paths = glob.glob(path)
+                    for match_path in matching_paths:
+                        if os.path.exists(match_path):
+                            try:
+                                # 폰트 매니저에 등록
+                                fm.fontManager.addfont(match_path)
+                                KOREAN_FONT_PATH = match_path
+                                KOREAN_FONT_PROP = fm.FontProperties(fname=match_path)
 
-                # matplotlib 설정
-                plt.rcParams['font.family'] = 'NanumGothic'
-                mpl.rcParams['font.family'] = 'NanumGothic'
+                                # matplotlib 설정
+                                plt.rcParams['font.family'] = 'NanumGothic'
+                                mpl.rcParams['font.family'] = 'NanumGothic'
 
-                logger.info(f"한글 폰트 설정 완료: {path}")
-                return path
+                                logger.info(f"한글 폰트 설정 완료: {match_path}")
+                                return match_path
+                            except (OSError, IOError) as e:
+                                logger.debug(f"Linux 폰트 파일 접근 실패: {match_path} -> {e}")
+                                continue
+                            except (ValueError, TypeError) as e:
+                                logger.debug(f"Linux 폰트 포맷 오류: {match_path} -> {e}")
+                                continue
+                            except PermissionError as e:
+                                logger.debug(f"Linux 폰트 권한 오류: {match_path} -> {e}")
+                                continue
+                else:
+                    # 일반 경로 처리
+                    if os.path.exists(path):
+                        try:
+                            # 폰트 매니저에 등록
+                            fm.fontManager.addfont(path)
+                            KOREAN_FONT_PATH = path
+                            KOREAN_FONT_PROP = fm.FontProperties(fname=path)
 
+                            # matplotlib 설정
+                            plt.rcParams['font.family'] = 'NanumGothic'
+                            mpl.rcParams['font.family'] = 'NanumGothic'
+
+                            logger.info(f"한글 폰트 설정 완료: {path}")
+                            return path
+                        except (OSError, IOError) as e:
+                            logger.debug(f"Linux 폰트 파일 접근 실패: {path} -> {e}")
+                            continue
+                        except (ValueError, TypeError) as e:
+                            logger.debug(f"Linux 폰트 포맷 오류: {path} -> {e}")
+                            continue
+                        except PermissionError as e:
+                            logger.debug(f"Linux 폰트 권한 오류: {path} -> {e}")
+                            continue
+            except (OSError, RuntimeError) as e:
+                logger.debug(f"glob 패턴 처리 오류: {path} -> {e}")
+                continue
+
+        # 경로 검색 실패 시 matplotlib 폰트 매니저로 재시도
+        logger.info("경로 검색 실패, matplotlib 폰트 매니저로 검색 중...")
+        korean_font_names = [
+            'NanumGothic', 'Nanum Gothic', 'NanumBarunGothic', 'Nanum Barun Gothic',
+            'NanumMyeongjo', 'Nanum Myeongjo', 'UnDotum', 'UnBatang'
+        ]
+
+        for font_name in korean_font_names:
+            try:
+                font_path = fm.findfont(fm.FontProperties(family=font_name))
+                if font_path and not font_path.endswith('.afm') and os.path.exists(font_path):
+                    # matplotlib 설정
+                    plt.rcParams['font.family'] = font_name
+                    mpl.rcParams['font.family'] = font_name
+                    KOREAN_FONT_PATH = font_path
+                    KOREAN_FONT_PROP = fm.FontProperties(family=font_name)
+
+                    logger.info(f"한글 폰트 설정 완료 (매니저): {font_name} -> {font_path}")
+                    return font_path
+            except (AttributeError, KeyError) as e:
+                logger.debug(f"Linux 폰트 매니저 속성 오류: {font_name} -> {e}")
+                continue
+            except (OSError, IOError) as e:
+                logger.debug(f"Linux 폰트 매니저 파일 오류: {font_name} -> {e}")
+                continue
+            except (ValueError, TypeError) as e:
+                logger.debug(f"Linux 폰트 매니저 값 오류: {font_name} -> {e}")
+                continue
+
+    # 모든 시도 실패 시 배포판별 설치 안내
     logger.info("⚠️ 한글 폰트 설정 실패: 한글이 제대로 표시되지 않을 수 있습니다.")
+
+    # 배포판별 설치 안내
+    try:
+        if system == 'Linux':
+            # Rocky Linux / CentOS / RHEL 감지
+            if (os.path.exists('/etc/rocky-release') or
+                    os.path.exists('/etc/centos-release') or
+                    os.path.exists('/etc/redhat-release')):
+                logger.info("Rocky Linux/CentOS/RHEL 한글 폰트 설치:")
+                logger.info("sudo dnf install google-nanum-fonts")
+
+            # Ubuntu / Debian 감지
+            elif (os.path.exists('/etc/debian_version') or
+                  os.path.exists('/etc/lsb-release')):
+                logger.info("Ubuntu/Debian 한글 폰트 설치:")
+                logger.info("sudo apt update && sudo apt install fonts-nanum fonts-nanum-coding")
+
+            else:
+                logger.info("Linux 한글 폰트 설치:")
+                logger.info("패키지 매니저로 nanum 폰트를 설치하세요.")
+        else:
+            logger.info("폰트 설치 방법은 README.md를 참조하세요.")
+
+    except (OSError, PermissionError) as e:
+        logger.debug(f"시스템 정보 확인 실패: {e}")
+        logger.info("폰트 설치 방법은 프로젝트 문서를 참조하세요.")
+    except FileNotFoundError as e:
+        logger.debug(f"시스템 파일 찾기 실패: {e}")
+        logger.info("폰트 설치 방법은 프로젝트 문서를 참조하세요.")
+
     return None
 
 # 전역 변수 초기화

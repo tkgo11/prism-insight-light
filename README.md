@@ -136,6 +136,24 @@ cd perplexity-ask
 npm install
 ```
 
+7. **한글 폰트 설치** (Linux 환경)
+
+Linux에서 차트 한글 표시를 위해 한글 폰트가 필요합니다.
+
+```bash
+# Rocky Linux 8 / CentOS / RHEL
+sudo dnf install google-nanum-fonts
+
+# Ubuntu 22.04+ / Debian
+sudo apt update && sudo apt install fonts-nanum fonts-nanum-coding
+
+# 폰트 캐시 갱신
+sudo fc-cache -fv
+python3 -c "import matplotlib.font_manager as fm; fm.fontManager.rebuild()"
+
+참고: macOS와 Windows는 기본 한글 폰트가 지원되어 별도 설치 불필요
+```
+
 ### 필수 설정 파일
 
 프로젝트 실행을 위해 다음 4개 설정 파일을 반드시 구성해야 합니다:
