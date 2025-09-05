@@ -270,60 +270,121 @@ def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame, 
     - 복합 점수: 거래대금비율(50%) + 절대거래대금(30%) + 당일등락률(20%)
     - 2차 필터링: 상승세 종목만 선별 (시가 대비 현재가 상승)
     """
-    logger.debug("trigger_morning_value_to_cap_ratio 시작")
+    logger.info("시총 대비 집중 자금 유입 상위주 분석 시작")
 
-    # 시가총액 데이터와 OHLCV 데이터 병합
-    merged = snapshot.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner").copy()
-
-    # 이전 거래일 데이터와 병합
-    common = merged.index.intersection(prev_snapshot.index)
-    merged = merged.loc[common].copy()
-    prev = prev_snapshot.loc[common].copy()
-
-    # 절대적 기준 적용
-    merged = apply_absolute_filters(merged)
-
-    # 거래대금/시가총액 비율 계산
-    merged["거래대금비율"] = (merged["거래대금"] / merged["시가총액"]) * 100
-
-    # 두 가지 등락률 계산
-    merged["장중등락률"] = (merged["종가"] / merged["시가"] - 1) * 100  # 시가 대비 현재가
-    merged["전일대비등락률"] = ((merged["종가"] - prev["종가"]) / prev["종가"]) * 100  # 증권사 앱과 동일
-    merged["상승여부"] = merged["종가"] > merged["시가"]
-
-    # 시총 필터링 - 최소 100억원 이상 종목
-    merged = merged[merged["시가총액"] >= 10000000000]
-
-    # 복합 점수 계산
-    if not merged.empty:
-        # 각 지표별 정규화
-        for col in ["거래대금비율", "거래대금", "장중등락률"]:
-            col_max = merged[col].max()
-            col_min = merged[col].min()
-            col_range = col_max - col_min if col_max > col_min else 1
-            merged[f"{col}_norm"] = (merged[col] - col_min) / col_range
-
-        # 복합 점수 계산
-        merged["복합점수"] = (
-                merged["거래대금비율_norm"] * 0.5 +
-                merged["거래대금_norm"] * 0.3 +
-                merged["장중등락률_norm"] * 0.2
-        )
-
-        # 상위 종목 선별
-        candidates = merged.sort_values("복합점수", ascending=False).head(top_n)
-    else:
-        candidates = merged
-
-    # 2차 필터링: 상승세 종목만 선별
-    result = candidates[candidates["상승여부"] == True].copy()
-
-    if result.empty:
-        logger.debug("trigger_morning_value_to_cap_ratio: 조건 충족 종목 없음")
+    # 방어 코드 1: 입력 데이터 유효성 검사
+    if snapshot.empty:
+        logger.error("snapshot 데이터가 비어있습니다")
         return pd.DataFrame()
 
-    logger.debug(f"시총 대비 집중 자금 유입 포착 종목 수: {len(result)}")
-    return enhance_dataframe(result.sort_values("복합점수", ascending=False).head(3))
+    if prev_snapshot.empty:
+        logger.error("prev_snapshot 데이터가 비어있습니다")
+        return pd.DataFrame()
+
+    if cap_df.empty:
+        logger.error("cap_df 데이터가 비어있습니다")
+        return pd.DataFrame()
+
+    # 방어 코드 2: 시가총액 컬럼 존재 확인
+    if '시가총액' not in cap_df.columns:
+        logger.error(f"cap_df에 '시가총액' 컬럼이 없습니다. 실제 컬럼: {list(cap_df.columns)}")
+        return pd.DataFrame()
+
+    logger.info(f"입력 데이터 검증 완료 - snapshot: {len(snapshot)}개, cap_df: {len(cap_df)}개")
+
+    try:
+        # 시가총액 데이터와 OHLCV 데이터 병합
+        logger.debug("시가총액 데이터 병합 시작")
+        merged = snapshot.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner").copy()
+        logger.info(f"데이터 병합 완료: {len(merged)}개 종목")
+
+        # 방어 코드 3: 병합 후 시가총액 컬럼 재확인
+        if '시가총액' not in merged.columns:
+            logger.error(f"병합 후 '시가총액' 컬럼이 없습니다. 병합 후 컬럼: {list(merged.columns)}")
+            return pd.DataFrame()
+
+        # 이전 거래일 데이터와 병합
+        common = merged.index.intersection(prev_snapshot.index)
+        if len(common) == 0:
+            logger.error("공통 종목이 없습니다")
+            return pd.DataFrame()
+
+        if len(common) < 50:
+            logger.warning(f"공통 종목이 {len(common)}개로 적습니다. 결과 품질이 낮을 수 있습니다")
+
+        merged = merged.loc[common].copy()
+        prev = prev_snapshot.loc[common].copy()
+        logger.debug(f"전일 데이터 병합 완료 - 공통 종목: {len(common)}개")
+
+        # 절대적 기준 적용
+        logger.debug("절대적 기준 필터링 시작")
+        merged = apply_absolute_filters(merged)
+        if merged.empty:
+            logger.warning("절대적 기준 필터링 후 종목이 없습니다")
+            return pd.DataFrame()
+
+        logger.info(f"필터링 완료: {len(merged)}개 종목")
+
+        # 방어 코드 4: 필수 컬럼 재확인
+        required_columns = ['거래대금', '시가총액', '종가', '시가']
+        missing_columns = [col for col in required_columns if col not in merged.columns]
+        if missing_columns:
+            logger.error(f"필수 컬럼이 없습니다: {missing_columns}")
+            return pd.DataFrame()
+
+        # 거래대금/시가총액 비율 계산
+        logger.debug("거래대금비율 계산 시작")
+        merged["거래대금비율"] = (merged["거래대금"] / merged["시가총액"]) * 100
+
+        # 두 가지 등락률 계산
+        merged["장중등락률"] = (merged["종가"] / merged["시가"] - 1) * 100  # 시가 대비 현재가
+        merged["전일대비등락률"] = ((merged["종가"] - prev["종가"]) / prev["종가"]) * 100  # 증권사 앱과 동일
+        merged["상승여부"] = merged["종가"] > merged["시가"]
+
+        # 시총 필터링 - 최소 100억원 이상 종목
+        merged = merged[merged["시가총액"] >= 10000000000]
+        if merged.empty:
+            logger.warning("시총 필터링 후 종목이 없습니다")
+            return pd.DataFrame()
+
+        logger.debug(f"시총 필터링 완료 - 남은 종목: {len(merged)}개")
+
+        # 복합 점수 계산
+        if not merged.empty:
+            # 각 지표별 정규화
+            for col in ["거래대금비율", "거래대금", "장중등락률"]:
+                col_max = merged[col].max()
+                col_min = merged[col].min()
+                col_range = col_max - col_min if col_max > col_min else 1
+                merged[f"{col}_norm"] = (merged[col] - col_min) / col_range
+
+            # 복합 점수 계산
+            merged["복합점수"] = (
+                    merged["거래대금비율_norm"] * 0.5 +
+                    merged["거래대금_norm"] * 0.3 +
+                    merged["장중등락률_norm"] * 0.2
+            )
+
+            # 상위 종목 선별
+            candidates = merged.sort_values("복합점수", ascending=False).head(top_n)
+        else:
+            candidates = merged
+
+        # 2차 필터링: 상승세 종목만 선별
+        result = candidates[candidates["상승여부"] == True].copy()
+
+        if result.empty:
+            logger.info("조건 충족 종목 없음")
+            return pd.DataFrame()
+
+        logger.info(f"분석 완료: {len(result)}개 종목 선별")
+        return enhance_dataframe(result.sort_values("복합점수", ascending=False).head(3))
+
+    except Exception as e:
+        logger.error(f"함수 실행 중 예외 발생: {e}")
+        import traceback
+        logger.debug(f"상세 에러:\n{traceback.format_exc()}")
+        return pd.DataFrame()
 
 # --- 오후 트리거 함수 (장 마감 스냅샷 기준) ---
 def trigger_afternoon_daily_rise_top(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, top_n: int = 15) -> pd.DataFrame:
