@@ -145,7 +145,7 @@ Linux에서 차트 한글 표시를 위해 한글 폰트가 필요합니다.
 sudo dnf install google-nanum-fonts
 
 # Ubuntu 22.04+ / Debian
-sudo apt update && sudo apt install fonts-nanum fonts-nanum-coding
+./cores/ubuntu_font_installer.py 실행
 
 # 폰트 캐시 갱신
 sudo fc-cache -fv
