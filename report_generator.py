@@ -175,7 +175,7 @@ def generate_report_response_sync(stock_code: str, company_name: str) -> str:
 import asyncio
 import json
 import sys
-from analysis import analyze_stock
+from cores.analysis import analyze_stock
 
 async def run():
     try:
