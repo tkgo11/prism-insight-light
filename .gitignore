@@ -5,3 +5,10 @@
 mcp_agent.config.yaml
 mcp_agent.secrets.yaml
 config.py
+
+# trading/.gitignore
+trading/config/KIS*
+trading/config/*.token*
+trading/config/*.key
+trading/config/kis_devlp.yaml
+trading/config/kis_*.yaml

@@ -27,6 +27,11 @@ mdpdf>=0.0.9  # 간편한 마크다운 변환 (대체 방식)
 # 주식 데이터 관련
 pykrx~=1.0.48
 
+# 한국투자증권 API 관련
+PyYAML>=6.0.1  # 설정 파일 파싱
+pycryptodome>=3.19.0  # 웹소켓 암호화
+websockets>=12.0  # 실시간 시세 웹소켓
+
 # JSON 처리
 ujson>=5.8.0
 
@@ -49,3 +54,5 @@ PyPDF2
 html2text
 
 scipy
+
+cryptography>=42.0.8,<45.0.0
