@@ -10,7 +10,6 @@ openai~=1.64.0
 anthropic~=0.47.2
 markdown>=3.3.0
 python-telegram-bot>=20.0
-asyncio>=3.4.3
 aiosqlite>=0.17.0
 mcp-server-sqlite
 
@@ -49,3 +48,5 @@ PyPDF2
 html2text
 
 scipy
+
+APScheduler==3.11.0

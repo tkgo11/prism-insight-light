@@ -52,6 +52,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 # 상수 정의
 REPORTS_DIR = Path("reports")
 REPORTS_DIR.mkdir(exist_ok=True)  # 디렉토리가 없으면 생성
@@ -107,6 +109,10 @@ class TelegramAIBot:
 
         # 기존 서버 프로세스 정리
         self.cleanup_server_processes()
+
+        self.scheduler = AsyncIOScheduler()
+        self.scheduler.add_job(self.load_stock_map, "interval", hours=12)
+        self.scheduler.start()
 
     def load_stock_map(self):
         """
@@ -820,11 +826,6 @@ class TelegramAIBot:
         # 디버깅을 위한 키 샘플 로깅
         sample_keys = list(self.stock_name_map.keys())[:5]
         logger.debug(f"stock_name_map 키 샘플: {sample_keys}")
-
-        # '신한'이 포함된 키들 찾기
-        shinhan_keys = [k for k in self.stock_name_map.keys() if '신한' in k]
-        if shinhan_keys:
-            logger.info(f"'신한' 포함 키들: {shinhan_keys}")
 
         # 정확 일치 검사
         if stock_input in self.stock_name_map:
