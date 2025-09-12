@@ -7,10 +7,9 @@ aiohttp~=3.11.13
 python-dateutil~=2.9.0.post0
 email-validator
 openai~=1.64.0
-anthropic~=0.47.2
+anthropic~=0.64.0
 markdown>=3.3.0
 python-telegram-bot>=20.0
-asyncio>=3.4.3
 aiosqlite>=0.17.0
 mcp-server-sqlite
 
@@ -55,4 +54,7 @@ html2text
 
 scipy
 
+
 cryptography>=42.0.8,<45.0.0
+
+APScheduler==3.11.0

@@ -52,6 +52,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 # 상수 정의
 REPORTS_DIR = Path("reports")
 REPORTS_DIR.mkdir(exist_ok=True)  # 디렉토리가 없으면 생성
@@ -107,6 +109,10 @@ class TelegramAIBot:
 
         # 기존 서버 프로세스 정리
         self.cleanup_server_processes()
+
+        self.scheduler = AsyncIOScheduler()
+        self.scheduler.add_job(self.load_stock_map, "interval", hours=12)
+        self.scheduler.start()
 
     def load_stock_map(self):
         """
@@ -771,35 +777,97 @@ class TelegramAIBot:
         Returns:
             tuple: (종목 코드, 종목 이름, 오류 메시지)
         """
+        # 입력값 방어코드
+        if not stock_input:
+            logger.warning("빈 입력값이 전달됨")
+            return None, None, "종목명 또는 코드를 입력해주세요."
+
+        if not isinstance(stock_input, str):
+            logger.warning(f"잘못된 입력 타입: {type(stock_input)}")
+            stock_input = str(stock_input)
+
+        original_input = stock_input
         stock_input = stock_input.strip()
+
+        logger.info(f"종목 검색 시작 - 입력: '{original_input}' -> 정리된 입력: '{stock_input}'")
+
+        # stock_name_map 상태 확인
+        if not hasattr(self, 'stock_name_map') or self.stock_name_map is None:
+            logger.error("stock_name_map이 초기화되지 않음")
+            return None, None, "시스템 오류: 종목 데이터가 로드되지 않았습니다."
+
+        if not isinstance(self.stock_name_map, dict):
+            logger.error(f"stock_name_map 타입 오류: {type(self.stock_name_map)}")
+            return None, None, "시스템 오류: 종목 데이터 형식이 잘못되었습니다."
+
+        logger.info(f"stock_name_map 상태 - 크기: {len(self.stock_name_map)}")
+
+        # stock_map 상태 확인
+        if not hasattr(self, 'stock_map') or self.stock_map is None:
+            logger.warning("stock_map이 초기화되지 않음")
+            self.stock_map = {}
 
         # 이미 종목 코드인 경우 (6자리 숫자)
         if re.match(r'^\d{6}$', stock_input):
+            logger.info(f"6자리 숫자 코드로 인식: {stock_input}")
             stock_code = stock_input
             stock_name = self.stock_map.get(stock_code)
 
             if stock_name:
+                logger.info(f"종목 코드 매칭 성공: {stock_code} -> {stock_name}")
                 return stock_code, stock_name, None
             else:
+                logger.warning(f"종목 코드 {stock_code}에 대한 이름 정보 없음")
                 return stock_code, f"종목_{stock_code}", "해당 종목 코드에 대한 정보가 없습니다. 코드가 정확한지 확인해주세요."
 
         # 종목명으로 입력한 경우 - 정확히 일치하는 경우 확인
+        logger.info(f"종목명 정확 일치 검색 시작: '{stock_input}'")
+
+        # 디버깅을 위한 키 샘플 로깅
+        sample_keys = list(self.stock_name_map.keys())[:5]
+        logger.debug(f"stock_name_map 키 샘플: {sample_keys}")
+
+        # 정확 일치 검사
         if stock_input in self.stock_name_map:
             stock_code = self.stock_name_map[stock_input]
+            logger.info(f"정확 일치 성공: '{stock_input}' -> {stock_code}")
             return stock_code, stock_input, None
+        else:
+            logger.info(f"정확 일치 실패: '{stock_input}'")
+
+            # 입력값의 상세 정보 로깅
+            logger.debug(f"입력값 상세 - 길이: {len(stock_input)}, "
+                         f"바이트: {stock_input.encode('utf-8')}, "
+                         f"유니코드: {[ord(c) for c in stock_input]}")
 
         # 종목명 부분 일치 검색
+        logger.info(f"부분 일치 검색 시작")
         possible_matches = []
-        for name, code in self.stock_name_map.items():
-            if stock_input.lower() in name.lower():
-                possible_matches.append((name, code))
+
+        try:
+            for name, code in self.stock_name_map.items():
+                if not isinstance(name, str) or not isinstance(code, str):
+                    logger.warning(f"잘못된 데이터 타입: name={type(name)}, code={type(code)}")
+                    continue
+
+                if stock_input.lower() in name.lower():
+                    possible_matches.append((name, code))
+                    logger.debug(f"부분 일치 발견: '{name}' ({code})")
+
+        except Exception as e:
+            logger.error(f"부분 일치 검색 중 오류: {e}")
+            return None, None, "검색 중 오류가 발생했습니다."
+
+        logger.info(f"부분 일치 결과: {len(possible_matches)}개 발견")
 
         if len(possible_matches) == 1:
             # 단일 일치 항목이 있으면 사용
             stock_name, stock_code = possible_matches[0]
+            logger.info(f"단일 부분 일치 성공: '{stock_name}' ({stock_code})")
             return stock_code, stock_name, None
         elif len(possible_matches) > 1:
             # 여러 일치 항목이 있으면 오류 메시지 반환
+            logger.info(f"다중 일치: {[f'{name}({code})' for name, code in possible_matches]}")
             match_info = "\n".join([f"{name} ({code})" for name, code in possible_matches[:5]])
             if len(possible_matches) > 5:
                 match_info += f"\n... 외 {len(possible_matches)-5}개"
@@ -807,6 +875,7 @@ class TelegramAIBot:
             return None, None, f"'{stock_input}'에 여러 일치하는 종목이 있습니다. 정확한 종목명이나 종목코드를 입력해주세요:\n{match_info}"
         else:
             # 일치하는 항목이 없으면 오류 메시지 반환
+            logger.warning(f"일치하는 종목 없음: '{stock_input}'")
             return None, None, f"'{stock_input}'에 해당하는 종목을 찾을 수 없습니다. 정확한 종목명이나 종목코드를 입력해주세요."
 
     async def process_results(self):
