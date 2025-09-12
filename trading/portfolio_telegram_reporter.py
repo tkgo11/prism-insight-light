@@ -45,7 +45,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # env파일 로드
-load_dotenv(dotenv_path="../.env")
+SCRIPT_DIR = Path(__file__).parent.absolute()  # trading/
+PROJECT_ROOT = SCRIPT_DIR.parent              # project_root/
+ENV_FILE = PROJECT_ROOT / ".env"
+load_dotenv(dotenv_path=str(ENV_FILE))
 
 class PortfolioTelegramReporter:
     """포트폴리오 상황을 텔레그램으로 리포트하는 클래스"""
