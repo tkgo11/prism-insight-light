@@ -348,6 +348,18 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
 
                     if buy_success:
+                        # 실제 계좌 매매 함수 호출(비동기)
+                        from trading.domestic_stock_trading import AsyncTradingContext
+                        async with AsyncTradingContext() as trading:
+                            # 비동기 매수 실행
+                            trade_result = await trading.async_buy_stock(stock_code=ticker)
+
+                        if trade_result['success']:
+                            logger.info(f"실제 매수 성공: {trade_result['message']}")
+                        else:
+                            logger.error(f"실제 매수 실패: {trade_result['message']}")
+
+                    if buy_success:
                         buy_count += 1
                         logger.info(f"매수 완료: {company_name}({ticker}) @ {current_price:,.0f}원")
                     else:

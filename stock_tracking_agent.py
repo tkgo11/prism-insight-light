@@ -954,6 +954,18 @@ class StockTrackingAgent:
                     sell_success = await self.sell_stock(stock, sell_reason)
 
                     if sell_success:
+                        # 실제 계좌 매매 함수 호출(비동기)
+                        from trading.domestic_stock_trading import AsyncTradingContext
+                        async with AsyncTradingContext() as trading:
+                            # 비동기 매도 실행
+                            trade_result = await trading.async_sell_stock(stock_code=ticker)
+
+                        if trade_result['success']:
+                            logger.info(f"실제 매도 성공: {trade_result['message']}")
+                        else:
+                            logger.error(f"실제 매도 실패: {trade_result['message']}")
+
+                    if sell_success:
                         sold_stocks.append({
                             "ticker": ticker,
                             "company_name": company_name,
@@ -1185,6 +1197,18 @@ class StockTrackingAgent:
                 if analysis_result.get("decision") == "진입" and effective_buy_score >= min_score:
                     # 매수 처리
                     buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
+
+                    if buy_success:
+                        # 실제 계좌 매매 함수 호출(비동기)
+                        from trading.domestic_stock_trading import AsyncTradingContext
+                        async with AsyncTradingContext() as trading:
+                            # 비동기 매수 실행
+                            trade_result = await trading.async_buy_stock(stock_code=ticker)
+
+                        if trade_result['success']:
+                            logger.info(f"실제 매수 성공: {trade_result['message']}")
+                        else:
+                            logger.error(f"실제 매수 실패: {trade_result['message']}")
 
                     if buy_success:
                         buy_count += 1
