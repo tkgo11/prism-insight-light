@@ -13,6 +13,7 @@ import datetime
 import yaml
 from pathlib import Path
 from typing import Dict, Any, List
+from dotenv import load_dotenv
 
 # 현재 스크립트의 디렉토리를 기준으로 경로 설정
 SCRIPT_DIR = Path(__file__).parent
@@ -43,6 +44,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# env파일 로드
+load_dotenv(dotenv_path="../.env")
 
 class PortfolioTelegramReporter:
     """포트폴리오 상황을 텔레그램으로 리포트하는 클래스"""
