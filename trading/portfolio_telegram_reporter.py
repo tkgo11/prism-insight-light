@@ -98,17 +98,16 @@ class PortfolioTelegramReporter:
         Returns:
             포맷팅된 텔레그램 메시지
         """
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = datetime.datetime.now().strftime("%m/%d %H:%M")
         mode_emoji = "🧪" if self.trading_mode == "demo" else "💰"
         mode_text = "모의투자" if self.trading_mode == "demo" else "실전투자"
 
-        # 헤더
-        message = f"📊 **포트폴리오 리포트** {mode_emoji}\n"
-        message += f"📅 {current_time}\n"
-        message += f"🔧 모드: {mode_text}\n"
-        message += "=" * 30 + "\n\n"
+        # 간결한 헤더
+        message = f"📊 *포트폴리오 리포트* {mode_emoji}\n"
+        message += f"🕐 {current_time} | {mode_text}\n"
+        message += "━━━━━━━━━━━━━━━━━━━━\n\n"
 
-        # 계좌 요약
+        # 계좌 요약 - 핵심 정보만
         if account_summary:
             total_eval = account_summary.get('total_eval_amount', 0)
             total_profit = account_summary.get('total_profit_amount', 0)
@@ -116,43 +115,59 @@ class PortfolioTelegramReporter:
             available = account_summary.get('available_amount', 0)
 
             profit_emoji = "📈" if total_profit >= 0 else "📉"
-            
-            message += "💼 **계좌 요약**\n"
-            message += f"🏦 총 평가금액: {self.format_currency(total_eval)}\n"
-            message += f"{profit_emoji} 총 평가손익: {self.format_currency(total_profit)} ({self.format_percentage(total_profit_rate)})\n"
-            message += f"💳 주문가능금액: {self.format_currency(available)}\n\n"
-        else:
-            message += "❌ 계좌 요약 정보를 불러올 수 없습니다.\n\n"
+            profit_sign = "+" if total_profit >= 0 else ""
 
-        # 포트폴리오
+            message += f"💰 *총 평가액*: `{self.format_currency(total_eval)}`\n"
+            message += f"{profit_emoji} *평가손익*: `{profit_sign}{self.format_currency(total_profit)}` "
+            message += f"({self.format_percentage(total_profit_rate)})\n"
+            if available > 0:
+                message += f"💳 *주문가능*: `{self.format_currency(available)}`\n"
+            message += "\n"
+        else:
+            message += "❌ 계좌 정보를 가져올 수 없습니다\n\n"
+
+        # 포트폴리오 - 간결하게 표시
         if portfolio:
-            message += f"📈 **보유 종목** ({len(portfolio)}개)\n"
-            message += "-" * 30 + "\n"
+            message += f"📈 *보유종목* ({len(portfolio)}개)\n"
+            message += "▫️▫️▫️▫️▫️▫️▫️▫️▫️▫️\n"
 
             for i, stock in enumerate(portfolio, 1):
                 stock_name = stock.get('stock_name', '알 수 없음')
                 stock_code = stock.get('stock_code', '')
                 quantity = stock.get('quantity', 0)
-                avg_price = stock.get('avg_price', 0)
                 current_price = stock.get('current_price', 0)
                 profit_amount = stock.get('profit_amount', 0)
                 profit_rate = stock.get('profit_rate', 0)
                 eval_amount = stock.get('eval_amount', 0)
 
-                profit_emoji = "🟢" if profit_amount >= 0 else "🔴"
-                
-                message += f"{i}. **{stock_name}({stock_code})**\n"
-                message += f"   📊 {quantity}주 | 평단: {self.format_currency(avg_price)}\n"
-                message += f"   💰 현재가: {self.format_currency(current_price)}\n"
-                message += f"   💵 평가액: {self.format_currency(eval_amount)}\n"
-                message += f"   {profit_emoji} 손익: {self.format_currency(profit_amount)} ({self.format_percentage(profit_rate)})\n\n"
+                # 수익률에 따른 이모지 및 표시
+                if profit_rate >= 3:
+                    status_emoji = "🚀"
+                elif profit_rate >= 0:
+                    status_emoji = "🟢"
+                elif profit_rate >= -3:
+                    status_emoji = "🟡"
+                else:
+                    status_emoji = "🔴"
+
+                profit_sign = "+" if profit_amount >= 0 else ""
+
+                # 종목명과 기본 정보 (첫 줄)
+                message += f"`{i}.` *{stock_name}* ({stock_code})\n"
+
+                # 수량, 현재가, 평가액 (둘째 줄)
+                message += f"    📊 {quantity}주 × {self.format_currency(current_price)} "
+                message += f"= `{self.format_currency(eval_amount)}`\n"
+
+                # 손익 정보 (셋째 줄)
+                message += f"    {status_emoji} `{profit_sign}{self.format_currency(profit_amount)}` "
+                message += f"({self.format_percentage(profit_rate)})\n\n"
 
         else:
-            message += "📭 보유 종목이 없습니다.\n\n"
+            message += "📭 *보유종목*: 없음\n\n"
 
         # 푸터
-        message += "=" * 30 + "\n"
-        message += "🤖 자동 리포트 시스템"
+        message += "━━━━━━━━━━━━━━━━━━━━\n"
 
         return message
 

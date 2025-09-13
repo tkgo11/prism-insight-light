@@ -1069,7 +1069,7 @@ class StockTrackingAgent:
                     sector_counts[sector] = sector_counts.get(sector, 0) + 1
 
                     profit_rate = ((current_price - buy_price) / buy_price) * 100 if buy_price else 0
-                    arrow = "🔺" if profit_rate > 0 else "🔻" if profit_rate < 0 else "➖"
+                    arrow = "🔴" if profit_rate > 0 else "🔵" if profit_rate < 0 else "➖"
 
                     buy_datetime = datetime.strptime(buy_date, "%Y-%m-%d %H:%M:%S") if buy_date else datetime.now()
                     days_passed = (datetime.now() - buy_datetime).days
