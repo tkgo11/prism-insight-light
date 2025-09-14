@@ -373,11 +373,10 @@ class DomesticStockTrading:
 
     def smart_buy(self, stock_code: str, buy_amount: int = None) -> Dict[str, Any]:
         """
-        시간대에 따라 자동으로 최적의 방법으로 매수
+        시간대에 따라 자동으로 최적의 방법으로 매수 (시간외 단일가 매매는 미체결 가능성이 높으므로 고려하지 않음)
 
         - 09:00~15:30: 시장가 매수
         - 15:40~16:00: 시간외 종가매매
-        - 16:00~18:00: 시간외 단일가매매
         - 그외 시간: 예약주문 (다음날 시장가)
 
         Args:
@@ -410,11 +409,6 @@ class DomesticStockTrading:
             # 시간외 종가매매
             logger.info(f"[{stock_code}] 시간외 종가매매 시간 - 종가매수 실행")
             return self.buy_closing_price(stock_code, buy_amount)
-
-        elif datetime.time(16, 0) <= current_time <= datetime.time(18, 0):
-            # 시간외 단일가매매
-            logger.info(f"[{stock_code}] 시간외 단일가매매 시간")
-            return self.buy_after_market(stock_code, buy_amount)
 
         else:
             # 예약주문
@@ -510,97 +504,6 @@ class DomesticStockTrading:
                 'order_no': None,
                 'stock_code': stock_code,
                 'quantity': quantity,
-                'message': f'매수 주문 중 오류: {str(e)}'
-            }
-
-    def buy_after_market(self, stock_code: str, buy_amount: int = None) -> Dict[str, Any]:
-        """
-        시간외 단일가매매로 매수 (16:00~18:00)
-
-        Args:
-            stock_code: 종목코드
-            buy_amount: 매수 금액 (기본값: 초기화시 설정한 금액)
-
-        Returns:
-            매수 결과
-        """
-
-        if not self.auto_trading:
-            return {
-                'success': False,
-                'order_no': None,
-                'stock_code': stock_code,
-                'quantity': 0,
-                'message': '자동매매가 비활성화되어 있습니다. 매수 작업을 수행할 수 없습니다. (AUTO_TRADING=False)'
-            }
-
-        # 매수 가능 수량 계산
-        buy_quantity = self.calculate_buy_quantity(stock_code, buy_amount)
-
-        if buy_quantity == 0:
-            return {
-                'success': False,
-                'order_no': None,
-                'stock_code': stock_code,
-                'quantity': 0,
-                'message': '매수 가능 수량이 0입니다'
-            }
-
-        # 시간외 단일가매매 매수
-        api_url = "/uapi/domestic-stock/v1/trading/order-cash"
-
-        if self.mode == "real":
-            tr_id = "TTTC0012U"
-        else:
-            tr_id = "VTTC0012U"
-
-        params = {
-            "CANO": self.trenv.my_acct,
-            "ACNT_PRDT_CD": self.trenv.my_prod,
-            "PDNO": stock_code,
-            "ORD_DVSN": "06",  # 06: 시간외 단일가
-            "ORD_QTY": str(buy_quantity),
-            "ORD_UNPR": "0",  # 시간외 단일가는 0
-            "EXCG_ID_DVSN_CD": "KRX",
-            "SLL_TYPE": "",
-            "CNDT_PRIC": ""
-        }
-
-        try:
-            res = ka._url_fetch(api_url, tr_id, "", params, postFlag=True)
-
-            if res.isOK():
-                output = res.getBody().output
-                order_no = output.get('odno', '')
-
-                logger.info(f"[{stock_code}] 시간외 단일가 매수 주문 성공: {buy_quantity}주, 주문번호: {order_no}")
-
-                return {
-                    'success': True,
-                    'order_no': order_no,
-                    'stock_code': stock_code,
-                    'quantity': buy_quantity,
-                    'message': f'시간외 단일가 매수 주문 완료 ({buy_quantity}주)'
-                }
-            else:
-                error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
-                logger.error(f"시간외 단일가 매수 실패: {error_msg}")
-
-                return {
-                    'success': False,
-                    'order_no': None,
-                    'stock_code': stock_code,
-                    'quantity': buy_quantity,
-                    'message': f'매수 주문 실패: {error_msg}'
-                }
-
-        except Exception as e:
-            logger.error(f"시간외 단일가 매수 중 오류: {str(e)}")
-            return {
-                'success': False,
-                'order_no': None,
-                'stock_code': stock_code,
-                'quantity': buy_quantity,
                 'message': f'매수 주문 중 오류: {str(e)}'
             }
 
@@ -814,11 +717,10 @@ class DomesticStockTrading:
 
     def smart_sell_all(self, stock_code: str) -> Dict[str, Any]:
         """
-        시간대에 따라 자동으로 최적의 방법으로 전량매도
+        시간대에 따라 자동으로 최적의 방법으로 전량매도 (시간외 단일가 매매는 미체결 가능성이 높으므로 고려하지 않음)
 
         - 09:00~15:30: 시장가 매도
         - 15:40~16:00: 시간외 종가매매
-        - 16:00~18:00: 시간외 단일가매매 (현재가 기준)
         - 그외 시간: 예약주문 (다음날 시장가)
 
         Args:
@@ -851,66 +753,10 @@ class DomesticStockTrading:
             logger.info(f"[{stock_code}] 시간외 종가매매 시간 - 종가매도 실행")
             return self.sell_all_closing_price(stock_code)
 
-        elif datetime.time(16, 0) <= current_time <= datetime.time(18, 0):
-            # 시간외 단일가매매 - 현재가 기준 지정가
-            logger.info(f"[{stock_code}] 시간외 단일가매매 시간 - 현재가 기준 매도")
-            return self.sell_all_after_market_limit(stock_code)
-
         else:
             # 예약주문 (다음날 시장가) - 수정된 함수 호출
             logger.info(f"[{stock_code}] 장외 시간 - 예약주문 실행")
             return self.sell_all_reserved_order(stock_code)
-
-    def sell_all_after_market_limit(self, stock_code: str) -> Dict[str, Any]:
-        """
-        시간외 단일가매매로 전량매도 (16:00~18:00)
-        현재가 기준으로 약간 낮은 가격에 지정가 매도
-        """
-        # 보유 수량 확인
-        holding_quantity = self.get_holding_quantity(stock_code)
-        if holding_quantity == 0:
-            return {'success': False, 'message': '보유 수량이 없습니다'}
-
-        # 시간외 단일가매매 매도
-        api_url = "/uapi/domestic-stock/v1/trading/order-cash"
-
-        if self.mode == "real":
-            tr_id = "TTTC0011U"
-        else:
-            tr_id = "VTTC0011U"
-
-        params = {
-            "CANO": self.trenv.my_acct,
-            "ACNT_PRDT_CD": self.trenv.my_prod,
-            "PDNO": stock_code,
-            "ORD_DVSN": "07",  # 07: 시간외 단일가
-            "ORD_QTY": str(holding_quantity),
-            "ORD_UNPR": str(0),
-            "EXCG_ID_DVSN_CD": "KRX",
-            "SLL_TYPE": "01",
-            "CNDT_PRIC": ""
-        }
-
-        try:
-            res = ka._url_fetch(api_url, tr_id, "", params, postFlag=True)
-
-            if res.isOK():
-                output = res.getBody().output
-                order_no = output.get('odno', '')
-
-                return {
-                    'success': True,
-                    'order_no': order_no,
-                    'stock_code': stock_code,
-                    'quantity': holding_quantity,
-                    'message': f'시간외 단일가 매도 완료 ({holding_quantity}주)'
-                }
-            else:
-                error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
-                return {'success': False, 'message': f'매도 실패: {error_msg}'}
-
-        except Exception as e:
-            return {'success': False, 'message': f'매도 중 오류: {str(e)}'}
 
     def sell_all_closing_price(self, stock_code: str) -> Dict[str, Any]:
         """
