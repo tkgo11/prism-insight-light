@@ -575,7 +575,7 @@ class DomesticStockTrading:
 
             if res.isOK():
                 output = res.getBody().output
-                order_no = output.get('RSVN_ORD_RCIT_UNPR', '')  # 예약주문접수단가
+                order_no = output.get('RSVN_ORD_SEQ', '')  # 예약주문접수번호
 
                 order_type_str = {
                     "01": "시장가",
@@ -904,7 +904,7 @@ class DomesticStockTrading:
 
             if res.isOK():
                 output = res.getBody().output
-                order_no = output.get('RSVN_ORD_RCIT_UNPR', '')  # 예약주문접수단가
+                order_no = output.get('RSVN_ORD_SEQ', '')  # 예약주문접수번호
 
                 order_type_str = {
                     "01": "시장가",
