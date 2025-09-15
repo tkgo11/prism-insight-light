@@ -58,7 +58,14 @@ class DomesticStockTrading:
 
         # 인증
         ka.auth(svr=self.env, product="01")
-        self.trenv = ka.getTREnv()
+        
+        try:
+            self.trenv = ka.getTREnv()
+        except RuntimeError as e:
+            print("❌ KIS API 인증 실패!")
+            print(f"모드: {self.mode}, 에러: {e}")
+            print("📋 kis_devlp.yaml 설정을 확인해주세요.")
+            raise RuntimeError(f"{self.mode} 모드 인증 실패") from e
 
         # 비동기 처리를 위한 추가 설정
         self._global_lock = asyncio.Lock()  # 전역 계좌 접근 제어
@@ -503,7 +510,7 @@ class DomesticStockTrading:
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
-                'quantity': quantity,
+                'quantity': buy_quantity,
                 'message': f'매수 주문 중 오류: {str(e)}'
             }
 
@@ -711,7 +718,7 @@ class DomesticStockTrading:
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
-                'quantity': quantity,
+                'quantity': buy_quantity,
                 'message': f'매도 주문 중 오류: {str(e)}'
             }
 
@@ -1020,6 +1027,8 @@ class DomesticStockTrading:
                         current_price_info = await asyncio.to_thread(
                             self.get_current_price, stock_code
                         )
+                        # Rate Limit 방지
+                        await asyncio.sleep(0.5)
 
                         if not current_price_info:
                             result['message'] = '현재가 조회 실패'
@@ -1029,9 +1038,8 @@ class DomesticStockTrading:
                         result['current_price'] = current_price_info['current_price']
 
                         # 2단계: 매수 가능 수량 계산 (amount 사용)
-                        buy_quantity = await asyncio.to_thread(
-                            self.calculate_buy_quantity, stock_code, amount  # amount 사용
-                        )
+                        current_price = current_price_info['current_price']
+                        buy_quantity = math.floor(amount / current_price)
 
                         if buy_quantity == 0:
                             result['message'] = f'매수 가능 수량이 0입니다 (매수금액: {amount:,}원)'
@@ -1042,6 +1050,8 @@ class DomesticStockTrading:
                         result['total_amount'] = buy_quantity * current_price_info['current_price']
 
                         # 3단계: 시장가 매수 실행 (amount 사용)
+                        # Rate Limit 방지
+                        await asyncio.sleep(0.5)
                         logger.info(f"[비동기 매수 API] {stock_code} 시장가 매수 실행: {buy_quantity}주 x {amount:,}원")
                         buy_result = await asyncio.to_thread(
                             self.smart_buy, stock_code, amount  # amount 사용
@@ -1132,7 +1142,7 @@ class DomesticStockTrading:
                         # 해당 종목이 포트폴리오에 있는지 확인
                         target_stock = None
                         for current_stock in current_portfolio:
-                            if stock['stock_code'] == stock_code:
+                            if current_stock['stock_code'] == stock_code:
                                 target_stock = current_stock
                                 break
 
@@ -1424,8 +1434,8 @@ if __name__ == "__main__":
 
     # 7. 전량 매도 (실제 실행시 주의!)
     print("\n=== 6. 전량 매도 (주석 해제시 실행) ===")
-    sell_result = trader.smart_sell_all("061040")
-    print(sell_result)
+    # sell_result = trader.smart_sell_all("061040")
+    # print(sell_result)
 
 # fixme : 아래 주석 삭제 예정
 ## 위 단위 기능들 테스트 성공(시장가 매수, 시간외 매도 테스트 필요) -> 매매 함수로 통합(ok) -> tracking_agent에 매매 함수 호출(ok) -> orchestrator에서 현재 계좌 현황 요약본 텔레그램 전송(테스트 필요)
