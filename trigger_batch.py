@@ -138,6 +138,7 @@ def enhance_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     종목명, 업종 등 추가 정보를 DataFrame에 추가합니다
     """
     if not df.empty:
+        df = df.copy()  # 명시적으로 복사본 생성하여 SettingWithCopyWarning 방지
         df["종목명"] = df.index.map(lambda ticker: stock_api.get_market_ticker_name(ticker))
     return df
 
@@ -545,11 +546,9 @@ def trigger_afternoon_volume_surge_flat(trade_date: str, snapshot: pd.DataFrame,
 def select_final_tickers(triggers: dict) -> dict:
     """
     각 트리거에서 선별된 종목들을 종합하여 최종 종목을 선택합니다.
-    - 무료 계정용: 가장 강한 시그널 1개 (없으면 다른 종목에서 채움)
-    - 유료 계정용: 최대 3개 종목 (여러 트리거에서 종합하여 채움)
+    - 최대 3개 종목 (여러 트리거에서 종합하여 채움)
     """
-    free_result = {}
-    premium_result = {}
+    final_result = {}
 
     # 1. 모든 결과 모으기 (종목 중복 제거)
     all_tickers = set()
@@ -567,40 +566,35 @@ def select_final_tickers(triggers: dict) -> dict:
     # 2. 복합 점수 기준 내림차순 정렬
     all_tickers_with_scores.sort(key=lambda x: x[2], reverse=True)
 
-    # 3. 무료 계정용: 가장 강한 시그널 1개만 선택
-    if all_tickers_with_scores:
-        best_trigger, best_ticker, _ = all_tickers_with_scores[0]
-        free_result[best_trigger] = triggers[best_trigger].loc[[best_ticker]]
-
-    # 4. 유료 계정용: 최대 3개까지 채우기
-    premium_tickers = set()  # 이미 선택된 종목 추적
+    # 3. 최대 3개까지 선택
+    selected_tickers = set()  # 이미 선택된 종목 추적
 
     # 우선 각 트리거별로 최상위 종목 1개씩 선택 (최대 3개 트리거)
     for name, df in triggers.items():
-        if not df.empty and len(premium_tickers) < 3:
+        if not df.empty and len(selected_tickers) < 3:
             # 해당 트리거에서 가장 점수가 높은 종목
             top_ticker = df.index[0]
-            if top_ticker not in premium_tickers:
-                premium_result[name] = df.loc[[top_ticker]]
-                premium_tickers.add(top_ticker)
+            if top_ticker not in selected_tickers:
+                final_result[name] = df.loc[[top_ticker]]
+                selected_tickers.add(top_ticker)
 
     # 만약 3개가 채워지지 않았다면, 점수 순으로 추가 종목 채우기
-    if len(premium_tickers) < 3:
+    if len(selected_tickers) < 3:
         for trigger_name, ticker, _ in all_tickers_with_scores:
-            if ticker not in premium_tickers and len(premium_tickers) < 3:
+            if ticker not in selected_tickers and len(selected_tickers) < 3:
                 # 이미 해당 트리거가 결과에 있는지 확인
-                if trigger_name in premium_result:
+                if trigger_name in final_result:
                     # 기존 결과에 추가
-                    premium_result[trigger_name] = pd.concat([
-                        premium_result[trigger_name],
+                    final_result[trigger_name] = pd.concat([
+                        final_result[trigger_name],
                         triggers[trigger_name].loc[[ticker]]
                     ])
                 else:
                     # 새 트리거 결과 추가
-                    premium_result[trigger_name] = triggers[trigger_name].loc[[ticker]]
-                premium_tickers.add(ticker)
+                    final_result[trigger_name] = triggers[trigger_name].loc[[ticker]]
+                selected_tickers.add(ticker)
 
-    return {"free": free_result, "premium": premium_result}
+    return final_result
 
 # --- 배치 실행 함수 ---
 def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = None):
@@ -671,40 +665,36 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
         import json
 
         # 선별된 종목 상세 정보 포함
-        output_data = {
-            "free": {},
-            "premium": {}
-        }
+        output_data = {}
 
-        # 계정 타입별 처리 (무료/유료)
-        for account_type in ["free", "premium"]:
-            for trigger_type, stocks_df in final_results[account_type].items():
-                if not stocks_df.empty:
-                    if trigger_type not in output_data[account_type]:
-                        output_data[account_type][trigger_type] = []
+        # 트리거 타입별 처리
+        for trigger_type, stocks_df in final_results.items():
+            if not stocks_df.empty:
+                if trigger_type not in output_data:
+                    output_data[trigger_type] = []
 
-                    for ticker in stocks_df.index:
-                        stock_info = {
-                            "code": ticker,
-                            "name": stocks_df.loc[ticker, "종목명"] if "종목명" in stocks_df.columns else "",
-                            "current_price": float(stocks_df.loc[ticker, "종가"]) if "종가" in stocks_df.columns else 0,
-                            "change_rate": float(stocks_df.loc[ticker, "전일대비등락률"]) if "전일대비등락률" in stocks_df.columns else 0,
-                            "volume": int(stocks_df.loc[ticker, "거래량"]) if "거래량" in stocks_df.columns else 0,
-                            "trade_value": float(stocks_df.loc[ticker, "거래대금"]) if "거래대금" in stocks_df.columns else 0,
-                        }
+                for ticker in stocks_df.index:
+                    stock_info = {
+                        "code": ticker,
+                        "name": stocks_df.loc[ticker, "종목명"] if "종목명" in stocks_df.columns else "",
+                        "current_price": float(stocks_df.loc[ticker, "종가"]) if "종가" in stocks_df.columns else 0,
+                        "change_rate": float(stocks_df.loc[ticker, "전일대비등락률"]) if "전일대비등락률" in stocks_df.columns else 0,
+                        "volume": int(stocks_df.loc[ticker, "거래량"]) if "거래량" in stocks_df.columns else 0,
+                        "trade_value": float(stocks_df.loc[ticker, "거래대금"]) if "거래대금" in stocks_df.columns else 0,
+                    }
 
-                        # 트리거 타입별 특화 데이터 추가
-                        if "거래량증가율" in stocks_df.columns and trigger_type == "거래량 급증 상위주":
-                            stock_info["volume_increase"] = float(stocks_df.loc[ticker, "거래량증가율"])
-                        elif "갭상승률" in stocks_df.columns:
-                            stock_info["gap_rate"] = float(stocks_df.loc[ticker, "갭상승률"])
-                        elif "거래대금비율" in stocks_df.columns:
-                            stock_info["trade_value_ratio"] = float(stocks_df.loc[ticker, "거래대금비율"])
-                            stock_info["market_cap"] = float(stocks_df.loc[ticker, "시가총액"])
-                        elif "마감강도" in stocks_df.columns:
-                            stock_info["closing_strength"] = float(stocks_df.loc[ticker, "마감강도"])
+                    # 트리거 타입별 특화 데이터 추가
+                    if "거래량증가율" in stocks_df.columns and trigger_type == "거래량 급증 상위주":
+                        stock_info["volume_increase"] = float(stocks_df.loc[ticker, "거래량증가율"])
+                    elif "갭상승률" in stocks_df.columns:
+                        stock_info["gap_rate"] = float(stocks_df.loc[ticker, "갭상승률"])
+                    elif "거래대금비율" in stocks_df.columns:
+                        stock_info["trade_value_ratio"] = float(stocks_df.loc[ticker, "거래대금비율"])
+                        stock_info["market_cap"] = float(stocks_df.loc[ticker, "시가총액"])
+                    elif "마감강도" in stocks_df.columns:
+                        stock_info["closing_strength"] = float(stocks_df.loc[ticker, "마감강도"])
 
-                        output_data[account_type][trigger_type].append(stock_info)
+                    output_data[trigger_type].append(stock_info)
 
         # 실행 시간 및 메타데이터 추가
         output_data["metadata"] = {
