@@ -13,13 +13,15 @@
 # 🔍 PRISM-INSIGHT
 
 AI 기반 주식 분석 및 매매 시뮬레이션 시스템
-- **[공식 텔레그램 채널](https://t.me/stock_ai_agent)**: (무료) 급등주 포착/주식 분석 리포트 다운로드/매매 시뮬레이션 제공 (https://t.me/stock_ai_agent)
+- **[공식 텔레그램 채널](https://t.me/stock_ai_agent)**: 급등주 포착/주식 분석 리포트 다운로드/매매 시뮬레이션 제공 (https://t.me/stock_ai_agent)
 - **커뮤니티**: 아직 없음. 임시로 텔레그램 채널 토론방에서 대화 가능
 
 
 ## 📖 프로젝트 개요
 
-PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을 핵심으로 하는 시스템입니다. 텔레그램 채널을 통해 매일 급등주를 자동으로 포착하고, 전문가 수준의 애널리스트 리포트를 생성하여 매매 시뮬레이션을 수행합니다.
+PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을 핵심으로 하는 **완전 오픈소스 무료 프로젝트**입니다. 텔레그램 채널을 통해 매일 급등주를 자동으로 포착하고, 전문가 수준의 애널리스트 리포트를 생성하여 매매 시뮬레이션을 수행합니다.
+
+**✨ 모든 기능이 100% 무료로 제공됩니다!**
 
 ## 📈 '25.09.13 기준 매매 시뮬레이터 실적
 - 최초 시작일 : 2025.03.15
@@ -154,6 +156,22 @@ python3 -c "import matplotlib.font_manager as fm; fm.fontManager.rebuild()"
 참고: macOS와 Windows는 기본 한글 폰트가 지원되어 별도 설치 불필요
 ```
 
+8. **자동 실행 설정 (Crontab)**
+
+시스템에서 자동으로 실행되도록 crontab을 설정합니다:
+
+```bash
+# 간편 설정 (권장)
+chmod +x utils/setup_crontab_simple.sh
+utils/setup_crontab_simple.sh
+
+# 또는 고급 설정
+chmod +x utils/setup_crontab.sh
+utils/setup_crontab.sh
+```
+
+자세한 내용은 [CRONTAB_SETUP.md](utils/CRONTAB_SETUP.md)를 참조하세요.
+
 ### 필수 설정 파일
 
 프로젝트 실행을 위해 다음 4개 설정 파일을 반드시 구성해야 합니다:
@@ -170,14 +188,14 @@ python3 -c "import matplotlib.font_manager as fm; fm.fontManager.rebuild()"
 전체 파이프라인을 실행하여 급등주 분석부터 텔레그램 전송까지 자동화:
 
 ```bash
-# 오전 + 오후 모두 실행 (프리미엄 계정)
-python stock_analysis_orchestrator.py --mode both --account-type premium
+# 오전 + 오후 모두 실행
+python stock_analysis_orchestrator.py --mode both
 
 # 오전만 실행
-python stock_analysis_orchestrator.py --mode morning --account-type premium
+python stock_analysis_orchestrator.py --mode morning
 
-# 오후만 실행 (무료 계정)
-python stock_analysis_orchestrator.py --mode afternoon --account-type free
+# 오후만 실행
+python stock_analysis_orchestrator.py --mode afternoon
 ```
 
 ### 개별 모듈 실행

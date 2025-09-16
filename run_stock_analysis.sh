@@ -31,7 +31,6 @@ fi
 
 # 실행할 프로그램 모드
 MODE=$1
-ACCOUNT_TYPE="premium"
 TODAY=$(date +%Y%m%d)
 
 # 로그 파일 지정 (날짜별)
@@ -48,7 +47,7 @@ fi
 
 # 백그라운드에서 스크립트 실행
 log "$MODE 배치 백그라운드 실행 시작"
-nohup /root/.pyenv/shims/python stock_analysis_orchestrator.py --mode $MODE --account-type $ACCOUNT_TYPE > $BATCH_LOG_FILE 2>&1 &
+nohup /root/.pyenv/shims/python stock_analysis_orchestrator.py --mode $MODE > $BATCH_LOG_FILE 2>&1 &
 
 # 실행된 프로세스 ID 저장
 PID=$!

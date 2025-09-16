@@ -106,16 +106,15 @@ class TelegramSummaryGenerator:
                     with open(results_file, 'r', encoding='utf-8') as f:
                         results = json.load(f)
 
-                    # free와 premium 계정 모두 확인
-                    for account_type in ["free", "premium"]:
-                        account_results = results.get(account_type, {})
-
-                        # 각 트리거 유형 확인
-                        for trigger_type, stocks in account_results.items():
-                            for stock in stocks:
-                                if stock.get("code") == stock_code:
-                                    logger.info(f"종목 {stock_code}의 트리거 유형: {trigger_type}, 모드: {mode}")
-                                    return trigger_type, mode
+                    # 모든 트리거 결과 확인 (metadata 제외)
+                    for trigger_type, stocks in results.items():
+                        if trigger_type != "metadata":
+                            # 각 트리거 유형 확인
+                            if isinstance(stocks, list):
+                                for stock in stocks:
+                                    if stock.get("code") == stock_code:
+                                        logger.info(f"종목 {stock_code}의 트리거 유형: {trigger_type}, 모드: {mode}")
+                                        return trigger_type, mode
                 except Exception as e:
                     logger.error(f"트리거 결과 파일 읽기 오류: {e}")
 
