@@ -77,11 +77,26 @@ class StockAnalysisOrchestrator:
 
             stdout, stderr = await process.communicate()
 
-            # 로그 출력
+            # 로그 출력 - 인코딩 문제 해결
             if stdout:
-                logger.info(f"배치 출력:\n{stdout.decode('utf-8')}")
+                try:
+                    stdout_text = stdout.decode('utf-8')
+                except UnicodeDecodeError:
+                    try:
+                        stdout_text = stdout.decode('cp949')  # Windows 한국어 인코딩
+                    except UnicodeDecodeError:
+                        stdout_text = stdout.decode('utf-8', errors='ignore')
+                logger.info(f"배치 출력:\n{stdout_text}")
+                
             if stderr:
-                logger.warning(f"배치 오류:\n{stderr.decode('utf-8')}")
+                try:
+                    stderr_text = stderr.decode('utf-8')
+                except UnicodeDecodeError:
+                    try:
+                        stderr_text = stderr.decode('cp949')  # Windows 한국어 인코딩
+                    except UnicodeDecodeError:
+                        stderr_text = stderr.decode('utf-8', errors='ignore')
+                logger.warning(f"배치 오류:\n{stderr_text}")
 
             if process.returncode != 0:
                 logger.error(f"배치 프로세스 실패: 종료 코드 {process.returncode}")
