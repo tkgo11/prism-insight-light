@@ -416,10 +416,10 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                                - fromdate와 todate는 현재 날짜({current_date})를 이용하여 최근 1개월의 날짜를 사용하세요. (fromdate, todate 포맷은 YYYYMMDD입니다)
                                - 기관, 외국인, 개인 등 투자자별 매수/매도 패턴을 파악하고 해석하세요.
                             
-                            3. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요. 최대한 1개의 쿼리로 통합해서 검색해주세요:
-                               - "종목코드 {ticker}의 정확한 회사 {ticker_name}에 대한 최근 뉴스 및 실적 분석 (유사 이름의 다른 회사와 혼동하지 말 것. 정확히 이 종목코드 {ticker}에 해당하는 {ticker_name} 회사만 검색. 날짜 기준: {current_date})"
-                               - "{ticker_name}(종목코드: {ticker}) 소속 업종 동향 및 전망 (날짜 기준: {current_date})"
-                               - "글로벌과 국내 증시 현황 및 전망 (날짜 기준: {current_date})"
+                            3. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요. 최대한 1개의 쿼리로 통합해서 현재날짜({current_date}) 기준으로 검색해주세요:
+                               - "종목코드 {ticker}의 정확한 회사 {ticker_name}에 대한 최근 뉴스 및 실적 분석 (유사 이름의 다른 회사와 혼동하지 말 것. 정확히 이 종목코드 {ticker}에 해당하는 {ticker_name} 회사만 검색."
+                               - "{ticker_name}(종목코드: {ticker}) 소속 업종 동향 및 전망"
+                               - "글로벌과 국내 증시 현황 및 전망"
                                
                             4. 필요에 따라 추가 데이터를 수집하세요.
                             5. 수집된 모든 정보를 종합적으로 분석하여 종목 평가에 활용하세요.
