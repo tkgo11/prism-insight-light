@@ -89,24 +89,24 @@ class PortfolioTelegramReporter:
 
     def create_portfolio_message(self, portfolio: List[Dict[str, Any]], account_summary: Dict[str, Any]) -> str:
         """
-        포트폴리오와 계좌 요약을 기반으로 텔레그램 메시지 생성
+        포트폴리오와 계좌 요약을 기반으로 텔레그램 메시지 생성 (MarkdownV2 버전)
 
         Args:
             portfolio: 포트폴리오 데이터
             account_summary: 계좌 요약 데이터
 
         Returns:
-            포맷팅된 텔레그램 메시지
+            포맷팅된 텔레그램 메시지 (MarkdownV2)
         """
         current_time = datetime.datetime.now().strftime("%m/%d %H:%M")
         mode_emoji = "🧪" if self.trading_mode == "demo" else "💰"
         mode_text = "모의투자" if self.trading_mode == "demo" else "실전투자"
 
-        # 헤더 - 간단하고 깔끔하게
-        message = f"📊 <b>포트폴리오 리포트</b> {mode_emoji}\n"
+        # 헤더
+        message = f"📊 *포트폴리오 리포트* {mode_emoji}\n"
         message += f"🕐 {current_time} | {mode_text}\n\n"
 
-        # 계좌 요약 - HTML 태그 사용으로 확실한 포맷팅
+        # 계좌 요약
         if account_summary:
             total_eval = account_summary.get('total_eval_amount', 0)
             total_profit = account_summary.get('total_profit_amount', 0)
@@ -116,19 +116,19 @@ class PortfolioTelegramReporter:
             profit_emoji = "📈" if total_profit >= 0 else "📉"
             profit_sign = "+" if total_profit >= 0 else ""
 
-            message += f"💰 <b>총 평가액</b>: <code>{self.format_currency(total_eval)}</code>\n"
-            message += f"{profit_emoji} <b>평가손익</b>: <code>{profit_sign}{self.format_currency(total_profit)}</code> "
+            message += f"💰 *총 평가액*: `{self.format_currency(total_eval)}`\n"
+            message += f"{profit_emoji} *평가손익*: `{profit_sign}{self.format_currency(total_profit)}` "
             message += f"({self.format_percentage(total_profit_rate)})\n"
 
             if available > 0:
-                message += f"💳 <b>주문가능</b>: <code>{self.format_currency(available)}</code>\n"
+                message += f"💳 *주문가능*: `{self.format_currency(available)}`\n"
             message += "\n"
         else:
             message += "❌ 계좌 정보를 가져올 수 없습니다\n\n"
 
-        # 보유종목 - 카드 스타일로 깔끔하게
+        # 보유 종목
         if portfolio:
-            message += f"📈 <b>보유종목</b> ({len(portfolio)}개)\n"
+            message += f"📈 *보유종목* ({len(portfolio)}개)\n"
 
             for i, stock in enumerate(portfolio, 1):
                 stock_name = stock.get('stock_name', '알 수 없음')
@@ -139,7 +139,7 @@ class PortfolioTelegramReporter:
                 profit_rate = stock.get('profit_rate', 0)
                 eval_amount = stock.get('eval_amount', 0)
 
-                # 수익률 상태 결정
+                # 수익률 상태
                 if profit_rate >= 3:
                     status_emoji = "🚀"
                 elif profit_rate >= 0:
@@ -151,15 +151,16 @@ class PortfolioTelegramReporter:
 
                 profit_sign = "+" if profit_amount >= 0 else ""
 
-                # 종목별 정보를 박스 형태로 구성
-                message += f"\n{i}. {status_emoji} <b>{stock_name}</b> ({stock_code})\n"
-                message += f"   📊 {quantity}주 × {self.format_currency(current_price)} = <code>{self.format_currency(eval_amount)}</code>\n"
-                message += f"   💹 <code>{profit_sign}{self.format_currency(profit_amount)}</code> ({self.format_percentage(profit_rate)})\n"
+                # 종목별 정보
+                message += f"\n{i}. {status_emoji} *{stock_name}* ({stock_code})\n"
+                message += f"   📊 {quantity}주 × {self.format_currency(current_price)} = `{self.format_currency(eval_amount)}`\n"
+                message += f"   💹 `{profit_sign}{self.format_currency(profit_amount)}` ({self.format_percentage(profit_rate)})\n"
 
         else:
-            message += "📭 <b>보유종목</b>: 없음\n\n"
+            message += "📭 *보유종목*: 없음\n\n"
 
         return message
+
 
     async def get_trading_data(self) -> tuple:
         """
