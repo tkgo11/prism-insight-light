@@ -272,6 +272,94 @@ def clean_model_response(response):
 
     return cleaned_response
 
+async def generate_follow_up_response(ticker, ticker_name, conversation_context, user_question, tone):
+    """
+    추가 질문에 대한 AI 응답 생성 (Agent 방식 사용)
+    
+    Args:
+        ticker (str): 종목 코드
+        ticker_name (str): 종목명
+        conversation_context (str): 이전 대화 컨텍스트
+        user_question (str): 사용자의 새 질문
+        tone (str): 응답 톤
+    
+    Returns:
+        str: AI 응답
+    """
+    try:
+        # MCPApp 초기화
+        app = MCPApp(name="telegram_ai_bot_followup")
+
+        async with app.run() as app_instance:
+            app_logger = app_instance.logger
+
+            # 현재 날짜 정보 가져오기
+            current_date = datetime.now().strftime('%Y%m%d')
+
+            # 에이전트 생성
+            agent = Agent(
+                name="followup_agent",
+                instruction=f"""당신은 텔레그램 채팅에서 주식 평가 후속 질문에 답변하는 전문가입니다.
+                            
+                            ## 기본 정보
+                            - 현재 날짜: {current_date}
+                            - 종목 코드: {ticker}
+                            - 종목 이름: {ticker_name}
+                            - 대화 스타일: {tone}
+                            
+                            ## 이전 대화 컨텍스트
+                            {conversation_context}
+                            
+                            ## 사용자의 새로운 질문
+                            {user_question}
+                            
+                            ## 응답 가이드라인
+                            1. 이전 대화에서 제공한 정보와 일관성을 유지하세요
+                            2. 필요한 경우 추가 데이터를 조회할 수 있습니다:
+                               - get_stock_ohlcv: 최신 주가 데이터 조회
+                               - get_stock_trading_volume: 투자자별 거래 데이터
+                               - perplexity_ask: 최신 뉴스나 정보 검색
+                            3. 사용자가 요청한 스타일({tone})을 유지하세요
+                            4. 텔레그램 메시지 형식으로 자연스럽게 작성하세요
+                            5. 이모티콘을 적극 활용하세요 (📈 📉 💰 🔥 💎 🚀 등)
+                            6. 마크다운 형식은 사용하지 마세요
+                            7. 2000자 이내로 작성하세요
+                            8. 이전 대화의 맥락을 고려하여 답변하세요
+                            
+                            ## 주의사항
+                            - 사용자의 질문이 이전 대화와 관련이 있다면, 그 맥락을 참고하여 답변
+                            - 새로운 정보가 필요한 경우에만 도구를 사용
+                            - 도구 호출 과정을 사용자에게 노출하지 마세요
+                            """,
+                server_names=["perplexity", "kospi_kosdaq"]
+            )
+
+            # LLM 연결
+            llm = await agent.attach_llm(AnthropicAugmentedLLM)
+
+            # 응답 생성
+            response = await llm.generate_str(
+                message=f"""사용자의 추가 질문에 대해 답변해주세요.
+                        
+                        이전 대화를 참고하되, 사용자의 새 질문에 집중하여 답변하세요.
+                        필요한 경우 최신 데이터를 조회하여 정확한 정보를 제공하세요.
+                        """,
+                request_params=RequestParams(
+                    model="claude-sonnet-4-20250514",
+                    maxTokens=2000
+                )
+            )
+            app_logger.info(f"추가 질문 응답 생성 결과: {str(response)[:100]}...")
+
+            return clean_model_response(response)
+
+    except Exception as e:
+        logger.error(f"추가 응답 생성 중 오류: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return "죄송합니다. 응답 생성 중 오류가 발생했습니다. 다시 시도해주세요."
+
+
 async def generate_evaluation_response(ticker, ticker_name, avg_price, period, tone, background, report_path=None):
     """
     종목 평가 AI 응답 생성
