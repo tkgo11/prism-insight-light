@@ -316,7 +316,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                             
                             ## 데이터 수집 및 분석 단계
                             1. get_stock_ohlcv 툴을 사용하여 종목({ticker})의 최신 주가 데이터 및 거래량을 조회하세요.
-                               - fromdate와 todate는 최근 1개월의 날짜를 사용하세요. (fromdate, todate 포맷은 YYYYMMDD입니다)
+                               - fromdate와 todate는 현재 날짜({current_date})를 이용하여 최근 1개월의 날짜를 사용하세요. (fromdate, todate 포맷은 YYYYMMDD입니다)
                                - 최신 종가와 전일 대비 변동률, 거래량 추이를 반드시 파악하세요.
                                - 최신 종가를 이용해 다음과 같이 수익률을 계산하세요:
                                  * 수익률(%) = ((현재가 - 평균매수가) / 평균매수가) * 100
@@ -325,7 +325,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                                
                                
                             2. get_stock_trading_volume 툴을 사용하여 투자자별 거래 데이터를 분석하세요.
-                               - 동일하게 최근 1개월 데이터를 사용하세요. (fromdate, todate 포맷은 YYYYMMDD입니다)
+                               - fromdate와 todate는 현재 날짜({current_date})를 이용하여 최근 1개월의 날짜를 사용하세요. (fromdate, todate 포맷은 YYYYMMDD입니다)
                                - 기관, 외국인, 개인 등 투자자별 매수/매도 패턴을 파악하고 해석하세요.
                             
                             3. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요. 최대한 1개의 쿼리로 통합해서 검색해주세요:

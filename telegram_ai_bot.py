@@ -322,7 +322,7 @@ class TelegramAIBot:
         """시작 명령어 처리"""
         user = update.effective_user
         await update.message.reply_text(
-            f"안녕하세요, {user.first_name}님! 저는 프리즘 어드바이 봇입니다.\n\n"
+            f"안녕하세요, {user.first_name}님! 저는 프리즘 어드바이저 봇입니다.\n\n"
             "저는 보유하신 종목에 대한 평가를 제공합니다.\n"
             "/evaluate - 보유 종목 평가 시작\n"
             "/report - 상세 분석 보고서 요청\n"
