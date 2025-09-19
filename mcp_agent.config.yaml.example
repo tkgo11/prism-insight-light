@@ -53,6 +53,13 @@ mcp:
           "stock_tracking_db"
         ]
 
+    time:
+      command: "uvx"
+      args:
+        [
+          "mcp-server-time"
+        ]
+
 openai:
   # Secrets (API keys, etc.) are stored in an mcp_agent.secrets.yaml file which can be gitignored
   default_model: gpt-5
