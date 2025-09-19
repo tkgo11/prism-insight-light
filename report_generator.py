@@ -404,7 +404,7 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                             
                             ## 데이터 수집 및 분석 단계
                             1. get_current_time 툴을 사용하여 현재 날짜를 가져오세요.
-                            2. get_stock_ohlcv 툴을 사용하여 종목({ticker})의 현재 날짜 기준 최신 3개월치 주가 데이터 및 거래량을 조회하세요.
+                            2. get_stock_ohlcv 툴을 사용하여 종목({ticker})의 현재 날짜 기준 최신 3개월치 주가 데이터 및 거래량을 조회하세요. 특히 get_current_time 툴에서 가져온 년도를 꼭 참고하세요.
                                - fromdate, todate 포맷은 YYYYMMDD입니다. 그리고 todate가 현재날짜고, fromdate가 과거날짜입니다.
                                - 최신 종가와 전일 대비 변동률, 거래량 추이를 반드시 파악하세요.
                                - 최신 종가를 이용해 다음과 같이 수익률을 계산하세요:
@@ -413,11 +413,11 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                                  * 매수평단가가 0이거나 비정상적으로 낮은 값인 경우 사용자에게 확인 요청
                                
                                
-                            3. get_stock_trading_volume 툴을 사용하여 현재 날짜 기준 최신 3개월치 투자자별 거래 데이터를 분석하세요.
+                            3. get_stock_trading_volume 툴을 사용하여 현재 날짜 기준 최신 3개월치 투자자별 거래 데이터를 분석하세요. 특히 get_current_time 툴에서 가져온 년도를 꼭 참고하세요.
                                - fromdate, todate 포맷은 YYYYMMDD입니다. 그리고 todate가 현재날짜고, fromdate가 과거날짜입니다.
                                - 기관, 외국인, 개인 등 투자자별 매수/매도 패턴을 파악하고 해석하세요.
                             
-                            4. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요. 최대한 1개의 쿼리로 통합해서 현재 날짜를 기준으로 검색해주세요:
+                            4. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요. 최대한 1개의 쿼리로 통합해서 현재 날짜를 기준으로 검색해주세요. 특히 get_current_time 툴에서 가져온 년도를 꼭 참고하세요.
                                - "종목코드 {ticker}의 정확한 회사 {ticker_name}에 대한 최근 뉴스 및 실적 분석 (유사 이름의 다른 회사와 혼동하지 말 것. 정확히 이 종목코드 {ticker}에 해당하는 {ticker_name} 회사만 검색."
                                - "{ticker_name}(종목코드: {ticker}) 소속 업종 동향 및 전망"
                                - "글로벌과 국내 증시 현황 및 전망"
