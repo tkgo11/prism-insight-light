@@ -1344,7 +1344,7 @@ class DomesticStockTrading:
                     account_summary = {
                         'total_eval_amount': float(output2.get('tot_evlu_amt', 0)),
                         'total_profit_amount': float(output2.get('evlu_pfls_smtl_amt', 0)),
-                        'total_profit_rate': round(float((output2.get('evlu_pfls_smtl_amt', 0) - output2.get('pchs_amt_smtl_amt', 0)) / output2.get('pchs_amt_smtl_amt', 1) * 100), 2),
+                        'total_profit_rate': round((float(output2.get('evlu_pfls_smtl_amt', 0)) - float(output2.get('pchs_amt_smtl_amt', 0))) / float(output2.get('pchs_amt_smtl_amt', 1)) * 100, 2),
                         'deposit': float(output2.get('dnca_tot_amt', 0)),
                         'available_amount': float(output2.get('ord_psbl_cash', 0))
                     }

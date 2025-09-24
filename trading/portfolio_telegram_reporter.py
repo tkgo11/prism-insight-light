@@ -155,6 +155,7 @@ class PortfolioTelegramReporter:
                 # 종목별 정보
                 message += f"\n{i}. {status_emoji} {stock_name} ({stock_code})\n"
                 message += f"   📊 {quantity}주 × {self.format_currency(current_price)} = `{self.format_currency(eval_amount)}`\n"
+                message += f"   💸 평균단가: `{self.format_currency(avg_price)}`\n"
                 message += f"   💹 `{profit_sign}{self.format_currency(profit_amount)}` ({self.format_percentage(profit_rate)})\n"
 
         else:
