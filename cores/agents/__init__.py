@@ -12,6 +12,9 @@ def get_agent_directory(company_name, company_code, reference_date, base_section
         create_news_analysis_agent,
         create_investment_strategy_agent
     )
+    from cores.agents.market_index_agents import (
+        create_market_index_analysis_agent
+    )
     from cores.utils import get_wise_report_url
     
     # URL 매핑 생성
@@ -41,6 +44,9 @@ def get_agent_directory(company_name, company_code, reference_date, base_section
         ),
         "news_analysis": lambda: create_news_analysis_agent(
             company_name, company_code, reference_date
+        ),
+        "market_index_analysis": lambda: create_market_index_analysis_agent(
+            reference_date, max_years_ago, max_years
         ),
         "investment_strategy": lambda: create_investment_strategy_agent(
             company_name, company_code, reference_date
