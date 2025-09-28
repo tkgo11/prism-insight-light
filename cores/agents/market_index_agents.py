@@ -59,7 +59,7 @@ def create_market_index_analysis_agent(reference_date, max_years_ago, max_years)
                 
                         ## 보고서 구성
                         1. **당일 시장 변동 요약**
-                           - 분석일({reference_date}) 기준 KOSPI/KOSDAQ 변동의 주요 원인 상세 분석
+                           - 분석일({reference_date}) 기준 KOSPI/KOSDAQ 지수 변동의 주요 원인 상세 분석
                            - 주요 거시경제 이슈 및 글로벌 요인의 시장 영향
                            
                         2. **시장 현황 요약**
