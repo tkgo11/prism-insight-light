@@ -123,7 +123,7 @@ class StockTrackingAgent:
                - 충분한 상승여력(목표가 대비 10% 이상)이 있는가?
             
             3. 목표가를 제시해주세요 (현실적이고 합리적인 수준).
-            4. 손절매 가격을 제시해주세요 (최대 허용 손실 기준).
+            4. 손절매 가격을 제시해주세요 (현실적이고 합리적인 수준).
             5. 투자 기간을 제안해주세요 (단기: 1개월 이내, 중기: 1~3개월, 장기: 3개월 이상).
                - 현재 포트폴리오의 투자 기간 분포를 고려하여 균형을 맞추세요
             6. 핵심 투자 근거를 3줄 이내로 요약해주세요.
@@ -158,7 +158,7 @@ class StockTrackingAgent:
             tool call 시 보고서 최상단의 '발행일: '이라고 표기된 날짜를 기준으로 적절한 범위의 데이터를 조회하면 됩니다.
             
             ### 응답 형식
-            JSON 형식으로 다음과 같이 응답해주세요:
+            JSON 형식으로 다음과 같이 응답해주세요. 단, 매도 시나리오 작성 시 100% 전량매도하는 시스템임을 참고하시길 바랍니다. :
             {
                 "portfolio_analysis": "현재 포트폴리오 상황 요약 (슬랏 수, 산업군 분포 등)",
                 "buy_score": 1~10 사이의 점수,
@@ -168,7 +168,28 @@ class StockTrackingAgent:
                 "investment_period": "단기" 또는 "중기" 또는 "장기",
                 "rationale": "핵심 투자 근거를 간략히 설명",
                 "sector": "이 종목의 산업군/섹터 이름",
-                "considerations": "포트폴리오 맥락에서 이 종목 선택의 이유"
+                "trading_scenarios": {
+                    "key_levels": {
+                        "primary_support": 주요 지지선 가격,
+                        "secondary_support": 보조 지지선 가격,  
+                        "primary_resistance": 주요 저항선 가격,
+                        "secondary_resistance": 보조 저항선 가격,
+                        "volume_baseline": "평소 거래량 기준"
+                    },
+                    "sell_triggers": [
+                        "익절 조건 1:  목표가/저항선 관련",
+                        "익절 조건 2: 상승 모멘텀 소진 관련", 
+                        "손절 조건 1: 지지선 이탈 관련",
+                        "손절 조건 2: 하락 가속 관련",
+                        "시간 조건: 횡보/장기보유 관련"
+                    ],
+                    "hold_conditions": [
+                        "보유 지속 조건 1",
+                        "보유 지속 조건 2", 
+                        "보유 지속 조건 3"
+                    ],
+                    "portfolio_context": "포트폴리오 관점에서의 의미"
+                }
             }
             """,
             server_names=["kospi_kosdaq", "sqlite"]

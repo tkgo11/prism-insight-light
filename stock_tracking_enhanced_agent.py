@@ -467,8 +467,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             except:
                 pass
 
-            # 종목의 추세 분석
-            trend = await self._analyze_trend(ticker)
+            # 종목의 추세 분석(7일 선형회귀 분석)
+            trend = await self._analyze_trend(ticker, days=7)
 
             # 매도 의사결정 우선순위에 따라 조건 체크
 
