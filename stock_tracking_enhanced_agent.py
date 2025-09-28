@@ -6,6 +6,11 @@ from stock_tracking_agent import StockTrackingAgent
 import logging
 import json
 import traceback
+import re
+
+from mcp_agent.agents.agent import Agent
+from mcp_agent.workflows.llm.augmented_llm import RequestParams
+from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,13 +30,129 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         """에이전트 초기화"""
         super().__init__(db_path, telegram_token)
         # 시장 상태 저장 변수 (1: 강세장, 0: 중립, -1: 약세장)
-        self.market_condition = 0
+        self.simple_market_condition = 0
         # 변동성 테이블 (종목별 변동성 저장)
         self.volatility_table = {}
 
     async def initialize(self):
         """필요한 테이블 생성 및 초기화"""
         await super().initialize()
+
+        # 매도 결정 에이전트 초기화
+        self.sell_decision_agent = Agent(
+            name="sell_decision_agent",
+            instruction="""당신은 보유 종목의 매도 시점을 결정하는 전문 분석가입니다.
+            현재 보유 중인 종목의 데이터를 종합적으로 분석하여 매도할지 계속 보유할지 결정해야 합니다.
+            
+            ### ⚠️ 중요: 매매 시스템 특성
+            **이 시스템은 분할매매가 불가능합니다. 매도 결정 시 해당 종목을 100% 전량 매도합니다.**
+            **따라서 부분 매도, 점진적 매도, 물타기 등은 불가능하며, 오직 '보유' 또는 '전량 매도'만 가능합니다.**
+            **이런 올인/올아웃 특성상 매도 결정은 더욱 신중해야 하며, 일시적 하락보다는 명확한 매도 신호가 있을 때만 결정해야 합니다.**
+            
+            ### 매도 의사결정 원칙
+            1. **손절매 우선**: 손절가에 도달하면 원칙적으로 매도하되, 강한 상승 모멘텀이 있으면 예외 고려
+            2. **목표가 달성**: 목표가 달성 시 매도하되, 추세가 강하면 추가 상승 여력 고려
+            3. **시장 환경 고려**: 약세장에서는 보수적으로, 강세장에서는 적극적으로 접근
+            4. **투자 기간 존중**: 단기/중기/장기 투자 성격에 맞는 매도 기준 적용
+            5. **추세 분석**: 기술적 추세를 고려하여 매도 타이밍 조절
+            6. **100% 매도 특성**: 한 번 매도하면 재진입까지 시간이 걸리므로 성급한 매도 지양
+            
+            ### 분석해야 할 요소들
+            **기본 수익률 정보:**
+            - 현재 수익률과 목표 수익률 비교
+            - 손실 규모와 허용 가능한 손실 한계
+            - 투자 기간 대비 성과 평가
+            
+            **기술적 분석:**
+            - 최근 주가 추세 분석
+            - 거래량 변화 패턴 분석
+            - 지지선/저항선 근처 위치 확인
+            - 모멘텀 지표 (상승/하락 가속도)
+            
+            **시장 환경 분석:**
+            - 전체 시장 상황 (강세장/약세장/중립)
+            - 시장 변동성 수준
+            
+            **포트폴리오 관점:**
+            - 전체 포트폴리오 내 비중과 위험도
+            - 시장상황과 포트폴리오 상황을 고려한 리밸런싱 필요성
+            
+            ### 매도 결정 조건별 우선순위
+            
+            **1순위: 리스크 관리 (손절)**
+            - 손절가 도달: 즉시 전량 매도 (단, 강한 상승 모멘텀 시 1-2일 유예 고려)
+            - 급격한 하락 (-5% 이상): 추세 확인 후 전량 손절 여부 결정
+            - 시장 충격 상황: 방어적 전량 매도 고려
+            
+            **2순위: 수익 실현 (익절)**
+            - 목표가 달성: 추세 강도에 따라 전량 매도 또는 보유 지속
+            - 단기 투자 목표 달성 (15일 이상 + 5% 이상 수익): 전량 매도 고려
+            - 과도한 수익 (+10% 이상): 차익 실현을 위한 전량 매도 고려 (단, 강한 상승추세 유지 시 홀딩)
+            
+            **3순위: 시간 관리**
+            - 투자 기간 만료 근접: 수익/손실 상관없이 전량 정리 고려
+            - 장기 보유 후 저조한 성과: 기회비용 관점에서 전량 매도 고려
+            - 시장 환경 변화: 투자 논리 변경 시 전량 매도
+            
+            **⚠️ 100% 매도 시스템 고려사항:**
+            - 일시적 변동성으로 인한 성급한 매도 지양
+            - 재진입 기회를 고려한 신중한 매도 결정
+            - 명확한 매도 신호가 있을 때만 결정
+            - 단순 조정과 추세 전환을 구분하여 판단
+            
+            ### tool 사용 지침
+            **time-get_current_time으로 현재 시간 획득**
+            **kospi_kosdaq tool로 확인할 데이터:**
+            1. kospi_kosdaq-get_stock_ohlcv: 최근 14일 가격/거래량 데이터로 추세 분석
+            2. kospi_kosdaq-get_stock_trading_volume: 기관/외국인 매매 동향 확인
+            3. kospi_kosdaq-get_index_ohlcv: 코스피/코스닥 시장 지수 정보 확인
+            
+            **sqlite tool로 확인할 데이터:**
+            1. 현재 포트폴리오 전체 현황
+            2. 현재 종목의 매매 정보
+            3. **DB 업데이트 기능**: portfolio_adjustment에서 목표가/손절가 조정이 필요하면 UPDATE 쿼리 실행
+            
+            **신중한 조정 원칙:**
+            - 포트폴리오 조정은 투자 원칙과 일관성을 해치므로 정말 필요할 때만 수행
+            - 단순 단기 변동이나 노이즈로 인한 조정은 지양
+            - 펀더멘털 변화, 시장 구조 변화 등 명확한 근거가 있을 때만 조정
+            
+            **중요**: 위 조건들은 모두 전량 매도를 의미하며, 부분 매도나 단계적 매도는 불가능합니다.
+            
+            ### 응답 형식
+            JSON 형식으로 다음과 같이 응답해주세요:
+            {
+                "should_sell": true 또는 false,
+                "sell_reason": "매도 이유 상세 설명",
+                "confidence": 1~10 사이의 확신도,
+                "analysis_summary": {
+                    "technical_trend": "상승/하락/중립 + 강도",
+                    "volume_analysis": "거래량 패턴 분석",
+                    "market_condition_impact": "시장 환경이 결정에 미친 영향",
+                    "time_factor": "보유 기간 관련 고려사항"
+                },
+                "portfolio_adjustment": {
+                    "needed": true 또는 false,
+                    "reason": "조정이 필요한 구체적 이유 (매우 신중하게 판단)",
+                    "new_target_price": 85000 (숫자, 쉼표 없이) 또는 null,
+                    "new_stop_loss": 70000 (숫자, 쉼표 없이) 또는 null,
+                    "urgency": "high/medium/low - 조정의 긴급도"
+                }
+            }
+            
+            **portfolio_adjustment 작성 가이드:**
+            - **매우 신중하게 판단**: 잦은 조정은 투자 원칙을 해치므로 정말 필요할 때만
+            - needed=true 조건: 시장 환경 급변, 종목 펀더멘털 변화, 기술적 구조 변화 등
+            - new_target_price: 조정이 필요하면 85000 (순수 숫자, 쉼표 없이), 아니면 null
+            - new_stop_loss: 조정이 필요하면 70000 (순수 숫자, 쉼표 없이), 아니면 null
+            - urgency: high(즉시), medium(며칠 내), low(참고용)
+            - **원칙**: 현재 전략이 여전히 유효하다면 needed=false로 설정
+            - **숫자 형식 주의**: 85000 (O), "85,000" (X), "85000원" (X)
+            
+            반드시 도구를 활용하여 최신 데이터를 확인한 후 종합적으로 판단하세요.
+            """,
+            server_names=["kospi_kosdaq", "sqlite", "time"]
+        )
 
         # 시장 상태 분석 테이블 생성
         self.cursor.execute("""
@@ -47,11 +168,11 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         self.conn.commit()
 
         # 시장 상태 분석 실행
-        await self._analyze_market_condition()
+        await self._analyze_simple_market_condition()
 
         return True
 
-    async def _analyze_market_condition(self):
+    async def _analyze_simple_market_condition(self):
         """시장 상태 분석 (강세장/약세장)"""
         try:
             from pykrx.stock import stock_api
@@ -86,7 +207,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             avg_volatility = (kospi_volatility + kosdaq_volatility) / 2
 
             # 시장 상태 저장
-            self.market_condition = market_condition
+            self.simple_market_condition = market_condition
 
             # DB에 저장
             current_date = dt.datetime.now().strftime("%Y-%m-%d")
@@ -177,9 +298,9 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             adjusted_stop_loss_pct = min(max(base_stop_loss_pct * relative_volatility, 3.0), 15.0)
 
             # 시장 상태에 따른 추가 조정
-            if self.market_condition == -1:  # 약세장
+            if self.simple_market_condition == -1:  # 약세장
                 adjusted_stop_loss_pct = adjusted_stop_loss_pct * 0.8  # 더 타이트하게
-            elif self.market_condition == 1:  # 강세장
+            elif self.simple_market_condition == 1:  # 강세장
                 adjusted_stop_loss_pct = adjusted_stop_loss_pct * 1.2  # 더 넓게
 
             # 손절가 계산
@@ -210,9 +331,9 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             adjusted_target_pct = min(max(base_target_pct * relative_volatility, 5.0), 30.0)
 
             # 시장 상태에 따른 추가 조정
-            if self.market_condition == 1:  # 강세장
+            if self.simple_market_condition == 1:  # 강세장
                 adjusted_target_pct = adjusted_target_pct * 1.3  # 더 높게
-            elif self.market_condition == -1:  # 약세장
+            elif self.simple_market_condition == -1:  # 약세장
                 adjusted_target_pct = adjusted_target_pct * 0.7  # 더 낮게
 
             # 목표가 계산
@@ -278,60 +399,33 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 rank_change_percentage = analysis_result.get("rank_change_percentage", 0)
                 rank_change_msg = analysis_result.get("rank_change_msg", "")
 
-                # 현재 보유 슬랏 수에 따라 매수 점수 기준 동적 조정
-                current_slots = await self._get_current_slots_count()
-
-                # 시장 상태에 따른 매수 점수 기준 조정
-                min_score = 8  # 기본 기준
-
-                # 약세장에서는 더 높은 기준, 강세장에서는 낮은 기준
-                if self.market_condition == -1:  # 약세장
-                    min_score = 9  # 더 엄격한 기준
-                elif self.market_condition == 1:  # 강세장
-                    min_score = 7  # 더 완화된 기준
-
-                # 슬랏이 많이 차있을수록 더 높은 기준 적용
-                if current_slots >= 7:  # 70% 이상 찼을 경우
-                    min_score += 1
-
                 # 진입 결정 확인
                 buy_score = scenario.get("buy_score", 0)
+                min_score = scenario.get("min_score", 0)
                 decision = analysis_result.get("decision")
                 logger.info(f"매수 점수 체크: {company_name}({ticker}) - 점수: {buy_score}, 최소 요구 점수: {min_score}")
 
-                # 거래대금 랭킹 상승 시 가중치 부여 (새로 추가)
-                rank_bonus = 0
-                if rank_change_percentage >= 30:
-                    rank_bonus = 2  # 큰 폭 상승 시 2점 보너스
-                    logger.info(f"거래대금 랭킹 큰 폭 상승으로 매수 점수 +2 보너스: {company_name}({ticker})")
-                elif rank_change_percentage >= 15:
-                    rank_bonus = 1  # 중간 수준 상승 시 1점 보너스
-                    logger.info(f"거래대금 랭킹 상승으로 매수 점수 +1 보너스: {company_name}({ticker})")
-
-                effective_buy_score = buy_score + rank_bonus
-                logger.info(f"최종 매수 점수: {effective_buy_score} (기본: {buy_score}, 랭킹 보너스: {rank_bonus})")
-
                 # 매수하지 않는 경우 (관망/점수 부족/산업군 제약) 메시지 생성
-                if decision != "진입" or effective_buy_score < min_score or not sector_diverse:
+                if decision != "진입" or buy_score < min_score or not sector_diverse:
                     # 매수하지 않는 이유 결정
                     reason = ""
                     if not sector_diverse:
                         reason = f"산업군 '{sector}' 과다 투자 방지"
-                    elif effective_buy_score < min_score:
+                    elif buy_score < min_score:
                         if decision == "진입":
                             decision = "관망"  # "진입"에서 "관망"으로 변경
-                            logger.info(f"매수 점수 부족으로 결정 변경: {company_name}({ticker}) - 진입 → 관망 (점수: {effective_buy_score} < {min_score})")
-                        reason = f"매수 점수 부족 ({effective_buy_score} < {min_score})"
+                            logger.info(f"매수 점수 부족으로 결정 변경: {company_name}({ticker}) - 진입 → 관망 (점수: {buy_score} < {min_score})")
+                        reason = f"매수 점수 부족 ({buy_score} < {min_score})"
                     elif decision != "진입":
                         reason = f"분석 결정이 '관망'"
 
                     # 시장 상태 정보
-                    market_condition_text = "강세장" if self.market_condition == 1 else "약세장" if self.market_condition == -1 else "중립"
+                    market_condition_text = scenario.get("market_condition")
 
                     # 관망 메시지 생성
                     skip_message = f"⚠️ 매수 보류: {company_name}({ticker})\n" \
                                    f"현재가: {current_price:,.0f}원\n" \
-                                   f"매수 점수: {buy_score}/10 (보너스: +{rank_bonus})\n" \
+                                   f"매수 점수: {buy_score}/10\n" \
                                    f"결정: {decision}\n" \
                                    f"시장 상태: {market_condition_text}\n" \
                                    f"산업군: {scenario.get('sector', '알 수 없음')}\n" \
@@ -343,7 +437,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     continue
 
                 # 진입 결정이면 매수 처리
-                if decision == "진입" and effective_buy_score >= min_score and sector_diverse:
+                if decision == "진입" and buy_score >= min_score and sector_diverse:
                     # 매수 처리
                     buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
 
@@ -439,10 +533,163 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             return 0  # 오류 발생 시 중립 추세로 가정
 
     async def _analyze_sell_decision(self, stock_data):
-        """개선된 매도 의사결정 분석"""
+        """AI 에이전트 기반 매도 의사결정 분석"""
         try:
             ticker = stock_data.get('ticker', '')
             company_name = stock_data.get('company_name', '')
+            buy_price = stock_data.get('buy_price', 0)
+            buy_date = stock_data.get('buy_date', '')
+            current_price = stock_data.get('current_price', 0)
+            target_price = stock_data.get('target_price', 0)
+            stop_loss = stock_data.get('stop_loss', 0)
+
+            # 수익률 계산
+            profit_rate = ((current_price - buy_price) / buy_price) * 100
+
+            # 매수일로부터 경과 일수
+            buy_datetime = datetime.strptime(buy_date, "%Y-%m-%d %H:%M:%S")
+            days_passed = (datetime.now() - buy_datetime).days
+
+            # 시나리오 정보 추출
+            scenario_str = stock_data.get('scenario', '{}')
+            period = "중기"  # 기본값
+            sector = "알 수 없음"
+            trading_scenarios = {}
+
+            try:
+                if isinstance(scenario_str, str):
+                    scenario_data = json.loads(scenario_str)
+                    period = scenario_data.get('investment_period', '중기')
+                    sector = scenario_data.get('sector', '알 수 없음')
+                    trading_scenarios = scenario_data.get('trading_scenarios', {})
+            except:
+                pass
+
+            # 현재 포트폴리오 정보 수집
+            self.cursor.execute("""
+                SELECT ticker, company_name, buy_price, current_price, scenario 
+                FROM stock_holdings
+            """)
+            holdings = [dict(row) for row in self.cursor.fetchall()]
+
+            # 산업군 분포 분석
+            sector_distribution = {}
+            investment_periods = {"단기": 0, "중기": 0, "장기": 0}
+
+            for holding in holdings:
+                scenario_str = holding.get('scenario', '{}')
+                try:
+                    # 산업군 정보 수집
+                    sector_distribution[sector] = sector_distribution.get(sector, 0) + 1
+                    # 투자 기간 정보 수집
+                    investment_periods[period] = investment_periods.get(period, 0) + 1
+                except:
+                    pass
+
+            # 포트폴리오 정보 문자열
+            portfolio_info = f"""
+            현재 보유 종목 수: {len(holdings)}/{self.max_slots}
+            산업군 분포: {json.dumps(sector_distribution, ensure_ascii=False)}
+            투자 기간 분포: {json.dumps(investment_periods, ensure_ascii=False)}
+            """
+
+            # LLM 호출하여 매도 의사결정 생성
+            llm = await self.sell_decision_agent.attach_llm(OpenAIAugmentedLLM)
+
+            response = await llm.generate_str(
+                message=f"""
+                다음 보유 종목에 대한 매도 의사결정을 수행해주세요.
+                
+                ### 종목 기본 정보:
+                - 종목명: {company_name}({ticker})
+                - 매수가: {buy_price:,.0f}원
+                - 현재가: {current_price:,.0f}원  
+                - 목표가: {target_price:,.0f}원
+                - 손절가: {stop_loss:,.0f}원
+                - 수익률: {profit_rate:.2f}%
+                - 보유기간: {days_passed}일
+                - 투자기간: {period}
+                - 섹터: {sector}
+                
+                ### 현재 포트폴리오 상황:
+                {portfolio_info}
+                
+                ### 매매 시나리오 정보:
+                {json.dumps(trading_scenarios, ensure_ascii=False) if trading_scenarios else "시나리오 정보 없음"}
+                
+                ### 분석 요청:
+                위 정보를 바탕으로 kospi_kosdaq과 sqlite 도구를 활용하여 최신 데이터를 확인하고,
+                매도할지 계속 보유할지 결정해주세요.
+                """,
+                request_params=RequestParams(
+                    model="gpt-5",
+                    maxTokens=6000
+                )
+            )
+
+            # JSON 파싱
+            try:
+                # 마크다운 코드 블록에서 JSON 추출 시도
+                markdown_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', response, re.DOTALL)
+                if markdown_match:
+                    json_str = markdown_match.group(1)
+                    json_str = re.sub(r',(\s*})', r'\1', json_str)
+                    decision_json = json.loads(json_str)
+                    logger.info(f"매도 결정 파싱 성공: {json.dumps(decision_json, ensure_ascii=False)}")
+                else:
+                    # 일반 JSON 객체 추출 시도
+                    json_match = re.search(r'({[\s\S]*?})(?:\s*$|\n\n)', response, re.DOTALL)
+                    if json_match:
+                        json_str = json_match.group(1)
+                        json_str = re.sub(r',(\s*})', r'\1', json_str)
+                        decision_json = json.loads(json_str)
+                        logger.info(f"매도 결정 파싱 성공: {json.dumps(decision_json, ensure_ascii=False)}")
+                    else:
+                        # 전체 응답이 JSON인 경우
+                        clean_response = re.sub(r',(\s*})', r'\1', response)
+                        decision_json = json.loads(clean_response)
+                        logger.info(f"매도 결정 파싱 성공: {json.dumps(decision_json, ensure_ascii=False)}")
+
+                # 결과 추출 - 기존 단일 형식 사용
+                should_sell = decision_json.get("should_sell", False)
+                sell_reason = decision_json.get("sell_reason", "AI 분석 결과")
+                confidence = decision_json.get("confidence", 5)
+                analysis_summary = decision_json.get("analysis_summary", {})
+                portfolio_adjustment = decision_json.get("portfolio_adjustment", {})
+                
+                logger.info(f"{ticker}({company_name}) AI 매도 결정: {'매도' if should_sell else '보유'} (확신도: {confidence}/10)")
+                logger.info(f"매도 사유: {sell_reason}")
+                
+                # 매도하지 않는 경우 portfolio_adjustment 처리
+                if not should_sell and portfolio_adjustment.get("needed", False):
+                    await self._process_portfolio_adjustment(ticker, company_name, portfolio_adjustment, analysis_summary)
+                
+                # 매도 시 analysis_summary를 sell_reason에 추가
+                if should_sell and analysis_summary:
+                    detailed_reason = self._format_sell_reason_with_analysis(sell_reason, analysis_summary)
+                    return should_sell, detailed_reason
+                
+                return should_sell, sell_reason
+
+            except Exception as json_err:
+                logger.error(f"매도 결정 JSON 파싱 오류: {json_err}")
+                logger.error(f"원본 응답: {response}")
+                
+                # 파싱 실패 시 기존 알고리즘으로 폴백
+                logger.warning(f"{ticker} AI 분석 실패, 기존 알고리즘으로 폴백")
+                return await self._fallback_sell_decision(stock_data)
+
+        except Exception as e:
+            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else '알 수 없는 종목'} AI 매도 분석 중 오류: {str(e)}")
+            logger.error(traceback.format_exc())
+            
+            # 오류 시 기존 알고리즘으로 폴백
+            return await self._fallback_sell_decision(stock_data)
+
+    async def _fallback_sell_decision(self, stock_data):
+        """기존 알고리즘 기반 매도 의사결정 (폴백용)"""
+        try:
+            ticker = stock_data.get('ticker', '')
             buy_price = stock_data.get('buy_price', 0)
             buy_date = stock_data.get('buy_date', '')
             current_price = stock_data.get('current_price', 0)
@@ -487,7 +734,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 return True, f"목표가 달성 (목표가: {target_price:,.0f}원)"
 
             # 3. 시장 상태와 추세에 따른 매도 조건 (시장 환경 고려)
-            if self.market_condition == -1 and trend < 0 and profit_rate > 3:
+            if self.simple_market_condition == -1 and trend < 0 and profit_rate > 3:
                 return True, f"약세장 + 하락 추세에서 수익 확보 (수익률: {profit_rate:.2f}%)"
 
             # 4. 투자 기간별 조건 (투자 유형에 따른 분화)
@@ -531,5 +778,129 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             return False, f"계속 보유 (추세: {trend_text}, 수익률: {profit_rate:.2f}%)"
 
         except Exception as e:
-            logger.error(f"매도 분석 중 오류: {str(e)}")
+            logger.error(f"폴백 매도 분석 중 오류: {str(e)}")
             return False, "분석 오류"
+
+    async def _process_portfolio_adjustment(self, ticker: str, company_name: str, portfolio_adjustment: Dict[str, Any], analysis_summary: Dict[str, Any]):
+        """portfolio_adjustment에 따른 DB 업데이트 및 텔레그램 알림 처리"""
+        try:
+            # 조정이 필요하지 않으면 리턴
+            if not portfolio_adjustment.get("needed", False):
+                return
+            
+            # 긴급도 확인 - low인 경우 실제 업데이트는 하지 않고 로그만
+            urgency = portfolio_adjustment.get("urgency", "low").lower()
+            if urgency == "low":
+                logger.info(f"{ticker} 포트폴리오 조정 제안 (urgency=low): {portfolio_adjustment.get('reason', '')}")
+                return
+                
+            db_updated = False
+            update_message = ""
+            adjustment_reason = portfolio_adjustment.get("reason", "AI 분석 결과")
+            
+            # 목표가 조정
+            new_target_price = portfolio_adjustment.get("new_target_price")
+            if new_target_price is not None:
+                # 안전한 숫자 변환 (쉼표 제거 포함)
+                target_price_num = self._safe_number_conversion(new_target_price)
+                if target_price_num > 0:
+                    self.cursor.execute(
+                        "UPDATE stock_holdings SET target_price = ? WHERE ticker = ?",
+                        (target_price_num, ticker)
+                    )
+                    self.conn.commit()
+                    db_updated = True
+                    update_message += f"목표가: {target_price_num:,.0f}원으로 조정\n"
+                    logger.info(f"{ticker} 목표가 AI 조정: {target_price_num:,.0f}원 (긴급도: {urgency})")
+            
+            # 손절가 조정
+            new_stop_loss = portfolio_adjustment.get("new_stop_loss")
+            if new_stop_loss is not None:
+                # 안전한 숫자 변환 (쉼표 제거 포함)
+                stop_loss_num = self._safe_number_conversion(new_stop_loss)
+                if stop_loss_num > 0:
+                    self.cursor.execute(
+                        "UPDATE stock_holdings SET stop_loss = ? WHERE ticker = ?",
+                        (stop_loss_num, ticker)
+                    )
+                    self.conn.commit()
+                    db_updated = True
+                    update_message += f"손절가: {stop_loss_num:,.0f}원으로 조정\n"
+                    logger.info(f"{ticker} 손절가 AI 조정: {stop_loss_num:,.0f}원 (긴급도: {urgency})")
+            
+            # DB가 업데이트되었으면 텔레그램 메시지 생성
+            if db_updated:
+                urgency_emoji = {"high": "🚨", "medium": "⚠️", "low": "💡"}.get(urgency, "🔄")
+                message = f"{urgency_emoji} 포트폴리오 조정: {company_name}({ticker})\n"
+                message += update_message
+                message += f"조정 근거: {adjustment_reason}\n"
+                message += f"긴급도: {urgency.upper()}\n"
+                
+                # 분석 요약 추가
+                if analysis_summary:
+                    message += f"기술적 추세: {analysis_summary.get('technical_trend', 'N/A')}\n"
+                    message += f"시장 환경 영향: {analysis_summary.get('market_condition_impact', 'N/A')}"
+                
+                self.message_queue.append(message)
+                logger.info(f"{ticker} AI 기반 포트폴리오 조정 완료: {update_message.strip()}")
+            else:
+                # 조정이 필요하다고 했지만 실제 값이 없는 경우
+                logger.warning(f"{ticker} 포트폴리오 조정 요청됐지만 구체적 값 없음: {portfolio_adjustment}")
+            
+        except Exception as e:
+            logger.error(f"{ticker} portfolio adjustment 처리 중 오류: {str(e)}")
+            logger.error(traceback.format_exc())
+
+    def _safe_number_conversion(self, value) -> float:
+        """다양한 형태의 값을 안전하게 숫자로 변환"""
+        try:
+            # 이미 숫자 타입인 경우
+            if isinstance(value, (int, float)):
+                return float(value)
+            
+            # 문자열인 경우
+            if isinstance(value, str):
+                # 쉼표 제거하고 공백 제거
+                cleaned_value = value.replace(',', '').replace(' ', '')
+                # "원" 제거 (혹시 포함되어 있을 경우)
+                cleaned_value = cleaned_value.replace('원', '')
+                
+                # 빈 문자열 체크
+                if not cleaned_value:
+                    return 0.0
+                
+                # 숫자로 변환
+                return float(cleaned_value)
+            
+            # null이나 기타 타입인 경우
+            return 0.0
+            
+        except (ValueError, TypeError) as e:
+            logger.warning(f"숫자 변환 실패: {value} -> {str(e)}")
+            return 0.0
+
+    def _format_sell_reason_with_analysis(self, sell_reason: str, analysis_summary: Dict[str, Any]) -> str:
+        """매도 이유에 분석 요약 추가"""
+        try:
+            detailed_reason = sell_reason
+            
+            if analysis_summary:
+                detailed_reason += "\n\n📊 상세 분석:"
+                
+                if analysis_summary.get('technical_trend'):
+                    detailed_reason += f"\n• 기술적 추세: {analysis_summary['technical_trend']}"
+                
+                if analysis_summary.get('volume_analysis'):
+                    detailed_reason += f"\n• 거래량 분석: {analysis_summary['volume_analysis']}"
+                
+                if analysis_summary.get('market_condition_impact'):
+                    detailed_reason += f"\n• 시장 환경: {analysis_summary['market_condition_impact']}"
+                
+                if analysis_summary.get('time_factor'):
+                    detailed_reason += f"\n• 시간 요인: {analysis_summary['time_factor']}"
+            
+            return detailed_reason
+            
+        except Exception as e:
+            logger.error(f"매도 이유 포맷팅 중 오류: {str(e)}")
+            return sell_reason
