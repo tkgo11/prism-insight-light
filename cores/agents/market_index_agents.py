@@ -1,6 +1,5 @@
 from mcp_agent.agents.agent import Agent
 
-# todo : perplexity로 1개월 이내 주요 거시적 환경 뉴스 검색
 def create_market_index_analysis_agent(reference_date, max_years_ago, max_years):
     """시장 인덱스 분석 에이전트 생성"""
     return Agent(
@@ -10,9 +9,26 @@ def create_market_index_analysis_agent(reference_date, max_years_ago, max_years)
                         ## 수집해야 할 데이터
                         1. KOSPI 지수 데이터: tool call(name : kospi_kosdaq-get_index_ohlcv)을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집 (ticker: "1001", 수집 기간(년) : {max_years}, freq: "d")
                         2. KOSDAQ 지수 데이터: tool call(name : kospi_kosdaq-get_index_ohlcv)을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집 (ticker: "2001", 수집 기간(년) : {max_years}, freq: "d")
+                        3. 종합 시장 분석: perplexity_ask 도구를 사용하여 "KOSPI KOSDAQ {reference_date[:4]}년 {reference_date[4:6]}월 {reference_date[6:]}일 시장 변동 요인, 한국 거시경제 동향, 미국 중국 일본 주요국 경제지표 영향 종합분석"을 1회 검색
                         
                         ## 분석 요소
-                        1. **시장 추세 분석**
+                        1. **당일 시장 변동 요인 분석 (최우선)**
+                           - 분석일 기준 KOSPI/KOSDAQ 변동의 직접적 원인 파악
+                           - 거래량 특이사항 및 외국인/기관투자자 동향
+                           - 당일 주요 이슈가 시장에 미친 영향 분석
+                           
+                        2. **거시경제 환경 분석**
+                           - 한국 경제지표 (금리, 환율, 물가, GDP 등) 현황 및 전망
+                           - 정부 정책 변화 및 시장 영향 평가
+                           - 국내 주요 산업별 동향 및 정책 변화
+                           
+                        3. **글로벌 경제 영향 분석**
+                           - 미국 경제지표 (Fed 정책, 인플레이션, 고용지표) 및 한국시장 영향
+                           - 중국 경제 상황 및 한국 수출/투자에 미치는 영향
+                           - 일본, 유럽 등 주요국 정책 변화 및 파급효과
+                           - 국제 원자재 가격 변동 영향 (유가, 반도체, 철강 등)
+                           
+                        4. **시장 추세 분석**
                            - 단기(1개월), 중기(3-6개월), 장기(1년 이상) 추세 파악
                            - 이동평균선(20일, 60일, 120일, 200일) 분석 및 골든크로스/데드크로스 탐지
                            - 지수의 변동성(Volatility) 분석 및 시장 안정성 평가
@@ -42,7 +58,11 @@ def create_market_index_analysis_agent(reference_date, max_years_ago, max_years)
                            - 시장 심리 지표 (변동성, 거래량 패턴 등) 종합 분석
                 
                         ## 보고서 구성
-                        1. **시장 현황 요약**
+                        1. **당일 시장 변동 요약**
+                           - 분석일({reference_date}) 기준 KOSPI/KOSDAQ 변동의 주요 원인 상세 분석
+                           - 주요 거시경제 이슈 및 글로벌 요인의 시장 영향
+                           
+                        2. **시장 현황 요약**
                            - KOSPI/KOSDAQ 현재 지수 및 변동률
                            - 주요 기술적 지표 현황 (RSI, MACD, 이동평균선 위치)
                            - 시장 강도 평가 (강세/약세/중립)
@@ -56,12 +76,17 @@ def create_market_index_analysis_agent(reference_date, max_years_ago, max_years)
                            - 주요 지지/저항선 제시
                            - 중요 돌파/이탈 가격대 명시
                            
-                        4. **시장 패턴 및 사이클**
+                        4. **거시경제 및 글로벌 환경**
+                           - 주요 경제지표 현황 및 시장 영향
+                           - 정부 정책 변화 및 예상 파급효과
+                           - 글로벌 경제 동향 및 한국시장 영향 평가
+                           
+                        5. **시장 패턴 및 사이클**
                            - 현재 형성 중인 차트 패턴
                            - 시장 사이클 상 현재 위치
                            - 향후 예상 시나리오 (메인/대안)
                            
-                        5. **시장 투자 전략**
+                        6. **시장 투자 전략**
                            - 현재 시장 환경에 적합한 투자 전략
                            - 리스크 관리 방안
                 
@@ -75,12 +100,16 @@ def create_market_index_analysis_agent(reference_date, max_years_ago, max_years)
                         ## 보고서 형식
                         - 보고서 시작 시 개행문자 2번 삽입(\\n\\n)
                         - 제목: "# 4. 시장 분석"
+                        - 첫 번째 섹션은 반드시 "## 당일 시장 변동 요인 분석"으로 시작하여 분석일 기준 시장 변동의 직접적 원인 분석
                         - 부제목은 ## 형식으로, 소제목은 ### 형식으로 구성
                         - 중요 정보는 **굵은 글씨**로 강조
                         - 핵심 지표는 표 형식으로 정리
                         - 시장 상황 평가는 명확한 등급/점수로 제시 (예: 강세/중립/약세 또는 1-10점 스케일)
+                        - 거시경제 정보는 출처 번호를 통해 신뢰성 제시 ([1], [2] 방식으로)
                 
                         ## 주의사항
+                        - 당일 시장 변동 요인 파악을 최우선으로 하고, 반드시 보고서 첫 부분에 상세히 분석할 것
+                        - perplexity_ask 도구를 1회 사용하여 당일 변동요인, 거시경제, 글로벌 영향을 종합적으로 수집
                         - 반드시 tool call을 통해 실제 데이터를 수집해야 합니다
                         - KOSPI는 ticker "1001", KOSDAQ는 ticker "2001"을 사용
                         - 할루시네이션 방지를 위해 실제 데이터에서 확인된 내용만 포함
@@ -88,6 +117,8 @@ def create_market_index_analysis_agent(reference_date, max_years_ago, max_years)
                         - 투자 권유가 아닌 시장 분석 정보 제공 관점에서 작성
                         - 강한 매수/매도 추천보다 "기술적으로 ~한 상황입니다"와 같은 객관적 서술 사용
                         - load_all_tickers tool은 절대 사용 금지!!
+                        - 거시경제 정보는 출처를 명확히 표기하여 신뢰성 확보
+                        - 모든 경제지표와 정책 정보는 검색을 통해 확인된 최신 내용만 포함
                         
                         ## 데이터가 불충분한 경우
                         - 데이터 부족 시 명확히 언급하고, 가용한 데이터만으로 제한적 분석 제공
@@ -107,5 +138,5 @@ def create_market_index_analysis_agent(reference_date, max_years_ago, max_years)
                 
                         ##분석일: {reference_date}(YYYYMMDD 형식)
                         """,
-        server_names=["kospi_kosdaq"]
+        server_names=["kospi_kosdaq", "perplexity"]
     )

@@ -885,7 +885,7 @@ class StockTrackingAgent:
             return False, "계속 보유"
 
         except Exception as e:
-            logger.error(f"{ticker if 'ticker' in locals() else '알 수 없는 종목'} 매도 분석 중 오류: {str(e)}")
+            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else '알 수 없는 종목'} 매도 분석 중 오류: {str(e)}")
             return False, "분석 오류"
 
     async def sell_stock(self, stock_data: Dict[str, Any], sell_reason: str) -> bool:
