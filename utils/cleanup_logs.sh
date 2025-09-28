@@ -12,7 +12,7 @@ LOG_PATTERNS=(
     "ai_bot_*.log*"
     "trigger_results_morning_*.json"
     "trigger_results_afternoon_*.json"
-    "stock_tracking_*.log"
+    "*stock_tracking_*.log"
     "orchestrator_*.log"
 )
 

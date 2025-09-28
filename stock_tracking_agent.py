@@ -86,6 +86,10 @@ class StockTrackingAgent:
             기본적으로는 가치투자 원칙을 따르되, 상승 모멘텀이 확인될 때는 보다 적극적으로 진입합니다.
             주식 분석 보고서를 읽고 매매 시나리오를 JSON 형식으로 생성해야 합니다.
             
+            ### 중요: 매매 시스템 특성 이해
+            **⚠️ 핵심: 이 시스템은 분할매매가 불가능하며, 매수 결정 시 해당 종목을 포트폴리오 전체의 10% 비중(1슬랏 전체)으로 100% 매수합니다.**
+            **매도 시에도 보유분 100% 전량 매도합니다. 따라서 보고서에서 분할매수/분할매도를 권장하더라도, 실제로는 올인/올아웃 방식이므로 더욱 신중한 판단이 필요합니다.**
+            
             ### 중요: 현재 포트폴리오 분석
             먼저 현재 보유 중인 종목 현황을 확인하세요. stock_holdings 테이블에 있는 기존 포트폴리오 정보를 분석하고
             다음과 같은 사항을 고려하세요:
@@ -96,24 +100,41 @@ class StockTrackingAgent:
             4. 현재 포트폴리오의 평균 수익률
             
             ### 종목 평가 및 결정
-            위 포트폴리오 상황을 고려하여 신규 종목에 대해 다음을 평가하세요:
+            위 포트폴리오 상황과 **perplexity 분석 결과**를 종합하여 신규 종목에 대해 다음을 평가하세요:
             
             1. 종목에 대한 매수 적정성을 평가하세요 (1~10점).
-               - 8~10점: 우수한 매수 기회 (확실한 근거 + 모멘텀)
-               - 7점: 양호한 매수 기회 (기본 조건 만족)
-               - 6점: 보통 (모멘텀이 있다면 고려)
-               - 5점 이하: 매수 부적합
+               **⚠️ 100% 비중 매수이므로 신중하게 평가:**
+               - 8~10점: 매수 적극 고려 (동종업계 대비 저평가 + 강한 모멘텀)
+               - 7점: 매수 고려 (단, 밸류에이션 매력도 추가 확인 필요)
+               - 6점 이하: 매수 부적합 (고평가 또는 업계 전망 부정적)
             
             2. 현재 진입 여부를 결정하세요 (진입/관망).
-               - "진입" 결정은 매우 신중하게 내려야 합니다
-               - 다음과 같은 경우 반드시 "관망"으로 결정하세요:
-                 * 현재 보유 종목이 7개 이상인 경우 매수 점수 8점 미만
-                 * 현재 보유 종목과 동일 산업군이 이미 2개 이상 있는 경우
-                 * 재무상태에 의구심이 있는 경우
-                 * 명확한 성장 동력이 확인되지 않는 경우
+               **⚠️ 100% 비중 매수 특성상 다음 핵심 조건들을 종합 고려:**
+               
+               **필수 확인사항 (우선순위 순):**
+               1. **밸류에이션 매력도**: 동종업계 대비 저평가되어 있는가?
+                   1-1. "[종목명] PER PBR vs [업종명] 업계 평균 밸류에이션 비교" (perplexity-ask tool call 활용)
+                   1-2. "[종목명] vs 동종업계 주요 경쟁사 밸류에이션 비교" (perplexity-ask tool call 활용)
+               2. **재무 건전성**: 부채비율, 현금흐름 등 기본 재무 상태가 양호한가?
+               3. **성장 동력**: 명확하고 지속가능한 성장 근거가 있는가?
+               4. **업계 전망**: 해당 업종의 전반적인 전망이 긍정적인가?
+               5. **기술적 신호**: 명확한 상승 모멘텀이나 지지선 확인이 있는가?
+               6. **개별 이슈**: 최근 특별한 호재나 악재는 없는가?
+               
+               **포트폴리오 고려사항:**
+               - 현재 보유 종목이 7개 이상이면 8점 이상만 고려
+               - 동일 산업군이 이미 2개 이상이면 매수 신중히 검토
+               - 충분한 상승여력(목표가 대비 10% 이상)이 있는가?
+               
+               **시장 고려사항:**
+               - 보고서의 '시장 분석' 섹션의 내용을 참고
+               - 시장의 리스크를 판단하고 포트폴리오에 보유할 최대 보유 종목 갯수 추론(최대 10개까지 가능) 
+               - 추론한 포트폴리오 최대 보유 갯수와 현재 포트폴리오 종목수를 고려하여 신규종목 진입 여부 결정 보정
+               - 시장의 강세장, 약세장 여부에 따라 목표가와 손절가 동적으로 보정
+               - 시장 상황에 따라 매수 적정성 점수 보정
             
             3. 목표가를 제시해주세요 (현실적이고 합리적인 수준).
-            4. 손절매 가격을 제시해주세요 (최대 허용 손실 기준).
+            4. 손절매 가격을 제시해주세요 (현실적이고 합리적인 수준).
             5. 투자 기간을 제안해주세요 (단기: 1개월 이내, 중기: 1~3개월, 장기: 3개월 이상).
                - 현재 포트폴리오의 투자 기간 분포를 고려하여 균형을 맞추세요
             6. 핵심 투자 근거를 3줄 이내로 요약해주세요.
@@ -121,42 +142,79 @@ class StockTrackingAgent:
             
             ### 종목 적합성 판단
             다음 질문들을 고려하여 매수 적정성을 판단하세요:
+            - 이 종목이 동종업계 대비 저평가되어 있는가?
             - 이 종목은 현재 주가 대비 상승여력이 충분한가?
             - 이 종목의 재무 상태는 건전한가?
+            - 해당 업종의 전반적인 전망이 긍정적인가?
             - 이 종목의 성장 가능성은 명확한가?
             - 이 종목은 현재 거래활동 증가나 관심 상승을 보이는가?
             - 이 종목은 현재 포트폴리오와 적절한 분산효과를 제공하는가?
             - 이 종목의 거래량 증가가 실질적인 가격 상승으로 이어지고 있는가?
             - 이 종목의 급등/급락 패턴이 기술적으로 건전한 투자 신호인가?
-            - 이 종목은 현재 일시적인 테마로 인한 상승인가?
+            - 이 종목에 최근 특별한 호재나 악재는 없는가?
             
-            **모멘텀 요소 특별 고려사항:**
-            - 최근 거래량이 평소보다 크게 증가한 경우: 긍정적 요소로 고려
-            - 투자자별 거래량에서 기관/외인 매수 우위: 긍정적 신호
-            - 개인 투자자 대비 기관 투자자 순매수 증가: 신뢰도 높은 신호
-            - 거래량 급증과 주가 움직임의 일관성 확인 필수
-            - 이러한 모멘텀 신호들이 확인될 때는 기존 매수 기준을 다소 완화하여 적용
+            **모멘텀 가중 요소:**
+            다음 신호들이 확인될 때는 매수 점수에 가산점을 고려하세요:
+            - 거래량이 평소 대비 크게 증가 (관심 상승 신호)
+            - 기관/외국인 투자자 순매수 우위 (자금 유입 신호)
+            - 기술적 돌파나 지지선 재확인 (추세 전환 신호)
+            - **동종업계 대비 저평가 상태** (밸류에이션 매력도)
+            - **업종 전반의 긍정적 전망** (섹터 로테이션 효과)
+            
+            **최종 진입 결정 가이드:**
+            - 7점 + 강한 모멘텀 + 동종업계 대비 저평가 = 진입 고려 가능
+            - 8점 + 보통 조건 + 업종 전망 긍정적 = 진입 고려 가능  
+            - 9점 이상 + 밸류에이션 매력도 = 적극 진입 고려
+            - 단, 보고서에 명시적 경고가 있거나 업종 전망이 부정적이면 한 단계 보수적으로 접근
             
             분석 보고서의 '투자 전략 및 의견' 섹션에 특히 주목하세요.
+            업종 동향이나 최근 뉴스는 보고서의 '최근 주요 뉴스 요약' 섹션에서 확인할 수 있습니다.
             주가, 목표가 및 손절가 정보는 보고서의 기술적 분석 부분에서 찾을 수 있습니다.
-            모멘텀 요소인 거래량, 투자자별 거래량은 too call(name : kospi_kosdaq-get_stock_ohlcv, kospi_kosdaq-get_stock_trading_volume)을 사용하여 조회할 수 있습니다. 
+            모멘텀 요소인 거래량, 투자자별 거래량은 tool call(name : kospi_kosdaq-get_stock_ohlcv, kospi_kosdaq-get_stock_trading_volume)을 사용하여 조회할 수 있습니다.
+            perplexity 확인은 perplexity_ask tool call 활용하면 됩니다. tool 활용 시 날짜는 time-get_current_time tool call 호출결과를 기준 삼으면 됩니다.
             tool call 시 보고서 최상단의 '발행일: '이라고 표기된 날짜를 기준으로 적절한 범위의 데이터를 조회하면 됩니다.
             
             ### 응답 형식
-            JSON 형식으로 다음과 같이 응답해주세요:
+            JSON 형식으로 다음과 같이 응답해주세요. 단, 매도 시나리오 작성 시 100% 전량매도하는 시스템임을 참고하시길 바랍니다. :
             {
                 "portfolio_analysis": "현재 포트폴리오 상황 요약 (슬랏 수, 산업군 분포 등)",
+                "valuation_analysis": "perplexity 기반 동종업계 밸류에이션 비교 결과",
+                "sector_outlook": "perplexity 기반 업종 전망 및 동향",
                 "buy_score": 1~10 사이의 점수,
+                "min_score": 최소 진입 요구 점수,
                 "decision": "진입" 또는 "관망",
                 "target_price": 숫자 (원),
                 "stop_loss": 숫자 (원),
                 "investment_period": "단기" 또는 "중기" 또는 "장기",
-                "rationale": "핵심 투자 근거를 간략히 설명",
+                "rationale": "핵심 투자 근거를 간략히 설명 (밸류에이션 매력도 포함)",
                 "sector": "이 종목의 산업군/섹터 이름",
-                "considerations": "포트폴리오 맥락에서 이 종목 선택의 이유"
+                "market_condition": "시장 분석 결과 도출된 시장 상태 요약",
+                "max_portfolio_size": "추론된 최대 보유 종목수 숫자",
+                "trading_scenarios": {
+                    "key_levels": {
+                        "primary_support": 주요 지지선 가격,
+                        "secondary_support": 보조 지지선 가격,  
+                        "primary_resistance": 주요 저항선 가격,
+                        "secondary_resistance": 보조 저항선 가격,
+                        "volume_baseline": "평소 거래량 기준"
+                    },
+                    "sell_triggers": [
+                        "익절 조건 1:  목표가/저항선 관련",
+                        "익절 조건 2: 상승 모멘텀 소진 관련", 
+                        "손절 조건 1: 지지선 이탈 관련",
+                        "손절 조건 2: 하락 가속 관련",
+                        "시간 조건: 횡보/장기보유 관련"
+                    ],
+                    "hold_conditions": [
+                        "보유 지속 조건 1",
+                        "보유 지속 조건 2", 
+                        "보유 지속 조건 3"
+                    ],
+                    "portfolio_context": "포트폴리오 관점에서의 의미"
+                }
             }
             """,
-            server_names=["kospi_kosdaq", "sqlite"]
+            server_names=["kospi_kosdaq", "sqlite", "perplexity", "time"]
         )
 
         # 데이터베이스 테이블 생성
@@ -524,7 +582,7 @@ class StockTrackingAgent:
                 """,
                 request_params=RequestParams(
                     model="gpt-5",
-                    maxTokens=6000
+                    maxTokens=10000
                 )
             )
 
@@ -685,6 +743,12 @@ class StockTrackingAgent:
                 logger.warning(f"보유 종목이 이미 최대치({self.max_slots}개)입니다.")
                 return False
 
+            # 시장 상황 기반 최대 포트폴리오 크기 확인
+            max_portfolio_size = scenario.get('max_portfolio_size', self.max_slots)
+            if current_slots >= max_portfolio_size:
+                logger.warning(f"시장 상황을 고려한 최대 포트폴리오 크기({max_portfolio_size}개)에 도달했습니다. 현재 보유: {current_slots}개")
+                return False
+
             # 현재 시간
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -717,11 +781,20 @@ class StockTrackingAgent:
                       f"투자기간: {scenario.get('investment_period', '단기')}\n" \
                       f"산업군: {scenario.get('sector', '알 수 없음')}\n"
 
+            # 밸류에이션 분석 정보가 있으면 추가
+            if scenario.get('valuation_analysis'):
+                message += f"밸류에이션: {scenario.get('valuation_analysis')}\n"
+            
+            # 섹터 전망 정보가 있으면 추가
+            if scenario.get('sector_outlook'):
+                message += f"업종 전망: {scenario.get('sector_outlook')}\n"
+
             # 거래대금 랭킹 정보가 있으면 추가
             if rank_change_msg:
                 message += f"거래대금 분석: {rank_change_msg}\n"
 
             message += f"투자근거: {scenario.get('rationale', '정보 없음')}"
+            message += f"매매시나리오: {scenario.get('trading_scenarios', '정보 없음')}"
 
             self.message_queue.append(message)
             logger.info(f"{ticker}({company_name}) 매수 완료")
@@ -812,7 +885,7 @@ class StockTrackingAgent:
             return False, "계속 보유"
 
         except Exception as e:
-            logger.error(f"{ticker if 'ticker' in locals() else '알 수 없는 종목'} 매도 분석 중 오류: {str(e)}")
+            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else '알 수 없는 종목'} 매도 분석 중 오류: {str(e)}")
             return False, "분석 오류"
 
     async def sell_stock(self, stock_data: Dict[str, Any], sell_reason: str) -> bool:
@@ -1174,31 +1247,11 @@ class StockTrackingAgent:
                     logger.info(f"매수 보류: {company_name}({ticker}) - 산업군 '{sector}' 과다 투자 방지")
                     continue
 
-                # 현재 보유 슬랏 수에 따라 매수 점수 기준 동적 조정
-                current_slots = await self._get_current_slots_count()
-                min_score = 8  # 기본 기준
-
-                # 슬랏이 많이 차있을수록 더 높은 기준 적용
-                if current_slots >= 7:  # 70% 이상 찼을 경우
-                    min_score = 9
-
                 # 진입 결정이면 매수 처리
                 buy_score = scenario.get("buy_score", 0)
-                logger.info(f"매수 점수 체크: {company_name}({ticker}) - 점수: {buy_score}, 최소 요구 점수: {min_score}")
-
-                # 거래대금 랭킹 상승 시 가중치 부여
-                rank_bonus = 0
-                if rank_change_percentage >= 30:
-                    rank_bonus = 2  # 1에서 2로 증가
-                    logger.info(f"거래대금 랭킹 큰 폭 상승으로 매수 점수 +2 보너스: {company_name}({ticker})")
-                elif rank_change_percentage >= 15:
-                    rank_bonus = 1  # 중간 수준 상승에도 보너스 추가
-                    logger.info(f"거래대금 랭킹 상승으로 매수 점수 +1 보너스: {company_name}({ticker})")
-
-                effective_buy_score = buy_score + rank_bonus
-                logger.info(f"최종 매수 점수: {effective_buy_score} (기본: {buy_score}, 랭킹 보너스: {rank_bonus})")
-
-                if analysis_result.get("decision") == "진입" and effective_buy_score >= min_score:
+                min_score = scenario.get("min_score", 0)
+                logger.info(f"매수 점수 체크: {company_name}({ticker}) - 점수: {buy_score}")
+                if analysis_result.get("decision") == "진입":
                     # 매수 처리
                     buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
 
@@ -1221,8 +1274,8 @@ class StockTrackingAgent:
                         logger.warning(f"매수 실패: {company_name}({ticker})")
                 else:
                     reason = ""
-                    if effective_buy_score < min_score:
-                        reason = f"매수 점수 부족 ({effective_buy_score} < {min_score})"
+                    if buy_score < min_score:
+                        reason = f"매수 점수 부족 ({buy_score} < {min_score})"
                     elif analysis_result.get("decision") != "진입":
                         reason = f"진입 결정 아님 (결정: {analysis_result.get('decision')})"
 
