@@ -111,13 +111,14 @@ async def generate_investment_strategy(section_reports, combined_reports, compan
         logger.info(f"Processing investment_strategy for {company_name}...")
         investment_strategy_agent = Agent(
             name="investment_strategy_agent",
-            instruction=f"""당신은 투자 전략 전문가입니다. 앞서 분석된 기술적 분석, 기업 정보, 재무 분석, 뉴스 트렌드를 종합하여 투자 전략 및 의견을 제시해야 합니다.
+            instruction=f"""당신은 투자 전략 전문가입니다. 앞서 분석된 기술적 분석, 기업 정보, 재무 분석, 뉴스 트렌드, 시장분석을 종합하여 투자 전략 및 의견을 제시해야 합니다.
 
             ## 분석 통합 요소
             1. 주가/거래량 분석 요약 - 주가 추세, 주요 지지/저항선, 거래량 패턴
             2. 투자자 거래 동향 분석 요약 - 기관/외국인/개인 매매 패턴
             3. 기업 기본 정보 요약 - 핵심 사업 모델, 경쟁력, 성장 동력
             4. 뉴스 분석 요약 - 주요 이슈, 시장 반응, 향후 이벤트
+            5. 시장 분석 요약 - 시장 변동 요인, 현황, 추세, 거시환경, 기술적 분석, 시장 투자 전략
 
             ## 투자 전략 구성 요소
             1. 종합 투자 관점 - 기술적/기본적 분석을 종합한 투자 전망
@@ -135,6 +136,7 @@ async def generate_investment_strategy(section_reports, combined_reports, compan
                - 주시해야 할 기술적 신호
                - 주목해야 할 실적 지표
                - 체크해야 할 뉴스 및 이벤트
+               - 체크해야 할 시장 환경
             5. 리스크 요소
                - 잠재적 하방 리스크
                - 상방 기회 요소
@@ -149,7 +151,7 @@ async def generate_investment_strategy(section_reports, combined_reports, compan
 
             ## 보고서 형식
             - 보고서 시작 시 개행문자 2번 삽입(\\n\\n)
-            - 제목: "# 4. 투자 전략 및 의견"
+            - 제목: "# 5. 투자 전략 및 의견"
             - 부제목은 ## 형식으로, 소제목은 ### 형식으로 구성
             - 투자자 유형별 전략은 명확히 구분하여 제시
             - 주요 매매 포인트는 구체적인 가격대와 조건으로 표현
