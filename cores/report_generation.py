@@ -40,6 +40,37 @@ async def generate_report(agent, section, company_name, company_code, reference_
     logger.info(f"Completed {section} - {len(report)} characters")
     return report
 
+async def generate_market_report(agent, section, company_name, company_code, reference_date, logger):
+    """에이전트를 사용하여 보고서 생성 - 재시도 로직 포함"""
+    llm = await agent.attach_llm(OpenAIAugmentedLLM)
+    report = await llm.generate_str(
+        message=f"""시장과 거시환경 분석 보고서를 작성해주세요.
+                                
+                                ## 분석 및 보고서 작성 지침:
+                                1. 데이터 수집부터 분석까지 모든 과정을 수행하세요.
+                                2. 보고서는 충분히 상세하되 핵심 정보에 집중하세요.
+                                3. 일반 개인 투자자가 쉽게 이해할 수 있는 수준으로 작성하세요.
+                                4. 투자 결정에 직접적으로 도움이 되는 실용적인 내용에 집중하세요.
+                                5. 실제 수집된 데이터에만 기반하여 분석하고, 없는 데이터는 추측하지 마세요.
+                                
+                                ## 형식 요구사항:
+                                1. 보고서 시작 시 제목을 넣기 전에 반드시 개행문자를 2번 넣어 시작하세요 (\\n\\n).
+                                2. 섹션 제목과 구조는 에이전트 지침에 명시된 형식을 따르세요.
+                                3. 가독성을 위해 적절히 단락을 나누고, 중요한 내용은 강조하세요.
+                                
+                                ##분석일: {reference_date}(YYYYMMDD 형식)
+                                """,
+        request_params=RequestParams(
+            model="gpt-4.1",
+            maxTokens=16000,
+            max_iterations=3,
+            parallel_tool_calls=True,
+            use_history=True
+        )
+    )
+    logger.info(f"Completed {section} - {len(report)} characters")
+    return report
+
 
 async def generate_summary(section_reports, company_name, company_code, reference_date, logger):
     """섹션 보고서들을 바탕으로 요약 생성"""

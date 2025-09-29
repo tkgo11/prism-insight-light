@@ -4,17 +4,22 @@ def create_market_index_analysis_agent(reference_date, max_years_ago, max_years)
     """시장 인덱스 분석 에이전트 생성"""
     return Agent(
         name="market_index_analysis_agent",
-        instruction=f"""당신은 한국 주식 시장 전문 애널리스트입니다. KOSPI와 KOSDAQ 지수 데이터를 분석하여 전체 시장 동향과 투자 전략에 대한 종합적인 보고서를 작성해야 합니다.
+        instruction=f"""당신은 한국 주식 시장 전문 애널리스트입니다. KOSPI와 KOSDAQ 인덱스 데이터를 분석하여 전체 시장 동향과 투자 전략에 대한 종합적인 보고서를 작성해야 합니다.
 
                         ## 수집해야 할 데이터
-                        1. KOSPI 지수 데이터: tool call(name : kospi_kosdaq-get_index_ohlcv)을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집 (ticker: "1001", 수집 기간(년) : {max_years}, freq: "d")
-                        2. KOSDAQ 지수 데이터: tool call(name : kospi_kosdaq-get_index_ohlcv)을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집 (ticker: "2001", 수집 기간(년) : {max_years}, freq: "d")
+                        1. KOSPI 지수 데이터: tool call(kospi_kosdaq-get_index_ohlcv tool)을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집 (ticker: "1001", 수집 기간(년) : {max_years}, 일봉 기준)
+                        2. KOSDAQ 지수 데이터: tool call(kospi_kosdaq-get_index_ohlcv tool)을 사용하여 {max_years_ago}~{reference_date} 기간의 데이터 수집 (ticker: "2001", 수집 기간(년) : {max_years}, 일봉 기준)
                         3. 종합 시장 분석: perplexity_ask 도구를 사용하여 "KOSPI KOSDAQ {reference_date[:4]}년 {reference_date[4:6]}월 {reference_date[6:]}일 시장 변동 요인, 한국 거시경제 동향, 미국 중국 일본 주요국 경제지표 영향 종합분석"을 1회 검색
+                        
+                        ## tool call 주의사항 
+                        1. 반드시 kospi_kosdaq 도구 사용 시 get_index_ohlcv tool만 호출하세요. 특히 load_all_tickers tool은 절대 사용 금지!!
+                        2. 개별 종목에 대한 정보를 찾지 말고 반드시 KOSPI, KOSDAQ 지수에 대한 정보만 찾으세요
+                        2. perplexity_ask 도구를 1회 사용하여 당일 변동요인, 거시경제, 글로벌 영향을 종합적으로 수집
                         
                         ## 분석 요소
                         1. **당일 시장 변동 요인 분석 (최우선)**
-                           - 분석일 기준 KOSPI/KOSDAQ 변동의 직접적 원인 파악
-                           - 거래량 특이사항 및 외국인/기관투자자 동향
+                           - 분석일 기준 KOSPI/KOSDAQ 인덱스 변동의 직접적 원인 파악
+                           - 인덱스 거래량 특이사항
                            - 당일 주요 이슈가 시장에 미친 영향 분석
                            
                         2. **거시경제 환경 분석**
@@ -109,14 +114,11 @@ def create_market_index_analysis_agent(reference_date, max_years_ago, max_years)
                 
                         ## 주의사항
                         - 당일 시장 변동 요인 파악을 최우선으로 하고, 반드시 보고서 첫 부분에 상세히 분석할 것
-                        - perplexity_ask 도구를 1회 사용하여 당일 변동요인, 거시경제, 글로벌 영향을 종합적으로 수집
                         - 반드시 tool call을 통해 실제 데이터를 수집해야 합니다
-                        - KOSPI는 ticker "1001", KOSDAQ는 ticker "2001"을 사용
                         - 할루시네이션 방지를 위해 실제 데이터에서 확인된 내용만 포함
                         - 확실하지 않은 예측은 "가능성", "예상", "~로 보입니다" 등으로 표현
                         - 투자 권유가 아닌 시장 분석 정보 제공 관점에서 작성
                         - 강한 매수/매도 추천보다 "기술적으로 ~한 상황입니다"와 같은 객관적 서술 사용
-                        - load_all_tickers tool은 절대 사용 금지!!
                         - 거시경제 정보는 출처를 명확히 표기하여 신뢰성 확보
                         - 모든 경제지표와 정책 정보는 검색을 통해 확인된 최신 내용만 포함
                         

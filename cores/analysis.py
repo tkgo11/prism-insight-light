@@ -4,7 +4,7 @@ from datetime import datetime
 from mcp_agent.app import MCPApp
 
 from cores.agents import get_agent_directory
-from cores.report_generation import generate_report, generate_summary, generate_investment_strategy, get_disclaimer
+from cores.report_generation import generate_report, generate_summary, generate_investment_strategy, get_disclaimer, generate_market_report
 from cores.stock_chart import (
     create_price_chart,
     create_trading_volume_chart,
@@ -55,7 +55,10 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
 
                 try:
                     agent = agents[section]
-                    report = await generate_report(agent, section, company_name, company_code, reference_date, logger)
+                    if section == "market_index_analysis":
+                        report = await generate_market_report(agent, section, company_name, company_code, reference_date, logger)
+                    else:
+                        report = await generate_report(agent, section, company_name, company_code, reference_date, logger)
                     section_reports[section] = report
                 except Exception as e:
                     logger.error(f"Final failure processing {section}: {e}")
