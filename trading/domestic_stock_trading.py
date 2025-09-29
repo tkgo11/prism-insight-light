@@ -1341,10 +1341,12 @@ class DomesticStockTrading:
                 output2 = res.getBody().output2[0]  # 계좌 요약 정보
 
                 if output2:
+                    pchs_amt = float(output2.get('pchs_amt_smtl_amt', 0)) or 1  # 0이면 1로 대체
+
                     account_summary = {
                         'total_eval_amount': float(output2.get('tot_evlu_amt', 0)),
                         'total_profit_amount': float(output2.get('evlu_pfls_smtl_amt', 0)),
-                        'total_profit_rate': round(float(output2.get('evlu_pfls_smtl_amt', 0)) / float(output2.get('pchs_amt_smtl_amt', 1)) * 100, 2),
+                        'total_profit_rate': round(float(output2.get('evlu_pfls_smtl_amt', 0)) / pchs_amt * 100, 2),
                         'deposit': float(output2.get('dnca_tot_amt', 0)),
                         'available_amount': float(output2.get('ord_psbl_cash', 0))
                     }

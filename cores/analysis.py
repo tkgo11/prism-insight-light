@@ -15,6 +15,9 @@ from cores.stock_chart import (
 from cores.utils import clean_markdown
 
 
+# 시장 분석 캐시 저장소 (전역 변수)
+_market_analysis_cache = {}
+
 async def analyze_stock(company_code: str = "000660", company_name: str = "SK하이닉스", reference_date: str = None):
     """
     주식 종합 분석 보고서 생성
@@ -56,7 +59,15 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
                 try:
                     agent = agents[section]
                     if section == "market_index_analysis":
-                        report = await generate_market_report(agent, section, company_name, company_code, reference_date, logger)
+                        # 캐시에 데이터가 있는지 확인
+                        if "report" in _market_analysis_cache:
+                            logger.info(f"Using cached market analysis")
+                            report = _market_analysis_cache["report"]
+                        else:
+                            logger.info(f"Generating new market analysis")
+                            report = await generate_market_report(agent, section, reference_date, logger)
+                            # 캐시에 저장
+                            _market_analysis_cache["report"] = report
                     else:
                         report = await generate_report(agent, section, company_name, company_code, reference_date, logger)
                     section_reports[section] = report
