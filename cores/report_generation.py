@@ -40,8 +40,8 @@ async def generate_report(agent, section, company_name, company_code, reference_
     logger.info(f"Completed {section} - {len(report)} characters")
     return report
 
-async def generate_market_report(agent, section, company_name, company_code, reference_date, logger):
-    """에이전트를 사용하여 보고서 생성 - 재시도 로직 포함"""
+async def generate_market_report(agent, section, reference_date, logger):
+    """에이전트를 사용하여 시장 분석 보고서 생성"""
     llm = await agent.attach_llm(OpenAIAugmentedLLM)
     report = await llm.generate_str(
         message=f"""시장과 거시환경 분석 보고서를 작성해주세요.
