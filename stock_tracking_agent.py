@@ -745,6 +745,12 @@ class StockTrackingAgent:
 
             # 시장 상황 기반 최대 포트폴리오 크기 확인
             max_portfolio_size = scenario.get('max_portfolio_size', self.max_slots)
+            # 문자열로 저장된 경우를 대비해 정수로 변환
+            if isinstance(max_portfolio_size, str):
+                try:
+                    max_portfolio_size = int(max_portfolio_size)
+                except (ValueError, TypeError):
+                    max_portfolio_size = self.max_slots
             if current_slots >= max_portfolio_size:
                 logger.warning(f"시장 상황을 고려한 최대 포트폴리오 크기({max_portfolio_size}개)에 도달했습니다. 현재 보유: {current_slots}개")
                 return False
