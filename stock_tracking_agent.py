@@ -799,8 +799,80 @@ class StockTrackingAgent:
             if rank_change_msg:
                 message += f"거래대금 분석: {rank_change_msg}\n"
 
-            message += f"투자근거: {scenario.get('rationale', '정보 없음')}"
-            message += f"매매시나리오: {scenario.get('trading_scenarios', '정보 없음')}"
+            message += f"투자근거: {scenario.get('rationale', '정보 없음')}\n"
+            
+            # 매매 시나리오 포맷팅
+            trading_scenarios = scenario.get('trading_scenarios', {})
+            if trading_scenarios and isinstance(trading_scenarios, dict):
+                message += "\n" + "="*40 + "\n"
+                message += "📋 매매 시나리오\n"
+                message += "="*40 + "\n\n"
+                
+                # 1. 핵심 가격대 (Key Levels)
+                key_levels = trading_scenarios.get('key_levels', {})
+                if key_levels:
+                    message += "💰 핵심 가격대:\n"
+                    
+                    # 저항선
+                    primary_resistance = key_levels.get('primary_resistance', 0)
+                    secondary_resistance = key_levels.get('secondary_resistance', 0)
+                    if primary_resistance or secondary_resistance:
+                        message += f"  📈 저항선:\n"
+                        if secondary_resistance:
+                            message += f"    • 2차: {secondary_resistance:,.0f}원\n"
+                        if primary_resistance:
+                            message += f"    • 1차: {primary_resistance:,.0f}원\n"
+                    
+                    # 현재가 표시
+                    message += f"  ━━ 현재가: {current_price:,.0f}원 ━━\n"
+                    
+                    # 지지선
+                    primary_support = key_levels.get('primary_support', 0)
+                    secondary_support = key_levels.get('secondary_support', 0)
+                    if primary_support or secondary_support:
+                        message += f"  📉 지지선:\n"
+                        if primary_support:
+                            message += f"    • 1차: {primary_support:,.0f}원\n"
+                        if secondary_support:
+                            message += f"    • 2차: {secondary_support:,.0f}원\n"
+                    
+                    # 거래량 기준
+                    volume_baseline = key_levels.get('volume_baseline', '')
+                    if volume_baseline:
+                        message += f"  📊 거래량 기준: {volume_baseline}\n"
+                    
+                    message += "\n"
+                
+                # 2. 매도 시그널
+                sell_triggers = trading_scenarios.get('sell_triggers', [])
+                if sell_triggers:
+                    message += "🔔 매도 시그널:\n"
+                    for i, trigger in enumerate(sell_triggers, 1):
+                        # 조건별로 이모지 선택
+                        if "익절" in trigger or "목표" in trigger or "저항" in trigger:
+                            emoji = "✅"
+                        elif "손절" in trigger or "지지" in trigger or "하락" in trigger:
+                            emoji = "⛔"
+                        elif "시간" in trigger or "횡보" in trigger:
+                            emoji = "⏰"
+                        else:
+                            emoji = "•"
+                        
+                        message += f"  {emoji} {trigger}\n"
+                    message += "\n"
+                
+                # 3. 보유 조건
+                hold_conditions = trading_scenarios.get('hold_conditions', [])
+                if hold_conditions:
+                    message += "✋ 보유 지속 조건:\n"
+                    for condition in hold_conditions:
+                        message += f"  • {condition}\n"
+                    message += "\n"
+                
+                # 4. 포트폴리오 맥락
+                portfolio_context = trading_scenarios.get('portfolio_context', '')
+                if portfolio_context:
+                    message += f"💼 포트폴리오 관점:\n  {portfolio_context}\n"
 
             self.message_queue.append(message)
             logger.info(f"{ticker}({company_name}) 매수 완료")
@@ -1325,11 +1397,39 @@ class StockTrackingAgent:
             for message in self.message_queue:
                 logger.info(f"텔레그램 메시지 전송 중: {chat_id}")
                 try:
-                    await self.telegram_bot.send_message(
-                        chat_id=chat_id,
-                        text=message,
-                        parse_mode="Markdown"  # Markdown 형식 지원
-                    )
+                    # 텔레그램 메시지 길이 제한 (4096자)
+                    MAX_MESSAGE_LENGTH = 4096
+                    
+                    if len(message) <= MAX_MESSAGE_LENGTH:
+                        # 메시지가 짧으면 한 번에 전송
+                        await self.telegram_bot.send_message(
+                            chat_id=chat_id,
+                            text=message
+                        )
+                    else:
+                        # 메시지가 길면 분할 전송
+                        parts = []
+                        current_part = ""
+                        
+                        for line in message.split('\n'):
+                            if len(current_part) + len(line) + 1 <= MAX_MESSAGE_LENGTH:
+                                current_part += line + '\n'
+                            else:
+                                if current_part:
+                                    parts.append(current_part.rstrip())
+                                current_part = line + '\n'
+                        
+                        if current_part:
+                            parts.append(current_part.rstrip())
+                        
+                        # 분할된 메시지 전송
+                        for i, part in enumerate(parts, 1):
+                            await self.telegram_bot.send_message(
+                                chat_id=chat_id,
+                                text=f"[{i}/{len(parts)}]\n{part}"
+                            )
+                            await asyncio.sleep(0.5)  # 분할 메시지 간 짧은 지연
+                    
                     logger.info(f"텔레그램 메시지 전송 완료: {chat_id}")
                 except TelegramError as e:
                     logger.error(f"텔레그램 메시지 전송 실패: {e}")
