@@ -106,7 +106,7 @@ PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을
 
 - Python 3.10+
 - OpenAI API 키 (GPT-4.1, GPT-5)
-- Anthropic API 키 (Claude-Sonnet-4)
+- Anthropic API 키 (Claude-Sonnet-4.5)
 - 텔레그램 봇 토큰 및 채널 ID
 - wkhtmltopdf (PDF 변환용)
 
