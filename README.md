@@ -32,7 +32,7 @@ PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을
 - 손실 거래: 28건
 - 승률: 45.1%
 - **누적 수익률: 408.60%**
-- **[매매 성과 요약 대시보드](https://claude.ai/public/artifacts/8958de2b-8a17-45e7-b46b-c95b1c7f4709)**
+- **[매매 성과 요약 대시보드](https://claude.ai/public/artifacts/d546cc2e-9d2c-4787-8415-86930494e198)**
 
 ### ⭐⭐ 시즌2 (진행 중)
 **시뮬레이터 실적**
@@ -67,7 +67,7 @@ PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을
 
   <img src="docs/images/simulation2.png" alt="시뮬레이션2" width="500">
 
-  <img src="docs/images/dashboard.jpg" alt="시뮬레이션 실적" width="500">
+  <img src="docs/images/season1_dashboard.png" alt="시뮬레이션 실적" width="500">
 
 - **🎨 시각화**: 주가, 거래량, 시가총액 등 다양한 차트 생성
 
@@ -326,6 +326,12 @@ AI 에이전트가 생성하는 종합 애널리스트 리포트는 다음 섹�
 ## 📞 문의
 
 프로젝트 관련 문의사항이나 버그 리포트는 [GitHub Issues](https://github.com/dragon1086/prism-insight/issues)를 통해 제출해 주세요.
+
+## ⭐ 프로젝트 성장
+
+'25.8월 중순 출시 이후 **단 6주 만에 100+ Stars**를 달성했습니다!
+
+[![Star History Chart](https://api.star-history.com/svg?repos=dragon1086/prism-insight&type=Date)](https://star-history.com/#dragon1086/prism-insight&Date)
 
 ---
 
