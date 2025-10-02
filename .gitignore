@@ -6,6 +6,9 @@ mcp_agent.config.yaml
 mcp_agent.secrets.yaml
 config.py
 
+# IntelliJ IDEA project files
+.idea/
+
 # trading/.gitignore
 trading/config/KIS*
 trading/config/*.token*
