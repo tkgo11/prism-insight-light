@@ -54,6 +54,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
 ### 📊 분석 팀 (6개 에이전트) - GPT-4.1 기반
 
 #### 1. 기술적 분석가 (Technical Analyst)
+<img src="docs/images/aiagent/technical_analyst.png" alt="Technical Analyst" width="300"/>
+
 - **역할**: 주가 및 거래량 기술적 분석 전문가
 - **분석 항목**:
   - 주가 추세, 이동평균선, 지지/저항선
@@ -61,12 +63,16 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
   - 기술적 관점 제시
 
 #### 2. 거래동향 분석가 (Trading Flow Analyst)
+<img src="docs/images/aiagent/tranding_flow_analyst.png" alt="Trading Flow Analyst" width="300"/>
+
 - **역할**: 투자자별 거래 동향 분석 전문가
 - **분석 항목**:
   - 기관/외국인/개인 투자자의 매매 패턴
   - 거래량 분석을 통한 투자 주체별 동향 파악
 
 #### 3. 재무 분석가 (Financial Analyst)
+<img src="docs/images/aiagent/financial_analyst.png" alt="Financial Analyst" width="300"/>
+
 - **역할**: 기업 재무 및 밸류에이션 분석 전문가
 - **분석 항목**:
   - 재무제표 분석 (매출, 영업이익, 순이익)
@@ -74,6 +80,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
   - 목표주가 및 증권사 컨센서스
 
 #### 4. 산업 분석가 (Industry Analyst)
+<img src="docs/images/aiagent/industry_analyst.png" alt="Industry Analyst" width="300"/>
+
 - **역할**: 기업 사업구조 및 경쟁력 분석 전문가
 - **분석 항목**:
   - 사업 포트폴리오 및 시장 점유율
@@ -81,6 +89,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
   - 연구개발 투자 및 성장동력
 
 #### 5. 정보 분석가 (Information Analyst)
+<img src="docs/images/aiagent/information_analyst.png" alt="Information Analyst" width="300"/>
+
 - **역할**: 뉴스 및 이슈 트렌드 분석 전문가
 - **분석 항목**:
   - 당일 주가 변동 원인 규명
@@ -88,6 +98,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
   - 업종 동향 및 정치/경제 이슈
 
 #### 6. 시장 분석가 (Market Analyst)
+<img src="docs/images/aiagent/market_analyst.png" alt="Market Analyst" width="300"/>
+
 - **역할**: 전체 시장 및 거시경제 분석 전문가
 - **분석 항목**:
   - KOSPI/KOSDAQ 인덱스 분석
@@ -99,6 +111,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
 ### 💡 전략 팀 (1개 에이전트) - GPT-4.1 기반
 
 #### 7. 투자 전략가 (Investment Strategist)
+<img src="docs/images/aiagent/investment_strategist.png" alt="Investment Strategist" width="300"/>
+
 - **역할**: 모든 분석 결과를 통합하여 최종 투자 전략 수립
 - **제공 사항**:
   - 단기/중기/장기 투자자별 맞춤 전략
@@ -110,6 +124,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
 ### 💬 커뮤니케이션 팀 (2개 에이전트) - GPT-4.1 + Claude Sonnet 4.5
 
 #### 8-1. 요약 전문가 (Summary Specialist)
+<img src="docs/images/aiagent/summary_specialist.png" alt="Summary Specialist" width="300"/>
+
 - **역할**: 상세 보고서를 투자자를 위한 핵심 요약으로 변환
 - **특징**:
   - 400자 내외의 간결한 텔레그램 메시지 생성
@@ -117,6 +133,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
   - 텔레그램 최적화 포맷팅
 
 #### 8-2. 품질 검수자 (Quality Inspector)
+<img src="docs/images/aiagent/quality_inspector.png" alt="Quality Inspector" width="300"/>
+
 - **역할**: 생성된 메시지의 품질 평가 및 개선 제안
 - **특징**:
   - 정확성, 명확성, 포맷 준수 여부 검증
@@ -128,6 +146,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
 ### 📈 매매 시뮬레이션 팀 (2개 에이전트) - GPT-5 기반
 
 #### 9-1. 매수 전문가 (Buy Specialist)
+<img src="docs/images/aiagent/buy_specialist.png" alt="Buy Specialist" width="300"/>
+
 - **역할**: AI 리포트 기반 매수 의사결정 및 진입 관리
 - **특징**:
   - 밸류에이션과 모멘텀 기반 매수 점수 평가 (1~10점)
@@ -137,6 +157,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
   - 상세 매매 시나리오 작성
 
 #### 9-2. 매도 전문가 (Sell Specialist)
+<img src="docs/images/aiagent/sell_specialist.png" alt="Sell Specialist" width="300"/>
+
 - **역할**: 매매시나리오 기반 보유 종목 모니터링 및 매도 타이밍 결정
 - **특징**:
   - 손절/익절 시나리오 실시간 모니터링
@@ -149,6 +171,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
 ### 💬 사용자 상담 팀 (2개 에이전트) - Claude Sonnet 4.5 기반
 
 #### 10-1. 포트폴리오 상담가 (Portfolio Consultant)
+<img src="docs/images/aiagent/portfolio_consultant.png" alt="Portfolio Consultant" width="300"/>
+
 - **역할**: 사용자 보유 종목 평가 및 맞춤형 투자 조언
 - **특징**:
   - 사용자의 평균 매수가와 보유 기간 기반 분석
@@ -157,6 +181,8 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
   - 수익/손실 포지션별 맞춤 조언
 
 #### 10-2. 대화 관리자 (Dialogue Manager)
+<img src="docs/images/aiagent/dialogue_manager.png" alt="Dialogue Manager" width="300"/>
+
 - **역할**: 대화 맥락 유지 및 후속 질문 처리
 - **특징**:
   - 이전 대화 컨텍스트 기억 및 참조
