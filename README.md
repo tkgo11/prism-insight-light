@@ -121,7 +121,7 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
 
 ---
 
-### 💬 커뮤니케이션 팀 (2개 에이전트) - GPT-4.1 + Claude Sonnet 4.5
+### 💬 커뮤니케이션 팀 (2개 에이전트) - GPT-4.1
 
 #### 8-1. 요약 전문가 (Summary Specialist)
 <img src="docs/images/aiagent/summary_specialist.jpeg" alt="Summary Specialist" width="300"/>
