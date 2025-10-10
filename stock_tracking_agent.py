@@ -587,6 +587,7 @@ class StockTrackingAgent:
             )
 
             # JSON 파싱
+            # todo : model을 만들어서 generate_structured 함수 호출하여 코드 유지보수성 증가
             try:
                 # JSON 문자열 추출 함수
                 def fix_json_syntax(json_str):
