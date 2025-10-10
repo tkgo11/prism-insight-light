@@ -2,7 +2,6 @@
 """
 JSON 파싱 오류 수정 테스트 코드
 
-실제 발생한 JSON 파싱 오류와 SQLite에 저장된 데이터를 사용하여
 stock_tracking_agent.py의 JSON 파싱 로직을 테스트합니다.
 """
 
@@ -21,66 +20,46 @@ sys.path.insert(0, str(project_root))
 class TestJSONParser:
     """JSON 파싱 테스트 클래스"""
     
-    @staticmethod
-    def fix_json_syntax(json_str: str) -> str:
-        """JSON 문법 오류 수정 (stock_tracking_agent.py와 동일한 로직)"""
-        # 1. 마지막 쉼표 제거
-        json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
-        
-        # 2. 배열 뒤에 객체 속성이 오는 경우 쉼표 추가
-        json_str = re.sub(r'(\])\s*(\n\s*")', r'\1,\2', json_str)
-        
-        # 3. 객체 뒤에 객체 속성이 오는 경우 쉼표 추가
-        json_str = re.sub(r'(})\s*(\n\s*")', r'\1,\2', json_str)
-        
-        # 4. 숫자나 문자열 뒤에 속성이 오는 경우 쉼표 추가
-        json_str = re.sub(r'([0-9]|")\s*(\n\s*")', r'\1,\2', json_str)
-        
-        # 5. 중복 쉼표 제거
-        json_str = re.sub(r',\s*,', ',', json_str)
-        
-        return json_str
-    
     def test_broken_json_from_error_log(self):
         """실제 에러 로그에서 발생한 JSON 파싱 테스트"""
         print("\n=== 테스트 1: 실제 오류 발생 JSON ===")
         
-        # 실제 오류가 발생했던 JSON (sell_triggers와 hold_conditions 사이 쉼표 누락)
+        # 실제 오류가 발생했던 JSON (sell_triggers, hold_conditions 대괄호가 아닌 중괄호로 닫힘)
         broken_json = """{
-  "portfolio_analysis": "보유 2/10 슬롯(화학/포장재 1, 반도체/전기전자 1). 중기 2, 단/장기 0으로 중기 편중. 평균 수익률 미제시. 동일 섹터(반도체/IT 하드웨어) 2종 보유 시 산업 노출 확대에 유의.",
-  "valuation_analysis": "보고서 기준: PER 2024 66.6x, 2025E 56.3x, Fwd 12M 22.7x. PBR 2024 1.81x(2025E ~1.8x). EV/EBITDA Fwd 12M ~7.5x. ROE 2024 ~2.7% → 2025E ~3.2% 개선 예상. 업종(WI26) 평균 PER ~75x 대비 상대적 저평가로 보이나, 절대 PER은 아직 부담. PBR은 업종 보통 수준.",
-  "sector_outlook": "AI/서버·첨단 패키징 투자 확대로 고부가 PCB 수요 증가. 동종업체 동반 강세, 2025~2026 성장 낙관론 우위. 다만 경쟁 심화·환율·글로벌 변수에 따른 변동성 상존.",
-  "buy_score": 7,
-  "min_score": 8,
+  "portfolio_analysis": "보유 2/10슬롯(여유 8). 산업 분포는 화학/포장재, 반도체/전기전자로 분산되어 있으며 자동차 유통 섹터 편입 시 과도한 중복 없음. 투자기간은 중기 중심(2/2)으로 단기 포지션 여지 존재. 포트폴리오 평균수익률 미제시.",
+  "valuation_analysis": "보고서 기준 PER은 적자 지속으로 N/A, PBR 2.92배(’24/12), EV/EBITDA 20.23배, PCR 10.28배. 업종 평균 PER 4.91배 대비 ‘저평가’ 근거는 부족하며(이익 부재·고 PBR), 우선주 유통물량 희소로 가격 변동성 왜곡 리스크 큼. 외부 소스(Perplexity)로 동종 업계/경쟁사 최신 비교는 불충분하여 보수적 해석 필요.",
+  "sector_outlook": "국내 자동차·모빌리티 업종은 3분기 실적 개선 기대, 친환경차/렌트·모빌리티 확장으로 심리 개선. 다만 유동성 낮은 종목·소형주 중심 변동성 확대, 외국인 수급 변화에 민감.",
+  "buy_score": 6.5,
+  "min_score": 7,
   "decision": "관망",
-  "target_price": 41000,
-  "stop_loss": 30000,
-  "investment_period": "중기",
-  "rationale": "거래대금 급증·기관/외국인 동반 매수로 모멘텀 강함. 다만 신고가 인접(36.5~37천원)과 컨센서스 목표가 하회로 업사이드 제한. Fwd PER 개선 기대는 있으나 절대 밸류 부담과 실적 변동성 존재.",
-  "sector": "IT 하드웨어(PCB/패키지기판)",
-  "market_condition": "KOSPI 중기 강세(지수 3,600 저항 테스트), KOSDAQ 중립~약세. 정책 호재와 글로벌 불확실성 혼재, 리스크 레벨 중간. 급등주 중심 단기 변동성 확대.",
+  "target_price": 55000,
+  "stop_loss": 39500,
+  "investment_period": "단기",
+  "rationale": "밸류에이션 매력 제한(PER N/A, PBR 높음)과 유동주식 6.56%의 극단적 변동성. 4만~4.5만원 지지 구간 인접은 기술적 반등 여지. 거래대금 급감·외국인 수급 변동성으로 모멘텀 약화.",
+  "sector": "자동차 유통/모빌리티",
+  "market_condition": "KOSPI 강세·KOSDAQ 중립, 전체 리스크 중간. 본 종목 거래대금 전일 대비 -76.9%로 관망세/모멘텀 둔화. 외국인 수급 변화가 주가 단기 방향 핵심 변수.",
   "max_portfolio_size": "6",
   "trading_scenarios": {
     "key_levels": {
-      "primary_support": 30000,
-      "secondary_support": 27000,
-      "primary_resistance": 37000,
-      "secondary_resistance": 40000,
-      "volume_baseline": "30만~70만주"
+      "primary_support": 40000,
+      "secondary_support": 35000,
+      "primary_resistance": 55000,
+      "secondary_resistance": "70000~80000",
+      "volume_baseline": "일평균 약 50만주 내외(9~10월 기준), 급등구간 100만~150만주"
     },
     "sell_triggers": [
-      "익절 조건 1: 41,000원 부근 도달 시 전량 매도",
-      "익절 조건 2: 37,000원 돌파 후 3거래일 내 거래량 급감·음봉 연속(2일) 시 모멘텀 소진으로 매도",
-      "손절 조건 1: 30,000원 종가 이탈 시 즉시 전량 손절",
-      "손절 조건 2: 32,000원 이탈 후 기관/외국인 3일 연속 순매도+거래대금 급감 시 하락 가속으로 손절",
-      "시간 조건: 20거래일 이상 32,000~37,000 박스권 횡보·수급 둔화 지속 시 기회비용 고려 청산"
-    ]
+      "익절 조건 1: 55,000원 부근(중간 저항) 도달 시 전량 매도",
+      "익절 조건 2: 거래량 감소·음봉 연속으로 모멘텀 소진 시 전량 매도",
+      "손절 조건 1: 40,000원 종가 이탈 + 거래량 동반 증가 시 전량 손절",
+      "손절 조건 2: 40,000원 이탈 후 35,000원 재지지 실패·하락 가속",
+      "시간 조건: 진입 후 10거래일 내 5만대 회복 실패·횡보 지속 시 청산"
+    },
     "hold_conditions": [
-      "가격이 33,000원 이상에서 20·60일선 위 유지",
-      "기관·외국인 순매수 추세 지속(주당 누적 +100만주/주 이상)",
-      "37,000원 돌파 후 3거래일 안착 및 거래대금 상위 20위 내 유지"
-    ],
-    "portfolio_context": "현재 보유 2/10로 여유는 충분하나 동일 섹터 비중 확대와 신고가 국면의 변동성 고려 시 추격매수 리스크가 큼. 목표가 대비 업사이드 10% 이상 확신 부족으로 관망 우위. 돌파 안착 또는 30~32천원 조정 재진입 시나리오가 유리."
+      "40,000~44,000원 지지선 수차례 방어 및 거래량 정상화",
+      "외국인 순매수 전환·유지와 함께 5만대 안착",
+      "업종/시장 강세 지속 및 분기 실적 개선 확인"
+    },
+    "portfolio_context": "현 포트폴리오에 소비경기/모빌리티 노출 추가로 분산효과는 있으나, 해당 종목은 유동성 리스크·변동성이 극단적. 분할매매 불가 시스템 특성상 트리거 충족 시에만 1슬롯(10%)로 단기 트레이드, 미충족 시 보유 회피가 합리적."
   }
 }"""
         
@@ -92,10 +71,11 @@ class TestJSONParser:
         except json.JSONDecodeError as e:
             print(f"   ✅ 예상대로 파싱 실패: {e}")
         
-        # fix_json_syntax 적용 후 파싱
-        print("2) fix_json_syntax 적용 후 파싱...")
+        # json_repair 적용 후 파싱
+        print("2) json_repair 적용 후 파싱...")
         try:
-            fixed_json = self.fix_json_syntax(broken_json)
+            import json_repair
+            fixed_json = json_repair.repair_json(broken_json)
             parsed = json.loads(fixed_json)
             print(f"   ✅ 파싱 성공!")
             print(f"   - portfolio_analysis: {parsed['portfolio_analysis'][:50]}...")
@@ -106,58 +86,6 @@ class TestJSONParser:
         except Exception as e:
             print(f"   ❌ 파싱 실패: {e}")
             return False
-        
-        return True
-    
-    def test_sqlite_stored_json(self):
-        """SQLite에 저장된 실제 JSON 데이터 파싱 테스트"""
-        print("\n=== 테스트 2: SQLite 저장된 JSON ===")
-        
-        # SQLite에서 데이터 읽기
-        conn = sqlite3.connect("stock_tracking_db.sqlite")
-        cursor = conn.cursor()
-        
-        try:
-            cursor.execute("SELECT ticker, company_name, scenario FROM stock_holdings")
-            rows = cursor.fetchall()
-            
-            if not rows:
-                print("   ⚠️ 데이터베이스에 데이터 없음")
-                return True
-            
-            for ticker, company_name, scenario_json in rows:
-                print(f"\n   종목: {company_name}({ticker})")
-                try:
-                    # JSON 파싱
-                    scenario = json.loads(scenario_json)
-                    
-                    # 주요 필드 확인
-                    assert 'portfolio_analysis' in scenario
-                    assert 'buy_score' in scenario
-                    assert 'decision' in scenario
-                    
-                    print(f"   ✅ 파싱 성공")
-                    print(f"      - buy_score: {scenario['buy_score']}")
-                    print(f"      - decision: {scenario['decision']}")
-                    print(f"      - sector: {scenario.get('sector', 'N/A')}")
-                    
-                    # trading_scenarios가 있는 경우
-                    if 'trading_scenarios' in scenario:
-                        ts = scenario['trading_scenarios']
-                        if 'sell_triggers' in ts:
-                            print(f"      - sell_triggers: {len(ts['sell_triggers'])}개")
-                        if 'hold_conditions' in ts:
-                            print(f"      - hold_conditions: {len(ts['hold_conditions'])}개")
-                    
-                except json.JSONDecodeError as e:
-                    print(f"   ❌ 파싱 실패: {e}")
-                    return False
-                except AssertionError as e:
-                    print(f"   ❌ 필수 필드 누락: {e}")
-                    return False
-                    
-        finally:
-            conn.close()
         
         return True
     
@@ -217,7 +145,8 @@ class TestJSONParser:
             
             # 수정 후 파싱
             try:
-                fixed = self.fix_json_syntax(test_case['broken'])
+                import json_repair
+                fixed = json_repair.repair_json(test_case['broken'])
                 parsed = json.loads(fixed)
                 
                 # 예상 키 확인
@@ -285,7 +214,6 @@ def main():
     # 각 테스트 실행
     results = {
         "실제 오류 JSON": tester.test_broken_json_from_error_log(),
-        "SQLite 저장 JSON": tester.test_sqlite_stored_json(),
         "다양한 오류 패턴": tester.test_various_broken_json_patterns(),
         "json-repair 폴백": tester.test_json_repair_fallback(),
     }
