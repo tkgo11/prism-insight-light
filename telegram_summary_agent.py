@@ -77,6 +77,15 @@ class TelegramSummaryGenerator:
     def determine_trigger_type(self, stock_code: str, report_date=None):
         """
         트리거 결과 파일에서 해당 종목의 트리거 유형을 결정
+        
+        로직:
+        1. morning과 afternoon 두 모드의 트리거 결과 파일을 모두 확인
+        2. 둘 다 존재하는 경우, 최신 데이터인 afternoon 우선 선택
+        3. 하나만 존재하는 경우, 해당 모드 선택
+        4. 둘 다 없는 경우, 기본값 반환
+        
+        이는 매일 스케줄 실행 순서(morning → afternoon)를 고려하여,
+        가장 최신의 시장 데이터를 활용하기 위함입니다.
 
         Args:
             stock_code: 종목 코드
@@ -94,7 +103,10 @@ class TelegramSummaryGenerator:
             # YYYY.MM.DD 형식을 YYYYMMDD로 변환
             report_date = report_date.replace(".", "")
 
-        # 가능한 모드 (morning, afternoon)
+        # 각 모드별로 발견된 트리거 정보 저장
+        found_triggers = {}  # {mode: (trigger_type, stocks)}
+        
+        # 가능한 모든 모드 확인 (morning, afternoon)
         for mode in ["morning", "afternoon"]:
             # 트리거 결과 파일 경로
             results_file = f"trigger_results_{mode}_{report_date}.json"
@@ -113,15 +125,30 @@ class TelegramSummaryGenerator:
                             if isinstance(stocks, list):
                                 for stock in stocks:
                                     if stock.get("code") == stock_code:
-                                        logger.info(f"종목 {stock_code}의 트리거 유형: {trigger_type}, 모드: {mode}")
-                                        return trigger_type, mode
+                                        # 해당 모드에서 트리거 발견
+                                        found_triggers[mode] = (trigger_type, mode)
+                                        logger.info(f"종목 {stock_code}의 트리거 발견 - 유형: {trigger_type}, 모드: {mode}")
+                                        break
+                        
+                        # 이미 찾았으면 다음 trigger_type 확인 불필요
+                        if mode in found_triggers:
+                            break
+                            
                 except Exception as e:
                     logger.error(f"트리거 결과 파일 읽기 오류: {e}")
 
+        # 우선순위에 따라 결과 반환: afternoon > morning
+        if "afternoon" in found_triggers:
+            trigger_type, mode = found_triggers["afternoon"]
+            logger.info(f"최종 선택: afternoon 모드 - 트리거 유형: {trigger_type}")
+            return trigger_type, mode
+        elif "morning" in found_triggers:
+            trigger_type, mode = found_triggers["morning"]
+            logger.info(f"최종 선택: morning 모드 - 트리거 유형: {trigger_type}")
+            return trigger_type, mode
+
         # 트리거 유형을 찾지 못한 경우 기본값 반환
         logger.warning(f"종목 {stock_code}의 트리거 유형을 결과 파일에서 찾지 못함, 기본값 사용")
-
-        # 기본 트리거 유형과 모드 (이전 방식 유지)
         return "주목할 패턴", "unknown"
 
     def create_optimizer_agent(self, metadata, current_date):
