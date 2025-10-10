@@ -1,15 +1,17 @@
 from mcp_agent.agents.agent import Agent
 
 def create_news_analysis_agent(company_name, company_code, reference_date):
-    """뉴스 분석 에이전트 생성"""
     return Agent(
         name="news_analysis_agent",
         instruction=f"""당신은 기업 뉴스 분석 전문가입니다. 주어진 기업 관련 최근 뉴스와 이벤트를 분석하여 깊이 있는 뉴스 트렌드 분석 보고서를 작성해야 합니다.
 
                         ## 수집해야 할 데이터
-                        1. 당일 주가 변동 요인: perplexity_ask 도구를 사용하여 "{company_name} 종목코드:{company_code} {reference_date[:4]}년 {reference_date[4:6]}월 {reference_date[6:]}일 주가 변동 원인"을 최우선으로 검색
-                        2. 기업 관련 주요 뉴스: "{company_name} 종목코드:{company_code}의 {reference_date[:4]}년 {reference_date[4:6]}월 최근 뉴스" 검색
-                        3. 업종/산업 관련 뉴스: "{company_name}({company_code})이 속한 업종의 {reference_date[:4]}년 {reference_date[4:6]}월 최근 동향" 검색
+                        1. 당일 주가 변동 요인: 
+                        1-1) firecrawl 도구를 사용하여 naver finance 사이트의 뉴스 및 공시 URL을 접속하여 당일 주가 변동 요인을 검색(접속 URL = https://finance.naver.com/item/news.naver?code={company_code})
+                        1-2) perplexity_ask 도구를 사용하여 "{company_name} 종목코드:{company_code} {reference_date[:4]}년 {reference_date[4:6]}월 {reference_date[6:]}일 주가 변동 원인"을 최우선으로 검색
+                        1-3) perplexity_ask 도구보다 firecrawl 도구 사용 결과에 가중치를 더 줄 것 
+                        2. 기업 관련 주요 뉴스: perplexity_ask 도구를 사용하여 "{company_name} 종목코드:{company_code}의 {reference_date[:4]}년 {reference_date[4:6]}월 최근 뉴스" 검색
+                        3. 업종/산업 관련 뉴스: perplexity_ask 도구를 사용하여 "{company_name}({company_code})이 속한 업종의 {reference_date[:4]}년 {reference_date[4:6]}월 최근 동향" 검색
                         
                         ## perplexity_ask 도구 활용
                         1. 반드시 첫 번째로 당일 주가 변동 요인을 검색하고 분석에 최우선으로 반영할 것
@@ -17,6 +19,9 @@ def create_news_analysis_agent(company_name, company_code, reference_date):
                         3. 응답에 포함된 출처 번호([1], [2] 등)를 통해 핵심 정보의 신뢰성 확인
                         4. 필요시 추가 질문으로 더 상세한 정보 탐색 가능
                         5. 날짜가 오래된 뉴스는 제외하고 최신 뉴스(분석일 기준 1개월 이내)에 집중
+                        
+                        ## firecrawl 도구 활용
+                        1. URL 접속 시 firecrawl_scrape tool을 사용하고 formats 파라미터는 ["markdown"]로, onlyMainContent 파라미터는 true로 설정하세요.
                         
                         ## 뉴스 구분 및 분류
                         검색된 뉴스를 다음 카테고리로 명확히 구분하여 분석:
@@ -79,5 +84,6 @@ def create_news_analysis_agent(company_name, company_code, reference_date):
                         기업: {company_name} ({company_code})
                         분석일: {reference_date}(YYYYMMDD 형식)
                         """,
-        server_names=["perplexity"]
+        server_names=["perplexity", "firecrawl"]
     )
+    """뉴스 분석 에이전트 생성"""
