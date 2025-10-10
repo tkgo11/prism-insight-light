@@ -33,6 +33,7 @@ websockets>=12.0  # 실시간 시세 웹소켓
 
 # JSON 처리
 ujson>=5.8.0
+json-repair>=0.1.0  # JSON 문법 오류 자동 복구
 
 # 이미지 처리 (PDF 변환시 필요)
 Pillow>=10.0.0

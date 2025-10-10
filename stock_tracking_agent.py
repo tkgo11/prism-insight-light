@@ -588,12 +588,34 @@ class StockTrackingAgent:
 
             # JSON 파싱
             try:
+                # JSON 문자열 추출 함수
+                def fix_json_syntax(json_str):
+                    """JSON 문법 오류 수정"""
+                    # 1. 마지막 쉼표 제거
+                    json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+                    
+                    # 2. 배열 뒤에 객체 속성이 오는 경우 쉼표 추가
+                    # ] 다음에 " 가 오면 쉼표 추가 (배열 끝나고 새 속성 시작)
+                    json_str = re.sub(r'(\])\s*(\n\s*")', r'\1,\2', json_str)
+                    
+                    # 3. 객체 뒤에 객체 속성이 오는 경우 쉼표 추가
+                    # } 다음에 " 가 오면 쉼표 추가 (객체 끝나고 새 속성 시작)
+                    json_str = re.sub(r'(})\s*(\n\s*")', r'\1,\2', json_str)
+                    
+                    # 4. 숫자나 문자열 뒤에 속성이 오는 경우 쉼표 추가
+                    # 숫자 또는 "로 끝나는 문자열 다음에 새 줄과 "가 오면 쉼표 추가
+                    json_str = re.sub(r'([0-9]|")\s*(\n\s*")', r'\1,\2', json_str)
+                    
+                    # 5. 중복 쉼표 제거
+                    json_str = re.sub(r',\s*,', ',', json_str)
+                    
+                    return json_str
+
                 # 마크다운 코드 블록에서 JSON 추출 시도 (```json ... ```)
                 markdown_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', response, re.DOTALL)
                 if markdown_match:
                     json_str = markdown_match.group(1)
-                    # 마지막 쉼표 제거
-                    json_str = re.sub(r',(\s*})', r'\1', json_str)
+                    json_str = fix_json_syntax(json_str)
                     scenario_json = json.loads(json_str)
                     logger.info(f"마크다운 코드 블록에서 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
@@ -602,15 +624,13 @@ class StockTrackingAgent:
                 json_match = re.search(r'({[\s\S]*?})(?:\s*$|\n\n)', response, re.DOTALL)
                 if json_match:
                     json_str = json_match.group(1)
-                    # 마지막 쉼표 제거
-                    json_str = re.sub(r',(\s*})', r'\1', json_str)
+                    json_str = fix_json_syntax(json_str)
                     scenario_json = json.loads(json_str)
                     logger.info(f"일반 JSON 형식에서 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
 
                 # 전체 응답이 JSON인 경우
-                # 마지막 쉼표 제거
-                clean_response = re.sub(r',(\s*})', r'\1', response)
+                clean_response = fix_json_syntax(response)
                 scenario_json = json.loads(clean_response)
                 logger.info(f"전체 응답 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
                 return scenario_json
@@ -619,16 +639,38 @@ class StockTrackingAgent:
                 logger.error(f"매매 시나리오 JSON 파싱 오류: {json_err}")
                 logger.error(f"원본 응답: {response}")
 
-                # 추가 복구 시도: 원본 응답에서 중괄호 사이의 내용을 추출
+                # 추가 복구 시도: 더 강력한 JSON 수정
                 try:
                     clean_response = re.sub(r'```(?:json)?|```', '', response).strip()
-                    # 마지막 쉼표 제거
-                    clean_response = re.sub(r',(\s*})', r'\1', clean_response)
+                    
+                    # 모든 가능한 JSON 문법 오류 수정
+                    # 1. 배열/객체 끝 다음에 속성이 오는 경우 쉼표 추가
+                    clean_response = re.sub(r'(\]|\})\s*(\n\s*"[^"]+"\s*:)', r'\1,\2', clean_response)
+                    
+                    # 2. 값 다음에 속성이 오는 경우 쉼표 추가
+                    clean_response = re.sub(r'(["\d\]\}])\s*\n\s*("[^"]+"\s*:)', r'\1,\n    \2', clean_response)
+                    
+                    # 3. 마지막 쉼표 제거
+                    clean_response = re.sub(r',(\s*[}\]])', r'\1', clean_response)
+                    
+                    # 4. 중복 쉼표 제거
+                    clean_response = re.sub(r',\s*,+', ',', clean_response)
+                    
                     scenario_json = json.loads(clean_response)
                     logger.info(f"추가 복구로 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
-                except:
-                    logger.error("추가 복구 시도도 실패")
+                except Exception as e:
+                    logger.error(f"추가 복구 시도도 실패: {str(e)}")
+                    
+                    # 최후의 시도: json_repair 라이브러리 사용 가능한 경우
+                    try:
+                        import json_repair
+                        repaired = json_repair.repair_json(response)
+                        scenario_json = json.loads(repaired)
+                        logger.info("json_repair로 복구 성공")
+                        return scenario_json
+                    except (ImportError, Exception):
+                        pass
 
                 # 모든 파싱 시도 실패 시 기본값 반환
                 return self._default_scenario()
