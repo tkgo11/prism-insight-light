@@ -1297,14 +1297,14 @@ class StockTrackingAgent:
                     sector_counts[sector] = sector_counts.get(sector, 0) + 1
 
                     profit_rate = ((current_price - buy_price) / buy_price) * 100 if buy_price else 0
-                    arrow = "🔴" if profit_rate > 0 else "🔵" if profit_rate < 0 else "➖"
+                    arrow = "🔺" if profit_rate > 0 else "🔻" if profit_rate < 0 else "➖"
 
                     buy_datetime = datetime.strptime(buy_date, "%Y-%m-%d %H:%M:%S") if buy_date else datetime.now()
                     days_passed = (datetime.now() - buy_datetime).days
 
                     message += f"- {company_name}({ticker}) [{sector}]\n"
                     message += f"  매수가: {buy_price:,.0f}원 / 현재가: {current_price:,.0f}원\n"
-                    message += f"  수익률: {arrow} {abs(profit_rate):.2f}% / 보유기간: {days_passed}일\n\n"
+                    message += f"  수익률: {arrow} {profit_rate:.2f}% / 보유기간: {days_passed}일\n\n"
 
                 # 산업군 분포 추가
                 message += f"🔸 산업군 분포:\n"
