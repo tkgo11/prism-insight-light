@@ -3,10 +3,14 @@ from holidays.countries import KR
 from datetime import date
 import sys
 import logging
+from pathlib import Path
+
+# 프로젝트 루트 디렉토리 자동 감지
+PROJECT_ROOT = Path(__file__).resolve().parent
 
 # 로깅 설정
 logging.basicConfig(
-    filename='/root/prism-insight/stock_scheduler.log',
+    filename=PROJECT_ROOT / 'stock_scheduler.log',
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
