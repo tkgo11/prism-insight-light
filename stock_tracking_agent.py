@@ -200,6 +200,25 @@ class StockTrackingAgent:
             - '기술적 분석': 주가, 목표가, 손절가 정보
             
             ## JSON 응답 형식
+            
+            **중요**: key_levels의 가격 필드는 반드시 다음 형식 중 하나로 작성하세요:
+            - 단일 숫자: 1700 또는 "1700"
+            - 쉼표 포함: "1,700" 
+            - 범위 표현: "1700~1800" 또는 "1,700~1,800" (중간값 사용됨)
+            - ❌ 금지: "1,700원", "약 1,700원", "최소 1,700" 같은 설명 문구 포함
+            
+            **key_levels 예시**:
+            올바른 예시:
+            "primary_support": 1700
+            "primary_support": "1,700"
+            "primary_support": "1700~1750"
+            "secondary_resistance": "2,000~2,050"
+            
+            잘못된 예시 (파싱 실패 가능):
+            "primary_support": "약 1,700원"
+            "primary_support": "1,700원 부근"
+            "primary_support": "최소 1,700"
+            
             {
                 "portfolio_analysis": "현재 포트폴리오 상황 요약",
                 "valuation_analysis": "동종업계 밸류에이션 비교 결과",
@@ -207,8 +226,8 @@ class StockTrackingAgent:
                 "buy_score": 1~10 사이의 점수,
                 "min_score": 최소 진입 요구 점수,
                 "decision": "진입" 또는 "관망",
-                "target_price": 목표가 (원),
-                "stop_loss": 손절가 (원),
+                "target_price": 목표가 (원, 숫자만),
+                "stop_loss": 손절가 (원, 숫자만),
                 "investment_period": "단기" / "중기" / "장기",
                 "rationale": "핵심 투자 근거 (3줄 이내)",
                 "sector": "산업군/섹터",
@@ -220,7 +239,7 @@ class StockTrackingAgent:
                         "secondary_support": 보조 지지선,
                         "primary_resistance": 주요 저항선,
                         "secondary_resistance": 보조 저항선,
-                        "volume_baseline": "평소 거래량 기준"
+                        "volume_baseline": "평소 거래량 기준(문자열 표현 가능)"
                     },
                     "sell_triggers": [
                         "익절 조건 1:  목표가/저항선 관련",
@@ -790,6 +809,50 @@ class StockTrackingAgent:
             logger.error(traceback.format_exc())
             return {"success": False, "error": str(e)}
 
+    def _parse_price_value(self, value: Any) -> float:
+        """
+        가격 값을 파싱하여 숫자로 변환
+        
+        Args:
+            value: 가격 값 (숫자, 문자열, 범위 등)
+            
+        Returns:
+            float: 파싱된 가격 (실패 시 0)
+        """
+        try:
+            # 이미 숫자인 경우
+            if isinstance(value, (int, float)):
+                return float(value)
+            
+            # 문자열인 경우
+            if isinstance(value, str):
+                # 쉼표 제거
+                value = value.replace(',', '')
+                
+                # 범위 표현 체크 (예: "2000~2050", "1,700-1,800")
+                range_patterns = [
+                    r'(\d+(?:\.\d+)?)\s*[-~]\s*(\d+(?:\.\d+)?)',  # 2000~2050 or 2000-2050
+                    r'(\d+(?:\.\d+)?)\s*~\s*(\d+(?:\.\d+)?)',     # 2000 ~ 2050
+                ]
+                
+                for pattern in range_patterns:
+                    match = re.search(pattern, value)
+                    if match:
+                        # 범위의 중간값 사용
+                        low = float(match.group(1))
+                        high = float(match.group(2))
+                        return (low + high) / 2
+                
+                # 단일 숫자 추출 시도
+                number_match = re.search(r'(\d+(?:\.\d+)?)', value)
+                if number_match:
+                    return float(number_match.group(1))
+            
+            return 0
+        except Exception as e:
+            logger.warning(f"가격 값 파싱 실패: {value} - {str(e)}")
+            return 0
+
     async def buy_stock(self, ticker: str, company_name: str, current_price: float, scenario: Dict[str, Any], rank_change_msg: str = "") -> bool:
         """
         주식 매수 처리
@@ -887,8 +950,8 @@ class StockTrackingAgent:
                     message += "💰 핵심 가격대:\n"
                     
                     # 저항선
-                    primary_resistance = key_levels.get('primary_resistance', 0)
-                    secondary_resistance = key_levels.get('secondary_resistance', 0)
+                    primary_resistance = self._parse_price_value(key_levels.get('primary_resistance', 0))
+                    secondary_resistance = self._parse_price_value(key_levels.get('secondary_resistance', 0))
                     if primary_resistance or secondary_resistance:
                         message += f"  📈 저항선:\n"
                         if secondary_resistance:
@@ -900,8 +963,8 @@ class StockTrackingAgent:
                     message += f"  ━━ 현재가: {current_price:,.0f}원 ━━\n"
                     
                     # 지지선
-                    primary_support = key_levels.get('primary_support', 0)
-                    secondary_support = key_levels.get('secondary_support', 0)
+                    primary_support = self._parse_price_value(key_levels.get('primary_support', 0))
+                    secondary_support = self._parse_price_value(key_levels.get('secondary_support', 0))
                     if primary_support or secondary_support:
                         message += f"  📉 지지선:\n"
                         if primary_support:
