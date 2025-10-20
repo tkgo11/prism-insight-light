@@ -186,6 +186,31 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             )
         """)
 
+        # 매수 보류(관망) 종목 추적 테이블 생성
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS watchlist_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticker TEXT NOT NULL,
+                company_name TEXT NOT NULL,
+                current_price REAL NOT NULL,
+                analyzed_date TEXT NOT NULL,
+                buy_score INTEGER NOT NULL,
+                min_score INTEGER NOT NULL,
+                decision TEXT NOT NULL,
+                skip_reason TEXT NOT NULL,
+                target_price REAL,
+                stop_loss REAL,
+                investment_period TEXT,
+                sector TEXT,
+                scenario TEXT,
+                portfolio_analysis TEXT,
+                valuation_analysis TEXT,
+                sector_outlook TEXT,
+                market_condition TEXT,
+                rationale TEXT
+            )
+        """)
+
         self.conn.commit()
 
         # 시장 상태 분석 실행
@@ -455,6 +480,20 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
 
                     self.message_queue.append(skip_message)
                     logger.info(f"매수 보류: {company_name}({ticker}) - {reason}")
+                    
+                    # 관망 종목을 watchlist_history 테이블에 저장
+                    await self._save_watchlist_item(
+                        ticker=ticker,
+                        company_name=company_name,
+                        current_price=current_price,
+                        buy_score=buy_score,
+                        min_score=min_score,
+                        decision=decision,
+                        skip_reason=reason,
+                        scenario=scenario,
+                        sector=sector
+                    )
+                    
                     continue
 
                 # 진입 결정이면 매수 처리
@@ -509,6 +548,90 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
 
         except Exception as e:
             logger.error(f"{ticker} 매수 처리 중 오류: {str(e)}")
+            logger.error(traceback.format_exc())
+            return False
+
+    async def _save_watchlist_item(
+        self,
+        ticker: str,
+        company_name: str,
+        current_price: float,
+        buy_score: int,
+        min_score: int,
+        decision: str,
+        skip_reason: str,
+        scenario: Dict[str, Any],
+        sector: str
+    ) -> bool:
+        """
+        매수하지 않는 종목을 watchlist_history 테이블에 저장
+        
+        Args:
+            ticker: 종목 코드
+            company_name: 종목명
+            current_price: 현재가
+            buy_score: 매수 점수
+            min_score: 최소 요구 점수
+            decision: 결정 (진입/관망)
+            skip_reason: 보류 이유
+            scenario: 시나리오 전체 정보
+            sector: 산업군
+            
+        Returns:
+            bool: 저장 성공 여부
+        """
+        try:
+            # 현재 시간
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # 시나리오에서 필요한 정보 추출
+            target_price = scenario.get('target_price', 0)
+            stop_loss = scenario.get('stop_loss', 0)
+            investment_period = scenario.get('investment_period', '단기')
+            portfolio_analysis = scenario.get('portfolio_analysis', '')
+            valuation_analysis = scenario.get('valuation_analysis', '')
+            sector_outlook = scenario.get('sector_outlook', '')
+            market_condition = scenario.get('market_condition', '')
+            rationale = scenario.get('rationale', '')
+            
+            # DB에 저장
+            self.cursor.execute(
+                """
+                INSERT INTO watchlist_history 
+                (ticker, company_name, current_price, analyzed_date, buy_score, min_score, 
+                 decision, skip_reason, target_price, stop_loss, investment_period, sector, 
+                 scenario, portfolio_analysis, valuation_analysis, sector_outlook, 
+                 market_condition, rationale)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    ticker,
+                    company_name,
+                    current_price,
+                    now,
+                    buy_score,
+                    min_score,
+                    decision,
+                    skip_reason,
+                    target_price,
+                    stop_loss,
+                    investment_period,
+                    sector,
+                    json.dumps(scenario, ensure_ascii=False),
+                    portfolio_analysis,
+                    valuation_analysis,
+                    sector_outlook,
+                    market_condition,
+                    rationale
+                )
+            )
+            self.conn.commit()
+            
+            logger.info(f"{ticker}({company_name}) 관망 종목 저장 완료 - 점수: {buy_score}/{min_score}, 이유: {skip_reason}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"{ticker} watchlist 저장 중 오류: {str(e)}")
             logger.error(traceback.format_exc())
             return False
 
