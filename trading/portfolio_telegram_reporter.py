@@ -141,22 +141,20 @@ class PortfolioTelegramReporter:
                 avg_price = stock.get('avg_price', 0)
 
                 # 수익률 상태
-                if profit_rate >= 3:
-                    status_emoji = "🚀"
-                elif profit_rate >= 0:
-                    status_emoji = "🟢"
-                elif profit_rate >= -3:
-                    status_emoji = "🟡"
+                if profit_rate > 0:
+                    status_emoji = "🔺"
+                elif profit_rate < 0:
+                    status_emoji = "🔻"
                 else:
-                    status_emoji = "🔴"
+                    status_emoji = "➖"
 
                 profit_sign = "+" if profit_amount >= 0 else ""
 
                 # 종목별 정보
-                message += f"\n{i}. {status_emoji} {stock_name} ({stock_code})\n"
-                message += f"   📊 {quantity}주 × {self.format_currency(current_price)} = `{self.format_currency(eval_amount)}`\n"
-                message += f"   💸 평균단가: `{self.format_currency(avg_price)}`\n"
-                message += f"   💹 `{profit_sign}{self.format_currency(profit_amount)}` ({self.format_percentage(profit_rate)})\n"
+                message += f"\n*{i}. {stock_name}* ({stock_code}) {status_emoji}\n"
+                message += f"  평가금액: `{self.format_currency(eval_amount)}`\n"
+                message += f"  평균단가: `{self.format_currency(avg_price)}` ({quantity}주)\n"
+                message += f"  손익: `{profit_sign}{self.format_currency(profit_amount)}`  |  {self.format_percentage(profit_rate)}\n"
 
         else:
             message += "📭 *보유종목*: 없음\n\n"

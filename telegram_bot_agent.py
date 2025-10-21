@@ -30,36 +30,29 @@ class TelegramBotAgent:
 
         self.bot = Bot(token=self.token)
 
-    async def send_message(self, chat_id, message):
+    async def send_message(self, chat_id, message, parse_mode="Markdown"):
         """
         텔레그램 채널로 메시지 전송
 
         Args:
             chat_id (str): 텔레그램 채널 ID
             message (str): 전송할 메시지
+            parse_mode (str): 파싱 모드 ("Markdown", "MarkdownV2", "HTML", None)
 
         Returns:
             bool: 전송 성공 여부
         """
         try:
-            # 특수 문자 이스케이프 처리
-            if message:
-                import re
-                # Markdown에서 이스케이프가 필요한 특수 문자들
-                special_chars = r'(\_|\*|\[|\]|\(|\)|\~|\`|\>|\#|\+|\-|\=|\||\{|\}|\.|\\!)'
-                escaped_message = re.sub(special_chars, r'\\\1', message)
-            else:
-                escaped_message = message
-
+            # 지정된 parse_mode로 전송 시도
             await self.bot.send_message(
                 chat_id=chat_id,
-                text=escaped_message,
-                parse_mode="MarkdownV2"  # 보다 안정적인 MarkdownV2로 변경
+                text=message,
+                parse_mode=parse_mode
             )
-            logger.info(f"메시지 전송 성공: {chat_id}")
+            logger.info(f"메시지 전송 성공 ({parse_mode}): {chat_id}")
             return True
         except TelegramError as e:
-            logger.error(f"텔레그램 메시지 전송 실패: {e}")
+            logger.error(f"텔레그램 메시지 전송 실패 ({parse_mode}): {e}")
             # 에러 발생 시 일반 텍스트로 재시도
             try:
                 logger.info("일반 텍스트로 재시도합니다.")
