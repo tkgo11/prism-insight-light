@@ -211,6 +211,37 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             )
         """)
 
+        # 보유 종목 매도 판단 테이블 생성 (AI의 홀딩/매도 결정 저장)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS holding_decisions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticker TEXT NOT NULL,
+                decision_date TEXT NOT NULL,
+                decision_time TEXT NOT NULL,
+                
+                current_price REAL NOT NULL,
+                should_sell BOOLEAN NOT NULL,
+                sell_reason TEXT,
+                confidence INTEGER,
+                
+                technical_trend TEXT,
+                volume_analysis TEXT,
+                market_condition_impact TEXT,
+                time_factor TEXT,
+                
+                portfolio_adjustment_needed BOOLEAN,
+                adjustment_reason TEXT,
+                new_target_price REAL,
+                new_stop_loss REAL,
+                adjustment_urgency TEXT,
+                
+                full_json_data TEXT NOT NULL,
+                
+                created_at TEXT DEFAULT (datetime('now', 'localtime')),
+                FOREIGN KEY (ticker) REFERENCES stock_holdings(ticker)
+            )
+        """)
+
         self.conn.commit()
 
         # 시장 상태 분석 실행
@@ -804,14 +835,27 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 logger.info(f"{ticker}({company_name}) AI 매도 결정: {'매도' if should_sell else '보유'} (확신도: {confidence}/10)")
                 logger.info(f"매도 사유: {sell_reason}")
                 
-                # 매도하지 않는 경우 portfolio_adjustment 처리
-                if not should_sell and portfolio_adjustment.get("needed", False):
-                    await self._process_portfolio_adjustment(ticker, company_name, portfolio_adjustment, analysis_summary)
-                
-                # 매도 시 analysis_summary를 sell_reason에 추가
-                if should_sell and analysis_summary:
-                    detailed_reason = self._format_sell_reason_with_analysis(sell_reason, analysis_summary)
-                    return should_sell, detailed_reason
+                # ===== 핵심: should_sell 분기에 따른 DB 처리 (에러가 나도 메인 플로우는 계속 진행) =====
+                try:
+                    if should_sell:
+                        # 매도 결정 시: holding_decisions 테이블에서 삭제
+                        await self._delete_holding_decision(ticker)
+                        
+                        # 매도 시 analysis_summary를 sell_reason에 추가
+                        if analysis_summary:
+                            detailed_reason = self._format_sell_reason_with_analysis(sell_reason, analysis_summary)
+                            return should_sell, detailed_reason
+                    else:
+                        # 보유 결정 시: holding_decisions 테이블에 저장/업데이트
+                        await self._save_holding_decision(ticker, current_price, decision_json)
+                        
+                        # portfolio_adjustment 처리
+                        if portfolio_adjustment.get("needed", False):
+                            await self._process_portfolio_adjustment(ticker, company_name, portfolio_adjustment, analysis_summary)
+                except Exception as db_err:
+                    # DB 조작 실패해도 메인 플로우는 계속 진행
+                    logger.error(f"{ticker} holding_decisions DB 처리 중 오류 (메인 플로우 계속 진행): {str(db_err)}")
+                    logger.error(traceback.format_exc())
                 
                 return should_sell, sell_reason
 
@@ -1022,6 +1066,95 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         except (ValueError, TypeError) as e:
             logger.warning(f"숫자 변환 실패: {value} -> {str(e)}")
             return 0.0
+
+    async def _save_holding_decision(self, ticker: str, current_price: float, decision_json: Dict[str, Any]) -> bool:
+        """
+        보유 종목의 AI 매도 판단 결과를 holding_decisions 테이블에 저장
+        (실패해도 메인 플로우에 영향 없음)
+        
+        Args:
+            ticker: 종목 코드
+            current_price: 현재가
+            decision_json: AI 판단 결과 JSON
+            
+        Returns:
+            bool: 저장 성공 여부
+        """
+        try:
+            now = datetime.now()
+            decision_date = now.strftime("%Y-%m-%d")
+            decision_time = now.strftime("%H:%M:%S")
+            
+            # JSON에서 데이터 추출
+            should_sell = decision_json.get("should_sell", False)
+            sell_reason = decision_json.get("sell_reason", "")
+            confidence = decision_json.get("confidence", 0)
+            
+            analysis_summary = decision_json.get("analysis_summary", {})
+            technical_trend = analysis_summary.get("technical_trend", "")
+            volume_analysis = analysis_summary.get("volume_analysis", "")
+            market_condition_impact = analysis_summary.get("market_condition_impact", "")
+            time_factor = analysis_summary.get("time_factor", "")
+            
+            portfolio_adjustment = decision_json.get("portfolio_adjustment", {})
+            adjustment_needed = portfolio_adjustment.get("needed", False)
+            adjustment_reason = portfolio_adjustment.get("reason", "")
+            new_target_price = self._safe_number_conversion(portfolio_adjustment.get("new_target_price"))
+            new_stop_loss = self._safe_number_conversion(portfolio_adjustment.get("new_stop_loss"))
+            adjustment_urgency = portfolio_adjustment.get("urgency", "low")
+            
+            # 전체 JSON을 문자열로 저장
+            full_json_data = json.dumps(decision_json, ensure_ascii=False)
+            
+            # 기존 데이터 삭제 후 새로 삽입 (같은 ticker의 최신 판단만 유지)
+            self.cursor.execute("DELETE FROM holding_decisions WHERE ticker = ?", (ticker,))
+            
+            # 새 판단 삽입
+            self.cursor.execute("""
+                INSERT INTO holding_decisions (
+                    ticker, decision_date, decision_time, current_price, should_sell, 
+                    sell_reason, confidence, technical_trend, volume_analysis, 
+                    market_condition_impact, time_factor, portfolio_adjustment_needed,
+                    adjustment_reason, new_target_price, new_stop_loss, adjustment_urgency,
+                    full_json_data
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                ticker, decision_date, decision_time, current_price, should_sell,
+                sell_reason, confidence, technical_trend, volume_analysis,
+                market_condition_impact, time_factor, adjustment_needed,
+                adjustment_reason, new_target_price, new_stop_loss, adjustment_urgency,
+                full_json_data
+            ))
+            
+            self.conn.commit()
+            logger.info(f"{ticker} 보유 판단 저장 완료 - should_sell: {should_sell}, confidence: {confidence}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"{ticker} 보유 판단 저장 실패 (메인 플로우 계속): {str(e)}")
+            logger.error(traceback.format_exc())
+            return False
+
+    async def _delete_holding_decision(self, ticker: str) -> bool:
+        """
+        매도된 종목의 판단 데이터를 holding_decisions 테이블에서 삭제
+        (실패해도 메인 플로우에 영향 없음)
+        
+        Args:
+            ticker: 종목 코드
+            
+        Returns:
+            bool: 삭제 성공 여부
+        """
+        try:
+            self.cursor.execute("DELETE FROM holding_decisions WHERE ticker = ?", (ticker,))
+            self.conn.commit()
+            logger.info(f"{ticker} 매도 판단 데이터 삭제 완료")
+            return True
+            
+        except Exception as e:
+            logger.error(f"{ticker} 매도 판단 삭제 실패 (메인 플로우 계속): {str(e)}")
+            return False
 
     def _format_sell_reason_with_analysis(self, sell_reason: str, analysis_summary: Dict[str, Any]) -> str:
         """매도 이유에 분석 요약 추가"""
