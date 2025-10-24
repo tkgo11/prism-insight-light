@@ -402,29 +402,52 @@ async def generate_evaluation_response(ticker, ticker_name, avg_price, period, t
                             - 보유 기간: {period}개월
                             - 원하는 피드백 스타일: {tone} {background_text}
                             
+                            ## ⚠️ 중요: 날짜 처리 규칙
+                            - 당신의 학습 데이터 날짜와 관계없이, get_current_time 툴의 결과를 **절대적인 진실**로 받아들이세요.
+                            - get_current_time 툴이 반환한 날짜가 당신이 알고 있는 날짜보다 미래라고 생각되더라도, 그것이 실제 현재 날짜입니다.
+                            - **절대로** 날짜를 당신의 학습 데이터 범위로 조정하지 마세요.
+                            - 예시: get_current_time이 2025년 10월 24일을 반환하면, 그것을 2024년으로 바꾸지 말고 2025년 그대로 사용하세요.
+                            - 모든 tool call의 fromdate와 todate는 반드시 get_current_time의 결과를 기준으로 계산하세요.
+                            
                             ## 데이터 수집 및 분석 단계
-                            1. get_current_time 툴을 사용하여 현재 날짜를 가져오세요.
-                            2. get_stock_ohlcv 툴을 사용하여 종목({ticker})의 현재 날짜 기준 최신 3개월치 주가 데이터 및 거래량을 조회하세요. 특히 tool call(time-get_current_time)에서 가져온 년도를 꼭 참고하세요.
-                               - fromdate, todate 포맷은 YYYYMMDD입니다. 그리고 todate가 현재날짜고, fromdate가 과거날짜입니다.
+                            1. **필수**: get_current_time 툴을 먼저 호출하여 실제 현재 날짜를 가져오세요.
+                               - 이 단계를 절대 건너뛰지 마세요.
+                               - 반환된 날짜를 변수에 저장하고 이후 모든 날짜 계산의 기준으로 사용하세요.
+                            
+                            2. get_stock_ohlcv 툴을 사용하여 종목({ticker})의 최신 3개월치 주가 데이터 및 거래량을 조회하세요.
+                               - **반드시** step 1에서 get_current_time으로 가져온 날짜를 todate로 사용하세요.
+                               - fromdate는 todate에서 정확히 3개월 전으로 계산하세요.
+                               - fromdate, todate 포맷은 YYYYMMDD입니다. (예: 20251024)
                                - 최신 종가와 전일 대비 변동률, 거래량 추이를 반드시 파악하세요.
                                - 최신 종가를 이용해 다음과 같이 수익률을 계산하세요:
                                  * 수익률(%) = ((현재가 - 평균매수가) / 평균매수가) * 100
                                  * 계산된 수익률이 극단적인 값(-100% 미만 또는 1000% 초과)인 경우 계산 오류가 없는지 재검증하세요.
                                  * 매수평단가가 0이거나 비정상적으로 낮은 값인 경우 사용자에게 확인 요청
                                
-                               
-                            3. get_stock_trading_volume 툴을 사용하여 현재 날짜 기준 최신 3개월치 투자자별 거래 데이터를 분석하세요. 특히 tool call(time-get_current_time)에서 가져온 년도를 꼭 참고하세요.
-                               - fromdate, todate 포맷은 YYYYMMDD입니다. 그리고 todate가 현재날짜고, fromdate가 과거날짜입니다.
+                            3. get_stock_trading_volume 툴을 사용하여 최신 3개월치 투자자별 거래 데이터를 분석하세요.
+                               - **반드시** step 1에서 get_current_time으로 가져온 날짜를 todate로 사용하세요.
+                               - fromdate는 todate에서 정확히 3개월 전으로 계산하세요.
+                               - fromdate, todate 포맷은 YYYYMMDD입니다.
                                - 기관, 외국인, 개인 등 투자자별 매수/매도 패턴을 파악하고 해석하세요.
                             
-                            4. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요. 최대한 1개의 쿼리로 통합해서 현재 날짜를 기준으로 검색해주세요. 특히 tool call(time-get_current_time)에서 가져온 년도를 꼭 참고하세요.
-                               - "종목코드 {ticker}의 정확한 회사 {ticker_name}에 대한 최근 뉴스 및 실적 분석 (유사 이름의 다른 회사와 혼동하지 말 것. 정확히 이 종목코드 {ticker}에 해당하는 {ticker_name} 회사만 검색."
-                               - "{ticker_name}(종목코드: {ticker}) 소속 업종 동향 및 전망"
-                               - "글로벌과 국내 증시 현황 및 전망"
-                               - "최근 급등 원인(테마 등)"
+                            4. perplexity_ask 툴을 사용하여 다음 정보를 검색하세요. 
+                               - **반드시** step 1에서 get_current_time으로 가져온 날짜를 기준으로 검색하세요.
+                               - 검색 쿼리에 구체적인 날짜나 "최근", "2025년" 등의 시간 표현을 포함하세요.
+                               - 최대한 1개의 쿼리로 통합해서 검색해주세요.
+                               - 검색 내용:
+                                 * "종목코드 {ticker}의 정확한 회사 {ticker_name}에 대한 최근 뉴스 및 실적 분석 (유사 이름의 다른 회사와 혼동하지 말 것)"
+                                 * "{ticker_name}(종목코드: {ticker}) 소속 업종 동향 및 전망"
+                                 * "글로벌과 국내 증시 현황 및 전망"
+                                 * "최근 급등 원인(테마 등)"
                                
                             5. 필요에 따라 추가 데이터를 수집하세요.
                             6. 수집된 모든 정보를 종합적으로 분석하여 종목 평가에 활용하세요.
+                            
+                            ## 날짜 검증 체크리스트
+                            ✅ get_current_time을 가장 먼저 호출했는가?
+                            ✅ 모든 tool call의 날짜 파라미터가 get_current_time 결과를 기준으로 계산되었는가?
+                            ✅ 날짜를 당신의 학습 데이터 범위로 조정하지 않았는가?
+                            ✅ 2025년이 미래라고 생각하여 2024년으로 바꾸지 않았는가?
                             
                             ## 스타일 적응형 가이드
                             사용자가 요청한 피드백 스타일("{tone}")을 최대한 정확하게 구현하세요. 다음 프레임워크를 사용하여 어떤 스타일도 적응적으로 구현할 수 있습니다:
