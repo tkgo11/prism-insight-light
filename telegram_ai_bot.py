@@ -30,7 +30,8 @@ from analysis_manager import (
 )
 # 내부 모듈 임포트
 from report_generator import (
-    generate_evaluation_response, get_cached_report, generate_follow_up_response
+    generate_evaluation_response, get_cached_report, generate_follow_up_response,
+    get_or_create_global_mcp_app, cleanup_global_mcp_app
 )
 from datetime import datetime, timedelta
 from typing import Dict, Optional
@@ -155,9 +156,6 @@ class TelegramAIBot:
 
         # 백그라운드 작업자 시작
         start_background_worker(self)
-
-        # 기존 서버 프로세스 정리
-        self.cleanup_server_processes()
 
         self.scheduler = AsyncIOScheduler()
         self.scheduler.add_job(self.load_stock_map, "interval", hours=12)
@@ -352,9 +350,6 @@ class TelegramAIBot:
                 conv_context.tone
             )
             
-            # 서버 프로세스 정리
-            self.cleanup_server_processes()
-            
             # 대기 메시지 삭제
             await waiting_message.delete()
             
@@ -423,32 +418,6 @@ class TelegramAIBot:
                 chat_id=request.chat_id,
                 text=f"⚠️ {request.company_name} ({request.stock_code}) 분석 결과 전송 중 오류가 발생했습니다."
             )
-
-    @staticmethod
-    def cleanup_server_processes():
-        """이전에 실행된 kospi_kosdaq 서버 프로세스 정리"""
-        try:
-            import subprocess
-            import os
-            import signal
-
-            # 서버 프로세스 찾기
-            result = subprocess.run(["pgrep", "-f", "kospi_kosdaq_stock_server"],
-                                    capture_output=True, text=True)
-
-            if result.returncode == 0:
-                for pid in result.stdout.strip().split('\n'):
-                    if pid and pid.isdigit():
-                        try:
-                            # 프로세스 종료
-                            os.kill(int(pid), signal.SIGTERM)
-                            logger.info(f"기존 kospi_kosdaq 서버 프로세스(PID: {pid}) 종료")
-                        except ProcessLookupError:
-                            pass
-                        except Exception as e:
-                            logger.error(f"프로세스 종료 중 오류: {str(e)}")
-        except Exception as e:
-            logger.error(f"서버 프로세스 정리 중 오류: {str(e)}")
 
     @staticmethod
     async def handle_default_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -861,9 +830,6 @@ class TelegramAIBot:
                 ticker, ticker_name, avg_price, period, tone, background
             )
 
-            # 서버 프로세스 정리 추가
-            self.cleanup_server_processes()
-
             # 응답이 비어있는지 확인
             if not response or not response.strip():
                 response = "죄송합니다. 응답 생성 중 오류가 발생했습니다. 다시 시도해주세요."
@@ -1080,6 +1046,15 @@ class TelegramAIBot:
 
     async def run(self):
         """봇 실행"""
+        # 전역 MCP App 초기화
+        try:
+            logger.info("전역 MCPApp 초기화 중...")
+            await get_or_create_global_mcp_app()
+            logger.info("전역 MCPApp 초기화 완료")
+        except Exception as e:
+            logger.error(f"전역 MCPApp 초기화 실패: {e}")
+            # 초기화 실패해도 봇은 시작 (나중에 재시도 가능)
+        
         # 봇 실행
         await self.application.initialize()
         await self.application.start()
@@ -1098,11 +1073,19 @@ class TelegramAIBot:
             pass
         finally:
             # 종료 시 리소스 정리
+            logger.info("봇 종료 시작 - 리소스 정리 중...")
+            
+            # 전역 MCP App 정리
+            try:
+                logger.info("전역 MCPApp 정리 중...")
+                await cleanup_global_mcp_app()
+                logger.info("전역 MCPApp 정리 완료")
+            except Exception as e:
+                logger.error(f"전역 MCPApp 정리 실패: {e}")
+            
+            # 봇 종료
             await self.application.stop()
             await self.application.shutdown()
-
-            # 서버 프로세스 정리 추가
-            self.cleanup_server_processes()
 
             logger.info("텔레그램 AI 대화형 봇이 종료되었습니다.")
 
