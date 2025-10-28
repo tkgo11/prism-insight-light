@@ -9,6 +9,7 @@ import { AIDecisionsPage } from "@/components/ai-decisions-page"
 import { TradingHistoryPage } from "@/components/trading-history-page"
 import { WatchlistPage } from "@/components/watchlist-page"
 import { StockDetailModal } from "@/components/stock-detail-modal"
+import { ProjectFooter } from "@/components/project-footer"
 import type { DashboardData, Holding } from "@/types/dashboard"
 
 export default function Page() {
@@ -117,6 +118,9 @@ export default function Page() {
 
         {activeTab === "watchlist" && <WatchlistPage watchlist={data.watchlist} />}
       </main>
+
+      {/* 프로젝트 소개 Footer */}
+      <ProjectFooter />
 
       {selectedStock && (
         <StockDetailModal 
