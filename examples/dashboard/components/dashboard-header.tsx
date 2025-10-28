@@ -1,8 +1,14 @@
 "use client"
 
-import { Moon, Sun, TrendingUp } from "lucide-react"
+import { Moon, Sun, TrendingUp, Github, Send } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface DashboardHeaderProps {
   activeTab: "dashboard" | "ai-decisions" | "trading" | "watchlist"
@@ -46,6 +52,18 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
                 <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-gradient-to-r from-primary to-purple-600 text-white">
                   Season 2
                 </span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-500 cursor-help">
+                        Open Source
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">AI 기반 주식 분석 및 매매 시스템 • MIT License</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <div className="flex items-center gap-3 mt-0.5">
                 <p className="text-xs text-muted-foreground">
@@ -90,16 +108,68 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
             </Button>
           </nav>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="rounded-full"
-          >
-            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">테마 전환</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    className="rounded-full"
+                  >
+                    <a
+                      href="https://github.com/dragon1086/prism-insight"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="GitHub Repository"
+                    >
+                      <Github className="h-5 w-5" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">GitHub 저장소</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    className="rounded-full"
+                  >
+                    <a
+                      href="https://t.me/stock_ai_agent"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Telegram Channel"
+                    >
+                      <Send className="h-5 w-5" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">텔레그램 채널</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="rounded-full"
+            >
+              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">테마 전환</span>
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
