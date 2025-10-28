@@ -186,6 +186,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             )
         """)
 
+        # todo : 1달치 데이터만 저장하고 나머지는 날리도록 수정
         # 매수 보류(관망) 종목 추적 테이블 생성
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS watchlist_history (

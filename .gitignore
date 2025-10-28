@@ -15,3 +15,8 @@ trading/config/*.token*
 trading/config/*.key
 trading/config/kis_devlp.yaml
 trading/config/kis_*.yaml
+
+# examples/.gitignore
+examples/dashboard/build/
+examples/dashboard/dist/
+examples/dashboard/node_modules/
