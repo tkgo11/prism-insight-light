@@ -291,10 +291,10 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                                     <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-border/30">
                                       {decision.new_target_price > 0 && (
                                         <div>
-                                          <p className="text-xs text-muted-foreground mb-1">신규 목표가</p>
+                                          <p className="text-xs text-muted-foreground mb-1">신규 목표가 이력</p>
                                           <div className="flex items-center gap-2">
                                             <p className="text-sm line-through text-muted-foreground">
-                                              {formatCurrency(stock?.target_price || 0)}
+                                              {formatCurrency(stock?.scenario?.target_price || 0)}
                                             </p>
                                             <TrendingUp className="w-3 h-3 text-success" />
                                             <p className="text-sm font-semibold text-success">
@@ -305,10 +305,10 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                                       )}
                                       {decision.new_stop_loss > 0 && (
                                         <div>
-                                          <p className="text-xs text-muted-foreground mb-1">신규 손절가</p>
+                                          <p className="text-xs text-muted-foreground mb-1">신규 손절가 이력</p>
                                           <div className="flex items-center gap-2">
                                             <p className="text-sm line-through text-muted-foreground">
-                                              {formatCurrency(stock?.stop_loss || 0)}
+                                              {formatCurrency(stock?.scenario?.stop_loss || 0)}
                                             </p>
                                             <TrendingDown className="w-3 h-3 text-destructive" />
                                             <p className="text-sm font-semibold text-destructive">
