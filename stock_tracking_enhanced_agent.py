@@ -265,6 +265,9 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
 
         # 시장 상태 분석 실행
         await self._analyze_simple_market_condition()
+        
+        # 오래된 watchlist 데이터 정리 (1달 이상 경과)
+        await self._cleanup_old_watchlist()
 
         return True
 
@@ -330,6 +333,22 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         except Exception as e:
             logger.error(f"시장 상태 분석 중 오류: {str(e)}")
             return 0, 0  # 오류 시 중립 상태로 가정
+
+    async def _cleanup_old_watchlist(self):
+        """1달 이전 watchlist 데이터 삭제"""
+        try:
+            one_month_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+            deleted = self.cursor.execute(
+                "DELETE FROM watchlist_history WHERE date(analyzed_date) < ?",
+                (one_month_ago,)
+            ).rowcount
+            self.conn.commit()
+            
+            if deleted > 0:
+                logger.info(f"오래된 watchlist 데이터 {deleted}개 삭제")
+                
+        except Exception as e:
+            logger.error(f"watchlist 정리 중 오류: {str(e)}")
 
     def _calculate_trend(self, price_series):
         """가격 시리즈의 추세 분석 (양수: 상승, 음수: 하락)"""
