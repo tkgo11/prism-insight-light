@@ -98,6 +98,24 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             - 강세장: Trailing Stop으로 수익 극대화 (공격적)
             - 중립장: 기본 원칙 적용
             
+            ### ⚠️ 현재 시간 확인 및 데이터 신뢰도 판단
+            **time-get_current_time tool을 사용하여 현재 시간을 먼저 확인하세요 (한국시간 KST 기준)**
+            
+            **장중(09:00~15:20) 분석 시:**
+            - 당일 거래량/가격 변화는 **아직 형성 중인 미완성 데이터**
+            - ❌ 금지: "오늘 거래량 급감", "오늘 급락/급등" 등 당일 확정 판단
+            - ✅ 권장: 전일 또는 최근 수일간의 확정 데이터로 추세 파악
+            - 당일 급변동은 "진행 중인 움직임" 정도만 참고, 확정 매도 근거로 사용 금지
+            - 특히 손절/익절 판단 시 전일 종가 기준으로 비교
+            
+            **장 마감 후(15:30 이후) 분석 시:**
+            - 당일 거래량/캔들/가격 변화 모두 **확정 완료**
+            - 당일 데이터를 적극 활용한 기술적 분석 가능
+            - 거래량 급증/급감, 캔들 패턴, 가격 변동 등 신뢰도 높은 판단 가능
+            
+            **핵심 원칙:**
+            장중 실행 = 전일 확정 데이터로 판단 / 장 마감 후 = 당일 포함 모든 데이터 활용
+            
             ### 분석 요소
             
             **기본 수익률 정보:**
@@ -247,6 +265,9 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
 
         # 시장 상태 분석 실행
         await self._analyze_simple_market_condition()
+        
+        # 오래된 watchlist 데이터 정리 (1달 이상 경과)
+        await self._cleanup_old_watchlist()
 
         return True
 
@@ -312,6 +333,22 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         except Exception as e:
             logger.error(f"시장 상태 분석 중 오류: {str(e)}")
             return 0, 0  # 오류 시 중립 상태로 가정
+
+    async def _cleanup_old_watchlist(self):
+        """1달 이전 watchlist 데이터 삭제"""
+        try:
+            one_month_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+            deleted = self.cursor.execute(
+                "DELETE FROM watchlist_history WHERE date(analyzed_date) < ?",
+                (one_month_ago,)
+            ).rowcount
+            self.conn.commit()
+            
+            if deleted > 0:
+                logger.info(f"오래된 watchlist 데이터 {deleted}개 삭제")
+                
+        except Exception as e:
+            logger.error(f"watchlist 정리 중 오류: {str(e)}")
 
     def _calculate_trend(self, price_series):
         """가격 시리즈의 추세 분석 (양수: 상승, 음수: 하락)"""

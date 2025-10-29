@@ -339,16 +339,127 @@ export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps
 
                     {/* AI 시나리오 */}
                     {trade.scenario && (
-                      <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                        <div className="flex items-start gap-2 mb-2">
-                          <Brain className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-primary mb-2">AI 매매 시나리오</p>
-                            {trade.scenario.rationale && (
-                              <p className="text-sm text-foreground leading-relaxed">{trade.scenario.rationale}</p>
-                            )}
+                      <div className="space-y-3">
+                        {/* 투자 근거 */}
+                        <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="flex items-start gap-2">
+                            <Brain className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold text-primary mb-2">AI 투자 근거</p>
+                              {trade.scenario.rationale && (
+                                <p className="text-sm text-foreground leading-relaxed">{trade.scenario.rationale}</p>
+                              )}
+                            </div>
                           </div>
                         </div>
+
+                        {/* 포트폴리오 분석 */}
+                        {trade.scenario.portfolio_analysis && (
+                          <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                            <p className="text-xs font-semibold text-muted-foreground mb-2">포트폴리오 분석</p>
+                            <p className="text-sm text-foreground leading-relaxed">{trade.scenario.portfolio_analysis}</p>
+                          </div>
+                        )}
+
+                        {/* 밸류에이션 분석 */}
+                        {trade.scenario.valuation_analysis && (
+                          <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                            <p className="text-xs font-semibold text-muted-foreground mb-2">밸류에이션 분석</p>
+                            <p className="text-sm text-foreground leading-relaxed">{trade.scenario.valuation_analysis}</p>
+                          </div>
+                        )}
+
+                        {/* 섹터 전망 */}
+                        {trade.scenario.sector_outlook && (
+                          <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                            <p className="text-xs font-semibold text-muted-foreground mb-2">섹터 전망</p>
+                            <p className="text-sm text-foreground leading-relaxed">{trade.scenario.sector_outlook}</p>
+                          </div>
+                        )}
+
+                        {/* 시장 상황 */}
+                        {trade.scenario.market_condition && (
+                          <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                            <p className="text-xs font-semibold text-muted-foreground mb-2">당시 시장 상황</p>
+                            <p className="text-sm text-foreground leading-relaxed">{trade.scenario.market_condition}</p>
+                          </div>
+                        )}
+
+                        {/* 매매 시나리오 상세 */}
+                        {trade.scenario.trading_scenarios && (
+                          <div className="p-4 rounded-lg bg-chart-1/10 border border-chart-1/20">
+                            <p className="text-sm font-semibold text-chart-1 mb-3">AI 매매 시나리오 상세</p>
+                            
+                            {/* 주요 레벨 */}
+                            {trade.scenario.trading_scenarios.key_levels && (
+                              <div className="mb-4">
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">주요 가격대</p>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  {trade.scenario.trading_scenarios.key_levels.primary_support && (
+                                    <div className="p-2 rounded bg-background/50">
+                                      <span className="text-muted-foreground">1차 지지: </span>
+                                      <span className="font-medium text-foreground">{trade.scenario.trading_scenarios.key_levels.primary_support}</span>
+                                    </div>
+                                  )}
+                                  {trade.scenario.trading_scenarios.key_levels.secondary_support && (
+                                    <div className="p-2 rounded bg-background/50">
+                                      <span className="text-muted-foreground">2차 지지: </span>
+                                      <span className="font-medium text-foreground">{trade.scenario.trading_scenarios.key_levels.secondary_support}</span>
+                                    </div>
+                                  )}
+                                  {trade.scenario.trading_scenarios.key_levels.primary_resistance && (
+                                    <div className="p-2 rounded bg-background/50">
+                                      <span className="text-muted-foreground">1차 저항: </span>
+                                      <span className="font-medium text-foreground">{trade.scenario.trading_scenarios.key_levels.primary_resistance}</span>
+                                    </div>
+                                  )}
+                                  {trade.scenario.trading_scenarios.key_levels.secondary_resistance && (
+                                    <div className="p-2 rounded bg-background/50">
+                                      <span className="text-muted-foreground">2차 저항: </span>
+                                      <span className="font-medium text-foreground">{trade.scenario.trading_scenarios.key_levels.secondary_resistance}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 매도 트리거 */}
+                            {trade.scenario.trading_scenarios.sell_triggers && trade.scenario.trading_scenarios.sell_triggers.length > 0 && (
+                              <div className="mb-4">
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">매도 트리거</p>
+                                <ul className="space-y-1.5">
+                                  {trade.scenario.trading_scenarios.sell_triggers.map((trigger, idx) => (
+                                    <li key={idx} className="text-xs text-foreground leading-relaxed pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-chart-1">
+                                      {trigger}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* 보유 조건 */}
+                            {trade.scenario.trading_scenarios.hold_conditions && trade.scenario.trading_scenarios.hold_conditions.length > 0 && (
+                              <div className="mb-4">
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">보유 조건</p>
+                                <ul className="space-y-1.5">
+                                  {trade.scenario.trading_scenarios.hold_conditions.map((condition, idx) => (
+                                    <li key={idx} className="text-xs text-foreground leading-relaxed pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-success">
+                                      {condition}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* 포트폴리오 맥락 */}
+                            {trade.scenario.trading_scenarios.portfolio_context && (
+                              <div>
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">포트폴리오 맥락</p>
+                                <p className="text-xs text-foreground leading-relaxed">{trade.scenario.trading_scenarios.portfolio_context}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
