@@ -143,18 +143,29 @@ def enhance_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # --- 오전 트리거 함수 (장 시작 스냅샷 기준) ---
-def trigger_morning_volume_surge(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, top_n: int = 10) -> pd.DataFrame:
+def trigger_morning_volume_surge(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, cap_df: pd.DataFrame = None, top_n: int = 10) -> pd.DataFrame:
     """
     [오전 트리거1] 당일 거래량 급증 상위주
     - 절대적 기준: 최소 거래대금 5억원 이상 + 시장 평균 거래량의 20% 이상
     - 추가 필터: 거래량 30% 이상 증가
     - 복합 점수: 거래량 증가율(60%) + 절대 거래량(40%)
     - 2차 필터링: 상승세 종목만 선별 (시가 대비 현재가 상승)
+    - 동전주 필터: 시가총액 500억원 이상
     """
     logger.debug("trigger_morning_volume_surge 시작")
     common = snapshot.index.intersection(prev_snapshot.index)
     snap = snapshot.loc[common].copy()
     prev = prev_snapshot.loc[common].copy()
+    
+    # 시가총액 데이터 병합 및 동전주 필터링
+    if cap_df is not None and not cap_df.empty:
+        snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
+        # 시가총액 500억원 이상만 선별 (동전주 제외)
+        snap = snap[snap["시가총액"] >= 50000000000]
+        logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
+        if snap.empty:
+            logger.warning("시가총액 필터링 후 종목이 없습니다")
+            return pd.DataFrame()
 
     # 디버깅 정보
     logger.debug(f"전일 종가 데이터 샘플: {prev['종가'].head()}")
@@ -207,17 +218,28 @@ def trigger_morning_volume_surge(trade_date: str, snapshot: pd.DataFrame, prev_s
     logger.debug(f"거래량 급증 포착 종목 수: {len(result)}")
     return enhance_dataframe(result.sort_values("복합점수", ascending=False).head(3))
 
-def trigger_morning_gap_up_momentum(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, top_n: int = 15) -> pd.DataFrame:
+def trigger_morning_gap_up_momentum(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, cap_df: pd.DataFrame = None, top_n: int = 15) -> pd.DataFrame:
     """
     [오전 트리거2] 갭 상승 모멘텀 상위주
     - 절대적 기준: 최소 거래대금 5억원 이상
     - 복합 점수: 갭상승률(50%) + 당일상승률(30%) + 거래대금(20%)
     - 2차 필터링: 현재가가 시가보다 높은 종목만 선별 (상승 지속)
+    - 동전주 필터: 시가총액 500억원 이상
     """
     logger.debug("trigger_morning_gap_up_momentum 시작")
     common = snapshot.index.intersection(prev_snapshot.index)
     snap = snapshot.loc[common].copy()
     prev = prev_snapshot.loc[common].copy()
+    
+    # 시가총액 데이터 병합 및 동전주 필터링
+    if cap_df is not None and not cap_df.empty:
+        snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
+        # 시가총액 500억원 이상만 선별 (동전주 제외)
+        snap = snap[snap["시가총액"] >= 50000000000]
+        logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
+        if snap.empty:
+            logger.warning("시가총액 필터링 후 종목이 없습니다")
+            return pd.DataFrame()
 
     # 절대적 기준 적용
     snap = apply_absolute_filters(snap)
@@ -343,8 +365,8 @@ def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame, 
         merged["전일대비등락률"] = ((merged["종가"] - prev["종가"]) / prev["종가"]) * 100  # 증권사 앱과 동일
         merged["상승여부"] = merged["종가"] > merged["시가"]
 
-        # 시총 필터링 - 최소 100억원 이상 종목
-        merged = merged[merged["시가총액"] >= 10000000000]
+        # 시총 필터링 - 최소 500억원 이상 종목 (동전주 제외)
+        merged = merged[merged["시가총액"] >= 50000000000]
         if merged.empty:
             logger.warning("시총 필터링 후 종목이 없습니다")
             return pd.DataFrame()
@@ -389,12 +411,13 @@ def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame, 
         return pd.DataFrame()
 
 # --- 오후 트리거 함수 (장 마감 스냅샷 기준) ---
-def trigger_afternoon_daily_rise_top(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, top_n: int = 15) -> pd.DataFrame:
+def trigger_afternoon_daily_rise_top(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, cap_df: pd.DataFrame = None, top_n: int = 15) -> pd.DataFrame:
     """
     [오후 트리거1] 일중 상승률 상위주
     - 절대적 기준: 최소 거래대금 10억원 이상
     - 복합 점수: 일중상승률(60%) + 거래대금(40%)
     - 추가 필터: 등락률 3% 이상
+    - 동전주 필터: 시가총액 500억원 이상
     """
     logger.debug("trigger_afternoon_daily_rise_top 시작")
 
@@ -402,6 +425,16 @@ def trigger_afternoon_daily_rise_top(trade_date: str, snapshot: pd.DataFrame, pr
     common = snapshot.index.intersection(prev_snapshot.index)
     snap = snapshot.loc[common].copy()
     prev = prev_snapshot.loc[common].copy()
+    
+    # 시가총액 데이터 병합 및 동전주 필터링
+    if cap_df is not None and not cap_df.empty:
+        snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
+        # 시가총액 500억원 이상만 선별 (동전주 제외)
+        snap = snap[snap["시가총액"] >= 50000000000]
+        logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
+        if snap.empty:
+            logger.warning("시가총액 필터링 후 종목이 없습니다")
+            return pd.DataFrame()
 
     # 절대적 기준 적용 (최소 거래대금 10억 이상)
     snap = apply_absolute_filters(snap.copy(), min_value=1000000000)
@@ -426,17 +459,28 @@ def trigger_afternoon_daily_rise_top(trade_date: str, snapshot: pd.DataFrame, pr
     logger.debug(f"일중 상승률 상위 포착 종목 수: {len(result)}")
     return enhance_dataframe(result.head(3))
 
-def trigger_afternoon_closing_strength(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, top_n: int = 15) -> pd.DataFrame:
+def trigger_afternoon_closing_strength(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, cap_df: pd.DataFrame = None, top_n: int = 15) -> pd.DataFrame:
     """
     [오후 트리거2] 마감 강도 상위주
     - 절대적 기준: 최소 거래대금 5억원 이상 + 전일 대비 거래량 증가
     - 복합 점수: 마감강도(50%) + 거래량증가율(30%) + 거래대금(20%)
     - 2차 필터링: 상승세 종목만 선별 (시가 대비 종가 상승)
+    - 동전주 필터: 시가총액 500억원 이상
     """
     logger.debug("trigger_afternoon_closing_strength 시작")
     common = snapshot.index.intersection(prev_snapshot.index)
     snap = snapshot.loc[common].copy()
     prev = prev_snapshot.loc[common].copy()
+    
+    # 시가총액 데이터 병합 및 동전주 필터링
+    if cap_df is not None and not cap_df.empty:
+        snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
+        # 시가총액 500억원 이상만 선별 (동전주 제외)
+        snap = snap[snap["시가총액"] >= 50000000000]
+        logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
+        if snap.empty:
+            logger.warning("시가총액 필터링 후 종목이 없습니다")
+            return pd.DataFrame()
 
     # 절대적 기준 적용
     snap = apply_absolute_filters(snap)
@@ -488,17 +532,28 @@ def trigger_afternoon_closing_strength(trade_date: str, snapshot: pd.DataFrame, 
     logger.debug(f"마감 강도 상위 포착 종목 수: {len(result)}")
     return enhance_dataframe(result.sort_values("복합점수", ascending=False).head(3))
 
-def trigger_afternoon_volume_surge_flat(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, top_n: int = 20) -> pd.DataFrame:
+def trigger_afternoon_volume_surge_flat(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, cap_df: pd.DataFrame = None, top_n: int = 20) -> pd.DataFrame:
     """
     [오후 트리거3] 거래량 증가 상위 횡보주
     - 절대적 기준: 최소 거래대금 5억원 이상 + 시장 평균 대비 거래량
     - 복합 점수: 거래량증가율(60%) + 거래대금(40%)
     - 2차 필터링: 등락률이 ±5% 이내인 횡보 종목만 선별
+    - 동전주 필터: 시가총액 500억원 이상
     """
     logger.debug("trigger_afternoon_volume_surge_flat 시작")
     common = snapshot.index.intersection(prev_snapshot.index)
     snap = snapshot.loc[common].copy()
     prev = prev_snapshot.loc[common].copy()
+    
+    # 시가총액 데이터 병합 및 동전주 필터링
+    if cap_df is not None and not cap_df.empty:
+        snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
+        # 시가총액 500억원 이상만 선별 (동전주 제외)
+        snap = snap[snap["시가총액"] >= 50000000000]
+        logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
+        if snap.empty:
+            logger.warning("시가총액 필터링 후 종목이 없습니다")
+            return pd.DataFrame()
 
     # 절대적 기준 적용
     snap = apply_absolute_filters(snap)
@@ -628,17 +683,17 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
 
     if trigger_time == "morning":
         logger.info("=== 오전 배치 실행 ===")
-        # 오전 트리거 실행
-        res1 = trigger_morning_volume_surge(trade_date, snapshot, prev_snapshot)
-        res2 = trigger_morning_gap_up_momentum(trade_date, snapshot, prev_snapshot)
+        # 오전 트리거 실행 - cap_df 전달
+        res1 = trigger_morning_volume_surge(trade_date, snapshot, prev_snapshot, cap_df)
+        res2 = trigger_morning_gap_up_momentum(trade_date, snapshot, prev_snapshot, cap_df)
         res3 = trigger_morning_value_to_cap_ratio(trade_date, snapshot, prev_snapshot, cap_df)
         triggers = {"거래량 급증 상위주": res1, "갭 상승 모멘텀 상위주": res2, "시총 대비 집중 자금 유입 상위주": res3}
     elif trigger_time == "afternoon":
         logger.info("=== 오후 배치 실행 ===")
-        # 오후 트리거 실행
-        res1 = trigger_afternoon_daily_rise_top(trade_date, snapshot, prev_snapshot)
-        res2 = trigger_afternoon_closing_strength(trade_date, snapshot, prev_snapshot)
-        res3 = trigger_afternoon_volume_surge_flat(trade_date, snapshot, prev_snapshot)
+        # 오후 트리거 실행 - cap_df 전달
+        res1 = trigger_afternoon_daily_rise_top(trade_date, snapshot, prev_snapshot, cap_df)
+        res2 = trigger_afternoon_closing_strength(trade_date, snapshot, prev_snapshot, cap_df)
+        res3 = trigger_afternoon_volume_surge_flat(trade_date, snapshot, prev_snapshot, cap_df)
         triggers = {"일중 상승률 상위주": res1, "마감 강도 상위주": res2, "거래량 증가 상위 횡보주": res3}
     else:
         logger.error("잘못된 trigger_time 값입니다. 'morning' 또는 'afternoon'를 입력하세요.")
