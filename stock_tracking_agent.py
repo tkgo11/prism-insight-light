@@ -252,7 +252,7 @@ class StockTrackingAgent:
                 "investment_period": "단기" / "중기" / "장기",
                 "rationale": "핵심 투자 근거 (3줄 이내)",
                 "sector": "산업군/섹터",
-                "market_condition": "시장 상태 분석",
+                "market_condition": "시장 추세 분석 (상승추세/하락추세/횡보)",
                 "max_portfolio_size": "시장 상태 분석 결과 추론된 최대 보유 종목수",
                 "trading_scenarios": {
                     "key_levels": {
