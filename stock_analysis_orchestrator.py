@@ -43,9 +43,17 @@ PDF_REPORTS_DIR.mkdir(exist_ok=True)
 class StockAnalysisOrchestrator:
     """주식 분석 및 텔레그램 전송 오케스트레이터"""
 
-    def __init__(self):
-        """초기화"""
+    def __init__(self, telegram_config=None):
+        """
+        초기화
+        
+        Args:
+            telegram_config: TelegramConfig 객체 (None이면 기본 설정 사용)
+        """
+        from telegram_config import TelegramConfig
+        
         self.selected_tickers = {}  # 선정된 종목 정보 저장
+        self.telegram_config = telegram_config or TelegramConfig(use_telegram=True)
 
     async def run_trigger_batch(self, mode):
         """
@@ -217,13 +225,15 @@ class StockAnalysisOrchestrator:
             message_paths (list): 텔레그램 메시지 파일 경로 리스트
             pdf_paths (list): PDF 파일 경로 리스트
         """
+        # 텔레그램 사용이 비활성화되어 있으면 스킵
+        if not self.telegram_config.use_telegram:
+            logger.info(f"텔레그램 비활성화 - 메시지 및 PDF 전송 스킵")
+            return
+        
         logger.info(f"{len(message_paths)}개 텔레그램 메시지 전송 시작")
 
-        # 환경 변수에서 채널 ID 가져오기
-        from dotenv import load_dotenv
-        load_dotenv()
-
-        chat_id = os.getenv("TELEGRAM_CHANNEL_ID")
+        # 텔레그램 설정 사용
+        chat_id = self.telegram_config.channel_id
         if not chat_id:
             logger.error("텔레그램 채널 ID가 설정되지 않았습니다.")
             return
@@ -260,6 +270,11 @@ class StockAnalysisOrchestrator:
         """
         트리거 실행 결과 정보를 텔레그램 채널로 즉시 전송
         """
+        # 텔레그램 사용이 비활성화되어 있으면 로그만 출력하고 리턴
+        if not self.telegram_config.use_telegram:
+            logger.info(f"텔레그램 비활성화 - 프리즘 시그널 얼럿 전송 스킵 (모드: {mode})")
+            return False
+        
         logger.info(f"프리즘 시그널 얼럿 전송 시작 - 모드: {mode}")
 
         try:
@@ -285,11 +300,8 @@ class StockAnalysisOrchestrator:
             # 텔레그램 메시지 생성
             message = self._create_trigger_alert_message(mode, all_results, trade_date)
 
-            # 환경 변수에서 채널 ID 가져오기
-            from dotenv import load_dotenv
-            load_dotenv()
-
-            chat_id = os.getenv("TELEGRAM_CHANNEL_ID")
+            # 텔레그램 설정 사용
+            chat_id = self.telegram_config.channel_id
             if not chat_id:
                 logger.error("텔레그램 채널 ID가 설정되지 않았습니다.")
                 return False
@@ -442,11 +454,17 @@ class StockAnalysisOrchestrator:
             # 3. PDF 변환
             pdf_paths = await self.convert_to_pdf(report_paths)
 
-            # 4. 텔레그램 메시지 생성
-            message_paths = await self.generate_telegram_messages(pdf_paths)
-
-            # 5. 텔레그램 메시지 및 PDF 전송
-            await self.send_telegram_messages(message_paths, pdf_paths)
+            # 4-5. 텔레그램 메시지 생성 및 전송 (텔레그램 사용 시에만)
+            if self.telegram_config.use_telegram:
+                logger.info("텔레그램 활성화 - 메시지 생성 및 전송 단계 진행")
+                
+                # 4. 텔레그램 메시지 생성
+                message_paths = await self.generate_telegram_messages(pdf_paths)
+                
+                # 5. 텔레그램 메시지 및 PDF 전송
+                await self.send_telegram_messages(message_paths, pdf_paths)
+            else:
+                logger.info("텔레그램 비활성화 - 메시지 생성 및 전송 단계 스킵")
 
             # 6. 트랙킹 시스템 배치
             if pdf_paths:
@@ -457,26 +475,28 @@ class StockAnalysisOrchestrator:
                     from stock_tracking_enhanced_agent import EnhancedStockTrackingAgent as StockTrackingAgent
                     from stock_tracking_agent import app as tracking_app
 
-                    # 환경 변수에서 채널 ID 및 봇 토큰 가져오기
-                    from dotenv import load_dotenv
-                    load_dotenv()
-
-                    chat_id = os.getenv("TELEGRAM_CHANNEL_ID")
-                    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
-
-                    if not chat_id:
-                        logger.error("텔레그램 채널 ID가 설정되지 않았습니다.")
-                        return
-
-                    if not telegram_token:
-                        logger.warning("텔레그램 봇 토큰이 설정되지 않았습니다. 텔레그램 메시지 전송이 제한될 수 있습니다.")
+                    # 텔레그램 설정 검증
+                    if self.telegram_config.use_telegram:
+                        # 텔레그램 사용이 활성화된 경우 필수 설정 검증
+                        try:
+                            self.telegram_config.validate_or_raise()
+                        except ValueError as ve:
+                            logger.error(f"텔레그램 설정 오류: {str(ve)}")
+                            logger.error("트래킹 시스템 배치를 건너뜁니다.")
+                            return
+                    
+                    # 텔레그램 설정 상태 로그
+                    self.telegram_config.log_status()
 
                     # MCPApp 컨텍스트 매니저 사용
                     async with tracking_app.run():
-                        # 텔레그램 토큰과 함께 에이전트 초기화
-                        tracking_agent = StockTrackingAgent(telegram_token=telegram_token)
+                        # 텔레그램 설정을 에이전트에 전달
+                        tracking_agent = StockTrackingAgent(
+                            telegram_token=self.telegram_config.bot_token if self.telegram_config.use_telegram else None
+                        )
 
-                        # 보고서 경로와 채널 ID 전달
+                        # 보고서 경로와 텔레그램 설정 전달
+                        chat_id = self.telegram_config.channel_id if self.telegram_config.use_telegram else None
                         tracking_success = await tracking_agent.run(pdf_paths, chat_id)
 
                         if tracking_success:
@@ -562,10 +582,29 @@ async def main():
     parser = argparse.ArgumentParser(description="주식 분석 및 텔레그램 전송 오케스트레이터")
     parser.add_argument("--mode", choices=["morning", "afternoon", "both"], default="both",
                         help="실행 모드 (morning, afternoon, both)")
+    parser.add_argument("--no-telegram", action="store_true",
+                        help="텔레그램 메시지 전송을 비활성화합니다. "
+                             "텔레그램 설정 없이 테스트하거나 로컬에서 실행할 때 사용하세요.")
 
     args = parser.parse_args()
+    
+    # 텔레그램 설정 생성
+    from telegram_config import TelegramConfig
+    telegram_config = TelegramConfig(use_telegram=not args.no_telegram)
+    
+    # 텔레그램 설정 검증 (사용이 활성화된 경우에만)
+    if telegram_config.use_telegram:
+        try:
+            telegram_config.validate_or_raise()
+        except ValueError as e:
+            logger.error(f"텔레그램 설정 오류: {str(e)}")
+            logger.error("프로그램을 종료합니다.")
+            sys.exit(1)
+    
+    # 텔레그램 설정 상태 로그
+    telegram_config.log_status()
 
-    orchestrator = StockAnalysisOrchestrator()
+    orchestrator = StockAnalysisOrchestrator(telegram_config=telegram_config)
 
     if args.mode == "morning" or args.mode == "both":
         await orchestrator.run_full_pipeline("morning")

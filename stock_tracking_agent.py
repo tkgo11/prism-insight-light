@@ -1529,20 +1529,34 @@ class StockTrackingAgent:
         텔레그램으로 메시지 전송
 
         Args:
-            chat_id: 텔레그램 채널 ID
+            chat_id: 텔레그램 채널 ID (None이면 전송하지 않음)
 
         Returns:
             bool: 전송 성공 여부
         """
         try:
+            # chat_id가 None이면 텔레그램 전송 스킵
+            if not chat_id:
+                logger.info("텔레그램 채널 ID가 없습니다. 메시지 전송을 스킵합니다.")
+                
+                # 메시지 로그 출력
+                for message in self.message_queue:
+                    logger.info(f"[메시지 (미전송)] {message[:100]}...")
+                
+                # 메시지 큐 초기화
+                self.message_queue = []
+                return True  # 의도적 스킵은 성공으로 간주
+            
             # 텔레그램 봇이 초기화되지 않았다면 로그만 출력
             if not self.telegram_bot:
                 logger.warning("텔레그램 봇이 초기화되지 않았습니다. 토큰을 확인해주세요.")
 
                 # 메시지 출력만 하고 실제 전송은 하지 않음
                 for message in self.message_queue:
-                    logger.info(f"[텔레그램 메시지] {message[:100]}...")
+                    logger.info(f"[텔레그램 메시지 (봇 미초기화)] {message[:100]}...")
 
+                # 메시지 큐 초기화
+                self.message_queue = []
                 return False
 
             #요약 보고서 생성
@@ -1611,7 +1625,7 @@ class StockTrackingAgent:
 
         Args:
             pdf_report_paths: 분석 보고서 파일 경로 리스트
-            chat_id: 텔레그램 채널 ID (설정되지 않으면 메시지를 전송하지 않음)
+            chat_id: 텔레그램 채널 ID (None이면 메시지를 전송하지 않음)
 
         Returns:
             bool: 실행 성공 여부
@@ -1626,13 +1640,17 @@ class StockTrackingAgent:
                 # 보고서 처리
                 buy_count, sell_count = await self.process_reports(pdf_report_paths)
 
-                # 텔레그램 메시지 전송
+                # 텔레그램 메시지 전송 (chat_id가 제공된 경우에만)
                 if chat_id:
                     message_sent = await self.send_telegram_message(chat_id)
                     if message_sent:
                         logger.info("텔레그램 메시지 전송 완료")
                     else:
                         logger.warning("텔레그램 메시지 전송 실패")
+                else:
+                    logger.info("텔레그램 채널 ID가 제공되지 않아 메시지 전송을 스킵합니다.")
+                    # chat_id가 None이어도 메시지 큐 정리를 위해 호출
+                    await self.send_telegram_message(None)
 
                 logger.info("트래킹 시스템 배치 실행 완료")
                 return True

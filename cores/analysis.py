@@ -47,7 +47,7 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
 
         # 3. 분석할 섹션 정의
         base_sections = ["price_volume_analysis", "investor_trading_analysis", "company_status", "company_overview", "news_analysis", "market_index_analysis"]
-        
+
         # 4. 에이전트 가져오기
         agents = get_agent_directory(company_name, company_code, reference_date, base_sections)
 

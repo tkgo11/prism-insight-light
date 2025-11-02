@@ -330,12 +330,21 @@ utils/setup_crontab.sh
 
 ### 필수 설정 파일
 
-프로젝트 실행을 위해 다음 4개 설정 파일을 반드시 구성해야 합니다:
+프로젝트 실행을 위해 다음 설정 파일을 구성해야 합니다:
 
-- **`.env`**: 환경 변수 (API 키, 토큰 등)
-- **`./examples/streamlit/config.py`**: 보고서 생성 웹 설정
+#### 🔧 핵심 설정 (필수)
 - **`mcp_agent.config.yaml`**: MCP 에이전트 설정
-- **`mcp_agent.secrets.yaml`**: MCP 에이전트 시크릿 정보
+- **`mcp_agent.secrets.yaml`**: MCP 에이전트 시크릿 정보 (API 키 등)
+
+#### 📱 텔레그램 설정 (선택)
+- **`.env`**: 텔레그램 채널 ID, 봇 토큰 등 환경 변수
+  - 텔레그램을 사용하지 않으려면 `--no-telegram` 옵션으로 실행
+  - 텔레그램 없이도 모든 분석 기능 정상 동작
+
+#### 🌐 웹 인터페이스 설정 (선택)
+- **`./examples/streamlit/config.py`**: 보고서 생성 웹 설정
+
+💡 **Tip**: `--no-telegram` 옵션을 사용하면 `.env` 파일 없이도 실행 가능합니다!
 
 ## 📋 사용법
 
@@ -344,7 +353,7 @@ utils/setup_crontab.sh
 전체 파이프라인을 실행하여 급등주 분석부터 텔레그램 전송까지 자동화:
 
 ```bash
-# 오전 + 오후 모두 실행
+# 오전 + 오후 모두 실행 (텔레그램 활성화)
 python stock_analysis_orchestrator.py --mode both
 
 # 오전만 실행
@@ -352,6 +361,30 @@ python stock_analysis_orchestrator.py --mode morning
 
 # 오후만 실행
 python stock_analysis_orchestrator.py --mode afternoon
+
+# 텔레그램 없이 로컬 테스트 (텔레그램 설정 불필요)
+python stock_analysis_orchestrator.py --mode morning --no-telegram
+```
+
+#### 💡 텔레그램 옵션 (`--no-telegram`)
+
+텔레그램 설정 없이도 시스템을 실행할 수 있습니다:
+
+**사용 시나리오:**
+- 🧪 **로컬 개발/테스트**: 텔레그램 설정 없이 핵심 기능만 빠르게 테스트
+- 🚀 **성능 최적화**: 메시지 생성 및 전송 과정을 스킵하여 실행
+- 🔧 **디버깅**: 분석 및 보고서 생성 기능만 집중 검증
+
+**실행 효과:**
+- ✅ 급등주 포착 → 보고서 생성 → PDF 변환 → 트래킹 시스템 (모두 정상 동작)
+- ❌ 텔레그램 알럿, 메시지 생성, 메시지 전송 (스킵)
+- 💰 AI 요약 생성 비용 절감
+
+**필수 환경변수 (텔레그램 사용 시):**
+```bash
+# .env 파일
+TELEGRAM_CHANNEL_ID="-1001234567890"
+TELEGRAM_BOT_TOKEN="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
 ```
 
 ### 개별 모듈 실행
@@ -404,6 +437,7 @@ prism-insight/
 ├── 📂 utils/                     # 유틸리티 스크립트
 ├── 📂 tests/                     # 테스트 코드
 ├── stock_analysis_orchestrator.py # 🎯 메인 오케스트레이터
+├── telegram_config.py           # 텔레그램 설정 관리 클래스
 ├── trigger_batch.py             # 급등주 포착 배치
 ├── telegram_bot_agent.py        # 텔레그램 봇 (Claude 기반)
 ├── stock_tracking_agent.py      # 매매 시뮬레이션 (GPT-5)
@@ -412,7 +446,7 @@ prism-insight/
 ├── requirements.txt             # 의존성 목록
 ├── .env.example                 # 환경 변수 예시
 ├── mcp_agent.config.yaml.example    # MCP 에이전트 설정 예시
-└── mcp_agent.secrets.yaml.example   # MCP 에이전트 시크릿 예시
+├── mcp_agent.secrets.yaml.example   # MCP 에이전트 시크릿 예시
 ```
 
 ## 📈 분석 보고서 구성
