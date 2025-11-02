@@ -614,12 +614,12 @@ async def main():
 
 if __name__ == "__main__":
     # 휴일 체크
-    # from check_market_day import is_market_day
-    #
-    # if not is_market_day():
-    #     current_date = datetime.now().date()  # datetime.now()를 사용
-    #     logger.info(f"오늘({current_date})은 주식시장 휴일입니다. 배치 작업을 실행하지 않습니다.")
-    #     sys.exit(0)
+    from check_market_day import is_market_day
+
+    if not is_market_day():
+        current_date = datetime.now().date()  # datetime.now()를 사용
+        logger.info(f"오늘({current_date})은 주식시장 휴일입니다. 배치 작업을 실행하지 않습니다.")
+        sys.exit(0)
 
     # 영업일인 경우에만 타이머 스레드 시작 및 메인 함수 실행
     import threading
