@@ -1314,7 +1314,7 @@ class StockTrackingAgent:
         try:
             # 보유 종목 조회
             self.cursor.execute(
-                "SELECT ticker, company_name, buy_price, current_price, buy_date, scenario FROM stock_holdings"
+                "SELECT ticker, company_name, buy_price, current_price, buy_date, scenario, target_price, stop_loss FROM stock_holdings"
             )
             holdings = [dict(row) for row in self.cursor.fetchall()]
 
@@ -1367,6 +1367,8 @@ class StockTrackingAgent:
                     current_price = stock.get('current_price', 0)
                     buy_date = stock.get('buy_date', '')
                     scenario_str = stock.get('scenario', '{}')
+                    target_price = stock.get('target_price', 0)
+                    stop_loss = stock.get('stop_loss', 0)
 
                     # 시나리오에서 섹터 정보 추출
                     sector = "알 수 없음"
@@ -1388,6 +1390,7 @@ class StockTrackingAgent:
 
                     message += f"- {company_name}({ticker}) [{sector}]\n"
                     message += f"  매수가: {buy_price:,.0f}원 / 현재가: {current_price:,.0f}원\n"
+                    message += f"  목표가: {target_price:,.0f}원 / 손절가: {stop_loss:,.0f}원\n"
                     message += f"  수익률: {arrow} {profit_rate:.2f}% / 보유기간: {days_passed}일\n\n"
 
                 # 산업군 분포 추가
