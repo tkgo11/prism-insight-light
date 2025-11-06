@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
+import { OperatingCostsCard } from "@/components/operating-costs-card"
 import { MetricsCards } from "@/components/metrics-cards"
 import { HoldingsTable } from "@/components/holdings-table"
 import { PerformanceChart } from "@/components/performance-chart"
@@ -58,6 +59,9 @@ export default function Page() {
       <main className="container mx-auto px-4 py-6 max-w-[1600px]">
         {activeTab === "dashboard" && (
           <div className="space-y-6">
+            {/* 운영 비용 카드 - 최상단 배치 */}
+            <OperatingCostsCard costs={data.operating_costs} />
+            
             {/* 핵심 지표 카드 */}
             <MetricsCards 
               summary={data.summary}

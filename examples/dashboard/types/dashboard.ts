@@ -166,6 +166,15 @@ export interface AccountSummary {
   available_amount: number
 }
 
+export interface OperatingCosts {
+  server_hosting: number
+  openai_api: number
+  anthropic_api: number
+  firecrawl_api: number
+  perplexity_api: number
+  month: string
+}
+
 export interface DashboardData {
   generated_at: string
   trading_mode: string
@@ -173,6 +182,7 @@ export interface DashboardData {
   holdings: Holding[]
   real_portfolio: Holding[]
   account_summary: AccountSummary
+  operating_costs?: OperatingCosts
   trading_history: Trade[]
   watchlist: WatchlistStock[]
   market_condition: MarketCondition[]

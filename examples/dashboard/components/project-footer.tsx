@@ -119,7 +119,7 @@ export function ProjectFooter() {
                     className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
                     <span>⭐</span>
-                    <span>6주 만에 100+ Stars 달성</span>
+                    <span>10주 만에 250+ Stars 달성</span>
                   </a>
                 </div>
               </div>

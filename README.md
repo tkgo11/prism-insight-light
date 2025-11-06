@@ -539,7 +539,7 @@ AI 에이전트가 생성하는 종합 애널리스트 리포트는 다음 섹�
 
 ## ⭐ 프로젝트 성장
 
-'25.8월 중순 출시 이후 **단 6주 만에 100+ Stars**를 달성했습니다!
+'25.8월 중순 출시 이후 **단 10주 만에 250+ Stars**를 달성했습니다!
 
 [![Star History Chart](https://api.star-history.com/svg?repos=dragon1086/prism-insight&type=Date)](https://star-history.com/#dragon1086/prism-insight&Date)
 
