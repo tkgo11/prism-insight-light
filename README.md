@@ -12,6 +12,9 @@
 
 # 🔍 PRISM-INSIGHT
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/dragon1086?style=for-the-badge&logo=github-sponsors&color=ff69b4&label=Sponsors)](https://github.com/sponsors/dragon1086)
+[![Stars](https://img.shields.io/github/stars/dragon1086/prism-insight?style=for-the-badge)](https://github.com/dragon1086/prism-insight/stargazers)
+
 AI 기반 주식 분석 및 매매 시스템
 - **[공식 텔레그램 채널](https://t.me/stock_ai_agent)**: 급등주 포착/주식 분석 리포트 다운로드/매매 시뮬레이션/자동매매 리포트 제공 (https://t.me/stock_ai_agent)
 - **[공식 대시보드](https://analysis.stocksimulation.kr/)**: PRISM-INSIGHT 실전매매 & 시뮬레이션 실시간 성과 대시보드 (부가적으로 AI 보유 분석, 거래내역, 관심종목 제공)
@@ -498,9 +501,45 @@ AI 에이전트가 생성하는 종합 애널리스트 리포트는 다음 섹�
 
 프로젝트 관련 문의사항이나 버그 리포트는 [GitHub Issues](https://github.com/dragon1086/prism-insight/issues)를 통해 제출해 주세요.
 
+## 💝 후원하기
+
+이 프로젝트가 도움이 되었다면 커피 한 잔 값으로 후원해주세요!
+
+<div align="center">
+  <a href="https://github.com/sponsors/dragon1086">
+    <img src="https://img.shields.io/badge/Sponsor_on_GitHub-❤️-ff69b4?style=for-the-badge&logo=github-sponsors" alt="Sponsor on GitHub">
+  </a>
+</div>
+
+### 💰 투명한 운영
+
+매월 약 ₩260,000의 API 비용과 서버 비용이 발생합니다 ('25.10월 기준) :
+- OpenAI API (GPT-4.1, GPT-5): ~₩140,000/월
+- Anthropic API (Claude Sonnet 4.5): ~₩30,000/월
+- Firecrawl API (MCP Server): ~₩30,000/월
+- Perplexity API (MCP Server): ~₩15,000/월
+- 서버 및 인프라: ~₩45,000/월
+
+현재 450명이 무료로 사용하고 있습니다.
+
+### ✨ 후원해주신 분들
+
+정말 감사합니다! 여러분의 응원으로 프리즘 인사이트가 계속 운영됩니다.
+
+<!-- sponsors -->
+아직 후원자가 없습니다. 첫 번째 후원자가 되어주세요! 💙
+<!-- sponsors -->
+
+---
+
+**중요:** 모든 기능은 후원 여부와 관계없이 무료로 제공됩니다.  
+후원은 서비스 지속을 위한 응원일 뿐입니다.
+
+---
+
 ## ⭐ 프로젝트 성장
 
-'25.8월 중순 출시 이후 **단 6주 만에 100+ Stars**를 달성했습니다!
+'25.8월 중순 출시 이후 **단 10주 만에 250+ Stars**를 달성했습니다!
 
 [![Star History Chart](https://api.star-history.com/svg?repos=dragon1086/prism-insight&type=Date)](https://star-history.com/#dragon1086/prism-insight&Date)
 

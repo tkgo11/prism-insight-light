@@ -377,6 +377,18 @@ class DashboardDataGenerator:
             'available_amount': account_summary.get('available_amount', 0)
         }
     
+    def get_operating_costs(self) -> Dict:
+        """프로젝트 운영 비용 데이터 반환"""
+        # 2025년 10월 기준 운영 비용
+        return {
+            'server_hosting': 31.68,
+            'openai_api': 95.82,
+            'anthropic_api': 18.2,
+            'firecrawl_api': 19.0,
+            'perplexity_api': 9.9,
+            'month': '2025-10'
+        }
+    
     def generate(self) -> Dict:
         """전체 대시보드 데이터 생성"""
         try:
@@ -419,6 +431,7 @@ class DashboardDataGenerator:
                 'holdings': holdings,
                 'real_portfolio': real_portfolio,  # 실전투자 포트폴리오 추가
                 'account_summary': account_summary,  # 계좌 요약 추가
+                'operating_costs': self.get_operating_costs(),  # 운영 비용 추가
                 'trading_history': trading_history,
                 'watchlist': watchlist,
                 'market_condition': market_condition,
