@@ -18,15 +18,16 @@ from cores.utils import clean_markdown
 # 시장 분석 캐시 저장소 (전역 변수)
 _market_analysis_cache = {}
 
-async def analyze_stock(company_code: str = "000660", company_name: str = "SK하이닉스", reference_date: str = None):
+async def analyze_stock(company_code: str = "000660", company_name: str = "SK하이닉스", reference_date: str = None, language: str = "ko"):
     """
     주식 종합 분석 보고서 생성
-    
+
     Args:
         company_code: 종목 코드
         company_name: 회사명
         reference_date: 분석 기준일 (YYYYMMDD 형식)
-    
+        language: Language code ("ko" or "en")
+
     Returns:
         str: 생성된 최종 보고서 마크다운 텍스트
     """
@@ -49,7 +50,7 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
         base_sections = ["price_volume_analysis", "investor_trading_analysis", "company_status", "company_overview", "news_analysis", "market_index_analysis"]
 
         # 4. 에이전트 가져오기
-        agents = get_agent_directory(company_name, company_code, reference_date, base_sections)
+        agents = get_agent_directory(company_name, company_code, reference_date, base_sections, language)
 
         # 5. 기본 분석 순차적으로 실행 (rate limit 대처를 위해 병렬 대신 순차 실행)
         for section in base_sections:
