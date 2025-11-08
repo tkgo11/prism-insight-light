@@ -1,5 +1,17 @@
-def get_agent_directory(company_name, company_code, reference_date, base_sections):
-    """각 섹션별 에이전트 디렉토리를 반환"""
+def get_agent_directory(company_name, company_code, reference_date, base_sections, language: str = "ko"):
+    """
+    각 섹션별 에이전트 디렉토리를 반환
+
+    Args:
+        company_name: 기업명
+        company_code: 종목 코드
+        reference_date: 분석 기준일 (YYYYMMDD)
+        base_sections: 생성할 에이전트 섹션 리스트
+        language: Language code ("ko" or "en")
+
+    Returns:
+        Dict[str, Agent]: 섹션명을 키로 하는 에이전트 딕셔너리
+    """
     from cores.agents.stock_price_agents import (
         create_price_volume_analysis_agent,
         create_investor_trading_analysis_agent
@@ -34,22 +46,22 @@ def get_agent_directory(company_name, company_code, reference_date, base_section
     
     agent_creators = {
         "price_volume_analysis": lambda: create_price_volume_analysis_agent(
-            company_name, company_code, reference_date, max_years_ago, max_years
+            company_name, company_code, reference_date, max_years_ago, max_years, language
         ),
         "investor_trading_analysis": lambda: create_investor_trading_analysis_agent(
-            company_name, company_code, reference_date, max_years_ago, max_years
+            company_name, company_code, reference_date, max_years_ago, max_years, language
         ),
         "company_status": lambda: create_company_status_agent(
-            company_name, company_code, reference_date, urls
+            company_name, company_code, reference_date, urls, language
         ),
         "company_overview": lambda: create_company_overview_agent(
-            company_name, company_code, reference_date, urls
+            company_name, company_code, reference_date, urls, language
         ),
         "news_analysis": lambda: create_news_analysis_agent(
-            company_name, company_code, reference_date
+            company_name, company_code, reference_date, language
         ),
         "market_index_analysis": lambda: create_market_index_analysis_agent(
-            reference_date, max_years_ago, max_years
+            reference_date, max_years_ago, max_years, language
         )
     }
     
