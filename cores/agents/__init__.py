@@ -14,6 +14,10 @@ def get_agent_directory(company_name, company_code, reference_date, base_section
     from cores.agents.market_index_agents import (
         create_market_index_analysis_agent
     )
+    from cores.agents.trading_agents import (
+        create_trading_scenario_agent,
+        create_sell_decision_agent
+    )
     from cores.utils import get_wise_report_url
     
     # URL 매핑 생성
