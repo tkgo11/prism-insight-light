@@ -416,12 +416,13 @@ class StockAnalysisOrchestrator:
         else:
             return "🔎"
 
-    async def run_full_pipeline(self, mode):
+    async def run_full_pipeline(self, mode, language: str = "ko"):
         """
         전체 파이프라인 실행
 
         Args:
             mode (str): 'morning' 또는 'afternoon'
+            language (str): 분석 언어 ("ko" or "en")
         """
         logger.info(f"전체 파이프라인 시작 - 모드: {mode}")
 
@@ -446,7 +447,7 @@ class StockAnalysisOrchestrator:
                 logger.warning(f"트리거 결과 파일이 없습니다: {results_file}")
 
             # 2. 보고서 생성 - 중요: 여기에 await 추가!
-            report_paths = await self.generate_reports(tickers, mode, timeout=600)
+            report_paths = await self.generate_reports(tickers, mode, timeout=600, language=language)
             if not report_paths:
                 logger.warning("생성된 보고서가 없습니다. 프로세스 종료.")
                 return
@@ -518,10 +519,19 @@ class StockAnalysisOrchestrator:
             import traceback
             logger.error(traceback.format_exc())
 
-    async def generate_reports(self, tickers, mode, timeout: int = None) -> list:
+    async def generate_reports(self, tickers, mode, timeout: int = None, language: str = "ko") -> list:
         """
         모든 종목에 대해 보고서를 단순 직렬로 생성합니다.
         한 번에 하나의 종목만 처리하여 OpenAI rate limit 문제를 방지합니다.
+
+        Args:
+            tickers: 분석할 종목 리스트
+            mode: 실행 모드
+            timeout: 타임아웃 (초)
+            language: 분석 언어 ("ko" or "en")
+
+        Returns:
+            list: 성공한 보고서 경로 리스트
         """
 
         logger.info(f"총 {len(tickers)}개 종목 보고서 생성 시작 (직렬 처리)")
@@ -553,7 +563,8 @@ class StockAnalysisOrchestrator:
                 report = await analyze_stock(
                     company_code=ticker,
                     company_name=company_name,
-                    reference_date=reference_date
+                    reference_date=reference_date,
+                    language=language
                 )
 
                 # 결과 저장
@@ -582,6 +593,8 @@ async def main():
     parser = argparse.ArgumentParser(description="주식 분석 및 텔레그램 전송 오케스트레이터")
     parser.add_argument("--mode", choices=["morning", "afternoon", "both"], default="both",
                         help="실행 모드 (morning, afternoon, both)")
+    parser.add_argument("--language", choices=["ko", "en"], default="ko",
+                        help="분석 언어 (ko: 한국어, en: English)")
     parser.add_argument("--no-telegram", action="store_true",
                         help="텔레그램 메시지 전송을 비활성화합니다. "
                              "텔레그램 설정 없이 테스트하거나 로컬에서 실행할 때 사용하세요.")
@@ -607,10 +620,10 @@ async def main():
     orchestrator = StockAnalysisOrchestrator(telegram_config=telegram_config)
 
     if args.mode == "morning" or args.mode == "both":
-        await orchestrator.run_full_pipeline("morning")
+        await orchestrator.run_full_pipeline("morning", language=args.language)
 
     if args.mode == "afternoon" or args.mode == "both":
-        await orchestrator.run_full_pipeline("afternoon")
+        await orchestrator.run_full_pipeline("afternoon", language=args.language)
 
 if __name__ == "__main__":
     # 휴일 체크
