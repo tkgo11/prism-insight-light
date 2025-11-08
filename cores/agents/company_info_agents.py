@@ -2,17 +2,17 @@ from mcp_agent.agents.agent import Agent
 
 
 def create_company_status_agent(company_name, company_code, reference_date, urls, language: str = "ko"):
-    """기업 현황 분석 에이전트 생성
+    """Create company status analysis agent
 
     Args:
-        company_name: 기업명
-        company_code: 종목 코드
-        reference_date: 분석 기준일 (YYYYMMDD)
-        urls: WiseReport URL 딕셔너리
+        company_name: Company name
+        company_code: Stock code
+        reference_date: Analysis reference date (YYYYMMDD)
+        urls: WiseReport URL dictionary
         language: Language code ("ko" or "en")
 
     Returns:
-        Agent: 기업 현황 분석 에이전트
+        Agent: Company status analysis agent
     """
 
     if language == "en":
@@ -184,17 +184,17 @@ def create_company_status_agent(company_name, company_code, reference_date, urls
 
 
 def create_company_overview_agent(company_name, company_code, reference_date, urls, language: str = "ko"):
-    """기업 개요 분석 에이전트 생성
+    """Create company overview analysis agent
 
     Args:
-        company_name: 기업명
-        company_code: 종목 코드
-        reference_date: 분석 기준일 (YYYYMMDD)
-        urls: WiseReport URL 딕셔너리
+        company_name: Company name
+        company_code: Stock code
+        reference_date: Analysis reference date (YYYYMMDD)
+        urls: WiseReport URL dictionary
         language: Language code ("ko" or "en")
 
     Returns:
-        Agent: 기업 개요 분석 에이전트
+        Agent: Company overview analysis agent
     """
 
     if language == "en":

@@ -2,16 +2,16 @@ from mcp_agent.agents.agent import Agent
 
 
 def create_news_analysis_agent(company_name, company_code, reference_date, language: str = "ko"):
-    """뉴스 분석 에이전트 생성
+    """Create news analysis agent
 
     Args:
-        company_name: 기업명
-        company_code: 종목 코드
-        reference_date: 분석 기준일 (YYYYMMDD)
+        company_name: Company name
+        company_code: Stock code
+        reference_date: Analysis reference date (YYYYMMDD)
         language: Language code ("ko" or "en")
 
     Returns:
-        Agent: 뉴스 분석 에이전트
+        Agent: News analysis agent
     """
 
     if language == "en":

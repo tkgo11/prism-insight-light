@@ -11,7 +11,7 @@ import re
 from mcp_agent.workflows.llm.augmented_llm import RequestParams
 from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 
-# 코어 에이전트 임포트
+# Import core agents
 from cores.agents.trading_agents import create_sell_decision_agent
 
 logging.basicConfig(
@@ -26,36 +26,36 @@ logger = logging.getLogger(__name__)
 
 
 class EnhancedStockTrackingAgent(StockTrackingAgent):
-    """개선된 주식 트래킹 및 매매 에이전트"""
+    """Enhanced stock tracking and trading agent"""
 
     def __init__(self, db_path: str = "stock_tracking_db.sqlite", telegram_token: str = None):
-        """에이전트 초기화"""
+        """Initialize agent"""
         super().__init__(db_path, telegram_token)
-        # 시장 상태 저장 변수 (1: 강세장, 0: 중립, -1: 약세장)
+        # Market condition storage variable (1: bull market, 0: neutral, -1: bear market)
         self.simple_market_condition = 0
-        # 변동성 테이블 (종목별 변동성 저장)
+        # Volatility table (store volatility per stock)
         self.volatility_table = {}
 
     async def initialize(self):
-        """필요한 테이블 생성 및 초기화"""
+        """Create necessary tables and initialize"""
         await super().initialize()
 
-        # 매도 결정 에이전트 초기화
+        # Initialize sell decision agent
         self.sell_decision_agent = create_sell_decision_agent()
 
-        # 시장 상태 분석 테이블 생성
+        # Create market condition analysis table
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS market_condition (
                 date TEXT PRIMARY KEY,
                 kospi_index REAL,
                 kosdaq_index REAL,
-                condition INTEGER,  -- 1: 강세장, 0: 중립, -1: 약세장
+                condition INTEGER,  -- 1: bull market, 0: neutral, -1: bear market
                 volatility REAL
             )
         """)
 
-        # todo : 1달치 데이터만 저장하고 나머지는 날리도록 수정
-        # 매수 보류(관망) 종목 추적 테이블 생성
+        # TODO: Modify to keep only 1 month of data and delete the rest
+        # Create watchlist (hold/watch) tracking table
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS watchlist_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,7 +80,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             )
         """)
 
-        # 보유 종목 매도 판단 테이블 생성 (AI의 홀딩/매도 결정 저장)
+        # Create holding decision table (store AI holding/selling decisions)
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS holding_decisions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

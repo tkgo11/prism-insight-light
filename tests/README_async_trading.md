@@ -1,316 +1,318 @@
-# 🧪 비동기 트레이딩 API 테스트 가이드
+# 🧪 Async Trading API Test Guide
 
-## 📋 개요
+> 📖 [한국어 문서](README_async_trading_ko.md)
 
-이 테스트 스크립트들은 `domestic_stock_trading.py`의 비동기 API 함수들을 안전하게 테스트하기 위한 도구입니다.
+## 📋 Overview
 
-## ⚠️ 중요 주의사항
+These test scripts are tools for safely testing the asynchronous API functions in `domestic_stock_trading.py`.
 
-- **반드시 모의투자 환경에서만 테스트하세요**
-- 실제 매매가 발생할 수 있으므로 소액으로 테스트하세요
-- `trading/config/kis_devlp.yaml` 설정을 먼저 확인하세요
-- 실전투자 모드 선택 시 확인 메시지가 나타납니다
+## ⚠️ Important Warnings
 
-## 🚀 테스트 스크립트 종류
+- **Always test only in simulation (paper trading) environment**
+- Test with small amounts as actual trades may occur
+- Check `trading/config/kis_devlp.yaml` configuration first
+- Confirmation message appears when selecting real trading mode
 
-### 1. 🏃‍♂️ `quick_test.py` - 빠른 개별 테스트
+## 🚀 Test Script Types
 
-**용도**: 개별 기능을 빠르게 테스트할 때 사용
+### 1. 🏃‍♂️ `quick_test.py` - Quick Individual Tests
 
-**실행 방법**:
+**Purpose**: Use for quick testing of individual functions
+
+**How to Run**:
 ```bash
 cd tests
 
-# 사용법 보기
+# View usage
 python quick_test.py
 
-# 포트폴리오 조회 (모의투자)
+# Portfolio inquiry (simulation)
 python quick_test.py portfolio
 
-# 매수 테스트 (모의투자, 알에프텍 1만원)
+# Buy test (simulation, RF-Tech 10,000 KRW)
 python quick_test.py buy
 
-# 매도 테스트 (모의투자, 알에프텍 전량)
+# Sell test (simulation, RF-Tech all shares)
 python quick_test.py sell
 
-# 실전투자 모드 (⚠️ 주의!)
+# Real trading mode (⚠️ Warning!)
 python quick_test.py portfolio --mode real
 python quick_test.py buy real
 python quick_test.py sell --mode real
 ```
 
-**특징**:
-- 단일 명령으로 빠른 테스트
-- argparse 기반 명령행 인자 지원
-- 실전투자 시 확인 메시지
-- 기본값: 모의투자, 알에프텍(061040), 1만원
+**Features**:
+- Quick testing with single command
+- argparse-based command line argument support
+- Confirmation message for real trading
+- Defaults: simulation, RF-Tech (061040), 10,000 KRW
 
-### 2. 🔬 `test_async_trading.py` - 종합 테스트
+### 2. 🔬 `test_async_trading.py` - Comprehensive Testing
 
-**용도**: 전체적인 기능을 체계적으로 테스트할 때 사용
+**Purpose**: Use for systematic testing of overall functionality
 
-**실행 방법**:
+**How to Run**:
 ```bash
 cd tests
 python test_async_trading.py
 ```
 
-**특징**:
-- 대화형 메뉴 인터페이스
-- 기본 테스트 + 배치 테스트 + 에러 처리 테스트
-- 상세한 로깅과 결과 분석
-- 기본값: 알에프텍(061040), 동국S&C(100130), 5만원/3만원
+**Features**:
+- Interactive menu interface
+- Basic tests + batch tests + error handling tests
+- Detailed logging and result analysis
+- Defaults: RF-Tech (061040), DongKuk S&C (100130), 50,000/30,000 KRW
 
-## 📊 테스트 항목 상세
+## 📊 Test Items in Detail
 
-### 🏃‍♂️ Quick Test 항목
+### 🏃‍♂️ Quick Test Items
 
-| 명령 | 설명 | 테스트 내용 |
+| Command | Description | Test Content |
 |------|------|-------------|
-| `portfolio` | 포트폴리오 조회 | 보유 종목, 총평가, 총손익, 수익률 표시 |
-| `buy` | 매수 테스트 | 알에프텍 1만원 시장가 매수 |
-| `sell` | 매도 테스트 | 알에프텍 보유 수량 전량 시장가 매도 |
+| `portfolio` | Portfolio inquiry | Display holdings, total value, profit/loss, return rate |
+| `buy` | Buy test | RF-Tech 10,000 KRW market order buy |
+| `sell` | Sell test | RF-Tech all shares market order sell |
 
-### 🔬 종합 테스트 항목
+### 🔬 Comprehensive Test Items
 
-#### 기본 테스트
-- ✅ **포트폴리오 조회**: 계좌 잔고 및 보유 종목 확인
-- ✅ **단일 매수**: 알에프텍 5만원 시장가 매수
-- ✅ **단일 매도**: 알에프텍 보유 수량 전량 시장가 매도
-- ✅ **에러 처리**: 잘못된 종목코드, 보유하지 않은 종목 매도, 타임아웃
+#### Basic Tests
+- ✅ **Portfolio Inquiry**: Check account balance and holdings
+- ✅ **Single Buy**: RF-Tech 50,000 KRW market order buy
+- ✅ **Single Sell**: RF-Tech all shares market order sell
+- ✅ **Error Handling**: Invalid stock code, sell non-owned stock, timeout
 
-#### 배치 테스트
-- ✅ **동시 매수**: 알에프텍, 동국S&C 각 1만원 동시 매수
-- ✅ **동시 매도**: 매수 성공한 종목들 전량 동시 매도
-- ✅ **결과 분석**: 성공/실패 통계 및 상세 로그
+#### Batch Tests
+- ✅ **Concurrent Buy**: RF-Tech, DongKuk S&C 10,000 KRW each concurrent buy
+- ✅ **Concurrent Sell**: All shares of successfully bought stocks concurrent sell
+- ✅ **Result Analysis**: Success/failure statistics and detailed logs
 
-## 🖥️ 실행 예시
+## 🖥️ Execution Examples
 
-### Quick Test 예시
+### Quick Test Examples
 
 ```bash
-# 모의투자 포트폴리오 조회
+# Simulation portfolio inquiry
 (.venv) ➜ python tests/quick_test.py portfolio
 
-🚀 빠른 테스트 시작 (🟢 모의투자)
+🚀 Quick test starting (🟢 Simulation)
 ========================================
-📊 포트폴리오 조회 중... (모드: demo)
+📊 Checking portfolio... (mode: demo)
 
-💼 보유 종목: 3개
-💰 총평가: 1,234,567원
-📈 총손익: +12,345원
-📊 수익률: +1.02%
-  1. 알에프텍: 10주 (+2.1%)
-  2. 동국S&C: 5주 (-0.5%)
-  3. NAVER: 3주 (+3.2%)
+💼 Holdings: 3 stocks
+💰 Total value: 1,234,567 KRW
+📈 Total profit: +12,345 KRW
+📊 Return: +1.02%
+  1. RF-Tech: 10 shares (+2.1%)
+  2. DongKuk S&C: 5 shares (-0.5%)
+  3. NAVER: 3 shares (+3.2%)
 
-✅ 테스트 완료 (모의투자)
+✅ Test completed (Simulation)
 ```
 
 ```bash
-# 실전투자 매수 (확인 메시지)
+# Real trading buy (with confirmation)
 (.venv) ➜ python tests/quick_test.py buy --mode real
 
-🚀 빠른 테스트 시작 (🔴 실전투자)
+🚀 Quick test starting (🔴 Real Trading)
 ========================================
-⚠️ 경고: 실전투자 모드입니다!
-⚠️ 실제 매매가 발생할 수 있습니다!
+⚠️ Warning: Real trading mode!
+⚠️ Actual trades may occur!
 ========================================
-💳 061040 매수 테스트 중... (금액: 10,000원, 모드: real)
-⚠️ 실전투자 모드입니다! 실제 매매가 발생합니다!
-정말 실전투자로 매수하시겠습니까? (yes/no): no
-매수가 취소되었습니다.
+💳 Testing 061040 buy... (Amount: 10,000 KRW, Mode: real)
+⚠️ Real trading mode! Actual trades will occur!
+Are you sure you want to buy in real trading? (yes/no): no
+Buy cancelled.
 
-✅ 테스트 완료 (실전투자)
+✅ Test completed (Real Trading)
 ```
 
-### 종합 테스트 예시
+### Comprehensive Test Examples
 
 ```bash
 (.venv) ➜ python tests/test_async_trading.py
 
-🧪 비동기 트레이딩 API 테스트 스크립트
+🧪 Async Trading API Test Script
 ============================================================
-⚠️  주의: 실전투자 모드 선택 시 실제 매매가 발생합니다!
+⚠️  Warning: Actual trades will occur in real trading mode!
 ============================================================
 
-투자 모드를 선택하세요:
-1. 모의투자 (demo) - 안전한 테스트
-2. 실전투자 (real) - ⚠️ 실제 매매 발생!
+Select trading mode:
+1. Simulation (demo) - Safe testing
+2. Real Trading (real) - ⚠️ Actual trades!
 
-모드 선택 (1-2): 1
-✅ 모의투자 모드 선택
+Select mode (1-2): 1
+✅ Simulation mode selected
 
-테스트 옵션을 선택하세요:
-1. 기본 테스트 (포트폴리오 조회, 단일 매수/매도, 에러 처리)
-2. 배치 테스트 (여러 종목 동시 매수/매도)
-3. 모든 테스트
-4. 종료
+Select test option:
+1. Basic tests (portfolio inquiry, single buy/sell, error handling)
+2. Batch tests (concurrent buy/sell of multiple stocks)
+3. All tests
+4. Exit
 
-선택 (1-4): 1
+Select (1-4): 1
 
-🚀 비동기 트레이딩 API 기본 테스트 시작 (모드: demo)
+🚀 Starting async trading API basic tests (mode: demo)
 
-1️⃣ 포트폴리오 조회: 성공
-📊 보유 종목 수: 2개
-💰 총평가금액: 1,500,000원
+1️⃣ Portfolio inquiry: Success
+📊 Holdings: 2 stocks
+💰 Total value: 1,500,000 KRW
 
-2️⃣ 단일 매수: 성공
-✅ 매수 성공: 매수 완료: 8주 x 62,500원 = 500,000원
+2️⃣ Single buy: Success
+✅ Buy successful: Buy completed: 8 shares x 62,500 KRW = 500,000 KRW
 
-3️⃣ 단일 매도: 성공
-✅ 매도 성공: 매도 완료: 8주 (평균단가: 62,500원, 예상금액: 500,800원, 수익률: +0.48%)
+3️⃣ Single sell: Success
+✅ Sell successful: Sell completed: 8 shares (avg price: 62,500 KRW, expected amount: 500,800 KRW, return: +0.48%)
 
-4️⃣ 에러 처리 테스트: 성공
-잘못된 종목코드 결과: 현재가 조회 실패
-보유하지 않은 종목 매도 결과: 포트폴리오에 005490 종목이 없습니다
+4️⃣ Error handling test: Success
+Invalid stock code result: Current price inquiry failed
+Sell non-owned stock result: Stock 005490 not in portfolio
 
-✅ 기본 테스트 완료
+✅ Basic tests completed
 ```
 
-## 🔧 설정 변경
+## 🔧 Configuration Changes
 
-### Quick Test 설정 변경
+### Quick Test Configuration Changes
 
-**종목 및 금액 변경** (`quick_test.py` 내부 수정):
+**Change stock and amount** (edit inside `quick_test.py`):
 ```python
-# 기본 설정 (1만원, 알에프텍)
+# Default settings (10,000 KRW, RF-Tech)
 await quick_buy_test("061040", 10000, mode)
 
-# 사용자 정의 (3만원, 삼성전자)
+# Custom (30,000 KRW, Samsung Electronics)
 await quick_buy_test("005930", 30000, mode)
 ```
 
-### 종합 테스트 설정 변경
+### Comprehensive Test Configuration Changes
 
-**매수 금액 변경**:
+**Change buy amount**:
 ```python
-# AsyncTradingTester 초기화 시
-tester = AsyncTradingTester(mode="demo", buy_amount=100000)  # 10만원
+# During AsyncTradingTester initialization
+tester = AsyncTradingTester(mode="demo", buy_amount=100000)  # 100,000 KRW
 
-# 배치 테스트 금액
-test_tester = AsyncTradingTester(mode=test_mode, buy_amount=50000)  # 5만원
+# Batch test amount
+test_tester = AsyncTradingTester(mode=test_mode, buy_amount=50000)  # 50,000 KRW
 ```
 
-**배치 테스트 종목 변경**:
+**Change batch test stocks**:
 ```python
-# 기본 설정
+# Default settings
 await test_tester.test_batch_operations(["005930", "000660"])
 
-# 사용자 정의
-await test_tester.test_batch_operations(["005930", "000660", "035420"])  # NAVER 추가
+# Custom
+await test_tester.test_batch_operations(["005930", "000660", "035420"])  # Add NAVER
 ```
 
-## 🛡️ 안전 기능
+## 🛡️ Safety Features
 
-### 1. **기본값 안전성**
-- 모든 테스트 기본값: `demo` (모의투자)
-- 소액 테스트: 1만원~5만원
+### 1. **Default Safety**
+- All tests default: `demo` (simulation)
+- Small amounts: 10,000-50,000 KRW
 
-### 2. **실전투자 확인**
-- `real` 모드 선택 시 경고 메시지
-- 이중 확인 메시지 (`yes/no`)
-- 사용자가 `no` 입력 시 안전하게 취소
+### 2. **Real Trading Confirmation**
+- Warning message when selecting `real` mode
+- Double confirmation message (`yes/no`)
+- Safe cancellation when user inputs `no`
 
-### 3. **시각적 구분**
-- 🟢 모의투자 / 🔴 실전투자 이모지
-- 명확한 경고 메시지
-- 상세한 결과 로깅
+### 3. **Visual Distinction**
+- 🟢 Simulation / 🔴 Real Trading emojis
+- Clear warning messages
+- Detailed result logging
 
-### 4. **타임아웃 처리**
-- 모든 비동기 호출에 타임아웃 적용
-- 기본 30초, 배치 45초
-- 네트워크 문제 시 안전한 종료
+### 4. **Timeout Handling**
+- Timeout applied to all async calls
+- Default 30 seconds, batch 45 seconds
+- Safe termination on network issues
 
-## 📝 로그 및 결과
+## 📝 Logs and Results
 
-### 로그 레벨
-- **INFO**: 일반 실행 정보
-- **WARNING**: 주의사항 (매수/매도 실패)
-- **ERROR**: 오류 발생
+### Log Levels
+- **INFO**: General execution information
+- **WARNING**: Cautions (buy/sell failures)
+- **ERROR**: Error occurrences
 
-### 결과 형식
+### Result Format
 ```python
 {
-    'success': True,           # 성공 여부
-    'stock_code': '005930',    # 종목코드
-    'quantity': 8,             # 수량
-    'current_price': 62500,    # 현재가
-    'total_amount': 500000,    # 총 금액
-    'message': '매수 완료...',  # 결과 메시지
-    'timestamp': '2025-09-07T...'  # 실행 시간
+    'success': True,           # Success status
+    'stock_code': '005930',    # Stock code
+    'quantity': 8,             # Quantity
+    'current_price': 62500,    # Current price
+    'total_amount': 500000,    # Total amount
+    'message': 'Buy completed...',  # Result message
+    'timestamp': '2025-09-07T...'  # Execution time
 }
 ```
 
-## 🐛 문제 해결
+## 🐛 Troubleshooting
 
-### 인증 오류
+### Authentication Error
 ```
-AuthenticationError: 인증 실패
+AuthenticationError: Authentication failed
 ```
-**해결책**:
-- `trading/config/kis_devlp.yaml` 설정 확인
-- API 키와 시크릿 키 확인
-- 토큰 만료 시 재인증
+**Solution**:
+- Check `trading/config/kis_devlp.yaml` configuration
+- Verify API key and secret key
+- Re-authenticate if token expired
 
-### 모듈 Import 오류
+### Module Import Error
 ```
 ModuleNotFoundError: No module named 'trading'
 ```
-**해결책**:
-- 프로젝트 루트에서 실행: `python tests/quick_test.py`
-- 경로 확인: `sys.path` 설정 검증
+**Solution**:
+- Run from project root: `python tests/quick_test.py`
+- Verify path: Check `sys.path` configuration
 
-### Config 파일 오류
+### Config File Error
 ```
 FileNotFoundError: kis_devlp.yaml
 ```
-**해결책**:
-- `trading/config/kis_devlp.yaml` 파일 존재 확인
-- `trading/config/kis_devlp.yaml.example` 참고하여 설정
+**Solution**:
+- Verify `trading/config/kis_devlp.yaml` file exists
+- Refer to `trading/config/kis_devlp.yaml.example` for configuration
 
-### 시장 시간 외 오류
+### Out-of-Market-Hours Error
 ```
-주문 가능 시간이 아닙니다
+Order time not available
 ```
-**해결책**:
-- 장 운영 시간(09:00-15:30) 내에 테스트
-- 모의투자에서 지원하는 시간 확인
+**Solution**:
+- Test during market hours (09:00-15:30)
+- Check supported hours for simulation
 
-## 📞 지원
+## 📞 Support
 
-문제가 발생하면:
-1. 로그를 먼저 확인
-2. 설정 파일 검증
-3. 네트워크 연결 상태 확인
-4. 필요시 개발팀에 문의
+If problems occur:
+1. Check logs first
+2. Verify configuration files
+3. Check network connection status
+4. Contact development team if needed
 
-## 🎯 추천 사용 패턴
+## 🎯 Recommended Usage Patterns
 
-### 1. **개발 중 빠른 테스트**
+### 1. **Quick Testing During Development**
 ```bash
 python tests/quick_test.py portfolio
 ```
 
-### 2. **기능별 개별 테스트**
+### 2. **Individual Function Testing**
 ```bash
 python tests/quick_test.py buy
 python tests/quick_test.py sell
 ```
 
-### 3. **전체 시스템 검증**
+### 3. **Full System Verification**
 ```bash
 python tests/test_async_trading.py
-# 메뉴에서 "3. 모든 테스트" 선택
+# Select "3. All tests" from menu
 ```
 
-### 4. **실전 배포 전 최종 검증**
+### 4. **Final Verification Before Production**
 ```bash
 python tests/test_async_trading.py
-# 모의투자로 모든 테스트 실행 후
-# 실전투자로 소액 단일 테스트
+# Run all tests in simulation first
+# Then test with small amounts in real trading
 ```
 
 ---
 
-**⚠️ 마지막 알림**: 항상 모의투자부터 시작하고, 실전투자는 충분한 검증 후 신중하게 진행하세요! 🚀
+**⚠️ Final Reminder**: Always start with simulation, and proceed with real trading cautiously after sufficient verification! 🚀

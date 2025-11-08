@@ -2,16 +2,16 @@ from mcp_agent.agents.agent import Agent
 
 
 def create_market_index_analysis_agent(reference_date, max_years_ago, max_years, language: str = "ko"):
-    """시장 인덱스 분석 에이전트 생성
+    """Create market index analysis agent
 
     Args:
-        reference_date: 분석 기준일 (YYYYMMDD)
-        max_years_ago: 분석 시작일 (YYYYMMDD)
-        max_years: 분석 기간 (년)
+        reference_date: Analysis reference date (YYYYMMDD)
+        max_years_ago: Analysis start date (YYYYMMDD)
+        max_years: Analysis period (years)
         language: Language code ("ko" or "en")
 
     Returns:
-        Agent: 시장 인덱스 분석 에이전트
+        Agent: Market index analysis agent
     """
 
     if language == "en":

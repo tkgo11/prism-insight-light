@@ -1,18 +1,18 @@
 from mcp_agent.agents.agent import Agent
 
 def create_price_volume_analysis_agent(company_name, company_code, reference_date, max_years_ago, max_years, language: str = "ko"):
-    """주가 및 거래량 분석 에이전트 생성
+    """Create stock price and trading volume analysis agent
 
     Args:
-        company_name: 기업명
-        company_code: 종목 코드
-        reference_date: 분석 기준일 (YYYYMMDD)
-        max_years_ago: 분석 시작일 (YYYYMMDD)
-        max_years: 분석 기간 (년)
+        company_name: Company name
+        company_code: Stock code
+        reference_date: Analysis reference date (YYYYMMDD)
+        max_years_ago: Analysis start date (YYYYMMDD)
+        max_years: Analysis period (years)
         language: Language code ("ko" or "en")
 
     Returns:
-        Agent: 주가 및 거래량 분석 에이전트
+        Agent: Stock price and trading volume analysis agent
     """
 
     if language == "en":
@@ -138,18 +138,18 @@ def create_price_volume_analysis_agent(company_name, company_code, reference_dat
 
 
 def create_investor_trading_analysis_agent(company_name, company_code, reference_date, max_years_ago, max_years, language: str = "ko"):
-    """투자자 거래 동향 분석 에이전트 생성
+    """Create investor trading trend analysis agent
 
     Args:
-        company_name: 기업명
-        company_code: 종목 코드
-        reference_date: 분석 기준일 (YYYYMMDD)
-        max_years_ago: 분석 시작일 (YYYYMMDD)
-        max_years: 분석 기간 (년)
+        company_name: Company name
+        company_code: Stock code
+        reference_date: Analysis reference date (YYYYMMDD)
+        max_years_ago: Analysis start date (YYYYMMDD)
+        max_years: Analysis period (years)
         language: Language code ("ko" or "en")
 
     Returns:
-        Agent: 투자자 거래 동향 분석 에이전트
+        Agent: Investor trading trend analysis agent
     """
 
     if language == "en":
