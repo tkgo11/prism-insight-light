@@ -18,6 +18,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any
 import logging
+import os
+
+# 번역 유틸리티 import
+try:
+    from translation_utils import DashboardTranslator
+    TRANSLATION_AVAILABLE = True
+except ImportError:
+    TRANSLATION_AVAILABLE = False
+    logging.warning("번역 유틸리티를 찾을 수 없습니다. 영어 번역이 비활성화됩니다.")
 
 # 경로 설정
 SCRIPT_DIR = Path(__file__).parent
@@ -51,7 +60,7 @@ logger = logging.getLogger(__name__)
 
 
 class DashboardDataGenerator:
-    def __init__(self, db_path: str = None, output_path: str = None, trading_mode: str = None):
+    def __init__(self, db_path: str = None, output_path: str = None, trading_mode: str = None, enable_translation: bool = True):
         # db_path 기본값: 프로젝트 루트의 stock_tracking_db.sqlite
         if db_path is None:
             db_path = str(PROJECT_ROOT / "stock_tracking_db.sqlite")
@@ -63,6 +72,18 @@ class DashboardDataGenerator:
         self.db_path = db_path
         self.output_path = output_path
         self.trading_mode = trading_mode if trading_mode is not None else _cfg.get("default_mode", "demo")
+        self.enable_translation = enable_translation and TRANSLATION_AVAILABLE
+        
+        # 번역기 초기화
+        if self.enable_translation:
+            try:
+                self.translator = DashboardTranslator(model="gpt-5-nano")
+                logger.info("번역 기능이 활성화되었습니다.")
+            except Exception as e:
+                self.enable_translation = False
+                logger.error(f"번역기 초기화 실패: {str(e)}")
+        else:
+            logger.info("번역 기능이 비활성화되었습니다.")
         
     def connect_db(self):
         """DB 연결"""
@@ -448,19 +469,22 @@ class DashboardDataGenerator:
             logger.error(f"데이터 생성 중 오류: {str(e)}")
             raise
     
-    def save(self, data: Dict):
+    def save(self, data: Dict, output_file: str = None):
         """JSON 파일로 저장"""
         try:
-            output_file = Path(self.output_path)
+            if output_file is None:
+                output_file = self.output_path
+            
+            output_path = Path(output_file)
             
             # 디렉토리가 없으면 생성
-            output_file.parent.mkdir(parents=True, exist_ok=True)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
             
-            with open(output_file, 'w', encoding='utf-8') as f:
+            with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             
-            file_size = output_file.stat().st_size
-            logger.info(f"JSON 파일 저장 완료: {output_file} ({file_size:,} bytes)")
+            file_size = output_path.stat().st_size
+            logger.info(f"JSON 파일 저장 완료: {output_path} ({file_size:,} bytes)")
             
         except Exception as e:
             logger.error(f"파일 저장 중 오류: {str(e)}")
@@ -470,29 +494,59 @@ class DashboardDataGenerator:
 def main():
     """메인 실행 함수"""
     import argparse
+    import asyncio
     
     parser = argparse.ArgumentParser(description="대시보드 JSON 생성")
     parser.add_argument("--mode", choices=["demo", "real"], 
                        help=f"트레이딩 모드 (demo: 모의투자, real: 실전투자, 기본값: {_cfg.get('default_mode', 'demo')})")
+    parser.add_argument("--no-translation", action="store_true",
+                       help="영어 번역 비활성화 (한국어 버전만 생성)")
     
     args = parser.parse_args()
     
-    try:
-        logger.info("=== 대시보드 JSON 생성 시작 ===")
-        
-        generator = DashboardDataGenerator(trading_mode=args.mode)
-        
-        # 데이터 생성
-        dashboard_data = generator.generate()
-        
-        # JSON 파일 저장
-        generator.save(dashboard_data)
-        
-        logger.info("=== 대시보드 JSON 생성 완료 ===")
-        
-    except Exception as e:
-        logger.error(f"실행 중 오류 발생: {str(e)}")
-        exit(1)
+    async def async_main():
+        try:
+            logger.info("=== 대시보드 JSON 생성 시작 ===")
+            
+            enable_translation = not args.no_translation
+            generator = DashboardDataGenerator(
+                trading_mode=args.mode,
+                enable_translation=enable_translation
+            )
+            
+            # 한국어 데이터 생성
+            logger.info("한국어 데이터 생성 중...")
+            dashboard_data_ko = generator.generate()
+            
+            # 한국어 JSON 파일 저장
+            ko_output = str(SCRIPT_DIR / "dashboard" / "public" / "dashboard_data.json")
+            generator.save(dashboard_data_ko, ko_output)
+            
+            # 영어 번역 및 저장
+            if generator.enable_translation:
+                try:
+                    logger.info("영어 번역 시작...")
+                    dashboard_data_en = await generator.translator.translate_dashboard_data(dashboard_data_ko)
+                    
+                    # 영어 JSON 파일 저장
+                    en_output = str(SCRIPT_DIR / "dashboard" / "public" / "dashboard_data_en.json")
+                    generator.save(dashboard_data_en, en_output)
+                    
+                    logger.info("영어 번역 완료!")
+                except Exception as e:
+                    logger.error(f"영어 번역 중 오류 발생: {str(e)}")
+                    logger.warning("한국어 버전만 생성되었습니다.")
+            else:
+                logger.info("번역 기능이 비활성화되어 한국어 버전만 생성되었습니다.")
+            
+            logger.info("=== 대시보드 JSON 생성 완료 ===")
+            
+        except Exception as e:
+            logger.error(f"실행 중 오류 발생: {str(e)}")
+            exit(1)
+    
+    # asyncio 이벤트 루프 실행
+    asyncio.run(async_main())
 
 
 if __name__ == "__main__":
