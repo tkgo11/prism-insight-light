@@ -92,9 +92,9 @@ Only return the translated text without any explanations or metadata.
 """
 
     agent = Agent(
+        name="telegram_translator",
         instruction=instruction,
-        role="telegram_translator",
-        tools=[]
+        server_names=[]
     )
 
     return agent
