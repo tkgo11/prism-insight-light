@@ -111,82 +111,27 @@ async def translate_telegram_message(message: str, model: str = "gpt-4o-mini") -
     Returns:
         str: Translated English message
     """
-    from openai import AsyncOpenAI
-    import os
+    from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
+    from mcp_agent.workflows.llm.augmented_llm import RequestParams
 
     try:
-        # Use OpenAI directly instead of going through Agent
-        client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        # Create translator agent
+        translator = create_telegram_translator_agent()
 
-        # Translation instruction
-        system_prompt = """You are a professional translator specializing in stock market and trading communications.
+        # Attach LLM to the agent
+        llm = await translator.attach_llm(OpenAIAugmentedLLM)
 
-Your task is to translate Korean telegram messages to English.
-
-## Translation Guidelines
-
-### 1. Preserve Formatting
-- Keep all line breaks and spacing
-- Maintain bullet points and numbered lists
-- Preserve all emojis exactly as they appear
-- Keep markdown formatting (*, -, etc.)
-
-### 2. Number and Currency Formatting
-- Keep Korean won amounts: "1,000원" → "1,000 KRW" or "₩1,000"
-- Preserve all numeric values and percentages
-- Keep date formats: "2025.01.10" → "2025.01.10"
-
-### 3. Technical Terms
-- Translate stock market terminology accurately:
-  - "매수" → "Buy"
-  - "매도" → "Sell"
-  - "수익률" → "Return" or "Profit Rate"
-  - "보유기간" → "Holding Period"
-  - "손절가" → "Stop Loss"
-  - "목표가" → "Target Price"
-  - "시가총액" → "Market Cap"
-  - "거래량" → "Volume"
-  - "거래대금" → "Trading Value"
-
-### 4. Stock Names
-- Keep Korean stock names in their original form
-- Add ticker symbols if present
-- Example: "삼성전자(005930)" → "Samsung Electronics (005930)"
-
-### 5. Tone and Style
-- Maintain professional but accessible tone
-- Keep urgency and emphasis from original message
-- Preserve any disclaimers or warnings
-
-### 6. Emojis and Symbols
-- Keep all emojis: 📈, 📊, 🔔, ✅, ⚠️, etc.
-- Preserve arrows: 🔺, 🔻, ➖, ↔️
-- Maintain visual hierarchy with emojis
-
-Translate the following Korean telegram message to English following all guidelines above.
-Only return the translated text without any explanations or metadata."""
-
-        # Call OpenAI API
-        response = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message}
-            ],
-            max_tokens=100000,
-            temperature=0.3
+        # Generate translation
+        translated = await llm.generate_str(
+            message=message,
+            request_params=RequestParams(
+                model=model,
+                maxTokens=100000,
+                temperature=0.3  # Lower temperature for more consistent translations
+            )
         )
 
-        translated = response.choices[0].message.content
-
-        if translated:
-            return translated.strip()
-        else:
-            # If translation is empty, return original
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning("Translation returned empty response, using original message")
-            return message
+        return translated.strip()
 
     except Exception as e:
         # If translation fails, return original message with error note
