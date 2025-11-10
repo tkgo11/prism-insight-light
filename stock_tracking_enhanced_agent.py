@@ -36,12 +36,17 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         # Volatility table (store volatility per stock)
         self.volatility_table = {}
 
-    async def initialize(self):
-        """Create necessary tables and initialize"""
-        await super().initialize()
+    async def initialize(self, language: str = "ko"):
+        """
+        Create necessary tables and initialize
 
-        # Initialize sell decision agent
-        self.sell_decision_agent = create_sell_decision_agent()
+        Args:
+            language: Language code for agents (default: "ko")
+        """
+        await super().initialize(language)
+
+        # Initialize sell decision agent with language
+        self.sell_decision_agent = create_sell_decision_agent(language=language)
 
         # Create market condition analysis table
         self.cursor.execute("""
@@ -87,25 +92,25 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 ticker TEXT NOT NULL,
                 decision_date TEXT NOT NULL,
                 decision_time TEXT NOT NULL,
-                
+
                 current_price REAL NOT NULL,
                 should_sell BOOLEAN NOT NULL,
                 sell_reason TEXT,
                 confidence INTEGER,
-                
+
                 technical_trend TEXT,
                 volume_analysis TEXT,
                 market_condition_impact TEXT,
                 time_factor TEXT,
-                
+
                 portfolio_adjustment_needed BOOLEAN,
                 adjustment_reason TEXT,
                 new_target_price REAL,
                 new_stop_loss REAL,
                 adjustment_urgency TEXT,
-                
+
                 full_json_data TEXT NOT NULL,
-                
+
                 created_at TEXT DEFAULT (datetime('now', 'localtime')),
                 FOREIGN KEY (ticker) REFERENCES stock_holdings(ticker)
             )
@@ -113,10 +118,10 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
 
         self.conn.commit()
 
-        # 시장 상태 분석 실행
+        # Run market condition analysis
         await self._analyze_simple_market_condition()
-        
-        # 오래된 watchlist 데이터 정리 (1달 이상 경과)
+
+        # Clean up old watchlist data (older than 1 month)
         await self._cleanup_old_watchlist()
 
         return True
