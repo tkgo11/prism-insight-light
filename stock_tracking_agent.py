@@ -96,6 +96,9 @@ class StockTrackingAgent:
         """
         logger.info("Starting tracking agent initialization")
 
+        # Store language for later use
+        self.language = language
+
         # Initialize SQLite connection
         self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row  # Return results as dictionary
@@ -456,22 +459,39 @@ class StockTrackingAgent:
             Investment period distribution: {json.dumps(investment_periods, ensure_ascii=False)}
             """
 
-            # LLM 호출하여 매매 시나리오 생성
+            # LLM call to generate trading scenario
             llm = await self.trading_agent.attach_llm(OpenAIAugmentedLLM)
 
-            response = await llm.generate_str(
-                message=f"""
+            # Prepare prompt based on language
+            if self.language == "ko":
+                prompt_message = f"""
                 다음은 주식 종목에 대한 AI 분석 보고서입니다. 이 보고서를 기반으로 매매 시나리오를 생성해주세요.
-                
+
                 ### 현재 포트폴리오 상황:
                 {portfolio_info}
-                
+
                 ### 거래대금 분석:
                 {rank_change_msg}
-                
+
                 ### 보고서 내용:
                 {report_content}
-                """,
+                """
+            else:  # English
+                prompt_message = f"""
+                This is an AI analysis report for a stock. Please generate a trading scenario based on this report.
+
+                ### Current Portfolio Status:
+                {portfolio_info}
+
+                ### Trading Value Analysis:
+                {rank_change_msg}
+
+                ### Report Content:
+                {report_content}
+                """
+
+            response = await llm.generate_str(
+                message=prompt_message,
                 request_params=RequestParams(
                     model="gpt-5",
                     maxTokens=10000

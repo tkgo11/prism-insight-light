@@ -661,34 +661,63 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             투자 기간 분포: {json.dumps(investment_periods, ensure_ascii=False)}
             """
 
-            # LLM 호출하여 Sell 의사결정 생성
+            # LLM call to generate sell decision
             llm = await self.sell_decision_agent.attach_llm(OpenAIAugmentedLLM)
 
-            response = await llm.generate_str(
-                message=f"""
+            # Prepare prompt based on language
+            if self.language == "ko":
+                prompt_message = f"""
                 다음 Hold 종목에 대한 Sell 의사결정을 수행해주세요.
-                
+
                 ### 종목 기본 정보:
                 - 종목명: {company_name}({ticker})
                 - 매수가: {buy_price:,.0f}원
-                - 현재가: {current_price:,.0f}원  
+                - 현재가: {current_price:,.0f}원
                 - 목표가: {target_price:,.0f} 원
-                - 손절가: {stop_loss:,.0f} 
+                - 손절가: {stop_loss:,.0f}
                 - 수익률: {profit_rate:.2f}%
                 - Hold기간: {days_passed}일
                 - 투자기간: {period}
                 - 섹터: {sector}
-                
+
                 ### 현재 포트폴리오 상황:
                 {portfolio_info}
-                
+
                 ### 매매 시나리오 정보:
                 {json.dumps(trading_scenarios, ensure_ascii=False) if trading_scenarios else "시나리오 정보 없음"}
-                
+
                 ### 분석 요청:
                 위 정보를 바탕으로 kospi_kosdaq과 sqlite 도구를 활용하여 최신 데이터를 확인하고,
                 Sell할지 계속 Hold할지 결정해주세요.
-                """,
+                """
+            else:  # English
+                prompt_message = f"""
+                Please make a sell decision for the following holding.
+
+                ### Stock Basic Information:
+                - Stock: {company_name}({ticker})
+                - Buy Price: {buy_price:,.0f} KRW
+                - Current Price: {current_price:,.0f} KRW
+                - Target Price: {target_price:,.0f} KRW
+                - Stop Loss: {stop_loss:,.0f} KRW
+                - Return: {profit_rate:.2f}%
+                - Holding Period: {days_passed} days
+                - Investment Period: {period}
+                - Sector: {sector}
+
+                ### Current Portfolio Status:
+                {portfolio_info}
+
+                ### Trading Scenario Information:
+                {json.dumps(trading_scenarios, ensure_ascii=False) if trading_scenarios else "No scenario information"}
+
+                ### Analysis Request:
+                Based on the above information, use the kospi_kosdaq and sqlite tools to check the latest data,
+                and decide whether to sell or continue holding.
+                """
+
+            response = await llm.generate_str(
+                message=prompt_message,
                 request_params=RequestParams(
                     model="gpt-5",
                     maxTokens=6000
