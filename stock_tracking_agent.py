@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-주식 트래킹 및 매매 에이전트
+Stock Tracking and Trading Agent
 
-이 모듈은 AI 기반 주식 분석 보고서를 활용하여 매수/매도 의사결정을 수행하고
-거래 내역을 관리하는 시스템입니다.
+This module performs buy/sell decisions using AI-based stock analysis reports
+and manages trading records.
 
-주요 기능:
-1. 분석 보고서 기반의 매매 시나리오 생성
-2. 종목 매수/매도 관리 (최대 10개 슬랏)
-3. 거래 내역 및 수익률 추적
-4. 텔레그램 채널을 통한 결과 공유
+Main Features:
+1. Generate trading scenarios based on analysis reports
+2. Manage stock purchases/sales (maximum 10 slots)
+3. Track trading history and returns
+4. Share results through Telegram channel
 """
 import asyncio
 import json
@@ -26,7 +26,7 @@ from typing import List, Dict, Any, Tuple
 from telegram import Bot
 from telegram.error import TelegramError
 
-# 로깅 설정
+# Logging configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -37,72 +37,77 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# MCP 관련 임포트
+# MCP related imports
 from mcp_agent.app import MCPApp
 from mcp_agent.workflows.llm.augmented_llm import RequestParams
 from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 
-# 코어 에이전트 임포트
+# Core agent imports
 from cores.agents.trading_agents import create_trading_scenario_agent
 
-# MCPApp 인스턴스 생성
+# Create MCPApp instance
 app = MCPApp(name="stock_tracking")
 
 class StockTrackingAgent:
-    """주식 트래킹 및 매매 에이전트"""
-    
-    # 상수 정의
-    MAX_SLOTS = 10  # 최대 보유 가능 종목 수
-    MAX_SAME_SECTOR = 3  # 동일 산업군 최대 보유 수
-    SECTOR_CONCENTRATION_RATIO = 0.3  # 섹터 집중도 제한 비율
-    
-    # 투자 기간 상수
-    PERIOD_SHORT = "단기"  # 1개월 이내
-    PERIOD_MEDIUM = "중기"  # 1~3개월
-    PERIOD_LONG = "장기"  # 3개월 이상
-    
-    # 매수 점수 기준
-    SCORE_STRONG_BUY = 8  # 강력 매수
-    SCORE_CONSIDER = 7  # 매수 고려
-    SCORE_UNSUITABLE = 6  # 매수 부적합
+    """Stock Tracking and Trading Agent"""
+
+    # Constants
+    MAX_SLOTS = 10  # Maximum number of stocks to hold
+    MAX_SAME_SECTOR = 3  # Maximum holdings in same sector
+    SECTOR_CONCENTRATION_RATIO = 0.3  # Sector concentration limit ratio
+
+    # Investment period constants
+    PERIOD_SHORT = "단기"  # Within 1 month
+    PERIOD_MEDIUM = "중기"  # 1-3 months
+    PERIOD_LONG = "장기"  # 3+ months
+
+    # Buy score thresholds
+    SCORE_STRONG_BUY = 8  # Strong buy
+    SCORE_CONSIDER = 7  # Consider buying
+    SCORE_UNSUITABLE = 6  # Unsuitable for buying
 
     def __init__(self, db_path: str = "stock_tracking_db.sqlite", telegram_token: str = None):
         """
-        에이전트 초기화
+        Initialize agent
 
         Args:
-            db_path: SQLite 데이터베이스 파일 경로
-            telegram_token: 텔레그램 봇 토큰
+            db_path: SQLite database file path
+            telegram_token: Telegram bot token
         """
         self.max_slots = self.MAX_SLOTS
-        self.message_queue = []  # 텔레그램 메시지 저장용
+        self.message_queue = []  # For storing Telegram messages
         self.trading_agent = None
         self.db_path = db_path
         self.conn = None
         self.cursor = None
 
-        # 텔레그램 봇 토큰 설정
+        # Set Telegram bot token
         self.telegram_token = telegram_token or os.environ.get("TELEGRAM_BOT_TOKEN")
         self.telegram_bot = None
         if self.telegram_token:
             self.telegram_bot = Bot(token=self.telegram_token)
 
-    async def initialize(self):
-        """필요한 테이블 생성 및 초기화"""
-        logger.info("트래킹 에이전트 초기화 시작")
+    async def initialize(self, language: str = "ko"):
+        """
+        Create necessary tables and initialize
 
-        # SQLite 연결 초기화
+        Args:
+            language: Language code for agents (default: "ko")
+        """
+        logger.info("Starting tracking agent initialization")
+
+        # Initialize SQLite connection
         self.conn = sqlite3.connect(self.db_path)
-        self.conn.row_factory = sqlite3.Row  # 결과를 딕셔너리 형태로 반환
+        self.conn.row_factory = sqlite3.Row  # Return results as dictionary
         self.cursor = self.conn.cursor()
 
-        # 트레이딩 시나리오 생성 에이전트 초기화
-        self.trading_agent = create_trading_scenario_agent()
+        # Initialize trading scenario generation agent with language
+        self.trading_agent = create_trading_scenario_agent(language=language)
 
-        # 데이터베이스 테이블 생성
+        # Create database tables
         await self._create_tables()
 
-        logger.info("트래킹 에이전트 초기화 완료")
+        logger.info("Tracking agent initialization complete")
         return True
 
     async def _create_tables(self):
@@ -1458,55 +1463,55 @@ class StockTrackingAgent:
 
     async def run(self, pdf_report_paths: List[str], chat_id: str = None, language: str = "ko") -> bool | None:
         """
-        주식 트래킹 시스템 메인 실행 함수
+        Main execution function for stock tracking system
 
         Args:
-            pdf_report_paths: 분석 보고서 파일 경로 리스트
-            chat_id: 텔레그램 채널 ID (None이면 메시지를 전송하지 않음)
-            language: 메시지 언어 ("ko" or "en")
+            pdf_report_paths: List of analysis report file paths
+            chat_id: Telegram channel ID (no messages sent if None)
+            language: Message language ("ko" or "en")
 
         Returns:
-            bool: 실행 성공 여부
+            bool: Execution success status
         """
         try:
-            logger.info("트래킹 시스템 배치 실행 시작")
+            logger.info("Starting tracking system batch execution")
 
-            # 초기화
-            await self.initialize()
+            # Initialize with language parameter
+            await self.initialize(language)
 
             try:
-                # 보고서 처리
+                # Process reports
                 buy_count, sell_count = await self.process_reports(pdf_report_paths)
 
-                # 텔레그램 메시지 전송 (chat_id가 제공된 경우에만)
+                # Send Telegram message (only if chat_id is provided)
                 if chat_id:
                     message_sent = await self.send_telegram_message(chat_id, language)
                     if message_sent:
-                        logger.info("텔레그램 메시지 전송 완료")
+                        logger.info("Telegram message sent successfully")
                     else:
-                        logger.warning("텔레그램 메시지 전송 실패")
+                        logger.warning("Telegram message send failed")
                 else:
-                    logger.info("텔레그램 채널 ID가 제공되지 않아 메시지 전송을 스킵합니다.")
-                    # chat_id가 None이어도 메시지 큐 정리를 위해 호출
+                    logger.info("Telegram channel ID not provided, skipping message send")
+                    # Call even if chat_id is None to clean up message queue
                     await self.send_telegram_message(None, language)
 
-                logger.info("트래킹 시스템 배치 실행 완료")
+                logger.info("Tracking system batch execution complete")
                 return True
             finally:
-                # finally 블록으로 이동하여 항상 연결 종료 보장
+                # Move to finally block to ensure connection is always closed
                 if self.conn:
                     self.conn.close()
-                    logger.info("데이터베이스 연결 종료")
+                    logger.info("Database connection closed")
 
         except Exception as e:
-            logger.error(f"트래킹 시스템 실행 중 오류: {str(e)}")
+            logger.error(f"Error during tracking system execution: {str(e)}")
             logger.error(traceback.format_exc())
 
-            # 데이터베이스 연결 확인 및 종료
+            # Check and close database connection
             if hasattr(self, 'conn') and self.conn:
                 try:
                     self.conn.close()
-                    logger.info("오류 발생 후 데이터베이스 연결 종료")
+                    logger.info("Database connection closed after error")
                 except:
                     pass
 
