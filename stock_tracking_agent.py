@@ -511,7 +511,7 @@ class StockTrackingAgent:
                     json_str = markdown_match.group(1)
                     json_str = fix_json_syntax(json_str)
                     scenario_json = json.loads(json_str)
-                    logger.info(f"마크다운 코드 블록에서 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
+                    logger.info(f"Scenario parsed from markdown code block: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
 
                 # 일반 JSON 객체 추출 시도
@@ -520,18 +520,18 @@ class StockTrackingAgent:
                     json_str = json_match.group(1)
                     json_str = fix_json_syntax(json_str)
                     scenario_json = json.loads(json_str)
-                    logger.info(f"일반 JSON 형식에서 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
+                    logger.info(f"Scenario parsed from regular JSON format: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
 
                 # 전체 응답이 JSON인 경우
                 clean_response = fix_json_syntax(response)
                 scenario_json = json.loads(clean_response)
-                logger.info(f"전체 응답 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
+                logger.info(f"Full response scenario: {json.dumps(scenario_json, ensure_ascii=False)}")
                 return scenario_json
 
             except Exception as json_err:
-                logger.error(f"매매 시나리오 JSON 파싱 오류: {json_err}")
-                logger.error(f"원본 응답: {response}")
+                logger.error(f"Trading scenario JSON parse error: {json_err}")
+                logger.error(f"Original response: {response}")
 
                 # 추가 복구 시도: 더 강력한 JSON 수정
                 try:
@@ -551,17 +551,17 @@ class StockTrackingAgent:
                     clean_response = re.sub(r',\s*,+', ',', clean_response)
                     
                     scenario_json = json.loads(clean_response)
-                    logger.info(f"추가 복구로 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
+                    logger.info(f"Scenario parsed with additional recovery: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
                 except Exception as e:
-                    logger.error(f"추가 복구 시도도 실패: {str(e)}")
+                    logger.error(f"Additional recovery attempt failed: {str(e)}")
                     
                     # 최후의 시도: json_repair 라이브러리 사용 가능한 경우
                     try:
                         import json_repair
                         repaired = json_repair.repair_json(response)
                         scenario_json = json.loads(repaired)
-                        logger.info("json_repair로 복구 성공")
+                        logger.info("Successfully recovered with json_repair")
                         return scenario_json
                     except (ImportError, Exception):
                         pass
@@ -570,7 +570,7 @@ class StockTrackingAgent:
                 return self._default_scenario()
 
         except Exception as e:
-            logger.error(f"매매 시나리오 추출 중 오류: {str(e)}")
+            logger.error(f"Error extracting trading scenario: {str(e)}")
             logger.error(traceback.format_exc())
             return self._default_scenario()
 
@@ -855,7 +855,7 @@ class StockTrackingAgent:
                     message += f"💼 포트폴리오 관점:\n  {portfolio_context}\n"
 
             self.message_queue.append(message)
-            logger.info(f"{ticker}({company_name}) 매수 완료")
+            logger.info(f"{ticker}({company_name}) purchase complete")
 
             return True
 
@@ -1277,7 +1277,7 @@ class StockTrackingAgent:
                 for stock in sold_stocks:
                     logger.info(f"매도: {stock['company_name']}({stock['ticker']}) - 수익률: {stock['profit_rate']:.2f}% / 이유: {stock['reason']}")
             else:
-                logger.info("매도된 종목이 없습니다.")
+                logger.info("No stocks sold")
 
             # 2. 새로운 보고서 분석 및 매수 의사결정
             for pdf_report_path in pdf_report_paths:
@@ -1290,7 +1290,7 @@ class StockTrackingAgent:
 
                 # 이미 보유 중인 종목이면 스킵
                 if analysis_result.get("decision") == "보유 중":
-                    logger.info(f"보유 중 종목 스킵: {analysis_result.get('ticker')} - {analysis_result.get('company_name')}")
+                    logger.info(f"Skipping stock in holdings: {analysis_result.get('ticker')} - {analysis_result.get('company_name')}")
                     continue
 
                 # 종목 정보 및 시나리오
@@ -1305,13 +1305,13 @@ class StockTrackingAgent:
 
                 # 산업군 다양성 체크 실패 시 스킵
                 if not sector_diverse:
-                    logger.info(f"매수 보류: {company_name}({ticker}) - 산업군 '{sector}' 과다 투자 방지")
+                    logger.info(f"Purchase deferred: {company_name}({ticker}) - Preventing sector over-investment '.*'")
                     continue
 
                 # 진입 결정이면 매수 처리
                 buy_score = scenario.get("buy_score", 0)
                 min_score = scenario.get("min_score", 0)
-                logger.info(f"매수 점수 체크: {company_name}({ticker}) - 점수: {buy_score}")
+                logger.info(f"Buy score check: {company_name}({ticker}) - 점수: {buy_score}")
                 if analysis_result.get("decision") == "진입":
                     # 매수 처리
                     buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
@@ -1324,15 +1324,15 @@ class StockTrackingAgent:
                             trade_result = await trading.async_buy_stock(stock_code=ticker)
 
                         if trade_result['success']:
-                            logger.info(f"실제 매수 성공: {trade_result['message']}")
+                            logger.info(f"Actual purchase successful: {trade_result['message']}")
                         else:
-                            logger.error(f"실제 매수 실패: {trade_result['message']}")
+                            logger.error(f"Actual purchase failed: {trade_result['message']}")
 
                     if buy_success:
                         buy_count += 1
-                        logger.info(f"매수 완료: {company_name}({ticker}) @ {current_price:,.0f}원")
+                        logger.info(f"Purchase complete: {company_name}({ticker}) @ {current_price:,.0f}원")
                     else:
-                        logger.warning(f"매수 실패: {company_name}({ticker})")
+                        logger.warning(f"Purchase failed: {company_name}({ticker})")
                 else:
                     reason = ""
                     if buy_score < min_score:
@@ -1340,9 +1340,9 @@ class StockTrackingAgent:
                     elif analysis_result.get("decision") != "진입":
                         reason = f"진입 결정 아님 (결정: {analysis_result.get('decision')})"
 
-                    logger.info(f"매수 보류: {company_name}({ticker}) - {reason}")
+                    logger.info(f"Purchase deferred: {company_name}({ticker}) - {reason}")
 
-            logger.info(f"보고서 처리 완료 - 매수: {buy_count}건, 매도: {sell_count}건")
+            logger.info(f"Report processing complete - 매수: {buy_count}건, 매도: {sell_count}건")
             return buy_count, sell_count
 
         except Exception as e:
@@ -1364,11 +1364,11 @@ class StockTrackingAgent:
         try:
             # chat_id가 None이면 텔레그램 전송 스킵
             if not chat_id:
-                logger.info("텔레그램 채널 ID가 없습니다. 메시지 전송을 스킵합니다.")
+                logger.info("No Telegram channel ID. Skipping message send")
 
                 # 메시지 로그 출력
                 for message in self.message_queue:
-                    logger.info(f"[메시지 (미전송)] {message[:100]}...")
+                    logger.info(f"[Message (not sent)] {message[:100]}...")
 
                 # 메시지 큐 초기화
                 self.message_queue = []
@@ -1376,11 +1376,11 @@ class StockTrackingAgent:
 
             # 텔레그램 봇이 초기화되지 않았다면 로그만 출력
             if not self.telegram_bot:
-                logger.warning("텔레그램 봇이 초기화되지 않았습니다. 토큰을 확인해주세요.")
+                logger.warning("Telegram bot not initialized. Please check token")
 
                 # 메시지 출력만 하고 실제 전송은 하지 않음
                 for message in self.message_queue:
-                    logger.info(f"[텔레그램 메시지 (봇 미초기화)] {message[:100]}...")
+                    logger.info(f"[Telegram message (bot not initialized)] {message[:100]}...")
 
                 # 메시지 큐 초기화
                 self.message_queue = []
@@ -1408,7 +1408,7 @@ class StockTrackingAgent:
             # 각 메시지 전송
             success = True
             for message in self.message_queue:
-                logger.info(f"텔레그램 메시지 전송 중: {chat_id}")
+                logger.info(f"Sending Telegram message: {chat_id}")
                 try:
                     # 텔레그램 메시지 길이 제한 (4096자)
                     MAX_MESSAGE_LENGTH = 4096
@@ -1443,9 +1443,9 @@ class StockTrackingAgent:
                             )
                             await asyncio.sleep(0.5)  # 분할 메시지 간 짧은 지연
 
-                    logger.info(f"텔레그램 메시지 전송 완료: {chat_id}")
+                    logger.info(f"Telegram message sent: {chat_id}")
                 except TelegramError as e:
-                    logger.error(f"텔레그램 메시지 전송 실패: {e}")
+                    logger.error(f"Telegram message send failed: {e}")
                     success = False
 
                 # API 제한 방지를 위한 지연
@@ -1533,7 +1533,7 @@ async def main():
     args = parser.parse_args()
 
     if not args.reports:
-        local_logger.error("보고서 경로가 지정되지 않았습니다.")
+        local_logger.error("Report path not specified")
         return False
 
     async with app.run():
@@ -1547,6 +1547,6 @@ if __name__ == "__main__":
         # asyncio 실행
         asyncio.run(main())
     except Exception as e:
-        logger.error(f"프로그램 실행 중 오류: {str(e)}")
+        logger.error(f"Error during program execution: {str(e)}")
         logger.error(traceback.format_exc())
         sys.exit(1)

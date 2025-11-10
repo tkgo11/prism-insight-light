@@ -276,7 +276,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             # Calculate stop-loss price
             stop_loss = buy_price * (1 - adjusted_stop_loss_pct/100)
 
-            logger.info(f"{ticker} Dynamic stop-loss calculated: {stop_loss:,.0f}원 (변동성: {volatility:.2f}%, 손절폭: {adjusted_stop_loss_pct:.2f}%)")
+            logger.info(f"{ticker} Dynamic stop-loss calculated: {stop_loss:,.0f} KRW (volatility: {volatility:.2f}%, stop-loss width: {adjusted_stop_loss_pct:.2f}%)")
 
             return stop_loss
 
@@ -309,7 +309,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             # 목표가 계산
             target_price = buy_price * (1 + adjusted_target_pct/100)
 
-            logger.info(f"{ticker} Dynamic target price calculated: {target_price:,.0f}원 (변동성: {volatility:.2f}%, 목표 수익률: {adjusted_target_pct:.2f}%)")
+            logger.info(f"{ticker} Dynamic target price calculated: {target_price:,.0f} KRW (volatility: {volatility:.2f}%, target return: {adjusted_target_pct:.2f}%)")
 
             return target_price
 
@@ -373,7 +373,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 buy_score = scenario.get("buy_score", 0)
                 min_score = scenario.get("min_score", 0)
                 decision = analysis_result.get("decision")
-                logger.info(f"Buy score check: {company_name}({ticker}) - Score: {buy_score}, 최소 요구 Score: {min_score}")
+                logger.info(f"Buy score check: {company_name}({ticker}) - Score: {buy_score}, Min required score: {min_score}")
 
                 # 매수하지 않는 경우 (관망/점수 부족/산업군 제약) 메시지 생성
                 if decision != "진입" or buy_score < min_score or not sector_diverse:
@@ -384,7 +384,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     elif buy_score < min_score:
                         if decision == "진입":
                             decision = "관망"  # "진입"에서 "관망"으로 변경
-                            logger.info(f"Decision changed due to insufficient buy score: {company_name}({ticker}) - 진입 → 관망 (Score: {buy_score} < {min_score})")
+                            logger.info(f"Decision changed due to insufficient buy score: {company_name}({ticker}) - Enter → Wait (Score: {buy_score} < {min_score})")
                         reason = f"매수 점수 부족 ({buy_score} < {min_score})"
                     elif decision != "진입":
                         reason = f"분석 결정이 '관망'"
@@ -726,7 +726,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 portfolio_adjustment = decision_json.get("portfolio_adjustment", {})
                 
                 logger.info(f"{ticker}({company_name}) AI sell decision: {'Sell' if should_sell else 'Hold'} (Confidence: {confidence}/10)")
-                logger.info(f"Sell 사유: {sell_reason}")
+                logger.info(f"Sell reason: {sell_reason}")
                 
                 # ===== 핵심: should_sell 분기에 따른 DB 처리 (에러가 나도 메인 플로우는 계속 진행) =====
                 try:
@@ -753,7 +753,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 return should_sell, sell_reason
 
             except Exception as json_err:
-                logger.error(f"Sell 결정 JSON 파싱 오류: {json_err}")
+                logger.error(f"Sell decision JSON parse error: {json_err}")
                 logger.error(f"Original response: {response}")
                 
                 # 파싱 실패 시 기존 알고리즘으로 폴백
@@ -761,7 +761,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 return await self._fallback_sell_decision(stock_data)
 
         except Exception as e:
-            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else 'Unknown stock'} AI Sell 분석 중 오류: {str(e)}")
+            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else 'Unknown stock'} Error in AI sell analysis: {str(e)}")
             logger.error(traceback.format_exc())
             
             # 오류 시 기존 알고리즘으로 폴백
@@ -859,7 +859,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             return False, f"계속 Hold (추세: {trend_text}, 수익률: {profit_rate:.2f}%)"
 
         except Exception as e:
-            logger.error(f"폴백 Sell 분석 중 오류: {str(e)}")
+            logger.error(f"Error in fallback sell analysis: {str(e)}")
             return False, "분석 오류"
 
     async def _process_portfolio_adjustment(self, ticker: str, company_name: str, portfolio_adjustment: Dict[str, Any], analysis_summary: Dict[str, Any]):
@@ -1020,11 +1020,11 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             ))
             
             self.conn.commit()
-            logger.info(f"{ticker} Hold 판단 저장 완료 - should_sell: {should_sell}, confidence: {confidence}")
+            logger.info(f"{ticker} Hold decision save complete - should_sell: {should_sell}, confidence: {confidence}")
             return True
             
         except Exception as e:
-            logger.error(f"{ticker} Hold 판단 저장 실패 (메인 플로우 계속): {str(e)}")
+            logger.error(f"{ticker} Hold decision save failed (main flow continues): {str(e)}")
             logger.error(traceback.format_exc())
             return False
 
@@ -1042,11 +1042,11 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         try:
             self.cursor.execute("DELETE FROM holding_decisions WHERE ticker = ?", (ticker,))
             self.conn.commit()
-            logger.info(f"{ticker} Sell 판단 데이터 삭제 완료")
+            logger.info(f"{ticker} Sell decision data deleted")
             return True
             
         except Exception as e:
-            logger.error(f"{ticker} Sell 판단 삭제 실패 (메인 플로우 계속): {str(e)}")
+            logger.error(f"{ticker} Sell decision delete failed (main flow continues): {str(e)}")
             return False
 
     def _format_sell_reason_with_analysis(self, sell_reason: str, analysis_summary: Dict[str, Any]) -> str:
@@ -1072,5 +1072,5 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             return detailed_reason
             
         except Exception as e:
-            logger.error(f"Sell 이유 포맷팅 중 오류: {str(e)}")
+            logger.error(f"Error formatting sell reason: {str(e)}")
             return sell_reason
