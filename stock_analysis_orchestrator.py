@@ -175,17 +175,18 @@ class StockAnalysisOrchestrator:
 
         return pdf_paths
 
-    async def generate_telegram_messages(self, report_pdf_paths):
+    async def generate_telegram_messages(self, report_pdf_paths, language: str = "ko"):
         """
         Generate telegram messages
 
         Args:
             report_pdf_paths (list): List of report file (pdf) paths
+            language (str): Message language ("ko" or "en")
 
         Returns:
             list: List of generated telegram message file paths
         """
-        logger.info(f"Starting telegram message generation for {len(report_pdf_paths)} reports")
+        logger.info(f"Starting telegram message generation for {len(report_pdf_paths)} reports (language: {language})")
 
         # Import telegram summary generator module
         from telegram_summary_agent import TelegramSummaryGenerator
@@ -197,7 +198,7 @@ class StockAnalysisOrchestrator:
         for report_pdf_path in report_pdf_paths:
             try:
                 # Generate telegram message
-                await generator.process_report(str(report_pdf_path), str(TELEGRAM_MSGS_DIR))
+                await generator.process_report(str(report_pdf_path), str(TELEGRAM_MSGS_DIR), to_lang=language)
 
                 # Estimate generated message file path
                 report_file = Path(report_pdf_path)
@@ -475,7 +476,7 @@ class StockAnalysisOrchestrator:
                 logger.info("Telegram enabled - proceeding with message generation and transmission steps")
 
                 # 4. Generate telegram messages
-                message_paths = await self.generate_telegram_messages(pdf_paths)
+                message_paths = await self.generate_telegram_messages(pdf_paths, language)
 
                 # 5. Send telegram messages and PDFs
                 await self.send_telegram_messages(message_paths, pdf_paths)
