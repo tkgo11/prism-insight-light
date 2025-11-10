@@ -127,47 +127,47 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         return True
 
     async def _analyze_simple_market_condition(self):
-        """시장 상태 분석 (강세장/약세장)"""
+        """Analyze market condition (bull/bear market)"""
         try:
             from pykrx.stock import stock_api
             import datetime as dt
 
-            # 오늘 날짜
+            # Today's date
             today = dt.datetime.now().strftime("%Y%m%d")
 
-            # 1달 전 날짜
+            # One month ago
             one_month_ago = (dt.datetime.now() - dt.timedelta(days=30)).strftime("%Y%m%d")
 
-            # 코스피, 코스닥 지수 데이터 가져오기
+            # Get KOSPI and KOSDAQ index data
             kospi_df = stock_api.get_index_ohlcv_by_date(one_month_ago, today, "1001")
             kosdaq_df = stock_api.get_index_ohlcv_by_date(one_month_ago, today, "2001")
 
-            # 지수 추세 분석
+            # Analyze index trends
             kospi_trend = self._calculate_trend(kospi_df['종가'])
             kosdaq_trend = self._calculate_trend(kosdaq_df['종가'])
 
-            # 전체 시장 상태 결정
-            # 두 지수 모두 상승 추세면 강세장(1), 두 지수 모두 하락 추세면 약세장(-1), 그 외는 중립(0)
+            # Determine overall market condition
+            # Bull market (1) if both trending up, bear market (-1) if both down, neutral (0) otherwise
             if kospi_trend > 0 and kosdaq_trend > 0:
-                market_condition = 1  # 강세장
+                market_condition = 1  # Bull market
             elif kospi_trend < 0 and kosdaq_trend < 0:
-                market_condition = -1  # 약세장
+                market_condition = -1  # Bear market
             else:
-                market_condition = 0  # 중립
+                market_condition = 0  # Neutral
 
-            # 시장 변동성 계산 (코스피, 코스닥 변동성의 평균)
+            # Calculate market volatility (average of KOSPI and KOSDAQ volatility)
             kospi_volatility = self._calculate_volatility(kospi_df['종가'])
             kosdaq_volatility = self._calculate_volatility(kosdaq_df['종가'])
             avg_volatility = (kospi_volatility + kosdaq_volatility) / 2
 
-            # 시장 상태 저장
+            # Store market condition
             self.simple_market_condition = market_condition
 
-            # DB에 저장
+            # Save to DB
             current_date = dt.datetime.now().strftime("%Y-%m-%d")
             self.cursor.execute(
                 """
-                INSERT OR REPLACE INTO market_condition 
+                INSERT OR REPLACE INTO market_condition
                 (date, kospi_index, kosdaq_index, condition, volatility)
                 VALUES (?, ?, ?, ?, ?)
                 """,
@@ -181,16 +181,16 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             )
             self.conn.commit()
 
-            logger.info(f"시장 상태 분석 완료: {'강세장' if market_condition == 1 else '약세장' if market_condition == -1 else '중립'}, 변동성: {avg_volatility:.2f}%")
+            logger.info(f"Market condition analysis complete: {'Bull' if market_condition == 1 else 'Bear' if market_condition == -1 else 'Neutral'}, Volatility: {avg_volatility:.2f}%")
 
             return market_condition, avg_volatility
 
         except Exception as e:
-            logger.error(f"시장 상태 분석 중 오류: {str(e)}")
-            return 0, 0  # 오류 시 중립 상태로 가정
+            logger.error(f"Error analyzing market condition: {str(e)}")
+            return 0, 0  # Assume neutral on error
 
     async def _cleanup_old_watchlist(self):
-        """1달 이전 watchlist 데이터 삭제"""
+        """Delete watchlist data older than 1 month"""
         try:
             one_month_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
             deleted = self.cursor.execute(
@@ -198,25 +198,25 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 (one_month_ago,)
             ).rowcount
             self.conn.commit()
-            
+
             if deleted > 0:
-                logger.info(f"오래된 watchlist 데이터 {deleted}개 삭제")
-                
+                logger.info(f"Deleted {deleted} old watchlist entries")
+
         except Exception as e:
-            logger.error(f"watchlist 정리 중 오류: {str(e)}")
+            logger.error(f"Error cleaning watchlist: {str(e)}")
 
     def _calculate_trend(self, price_series):
-        """가격 시리즈의 추세 분석 (양수: 상승, 음수: 하락)"""
-        # 단순 선형 회귀로 추세 계산
+        """Analyze price series trend (positive: uptrend, negative: downtrend)"""
+        # Calculate trend using simple linear regression
         x = np.arange(len(price_series))
         slope, _, _, _, _ = stats.linregress(x, price_series)
         return slope
 
     def _calculate_volatility(self, price_series):
-        """가격 시리즈의 변동성 계산 (일간 수익률의 표준편차, 연율화)"""
+        """Calculate price series volatility (daily return std dev, annualized)"""
         daily_returns = price_series.pct_change().dropna()
         daily_volatility = daily_returns.std()
-        return daily_volatility * 100  # 퍼센트로 변환
+        return daily_volatility * 100  # Convert to percentage
 
     async def _get_stock_volatility(self, ticker):
         """개별 종목의 변동성 계산"""

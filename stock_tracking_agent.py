@@ -111,9 +111,9 @@ class StockTrackingAgent:
         return True
 
     async def _create_tables(self):
-        """필요한 데이터베이스 테이블 생성"""
+        """Create necessary database tables"""
         try:
-            # 보유종목 테이블 생성
+            # Create stock holdings table
             self.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS stock_holdings (
                     ticker TEXT PRIMARY KEY,
@@ -128,7 +128,7 @@ class StockTrackingAgent:
                 )
             """)
 
-            # 매매 이력 테이블 생성
+            # Create trading history table
             self.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS trading_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -144,31 +144,31 @@ class StockTrackingAgent:
                 )
             """)
 
-            # 변경사항 저장
+            # Save changes
             self.conn.commit()
 
-            logger.info("데이터베이스 테이블 생성 완료")
+            logger.info("Database table creation complete")
 
         except Exception as e:
-            logger.error(f"테이블 생성 중 오류: {str(e)}")
+            logger.error(f"Error creating tables: {str(e)}")
             logger.error(traceback.format_exc())
             raise
 
     async def _extract_ticker_info(self, report_path: str) -> Tuple[str, str]:
         """
-        보고서 파일 경로에서 종목 코드와 이름 추출
+        Extract ticker code and company name from report file path
 
         Args:
-            report_path: 보고서 파일 경로
+            report_path: Report file path
 
         Returns:
-            Tuple[str, str]: 종목 코드, 종목 이름
+            Tuple[str, str]: Ticker code, company name
         """
         try:
-            # 파일명에서 정규표현식으로 ticker와 company_name 추출
+            # Extract ticker and company_name from filename using regex
             file_name = Path(report_path).stem
 
-            # 정규표현식을 사용한 파싱
+            # Parsing using regular expression
             pattern = r'^([A-Za-z0-9]+)_([^_]+)'
             match = re.match(pattern, file_name)
 
@@ -177,50 +177,50 @@ class StockTrackingAgent:
                 company_name = match.group(2)
                 return ticker, company_name
             else:
-                # 기존 방식도 유지
+                # Keep legacy method as fallback
                 parts = file_name.split('_')
                 if len(parts) >= 2:
                     return parts[0], parts[1]
 
-            logger.error(f"파일명에서 종목 정보를 추출할 수 없습니다: {file_name}")
+            logger.error(f"Cannot extract ticker info from filename: {file_name}")
             return "", ""
         except Exception as e:
-            logger.error(f"종목 정보 추출 중 오류: {str(e)}")
+            logger.error(f"Error extracting ticker info: {str(e)}")
             return "", ""
 
     async def _get_current_stock_price(self, ticker: str) -> float:
         """
-        현재 주가 조회
+        Get current stock price
 
         Args:
-            ticker: 종목 코드
+            ticker: Stock code
 
         Returns:
-            float: 현재 주가
+            float: Current stock price
         """
         try:
             from pykrx.stock import stock_api
             import datetime
 
-            # 오늘 날짜
+            # Today's date
             today = datetime.datetime.now().strftime("%Y%m%d")
 
-            # 가장 최근 영업일 구하기
+            # Get the most recent business day
             trade_date = stock_api.get_nearest_business_day_in_a_week(today, prev=True)
-            logger.info(f"타겟 날짜: {trade_date}")
+            logger.info(f"Target date: {trade_date}")
 
-            # 해당 거래일의 OHLCV 데이터 가져오기
+            # Get OHLCV data for the trading day
             df = stock_api.get_market_ohlcv_by_ticker(trade_date)
 
-            # 특정 종목 데이터 추출
+            # Extract specific stock data
             if ticker in df.index:
-                # 종가(Close) 추출
+                # Extract closing price
                 current_price = df.loc[ticker, "종가"]
-                logger.info(f"{ticker} 종목 현재가: {current_price:,.0f}원")
+                logger.info(f"{ticker} current price: {current_price:,.0f} KRW")
                 return float(current_price)
             else:
-                logger.warning(f"{ticker} 종목을 찾을 수 없습니다.")
-                # DB에서 마지막 저장된 가격 확인
+                logger.warning(f"Cannot find ticker {ticker}")
+                # Check last saved price from DB
                 try:
                     self.cursor.execute(
                         "SELECT current_price FROM stock_holdings WHERE ticker = ?",
@@ -229,16 +229,16 @@ class StockTrackingAgent:
                     row = self.cursor.fetchone()
                     if row and row[0]:
                         last_price = float(row[0])
-                        logger.warning(f"{ticker} 현재가 조회 실패, 마지막 가격 사용: {last_price}")
+                        logger.warning(f"{ticker} price query failed, using last price: {last_price}")
                         return last_price
                 except:
                     pass
                 return 0.0
 
         except Exception as e:
-            logger.error(f"{ticker} 현재 주가 조회 중 오류: {str(e)}")
+            logger.error(f"Error querying current price for {ticker}: {str(e)}")
             logger.error(traceback.format_exc())
-            # 오류 발생 시 DB에서 마지막 저장된 가격 확인
+            # Check last saved price from DB on error
             try:
                 self.cursor.execute(
                     "SELECT current_price FROM stock_holdings WHERE ticker = ?",
@@ -247,7 +247,7 @@ class StockTrackingAgent:
                 row = self.cursor.fetchone()
                 if row and row[0]:
                     last_price = float(row[0])
-                    logger.warning(f"{ticker} 현재가 조회 실패, 마지막 가격 사용: {last_price}")
+                    logger.warning(f"{ticker} price query failed, using last price: {last_price}")
                     return last_price
             except:
                 pass
@@ -255,23 +255,23 @@ class StockTrackingAgent:
 
     async def _get_trading_value_rank_change(self, ticker: str) -> Tuple[float, str]:
         """
-        종목의 거래대금 랭킹 변화를 계산
+        Calculate trading value ranking change for a stock
 
         Args:
-            ticker: 종목 코드
+            ticker: Stock code
 
         Returns:
-            Tuple[float, str]: 랭킹 변화율, 분석 결과 메시지
+            Tuple[float, str]: Ranking change percentage, analysis result message
         """
         try:
             from pykrx.stock import stock_api
             import datetime
             import pandas as pd
 
-            # 오늘 날짜
+            # Today's date
             today = datetime.datetime.now().strftime("%Y%m%d")
 
-            # 최근 2개 영업일 구하기
+            # Get recent 2 business days
             recent_date = stock_api.get_nearest_business_day_in_a_week(today, prev=True)
             previous_date_obj = datetime.datetime.strptime(recent_date, "%Y%m%d") - timedelta(days=1)
             previous_date = stock_api.get_nearest_business_day_in_a_week(
@@ -279,17 +279,17 @@ class StockTrackingAgent:
                 prev=True
             )
 
-            logger.info(f"최근 영업일: {recent_date}, 이전 영업일: {previous_date}")
+            logger.info(f"Recent trading day: {recent_date}, Previous trading day: {previous_date}")
 
-            # 해당 거래일의 OHLCV 데이터 가져오기 (거래대금 포함)
+            # Get OHLCV data for the trading days (including trading value)
             recent_df = stock_api.get_market_ohlcv_by_ticker(recent_date)
             previous_df = stock_api.get_market_ohlcv_by_ticker(previous_date)
 
-            # 거래대금으로 정렬하여 랭킹 생성
+            # Sort by trading value to generate rankings
             recent_rank = recent_df.sort_values(by="거래대금", ascending=False).reset_index()
             previous_rank = previous_df.sort_values(by="거래대금", ascending=False).reset_index()
 
-            # 티커에 대한 랭킹 찾기
+            # Find ranking for ticker
             if ticker in recent_rank['티커'].values:
                 recent_ticker_rank = recent_rank[recent_rank['티커'] == ticker].index[0] + 1
             else:
@@ -300,43 +300,43 @@ class StockTrackingAgent:
             else:
                 previous_ticker_rank = 0
 
-            # 랭킹이 없을 경우 리턴
+            # Return if no ranking info
             if recent_ticker_rank == 0 or previous_ticker_rank == 0:
-                return 0, f"거래대금 랭킹 정보 없음"
+                return 0, f"No trading value ranking info"
 
-            # 랭킹 변화 계산
-            rank_change = previous_ticker_rank - recent_ticker_rank  # 양수면 순위 상승, 음수면 순위 하락
+            # Calculate ranking change
+            rank_change = previous_ticker_rank - recent_ticker_rank  # Positive = rank up, negative = rank down
             rank_change_percentage = (rank_change / previous_ticker_rank) * 100
 
-            # 랭킹 정보 및 거래대금 데이터
+            # Ranking info and trading value data
             recent_value = int(recent_df.loc[ticker, "거래대금"]) if ticker in recent_df.index else 0
             previous_value = int(previous_df.loc[ticker, "거래대금"]) if ticker in previous_df.index else 0
             value_change_percentage = ((recent_value - previous_value) / previous_value * 100) if previous_value > 0 else 0
 
             result_msg = (
-                f"거래대금 랭킹: {recent_ticker_rank}위 (이전: {previous_ticker_rank}위, "
-                f"변화: {'▲' if rank_change > 0 else '▼' if rank_change < 0 else '='}{abs(rank_change)}), "
-                f"거래대금: {recent_value:,}원 (이전: {previous_value:,}원, "
-                f"변화: {'▲' if value_change_percentage > 0 else '▼' if value_change_percentage < 0 else '='}{abs(value_change_percentage):.1f}%)"
+                f"Trading value rank: #{recent_ticker_rank} (prev: #{previous_ticker_rank}, "
+                f"change: {'▲' if rank_change > 0 else '▼' if rank_change < 0 else '='}{abs(rank_change)}), "
+                f"Trading value: {recent_value:,} KRW (prev: {previous_value:,} KRW, "
+                f"change: {'▲' if value_change_percentage > 0 else '▼' if value_change_percentage < 0 else '='}{abs(value_change_percentage):.1f}%)"
             )
 
             logger.info(f"{ticker} {result_msg}")
             return rank_change_percentage, result_msg
 
         except Exception as e:
-            logger.error(f"{ticker} 거래대금 랭킹 분석 중 오류: {str(e)}")
+            logger.error(f"Error analyzing trading value ranking for {ticker}: {str(e)}")
             logger.error(traceback.format_exc())
-            return 0, "거래대금 랭킹 분석 실패"
+            return 0, "Trading value ranking analysis failed"
 
     async def _is_ticker_in_holdings(self, ticker: str) -> bool:
         """
-        종목이 이미 보유 중인지 확인
+        Check if stock is already in holdings
 
         Args:
-            ticker: 종목 코드
+            ticker: Stock code
 
         Returns:
-            bool: 보유 중이면 True, 아니면 False
+            bool: True if holding, False otherwise
         """
         try:
             self.cursor.execute(
@@ -346,35 +346,35 @@ class StockTrackingAgent:
             count = self.cursor.fetchone()[0]
             return count > 0
         except Exception as e:
-            logger.error(f"보유 종목 확인 중 오류: {str(e)}")
+            logger.error(f"Error checking holdings: {str(e)}")
             return False
 
     async def _get_current_slots_count(self) -> int:
-        """현재 보유 중인 종목 수 조회"""
+        """Get current number of holdings"""
         try:
             self.cursor.execute("SELECT COUNT(*) FROM stock_holdings")
             count = self.cursor.fetchone()[0]
             return count
         except Exception as e:
-            logger.error(f"보유 종목 수 조회 중 오류: {str(e)}")
+            logger.error(f"Error querying holdings count: {str(e)}")
             return 0
 
     async def _check_sector_diversity(self, sector: str) -> bool:
         """
-        동일 산업군 과다 투자 여부 확인
+        Check for over-concentration in same sector
 
         Args:
-            sector: 산업군 이름
+            sector: Sector name
 
         Returns:
-            bool: 투자 가능 여부 (True: 가능, False: 과다)
+            bool: Investment availability (True: available, False: over-concentrated)
         """
         try:
-            # 산업군 정보가 없거나 유효하지 않으면 제한하지 않음
+            # Don't limit if sector info is missing or invalid
             if not sector or sector == "알 수 없음":
                 return True
 
-            # 현재 보유 종목의 시나리오에서 산업군 정보 추출
+            # Extract sector info from scenarios of current holdings
             self.cursor.execute("SELECT scenario FROM stock_holdings")
             holdings_scenarios = self.cursor.fetchall()
 
@@ -388,48 +388,48 @@ class StockTrackingAgent:
                     except:
                         pass
 
-            # 동일 산업군 종목 수 계산
+            # Count stocks in same sector
             same_sector_count = sum(1 for s in sectors if s and s.lower() == sector.lower())
 
-            # 동일 산업군이 MAX_SAME_SECTOR 이상이거나 전체의 SECTOR_CONCENTRATION_RATIO 이상이면 제한
+            # Limit if same sector count >= MAX_SAME_SECTOR or >= SECTOR_CONCENTRATION_RATIO of total
             if same_sector_count >= self.MAX_SAME_SECTOR or \
                (sectors and same_sector_count / len(sectors) >= self.SECTOR_CONCENTRATION_RATIO):
                 logger.warning(
-                    f"산업군 '{sector}' 과다 투자 위험: "
-                    f"현재 {same_sector_count}개 보유 중 "
-                    f"(최대 {self.MAX_SAME_SECTOR}개, 집중도 {self.SECTOR_CONCENTRATION_RATIO*100:.0f}% 제한)"
+                    f"Sector '{sector}' over-investment risk: "
+                    f"Currently holding {same_sector_count} stocks "
+                    f"(max {self.MAX_SAME_SECTOR}, concentration limit {self.SECTOR_CONCENTRATION_RATIO*100:.0f}%)"
                 )
                 return False
 
             return True
 
         except Exception as e:
-            logger.error(f"산업군 다양성 확인 중 오류: {str(e)}")
-            return True  # 오류 발생 시 기본적으로 제한하지 않음
+            logger.error(f"Error checking sector diversity: {str(e)}")
+            return True  # Don't limit by default on error
 
     async def _extract_trading_scenario(self, report_content: str, rank_change_msg: str = "") -> Dict[str, Any]:
         """
-        보고서에서 매매 시나리오 추출
+        Extract trading scenario from report
 
         Args:
-            report_content: 분석 보고서 내용
-            rank_change_msg: 거래대금 랭킹 변화 정보
+            report_content: Analysis report content
+            rank_change_msg: Trading value ranking change info
 
         Returns:
-            Dict: 매매 시나리오 정보
+            Dict: Trading scenario information
         """
         try:
-            # 현재 보유 종목 정보 및 산업군 분포를 가져옴
+            # Get current holdings info and sector distribution
             current_slots = await self._get_current_slots_count()
 
-            # 현재 포트폴리오 정보 수집
+            # Collect current portfolio information
             self.cursor.execute("""
-                SELECT ticker, company_name, buy_price, current_price, scenario 
+                SELECT ticker, company_name, buy_price, current_price, scenario
                 FROM stock_holdings
             """)
             holdings = [dict(row) for row in self.cursor.fetchall()]
 
-            # 산업군 분포 분석
+            # Analyze sector distribution
             sector_distribution = {}
             investment_periods = {"단기": 0, "중기": 0, "장기": 0}
 
@@ -439,21 +439,21 @@ class StockTrackingAgent:
                     if isinstance(scenario_str, str):
                         scenario_data = json.loads(scenario_str)
 
-                        # 산업군 정보 수집
+                        # Collect sector info
                         sector = scenario_data.get('sector', '알 수 없음')
                         sector_distribution[sector] = sector_distribution.get(sector, 0) + 1
 
-                        # 투자 기간 정보 수집
+                        # Collect investment period info
                         period = scenario_data.get('investment_period', '중기')
                         investment_periods[period] = investment_periods.get(period, 0) + 1
                 except:
                     pass
 
-            # 포트폴리오 정보 문자열
+            # Portfolio info string
             portfolio_info = f"""
-            현재 보유 종목 수: {current_slots}/{self.max_slots}
-            산업군 분포: {json.dumps(sector_distribution, ensure_ascii=False)}
-            투자 기간 분포: {json.dumps(investment_periods, ensure_ascii=False)}
+            Current holdings: {current_slots}/{self.max_slots}
+            Sector distribution: {json.dumps(sector_distribution, ensure_ascii=False)}
+            Investment period distribution: {json.dumps(investment_periods, ensure_ascii=False)}
             """
 
             # LLM 호출하여 매매 시나리오 생성
@@ -575,28 +575,28 @@ class StockTrackingAgent:
             return self._default_scenario()
 
     def _default_scenario(self) -> Dict[str, Any]:
-        """기본 매매 시나리오 반환"""
+        """Return default trading scenario"""
         return {
-            "portfolio_analysis": "분석 실패",
+            "portfolio_analysis": "Analysis failed",
             "buy_score": 0,
             "decision": "관망",
             "target_price": 0,
             "stop_loss": 0,
             "investment_period": "단기",
-            "rationale": "분석 실패",
+            "rationale": "Analysis failed",
             "sector": "알 수 없음",
-            "considerations": "분석 실패"
+            "considerations": "Analysis failed"
         }
 
     async def analyze_report(self, pdf_report_path: str) -> Dict[str, Any]:
         """
-        주식 분석 보고서를 분석하여 매매 의사결정
+        Analyze stock analysis report and make trading decision
 
         Args:
-            pdf_report_path: pdf 분석 보고서 파일 경로
+            pdf_report_path: PDF analysis report file path
 
         Returns:
-            Dict: 매매 의사결정 결과
+            Dict: Trading decision result
         """
         try:
             logger.info(f"보고서 분석 시작: {pdf_report_path}")
