@@ -761,7 +761,7 @@ class StockTrackingAgent:
 
             # Add purchase message
             message = f"📈 신규 매수: {company_name}({ticker})\n" \
-                      f"매수가: {current_price:,.0f}원\n" \
+                      f"매수가: {current_price:,.0f} KRW\n" \
                       f"목표가: {scenario.get('target_price', 0):,.0f}원\n" \
                       f"손절가: {scenario.get('stop_loss', 0):,.0f}원\n" \
                       f"투자기간: {scenario.get('investment_period', '단기')}\n" \
@@ -804,7 +804,7 @@ class StockTrackingAgent:
                             message += f"    • 1차: {primary_resistance:,.0f}원\n"
                     
                     # 현재가 표시
-                    message += f"  ━━ 현재가: {current_price:,.0f}원 ━━\n"
+                    message += f"  ━━ 현재가: {current_price:,.0f} KRW ━━\n"
                     
                     # 지지선
                     primary_support = self._parse_price_value(key_levels.get('primary_support', 0))
@@ -1009,7 +1009,7 @@ class StockTrackingAgent:
             arrow = "🔺" if profit_rate > 0 else "🔻" if profit_rate < 0 else "➖"
             message = f"📉 매도: {company_name}({ticker})\n" \
                       f"매수가: {buy_price:,.0f}원\n" \
-                      f"매도가: {current_price:,.0f}원\n" \
+                      f"매도가: {current_price:,.0f} KRW\n" \
                       f"수익률: {arrow} {abs(profit_rate):.2f}%\n" \
                       f"보유기간: {holding_days}일\n" \
                       f"매도이유: {sell_reason}"
@@ -1118,7 +1118,7 @@ class StockTrackingAgent:
                         (current_price, now, ticker)
                     )
                     self.conn.commit()
-                    logger.info(f"{ticker}({company_name}) current price updated: {current_price:,.0f}원 ({sell_reason})")
+                    logger.info(f"{ticker}({company_name}) current price updated: {current_price:,.0f} KRW ({sell_reason})")
 
             return sold_stocks
 
@@ -1212,7 +1212,7 @@ class StockTrackingAgent:
                     days_passed = (datetime.now() - buy_datetime).days
 
                     message += f"- {company_name}({ticker}) [{sector}]\n"
-                    message += f"  매수가: {buy_price:,.0f}원 / 현재가: {current_price:,.0f}원\n"
+                    message += f"  매수가: {buy_price:,.0f}원 / 현재가: {current_price:,.0f} KRW\n"
                     message += f"  목표가: {target_price:,.0f}원 / 손절가: {stop_loss:,.0f}원\n"
                     message += f"  수익률: {arrow} {profit_rate:.2f}% / 보유기간: {days_passed}일\n\n"
 
@@ -1330,7 +1330,7 @@ class StockTrackingAgent:
 
                     if buy_success:
                         buy_count += 1
-                        logger.info(f"Purchase complete: {company_name}({ticker}) @ {current_price:,.0f}원")
+                        logger.info(f"Purchase complete: {company_name}({ticker}) @ {current_price:,.0f} KRW")
                     else:
                         logger.warning(f"Purchase failed: {company_name}({ticker})")
                 else:
@@ -1342,7 +1342,7 @@ class StockTrackingAgent:
 
                     logger.info(f"Purchase deferred: {company_name}({ticker}) - {reason}")
 
-            logger.info(f"Report processing complete - Purchased: {buy_count}items, Sold: {sell_count}건")
+            logger.info(f"Report processing complete - Purchased: {buy_count}items, Sold: {sell_count} items")
             return buy_count, sell_count
 
         except Exception as e:
