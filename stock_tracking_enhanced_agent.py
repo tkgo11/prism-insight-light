@@ -221,100 +221,100 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
     async def _get_stock_volatility(self, ticker):
         """개별 종목의 변동성 계산"""
         try:
-            # 캐시된 변동성이 있으면 사용
+            # Use cached volatility if available
             if ticker in self.volatility_table:
                 return self.volatility_table[ticker]
 
-            # 60일간의 가격 데이터 가져오기
+            # Fetch 60 days of price data
             today = datetime.now()
             start_date = (today - timedelta(days=60)).strftime("%Y%m%d")
             end_date = today.strftime("%Y%m%d")
 
-            # pykrx 사용하여 주가 데이터 가져오기
+            # Fetch stock price data using pykrx
             from pykrx.stock import stock_api
             df = stock_api.get_market_ohlcv_by_date(start_date, end_date, ticker)
 
             if df.empty:
-                logger.warning(f"{ticker} 가격 데이터를 가져올 수 없습니다.")
-                return 15.0  # 기본 변동성 (15%)
+                logger.warning(f"{ticker} Cannot fetch price data")
+                return 15.0  # Default volatility (15%)
 
-            # 일간 수익률의 표준편차 계산
+            # Calculate standard deviation of daily returns
             daily_returns = df['종가'].pct_change().dropna()
-            volatility = daily_returns.std() * 100  # 퍼센트로 변환
+            volatility = daily_returns.std() * 100  # Convert to percentage
 
-            # 변동성 테이블에 저장
+            # Store in volatility table
             self.volatility_table[ticker] = volatility
 
             return volatility
 
         except Exception as e:
-            logger.error(f"{ticker} 변동성 계산 중 오류: {str(e)}")
-            return 15.0  # 오류 시 기본 변동성 반환
+            logger.error(f"{ticker} Error calculating volatility: {str(e)}")
+            return 15.0  # Return default volatility on error
 
     async def _dynamic_stop_loss(self, ticker, buy_price):
         """종목별 변동성에 기반한 동적 손절 가격 계산"""
         try:
-            # 종목의 변동성 가져오기
+            # Get stock volatility
             volatility = await self._get_stock_volatility(ticker)
 
-            # 변동성에 따른 손절폭 계산 (변동성이 클수록 더 넓게 설정)
-            # 기본 손절폭 5%에 변동성 조정치 적용
+            # Calculate stop-loss width based on volatility (wider for higher volatility)
+            # Apply volatility adjustment to base 5% stop-loss
             base_stop_loss_pct = 5.0
 
-            # 시장 평균 변동성 (15% 가정) 대비 상대적 변동성 비율
+            # Relative volatility ratio vs market average (15% assumed)
             relative_volatility = volatility / 15.0
 
-            # 조정된 손절폭 계산 (최소 3%, 최대 15%)
+            # Calculate adjusted stop-loss (min 3%, max 15%)
             adjusted_stop_loss_pct = min(max(base_stop_loss_pct * relative_volatility, 3.0), 15.0)
 
-            # 시장 상태에 따른 추가 조정
-            if self.simple_market_condition == -1:  # 약세장
-                adjusted_stop_loss_pct = adjusted_stop_loss_pct * 0.8  # 더 타이트하게
-            elif self.simple_market_condition == 1:  # 강세장
-                adjusted_stop_loss_pct = adjusted_stop_loss_pct * 1.2  # 더 넓게
+            # Additional adjustment based on market condition
+            if self.simple_market_condition == -1:  # Bear market
+                adjusted_stop_loss_pct = adjusted_stop_loss_pct * 0.8  # Tighter
+            elif self.simple_market_condition == 1:  # Bull market
+                adjusted_stop_loss_pct = adjusted_stop_loss_pct * 1.2  # Wider
 
-            # 손절가 계산
+            # Calculate stop-loss price
             stop_loss = buy_price * (1 - adjusted_stop_loss_pct/100)
 
-            logger.info(f"{ticker} 동적 손절가 계산: {stop_loss:,.0f}원 (변동성: {volatility:.2f}%, 손절폭: {adjusted_stop_loss_pct:.2f}%)")
+            logger.info(f"{ticker} Dynamic stop-loss calculated: {stop_loss:,.0f}원 (변동성: {volatility:.2f}%, 손절폭: {adjusted_stop_loss_pct:.2f}%)")
 
             return stop_loss
 
         except Exception as e:
-            logger.error(f"{ticker} 동적 손절가 계산 중 오류: {str(e)}")
-            return buy_price * 0.95  # 오류 시 기본 5% 손절폭 적용
+            logger.error(f"{ticker} Error calculating dynamic stop-loss: {str(e)}")
+            return buy_price * 0.95  # Apply default 5% stop-loss on error
 
     async def _dynamic_target_price(self, ticker, buy_price):
         """종목별 변동성에 기반한 동적 목표가 계산"""
         try:
-            # 종목의 변동성 가져오기
+            # Get stock volatility
             volatility = await self._get_stock_volatility(ticker)
 
             # 변동성에 따른 목표가 계산 (변동성이 클수록 더 높게 설정)
             # 기본 목표 수익률 10%에 변동성 조정치 적용
             base_target_pct = 10.0
 
-            # 시장 평균 변동성 (15% 가정) 대비 상대적 변동성 비율
+            # Relative volatility ratio vs market average (15% assumed)
             relative_volatility = volatility / 15.0
 
             # 조정된 목표 수익률 계산 (최소 5%, 최대 30%)
             adjusted_target_pct = min(max(base_target_pct * relative_volatility, 5.0), 30.0)
 
-            # 시장 상태에 따른 추가 조정
-            if self.simple_market_condition == 1:  # 강세장
+            # Additional adjustment based on market condition
+            if self.simple_market_condition == 1:  # Bull market
                 adjusted_target_pct = adjusted_target_pct * 1.3  # 더 높게
-            elif self.simple_market_condition == -1:  # 약세장
+            elif self.simple_market_condition == -1:  # Bear market
                 adjusted_target_pct = adjusted_target_pct * 0.7  # 더 낮게
 
             # 목표가 계산
             target_price = buy_price * (1 + adjusted_target_pct/100)
 
-            logger.info(f"{ticker} 동적 목표가 계산: {target_price:,.0f}원 (변동성: {volatility:.2f}%, 목표 수익률: {adjusted_target_pct:.2f}%)")
+            logger.info(f"{ticker} Dynamic target price calculated: {target_price:,.0f}원 (변동성: {volatility:.2f}%, 목표 수익률: {adjusted_target_pct:.2f}%)")
 
             return target_price
 
         except Exception as e:
-            logger.error(f"{ticker} 동적 목표가 계산 중 오류: {str(e)}")
+            logger.error(f"{ticker} Error calculating dynamic target: {str(e)}")
             return buy_price * 1.1  # 오류 시 기본 10% 목표 수익률 적용
 
     async def process_reports(self, pdf_report_paths: List[str]) -> Tuple[int, int]:
@@ -325,25 +325,25 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             pdf_report_paths: pdf 분석 보고서 파일 경로 리스트
 
         Returns:
-            Tuple[int, int]: 매수 건수, 매도 건수
+            Tuple[int, int]: 매수 건수, Sell 건수
         """
         try:
-            logger.info(f"총 {len(pdf_report_paths)}개 보고서 처리 시작")
+            logger.info(f"Starting processing of {len(pdf_report_paths)} reports")
 
-            # 매수, 매도 카운터
+            # 매수, Sell 카운터
             buy_count = 0
             sell_count = 0
 
-            # 1. 기존 보유 종목 업데이트 및 매도 의사결정
+            # 1. 기존 Hold 종목 업데이트 및 Sell 의사결정
             sold_stocks = await self.update_holdings()
             sell_count = len(sold_stocks)
 
             if sold_stocks:
-                logger.info(f"{len(sold_stocks)}개 종목 매도 완료")
+                logger.info(f"{len(sold_stocks)} stocks sold")
                 for stock in sold_stocks:
-                    logger.info(f"매도: {stock['company_name']}({stock['ticker']}) - 수익률: {stock['profit_rate']:.2f}% / 이유: {stock['reason']}")
+                    logger.info(f"Sold: {stock['company_name']}({stock['ticker']}) - Return: {stock['profit_rate']:.2f}% / Reason: {stock['reason']}")
             else:
-                logger.info("매도된 종목이 없습니다.")
+                logger.info("No stocks sold")
 
             # 2. 새로운 보고서 분석 및 매수 의사결정
             for pdf_report_path in pdf_report_paths:
@@ -351,12 +351,12 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 analysis_result = await self.analyze_report(pdf_report_path)
 
                 if not analysis_result.get("success", False):
-                    logger.error(f"보고서 분석 실패: {pdf_report_path} - {analysis_result.get('error', '알 수 없는 오류')}")
+                    logger.error(f"Report analysis failed: {pdf_report_path} - {analysis_result.get('error', 'Unknown error')}")
                     continue
 
-                # 이미 보유 중인 종목이면 스킵
-                if analysis_result.get("decision") == "보유 중":
-                    logger.info(f"보유 중 종목 스킵: {analysis_result.get('ticker')} - {analysis_result.get('company_name')}")
+                # 이미 Hold 중인 종목이면 스킵
+                if analysis_result.get("decision") == "Hold 중":
+                    logger.info(f"Skipping stock already in holdings: {analysis_result.get('ticker')} - {analysis_result.get('company_name')}")
                     continue
 
                 # 종목 정보 및 시나리오
@@ -373,7 +373,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 buy_score = scenario.get("buy_score", 0)
                 min_score = scenario.get("min_score", 0)
                 decision = analysis_result.get("decision")
-                logger.info(f"매수 점수 체크: {company_name}({ticker}) - 점수: {buy_score}, 최소 요구 점수: {min_score}")
+                logger.info(f"Buy score check: {company_name}({ticker}) - Score: {buy_score}, 최소 요구 Score: {min_score}")
 
                 # 매수하지 않는 경우 (관망/점수 부족/산업군 제약) 메시지 생성
                 if decision != "진입" or buy_score < min_score or not sector_diverse:
@@ -384,7 +384,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     elif buy_score < min_score:
                         if decision == "진입":
                             decision = "관망"  # "진입"에서 "관망"으로 변경
-                            logger.info(f"매수 점수 부족으로 결정 변경: {company_name}({ticker}) - 진입 → 관망 (점수: {buy_score} < {min_score})")
+                            logger.info(f"Decision changed due to insufficient buy score: {company_name}({ticker}) - 진입 → 관망 (Score: {buy_score} < {min_score})")
                         reason = f"매수 점수 부족 ({buy_score} < {min_score})"
                     elif decision != "진입":
                         reason = f"분석 결정이 '관망'"
@@ -395,15 +395,15 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     # 관망 메시지 생성
                     skip_message = f"⚠️ 매수 보류: {company_name}({ticker})\n" \
                                    f"현재가: {current_price:,.0f}원\n" \
-                                   f"매수 점수: {buy_score}/10\n" \
+                                   f"매수 Score: {buy_score}/10\n" \
                                    f"결정: {decision}\n" \
                                    f"시장 상태: {market_condition_text}\n" \
                                    f"산업군: {scenario.get('sector', '알 수 없음')}\n" \
-                                   f"보류 이유: {reason}\n" \
+                                   f"보류 Reason: {reason}\n" \
                                    f"분석 의견: {scenario.get('rationale', '정보 없음')}"
 
                     self.message_queue.append(skip_message)
-                    logger.info(f"매수 보류: {company_name}({ticker}) - {reason}")
+                    logger.info(f"Purchase deferred: {company_name}({ticker}) - {reason}")
                     
                     # 관망 종목을 watchlist_history 테이블에 저장
                     await self._save_watchlist_item(
@@ -433,21 +433,21 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                             trade_result = await trading.async_buy_stock(stock_code=ticker)
 
                         if trade_result['success']:
-                            logger.info(f"실제 매수 성공: {trade_result['message']}")
+                            logger.info(f"Actual purchase successful: {trade_result['message']}")
                         else:
-                            logger.error(f"실제 매수 실패: {trade_result['message']}")
+                            logger.error(f"Actual purchase failed: {trade_result['message']}")
 
                     if buy_success:
                         buy_count += 1
-                        logger.info(f"매수 완료: {company_name}({ticker}) @ {current_price:,.0f}원")
+                        logger.info(f"Purchase complete: {company_name}({ticker}) @ {current_price:,.0f}원")
                     else:
-                        logger.warning(f"매수 실패: {company_name}({ticker})")
+                        logger.warning(f"Purchase failed: {company_name}({ticker})")
 
-            logger.info(f"보고서 처리 완료 - 매수: {buy_count}건, 매도: {sell_count}건")
+            logger.info(f"Report processing complete - Purchased: {buy_count}items, Sold: {sell_count}건")
             return buy_count, sell_count
 
         except Exception as e:
-            logger.error(f"보고서 처리 중 오류: {str(e)}")
+            logger.error(f"Error processing reports: {str(e)}")
             logger.error(traceback.format_exc())
             return 0, 0
 
@@ -460,18 +460,18 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             if scenario.get('target_price', 0) <= 0:
                 target_price = await self._dynamic_target_price(ticker, current_price)
                 scenario['target_price'] = target_price
-                logger.info(f"{ticker} 동적 목표가 계산: {target_price:,.0f}원")
+                logger.info(f"{ticker} Dynamic target price calculated: {target_price:,.0f}원")
 
             if scenario.get('stop_loss', 0) <= 0:
                 stop_loss = await self._dynamic_stop_loss(ticker, current_price)
                 scenario['stop_loss'] = stop_loss
-                logger.info(f"{ticker} 동적 손절가 계산: {stop_loss:,.0f}원")
+                logger.info(f"{ticker} Dynamic stop-loss calculated: {stop_loss:,.0f}원")
 
             # 부모 클래스의 buy_stock 메서드 호출
             return await super().buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
 
         except Exception as e:
-            logger.error(f"{ticker} 매수 처리 중 오류: {str(e)}")
+            logger.error(f"{ticker} Error during purchase processing: {str(e)}")
             logger.error(traceback.format_exc())
             return False
 
@@ -551,11 +551,11 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             )
             self.conn.commit()
             
-            logger.info(f"{ticker}({company_name}) 관망 종목 저장 완료 - 점수: {buy_score}/{min_score}, 이유: {skip_reason}")
+            logger.info(f"{ticker}({company_name}) Watchlist save complete - Score: {buy_score}/{min_score}, Reason: {skip_reason}")
             return True
             
         except Exception as e:
-            logger.error(f"{ticker} watchlist 저장 중 오류: {str(e)}")
+            logger.error(f"{ticker} Error saving watchlist: {str(e)}")
             logger.error(traceback.format_exc())
             return False
 
@@ -597,11 +597,11 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 return 0
 
         except Exception as e:
-            logger.error(f"{ticker} 추세 분석 중 오류: {str(e)}")
+            logger.error(f"{ticker} Error analyzing trend: {str(e)}")
             return 0  # 오류 발생 시 중립 추세로 가정
 
     async def _analyze_sell_decision(self, stock_data):
-        """AI 에이전트 기반 매도 의사결정 분석"""
+        """AI 에이전트 기반 Sell 의사결정 분석"""
         try:
             ticker = stock_data.get('ticker', '')
             company_name = stock_data.get('company_name', '')
@@ -656,17 +656,17 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
 
             # 포트폴리오 정보 문자열
             portfolio_info = f"""
-            현재 보유 종목 수: {len(holdings)}/{self.max_slots}
+            현재 Hold 종목 수: {len(holdings)}/{self.max_slots}
             산업군 분포: {json.dumps(sector_distribution, ensure_ascii=False)}
             투자 기간 분포: {json.dumps(investment_periods, ensure_ascii=False)}
             """
 
-            # LLM 호출하여 매도 의사결정 생성
+            # LLM 호출하여 Sell 의사결정 생성
             llm = await self.sell_decision_agent.attach_llm(OpenAIAugmentedLLM)
 
             response = await llm.generate_str(
                 message=f"""
-                다음 보유 종목에 대한 매도 의사결정을 수행해주세요.
+                다음 Hold 종목에 대한 Sell 의사결정을 수행해주세요.
                 
                 ### 종목 기본 정보:
                 - 종목명: {company_name}({ticker})
@@ -675,7 +675,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 - 목표가: {target_price:,.0f}원
                 - 손절가: {stop_loss:,.0f}원
                 - 수익률: {profit_rate:.2f}%
-                - 보유기간: {days_passed}일
+                - Hold기간: {days_passed}일
                 - 투자기간: {period}
                 - 섹터: {sector}
                 
@@ -687,7 +687,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 
                 ### 분석 요청:
                 위 정보를 바탕으로 kospi_kosdaq과 sqlite 도구를 활용하여 최신 데이터를 확인하고,
-                매도할지 계속 보유할지 결정해주세요.
+                Sell할지 계속 Hold할지 결정해주세요.
                 """,
                 request_params=RequestParams(
                     model="gpt-5",
@@ -703,7 +703,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     json_str = markdown_match.group(1)
                     json_str = re.sub(r',(\s*})', r'\1', json_str)
                     decision_json = json.loads(json_str)
-                    logger.info(f"매도 결정 파싱 성공: {json.dumps(decision_json, ensure_ascii=False)}")
+                    logger.info(f"Sell decision parse successful: {json.dumps(decision_json, ensure_ascii=False)}")
                 else:
                     # 일반 JSON 객체 추출 시도
                     json_match = re.search(r'({[\s\S]*?})(?:\s*$|\n\n)', response, re.DOTALL)
@@ -711,12 +711,12 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                         json_str = json_match.group(1)
                         json_str = re.sub(r',(\s*})', r'\1', json_str)
                         decision_json = json.loads(json_str)
-                        logger.info(f"매도 결정 파싱 성공: {json.dumps(decision_json, ensure_ascii=False)}")
+                        logger.info(f"Sell decision parse successful: {json.dumps(decision_json, ensure_ascii=False)}")
                     else:
                         # 전체 응답이 JSON인 경우
                         clean_response = re.sub(r',(\s*})', r'\1', response)
                         decision_json = json.loads(clean_response)
-                        logger.info(f"매도 결정 파싱 성공: {json.dumps(decision_json, ensure_ascii=False)}")
+                        logger.info(f"Sell decision parse successful: {json.dumps(decision_json, ensure_ascii=False)}")
 
                 # 결과 추출 - 기존 단일 형식 사용
                 should_sell = decision_json.get("should_sell", False)
@@ -725,21 +725,21 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 analysis_summary = decision_json.get("analysis_summary", {})
                 portfolio_adjustment = decision_json.get("portfolio_adjustment", {})
                 
-                logger.info(f"{ticker}({company_name}) AI 매도 결정: {'매도' if should_sell else '보유'} (확신도: {confidence}/10)")
-                logger.info(f"매도 사유: {sell_reason}")
+                logger.info(f"{ticker}({company_name}) AI sell decision: {'Sell' if should_sell else 'Hold'} (Confidence: {confidence}/10)")
+                logger.info(f"Sell 사유: {sell_reason}")
                 
                 # ===== 핵심: should_sell 분기에 따른 DB 처리 (에러가 나도 메인 플로우는 계속 진행) =====
                 try:
                     if should_sell:
-                        # 매도 결정 시: holding_decisions 테이블에서 삭제
+                        # Sell 결정 시: holding_decisions 테이블에서 삭제
                         await self._delete_holding_decision(ticker)
                         
-                        # 매도 시 analysis_summary를 sell_reason에 추가
+                        # Sell 시 analysis_summary를 sell_reason에 추가
                         if analysis_summary:
                             detailed_reason = self._format_sell_reason_with_analysis(sell_reason, analysis_summary)
                             return should_sell, detailed_reason
                     else:
-                        # 보유 결정 시: holding_decisions 테이블에 저장/업데이트
+                        # Hold 결정 시: holding_decisions 테이블에 저장/업데이트
                         await self._save_holding_decision(ticker, current_price, decision_json)
                         
                         # portfolio_adjustment 처리
@@ -747,28 +747,28 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                             await self._process_portfolio_adjustment(ticker, company_name, portfolio_adjustment, analysis_summary)
                 except Exception as db_err:
                     # DB 조작 실패해도 메인 플로우는 계속 진행
-                    logger.error(f"{ticker} holding_decisions DB 처리 중 오류 (메인 플로우 계속 진행): {str(db_err)}")
+                    logger.error(f"{ticker} Error processing holding_decisions DB (main flow continues): {str(db_err)}")
                     logger.error(traceback.format_exc())
                 
                 return should_sell, sell_reason
 
             except Exception as json_err:
-                logger.error(f"매도 결정 JSON 파싱 오류: {json_err}")
-                logger.error(f"원본 응답: {response}")
+                logger.error(f"Sell 결정 JSON 파싱 오류: {json_err}")
+                logger.error(f"Original response: {response}")
                 
                 # 파싱 실패 시 기존 알고리즘으로 폴백
-                logger.warning(f"{ticker} AI 분석 실패, 기존 알고리즘으로 폴백")
+                logger.warning(f"{ticker} AI analysis failed, falling back to legacy algorithm")
                 return await self._fallback_sell_decision(stock_data)
 
         except Exception as e:
-            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else '알 수 없는 종목'} AI 매도 분석 중 오류: {str(e)}")
+            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else 'Unknown stock'} AI Sell 분석 중 오류: {str(e)}")
             logger.error(traceback.format_exc())
             
             # 오류 시 기존 알고리즘으로 폴백
             return await self._fallback_sell_decision(stock_data)
 
     async def _fallback_sell_decision(self, stock_data):
-        """기존 알고리즘 기반 매도 의사결정 (폴백용)"""
+        """기존 알고리즘 기반 Sell 의사결정 (폴백용)"""
         try:
             ticker = stock_data.get('ticker', '')
             buy_price = stock_data.get('buy_price', 0)
@@ -798,7 +798,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             # 종목의 추세 분석(7일 선형회귀 분석)
             trend = await self._analyze_trend(ticker, days=7)
 
-            # 매도 의사결정 우선순위에 따라 조건 체크
+            # Sell 의사결정 우선순위에 따라 조건 체크
 
             # 1. 손절매 조건 확인 (가장 높은 우선순위)
             if stop_loss > 0 and current_price <= stop_loss:
@@ -809,12 +809,12 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
 
             # 2. 목표가 도달 확인
             if target_price > 0 and current_price >= target_price:
-                # 강한 상승 추세면 계속 보유 (예외 케이스)
+                # 강한 상승 추세면 계속 Hold (예외 케이스)
                 if trend >= 2:
-                    return False, "목표가 달성했으나 강한 상승 추세로 보유 유지"
+                    return False, "목표가 달성했으나 강한 상승 추세로 Hold 유지"
                 return True, f"목표가 달성 (목표가: {target_price:,.0f}원)"
 
-            # 3. 시장 상태와 추세에 따른 매도 조건 (시장 환경 고려)
+            # 3. 시장 상태와 추세에 따른 Sell 조건 (시장 환경 고려)
             if self.simple_market_condition == -1 and trend < 0 and profit_rate > 3:
                 return True, f"약세장 + 하락 추세에서 수익 확보 (수익률: {profit_rate:.2f}%)"
 
@@ -822,44 +822,44 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             if investment_period == "단기":
                 # 단기 투자 수익 목표 달성
                 if days_passed >= 15 and profit_rate >= 5 and trend < 2:
-                    return True, f"단기 투자 목표 달성 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
+                    return True, f"단기 투자 목표 달성 (Hold일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
                 # 단기 투자 손실 방어 (단, 강한 상승 추세면 유지)
                 if days_passed >= 10 and profit_rate <= -3 and trend < 2:
-                    return True, f"단기 투자 손실 방어 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
+                    return True, f"단기 투자 손실 방어 (Hold일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
             # 5. 일반적인 수익 목표 달성 (특별한 기간이 아닌 일반 투자)
             if profit_rate >= 10 and trend < 2:
                 return True, f"수익률 10% 이상 달성 (현재 수익률: {profit_rate:.2f}%)"
 
-            # 6. 장기 보유 후 상태 점검 (시간 경과에 따른 판단)
+            # 6. 장기 Hold 후 상태 점검 (시간 경과에 따른 판단)
             # 손절가보다 높지만 장기간 손실이 지속되는 경우
             if days_passed >= 30 and profit_rate < 0 and trend < 1:
-                return True, f"30일 이상 보유 중이며 손실 상태 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
+                return True, f"30일 이상 Hold 중이며 손실 상태 (Hold일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
             if days_passed >= 60 and profit_rate >= 3 and trend < 1:
-                return True, f"60일 이상 보유 중이며 3% 이상 수익 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
+                return True, f"60일 이상 Hold 중이며 3% 이상 수익 (Hold일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
             # 7. 투자 유형별 장기 점검 (투자 기간 특화)
             if investment_period == "장기" and days_passed >= 90 and profit_rate < 0 and trend < 1:
-                return True, f"장기 투자 손실 정리 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
+                return True, f"장기 투자 손실 정리 (Hold일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
             # 8. 손절가는 아니지만 급격한 손실 발생 (비상 대응)
-            # 일반 손실 매도 조건은 손절가 이하가 아닌 경우에만 적용
+            # 일반 손실 Sell 조건은 손절가 이하가 아닌 경우에만 적용
             # 손절가가 설정되지 않았거나(0) 손절가보다 현재가가 높으면서 큰 손실(-5% 이상)이 있는 경우
             if (stop_loss == 0 or current_price > stop_loss) and profit_rate <= -5 and trend < 1:
                 return True, f"심각한 손실 발생 (현재 수익률: {profit_rate:.2f}%)"
 
-            # 기본적으로 계속 보유
+            # 기본적으로 계속 Hold
             trend_text = {
                 2: "강한 상승 추세", 1: "약한 상승 추세", 0: "중립 추세",
                 -1: "약한 하락 추세", -2: "강한 하락 추세"
             }.get(trend, "알 수 없는 추세")
 
-            return False, f"계속 보유 (추세: {trend_text}, 수익률: {profit_rate:.2f}%)"
+            return False, f"계속 Hold (추세: {trend_text}, 수익률: {profit_rate:.2f}%)"
 
         except Exception as e:
-            logger.error(f"폴백 매도 분석 중 오류: {str(e)}")
+            logger.error(f"폴백 Sell 분석 중 오류: {str(e)}")
             return False, "분석 오류"
 
     async def _process_portfolio_adjustment(self, ticker: str, company_name: str, portfolio_adjustment: Dict[str, Any], analysis_summary: Dict[str, Any]):
@@ -872,7 +872,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             # 긴급도 확인 - low인 경우 실제 업데이트는 하지 않고 로그만
             urgency = portfolio_adjustment.get("urgency", "low").lower()
             if urgency == "low":
-                logger.info(f"{ticker} 포트폴리오 조정 제안 (urgency=low): {portfolio_adjustment.get('reason', '')}")
+                logger.info(f"{ticker} Portfolio adjustment suggestion (urgency=low): {portfolio_adjustment.get('reason', '')}")
                 return
                 
             db_updated = False
@@ -892,7 +892,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     self.conn.commit()
                     db_updated = True
                     update_message += f"목표가: {target_price_num:,.0f}원으로 조정\n"
-                    logger.info(f"{ticker} 목표가 AI 조정: {target_price_num:,.0f}원 (긴급도: {urgency})")
+                    logger.info(f"{ticker} Target price AI adjustment: {target_price_num:,.0f}원 (Urgency: {urgency})")
             
             # 손절가 조정
             new_stop_loss = portfolio_adjustment.get("new_stop_loss")
@@ -907,7 +907,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     self.conn.commit()
                     db_updated = True
                     update_message += f"손절가: {stop_loss_num:,.0f}원으로 조정\n"
-                    logger.info(f"{ticker} 손절가 AI 조정: {stop_loss_num:,.0f}원 (긴급도: {urgency})")
+                    logger.info(f"{ticker} Stop-loss AI adjustment: {stop_loss_num:,.0f}원 (Urgency: {urgency})")
             
             # DB가 업데이트되었으면 텔레그램 메시지 생성
             if db_updated:
@@ -915,7 +915,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 message = f"{urgency_emoji} 포트폴리오 조정: {company_name}({ticker})\n"
                 message += update_message
                 message += f"조정 근거: {adjustment_reason}\n"
-                message += f"긴급도: {urgency.upper()}\n"
+                message += f"Urgency: {urgency.upper()}\n"
                 
                 # 분석 요약 추가
                 if analysis_summary:
@@ -923,13 +923,13 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     message += f"시장 환경 영향: {analysis_summary.get('market_condition_impact', 'N/A')}"
                 
                 self.message_queue.append(message)
-                logger.info(f"{ticker} AI 기반 포트폴리오 조정 완료: {update_message.strip()}")
+                logger.info(f"{ticker} AI-based portfolio adjustment complete: {update_message.strip()}")
             else:
                 # 조정이 필요하다고 했지만 실제 값이 없는 경우
-                logger.warning(f"{ticker} 포트폴리오 조정 요청됐지만 구체적 값 없음: {portfolio_adjustment}")
+                logger.warning(f"{ticker} Portfolio adjustment requested but no specific values: {portfolio_adjustment}")
             
         except Exception as e:
-            logger.error(f"{ticker} portfolio adjustment 처리 중 오류: {str(e)}")
+            logger.error(f"{ticker} Error processing portfolio adjustment: {str(e)}")
             logger.error(traceback.format_exc())
 
     def _safe_number_conversion(self, value) -> float:
@@ -957,12 +957,12 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             return 0.0
             
         except (ValueError, TypeError) as e:
-            logger.warning(f"숫자 변환 실패: {value} -> {str(e)}")
+            logger.warning(f"Number conversion failed: {value} -> {str(e)}")
             return 0.0
 
     async def _save_holding_decision(self, ticker: str, current_price: float, decision_json: Dict[str, Any]) -> bool:
         """
-        보유 종목의 AI 매도 판단 결과를 holding_decisions 테이블에 저장
+        Hold 종목의 AI Sell 판단 결과를 holding_decisions 테이블에 저장
         (실패해도 메인 플로우에 영향 없음)
         
         Args:
@@ -1020,17 +1020,17 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             ))
             
             self.conn.commit()
-            logger.info(f"{ticker} 보유 판단 저장 완료 - should_sell: {should_sell}, confidence: {confidence}")
+            logger.info(f"{ticker} Hold 판단 저장 완료 - should_sell: {should_sell}, confidence: {confidence}")
             return True
             
         except Exception as e:
-            logger.error(f"{ticker} 보유 판단 저장 실패 (메인 플로우 계속): {str(e)}")
+            logger.error(f"{ticker} Hold 판단 저장 실패 (메인 플로우 계속): {str(e)}")
             logger.error(traceback.format_exc())
             return False
 
     async def _delete_holding_decision(self, ticker: str) -> bool:
         """
-        매도된 종목의 판단 데이터를 holding_decisions 테이블에서 삭제
+        Sell된 종목의 판단 데이터를 holding_decisions 테이블에서 삭제
         (실패해도 메인 플로우에 영향 없음)
         
         Args:
@@ -1042,15 +1042,15 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         try:
             self.cursor.execute("DELETE FROM holding_decisions WHERE ticker = ?", (ticker,))
             self.conn.commit()
-            logger.info(f"{ticker} 매도 판단 데이터 삭제 완료")
+            logger.info(f"{ticker} Sell 판단 데이터 삭제 완료")
             return True
             
         except Exception as e:
-            logger.error(f"{ticker} 매도 판단 삭제 실패 (메인 플로우 계속): {str(e)}")
+            logger.error(f"{ticker} Sell 판단 삭제 실패 (메인 플로우 계속): {str(e)}")
             return False
 
     def _format_sell_reason_with_analysis(self, sell_reason: str, analysis_summary: Dict[str, Any]) -> str:
-        """매도 이유에 분석 요약 추가"""
+        """Sell 이유에 분석 요약 추가"""
         try:
             detailed_reason = sell_reason
             
@@ -1072,5 +1072,5 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             return detailed_reason
             
         except Exception as e:
-            logger.error(f"매도 이유 포맷팅 중 오류: {str(e)}")
+            logger.error(f"Sell 이유 포맷팅 중 오류: {str(e)}")
             return sell_reason
