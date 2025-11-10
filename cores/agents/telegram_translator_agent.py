@@ -1,20 +1,38 @@
 from mcp_agent.agents.agent import Agent
 
 
-def create_telegram_translator_agent():
+def create_telegram_translator_agent(from_lang: str = "ko", to_lang: str = "en"):
     """
     Create telegram message translation agent
 
-    Translates Korean telegram messages to English while preserving formatting,
+    Translates telegram messages from source language to target language while preserving formatting,
     emojis, numbers, and technical terms.
+
+    Args:
+        from_lang: Source language code (default: "ko" for Korean)
+        to_lang: Target language code (default: "en" for English)
 
     Returns:
         Agent: Telegram message translation agent
     """
 
-    instruction = """You are a professional translator specializing in stock market and trading communications.
+    # Language name mapping
+    lang_names = {
+        "ko": "Korean",
+        "en": "English",
+        "ja": "Japanese",
+        "zh": "Chinese",
+        "es": "Spanish",
+        "fr": "French",
+        "de": "German"
+    }
 
-Your task is to translate Korean telegram messages to English.
+    from_lang_name = lang_names.get(from_lang, from_lang.upper())
+    to_lang_name = lang_names.get(to_lang, to_lang.upper())
+
+    instruction = f"""You are a professional translator specializing in stock market and trading communications.
+
+Your task is to translate {from_lang_name} telegram messages to {to_lang_name}.
 
 ## Translation Guidelines
 
@@ -41,10 +59,15 @@ Your task is to translate Korean telegram messages to English.
   - "거래량" → "Volume"
   - "거래대금" → "Trading Value"
 
-### 4. Stock Names
-- Keep Korean stock names in their original form
-- Add ticker symbols if present
-- Example: "삼성전자(005930)" → "Samsung Electronics (005930)"
+### 4. Stock Names - CRITICAL
+- **ALWAYS translate company names to {to_lang_name}**
+- **DO NOT keep the original language company names**
+- Always include ticker symbols if present
+- Example (Korean to English): "삼성전자(005930)" → "Samsung Electronics (005930)"
+- Example (Korean to English): "현대자동차" → "Hyundai Motor Company"
+- Example (Korean to English): "SK하이닉스" → "SK Hynix"
+- For well-known companies, use their official {to_lang_name} names
+- For lesser-known companies, provide a descriptive translation
 
 ### 5. Tone and Style
 - Maintain professional but accessible tone
@@ -56,38 +79,9 @@ Your task is to translate Korean telegram messages to English.
 - Preserve arrows: 🔺, 🔻, ➖, ↔️
 - Maintain visual hierarchy with emojis
 
-## Example Translation
-
-**Korean Input:**
-```
-🔔 오전 프리즘 시그널 얼럿
-📅 2025.01.10 장 시작 후 10분 시점 포착된 관심종목
-
-📊 *거래량 급증*
-· *삼성전자* (005930)
-  85,000원 🔺 2.50%
-  거래량 증가율: 150.00%
-
-💡 상세 분석 보고서는 약 10-30분 내 제공 예정
-⚠️ 본 정보는 투자 참고용이며, 투자 결정과 책임은 투자자에게 있습니다.
-```
-
-**English Output:**
-```
-🔔 Morning PRISM Signal Alert
-📅 2025.01.10 Stocks detected 10 minutes after market open
-
-📊 *Volume Surge*
-· *Samsung Electronics* (005930)
-  ₩85,000 🔺 2.50%
-  Volume increase rate: 150.00%
-
-💡 Detailed analysis report will be provided within 10-30 minutes
-⚠️ This information is for reference only. Investment decisions and responsibilities lie with the investor.
-```
-
 ## Instructions
-Translate the following Korean telegram message to English following all guidelines above.
+Translate the following {from_lang_name} telegram message to {to_lang_name} following all guidelines above.
+**CRITICAL**: Make sure to translate ALL company names to {to_lang_name}. Do not leave them in {from_lang_name}.
 Only return the translated text without any explanations or metadata.
 """
 
@@ -100,23 +94,30 @@ Only return the translated text without any explanations or metadata.
     return agent
 
 
-async def translate_telegram_message(message: str, model: str = "gpt-5-nano") -> str:
+async def translate_telegram_message(
+    message: str,
+    model: str = "gpt-5-nano",
+    from_lang: str = "ko",
+    to_lang: str = "en"
+) -> str:
     """
-    Translate a Korean telegram message to English
+    Translate a telegram message from source language to target language
 
     Args:
-        message: Korean telegram message to translate
+        message: Telegram message to translate
         model: OpenAI model to use (default: gpt-5-nano for cost efficiency)
+        from_lang: Source language code (default: "ko" for Korean)
+        to_lang: Target language code (default: "en" for English)
 
     Returns:
-        str: Translated English message
+        str: Translated message
     """
     from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
     from mcp_agent.workflows.llm.augmented_llm import RequestParams
 
     try:
         # Create translator agent
-        translator = create_telegram_translator_agent()
+        translator = create_telegram_translator_agent(from_lang=from_lang, to_lang=to_lang)
 
         # Attach LLM to the agent
         llm = await translator.attach_llm(OpenAIAugmentedLLM)
