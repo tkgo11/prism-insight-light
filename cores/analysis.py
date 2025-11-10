@@ -66,11 +66,11 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
                             report = _market_analysis_cache["report"]
                         else:
                             logger.info(f"Generating new market analysis")
-                            report = await generate_market_report(agent, section, reference_date, logger)
+                            report = await generate_market_report(agent, section, reference_date, logger, language)
                             # Save to cache
                             _market_analysis_cache["report"] = report
                     else:
-                        report = await generate_report(agent, section, company_name, company_code, reference_date, logger)
+                        report = await generate_report(agent, section, company_name, company_code, reference_date, logger, language)
                     section_reports[section] = report
                 except Exception as e:
                     logger.error(f"Final failure processing {section}: {e}")
@@ -88,7 +88,7 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
             logger.info(f"Processing investment_strategy for {company_name}...")
 
             investment_strategy = await generate_investment_strategy(
-                section_reports, combined_reports, company_name, company_code, reference_date, logger
+                section_reports, combined_reports, company_name, company_code, reference_date, logger, language
             )
             section_reports["investment_strategy"] = investment_strategy.lstrip('\n')
             logger.info(f"Completed investment_strategy - {len(investment_strategy)} characters")
@@ -106,7 +106,7 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
         # 9. Generate summary
         try:
             executive_summary = await generate_summary(
-                section_reports, company_name, company_code, reference_date, logger
+                section_reports, company_name, company_code, reference_date, logger, language
             )
         except Exception as e:
             logger.error(f"Error generating executive summary: {e}")
