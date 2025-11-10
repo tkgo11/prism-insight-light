@@ -488,9 +488,18 @@ Please present a consistent and executable investment strategy that investors ca
             return "Investment strategy analysis failed"
 
 
-def get_disclaimer():
-    """Get disclaimer text"""
-    return """
+def get_disclaimer(language="ko"):
+    """
+    Get disclaimer text
+
+    Args:
+        language: Disclaimer language code (default: "ko")
+
+    Returns:
+        Disclaimer text in specified language
+    """
+    if language == "ko":
+        return """
 # 투자 유의사항
 
 본 보고서는 정보 제공을 목적으로 작성되었으며, 투자 권유를 목적으로 하지 않습니다.
@@ -499,4 +508,15 @@ def get_disclaimer():
 
 투자는 본인의 판단과 책임 하에 신중하게 이루어져야 하며,
 본 보고서를 참고하여 발생하는 투자 결과에 대한 책임은 투자자 본인에게 있습니다.
+"""
+    else:  # English or other languages
+        return """
+# Investment Disclaimer
+
+This report is provided for informational purposes only and is not intended as investment advice.
+The content in this report is AI-generated based on reliable sources as of the time of writing,
+but its accuracy and completeness are not guaranteed.
+
+Investments should be made carefully at your own judgment and risk,
+and you are solely responsible for any investment results based on this report.
 """

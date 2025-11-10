@@ -145,7 +145,7 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
             fundamentals_chart_html = None
 
         # 11. Compose final report
-        disclaimer = get_disclaimer()
+        disclaimer = get_disclaimer(language)
         final_report = disclaimer + "\n\n" + executive_summary + "\n\n"
 
         all_sections = base_sections + ["investment_strategy"]
