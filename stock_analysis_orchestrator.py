@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-주식 분석 및 텔레그램 전송 오케스트레이터
+Stock Analysis and Telegram Transmission Orchestrator
 
-전체 프로세스:
-1. 시간대별(오전/오후) 트리거 배치 작업 실행
-2. 선정된 종목에 대한 상세 분석 보고서 생성
-3. 보고서 PDF 변환
-4. 텔레그램 채널 요약 메시지 생성 및 전송
-5. 생성된 PDF 첨부파일 전송
+Overall Process:
+1. Execute time-based (morning/afternoon) trigger batch jobs
+2. Generate detailed analysis reports for selected stocks
+3. Convert reports to PDF
+4. Generate and send telegram channel summary messages
+5. Send generated PDF attachments
 """
 import argparse
 import asyncio
@@ -18,7 +18,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# 로거 설정
+# Logger configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -29,51 +29,51 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 환경 설정
+# Environment configuration
 REPORTS_DIR = Path("reports")
 TELEGRAM_MSGS_DIR = Path("telegram_messages")
 PDF_REPORTS_DIR = Path("pdf_reports")
 
-# 디렉토리 생성
+# Create directories
 REPORTS_DIR.mkdir(exist_ok=True)
 TELEGRAM_MSGS_DIR.mkdir(exist_ok=True)
 PDF_REPORTS_DIR.mkdir(exist_ok=True)
 (TELEGRAM_MSGS_DIR / "sent").mkdir(exist_ok=True)
 
 class StockAnalysisOrchestrator:
-    """주식 분석 및 텔레그램 전송 오케스트레이터"""
+    """Stock Analysis and Telegram Transmission Orchestrator"""
 
     def __init__(self, telegram_config=None):
         """
-        초기화
-        
+        Initialize orchestrator
+
         Args:
-            telegram_config: TelegramConfig 객체 (None이면 기본 설정 사용)
+            telegram_config: TelegramConfig object (uses default config if None)
         """
         from telegram_config import TelegramConfig
-        
-        self.selected_tickers = {}  # 선정된 종목 정보 저장
+
+        self.selected_tickers = {}  # Store selected stock information
         self.telegram_config = telegram_config or TelegramConfig(use_telegram=True)
 
     async def run_trigger_batch(self, mode):
         """
-        트리거 배치 실행 및 결과 저장 (비동기 버전)
+        Execute trigger batch and save results (async version)
 
         Args:
-            mode (str): 'morning' 또는 'afternoon'
+            mode (str): 'morning' or 'afternoon'
 
         Returns:
-            list: 선정된 종목 코드 리스트
+            list: List of selected stock codes
         """
-        logger.info(f"트리거 배치 실행 시작: {mode}")
+        logger.info(f"Starting trigger batch execution: {mode}")
         try:
-            # 배치 프로세스 실행
+            # Execute batch process
             import subprocess
 
-            # 임시 파일에 결과 저장
+            # Save results to temporary file
             results_file = f"trigger_results_{mode}_{datetime.now().strftime('%Y%m%d')}.json"
 
-            # 명령 실행 - asyncio.create_subprocess_exec을 사용하여 비동기적으로 실행
+            # Execute command - run asynchronously using asyncio.create_subprocess_exec
             import asyncio
             process = await asyncio.create_subprocess_exec(
                 sys.executable, "trigger_batch.py", mode, "INFO", "--output", results_file,
@@ -83,80 +83,80 @@ class StockAnalysisOrchestrator:
 
             stdout, stderr = await process.communicate()
 
-            # 로그 출력 - 인코딩 문제 해결
+            # Log output - resolve encoding issues
             if stdout:
                 try:
                     stdout_text = stdout.decode('utf-8')
                 except UnicodeDecodeError:
                     try:
-                        stdout_text = stdout.decode('cp949')  # Windows 한국어 인코딩
+                        stdout_text = stdout.decode('cp949')  # Windows Korean encoding
                     except UnicodeDecodeError:
                         stdout_text = stdout.decode('utf-8', errors='ignore')
-                logger.info(f"배치 출력:\n{stdout_text}")
-                
+                logger.info(f"Batch output:\n{stdout_text}")
+
             if stderr:
                 try:
                     stderr_text = stderr.decode('utf-8')
                 except UnicodeDecodeError:
                     try:
-                        stderr_text = stderr.decode('cp949')  # Windows 한국어 인코딩
+                        stderr_text = stderr.decode('cp949')  # Windows Korean encoding
                     except UnicodeDecodeError:
                         stderr_text = stderr.decode('utf-8', errors='ignore')
-                logger.warning(f"배치 오류:\n{stderr_text}")
+                logger.warning(f"Batch error:\n{stderr_text}")
 
             if process.returncode != 0:
-                logger.error(f"배치 프로세스 실패: 종료 코드 {process.returncode}")
+                logger.error(f"Batch process failed: exit code {process.returncode}")
                 return []
 
-            # 결과 파일 읽기
+            # Read results file
             if os.path.exists(results_file):
                 with open(results_file, 'r', encoding='utf-8') as f:
                     results = json.load(f)
 
-                # 결과 저장
+                # Save results
                 self.selected_tickers[mode] = results
 
-                # 종목 코드 추출 - JSON 구조에 맞게 수정
+                # Extract stock codes - modified to match JSON structure
                 tickers = []
-                ticker_codes = set()  # 중복 확인용
+                ticker_codes = set()  # For duplicate checking
 
-                # 트리거 타입별로 종목 추출 (metadata 제외)
+                # Extract stocks by trigger type (excluding metadata)
                 for trigger_type, stocks in results.items():
                     if trigger_type != "metadata" and isinstance(stocks, list):
                         for stock in stocks:
                             if isinstance(stock, dict) and 'code' in stock:
                                 code = stock['code']
-                                if code not in ticker_codes:  # 중복 제거
+                                if code not in ticker_codes:  # Remove duplicates
                                     ticker_codes.add(code)
                                     tickers.append({
                                         'code': code,
                                         'name': stock.get('name', '')
                                     })
 
-                logger.info(f"선정된 종목 수: {len(tickers)}")
+                logger.info(f"Number of selected stocks: {len(tickers)}")
                 return tickers
             else:
-                logger.error(f"결과 파일이 생성되지 않음: {results_file}")
+                logger.error(f"Results file was not created: {results_file}")
                 return []
 
         except Exception as e:
-            logger.error(f"트리거 배치 실행 중 오류: {str(e)}")
+            logger.error(f"Error during trigger batch execution: {str(e)}")
             return []
 
     async def convert_to_pdf(self, report_paths):
         """
-        마크다운 보고서를 PDF로 변환
+        Convert markdown reports to PDF
 
         Args:
-            report_paths (list): 마크다운 보고서 파일 경로 리스트
+            report_paths (list): List of markdown report file paths
 
         Returns:
-            list: 생성된 PDF 파일 경로 리스트
+            list: List of generated PDF file paths
         """
-        logger.info(f"{len(report_paths)}개 보고서 PDF 변환 시작")
+        logger.info(f"Starting PDF conversion for {len(report_paths)} reports")
         pdf_paths = []
 
-        # PDF 변환 모듈 임포트
+        # Import PDF converter module
         from pdf_converter import markdown_to_pdf
 
         for report_path in report_paths:
@@ -164,42 +164,42 @@ class StockAnalysisOrchestrator:
                 report_file = Path(report_path)
                 pdf_file = PDF_REPORTS_DIR / f"{report_file.stem}.pdf"
 
-                # 마크다운을 PDF로 변환
+                # Convert markdown to PDF
                 markdown_to_pdf(report_path, pdf_file, 'pdfkit', add_theme=True, enable_watermark=False)
 
-                logger.info(f"PDF 변환 완료: {pdf_file}")
+                logger.info(f"PDF conversion complete: {pdf_file}")
                 pdf_paths.append(pdf_file)
 
             except Exception as e:
-                logger.error(f"{report_path} PDF 변환 중 오류: {str(e)}")
+                logger.error(f"Error during PDF conversion of {report_path}: {str(e)}")
 
         return pdf_paths
 
     async def generate_telegram_messages(self, report_pdf_paths):
         """
-        텔레그램 메시지 생성
+        Generate telegram messages
 
         Args:
-            report_pdf_paths (list): 보고서 파일(pdf) 경로 리스트
+            report_pdf_paths (list): List of report file (pdf) paths
 
         Returns:
-            list: 생성된 텔레그램 메시지 파일 경로 리스트
+            list: List of generated telegram message file paths
         """
-        logger.info(f"{len(report_pdf_paths)}개 보고서 텔레그램 메시지 생성 시작")
+        logger.info(f"Starting telegram message generation for {len(report_pdf_paths)} reports")
 
-        # 텔레그램 요약 생성기 모듈 임포트
+        # Import telegram summary generator module
         from telegram_summary_agent import TelegramSummaryGenerator
 
-        # 요약 생성기 초기화
+        # Initialize summary generator
         generator = TelegramSummaryGenerator()
 
         message_paths = []
         for report_pdf_path in report_pdf_paths:
             try:
-                # 텔레그램 메시지 생성
+                # Generate telegram message
                 await generator.process_report(str(report_pdf_path), str(TELEGRAM_MSGS_DIR))
 
-                # 생성된 메시지 파일 경로 추정
+                # Estimate generated message file path
                 report_file = Path(report_pdf_path)
                 ticker = report_file.stem.split('_')[0]
                 company_name = report_file.stem.split('_')[1]
@@ -207,137 +207,152 @@ class StockAnalysisOrchestrator:
                 message_path = TELEGRAM_MSGS_DIR / f"{ticker}_{company_name}_telegram.txt"
 
                 if message_path.exists():
-                    logger.info(f"텔레그램 메시지 생성 완료: {message_path}")
+                    logger.info(f"Telegram message generation complete: {message_path}")
                     message_paths.append(message_path)
                 else:
-                    logger.warning(f"텔레그램 메시지 파일이 예상 경로에 없습니다: {message_path}")
+                    logger.warning(f"Telegram message file not found at expected path: {message_path}")
 
             except Exception as e:
-                logger.error(f"{report_pdf_path} 텔레그램 메시지 생성 중 오류: {str(e)}")
+                logger.error(f"Error during telegram message generation for {report_pdf_path}: {str(e)}")
 
         return message_paths
 
     async def send_telegram_messages(self, message_paths, pdf_paths):
         """
-        텔레그램 메시지 및 PDF 파일 전송
+        Send telegram messages and PDF files
 
         Args:
-            message_paths (list): 텔레그램 메시지 파일 경로 리스트
-            pdf_paths (list): PDF 파일 경로 리스트
+            message_paths (list): List of telegram message file paths
+            pdf_paths (list): List of PDF file paths
         """
-        # 텔레그램 사용이 비활성화되어 있으면 스킵
+        # Skip if telegram is disabled
         if not self.telegram_config.use_telegram:
-            logger.info(f"텔레그램 비활성화 - 메시지 및 PDF 전송 스킵")
+            logger.info(f"Telegram disabled - skipping message and PDF transmission")
             return
-        
-        logger.info(f"{len(message_paths)}개 텔레그램 메시지 전송 시작")
 
-        # 텔레그램 설정 사용
+        logger.info(f"Starting telegram message transmission for {len(message_paths)} messages")
+
+        # Use telegram configuration
         chat_id = self.telegram_config.channel_id
         if not chat_id:
-            logger.error("텔레그램 채널 ID가 설정되지 않았습니다.")
+            logger.error("Telegram channel ID is not configured.")
             return
 
-        # 텔레그램 봇 에이전트 초기화
+        # Initialize telegram bot agent
         from telegram_bot_agent import TelegramBotAgent
 
         try:
             bot_agent = TelegramBotAgent()
 
-            # 메시지 전송
+            # Send messages
             await bot_agent.process_messages_directory(
                 str(TELEGRAM_MSGS_DIR),
                 chat_id,
                 str(TELEGRAM_MSGS_DIR / "sent")
             )
 
-            # PDF 파일 전송
+            # Send PDF files
             for pdf_path in pdf_paths:
-                logger.info(f"PDF 파일 전송: {pdf_path}")
+                logger.info(f"Sending PDF file: {pdf_path}")
                 success = await bot_agent.send_document(chat_id, str(pdf_path))
                 if success:
-                    logger.info(f"PDF 파일 전송 성공: {pdf_path}")
+                    logger.info(f"PDF file transmission successful: {pdf_path}")
                 else:
-                    logger.error(f"PDF 파일 전송 실패: {pdf_path}")
+                    logger.error(f"PDF file transmission failed: {pdf_path}")
 
-                # 전송 간격
+                # Transmission interval
                 await asyncio.sleep(1)
 
         except Exception as e:
-            logger.error(f"텔레그램 메시지 전송 중 오류: {str(e)}")
+            logger.error(f"Error during telegram message transmission: {str(e)}")
 
-    async def send_trigger_alert(self, mode, trigger_results_file):
+    async def send_trigger_alert(self, mode, trigger_results_file, language: str = "ko"):
         """
-        트리거 실행 결과 정보를 텔레그램 채널로 즉시 전송
+        Send trigger execution result information to telegram channel immediately
+
+        Args:
+            mode: 'morning' or 'afternoon'
+            trigger_results_file: Path to trigger results JSON file
+            language: Message language ("ko" or "en")
         """
-        # 텔레그램 사용이 비활성화되어 있으면 로그만 출력하고 리턴
+        # Log and return if telegram is disabled
         if not self.telegram_config.use_telegram:
-            logger.info(f"텔레그램 비활성화 - 프리즘 시그널 얼럿 전송 스킵 (모드: {mode})")
+            logger.info(f"Telegram disabled - skipping Prism Signal alert transmission (mode: {mode})")
             return False
-        
-        logger.info(f"프리즘 시그널 얼럿 전송 시작 - 모드: {mode}")
+
+        logger.info(f"Starting Prism Signal alert transmission - mode: {mode}, language: {language}")
 
         try:
-            # JSON 파일 읽기
+            # Read JSON file
             with open(trigger_results_file, 'r', encoding='utf-8') as f:
                 results = json.load(f)
 
-            # 메타데이터 추출
+            # Extract metadata
             metadata = results.get("metadata", {})
             trade_date = metadata.get("trade_date", datetime.now().strftime("%Y%m%d"))
 
-            # 트리거 종목 정보 추출 - 직접 리스트인 경우 처리
+            # Extract trigger stock information - handle direct list case
             all_results = {}
             for key, value in results.items():
                 if key != "metadata" and isinstance(value, list):
-                    # value가 직접 종목 리스트인 경우
+                    # When value is directly a stock list
                     all_results[key] = value
 
             if not all_results:
-                logger.warning(f"트리거 결과가 없습니다.")
+                logger.warning(f"No trigger results found.")
                 return False
 
-            # 텔레그램 메시지 생성
+            # Generate telegram message
             message = self._create_trigger_alert_message(mode, all_results, trade_date)
 
-            # 텔레그램 설정 사용
+            # Translate message if English is requested
+            if language == "en":
+                try:
+                    logger.info("Translating trigger alert message to English")
+                    from cores.agents.telegram_translator_agent import translate_telegram_message
+                    message = await translate_telegram_message(message, model="gpt-4o-mini")
+                    logger.info("Translation complete")
+                except Exception as e:
+                    logger.error(f"Translation failed: {str(e)}. Using original Korean message.")
+
+            # Use telegram configuration
             chat_id = self.telegram_config.channel_id
             if not chat_id:
-                logger.error("텔레그램 채널 ID가 설정되지 않았습니다.")
+                logger.error("Telegram channel ID is not configured.")
                 return False
 
-            # 텔레그램 봇 에이전트 초기화
+            # Initialize telegram bot agent
             from telegram_bot_agent import TelegramBotAgent
 
             try:
                 bot_agent = TelegramBotAgent()
 
-                # 메시지 전송
+                # Send message
                 success = await bot_agent.send_message(chat_id, message)
 
                 if success:
-                    logger.info("프리즘 시그널 얼럿 전송 성공")
+                    logger.info("Prism Signal alert transmission successful")
                     return True
                 else:
-                    logger.error("프리즘 시그널 얼럿 전송 실패")
+                    logger.error("Prism Signal alert transmission failed")
                     return False
 
             except Exception as e:
-                logger.error(f"텔레그램 봇 초기화 또는 메시지 전송 중 오류: {str(e)}")
+                logger.error(f"Error during telegram bot initialization or message transmission: {str(e)}")
                 return False
 
         except Exception as e:
-            logger.error(f"프리즘 시그널 얼럿 생성 중 오류: {str(e)}")
+            logger.error(f"Error during Prism Signal alert generation: {str(e)}")
             return False
 
     def _create_trigger_alert_message(self, mode, results, trade_date):
         """
-        트리거 결과를 기반으로 텔레그램 알림 메시지 생성
+        Generate telegram alert message based on trigger results
         """
-        # 날짜 포맷 변환
+        # Convert date format
         formatted_date = f"{trade_date[:4]}.{trade_date[4:6]}.{trade_date[6:8]}"
 
-        # 모드에 따른 제목 설정
+        # Set title based on mode
         if mode == "morning":
             title = "🔔 오전 프리즘 시그널 얼럿"
             time_desc = "장 시작 후 10분 시점"
@@ -345,32 +360,32 @@ class StockAnalysisOrchestrator:
             title = "🔔 오후 프리즘 시그널 얼럿"
             time_desc = "장 마감 후"
 
-        # 메시지 헤더
+        # Message header
         message = f"{title}\n"
         message += f"📅 {formatted_date} {time_desc} 포착된 관심종목\n\n"
 
-        # 트리거별 종목 정보 추가
+        # Add stock information by trigger
         for trigger_type, stocks in results.items():
-            # 트리거 타입에 따른 이모지 설정
+            # Set emoji based on trigger type
             emoji = self._get_trigger_emoji(trigger_type)
 
             message += f"{emoji} *{trigger_type}*\n"
 
-            # 각 종목 정보 추가
+            # Add each stock information
             for stock in stocks:
                 code = stock.get("code", "")
                 name = stock.get("name", "")
                 current_price = stock.get("current_price", 0)
                 change_rate = stock.get("change_rate", 0)
 
-                # 등락률에 따른 화살표
+                # Arrow based on change rate
                 arrow = "🔺" if change_rate > 0 else "🔻" if change_rate < 0 else "➖"
 
-                # 기본 정보
+                # Basic information
                 message += f"· *{name}* ({code})\n"
                 message += f"  {current_price:,.0f}원 {arrow} {abs(change_rate):.2f}%\n"
 
-                # 트리거 타입에 따른 추가 정보
+                # Additional information based on trigger type
                 if "volume_increase" in stock and trigger_type.startswith("거래량"):
                     volume_increase = stock.get("volume_increase", 0)
                     message += f"  거래량 증가율: {volume_increase:.2f}%\n"
@@ -381,7 +396,7 @@ class StockAnalysisOrchestrator:
 
                 elif "trade_value_ratio" in stock and "시총 대비" in trigger_type:
                     trade_value_ratio = stock.get("trade_value_ratio", 0)
-                    market_cap = stock.get("market_cap", 0) / 100000000  # 억원 단위로 변환
+                    market_cap = stock.get("market_cap", 0) / 100000000  # Convert to hundred million won units
                     message += f"  거래대금/시총 비율: {trade_value_ratio:.2f}%\n"
                     message += f"  시가총액: {market_cap:.2f}억원\n"
 
@@ -391,7 +406,7 @@ class StockAnalysisOrchestrator:
 
                 message += "\n"
 
-        # 푸터 메시지
+        # Footer message
         message += "💡 상세 분석 보고서는 약 10-30분 내 제공 예정\n"
         message += "⚠️ 본 정보는 투자 참고용이며, 투자 결정과 책임은 투자자에게 있습니다."
 
@@ -399,7 +414,7 @@ class StockAnalysisOrchestrator:
 
     def _get_trigger_emoji(self, trigger_type):
         """
-        트리거 유형에 맞는 이모지 반환
+        Return emoji matching trigger type
         """
         if "거래량" in trigger_type:
             return "📊"
@@ -418,148 +433,148 @@ class StockAnalysisOrchestrator:
 
     async def run_full_pipeline(self, mode, language: str = "ko"):
         """
-        전체 파이프라인 실행
+        Execute full pipeline
 
         Args:
-            mode (str): 'morning' 또는 'afternoon'
-            language (str): 분석 언어 ("ko" or "en")
+            mode (str): 'morning' or 'afternoon'
+            language (str): Analysis language ("ko" or "en")
         """
-        logger.info(f"전체 파이프라인 시작 - 모드: {mode}")
+        logger.info(f"Starting full pipeline - mode: {mode}")
 
         try:
-            # 1. 트리거 배치 실행 - 비동기 방식으로 변경 (asyncio 리소스 관리 개선)
+            # 1. Execute trigger batch - changed to async method (improved asyncio resource management)
             results_file = f"trigger_results_{mode}_{datetime.now().strftime('%Y%m%d')}.json"
             tickers = await self.run_trigger_batch(mode)
 
             if not tickers:
-                logger.warning("선정된 종목이 없습니다. 프로세스 종료.")
+                logger.warning("No stocks selected. Terminating process.")
                 return
 
-            # 1-1. 트리거 결과를 텔레그램으로 즉시 전송
+            # 1-1. Send trigger results to telegram immediately
             if os.path.exists(results_file):
-                logger.info(f"트리거 결과 파일 확인됨: {results_file}")
-                alert_sent = await self.send_trigger_alert(mode, results_file)
+                logger.info(f"Trigger results file confirmed: {results_file}")
+                alert_sent = await self.send_trigger_alert(mode, results_file, language)
                 if alert_sent:
-                    logger.info("프리즘 시그널 얼럿 전송 완료")
+                    logger.info("Prism Signal alert transmission complete")
                 else:
-                    logger.warning("프리즘 시그널 얼럿 전송 실패")
+                    logger.warning("Prism Signal alert transmission failed")
             else:
-                logger.warning(f"트리거 결과 파일이 없습니다: {results_file}")
+                logger.warning(f"Trigger results file not found: {results_file}")
 
-            # 2. 보고서 생성 - 중요: 여기에 await 추가!
+            # 2. Generate reports - important: await added here!
             report_paths = await self.generate_reports(tickers, mode, timeout=600, language=language)
             if not report_paths:
-                logger.warning("생성된 보고서가 없습니다. 프로세스 종료.")
+                logger.warning("No reports generated. Terminating process.")
                 return
 
-            # 3. PDF 변환
+            # 3. PDF conversion
             pdf_paths = await self.convert_to_pdf(report_paths)
 
-            # 4-5. 텔레그램 메시지 생성 및 전송 (텔레그램 사용 시에만)
+            # 4-5. Generate and send telegram messages (only when telegram is enabled)
             if self.telegram_config.use_telegram:
-                logger.info("텔레그램 활성화 - 메시지 생성 및 전송 단계 진행")
-                
-                # 4. 텔레그램 메시지 생성
+                logger.info("Telegram enabled - proceeding with message generation and transmission steps")
+
+                # 4. Generate telegram messages
                 message_paths = await self.generate_telegram_messages(pdf_paths)
-                
-                # 5. 텔레그램 메시지 및 PDF 전송
+
+                # 5. Send telegram messages and PDFs
                 await self.send_telegram_messages(message_paths, pdf_paths)
             else:
-                logger.info("텔레그램 비활성화 - 메시지 생성 및 전송 단계 스킵")
+                logger.info("Telegram disabled - skipping message generation and transmission steps")
 
-            # 6. 트랙킹 시스템 배치
+            # 6. Tracking system batch
             if pdf_paths:
                 try:
-                    logger.info("주식 트래킹 시스템 배치 실행 시작")
+                    logger.info("Starting stock tracking system batch execution")
 
-                    # 트래킹 에이전트 임포트
+                    # Import tracking agent
                     from stock_tracking_enhanced_agent import EnhancedStockTrackingAgent as StockTrackingAgent
                     from stock_tracking_agent import app as tracking_app
 
-                    # 텔레그램 설정 검증
+                    # Validate telegram configuration
                     if self.telegram_config.use_telegram:
-                        # 텔레그램 사용이 활성화된 경우 필수 설정 검증
+                        # Validate required settings when telegram is enabled
                         try:
                             self.telegram_config.validate_or_raise()
                         except ValueError as ve:
-                            logger.error(f"텔레그램 설정 오류: {str(ve)}")
-                            logger.error("트래킹 시스템 배치를 건너뜁니다.")
+                            logger.error(f"Telegram configuration error: {str(ve)}")
+                            logger.error("Skipping tracking system batch.")
                             return
-                    
-                    # 텔레그램 설정 상태 로그
+
+                    # Log telegram configuration status
                     self.telegram_config.log_status()
 
-                    # MCPApp 컨텍스트 매니저 사용
+                    # Use MCPApp context manager
                     async with tracking_app.run():
-                        # 텔레그램 설정을 에이전트에 전달
+                        # Pass telegram configuration to agent
                         tracking_agent = StockTrackingAgent(
                             telegram_token=self.telegram_config.bot_token if self.telegram_config.use_telegram else None
                         )
 
-                        # 보고서 경로와 텔레그램 설정 전달
+                        # Pass report paths, telegram configuration, and language
                         chat_id = self.telegram_config.channel_id if self.telegram_config.use_telegram else None
-                        tracking_success = await tracking_agent.run(pdf_paths, chat_id)
+                        tracking_success = await tracking_agent.run(pdf_paths, chat_id, language)
 
                         if tracking_success:
-                            logger.info("트래킹 시스템 배치 실행 완료")
+                            logger.info("Tracking system batch execution complete")
                         else:
-                            logger.error("트래킹 시스템 배치 실행 실패")
+                            logger.error("Tracking system batch execution failed")
 
                 except Exception as e:
-                    logger.error(f"트래킹 시스템 배치 실행 중 오류: {str(e)}")
+                    logger.error(f"Error during tracking system batch execution: {str(e)}")
                     import traceback
                     logger.error(traceback.format_exc())
             else:
-                logger.warning("생성된 보고서가 없어 트래킹 시스템 배치를 실행하지 않습니다.")
+                logger.warning("No reports generated, not executing tracking system batch.")
 
-            logger.info(f"전체 파이프라인 완료 - 모드: {mode}")
+            logger.info(f"Full pipeline complete - mode: {mode}")
 
         except Exception as e:
-            logger.error(f"파이프라인 실행 중 오류: {str(e)}")
+            logger.error(f"Error during pipeline execution: {str(e)}")
             import traceback
             logger.error(traceback.format_exc())
 
     async def generate_reports(self, tickers, mode, timeout: int = None, language: str = "ko") -> list:
         """
-        모든 종목에 대해 보고서를 단순 직렬로 생성합니다.
-        한 번에 하나의 종목만 처리하여 OpenAI rate limit 문제를 방지합니다.
+        Generate reports serially for all stocks.
+        Process one stock at a time to prevent OpenAI rate limit issues.
 
         Args:
-            tickers: 분석할 종목 리스트
-            mode: 실행 모드
-            timeout: 타임아웃 (초)
-            language: 분석 언어 ("ko" or "en")
+            tickers: List of stocks to analyze
+            mode: Execution mode
+            timeout: Timeout (seconds)
+            language: Analysis language ("ko" or "en")
 
         Returns:
-            list: 성공한 보고서 경로 리스트
+            list: List of successful report paths
         """
 
-        logger.info(f"총 {len(tickers)}개 종목 보고서 생성 시작 (직렬 처리)")
+        logger.info(f"Starting report generation for {len(tickers)} stocks (serial processing)")
 
         successful_reports = []
 
-        # 각 종목에 대해 순차적으로 처리
+        # Process each stock sequentially
         for idx, ticker_info in enumerate(tickers, 1):
-            # ticker_info가 dict일 경우
+            # If ticker_info is a dict
             if isinstance(ticker_info, dict):
                 ticker = ticker_info.get('code')
-                company_name = ticker_info.get('name', f"종목_{ticker}")
+                company_name = ticker_info.get('name', f"Stock_{ticker}")
             else:
                 ticker = ticker_info
-                company_name = f"종목_{ticker}"
+                company_name = f"Stock_{ticker}"
 
-            logger.info(f"[{idx}/{len(tickers)}] 종목 분석 시작: {company_name}({ticker})")
+            logger.info(f"[{idx}/{len(tickers)}] Starting stock analysis: {company_name}({ticker})")
 
-            # 출력 파일 경로 설정
+            # Set output file path
             reference_date = datetime.now().strftime("%Y%m%d")
             output_file = str(REPORTS_DIR / f"{ticker}_{company_name}_{reference_date}_{mode}_gpt4.1.md")
 
             try:
-                # main.py에서 직접 함수 임포트
+                # Import function directly from main.py
                 from cores.main import analyze_stock
 
-                # 이미 비동기 환경이므로 직접 await 사용
-                logger.info(f"[{idx}/{len(tickers)}] analyze_stock 함수 호출 시작")
+                # Use await directly since already in async environment
+                logger.info(f"[{idx}/{len(tickers)}] Starting analyze_stock function call")
                 report = await analyze_stock(
                     company_code=ticker,
                     company_name=company_name,
@@ -567,54 +582,54 @@ class StockAnalysisOrchestrator:
                     language=language
                 )
 
-                # 결과 저장
+                # Save result
                 if report and len(report.strip()) > 0:
                     with open(output_file, "w", encoding="utf-8") as f:
                         f.write(report)
-                    logger.info(f"[{idx}/{len(tickers)}] 보고서 생성 완료: {company_name}({ticker}) - {len(report)} 글자")
+                    logger.info(f"[{idx}/{len(tickers)}] Report generation complete: {company_name}({ticker}) - {len(report)} characters")
                     successful_reports.append(output_file)
                 else:
-                    logger.error(f"[{idx}/{len(tickers)}] 보고서 생성 실패: {company_name}({ticker}) - 내용이 비어 있음")
+                    logger.error(f"[{idx}/{len(tickers)}] Report generation failed: {company_name}({ticker}) - empty content")
 
             except Exception as e:
-                logger.error(f"[{idx}/{len(tickers)}] 분석 중 오류 발생: {company_name}({ticker}) - {str(e)}")
+                logger.error(f"[{idx}/{len(tickers)}] Error during analysis: {company_name}({ticker}) - {str(e)}")
                 import traceback
                 logger.error(traceback.format_exc())
 
 
-        logger.info(f"보고서 생성 완료: 총 {len(successful_reports)}/{len(tickers)}개 성공")
+        logger.info(f"Report generation complete: {len(successful_reports)}/{len(tickers)} successful")
 
         return successful_reports
 
 async def main():
     """
-    메인 함수 - 명령줄 인터페이스
+    Main function - command line interface
     """
-    parser = argparse.ArgumentParser(description="주식 분석 및 텔레그램 전송 오케스트레이터")
+    parser = argparse.ArgumentParser(description="Stock analysis and telegram transmission orchestrator")
     parser.add_argument("--mode", choices=["morning", "afternoon", "both"], default="both",
-                        help="실행 모드 (morning, afternoon, both)")
+                        help="Execution mode (morning, afternoon, both)")
     parser.add_argument("--language", choices=["ko", "en"], default="ko",
-                        help="분석 언어 (ko: 한국어, en: English)")
+                        help="Analysis language (ko: Korean, en: English)")
     parser.add_argument("--no-telegram", action="store_true",
-                        help="텔레그램 메시지 전송을 비활성화합니다. "
-                             "텔레그램 설정 없이 테스트하거나 로컬에서 실행할 때 사용하세요.")
+                        help="Disable telegram message transmission. "
+                             "Use when testing without telegram configuration or running locally.")
 
     args = parser.parse_args()
-    
-    # 텔레그램 설정 생성
+
+    # Create telegram configuration
     from telegram_config import TelegramConfig
     telegram_config = TelegramConfig(use_telegram=not args.no_telegram)
-    
-    # 텔레그램 설정 검증 (사용이 활성화된 경우에만)
+
+    # Validate telegram configuration (only when enabled)
     if telegram_config.use_telegram:
         try:
             telegram_config.validate_or_raise()
         except ValueError as e:
-            logger.error(f"텔레그램 설정 오류: {str(e)}")
-            logger.error("프로그램을 종료합니다.")
+            logger.error(f"Telegram configuration error: {str(e)}")
+            logger.error("Terminating program.")
             sys.exit(1)
-    
-    # 텔레그램 설정 상태 로그
+
+    # Log telegram configuration status
     telegram_config.log_status()
 
     orchestrator = StockAnalysisOrchestrator(telegram_config=telegram_config)
@@ -626,27 +641,27 @@ async def main():
         await orchestrator.run_full_pipeline("afternoon", language=args.language)
 
 if __name__ == "__main__":
-    # 휴일 체크
+    # Check market holiday
     from check_market_day import is_market_day
 
     if not is_market_day():
-        current_date = datetime.now().date()  # datetime.now()를 사용
-        logger.info(f"오늘({current_date})은 주식시장 휴일입니다. 배치 작업을 실행하지 않습니다.")
+        current_date = datetime.now().date()  # Use datetime.now()
+        logger.info(f"Today ({current_date}) is a stock market holiday. Not executing batch job.")
         sys.exit(0)
 
-    # 영업일인 경우에만 타이머 스레드 시작 및 메인 함수 실행
+    # Start timer thread and execute main function only on business days
     import threading
 
-    # 120분 후에 프로세스를 종료하는 타이머 함수
+    # Timer function to terminate process after 120 minutes
     def exit_after_timeout():
         import time
         import os
         import signal
-        time.sleep(7200)  # 120분 대기
-        logger.warning("120분 타임아웃 도달: 프로세스 강제 종료")
+        time.sleep(7200)  # Wait 120 minutes
+        logger.warning("120-minute timeout reached: forcefully terminating process")
         os.kill(os.getpid(), signal.SIGTERM)
 
-    # 백그라운드 스레드로 타이머 시작
+    # Start timer as background thread
     timer_thread = threading.Thread(target=exit_after_timeout, daemon=True)
     timer_thread.start()
 

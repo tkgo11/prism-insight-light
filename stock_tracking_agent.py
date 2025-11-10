@@ -1345,12 +1345,13 @@ class StockTrackingAgent:
             logger.error(traceback.format_exc())
             return 0, 0
 
-    async def send_telegram_message(self, chat_id: str) -> bool:
+    async def send_telegram_message(self, chat_id: str, language: str = "ko") -> bool:
         """
         텔레그램으로 메시지 전송
 
         Args:
             chat_id: 텔레그램 채널 ID (None이면 전송하지 않음)
+            language: 메시지 언어 ("ko" or "en")
 
         Returns:
             bool: 전송 성공 여부
@@ -1359,15 +1360,15 @@ class StockTrackingAgent:
             # chat_id가 None이면 텔레그램 전송 스킵
             if not chat_id:
                 logger.info("텔레그램 채널 ID가 없습니다. 메시지 전송을 스킵합니다.")
-                
+
                 # 메시지 로그 출력
                 for message in self.message_queue:
                     logger.info(f"[메시지 (미전송)] {message[:100]}...")
-                
+
                 # 메시지 큐 초기화
                 self.message_queue = []
                 return True  # 의도적 스킵은 성공으로 간주
-            
+
             # 텔레그램 봇이 초기화되지 않았다면 로그만 출력
             if not self.telegram_bot:
                 logger.warning("텔레그램 봇이 초기화되지 않았습니다. 토큰을 확인해주세요.")
@@ -1384,6 +1385,21 @@ class StockTrackingAgent:
             summary = await self.generate_report_summary()
             self.message_queue.append(summary)
 
+            # Translate messages if English is requested
+            if language == "en":
+                logger.info(f"Translating {len(self.message_queue)} messages to English")
+                try:
+                    from cores.agents.telegram_translator_agent import translate_telegram_message
+                    translated_queue = []
+                    for idx, message in enumerate(self.message_queue, 1):
+                        logger.info(f"Translating message {idx}/{len(self.message_queue)}")
+                        translated = await translate_telegram_message(message, model="gpt-4o-mini")
+                        translated_queue.append(translated)
+                    self.message_queue = translated_queue
+                    logger.info("All messages translated successfully")
+                except Exception as e:
+                    logger.error(f"Translation failed: {str(e)}. Using original Korean messages.")
+
             # 각 메시지 전송
             success = True
             for message in self.message_queue:
@@ -1391,7 +1407,7 @@ class StockTrackingAgent:
                 try:
                     # 텔레그램 메시지 길이 제한 (4096자)
                     MAX_MESSAGE_LENGTH = 4096
-                    
+
                     if len(message) <= MAX_MESSAGE_LENGTH:
                         # 메시지가 짧으면 한 번에 전송
                         await self.telegram_bot.send_message(
@@ -1402,7 +1418,7 @@ class StockTrackingAgent:
                         # 메시지가 길면 분할 전송
                         parts = []
                         current_part = ""
-                        
+
                         for line in message.split('\n'):
                             if len(current_part) + len(line) + 1 <= MAX_MESSAGE_LENGTH:
                                 current_part += line + '\n'
@@ -1410,10 +1426,10 @@ class StockTrackingAgent:
                                 if current_part:
                                     parts.append(current_part.rstrip())
                                 current_part = line + '\n'
-                        
+
                         if current_part:
                             parts.append(current_part.rstrip())
-                        
+
                         # 분할된 메시지 전송
                         for i, part in enumerate(parts, 1):
                             await self.telegram_bot.send_message(
@@ -1421,7 +1437,7 @@ class StockTrackingAgent:
                                 text=f"[{i}/{len(parts)}]\n{part}"
                             )
                             await asyncio.sleep(0.5)  # 분할 메시지 간 짧은 지연
-                    
+
                     logger.info(f"텔레그램 메시지 전송 완료: {chat_id}")
                 except TelegramError as e:
                     logger.error(f"텔레그램 메시지 전송 실패: {e}")
@@ -1440,13 +1456,14 @@ class StockTrackingAgent:
             logger.error(traceback.format_exc())
             return False
 
-    async def run(self, pdf_report_paths: List[str], chat_id: str = None) -> bool | None:
+    async def run(self, pdf_report_paths: List[str], chat_id: str = None, language: str = "ko") -> bool | None:
         """
         주식 트래킹 시스템 메인 실행 함수
 
         Args:
             pdf_report_paths: 분석 보고서 파일 경로 리스트
             chat_id: 텔레그램 채널 ID (None이면 메시지를 전송하지 않음)
+            language: 메시지 언어 ("ko" or "en")
 
         Returns:
             bool: 실행 성공 여부
@@ -1463,7 +1480,7 @@ class StockTrackingAgent:
 
                 # 텔레그램 메시지 전송 (chat_id가 제공된 경우에만)
                 if chat_id:
-                    message_sent = await self.send_telegram_message(chat_id)
+                    message_sent = await self.send_telegram_message(chat_id, language)
                     if message_sent:
                         logger.info("텔레그램 메시지 전송 완료")
                     else:
@@ -1471,7 +1488,7 @@ class StockTrackingAgent:
                 else:
                     logger.info("텔레그램 채널 ID가 제공되지 않아 메시지 전송을 스킵합니다.")
                     # chat_id가 None이어도 메시지 큐 정리를 위해 호출
-                    await self.send_telegram_message(None)
+                    await self.send_telegram_message(None, language)
 
                 logger.info("트래킹 시스템 배치 실행 완료")
                 return True
