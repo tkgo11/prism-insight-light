@@ -127,7 +127,8 @@ async def translate_telegram_message(message: str, model: str = "gpt-4o-mini") -
             request_params=RequestParams(
                 model=model,
                 maxTokens=100000,
-                temperature=0.3  # Lower temperature for more consistent translations
+                temperature=0.3,  # Lower temperature for more consistent translations
+                max_iterations=1  # Single pass translation, no complex reasoning needed
             )
         )
 
