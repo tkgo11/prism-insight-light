@@ -860,7 +860,7 @@ class StockTrackingAgent:
             return True
 
         except Exception as e:
-            logger.error(f"{ticker} 매수 처리 중 오류: {str(e)}")
+            logger.error(f"{ticker} Error during purchase processing: {str(e)}")
             logger.error(traceback.format_exc())
             return False
 
@@ -943,7 +943,7 @@ class StockTrackingAgent:
             return False, "계속 보유"
 
         except Exception as e:
-            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else '알 수 없는 종목'} 매도 분석 중 오류: {str(e)}")
+            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else 'Unknown stock'} Error analyzing sell: {str(e)}")
             return False, "분석 오류"
 
     async def sell_stock(self, stock_data: Dict[str, Any], sell_reason: str) -> bool:
@@ -1015,7 +1015,7 @@ class StockTrackingAgent:
                       f"매도이유: {sell_reason}"
 
             self.message_queue.append(message)
-            logger.info(f"{ticker}({company_name}) 매도 완료 (수익률: {profit_rate:.2f}%)")
+            logger.info(f"{ticker}({company_name}) sell complete (return: {profit_rate:.2f}%)")
 
             return True
 
@@ -1032,7 +1032,7 @@ class StockTrackingAgent:
             List[Dict]: 매도된 종목 정보 리스트
         """
         try:
-            logger.info("보유 종목 정보 업데이트 시작")
+            logger.info("Starting holdings info update")
 
             # 보유 종목 목록 조회
             self.cursor.execute(
@@ -1043,7 +1043,7 @@ class StockTrackingAgent:
             holdings = [dict(row) for row in self.cursor.fetchall()]
 
             if not holdings or len(holdings) == 0:
-                logger.info("보유 중인 종목이 없습니다.")
+                logger.info("No holdings")
                 return []
 
             sold_stocks = []
@@ -1057,7 +1057,7 @@ class StockTrackingAgent:
 
                 if current_price <= 0:
                     old_price = stock.get('current_price', 0)
-                    logger.warning(f"{ticker} 현재 주가 조회 실패, 이전 가격 유지: {old_price}")
+                    logger.warning(f"{ticker} Current price query failed, keeping previous price: {old_price}")
                     current_price = old_price
 
                 # 주가 정보 업데이트
@@ -1076,7 +1076,7 @@ class StockTrackingAgent:
                         if 'stop_loss' in scenario_json and stock.get('stop_loss', 0) == 0:
                             stock['stop_loss'] = scenario_json['stop_loss']
                 except:
-                    logger.warning(f"{ticker} 시나리오 JSON 파싱 실패")
+                    logger.warning(f"{ticker} Scenario JSON parse failed")
 
                 # 현재 시간
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -1096,9 +1096,9 @@ class StockTrackingAgent:
                             trade_result = await trading.async_sell_stock(stock_code=ticker)
 
                         if trade_result['success']:
-                            logger.info(f"실제 매도 성공: {trade_result['message']}")
+                            logger.info(f"Actual sell successful: {trade_result['message']}")
                         else:
-                            logger.error(f"실제 매도 실패: {trade_result['message']}")
+                            logger.error(f"Actual sell failed: {trade_result['message']}")
 
                     if sell_success:
                         sold_stocks.append({
@@ -1118,7 +1118,7 @@ class StockTrackingAgent:
                         (current_price, now, ticker)
                     )
                     self.conn.commit()
-                    logger.info(f"{ticker}({company_name}) 현재가 업데이트: {current_price:,.0f}원 ({sell_reason})")
+                    logger.info(f"{ticker}({company_name}) current price updated: {current_price:,.0f}원 ({sell_reason})")
 
             return sold_stocks
 
@@ -1247,7 +1247,7 @@ class StockTrackingAgent:
             return message
 
         except Exception as e:
-            logger.error(f"보고서 요약 생성 중 오류: {str(e)}")
+            logger.error(f"Error generating report summary: {str(e)}")
             error_msg = f"보고서 생성 중 오류가 발생했습니다: {str(e)}"
             return error_msg
 
@@ -1273,9 +1273,9 @@ class StockTrackingAgent:
             sell_count = len(sold_stocks)
 
             if sold_stocks:
-                logger.info(f"{len(sold_stocks)}개 종목 매도 완료")
+                logger.info(f"{len(sold_stocks)} stocks sold")
                 for stock in sold_stocks:
-                    logger.info(f"매도: {stock['company_name']}({stock['ticker']}) - 수익률: {stock['profit_rate']:.2f}% / 이유: {stock['reason']}")
+                    logger.info(f"Sold: {stock['company_name']}({stock['ticker']}) - Return: {stock['profit_rate']:.2f}% / Reason: {stock['reason']}")
             else:
                 logger.info("No stocks sold")
 
@@ -1311,7 +1311,7 @@ class StockTrackingAgent:
                 # 진입 결정이면 매수 처리
                 buy_score = scenario.get("buy_score", 0)
                 min_score = scenario.get("min_score", 0)
-                logger.info(f"Buy score check: {company_name}({ticker}) - 점수: {buy_score}")
+                logger.info(f"Buy score check: {company_name}({ticker}) - Score: {buy_score}")
                 if analysis_result.get("decision") == "진입":
                     # 매수 처리
                     buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
@@ -1342,7 +1342,7 @@ class StockTrackingAgent:
 
                     logger.info(f"Purchase deferred: {company_name}({ticker}) - {reason}")
 
-            logger.info(f"Report processing complete - 매수: {buy_count}건, 매도: {sell_count}건")
+            logger.info(f"Report processing complete - Purchased: {buy_count}items, Sold: {sell_count}건")
             return buy_count, sell_count
 
         except Exception as e:

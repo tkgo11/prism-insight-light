@@ -439,11 +439,11 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
 
                     if buy_success:
                         buy_count += 1
-                        logger.info(f"Purchase complete: {company_name}({ticker}) @ {current_price:,.0f}원")
+                        logger.info(f"Purchase complete: {company_name}({ticker}) @ {current_price:,.0f} KRW")
                     else:
                         logger.warning(f"Purchase failed: {company_name}({ticker})")
 
-            logger.info(f"Report processing complete - Purchased: {buy_count}items, Sold: {sell_count}건")
+            logger.info(f"Report processing complete - Purchased: {buy_count}items, Sold: {sell_count} items")
             return buy_count, sell_count
 
         except Exception as e:
@@ -460,12 +460,12 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             if scenario.get('target_price', 0) <= 0:
                 target_price = await self._dynamic_target_price(ticker, current_price)
                 scenario['target_price'] = target_price
-                logger.info(f"{ticker} Dynamic target price calculated: {target_price:,.0f}원")
+                logger.info(f"{ticker} Dynamic target price calculated: {target_price:,.0f} KRW")
 
             if scenario.get('stop_loss', 0) <= 0:
                 stop_loss = await self._dynamic_stop_loss(ticker, current_price)
                 scenario['stop_loss'] = stop_loss
-                logger.info(f"{ticker} Dynamic stop-loss calculated: {stop_loss:,.0f}원")
+                logger.info(f"{ticker} Dynamic stop-loss calculated: {stop_loss:,.0f} KRW")
 
             # 부모 클래스의 buy_stock 메서드 호출
             return await super().buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
@@ -672,8 +672,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 - 종목명: {company_name}({ticker})
                 - 매수가: {buy_price:,.0f}원
                 - 현재가: {current_price:,.0f}원  
-                - 목표가: {target_price:,.0f}원
-                - 손절가: {stop_loss:,.0f}원
+                - 목표가: {target_price:,.0f} KRW
+                - 손절가: {stop_loss:,.0f} KRW
                 - 수익률: {profit_rate:.2f}%
                 - Hold기간: {days_passed}일
                 - 투자기간: {period}
@@ -805,14 +805,14 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 # 강한 상승 추세에서는 손절 유예 (예외 케이스)
                 if trend >= 2 and profit_rate > -7:  # 강한 상승 추세 & 손실이 7% 미만
                     return False, "손절 유예 (강한 상승 추세)"
-                return True, f"손절매 조건 도달 (손절가: {stop_loss:,.0f}원)"
+                return True, f"손절매 조건 도달 (손절가: {stop_loss:,.0f} KRW)"
 
             # 2. 목표가 도달 확인
             if target_price > 0 and current_price >= target_price:
                 # 강한 상승 추세면 계속 Hold (예외 케이스)
                 if trend >= 2:
                     return False, "목표가 달성했으나 강한 상승 추세로 Hold 유지"
-                return True, f"목표가 달성 (목표가: {target_price:,.0f}원)"
+                return True, f"목표가 달성 (목표가: {target_price:,.0f} KRW)"
 
             # 3. 시장 상태와 추세에 따른 Sell 조건 (시장 환경 고려)
             if self.simple_market_condition == -1 and trend < 0 and profit_rate > 3:
@@ -891,8 +891,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     )
                     self.conn.commit()
                     db_updated = True
-                    update_message += f"목표가: {target_price_num:,.0f}원으로 조정\n"
-                    logger.info(f"{ticker} Target price AI adjustment: {target_price_num:,.0f}원 (Urgency: {urgency})")
+                    update_message += f"목표가: {target_price_num:,.0f} KRW으로 조정\n"
+                    logger.info(f"{ticker} Target price AI adjustment: {target_price_num:,.0f} KRW (Urgency: {urgency})")
             
             # 손절가 조정
             new_stop_loss = portfolio_adjustment.get("new_stop_loss")
@@ -906,8 +906,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     )
                     self.conn.commit()
                     db_updated = True
-                    update_message += f"손절가: {stop_loss_num:,.0f}원으로 조정\n"
-                    logger.info(f"{ticker} Stop-loss AI adjustment: {stop_loss_num:,.0f}원 (Urgency: {urgency})")
+                    update_message += f"손절가: {stop_loss_num:,.0f} KRW으로 조정\n"
+                    logger.info(f"{ticker} Stop-loss AI adjustment: {stop_loss_num:,.0f} KRW (Urgency: {urgency})")
             
             # DB가 업데이트되었으면 텔레그램 메시지 생성
             if db_updated:
