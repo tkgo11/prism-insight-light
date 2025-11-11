@@ -231,9 +231,9 @@ class PortfolioTelegramReporter:
             else:
                 logger.error("Failed to send portfolio report!")
 
-            # Send to broadcast channels
+            # Send to broadcast channels (non-blocking)
             if self.broadcast_languages:
-                await self._send_translated_portfolio_report(message)
+                asyncio.create_task(self._send_translated_portfolio_report(message))
 
             return success
 

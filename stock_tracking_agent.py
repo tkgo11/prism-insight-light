@@ -1471,9 +1471,9 @@ class StockTrackingAgent:
                 # API 제한 방지를 위한 지연
                 await asyncio.sleep(1)
 
-            # Send to broadcast channels if configured
+            # Send to broadcast channels if configured (non-blocking)
             if hasattr(self, 'telegram_config') and self.telegram_config and self.telegram_config.broadcast_languages:
-                await self._send_to_translation_channels(self.message_queue)
+                asyncio.create_task(self._send_to_translation_channels(self.message_queue.copy()))
 
             # 메시지 큐 초기화
             self.message_queue = []
