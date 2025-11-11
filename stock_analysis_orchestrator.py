@@ -246,7 +246,11 @@ class StockAnalysisOrchestrator:
         try:
             bot_agent = TelegramBotAgent()
 
-            # Send messages to main channel
+            # Send translated messages to broadcast channels BEFORE process_messages_directory moves files
+            if self.telegram_config.broadcast_languages:
+                await self._send_translated_messages(bot_agent, message_paths)
+
+            # Send messages to main channel (this moves files to sent folder)
             await bot_agent.process_messages_directory(
                 str(TELEGRAM_MSGS_DIR),
                 chat_id,
@@ -265,21 +269,21 @@ class StockAnalysisOrchestrator:
                 # Transmission interval
                 await asyncio.sleep(1)
 
-            # Send to broadcast channels asynchronously (non-blocking)
+            # Send translated PDFs to broadcast channels asynchronously (non-blocking)
             if self.telegram_config.broadcast_languages and report_paths:
-                asyncio.create_task(self._send_translated_messages_and_pdfs(bot_agent, message_paths, report_paths))
+                asyncio.create_task(self._send_translated_pdfs(bot_agent, report_paths))
 
         except Exception as e:
             logger.error(f"Error during telegram message transmission: {str(e)}")
 
-    async def _send_translated_messages_and_pdfs(self, bot_agent, message_paths, report_paths):
+    async def _send_translated_messages(self, bot_agent, message_paths):
         """
-        Send translated messages and PDFs to additional language channels
+        Send translated telegram messages to broadcast channels (synchronous)
+        Must be called BEFORE process_messages_directory moves the files
 
         Args:
             bot_agent: TelegramBotAgent instance
             message_paths: List of original message file paths
-            report_paths: List of original markdown report file paths
         """
         try:
             from cores.agents.telegram_translator_agent import translate_telegram_message
@@ -292,7 +296,7 @@ class StockAnalysisOrchestrator:
                         logger.warning(f"No channel ID configured for language: {lang}")
                         continue
 
-                    logger.info(f"Sending translated content to {lang} channel")
+                    logger.info(f"Sending translated messages to {lang} channel")
 
                     # Translate and send each telegram message
                     for message_path in message_paths:
@@ -322,6 +326,33 @@ class StockAnalysisOrchestrator:
 
                         except Exception as e:
                             logger.error(f"Error translating/sending message {message_path} to {lang}: {str(e)}")
+
+                except Exception as e:
+                    logger.error(f"Error processing language {lang}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error in _send_translated_messages: {str(e)}")
+
+    async def _send_translated_pdfs(self, bot_agent, report_paths):
+        """
+        Send translated PDF reports to broadcast channels (asynchronous, runs in background)
+
+        Args:
+            bot_agent: TelegramBotAgent instance
+            report_paths: List of original markdown report file paths
+        """
+        try:
+            from cores.agents.telegram_translator_agent import translate_telegram_message
+
+            for lang in self.telegram_config.broadcast_languages:
+                try:
+                    # Get channel ID for this language
+                    channel_id = self.telegram_config.get_broadcast_channel_id(lang)
+                    if not channel_id:
+                        logger.warning(f"No channel ID configured for language: {lang}")
+                        continue
+
+                    logger.info(f"Sending translated PDFs to {lang} channel")
 
                     # Translate markdown reports, convert to PDF, and send
                     for report_path in report_paths:
@@ -375,7 +406,7 @@ class StockAnalysisOrchestrator:
                     logger.error(f"Error processing language {lang}: {str(e)}")
 
         except Exception as e:
-            logger.error(f"Error in _send_translated_messages_and_pdfs: {str(e)}")
+            logger.error(f"Error in _send_translated_pdfs: {str(e)}")
 
     async def send_trigger_alert(self, mode, trigger_results_file, language: str = "ko"):
         """
