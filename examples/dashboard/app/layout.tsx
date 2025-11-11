@@ -3,13 +3,14 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { LanguageProvider } from "@/components/language-provider"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "프리즘 인사이트 대시보드",
-  description: "AI에이전트 기반 한국 주식 분석 및 매매 시스템",
+  title: "Prism Insight Dashboard",
+  description: "AI Agent-based Korean Stock Analysis & Trading System",
   generator: "v0.app",
 }
 
@@ -22,7 +23,9 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          {children}
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

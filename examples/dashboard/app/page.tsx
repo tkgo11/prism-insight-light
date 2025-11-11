@@ -11,9 +11,11 @@ import { TradingHistoryPage } from "@/components/trading-history-page"
 import { WatchlistPage } from "@/components/watchlist-page"
 import { StockDetailModal } from "@/components/stock-detail-modal"
 import { ProjectFooter } from "@/components/project-footer"
+import { useLanguage } from "@/components/language-provider"
 import type { DashboardData, Holding } from "@/types/dashboard"
 
 export default function Page() {
+  const { language, t } = useLanguage()
   const [data, setData] = useState<DashboardData | null>(null)
   const [activeTab, setActiveTab] = useState<"dashboard" | "ai-decisions" | "trading" | "watchlist">("dashboard")
   const [selectedStock, setSelectedStock] = useState<Holding | null>(null)
@@ -22,7 +24,8 @@ export default function Page() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/dashboard_data.json")
+        const dataFile = language === "en" ? "/dashboard_data_en.json" : "/dashboard_data.json"
+        const response = await fetch(dataFile)
         const jsonData = await response.json()
         setData(jsonData)
       } catch (error) {
@@ -34,7 +37,7 @@ export default function Page() {
     const interval = setInterval(fetchData, 5 * 60 * 1000) // 5분마다 갱신
 
     return () => clearInterval(interval)
-  }, [])
+  }, [language])
 
   const handleStockClick = (stock: Holding, isReal: boolean) => {
     setSelectedStock(stock)
@@ -46,7 +49,7 @@ export default function Page() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">데이터 로딩 중...</p>
+          <p className="text-muted-foreground">{t("loading.text")}</p>
         </div>
       </div>
     )
@@ -95,19 +98,19 @@ export default function Page() {
             
             {/* 실전투자 포트폴리오 - 최우선 표시 */}
             {data.real_portfolio && data.real_portfolio.length > 0 && (
-              <HoldingsTable 
-                holdings={data.real_portfolio} 
+              <HoldingsTable
+                holdings={data.real_portfolio}
                 onStockClick={(stock) => handleStockClick(stock, true)}
-                title="실전투자 포트폴리오"
+                title={t("table.realPortfolio")}
                 isRealTrading={true}
               />
             )}
-            
+
             {/* 프리즘 시뮬레이터 */}
-            <HoldingsTable 
-              holdings={data.holdings} 
+            <HoldingsTable
+              holdings={data.holdings}
               onStockClick={(stock) => handleStockClick(stock, false)}
-              title="프리즘 시뮬레이터"
+              title={t("table.simulator")}
               isRealTrading={false}
             />
             

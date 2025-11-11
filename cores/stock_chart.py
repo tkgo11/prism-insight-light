@@ -510,10 +510,10 @@ def create_price_chart(ticker, company_name=None, days=730, save_path=None, adju
     # 한글 지원 mplfinance 스타일 생성
     s = create_mpf_style()
 
-    # 플롯 타이틀
-    title = f"{company_name} ({ticker}) - 가격 차트"
+    # Plot title
+    title = f"{company_name} ({ticker}) - Price Chart"
 
-    # 추가 데이터 플롯 설정
+    # Additional plot settings
     additional_plots = [
         mpf.make_addplot(df['MA20'], color='#ff9500', width=1),
         mpf.make_addplot(df['MA60'], color='#0066cc', width=1.5),
@@ -521,18 +521,18 @@ def create_price_chart(ticker, company_name=None, days=730, save_path=None, adju
     ]
 
     if KOREAN_FONT_PATH:
-        # 한글 폰트 직접 등록 (mplfinance 전용)
+        # Register Korean font directly (for mplfinance)
         font_prop = fm.FontProperties(fname=KOREAN_FONT_PATH)
         plt.rcParams['font.family'] = font_prop.get_name()
         mpl.rcParams['font.family'] = font_prop.get_name()
 
-    # 차트 생성
+    # Create chart
     fig, axes = mpf.plot(
         ohlc_df,
         type='candle',
         style=s,
         title=title,
-        ylabel='가격',
+        ylabel='Price',
         volume=True,
         figsize=(12, 8),
         tight_layout=True,
@@ -542,97 +542,57 @@ def create_price_chart(ticker, company_name=None, days=730, save_path=None, adju
     )
 
     if KOREAN_FONT_PROP:
-        # 제목 다시 설정
+        # Reset title
         fig.suptitle(
-            f"{company_name} ({ticker}) - 가격 차트",
+            f"{company_name} ({ticker}) - Price Chart",
             fontproperties=KOREAN_FONT_PROP,
             fontsize=16,
             fontweight='bold'
         )
 
-    # 가격과 거래량 축 가져오기
+    # Get price and volume axes
     ax1, ax2 = axes[0], axes[2]
 
-    # 이평선 범례 추가
-    if KOREAN_FONT_PROP:
-        ax1.legend(['20일 이평선', '60일 이평선', '120일 이평선'], loc='upper left', prop=KOREAN_FONT_PROP)
-    else:
-        ax1.legend(['MA20', 'MA60', 'MA120'], loc='upper left')
+    # Add moving average legend
+    ax1.legend(['MA20', 'MA60', 'MA120'], loc='upper left')
 
     # 중요 가격 포인트에 주석 추가
     max_point = df['종가'].idxmax()
     min_point = df['종가'].idxmin()
     last_point = df.index[-1]
 
-    # 주석에 한글 폰트 적용
-    if KOREAN_FONT_PROP:
-        bbox_props = dict(boxstyle="round,pad=0.3", fc="#f8f9fa", ec="none", alpha=0.9)
+    # Add annotations to important price points
+    bbox_props = dict(boxstyle="round,pad=0.3", fc="#f8f9fa", ec="none", alpha=0.9)
 
-        ax1.annotate(
-            f"고점: {df.loc[max_point, '종가']:,.0f}",
-            xy=(max_point, df.loc[max_point, '종가']),
-            xytext=(0, 15),
-            textcoords='offset points',
-            ha='center',
-            va='bottom',
-            bbox=bbox_props,
-            fontproperties=KOREAN_FONT_PROP
-        )
+    ax1.annotate(
+        f"High: {df.loc[max_point, '종가']:,.0f}",
+        xy=(max_point, df.loc[max_point, '종가']),
+        xytext=(0, 15),
+        textcoords='offset points',
+        ha='center',
+        va='bottom',
+        bbox=bbox_props
+    )
 
-        ax1.annotate(
-            f"저점: {df.loc[min_point, '종가']:,.0f}",
-            xy=(min_point, df.loc[min_point, '종가']),
-            xytext=(0, -15),
-            textcoords='offset points',
-            ha='center',
-            va='top',
-            bbox=bbox_props,
-            fontproperties=KOREAN_FONT_PROP
-        )
+    ax1.annotate(
+        f"Low: {df.loc[min_point, '종가']:,.0f}",
+        xy=(min_point, df.loc[min_point, '종가']),
+        xytext=(0, -15),
+        textcoords='offset points',
+        ha='center',
+        va='top',
+        bbox=bbox_props
+    )
 
-        ax1.annotate(
-            f"현재: {df.loc[last_point, '종가']:,.0f}",
-            xy=(last_point, df.loc[last_point, '종가']),
-            xytext=(15, 0),
-            textcoords='offset points',
-            ha='left',
-            va='center',
-            bbox=bbox_props,
-            fontproperties=KOREAN_FONT_PROP
-        )
-    else:
-        # 영문 대체 버전
-        bbox_props = dict(boxstyle="round,pad=0.3", fc="#f8f9fa", ec="none", alpha=0.9)
-
-        ax1.annotate(
-            f"High: {df.loc[max_point, '종가']:,.0f}",
-            xy=(max_point, df.loc[max_point, '종가']),
-            xytext=(0, 15),
-            textcoords='offset points',
-            ha='center',
-            va='bottom',
-            bbox=bbox_props
-        )
-
-        ax1.annotate(
-            f"Low: {df.loc[min_point, '종가']:,.0f}",
-            xy=(min_point, df.loc[min_point, '종가']),
-            xytext=(0, -15),
-            textcoords='offset points',
-            ha='center',
-            va='top',
-            bbox=bbox_props
-        )
-
-        ax1.annotate(
-            f"Current: {df.loc[last_point, '종가']:,.0f}",
-            xy=(last_point, df.loc[last_point, '종가']),
-            xytext=(15, 0),
-            textcoords='offset points',
-            ha='left',
-            va='center',
-            bbox=bbox_props
-        )
+    ax1.annotate(
+        f"Current: {df.loc[last_point, '종가']:,.0f}",
+        xy=(last_point, df.loc[last_point, '종가']),
+        xytext=(15, 0),
+        textcoords='offset points',
+        ha='left',
+        va='center',
+        bbox=bbox_props
+    )
 
     # Y축 포맷터 설정
     max_price = df['고가'].max()
@@ -737,14 +697,10 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
         linewidth=2.5
     )
 
-    # 제목 및 레이블 설정
-    title = f"{company_name} ({ticker}) - 시가총액 추이"
-    if KOREAN_FONT_PROP:
-        ax.set_title(title, fontsize=16, fontweight='bold', pad=15, fontproperties=KOREAN_FONT_PROP)
-        ax.set_ylabel('시가총액', fontsize=12, labelpad=10, fontproperties=KOREAN_FONT_PROP)
-    else:
-        ax.set_title(title, fontsize=16, fontweight='bold', pad=15)
-        ax.set_ylabel('시가총액', fontsize=12, labelpad=10)
+    # Title and label settings
+    title = f"{company_name} ({ticker}) - Market Cap Trend"
+    ax.set_title(title, fontsize=16, fontweight='bold', pad=15)
+    ax.set_ylabel('Market Cap', fontsize=12, labelpad=10)
 
     ax.set_xlabel('', fontsize=12)
 
@@ -771,88 +727,60 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
     # 최신 포인트
     bbox_props = dict(boxstyle="round,pad=0.3", fc="#f8f9fa", ec="none", alpha=0.9)
 
-    # 주석에 한글 폰트 적용
-    if KOREAN_FONT_PROP:
-        ax.annotate(
-            f"{latest_point['시가총액']/1000000000000:.2f}조원",
-            xy=(latest_point.name, latest_point['시가총액']),
-            xytext=(10, 0),
-            textcoords='offset points',
-            ha='left',
-            va='center',
-            fontsize=10,
-            bbox=bbox_props,
-            fontproperties=KOREAN_FONT_PROP
-        )
+    # Add annotations to key points
+    ax.annotate(
+        f"{latest_point['시가총액']/1000000000000:.2f}T KRW",
+        xy=(latest_point.name, latest_point['시가총액']),
+        xytext=(10, 0),
+        textcoords='offset points',
+        ha='left',
+        va='center',
+        fontsize=10,
+        bbox=bbox_props
+    )
 
-        # 최고점
-        if max_point_idx != df.index[-1]:
-            ax.annotate(
-                f"최고: {max_point['시가총액']/1000000000000:.2f}조원",
-                xy=(max_point.name, max_point['시가총액']),
-                xytext=(0, 15),
-                textcoords='offset points',
-                ha='center',
-                va='bottom',
-                fontsize=9,
-                bbox=bbox_props,
-                fontproperties=KOREAN_FONT_PROP
-            )
-
-        # 최저점
-        if min_point_idx != df.index[0]:
-            ax.annotate(
-                f"최저: {min_point['시가총액']/1000000000000:.2f}조원",
-                xy=(min_point.name, min_point['시가총액']),
-                xytext=(0, -15),
-                textcoords='offset points',
-                ha='center',
-                va='top',
-                fontsize=9,
-                bbox=bbox_props,
-                fontproperties=KOREAN_FONT_PROP
-            )
-    else:
-        # 영문 대체 버전 주석
+    # Highest point
+    if max_point_idx != df.index[-1]:
         ax.annotate(
-            f"{latest_point['시가총액']/1000000000000:.2f}T KRW",
-            xy=(latest_point.name, latest_point['시가총액']),
-            xytext=(10, 0),
+            f"High: {max_point['시가총액']/1000000000000:.2f}T KRW",
+            xy=(max_point.name, max_point['시가총액']),
+            xytext=(0, 15),
             textcoords='offset points',
-            ha='left',
-            va='center',
-            fontsize=10,
+            ha='center',
+            va='bottom',
+            fontsize=9,
             bbox=bbox_props
         )
 
-    # YTD 또는 1년 변화율 계산 및 표시
+    # Lowest point
+    if min_point_idx != df.index[0]:
+        ax.annotate(
+            f"Low: {min_point['시가총액']/1000000000000:.2f}T KRW",
+            xy=(min_point.name, min_point['시가총액']),
+            xytext=(0, -15),
+            textcoords='offset points',
+            ha='center',
+            va='top',
+            fontsize=9,
+            bbox=bbox_props
+        )
+
+    # Calculate and display YTD or 1-year change rate
     first_point = df.iloc[0]
     pct_change = (latest_point['시가총액'] - first_point['시가총액']) / first_point['시가총액'] * 100
-    period = "YTD" if df.index[0].year == df.index[-1].year else "1년"
-    change_text = f"{period} 변화율: {pct_change:.1f}%"
+    period = "YTD" if df.index[0].year == df.index[-1].year else "1Y"
+    change_text = f"{period} Change: {pct_change:.1f}%"
 
-    # 기간 변화 텍스트 추가
-    if KOREAN_FONT_PROP:
-        ax.text(
-            0.02, 0.95,
-            change_text,
-            transform=ax.transAxes,
-            ha='left',
-            va='top',
-            fontsize=10,
-            bbox=bbox_props,
-            fontproperties=KOREAN_FONT_PROP
-        )
-    else:
-        ax.text(
-            0.02, 0.95,
-            change_text,
-            transform=ax.transAxes,
-            ha='left',
-            va='top',
-            fontsize=10,
-            bbox=bbox_props
-        )
+    # Add period change text
+    ax.text(
+        0.02, 0.95,
+        change_text,
+        transform=ax.transAxes,
+        ha='left',
+        va='top',
+        fontsize=10,
+        bbox=bbox_props
+    )
 
     # 워터마크 추가
     fig.text(
@@ -940,229 +868,130 @@ def create_fundamentals_chart(ticker, company_name=None, days=730, save_path=Non
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
         ax.xaxis.set_major_locator(mdates.MonthLocator(interval=2))
 
-    # 1. PER (주가수익비율) 플롯
+    # 1. PER (Price-to-Earnings Ratio) plot
     axes[0].plot(df.index, df['PER'], color=PRIMARY_COLORS[0], linewidth=2.5)
 
-    # 제목 및 라벨 설정에 한글 폰트 적용
-    if KOREAN_FONT_PROP:
-        axes[0].set_title("주가수익비율 (PER)", fontsize=12, loc='left', fontproperties=KOREAN_FONT_PROP)
-        axes[0].set_ylabel('PER', fontsize=11, fontproperties=KOREAN_FONT_PROP)
-    else:
-        axes[0].set_title("Price-to-Earnings Ratio (PER)", fontsize=12, loc='left')
-        axes[0].set_ylabel('PER', fontsize=11)
+    # Title and label settings
+    axes[0].set_title("Price-to-Earnings Ratio (PER)", fontsize=12, loc='left')
+    axes[0].set_ylabel('PER', fontsize=11)
 
     axes[0].grid(linestyle='--', alpha=0.7)
 
-    # PER 주석 추가
+    # Add PER annotations
     latest_per = df['PER'].iloc[-1]
     min_per_idx = df['PER'].idxmin()
     max_per_idx = df['PER'].idxmax()
 
     bbox_props = dict(boxstyle="round,pad=0.3", fc="#f8f9fa", ec="none", alpha=0.9)
 
-    if KOREAN_FONT_PROP:
-        axes[0].annotate(
-            f"현재: {latest_per:.2f}",
-            xy=(df.index[-1], latest_per),
-            xytext=(10, 0),
-            textcoords='offset points',
-            ha='left',
-            va='center',
-            fontsize=9,
-            bbox=bbox_props,
-            fontproperties=KOREAN_FONT_PROP
-        )
-    else:
-        axes[0].annotate(
-            f"Current: {latest_per:.2f}",
-            xy=(df.index[-1], latest_per),
-            xytext=(10, 0),
-            textcoords='offset points',
-            ha='left',
-            va='center',
-            fontsize=9,
-            bbox=bbox_props
-        )
+    axes[0].annotate(
+        f"Current: {latest_per:.2f}",
+        xy=(df.index[-1], latest_per),
+        xytext=(10, 0),
+        textcoords='offset points',
+        ha='left',
+        va='center',
+        fontsize=9,
+        bbox=bbox_props
+    )
 
-    # 업종 평균 비교 추가 (예시 - 실제 데이터는 API로 가져와야 함)
-    avg_per = df['PER'].mean()  # 평균값 사용
+    # Add industry average comparison (example - actual data should be fetched from API)
+    avg_per = df['PER'].mean()  # Use average value
     axes[0].axhline(y=avg_per, color='gray', linestyle='--', alpha=0.7)
 
-    if KOREAN_FONT_PROP:
-        axes[0].annotate(
-            f"평균: {avg_per:.2f}",
-            xy=(df.index[0], avg_per),
-            xytext=(5, 5),
-            textcoords='offset points',
-            ha='left',
-            va='bottom',
-            fontsize=8,
-            bbox=bbox_props,
-            fontproperties=KOREAN_FONT_PROP
-        )
-    else:
-        axes[0].annotate(
-            f"Avg: {avg_per:.2f}",
-            xy=(df.index[0], avg_per),
-            xytext=(5, 5),
-            textcoords='offset points',
-            ha='left',
-            va='bottom',
-            fontsize=8,
-            bbox=bbox_props
-        )
+    axes[0].annotate(
+        f"Avg: {avg_per:.2f}",
+        xy=(df.index[0], avg_per),
+        xytext=(5, 5),
+        textcoords='offset points',
+        ha='left',
+        va='bottom',
+        fontsize=8,
+        bbox=bbox_props
+    )
 
-    # 2. PBR (주가순자산비율) 플롯
+    # 2. PBR (Price-to-Book Ratio) plot
     axes[1].plot(df.index, df['PBR'], color=PRIMARY_COLORS[1], linewidth=2.5)
 
-    if KOREAN_FONT_PROP:
-        axes[1].set_title("주가순자산비율 (PBR)", fontsize=12, loc='left', fontproperties=KOREAN_FONT_PROP)
-        axes[1].set_ylabel('PBR', fontsize=11, fontproperties=KOREAN_FONT_PROP)
-    else:
-        axes[1].set_title("Price-to-Book Ratio (PBR)", fontsize=12, loc='left')
-        axes[1].set_ylabel('PBR', fontsize=11)
+    axes[1].set_title("Price-to-Book Ratio (PBR)", fontsize=12, loc='left')
+    axes[1].set_ylabel('PBR', fontsize=11)
 
     axes[1].grid(linestyle='--', alpha=0.7)
 
-    # PBR 주석 추가
+    # Add PBR annotations
     latest_pbr = df['PBR'].iloc[-1]
 
-    if KOREAN_FONT_PROP:
-        axes[1].annotate(
-            f"현재: {latest_pbr:.2f}",
-            xy=(df.index[-1], latest_pbr),
-            xytext=(10, 0),
-            textcoords='offset points',
-            ha='left',
-            va='center',
-            fontsize=9,
-            bbox=bbox_props,
-            fontproperties=KOREAN_FONT_PROP
-        )
-    else:
-        axes[1].annotate(
-            f"Current: {latest_pbr:.2f}",
-            xy=(df.index[-1], latest_pbr),
-            xytext=(10, 0),
-            textcoords='offset points',
-            ha='left',
-            va='center',
-            fontsize=9,
-            bbox=bbox_props
-        )
+    axes[1].annotate(
+        f"Current: {latest_pbr:.2f}",
+        xy=(df.index[-1], latest_pbr),
+        xytext=(10, 0),
+        textcoords='offset points',
+        ha='left',
+        va='center',
+        fontsize=9,
+        bbox=bbox_props
+    )
 
-    # 업종 평균 비교 추가
-    avg_pbr = df['PBR'].mean()  # 평균값 사용
+    # Add industry average comparison
+    avg_pbr = df['PBR'].mean()  # Use average value
     axes[1].axhline(y=avg_pbr, color='gray', linestyle='--', alpha=0.7)
 
-    if KOREAN_FONT_PROP:
-        axes[1].annotate(
-            f"평균: {avg_pbr:.2f}",
-            xy=(df.index[0], avg_pbr),
-            xytext=(5, 5),
-            textcoords='offset points',
-            ha='left',
-            va='bottom',
-            fontsize=8,
-            bbox=bbox_props,
-            fontproperties=KOREAN_FONT_PROP
-        )
-    else:
-        axes[1].annotate(
-            f"Avg: {avg_pbr:.2f}",
-            xy=(df.index[0], avg_pbr),
-            xytext=(5, 5),
-            textcoords='offset points',
-            ha='left',
-            va='bottom',
-            fontsize=8,
-            bbox=bbox_props
-        )
+    axes[1].annotate(
+        f"Avg: {avg_pbr:.2f}",
+        xy=(df.index[0], avg_pbr),
+        xytext=(5, 5),
+        textcoords='offset points',
+        ha='left',
+        va='bottom',
+        fontsize=8,
+        bbox=bbox_props
+    )
 
-    # 3. 배당수익률 (DIV) 플롯
+    # 3. Dividend Yield (DIV) plot
     if 'DIV' in df.columns:
         axes[2].plot(df.index, df['DIV'], color=PRIMARY_COLORS[2], linewidth=2.5)
 
-        if KOREAN_FONT_PROP:
-            axes[2].set_title("배당수익률 (%)", fontsize=12, loc='left', fontproperties=KOREAN_FONT_PROP)
-            axes[2].set_ylabel('수익률 (%)', fontsize=11, fontproperties=KOREAN_FONT_PROP)
-        else:
-            axes[2].set_title("Dividend Yield (%)", fontsize=12, loc='left')
-            axes[2].set_ylabel('Yield (%)', fontsize=11)
+        axes[2].set_title("Dividend Yield (%)", fontsize=12, loc='left')
+        axes[2].set_ylabel('Yield (%)', fontsize=11)
 
         axes[2].grid(linestyle='--', alpha=0.7)
 
-        # 배당 주석 추가
+        # Add dividend annotations
         latest_div = df['DIV'].iloc[-1]
 
-        if KOREAN_FONT_PROP:
-            axes[2].annotate(
-                f"현재: {latest_div:.2f}%",
-                xy=(df.index[-1], latest_div),
-                xytext=(10, 0),
-                textcoords='offset points',
-                ha='left',
-                va='center',
-                fontsize=9,
-                bbox=bbox_props,
-                fontproperties=KOREAN_FONT_PROP
-            )
-        else:
-            axes[2].annotate(
-                f"Current: {latest_div:.2f}%",
-                xy=(df.index[-1], latest_div),
-                xytext=(10, 0),
-                textcoords='offset points',
-                ha='left',
-                va='center',
-                fontsize=9,
-                bbox=bbox_props
-            )
+        axes[2].annotate(
+            f"Current: {latest_div:.2f}%",
+            xy=(df.index[-1], latest_div),
+            xytext=(10, 0),
+            textcoords='offset points',
+            ha='left',
+            va='center',
+            fontsize=9,
+            bbox=bbox_props
+        )
 
-        # 업종 평균 비교 추가
-        avg_div = df['DIV'].mean()  # 평균값 사용
+        # Add industry average comparison
+        avg_div = df['DIV'].mean()  # Use average value
         axes[2].axhline(y=avg_div, color='gray', linestyle='--', alpha=0.7)
 
-        if KOREAN_FONT_PROP:
-            axes[2].annotate(
-                f"평균: {avg_div:.2f}%",
-                xy=(df.index[0], avg_div),
-                xytext=(5, 5),
-                textcoords='offset points',
-                ha='left',
-                va='bottom',
-                fontsize=8,
-                bbox=bbox_props,
-                fontproperties=KOREAN_FONT_PROP
-            )
-        else:
-            axes[2].annotate(
-                f"Avg: {avg_div:.2f}%",
-                xy=(df.index[0], avg_div),
-                xytext=(5, 5),
-                textcoords='offset points',
-                ha='left',
-                va='bottom',
-                fontsize=8,
-                bbox=bbox_props
-            )
+        axes[2].annotate(
+            f"Avg: {avg_div:.2f}%",
+            xy=(df.index[0], avg_div),
+            xytext=(5, 5),
+            textcoords='offset points',
+            ha='left',
+            va='bottom',
+            fontsize=8,
+            bbox=bbox_props
+        )
 
-    # 전체 제목
-    if KOREAN_FONT_PROP:
-        fig.suptitle(
-            f"{company_name} ({ticker}) - 기본 지표 분석",
-            fontsize=16,
-            fontweight='bold',
-            y=0.98,
-            fontproperties=KOREAN_FONT_PROP
-        )
-    else:
-        fig.suptitle(
-            f"{company_name} ({ticker}) - Fundamental Analysis",
-            fontsize=16,
-            fontweight='bold',
-            y=0.98
-        )
+    # Overall title
+    fig.suptitle(
+        f"{company_name} ({ticker}) - Fundamental Analysis",
+        fontsize=16,
+        fontweight='bold',
+        y=0.98
+    )
 
     # 레이블 폰트 설정 강화
     for ax in axes:
@@ -1284,11 +1113,8 @@ def create_trading_volume_chart(ticker, company_name=None, days=730, save_path=N
             alpha=0.7
         )
 
-        # 라벨 및 제목 설정
-        if KOREAN_FONT_PROP:
-            axes[0].set_title("투자자별 순매수량", fontsize=12, loc='left', fontproperties=KOREAN_FONT_PROP)
-        else:
-            axes[0].set_title("Net Purchase by Investor Type", fontsize=12, loc='left')
+        # Label and title settings
+        axes[0].set_title("Net Purchase by Investor Type", fontsize=12, loc='left')
 
         axes[0].set_xticks(pos)
 
@@ -1361,21 +1187,15 @@ def create_trading_volume_chart(ticker, company_name=None, days=730, save_path=N
             label=investor
         )
 
-    # 라벨 및 제목 설정
-    if KOREAN_FONT_PROP:
-        axes[1].set_title("일별 누적 순매수량 추이", fontsize=12, loc='left', fontproperties=KOREAN_FONT_PROP)
-    else:
-        axes[1].set_title("Daily Cumulative Net Purchase Trend", fontsize=12, loc='left')
+    # Label and title settings
+    axes[1].set_title("Daily Cumulative Net Purchase Trend", fontsize=12, loc='left')
 
     axes[1].set_xlabel('')
     axes[1].axhline(y=0, color='black', linestyle='-', alpha=0.3)
     axes[1].grid(linestyle='--', alpha=0.7)
 
-    # 한글 폰트를 범례에 적용
-    if KOREAN_FONT_PROP:
-        legend = axes[1].legend(loc='upper left', prop=KOREAN_FONT_PROP)
-    else:
-        legend = axes[1].legend(loc='upper left')
+    # Add legend
+    legend = axes[1].legend(loc='upper left')
 
     # 숫자 포맷팅
     max_vol = df_cumulative.max().max()
@@ -1388,22 +1208,13 @@ def create_trading_volume_chart(ticker, company_name=None, days=730, save_path=N
     axes[1].xaxis.set_major_locator(mdates.WeekdayLocator(interval=2))
     plt.setp(axes[1].xaxis.get_majorticklabels(), rotation=45, ha='right')
 
-    # 전체 제목
-    if KOREAN_FONT_PROP:
-        fig.suptitle(
-            f"{company_name} ({ticker}) - 투자자별 거래 동향",
-            fontsize=16,
-            fontweight='bold',
-            y=0.98,
-            fontproperties=KOREAN_FONT_PROP
-        )
-    else:
-        fig.suptitle(
-            f"{company_name} ({ticker}) - Trading by Investor Type",
-            fontsize=16,
-            fontweight='bold',
-            y=0.98
-        )
+    # Overall title
+    fig.suptitle(
+        f"{company_name} ({ticker}) - Trading by Investor Type",
+        fontsize=16,
+        fontweight='bold',
+        y=0.98
+    )
 
     # 워터마크 추가
     fig.text(

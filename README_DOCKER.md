@@ -1,155 +1,157 @@
-# 🐳 PRISM-INSIGHT Docker 설치 가이드
+# 🐳 PRISM-INSIGHT Docker Installation Guide
 
-Ubuntu 24.04 기반 AI 주식 분석 시스템을 Docker로 간편하게 실행하세요.
+> 📖 [한국어 문서](README_DOCKER_ko.md)
 
----
-
-## 📋 목차
-1. [시스템 구성](#-시스템-구성)
-2. [준비사항](#-준비사항)
-3. [설치 및 실행](#-설치-및-실행)
-4. [설정 파일](#-설정-파일)
-5. [테스트](#-테스트)
-6. [사용법](#-사용법)
-7. [문제 해결](#-문제-해결)
+Run Ubuntu 24.04-based AI stock analysis system easily with Docker.
 
 ---
 
-## 🔧 시스템 구성
+## 📋 Table of Contents
+1. [System Configuration](#-system-configuration)
+2. [Prerequisites](#-prerequisites)
+3. [Installation and Execution](#-installation-and-execution)
+4. [Configuration Files](#-configuration-files)
+5. [Testing](#-testing)
+6. [Usage](#-usage)
+7. [Troubleshooting](#-troubleshooting)
 
-### Docker 이미지에 포함된 구성요소
+---
 
-#### 시스템
+## 🔧 System Configuration
+
+### Components Included in Docker Image
+
+#### System
 - **OS**: Ubuntu 24.04 LTS
-- **Python**: 3.12.x (가상환경)
+- **Python**: 3.12.x (virtual environment)
 - **Node.js**: 22.x LTS
-- **UV**: Python 패키지 관리자
-- **wkhtmltopdf**: PDF 변환 도구
-- **한글 폰트**: Nanum 폰트 패밀리
+- **UV**: Python package manager
+- **wkhtmltopdf**: PDF conversion tool
+- **Korean Fonts**: Nanum font family
 
-#### Python 패키지
+#### Python Packages
 - OpenAI API (GPT-4.1, GPT-5)
 - Anthropic API (Claude Sonnet 4.5)
-- MCP Agent 및 관련 서버들
-- pykrx (한국 주식 데이터)
-- matplotlib, seaborn (데이터 시각화)
-- 프로젝트 requirements.txt의 모든 패키지
+- MCP Agent and related servers
+- pykrx (Korean stock data)
+- matplotlib, seaborn (data visualization)
+- All packages from project requirements.txt
 
-#### MCP 서버
-- **kospi-kosdaq**: 한국 주식 데이터
-- **perplexity-ask**: AI 검색
-- **firecrawl**: 웹 크롤링
-- **sqlite**: 데이터베이스
-- **time**: 시간 관리
+#### MCP Servers
+- **kospi-kosdaq**: Korean stock data
+- **perplexity-ask**: AI search
+- **firecrawl**: Web crawling
+- **sqlite**: Database
+- **time**: Time management
 
 ---
 
-## 📦 준비사항
+## 📦 Prerequisites
 
-### 1. Docker 설치 확인
+### 1. Check Docker Installation
 
 ```bash
-# Docker 버전 확인
+# Check Docker version
 docker --version
 
-# Docker Compose 버전 확인
+# Check Docker Compose version
 docker-compose --version
 ```
 
-Docker가 없다면:
+If you don't have Docker:
 - **Ubuntu**: https://docs.docker.com/engine/install/ubuntu/
 - **macOS**: https://docs.docker.com/desktop/install/mac-install/
 - **Windows**: https://docs.docker.com/desktop/install/windows-install/
 
-### 2. 시스템 요구사항
-- Docker 20.10 이상
-- 4GB RAM 이상
-- 10GB 디스크 여유 공간
+### 2. System Requirements
+- Docker 20.10 or later
+- 4GB RAM or more
+- 10GB free disk space
 
-### 3. 필수 API 키 준비
-- OpenAI API 키 (https://platform.openai.com/api-keys)
-- Anthropic API 키 (https://console.anthropic.com/settings/keys)
-- Perplexity API 키 (https://www.perplexity.ai/settings/api)
-- Firecrawl API 키 (https://www.firecrawl.dev/)
-- Telegram Bot Token ([@BotFather](https://t.me/BotFather)에서 발급)
+### 3. Required API Keys
+- OpenAI API Key (https://platform.openai.com/api-keys)
+- Anthropic API Key (https://console.anthropic.com/settings/keys)
+- Perplexity API Key (https://www.perplexity.ai/settings/api)
+- Firecrawl API Key (https://www.firecrawl.dev/)
+- Telegram Bot Token (issued by [@BotFather](https://t.me/BotFather))
 - Telegram Channel ID
 
 ---
 
-## 🚀 설치 및 실행
+## 🚀 Installation and Execution
 
-### 전체 흐름
+### Overall Flow
 
 ```
-1️⃣ 호스트(로컬)에서 설정 파일 준비
+1️⃣ Prepare configuration files on host (local)
    ↓
-2️⃣ 호스트(로컬)에서 Docker Compose 실행
+2️⃣ Run Docker Compose on host (local)
    ↓
-3️⃣ 컨테이너에 접속하여 테스트
+3️⃣ Access container for testing
 ```
 
-### 방법 1: Docker Compose 사용 (권장)
+### Method 1: Using Docker Compose (Recommended)
 
-#### 1단계: 설정 파일 준비 (호스트/로컬에서)
+#### Step 1: Prepare Configuration Files (on Host/Local)
 
-프로젝트 루트 디렉토리에서 실행:
+Run in project root directory:
 
 ```bash
-# 현재 위치 확인 (프로젝트 루트여야 함)
+# Check current location (should be project root)
 pwd
-# 예: /home/user/prism-insight
+# Example: /home/user/prism-insight
 
-# .env 파일 생성 및 편집
+# Create and edit .env file
 cp .env.example .env
 nano .env
-# 또는 vi, vim, code 등 원하는 에디터 사용
+# Or use your preferred editor: vi, vim, code, etc.
 
-# MCP 설정 파일 생성 및 편집
+# Create and edit MCP config file
 cp mcp_agent.config.yaml.example mcp_agent.config.yaml
 nano mcp_agent.config.yaml
 
-# MCP secrets 파일 생성 및 편집
+# Create and edit MCP secrets file
 cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
 nano mcp_agent.secrets.yaml
 ```
 
-**중요**: 이 단계는 **컨테이너 실행 전** 로컬 컴퓨터에서 해야 합니다!
+**Important**: This step must be done **before running the container** on your local computer!
 
-#### 2단계: Docker Compose 실행 (호스트/로컬에서)
+#### Step 2: Run Docker Compose (on Host/Local)
 
 ```bash
-# 빌드 및 실행 (백그라운드)
+# Build and run (in background)
 docker-compose up -d --build
 
-# 로그 확인 (Ctrl+C로 종료)
+# Check logs (Ctrl+C to exit)
 docker-compose logs -f
 
-# 컨테이너 접속
+# Access container
 docker-compose exec prism-insight /bin/bash
 ```
 
-#### 3단계: 테스트 (컨테이너 내부)
+#### Step 3: Testing (Inside Container)
 
 ```bash
-# Python 버전 확인
+# Check Python version
 python3 --version
 
-# 프로젝트 디렉토리 확인
+# Check project directory
 ls -la /app/prism-insight
 
-# 시장 영업일 확인
+# Check market business day
 python3 check_market_day.py
 ```
 
-### 방법 2: Docker 명령어 직접 사용
+### Method 2: Using Docker Commands Directly
 
-모든 명령어는 **호스트(로컬)**에서 실행합니다.
+All commands are executed on **host (local)**.
 
 ```bash
-# 이미지 빌드
+# Build image
 docker build -t prism-insight:latest .
 
-# 컨테이너 실행
+# Run container
 docker run -it --name prism-insight-container \
   -v $(pwd)/data:/app/prism-insight/data \
   -v $(pwd)/.env:/app/prism-insight/.env \
@@ -159,24 +161,24 @@ docker run -it --name prism-insight-container \
   -v $(pwd)/pdf_reports:/app/prism-insight/pdf_reports \
   prism-insight:latest
 
-# 실행 중인 컨테이너 접속 (새 터미널에서)
+# Access running container (in new terminal)
 docker exec -it prism-insight-container /bin/bash
 ```
 
 ---
 
-## ⚙️ 설정 파일
+## ⚙️ Configuration Files
 
-### 필수 설정 파일 3개
+### 3 Required Configuration Files
 
-#### 1. `.env` 파일
+#### 1. `.env` File
 ```bash
-TELEGRAM_BOT_TOKEN=여기에_봇_토큰_입력
-TELEGRAM_AI_BOT_TOKEN=여기에_AI봇_토큰_입력
-TELEGRAM_CHANNEL_ID=@여기에_채널ID_입력
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_AI_BOT_TOKEN=your_ai_bot_token_here
+TELEGRAM_CHANNEL_ID=@your_channel_id_here
 ```
 
-#### 2. `mcp_agent.config.yaml` 파일
+#### 2. `mcp_agent.config.yaml` File
 ```yaml
 $schema: ../../schema/mcp-agent.config.schema.json
 execution_engine: asyncio
@@ -189,7 +191,7 @@ mcp:
       command: "npx"
       args: [ "-y", "firecrawl-mcp" ]
       env:
-        FIRECRAWL_API_KEY: "여기에_Firecrawl_API키_입력"
+        FIRECRAWL_API_KEY: "your_firecrawl_api_key_here"
     kospi_kosdaq:
       command: "python3"
       args: ["-m", "kospi_kosdaq_stock_server"]
@@ -197,7 +199,7 @@ mcp:
       command: "node"
       args: ["perplexity-ask/dist/index.js"]
       env:
-        PERPLEXITY_API_KEY: "여기에_Perplexity_API키_입력"
+        PERPLEXITY_API_KEY: "your_perplexity_api_key_here"
     sqlite:
       command: "uv"
       args: ["--directory", "sqlite", "run", "mcp-server-sqlite", "--db-path", "stock_tracking_db"]
@@ -209,75 +211,75 @@ openai:
   reasoning_effort: medium
 ```
 
-#### 3. `mcp_agent.secrets.yaml` 파일
+#### 3. `mcp_agent.secrets.yaml` File
 ```yaml
 $schema: ../../schema/mcp-agent.config.schema.json
 openai:
-  api_key: 여기에_OpenAI_API키_입력
+  api_key: your_openai_api_key_here
 anthropic:
-  api_key: 여기에_Anthropic_API키_입력
+  api_key: your_anthropic_api_key_here
 ```
 
-### 보안 주의사항
+### Security Notes
 ```bash
-# 파일 권한 설정
+# Set file permissions
 chmod 600 .env
 chmod 600 mcp_agent.secrets.yaml
 
-# Git 추적 제외 확인
+# Verify Git exclusion
 cat .gitignore | grep -E "\.env|secrets"
 ```
 
 ---
 
-## 🧪 테스트
+## 🧪 Testing
 
-컨테이너 접속 후 아래 명령어들로 테스트하세요.
+Test with the following commands after accessing the container.
 
-### 1. 기본 환경 테스트
+### 1. Basic Environment Test
 
 ```bash
-# Python 버전 확인 (3.12.x 예상)
+# Check Python version (expected: 3.12.x)
 python3 --version
 
-# 가상환경 확인 (/app/venv/bin/python 예상)
+# Check virtual environment (expected: /app/venv/bin/python)
 which python
 
-# 주요 패키지 확인
+# Check main packages
 pip list | grep -E "openai|anthropic|mcp-agent"
 
-# Node.js 확인
+# Check Node.js
 node --version
 npm --version
 
-# UV 확인
+# Check UV
 uv --version
 ```
 
-### 2. 한글 폰트 테스트
+### 2. Korean Font Test
 
 ```bash
-# 한글 폰트 목록
+# List Korean fonts
 fc-list | grep -i nanum
 
-# Python 한글 차트 테스트
+# Test Python Korean chart
 python3 << 'EOF'
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
 fonts = [f.name for f in fm.fontManager.ttflist if 'Nanum' in f.name]
-print("한글 폰트:", fonts)
+print("Korean fonts:", fonts)
 
 plt.rcParams['font.family'] = 'NanumGothic'
 fig, ax = plt.subplots()
 ax.plot([1, 2, 3], [1, 4, 9])
-ax.set_title('한글 테스트')
+ax.set_title('Korean Test')
 plt.savefig('/tmp/test_korean.png')
-print("✅ 차트 생성 완료: /tmp/test_korean.png")
+print("✅ Chart created: /tmp/test_korean.png")
 EOF
 ```
 
-### 3. 주식 데이터 조회 테스트
+### 3. Stock Data Query Test
 
 ```bash
 python3 << 'EOF'
@@ -289,88 +291,88 @@ week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
 
 try:
     df = stock.get_market_ohlcv(week_ago, today, "005930")
-    print("✅ 삼성전자 주가 데이터 조회 성공!")
+    print("✅ Samsung Electronics stock data query successful!")
     print(df.tail())
 except Exception as e:
-    print(f"⚠️ 오류 (주말/공휴일일 수 있음): {e}")
+    print(f"⚠️ Error (may be weekend/holiday): {e}")
 EOF
 ```
 
-### 4. 프로젝트 스크립트 테스트
+### 4. Project Script Test
 
 ```bash
-# 시장 영업일 확인
+# Check market business day
 python3 check_market_day.py
 
-# 도움말 확인
+# Check help
 python3 stock_analysis_orchestrator.py --help
 python3 trigger_batch.py --help
 ```
 
 ---
 
-## 💻 사용법
+## 💻 Usage
 
-### 실행 위치 안내
+### Execution Location Guide
 
-- **🖥️ 호스트/로컬**: Docker Compose 명령어
-- **🐳 컨테이너 내부**: 프로젝트 실행 명령어
+- **🖥️ Host/Local**: Docker Compose commands
+- **🐳 Inside Container**: Project execution commands
 
 ---
 
-### Docker Compose 명령어 (호스트/로컬에서)
+### Docker Compose Commands (on Host/Local)
 
 ```bash
-# 컨테이너 시작
+# Start container
 docker-compose up -d
 
-# 컨테이너 중지
+# Stop container
 docker-compose stop
 
-# 컨테이너 재시작
+# Restart container
 docker-compose restart
 
-# 로그 확인
+# Check logs
 docker-compose logs -f prism-insight
 
-# 컨테이너 접속
+# Access container
 docker-compose exec prism-insight /bin/bash
 
-# 컨테이너 삭제
+# Remove container
 docker-compose down
 
-# 볼륨까지 삭제
+# Remove including volumes
 docker-compose down -v
 ```
 
-### 프로젝트 실행 (컨테이너 내부)
+### Project Execution (Inside Container)
 
 ```bash
-# 프로젝트 디렉토리로 이동
+# Navigate to project directory
 cd /app/prism-insight
 
-# 오전 급등주 분석
+# Morning surge analysis
 python3 stock_analysis_orchestrator.py --mode morning
 
-# 오후 급등주 분석
+# Afternoon surge analysis
 python3 stock_analysis_orchestrator.py --mode afternoon
 
-# 오전 + 오후 모두
+# Both morning + afternoon
 python3 stock_analysis_orchestrator.py --mode both
 ```
 
-### Crontab 자동화 설정
+### Crontab Automation Setup
 
 ```bash
-# 컨테이너 내부에서
+# Inside container
 chmod +x utils/setup_crontab_simple.sh
 ./utils/setup_crontab_simple.sh
 ```
 
-### 데이터 백업 (호스트/로컬에서)
+### Data Backup (on Host/Local)
 
 ```bash
-# 호스트에서 실행
+# Run on host
 docker-compose exec prism-insight tar -czf /tmp/backup.tar.gz \
   stock_tracking_db.sqlite reports/ pdf_reports/
 
@@ -380,148 +382,148 @@ docker cp prism-insight-container:/tmp/backup.tar.gz \
 
 ---
 
-## 🔧 문제 해결
+## 🔧 Troubleshooting
 
-### 명령어 실행 위치
+### Command Execution Location
 
-| 증상/작업 | 실행 위치 | 예시 |
+| Symptom/Task | Execution Location | Example |
 |----------|----------|------|
-| Docker 빌드/실행 | 🖥️ 호스트/로컬 | `docker-compose up -d` |
-| 컨테이너 접속 | 🖥️ 호스트/로컬 | `docker-compose exec prism-insight /bin/bash` |
-| Python 스크립트 실행 | 🐳 컨테이너 내부 | `python3 check_market_day.py` |
-| 설정 파일 편집 | 🖥️ 호스트/로컬 | `nano .env` |
+| Docker build/run | 🖥️ Host/Local | `docker-compose up -d` |
+| Access container | 🖥️ Host/Local | `docker-compose exec prism-insight /bin/bash` |
+| Run Python scripts | 🐳 Inside Container | `python3 check_market_day.py` |
+| Edit config files | 🖥️ Host/Local | `nano .env` |
 
 ---
 
-### 빌드 실패 (호스트/로컬에서)
+### Build Failure (on Host/Local)
 
 ```bash
-# Docker 서비스 확인
+# Check Docker service
 sudo systemctl status docker
 
-# Docker 재시작
+# Restart Docker
 sudo systemctl restart docker
 
-# 캐시 없이 재빌드
+# Rebuild without cache
 docker-compose build --no-cache
 
-# 또는
+# Or
 docker build --no-cache -t prism-insight:latest .
 ```
 
-### 한글이 깨져 보임 (컨테이너 내부에서)
+### Korean Characters Garbled (Inside Container)
 
 ```bash
-# 컨테이너 내부에서 실행
+# Run inside container
 fc-cache -fv
 python3 ./cores/ubuntu_font_installer.py
 python3 -c "import matplotlib.font_manager as fm; fm.fontManager.rebuild()"
 ```
 
-### 가상환경 미활성화 (컨테이너 내부에서)
+### Virtual Environment Not Activated (Inside Container)
 
 ```bash
-# 가상환경 활성화
+# Activate virtual environment
 source /app/venv/bin/activate
 
-# 확인
+# Verify
 which python
-# 예상 출력: /app/venv/bin/python
+# Expected output: /app/venv/bin/python
 ```
 
-### API 키 인식 오류
+### API Key Recognition Error
 
 ```bash
-# 1. 호스트/로컬에서 설정 파일 확인
+# 1. Check config files on host/local
 cat .env
 cat mcp_agent.secrets.yaml
 
-# 2. 컨테이너에 제대로 마운트되었는지 확인 (호스트/로컬에서)
+# 2. Verify proper mounting in container (on host/local)
 docker-compose exec prism-insight cat /app/prism-insight/.env
 
-# 3. 컨테이너 재시작 (호스트/로컬에서)
+# 3. Restart container (on host/local)
 docker-compose restart
 ```
 
-### 권한 문제 (호스트/로컬에서)
+### Permission Issues (on Host/Local)
 
 ```bash
-# 호스트에서
+# On host
 chmod -R 755 data reports pdf_reports
 sudo chown -R $USER:$USER data reports pdf_reports
 ```
 
-### 포트 충돌
+### Port Conflicts
 
 ```bash
-# docker-compose.yml에서 포트 변경
+# Change port in docker-compose.yml
 # ports:
-#   - "8080:8080"  # 다른 포트로 변경
+#   - "8080:8080"  # Change to another port
 ```
 
 ---
 
-## 📊 추가 정보
+## 📊 Additional Information
 
-### 컨테이너 내부 디렉토리 구조
+### Container Internal Directory Structure
 
 ```
 /app/
-├── venv/                      # Python 가상환경
-└── prism-insight/            # 프로젝트 루트
-    ├── cores/                # AI 분석 엔진
-    ├── trading/              # 자동매매
-    ├── perplexity-ask/       # MCP 서버
-    ├── sqlite/               # 데이터베이스
-    ├── reports/              # 분석 보고서
-    └── pdf_reports/          # PDF 보고서
+├── venv/                      # Python virtual environment
+└── prism-insight/            # Project root
+    ├── cores/                # AI analysis engine
+    ├── trading/              # Automated trading
+    ├── perplexity-ask/       # MCP server
+    ├── sqlite/               # Database
+    ├── reports/              # Analysis reports
+    └── pdf_reports/          # PDF reports
 ```
 
-### 이미지 정보
-- **베이스 이미지**: ubuntu:24.04
-- **예상 크기**: ~3-4GB
-- **빌드 시간**: ~5-10분 (네트워크 속도에 따라)
+### Image Information
+- **Base Image**: ubuntu:24.04
+- **Expected Size**: ~3-4GB
+- **Build Time**: ~5-10 minutes (depending on network speed)
 
-### 주요 특징
-- ✅ 완전 자동화 (Git clone ~ 의존성 설치)
-- ✅ 한글 완벽 지원 (Nanum 폰트)
-- ✅ MCP 서버 통합
-- ✅ 데이터 영속성 (볼륨 마운트)
-- ✅ Docker Compose 지원
-
----
-
-## 📞 지원
-
-- **프로젝트**: https://github.com/dragon1086/prism-insight
-- **텔레그램**: https://t.me/stock_ai_agent
-- **이슈**: https://github.com/dragon1086/prism-insight/issues
+### Key Features
+- ✅ Fully automated (Git clone ~ dependency installation)
+- ✅ Perfect Korean support (Nanum fonts)
+- ✅ MCP server integration
+- ✅ Data persistence (volume mounting)
+- ✅ Docker Compose support
 
 ---
 
-## ⚠️ 주의사항
+## 📞 Support
 
-- API 키는 절대 Git에 커밋하지 마세요
-- `.env` 파일은 `.gitignore`에 추가되어 있습니다
-- 실제 운영 환경에서는 적절한 보안 조치를 취하세요
-- 첫 빌드는 5-10분 정도 소요됩니다
+- **Project**: https://github.com/dragon1086/prism-insight
+- **Telegram**: https://t.me/stock_ai_agent
+- **Issues**: https://github.com/dragon1086/prism-insight/issues
 
 ---
 
-## 🔧 경로 설정 정보
+## ⚠️ Important Notes
 
-프로젝트는 **자동 경로 감지**를 사용하므로 어떤 환경에서도 작동합니다:
+- Never commit API keys to Git
+- `.env` file is included in `.gitignore`
+- Take appropriate security measures in production environments
+- First build takes about 5-10 minutes
 
-- **로컬 환경**: `~/my-path/prism-insight` ✅
-- **Docker 환경**: `/app/prism-insight` ✅
-- **다른 개발자**: `/home/user/custom-path` ✅
+---
 
-Python 실행 파일도 자동 감지됩니다 (우선순위):
-1. 프로젝트 가상환경 (`venv/bin/python`)
+## 🔧 Path Configuration Information
+
+The project uses **automatic path detection** so it works in any environment:
+
+- **Local environment**: `~/my-path/prism-insight` ✅
+- **Docker environment**: `/app/prism-insight` ✅
+- **Other developers**: `/home/user/custom-path` ✅
+
+Python executables are also auto-detected (priority):
+1. Project virtual environment (`venv/bin/python`)
 2. pyenv Python (`~/.pyenv/shims/python`)
-3. 시스템 Python (`python3`)
+3. System Python (`python3`)
 
 ---
 
-**⭐ 도움이 되셨다면 GitHub 저장소에 Star를 눌러주세요!**  
-**라이센스**: MIT | **만든 사람**: PRISM-INSIGHT 커뮤니티
+**⭐ If this helped you, please star the GitHub repository!**
+**License**: MIT | **Created by**: PRISM-INSIGHT Community
