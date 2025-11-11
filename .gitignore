@@ -6,6 +6,13 @@ mcp_agent.config.yaml
 mcp_agent.secrets.yaml
 config.py
 
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
 # IntelliJ IDEA project files
 .idea/
 

@@ -1,8 +1,8 @@
 """
-국내주식 매매 모듈
-- 1종목당 정액 매수
-- 시장가 매수/매도
-- 전량 청산 매도
+Domestic stock trading module
+- Fixed amount purchase per stock
+- Market price buy/sell
+- Full liquidation sell
 """
 
 import asyncio
@@ -14,66 +14,66 @@ from typing import Optional, Dict, List, Any
 
 import yaml
 
-# 현재 파일이 있는 디렉토리의 경로
+# Path to directory where current file is located
 TRADING_DIR = Path(__file__).parent
 
-# kis_auth import (같은 디렉토리)
+# kis_auth import (same directory)
 import sys
 sys.path.insert(0, str(TRADING_DIR))
 import kis_auth as ka
 
-# 로깅 설정
+# Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# 설정파일 로딩
+# Load configuration file
 CONFIG_FILE = TRADING_DIR / "config" / "kis_devlp.yaml"
 with open(CONFIG_FILE, encoding="UTF-8") as f:
     _cfg = yaml.load(f, Loader=yaml.FullLoader)
 
 
 class DomesticStockTrading:
-    """국내주식 매매 클래스"""
+    """Domestic stock trading class"""
 
-    # 기본 매수 금액 단위
+    # Default buy amount per stock
     DEFAULT_BUY_AMOUNT = _cfg["default_unit_amount"]
-    # 자동매매 동작 여부
+    # Auto trading enabled flag
     AUTO_TRADING = _cfg["auto_trading"]
-    # 기본 매매 환경
+    # Default trading environment
     DEFAULT_MODE = _cfg["default_mode"]
 
     def __init__(self, mode: str = DEFAULT_MODE, buy_amount: int = None, auto_trading:bool = AUTO_TRADING):
         """
-        초기화
+        Initialize
 
         Args:
-            mode: 'demo' (모의투자) 또는 'real' (실전투자)
-            buy_amount: 1종목당 매수 금액 단위 (기본값: yaml 파일 참고)
-            auto_trading: 자동 트레이딩 실행 여부
+            mode: 'demo' (simulated investment) or 'real' (real investment)
+            buy_amount: Buy amount per stock (default: refer to yaml file)
+            auto_trading: Whether to execute auto trading
         """
         self.mode = mode
         self.env = "vps" if mode == "demo" else "prod"
         self.buy_amount = buy_amount if buy_amount else self.DEFAULT_BUY_AMOUNT
         self.auto_trading = auto_trading
 
-        # 인증
+        # Authentication
         ka.auth(svr=self.env, product="01")
-        
+
         try:
             self.trenv = ka.getTREnv()
         except RuntimeError as e:
-            print("❌ KIS API 인증 실패!")
-            print(f"모드: {self.mode}, 에러: {e}")
-            print("📋 kis_devlp.yaml 설정을 확인해주세요.")
-            raise RuntimeError(f"{self.mode} 모드 인증 실패") from e
+            print("❌ KIS API authentication failed!")
+            print(f"Mode: {self.mode}, Error: {e}")
+            print("📋 Please check kis_devlp.yaml settings.")
+            raise RuntimeError(f"{self.mode} mode authentication failed") from e
 
-        # 비동기 처리를 위한 추가 설정
-        self._global_lock = asyncio.Lock()  # 전역 계좌 접근 제어
-        self._semaphore = asyncio.Semaphore(3)  # 최대 3개 동시 요청
-        self._stock_locks = {}  # 종목별 락
+        # Additional setup for asynchronous processing
+        self._global_lock = asyncio.Lock()  # Global account access control
+        self._semaphore = asyncio.Semaphore(3)  # Maximum 3 concurrent requests
+        self._stock_locks = {}  # Per-stock locks
 
         logger.info(f"DomesticStockTrading initialized (Async Enabled)")
-        logger.info(f"Mode: {mode}, Buy Amount: {self.buy_amount:,}원")
+        logger.info(f"Mode: {mode}, Buy Amount: {self.buy_amount:,} KRW")
         logger.info(f"Account: {self.trenv.my_acct}-{self.trenv.my_prod}")
 
     def get_current_price(self, stock_code: str) -> Optional[Dict[str, Any]]:
