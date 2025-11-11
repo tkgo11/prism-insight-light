@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-주식 트래킹 및 매매 에이전트
+Stock Tracking and Trading Agent
 
-이 모듈은 AI 기반 주식 분석 보고서를 활용하여 매수/매도 의사결정을 수행하고
-거래 내역을 관리하는 시스템입니다.
+This module performs buy/sell decisions using AI-based stock analysis reports
+and manages trading records.
 
-주요 기능:
-1. 분석 보고서 기반의 매매 시나리오 생성
-2. 종목 매수/매도 관리 (최대 10개 슬랏)
-3. 거래 내역 및 수익률 추적
-4. 텔레그램 채널을 통한 결과 공유
+Main Features:
+1. Generate trading scenarios based on analysis reports
+2. Manage stock purchases/sales (maximum 10 slots)
+3. Track trading history and returns
+4. Share results through Telegram channel
 """
 import asyncio
 import json
@@ -26,7 +26,7 @@ from typing import List, Dict, Any, Tuple
 from telegram import Bot
 from telegram.error import TelegramError
 
-# 로깅 설정
+# Logging configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -37,260 +37,86 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# MCP 관련 임포트
-from mcp_agent.agents.agent import Agent
+# MCP related imports
 from mcp_agent.app import MCPApp
 from mcp_agent.workflows.llm.augmented_llm import RequestParams
 from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 
-# MCPApp 인스턴스 생성
+# Core agent imports
+from cores.agents.trading_agents import create_trading_scenario_agent
+
+# Create MCPApp instance
 app = MCPApp(name="stock_tracking")
 
 class StockTrackingAgent:
-    """주식 트래킹 및 매매 에이전트"""
-    
-    # 상수 정의
-    MAX_SLOTS = 10  # 최대 보유 가능 종목 수
-    MAX_SAME_SECTOR = 3  # 동일 산업군 최대 보유 수
-    SECTOR_CONCENTRATION_RATIO = 0.3  # 섹터 집중도 제한 비율
-    
-    # 투자 기간 상수
-    PERIOD_SHORT = "단기"  # 1개월 이내
-    PERIOD_MEDIUM = "중기"  # 1~3개월
-    PERIOD_LONG = "장기"  # 3개월 이상
-    
-    # 매수 점수 기준
-    SCORE_STRONG_BUY = 8  # 강력 매수
-    SCORE_CONSIDER = 7  # 매수 고려
-    SCORE_UNSUITABLE = 6  # 매수 부적합
+    """Stock Tracking and Trading Agent"""
+
+    # Constants
+    MAX_SLOTS = 10  # Maximum number of stocks to hold
+    MAX_SAME_SECTOR = 3  # Maximum holdings in same sector
+    SECTOR_CONCENTRATION_RATIO = 0.3  # Sector concentration limit ratio
+
+    # Investment period constants
+    PERIOD_SHORT = "단기"  # Within 1 month
+    PERIOD_MEDIUM = "중기"  # 1-3 months
+    PERIOD_LONG = "장기"  # 3+ months
+
+    # Buy score thresholds
+    SCORE_STRONG_BUY = 8  # Strong buy
+    SCORE_CONSIDER = 7  # Consider buying
+    SCORE_UNSUITABLE = 6  # Unsuitable for buying
 
     def __init__(self, db_path: str = "stock_tracking_db.sqlite", telegram_token: str = None):
         """
-        에이전트 초기화
+        Initialize agent
 
         Args:
-            db_path: SQLite 데이터베이스 파일 경로
-            telegram_token: 텔레그램 봇 토큰
+            db_path: SQLite database file path
+            telegram_token: Telegram bot token
         """
         self.max_slots = self.MAX_SLOTS
-        self.message_queue = []  # 텔레그램 메시지 저장용
+        self.message_queue = []  # For storing Telegram messages
         self.trading_agent = None
         self.db_path = db_path
         self.conn = None
         self.cursor = None
 
-        # 텔레그램 봇 토큰 설정
+        # Set Telegram bot token
         self.telegram_token = telegram_token or os.environ.get("TELEGRAM_BOT_TOKEN")
         self.telegram_bot = None
         if self.telegram_token:
             self.telegram_bot = Bot(token=self.telegram_token)
 
-    async def initialize(self):
-        """필요한 테이블 생성 및 초기화"""
-        logger.info("트래킹 에이전트 초기화 시작")
+    async def initialize(self, language: str = "ko"):
+        """
+        Create necessary tables and initialize
 
-        # SQLite 연결 초기화
+        Args:
+            language: Language code for agents (default: "ko")
+        """
+        logger.info("Starting tracking agent initialization")
+
+        # Store language for later use
+        self.language = language
+
+        # Initialize SQLite connection
         self.conn = sqlite3.connect(self.db_path)
-        self.conn.row_factory = sqlite3.Row  # 결과를 딕셔너리 형태로 반환
+        self.conn.row_factory = sqlite3.Row  # Return results as dictionary
         self.cursor = self.conn.cursor()
 
-        # 트레이딩 시나리오 생성 에이전트 초기화
-        self.trading_agent = Agent(
-            name="trading_scenario_agent",
-            instruction="""당신은 신중하고 분석적인 주식 매매 시나리오 생성 전문가입니다.
-            기본적으로는 가치투자 원칙을 따르되, 상승 모멘텀이 확인될 때는 보다 적극적으로 진입합니다.
-            주식 분석 보고서를 읽고 매매 시나리오를 JSON 형식으로 생성해야 합니다.
-            
-            ## 매매 시스템 특성
-            ⚠️ **핵심**: 이 시스템은 분할매매가 불가능합니다.
-            - 매수: 포트폴리오의 10% 비중(1슬롯)으로 100% 매수
-            - 매도: 1슬롯 보유분 100% 전량 매도
-            - 올인/올아웃 방식이므로 더욱 신중한 판단 필요
-            
-            ### ⚠️ 리스크 관리 최우선 원칙 (손실은 짧게!)
+        # Initialize trading scenario generation agent with language
+        self.trading_agent = create_trading_scenario_agent(language=language)
 
-            **손절가 설정 철칙:**
-            - 손절가는 매수가 기준 **-5% ~ -7% 이내** 우선 적용
-            - 손절가 도달 시 **원칙적으로 즉시 전량 매도** (매도 에이전트가 판단)
-            - **예외 허용**: 당일 강한 반등 + 거래량 급증 시 1일 유예 가능 (단, 손실 -7% 미만일 때만)
-            
-            **Risk/Reward Ratio 필수:**
-            - 목표 수익률이 10%면 → 손절은 최대 -5%
-            - 목표 수익률이 15%면 → 손절은 최대 -7%
-            - **손절폭은 원칙적으로 -7%를 넘지 않도록 설정**
-            
-            **지지선이 -7% 밖에 있는 경우:**
-            - **우선 선택**: 진입을 재검토하거나 점수를 하향 조정
-            - **차선 선택**: 지지선을 손절가로 하되, 다음 조건 충족 필수:
-              * Risk/Reward Ratio 2:1 이상 확보 (목표가를 더 높게)
-              * 지지선의 강력함을 명확히 확인 (박스권 하단, 장기 이평선 등)
-              * 손절폭이 -10%를 초과하지 않도록 제한
-            
-            **100% 올인/올아웃의 위험성:**
-            - 한 번의 큰 손실(-15%)은 복구에 +17.6% 필요
-            - 작은 손실(-5%)은 복구에 +5.3%만 필요
-            - 따라서 **손절이 멀면 진입하지 않는 게 낫다**
-            
-            **예시:**
-            - 매수가 18,000원, 지지선 15,500원 → 손실폭 -13.9% (❌ 진입 부적합)
-            - 이 경우: 진입을 포기하거나, 목표가를 30,000원 이상(+67%)으로 상향
-            
-            ## 분석 프로세스
-            
-            ### 1. 포트폴리오 현황 분석
-            stock_holdings 테이블에서 다음 정보를 확인하세요:
-            - 현재 보유 종목 수 (최대 10개 슬롯)
-            - 산업군 분포 (특정 산업군 과다 노출 여부)
-            - 투자 기간 분포 (단기/중기/장기 비율)
-            - 포트폴리오 평균 수익률
-            
-            ### 2. 종목 평가 (1~10점)
-            - **8~10점**: 매수 적극 고려 (동종업계 대비 저평가 + 강한 모멘텀)
-            - **7점**: 매수 고려 (밸류에이션 추가 확인 필요)
-            - **6점 이하**: 매수 부적합 (고평가 또는 부정적 전망 또는 1,000원 이하의 동전주)
-            
-            ### 3. 진입 결정 필수 확인사항
-            
-            #### 3-1. 밸류에이션 분석 (최우선)
-            perplexity-ask tool을 활용하여 확인:
-            - "[종목명] PER PBR vs [업종명] 업계 평균 밸류에이션 비교"
-            - "[종목명] vs 동종업계 주요 경쟁사 밸류에이션 비교"
-            
-            #### 3-2. 기본 체크리스트
-            - 재무 건전성 (부채비율, 현금흐름)
-            - 성장 동력 (명확하고 지속가능한 성장 근거)
-            - 업계 전망 (업종 전반의 긍정적 전망)
-            - 기술적 신호 (상승 모멘텀, 지지선, 박스권 내 현재 위치에서 하락 리스크)
-            - 개별 이슈 (최근 호재/악재)
-            
-            #### 3-3. 포트폴리오 제약사항
-            - 보유 종목 7개 이상 → 8점 이상만 고려
-            - 동일 산업군 2개 이상 → 매수 신중 검토
-            - 충분한 상승여력 필요 (목표가 대비 10% 이상)
-            
-            #### 3-4. 시장 상황 반영
-            - 보고서의 '시장 분석' 섹션의 시장 리스크 레벨과 권장 현금 보유 비율을 확인
-            - **최대 보유 종목 수 결정**:
-              * 시장 리스크 Low + 현금 비율 ~10% → 최대 9~10개
-              * 시장 리스크 Medium + 현금 비율 ~20% → 최대 7~8개  
-              * 시장 리스크 High + 현금 비율 30%+ → 최대 6~7개
-            - RSI 과매수권(70+) 또는 단기 과열 언급 시 신규 매수 신중히 접근
-            - 최대 종목 수는 매 실행 시 재평가하되, 상향 조정은 신중하게, 리스크 증가 시 즉시 하향 조정
-            
-            #### 3-5. 현재 시간 반영 및 데이터 신뢰도 판단 ⚠️
-            **time-get_current_time tool을 사용하여 현재 시간을 확인하세요 (한국시간 KST 기준)**
-            
-            **장중(09:00~15:20) 데이터 분석 시:**
-            - 당일 거래량/캔들은 **아직 형성 중인 미완성 데이터**
-            - ❌ 금지: "오늘 거래량이 부족하다", "오늘 캔들이 약세다" 등의 판단
-            - ✅ 권장: 전일 또는 최근 수일간의 확정 데이터로 분석
-            - 당일 데이터는 "추세 변화의 참고"만 가능, 확정 판단의 근거로 사용 금지
-            
-            **장 마감 후(15:30 이후) 데이터 분석 시:**
-            - 당일 거래량/캔들 모두 **확정 완료**
-            - 모든 기술적 지표 (거래량, 종가, 캔들 패턴 등) 신뢰 가능
-            - 당일 데이터를 적극 활용하여 분석 가능
-            
-            **핵심 원칙:**
-            장중 실행 = 전일 확정 데이터 중심 분석 / 장 마감 후 = 당일 포함 모든 데이터 활용
-            
-            ### 4. 모멘텀 가산점 요소
-            다음 신호 확인 시 매수 점수 가산:
-            - 거래량 급증 (관심 상승)
-            - 기관/외국인 순매수 (자금 유입)
-            - 기술적 돌파1 (추세 전환)
-            - 기술적 돌파2 (박스권 상향 돌파)
-            - 동종업계 대비 저평가
-            - 업종 전반 긍정적 전망
-            
-            ### 5. 최종 진입 가이드
-            - 7점 + 강한 모멘텀 + 저평가 → 진입 고려
-            - 8점 + 보통 조건 + 긍정적 전망 → 진입 고려
-            - 9점 이상 + 밸류에이션 매력 → 적극 진입
-            - 명시적 경고나 부정적 전망 시 보수적 접근
-            
-            ## 도구 사용 가이드
-            - 거래량/투자자별 매매: kospi_kosdaq-get_stock_ohlcv, kospi_kosdaq-get_stock_trading_volume
-            - 밸류에이션 비교: perplexity_ask tool
-            - 현재 시간: time-get_current_time tool
-            - 데이터 조회 기준: 보고서의 '발행일: ' 날짜
-            
-            ## 보고서 주요 확인 섹션
-            - '투자 전략 및 의견': 핵심 투자 의견
-            - '최근 주요 뉴스 요약': 업종 동향과 뉴스
-            - '기술적 분석': 주가, 목표가, 손절가 정보
-            
-            ## JSON 응답 형식
-            
-            **중요**: key_levels의 가격 필드는 반드시 다음 형식 중 하나로 작성하세요:
-            - 단일 숫자: 1700 또는 "1700"
-            - 쉼표 포함: "1,700" 
-            - 범위 표현: "1700~1800" 또는 "1,700~1,800" (중간값 사용됨)
-            - ❌ 금지: "1,700원", "약 1,700원", "최소 1,700" 같은 설명 문구 포함
-            
-            **key_levels 예시**:
-            올바른 예시:
-            "primary_support": 1700
-            "primary_support": "1,700"
-            "primary_support": "1700~1750"
-            "secondary_resistance": "2,000~2,050"
-            
-            잘못된 예시 (파싱 실패 가능):
-            "primary_support": "약 1,700원"
-            "primary_support": "1,700원 부근"
-            "primary_support": "최소 1,700"
-            
-            {
-                "portfolio_analysis": "현재 포트폴리오 상황 요약",
-                "valuation_analysis": "동종업계 밸류에이션 비교 결과",
-                "sector_outlook": "업종 전망 및 동향",
-                "buy_score": 1~10 사이의 점수,
-                "min_score": 최소 진입 요구 점수,
-                "decision": "진입" 또는 "관망",
-                "target_price": 목표가 (원, 숫자만),
-                "stop_loss": 손절가 (원, 숫자만),
-                "investment_period": "단기" / "중기" / "장기",
-                "rationale": "핵심 투자 근거 (3줄 이내)",
-                "sector": "산업군/섹터",
-                "market_condition": "시장 추세 분석 (상승추세/하락추세/횡보)",
-                "max_portfolio_size": "시장 상태 분석 결과 추론된 최대 보유 종목수",
-                "trading_scenarios": {
-                    "key_levels": {
-                        "primary_support": 주요 지지선,
-                        "secondary_support": 보조 지지선,
-                        "primary_resistance": 주요 저항선,
-                        "secondary_resistance": 보조 저항선,
-                        "volume_baseline": "평소 거래량 기준(문자열 표현 가능)"
-                    },
-                    "sell_triggers": [
-                        "익절 조건 1:  목표가/저항선 관련",
-                        "익절 조건 2: 상승 모멘텀 소진 관련", 
-                        "손절 조건 1: 지지선 이탈 관련",
-                        "손절 조건 2: 하락 가속 관련",
-                        "시간 조건: 횡보/장기보유 관련"
-                    ],
-                    "hold_conditions": [
-                        "보유 지속 조건 1",
-                        "보유 지속 조건 2",
-                        "보유 지속 조건 3"
-                    ],
-                    "portfolio_context": "포트폴리오 관점 의미"
-                }
-            }
-            """,
-            server_names=["kospi_kosdaq", "sqlite", "perplexity", "time"]
-        )
-
-        # 데이터베이스 테이블 생성
+        # Create database tables
         await self._create_tables()
 
-        logger.info("트래킹 에이전트 초기화 완료")
+        logger.info("Tracking agent initialization complete")
         return True
 
     async def _create_tables(self):
-        """필요한 데이터베이스 테이블 생성"""
+        """Create necessary database tables"""
         try:
-            # 보유종목 테이블 생성
+            # Create stock holdings table
             self.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS stock_holdings (
                     ticker TEXT PRIMARY KEY,
@@ -305,7 +131,7 @@ class StockTrackingAgent:
                 )
             """)
 
-            # 매매 이력 테이블 생성
+            # Create trading history table
             self.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS trading_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -321,31 +147,31 @@ class StockTrackingAgent:
                 )
             """)
 
-            # 변경사항 저장
+            # Save changes
             self.conn.commit()
 
-            logger.info("데이터베이스 테이블 생성 완료")
+            logger.info("Database table creation complete")
 
         except Exception as e:
-            logger.error(f"테이블 생성 중 오류: {str(e)}")
+            logger.error(f"Error creating tables: {str(e)}")
             logger.error(traceback.format_exc())
             raise
 
     async def _extract_ticker_info(self, report_path: str) -> Tuple[str, str]:
         """
-        보고서 파일 경로에서 종목 코드와 이름 추출
+        Extract ticker code and company name from report file path
 
         Args:
-            report_path: 보고서 파일 경로
+            report_path: Report file path
 
         Returns:
-            Tuple[str, str]: 종목 코드, 종목 이름
+            Tuple[str, str]: Ticker code, company name
         """
         try:
-            # 파일명에서 정규표현식으로 ticker와 company_name 추출
+            # Extract ticker and company_name from filename using regex
             file_name = Path(report_path).stem
 
-            # 정규표현식을 사용한 파싱
+            # Parsing using regular expression
             pattern = r'^([A-Za-z0-9]+)_([^_]+)'
             match = re.match(pattern, file_name)
 
@@ -354,50 +180,50 @@ class StockTrackingAgent:
                 company_name = match.group(2)
                 return ticker, company_name
             else:
-                # 기존 방식도 유지
+                # Keep legacy method as fallback
                 parts = file_name.split('_')
                 if len(parts) >= 2:
                     return parts[0], parts[1]
 
-            logger.error(f"파일명에서 종목 정보를 추출할 수 없습니다: {file_name}")
+            logger.error(f"Cannot extract ticker info from filename: {file_name}")
             return "", ""
         except Exception as e:
-            logger.error(f"종목 정보 추출 중 오류: {str(e)}")
+            logger.error(f"Error extracting ticker info: {str(e)}")
             return "", ""
 
     async def _get_current_stock_price(self, ticker: str) -> float:
         """
-        현재 주가 조회
+        Get current stock price
 
         Args:
-            ticker: 종목 코드
+            ticker: Stock code
 
         Returns:
-            float: 현재 주가
+            float: Current stock price
         """
         try:
             from pykrx.stock import stock_api
             import datetime
 
-            # 오늘 날짜
+            # Today's date
             today = datetime.datetime.now().strftime("%Y%m%d")
 
-            # 가장 최근 영업일 구하기
+            # Get the most recent business day
             trade_date = stock_api.get_nearest_business_day_in_a_week(today, prev=True)
-            logger.info(f"타겟 날짜: {trade_date}")
+            logger.info(f"Target date: {trade_date}")
 
-            # 해당 거래일의 OHLCV 데이터 가져오기
+            # Get OHLCV data for the trading day
             df = stock_api.get_market_ohlcv_by_ticker(trade_date)
 
-            # 특정 종목 데이터 추출
+            # Extract specific stock data
             if ticker in df.index:
-                # 종가(Close) 추출
+                # Extract closing price
                 current_price = df.loc[ticker, "종가"]
-                logger.info(f"{ticker} 종목 현재가: {current_price:,.0f}원")
+                logger.info(f"{ticker} current price: {current_price:,.0f} KRW")
                 return float(current_price)
             else:
-                logger.warning(f"{ticker} 종목을 찾을 수 없습니다.")
-                # DB에서 마지막 저장된 가격 확인
+                logger.warning(f"Cannot find ticker {ticker}")
+                # Check last saved price from DB
                 try:
                     self.cursor.execute(
                         "SELECT current_price FROM stock_holdings WHERE ticker = ?",
@@ -406,16 +232,16 @@ class StockTrackingAgent:
                     row = self.cursor.fetchone()
                     if row and row[0]:
                         last_price = float(row[0])
-                        logger.warning(f"{ticker} 현재가 조회 실패, 마지막 가격 사용: {last_price}")
+                        logger.warning(f"{ticker} price query failed, using last price: {last_price}")
                         return last_price
                 except:
                     pass
                 return 0.0
 
         except Exception as e:
-            logger.error(f"{ticker} 현재 주가 조회 중 오류: {str(e)}")
+            logger.error(f"Error querying current price for {ticker}: {str(e)}")
             logger.error(traceback.format_exc())
-            # 오류 발생 시 DB에서 마지막 저장된 가격 확인
+            # Check last saved price from DB on error
             try:
                 self.cursor.execute(
                     "SELECT current_price FROM stock_holdings WHERE ticker = ?",
@@ -424,7 +250,7 @@ class StockTrackingAgent:
                 row = self.cursor.fetchone()
                 if row and row[0]:
                     last_price = float(row[0])
-                    logger.warning(f"{ticker} 현재가 조회 실패, 마지막 가격 사용: {last_price}")
+                    logger.warning(f"{ticker} price query failed, using last price: {last_price}")
                     return last_price
             except:
                 pass
@@ -432,23 +258,23 @@ class StockTrackingAgent:
 
     async def _get_trading_value_rank_change(self, ticker: str) -> Tuple[float, str]:
         """
-        종목의 거래대금 랭킹 변화를 계산
+        Calculate trading value ranking change for a stock
 
         Args:
-            ticker: 종목 코드
+            ticker: Stock code
 
         Returns:
-            Tuple[float, str]: 랭킹 변화율, 분석 결과 메시지
+            Tuple[float, str]: Ranking change percentage, analysis result message
         """
         try:
             from pykrx.stock import stock_api
             import datetime
             import pandas as pd
 
-            # 오늘 날짜
+            # Today's date
             today = datetime.datetime.now().strftime("%Y%m%d")
 
-            # 최근 2개 영업일 구하기
+            # Get recent 2 business days
             recent_date = stock_api.get_nearest_business_day_in_a_week(today, prev=True)
             previous_date_obj = datetime.datetime.strptime(recent_date, "%Y%m%d") - timedelta(days=1)
             previous_date = stock_api.get_nearest_business_day_in_a_week(
@@ -456,17 +282,17 @@ class StockTrackingAgent:
                 prev=True
             )
 
-            logger.info(f"최근 영업일: {recent_date}, 이전 영업일: {previous_date}")
+            logger.info(f"Recent trading day: {recent_date}, Previous trading day: {previous_date}")
 
-            # 해당 거래일의 OHLCV 데이터 가져오기 (거래대금 포함)
+            # Get OHLCV data for the trading days (including trading value)
             recent_df = stock_api.get_market_ohlcv_by_ticker(recent_date)
             previous_df = stock_api.get_market_ohlcv_by_ticker(previous_date)
 
-            # 거래대금으로 정렬하여 랭킹 생성
+            # Sort by trading value to generate rankings
             recent_rank = recent_df.sort_values(by="거래대금", ascending=False).reset_index()
             previous_rank = previous_df.sort_values(by="거래대금", ascending=False).reset_index()
 
-            # 티커에 대한 랭킹 찾기
+            # Find ranking for ticker
             if ticker in recent_rank['티커'].values:
                 recent_ticker_rank = recent_rank[recent_rank['티커'] == ticker].index[0] + 1
             else:
@@ -477,43 +303,43 @@ class StockTrackingAgent:
             else:
                 previous_ticker_rank = 0
 
-            # 랭킹이 없을 경우 리턴
+            # Return if no ranking info
             if recent_ticker_rank == 0 or previous_ticker_rank == 0:
-                return 0, f"거래대금 랭킹 정보 없음"
+                return 0, f"No trading value ranking info"
 
-            # 랭킹 변화 계산
-            rank_change = previous_ticker_rank - recent_ticker_rank  # 양수면 순위 상승, 음수면 순위 하락
+            # Calculate ranking change
+            rank_change = previous_ticker_rank - recent_ticker_rank  # Positive = rank up, negative = rank down
             rank_change_percentage = (rank_change / previous_ticker_rank) * 100
 
-            # 랭킹 정보 및 거래대금 데이터
+            # Ranking info and trading value data
             recent_value = int(recent_df.loc[ticker, "거래대금"]) if ticker in recent_df.index else 0
             previous_value = int(previous_df.loc[ticker, "거래대금"]) if ticker in previous_df.index else 0
             value_change_percentage = ((recent_value - previous_value) / previous_value * 100) if previous_value > 0 else 0
 
             result_msg = (
-                f"거래대금 랭킹: {recent_ticker_rank}위 (이전: {previous_ticker_rank}위, "
-                f"변화: {'▲' if rank_change > 0 else '▼' if rank_change < 0 else '='}{abs(rank_change)}), "
-                f"거래대금: {recent_value:,}원 (이전: {previous_value:,}원, "
-                f"변화: {'▲' if value_change_percentage > 0 else '▼' if value_change_percentage < 0 else '='}{abs(value_change_percentage):.1f}%)"
+                f"Trading value rank: #{recent_ticker_rank} (prev: #{previous_ticker_rank}, "
+                f"change: {'▲' if rank_change > 0 else '▼' if rank_change < 0 else '='}{abs(rank_change)}), "
+                f"Trading value: {recent_value:,} KRW (prev: {previous_value:,} KRW, "
+                f"change: {'▲' if value_change_percentage > 0 else '▼' if value_change_percentage < 0 else '='}{abs(value_change_percentage):.1f}%)"
             )
 
             logger.info(f"{ticker} {result_msg}")
             return rank_change_percentage, result_msg
 
         except Exception as e:
-            logger.error(f"{ticker} 거래대금 랭킹 분석 중 오류: {str(e)}")
+            logger.error(f"Error analyzing trading value ranking for {ticker}: {str(e)}")
             logger.error(traceback.format_exc())
-            return 0, "거래대금 랭킹 분석 실패"
+            return 0, "Trading value ranking analysis failed"
 
     async def _is_ticker_in_holdings(self, ticker: str) -> bool:
         """
-        종목이 이미 보유 중인지 확인
+        Check if stock is already in holdings
 
         Args:
-            ticker: 종목 코드
+            ticker: Stock code
 
         Returns:
-            bool: 보유 중이면 True, 아니면 False
+            bool: True if holding, False otherwise
         """
         try:
             self.cursor.execute(
@@ -523,35 +349,35 @@ class StockTrackingAgent:
             count = self.cursor.fetchone()[0]
             return count > 0
         except Exception as e:
-            logger.error(f"보유 종목 확인 중 오류: {str(e)}")
+            logger.error(f"Error checking holdings: {str(e)}")
             return False
 
     async def _get_current_slots_count(self) -> int:
-        """현재 보유 중인 종목 수 조회"""
+        """Get current number of holdings"""
         try:
             self.cursor.execute("SELECT COUNT(*) FROM stock_holdings")
             count = self.cursor.fetchone()[0]
             return count
         except Exception as e:
-            logger.error(f"보유 종목 수 조회 중 오류: {str(e)}")
+            logger.error(f"Error querying holdings count: {str(e)}")
             return 0
 
     async def _check_sector_diversity(self, sector: str) -> bool:
         """
-        동일 산업군 과다 투자 여부 확인
+        Check for over-concentration in same sector
 
         Args:
-            sector: 산업군 이름
+            sector: Sector name
 
         Returns:
-            bool: 투자 가능 여부 (True: 가능, False: 과다)
+            bool: Investment availability (True: available, False: over-concentrated)
         """
         try:
-            # 산업군 정보가 없거나 유효하지 않으면 제한하지 않음
+            # Don't limit if sector info is missing or invalid
             if not sector or sector == "알 수 없음":
                 return True
 
-            # 현재 보유 종목의 시나리오에서 산업군 정보 추출
+            # Extract sector info from scenarios of current holdings
             self.cursor.execute("SELECT scenario FROM stock_holdings")
             holdings_scenarios = self.cursor.fetchall()
 
@@ -565,48 +391,48 @@ class StockTrackingAgent:
                     except:
                         pass
 
-            # 동일 산업군 종목 수 계산
+            # Count stocks in same sector
             same_sector_count = sum(1 for s in sectors if s and s.lower() == sector.lower())
 
-            # 동일 산업군이 MAX_SAME_SECTOR 이상이거나 전체의 SECTOR_CONCENTRATION_RATIO 이상이면 제한
+            # Limit if same sector count >= MAX_SAME_SECTOR or >= SECTOR_CONCENTRATION_RATIO of total
             if same_sector_count >= self.MAX_SAME_SECTOR or \
                (sectors and same_sector_count / len(sectors) >= self.SECTOR_CONCENTRATION_RATIO):
                 logger.warning(
-                    f"산업군 '{sector}' 과다 투자 위험: "
-                    f"현재 {same_sector_count}개 보유 중 "
-                    f"(최대 {self.MAX_SAME_SECTOR}개, 집중도 {self.SECTOR_CONCENTRATION_RATIO*100:.0f}% 제한)"
+                    f"Sector '{sector}' over-investment risk: "
+                    f"Currently holding {same_sector_count} stocks "
+                    f"(max {self.MAX_SAME_SECTOR}, concentration limit {self.SECTOR_CONCENTRATION_RATIO*100:.0f}%)"
                 )
                 return False
 
             return True
 
         except Exception as e:
-            logger.error(f"산업군 다양성 확인 중 오류: {str(e)}")
-            return True  # 오류 발생 시 기본적으로 제한하지 않음
+            logger.error(f"Error checking sector diversity: {str(e)}")
+            return True  # Don't limit by default on error
 
     async def _extract_trading_scenario(self, report_content: str, rank_change_msg: str = "") -> Dict[str, Any]:
         """
-        보고서에서 매매 시나리오 추출
+        Extract trading scenario from report
 
         Args:
-            report_content: 분석 보고서 내용
-            rank_change_msg: 거래대금 랭킹 변화 정보
+            report_content: Analysis report content
+            rank_change_msg: Trading value ranking change info
 
         Returns:
-            Dict: 매매 시나리오 정보
+            Dict: Trading scenario information
         """
         try:
-            # 현재 보유 종목 정보 및 산업군 분포를 가져옴
+            # Get current holdings info and sector distribution
             current_slots = await self._get_current_slots_count()
 
-            # 현재 포트폴리오 정보 수집
+            # Collect current portfolio information
             self.cursor.execute("""
-                SELECT ticker, company_name, buy_price, current_price, scenario 
+                SELECT ticker, company_name, buy_price, current_price, scenario
                 FROM stock_holdings
             """)
             holdings = [dict(row) for row in self.cursor.fetchall()]
 
-            # 산업군 분포 분석
+            # Analyze sector distribution
             sector_distribution = {}
             investment_periods = {"단기": 0, "중기": 0, "장기": 0}
 
@@ -616,39 +442,56 @@ class StockTrackingAgent:
                     if isinstance(scenario_str, str):
                         scenario_data = json.loads(scenario_str)
 
-                        # 산업군 정보 수집
+                        # Collect sector info
                         sector = scenario_data.get('sector', '알 수 없음')
                         sector_distribution[sector] = sector_distribution.get(sector, 0) + 1
 
-                        # 투자 기간 정보 수집
+                        # Collect investment period info
                         period = scenario_data.get('investment_period', '중기')
                         investment_periods[period] = investment_periods.get(period, 0) + 1
                 except:
                     pass
 
-            # 포트폴리오 정보 문자열
+            # Portfolio info string
             portfolio_info = f"""
-            현재 보유 종목 수: {current_slots}/{self.max_slots}
-            산업군 분포: {json.dumps(sector_distribution, ensure_ascii=False)}
-            투자 기간 분포: {json.dumps(investment_periods, ensure_ascii=False)}
+            Current holdings: {current_slots}/{self.max_slots}
+            Sector distribution: {json.dumps(sector_distribution, ensure_ascii=False)}
+            Investment period distribution: {json.dumps(investment_periods, ensure_ascii=False)}
             """
 
-            # LLM 호출하여 매매 시나리오 생성
+            # LLM call to generate trading scenario
             llm = await self.trading_agent.attach_llm(OpenAIAugmentedLLM)
 
-            response = await llm.generate_str(
-                message=f"""
+            # Prepare prompt based on language
+            if self.language == "ko":
+                prompt_message = f"""
                 다음은 주식 종목에 대한 AI 분석 보고서입니다. 이 보고서를 기반으로 매매 시나리오를 생성해주세요.
-                
+
                 ### 현재 포트폴리오 상황:
                 {portfolio_info}
-                
+
                 ### 거래대금 분석:
                 {rank_change_msg}
-                
+
                 ### 보고서 내용:
                 {report_content}
-                """,
+                """
+            else:  # English
+                prompt_message = f"""
+                This is an AI analysis report for a stock. Please generate a trading scenario based on this report.
+
+                ### Current Portfolio Status:
+                {portfolio_info}
+
+                ### Trading Value Analysis:
+                {rank_change_msg}
+
+                ### Report Content:
+                {report_content}
+                """
+
+            response = await llm.generate_str(
+                message=prompt_message,
                 request_params=RequestParams(
                     model="gpt-5",
                     maxTokens=10000
@@ -688,7 +531,7 @@ class StockTrackingAgent:
                     json_str = markdown_match.group(1)
                     json_str = fix_json_syntax(json_str)
                     scenario_json = json.loads(json_str)
-                    logger.info(f"마크다운 코드 블록에서 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
+                    logger.info(f"Scenario parsed from markdown code block: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
 
                 # 일반 JSON 객체 추출 시도
@@ -697,18 +540,18 @@ class StockTrackingAgent:
                     json_str = json_match.group(1)
                     json_str = fix_json_syntax(json_str)
                     scenario_json = json.loads(json_str)
-                    logger.info(f"일반 JSON 형식에서 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
+                    logger.info(f"Scenario parsed from regular JSON format: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
 
                 # 전체 응답이 JSON인 경우
                 clean_response = fix_json_syntax(response)
                 scenario_json = json.loads(clean_response)
-                logger.info(f"전체 응답 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
+                logger.info(f"Full response scenario: {json.dumps(scenario_json, ensure_ascii=False)}")
                 return scenario_json
 
             except Exception as json_err:
-                logger.error(f"매매 시나리오 JSON 파싱 오류: {json_err}")
-                logger.error(f"원본 응답: {response}")
+                logger.error(f"Trading scenario JSON parse error: {json_err}")
+                logger.error(f"Original response: {response}")
 
                 # 추가 복구 시도: 더 강력한 JSON 수정
                 try:
@@ -728,17 +571,17 @@ class StockTrackingAgent:
                     clean_response = re.sub(r',\s*,+', ',', clean_response)
                     
                     scenario_json = json.loads(clean_response)
-                    logger.info(f"추가 복구로 파싱된 시나리오: {json.dumps(scenario_json, ensure_ascii=False)}")
+                    logger.info(f"Scenario parsed with additional recovery: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
                 except Exception as e:
-                    logger.error(f"추가 복구 시도도 실패: {str(e)}")
+                    logger.error(f"Additional recovery attempt failed: {str(e)}")
                     
                     # 최후의 시도: json_repair 라이브러리 사용 가능한 경우
                     try:
                         import json_repair
                         repaired = json_repair.repair_json(response)
                         scenario_json = json.loads(repaired)
-                        logger.info("json_repair로 복구 성공")
+                        logger.info("Successfully recovered with json_repair")
                         return scenario_json
                     except (ImportError, Exception):
                         pass
@@ -747,71 +590,71 @@ class StockTrackingAgent:
                 return self._default_scenario()
 
         except Exception as e:
-            logger.error(f"매매 시나리오 추출 중 오류: {str(e)}")
+            logger.error(f"Error extracting trading scenario: {str(e)}")
             logger.error(traceback.format_exc())
             return self._default_scenario()
 
     def _default_scenario(self) -> Dict[str, Any]:
-        """기본 매매 시나리오 반환"""
+        """Return default trading scenario"""
         return {
-            "portfolio_analysis": "분석 실패",
+            "portfolio_analysis": "Analysis failed",
             "buy_score": 0,
             "decision": "관망",
             "target_price": 0,
             "stop_loss": 0,
             "investment_period": "단기",
-            "rationale": "분석 실패",
+            "rationale": "Analysis failed",
             "sector": "알 수 없음",
-            "considerations": "분석 실패"
+            "considerations": "Analysis failed"
         }
 
     async def analyze_report(self, pdf_report_path: str) -> Dict[str, Any]:
         """
-        주식 분석 보고서를 분석하여 매매 의사결정
+        Analyze stock analysis report and make trading decision
 
         Args:
-            pdf_report_path: pdf 분석 보고서 파일 경로
+            pdf_report_path: PDF analysis report file path
 
         Returns:
-            Dict: 매매 의사결정 결과
+            Dict: Trading decision result
         """
         try:
-            logger.info(f"보고서 분석 시작: {pdf_report_path}")
+            logger.info(f"Starting report analysis: {pdf_report_path}")
 
-            # 파일 경로에서 종목 코드와 이름 추출
+            # Extract ticker code and company name from file path
             ticker, company_name = await self._extract_ticker_info(pdf_report_path)
 
             if not ticker or not company_name:
-                logger.error(f"종목 정보 추출 실패: {pdf_report_path}")
-                return {"success": False, "error": "종목 정보 추출 실패"}
+                logger.error(f"Failed to extract ticker info: {pdf_report_path}")
+                return {"success": False, "error": "Failed to extract ticker info"}
 
-            # 이미 보유 중인 종목인지 확인
+            # Check if already holding this stock
             is_holding = await self._is_ticker_in_holdings(ticker)
             if is_holding:
-                logger.info(f"{ticker}({company_name}) 이미 보유 중인 종목입니다.")
+                logger.info(f"{ticker}({company_name}) already in holdings")
                 return {"success": True, "decision": "보유 중", "ticker": ticker, "company_name": company_name}
 
-            # 현재 주가 조회
+            # Get current stock price
             current_price = await self._get_current_stock_price(ticker)
             if current_price <= 0:
-                logger.error(f"{ticker} 현재 주가 조회 실패")
-                return {"success": False, "error": "현재 주가 조회 실패"}
+                logger.error(f"{ticker} current price query failed")
+                return {"success": False, "error": "Current price query failed"}
 
-            # 거래대금 랭킹 변화 분석 추가
+            # Analyze trading value ranking change
             rank_change_percentage, rank_change_msg = await self._get_trading_value_rank_change(ticker)
 
-            # 보고서 내용 읽기
+            # Read report content
             from pdf_converter import pdf_to_markdown_text
             report_content = pdf_to_markdown_text(pdf_report_path)
 
-            # 매매 시나리오 추출 (거래대금 랭킹 정보 전달)
+            # Extract trading scenario (pass trading value ranking info)
             scenario = await self._extract_trading_scenario(report_content, rank_change_msg)
 
-            # 산업군 다양성 확인
+            # Check sector diversity
             sector = scenario.get("sector", "알 수 없음")
             is_sector_diverse = await self._check_sector_diversity(sector)
 
-            # 결과 반환
+            # Return result
             return {
                 "success": True,
                 "ticker": ticker,
@@ -821,105 +664,105 @@ class StockTrackingAgent:
                 "decision": scenario.get("decision", "관망"),
                 "sector": sector,
                 "sector_diverse": is_sector_diverse,
-                "rank_change_percentage": rank_change_percentage,  # 추가된 부분
-                "rank_change_msg": rank_change_msg  # 추가된 부분
+                "rank_change_percentage": rank_change_percentage,
+                "rank_change_msg": rank_change_msg
             }
 
         except Exception as e:
-            logger.error(f"보고서 분석 중 오류: {str(e)}")
+            logger.error(f"Error analyzing report: {str(e)}")
             logger.error(traceback.format_exc())
             return {"success": False, "error": str(e)}
 
     def _parse_price_value(self, value: Any) -> float:
         """
-        가격 값을 파싱하여 숫자로 변환
-        
+        Parse price value and convert to number
+
         Args:
-            value: 가격 값 (숫자, 문자열, 범위 등)
-            
+            value: Price value (number, string, range, etc.)
+
         Returns:
-            float: 파싱된 가격 (실패 시 0)
+            float: Parsed price (0 on failure)
         """
         try:
-            # 이미 숫자인 경우
+            # Already a number
             if isinstance(value, (int, float)):
                 return float(value)
-            
-            # 문자열인 경우
+
+            # String case
             if isinstance(value, str):
-                # 쉼표 제거
+                # Remove commas
                 value = value.replace(',', '')
-                
-                # 범위 표현 체크 (예: "2000~2050", "1,700-1,800")
+
+                # Check for range expression (e.g., "2000~2050", "1,700-1,800")
                 range_patterns = [
                     r'(\d+(?:\.\d+)?)\s*[-~]\s*(\d+(?:\.\d+)?)',  # 2000~2050 or 2000-2050
                     r'(\d+(?:\.\d+)?)\s*~\s*(\d+(?:\.\d+)?)',     # 2000 ~ 2050
                 ]
-                
+
                 for pattern in range_patterns:
                     match = re.search(pattern, value)
                     if match:
-                        # 범위의 중간값 사용
+                        # Use midpoint of range
                         low = float(match.group(1))
                         high = float(match.group(2))
                         return (low + high) / 2
-                
-                # 단일 숫자 추출 시도
+
+                # Try extracting single number
                 number_match = re.search(r'(\d+(?:\.\d+)?)', value)
                 if number_match:
                     return float(number_match.group(1))
             
             return 0
         except Exception as e:
-            logger.warning(f"가격 값 파싱 실패: {value} - {str(e)}")
+            logger.warning(f"Failed to parse price value: {value} - {str(e)}")
             return 0
 
     async def buy_stock(self, ticker: str, company_name: str, current_price: float, scenario: Dict[str, Any], rank_change_msg: str = "") -> bool:
         """
-        주식 매수 처리
+        Process stock purchase
 
         Args:
-            ticker: 종목 코드
-            company_name: 종목 이름
-            current_price: 현재 주가
-            scenario: 매매 시나리오 정보
-            rank_change_msg: 거래대금 랭킹 변화 정보
+            ticker: Stock code
+            company_name: Company name
+            current_price: Current stock price
+            scenario: Trading scenario information
+            rank_change_msg: Trading value ranking change info
 
         Returns:
-            bool: 매수 성공 여부
+            bool: Purchase success status
         """
         try:
-            # 이미 보유 중인지 확인
+            # Check if already holding
             if await self._is_ticker_in_holdings(ticker):
-                logger.warning(f"{ticker}({company_name}) 이미 보유 중인 종목입니다.")
+                logger.warning(f"{ticker}({company_name}) already in holdings")
                 return False
 
-            # 슬랏 여유 공간 확인
+            # Check available slots
             current_slots = await self._get_current_slots_count()
             if current_slots >= self.max_slots:
-                logger.warning(f"보유 종목이 이미 최대치({self.max_slots}개)입니다.")
+                logger.warning(f"Holdings already at maximum ({self.max_slots})")
                 return False
 
-            # 시장 상황 기반 최대 포트폴리오 크기 확인
+            # Check market-based maximum portfolio size
             max_portfolio_size = scenario.get('max_portfolio_size', self.max_slots)
-            # 문자열로 저장된 경우를 대비해 정수로 변환
+            # Convert to int if stored as string
             if isinstance(max_portfolio_size, str):
                 try:
                     max_portfolio_size = int(max_portfolio_size)
                 except (ValueError, TypeError):
                     max_portfolio_size = self.max_slots
             if current_slots >= max_portfolio_size:
-                logger.warning(f"시장 상황을 고려한 최대 포트폴리오 크기({max_portfolio_size}개)에 도달했습니다. 현재 보유: {current_slots}개")
+                logger.warning(f"Reached market-based max portfolio size ({max_portfolio_size}). Current holdings: {current_slots}")
                 return False
 
-            # 현재 시간
+            # Current time
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            # 보유종목 테이블에 추가
+            # Add to holdings table
             self.cursor.execute(
                 """
-                INSERT INTO stock_holdings 
-                (ticker, company_name, buy_price, buy_date, current_price, last_updated, scenario, target_price, stop_loss) 
+                INSERT INTO stock_holdings
+                (ticker, company_name, buy_price, buy_date, current_price, last_updated, scenario, target_price, stop_loss)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
@@ -936,29 +779,29 @@ class StockTrackingAgent:
             )
             self.conn.commit()
 
-            # 매수 내역 메시지 추가
+            # Add purchase message
             message = f"📈 신규 매수: {company_name}({ticker})\n" \
-                      f"매수가: {current_price:,.0f}원\n" \
+                      f"매수가: {current_price:,.0f} \n" \
                       f"목표가: {scenario.get('target_price', 0):,.0f}원\n" \
                       f"손절가: {scenario.get('stop_loss', 0):,.0f}원\n" \
                       f"투자기간: {scenario.get('investment_period', '단기')}\n" \
                       f"산업군: {scenario.get('sector', '알 수 없음')}\n"
 
-            # 밸류에이션 분석 정보가 있으면 추가
+            # Add valuation analysis if available
             if scenario.get('valuation_analysis'):
                 message += f"밸류에이션: {scenario.get('valuation_analysis')}\n"
-            
-            # 섹터 전망 정보가 있으면 추가
+
+            # Add sector outlook if available
             if scenario.get('sector_outlook'):
                 message += f"업종 전망: {scenario.get('sector_outlook')}\n"
 
-            # 거래대금 랭킹 정보가 있으면 추가
+            # Add trading value ranking info if available
             if rank_change_msg:
                 message += f"거래대금 분석: {rank_change_msg}\n"
 
             message += f"투자근거: {scenario.get('rationale', '정보 없음')}\n"
             
-            # 매매 시나리오 포맷팅
+            # Format trading scenario
             trading_scenarios = scenario.get('trading_scenarios', {})
             if trading_scenarios and isinstance(trading_scenarios, dict):
                 message += "\n" + "="*40 + "\n"
@@ -981,7 +824,7 @@ class StockTrackingAgent:
                             message += f"    • 1차: {primary_resistance:,.0f}원\n"
                     
                     # 현재가 표시
-                    message += f"  ━━ 현재가: {current_price:,.0f}원 ━━\n"
+                    message += f"  ━━ 현재가: {current_price:,.0f} 원 ━━\n"
                     
                     # 지지선
                     primary_support = self._parse_price_value(key_levels.get('primary_support', 0))
@@ -1032,12 +875,12 @@ class StockTrackingAgent:
                     message += f"💼 포트폴리오 관점:\n  {portfolio_context}\n"
 
             self.message_queue.append(message)
-            logger.info(f"{ticker}({company_name}) 매수 완료")
+            logger.info(f"{ticker}({company_name}) purchase complete")
 
             return True
 
         except Exception as e:
-            logger.error(f"{ticker} 매수 처리 중 오류: {str(e)}")
+            logger.error(f"{ticker} Error during purchase processing: {str(e)}")
             logger.error(traceback.format_exc())
             return False
 
@@ -1120,7 +963,7 @@ class StockTrackingAgent:
             return False, "계속 보유"
 
         except Exception as e:
-            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else '알 수 없는 종목'} 매도 분석 중 오류: {str(e)}")
+            logger.error(f"{stock_data.get('ticker', '') if 'ticker' in locals() else 'Unknown stock'} Error analyzing sell: {str(e)}")
             return False, "분석 오류"
 
     async def sell_stock(self, stock_data: Dict[str, Any], sell_reason: str) -> bool:
@@ -1186,18 +1029,18 @@ class StockTrackingAgent:
             arrow = "🔺" if profit_rate > 0 else "🔻" if profit_rate < 0 else "➖"
             message = f"📉 매도: {company_name}({ticker})\n" \
                       f"매수가: {buy_price:,.0f}원\n" \
-                      f"매도가: {current_price:,.0f}원\n" \
+                      f"매도가: {current_price:,.0f} \n" \
                       f"수익률: {arrow} {abs(profit_rate):.2f}%\n" \
                       f"보유기간: {holding_days}일\n" \
                       f"매도이유: {sell_reason}"
 
             self.message_queue.append(message)
-            logger.info(f"{ticker}({company_name}) 매도 완료 (수익률: {profit_rate:.2f}%)")
+            logger.info(f"{ticker}({company_name}) sell complete (return: {profit_rate:.2f}%)")
 
             return True
 
         except Exception as e:
-            logger.error(f"매도 처리 중 오류: {str(e)}")
+            logger.error(f"Error during sell: {str(e)}")
             logger.error(traceback.format_exc())
             return False
 
@@ -1209,7 +1052,7 @@ class StockTrackingAgent:
             List[Dict]: 매도된 종목 정보 리스트
         """
         try:
-            logger.info("보유 종목 정보 업데이트 시작")
+            logger.info("Starting holdings info update")
 
             # 보유 종목 목록 조회
             self.cursor.execute(
@@ -1220,7 +1063,7 @@ class StockTrackingAgent:
             holdings = [dict(row) for row in self.cursor.fetchall()]
 
             if not holdings or len(holdings) == 0:
-                logger.info("보유 중인 종목이 없습니다.")
+                logger.info("No holdings")
                 return []
 
             sold_stocks = []
@@ -1234,7 +1077,7 @@ class StockTrackingAgent:
 
                 if current_price <= 0:
                     old_price = stock.get('current_price', 0)
-                    logger.warning(f"{ticker} 현재 주가 조회 실패, 이전 가격 유지: {old_price}")
+                    logger.warning(f"{ticker} Current price query failed, keeping previous price: {old_price}")
                     current_price = old_price
 
                 # 주가 정보 업데이트
@@ -1253,7 +1096,7 @@ class StockTrackingAgent:
                         if 'stop_loss' in scenario_json and stock.get('stop_loss', 0) == 0:
                             stock['stop_loss'] = scenario_json['stop_loss']
                 except:
-                    logger.warning(f"{ticker} 시나리오 JSON 파싱 실패")
+                    logger.warning(f"{ticker} Scenario JSON parse failed")
 
                 # 현재 시간
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -1273,9 +1116,9 @@ class StockTrackingAgent:
                             trade_result = await trading.async_sell_stock(stock_code=ticker)
 
                         if trade_result['success']:
-                            logger.info(f"실제 매도 성공: {trade_result['message']}")
+                            logger.info(f"Actual sell successful: {trade_result['message']}")
                         else:
-                            logger.error(f"실제 매도 실패: {trade_result['message']}")
+                            logger.error(f"Actual sell failed: {trade_result['message']}")
 
                     if sell_success:
                         sold_stocks.append({
@@ -1295,12 +1138,12 @@ class StockTrackingAgent:
                         (current_price, now, ticker)
                     )
                     self.conn.commit()
-                    logger.info(f"{ticker}({company_name}) 현재가 업데이트: {current_price:,.0f}원 ({sell_reason})")
+                    logger.info(f"{ticker}({company_name}) current price updated: {current_price:,.0f} KRW ({sell_reason})")
 
             return sold_stocks
 
         except Exception as e:
-            logger.error(f"보유 종목 업데이트 중 오류: {str(e)}")
+            logger.error(f"Error updating holdings: {str(e)}")
             logger.error(traceback.format_exc())
             return []
 
@@ -1389,7 +1232,7 @@ class StockTrackingAgent:
                     days_passed = (datetime.now() - buy_datetime).days
 
                     message += f"- {company_name}({ticker}) [{sector}]\n"
-                    message += f"  매수가: {buy_price:,.0f}원 / 현재가: {current_price:,.0f}원\n"
+                    message += f"  매수가: {buy_price:,.0f}원 / 현재가: {current_price:,.0f} 원\n"
                     message += f"  목표가: {target_price:,.0f}원 / 손절가: {stop_loss:,.0f}원\n"
                     message += f"  수익률: {arrow} {profit_rate:.2f}% / 보유기간: {days_passed}일\n\n"
 
@@ -1424,7 +1267,7 @@ class StockTrackingAgent:
             return message
 
         except Exception as e:
-            logger.error(f"보고서 요약 생성 중 오류: {str(e)}")
+            logger.error(f"Error generating report summary: {str(e)}")
             error_msg = f"보고서 생성 중 오류가 발생했습니다: {str(e)}"
             return error_msg
 
@@ -1439,7 +1282,7 @@ class StockTrackingAgent:
             Tuple[int, int]: 매수 건수, 매도 건수
         """
         try:
-            logger.info(f"총 {len(pdf_report_paths)}개 보고서 처리 시작")
+            logger.info(f"Starting processing of {len(pdf_report_paths)} reports")
 
             # 매수, 매도 카운터
             buy_count = 0
@@ -1450,11 +1293,11 @@ class StockTrackingAgent:
             sell_count = len(sold_stocks)
 
             if sold_stocks:
-                logger.info(f"{len(sold_stocks)}개 종목 매도 완료")
+                logger.info(f"{len(sold_stocks)} stocks sold")
                 for stock in sold_stocks:
-                    logger.info(f"매도: {stock['company_name']}({stock['ticker']}) - 수익률: {stock['profit_rate']:.2f}% / 이유: {stock['reason']}")
+                    logger.info(f"Sold: {stock['company_name']}({stock['ticker']}) - Return: {stock['profit_rate']:.2f}% / Reason: {stock['reason']}")
             else:
-                logger.info("매도된 종목이 없습니다.")
+                logger.info("No stocks sold")
 
             # 2. 새로운 보고서 분석 및 매수 의사결정
             for pdf_report_path in pdf_report_paths:
@@ -1462,12 +1305,12 @@ class StockTrackingAgent:
                 analysis_result = await self.analyze_report(pdf_report_path)
 
                 if not analysis_result.get("success", False):
-                    logger.error(f"보고서 분석 실패: {pdf_report_path} - {analysis_result.get('error', '알 수 없는 오류')}")
+                    logger.error(f"Report analysis failed: {pdf_report_path} - {analysis_result.get('error', '알 수 없는 오류')}")
                     continue
 
                 # 이미 보유 중인 종목이면 스킵
                 if analysis_result.get("decision") == "보유 중":
-                    logger.info(f"보유 중 종목 스킵: {analysis_result.get('ticker')} - {analysis_result.get('company_name')}")
+                    logger.info(f"Skipping stock in holdings: {analysis_result.get('ticker')} - {analysis_result.get('company_name')}")
                     continue
 
                 # 종목 정보 및 시나리오
@@ -1482,13 +1325,13 @@ class StockTrackingAgent:
 
                 # 산업군 다양성 체크 실패 시 스킵
                 if not sector_diverse:
-                    logger.info(f"매수 보류: {company_name}({ticker}) - 산업군 '{sector}' 과다 투자 방지")
+                    logger.info(f"Purchase deferred: {company_name}({ticker}) - Preventing sector over-investment '.*'")
                     continue
 
                 # 진입 결정이면 매수 처리
                 buy_score = scenario.get("buy_score", 0)
                 min_score = scenario.get("min_score", 0)
-                logger.info(f"매수 점수 체크: {company_name}({ticker}) - 점수: {buy_score}")
+                logger.info(f"Buy score check: {company_name}({ticker}) - Score: {buy_score}")
                 if analysis_result.get("decision") == "진입":
                     # 매수 처리
                     buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
@@ -1501,15 +1344,15 @@ class StockTrackingAgent:
                             trade_result = await trading.async_buy_stock(stock_code=ticker)
 
                         if trade_result['success']:
-                            logger.info(f"실제 매수 성공: {trade_result['message']}")
+                            logger.info(f"Actual purchase successful: {trade_result['message']}")
                         else:
-                            logger.error(f"실제 매수 실패: {trade_result['message']}")
+                            logger.error(f"Actual purchase failed: {trade_result['message']}")
 
                     if buy_success:
                         buy_count += 1
-                        logger.info(f"매수 완료: {company_name}({ticker}) @ {current_price:,.0f}원")
+                        logger.info(f"Purchase complete: {company_name}({ticker}) @ {current_price:,.0f} KRW")
                     else:
-                        logger.warning(f"매수 실패: {company_name}({ticker})")
+                        logger.warning(f"Purchase failed: {company_name}({ticker})")
                 else:
                     reason = ""
                     if buy_score < min_score:
@@ -1517,22 +1360,23 @@ class StockTrackingAgent:
                     elif analysis_result.get("decision") != "진입":
                         reason = f"진입 결정 아님 (결정: {analysis_result.get('decision')})"
 
-                    logger.info(f"매수 보류: {company_name}({ticker}) - {reason}")
+                    logger.info(f"Purchase deferred: {company_name}({ticker}) - {reason}")
 
-            logger.info(f"보고서 처리 완료 - 매수: {buy_count}건, 매도: {sell_count}건")
+            logger.info(f"Report processing complete - Purchased: {buy_count}items, Sold: {sell_count} items")
             return buy_count, sell_count
 
         except Exception as e:
-            logger.error(f"보고서 처리 중 오류: {str(e)}")
+            logger.error(f"Error processing reports: {str(e)}")
             logger.error(traceback.format_exc())
             return 0, 0
 
-    async def send_telegram_message(self, chat_id: str) -> bool:
+    async def send_telegram_message(self, chat_id: str, language: str = "ko") -> bool:
         """
         텔레그램으로 메시지 전송
 
         Args:
             chat_id: 텔레그램 채널 ID (None이면 전송하지 않음)
+            language: 메시지 언어 ("ko" or "en")
 
         Returns:
             bool: 전송 성공 여부
@@ -1540,23 +1384,23 @@ class StockTrackingAgent:
         try:
             # chat_id가 None이면 텔레그램 전송 스킵
             if not chat_id:
-                logger.info("텔레그램 채널 ID가 없습니다. 메시지 전송을 스킵합니다.")
-                
+                logger.info("No Telegram channel ID. Skipping message send")
+
                 # 메시지 로그 출력
                 for message in self.message_queue:
-                    logger.info(f"[메시지 (미전송)] {message[:100]}...")
-                
+                    logger.info(f"[Message (not sent)] {message[:100]}...")
+
                 # 메시지 큐 초기화
                 self.message_queue = []
                 return True  # 의도적 스킵은 성공으로 간주
-            
+
             # 텔레그램 봇이 초기화되지 않았다면 로그만 출력
             if not self.telegram_bot:
-                logger.warning("텔레그램 봇이 초기화되지 않았습니다. 토큰을 확인해주세요.")
+                logger.warning("Telegram bot not initialized. Please check token")
 
                 # 메시지 출력만 하고 실제 전송은 하지 않음
                 for message in self.message_queue:
-                    logger.info(f"[텔레그램 메시지 (봇 미초기화)] {message[:100]}...")
+                    logger.info(f"[Telegram message (bot not initialized)] {message[:100]}...")
 
                 # 메시지 큐 초기화
                 self.message_queue = []
@@ -1566,14 +1410,29 @@ class StockTrackingAgent:
             summary = await self.generate_report_summary()
             self.message_queue.append(summary)
 
+            # Translate messages if English is requested
+            if language == "en":
+                logger.info(f"Translating {len(self.message_queue)} messages to English")
+                try:
+                    from cores.agents.telegram_translator_agent import translate_telegram_message
+                    translated_queue = []
+                    for idx, message in enumerate(self.message_queue, 1):
+                        logger.info(f"Translating message {idx}/{len(self.message_queue)}")
+                        translated = await translate_telegram_message(message, model="gpt-5-nano")
+                        translated_queue.append(translated)
+                    self.message_queue = translated_queue
+                    logger.info("All messages translated successfully")
+                except Exception as e:
+                    logger.error(f"Translation failed: {str(e)}. Using original Korean messages.")
+
             # 각 메시지 전송
             success = True
             for message in self.message_queue:
-                logger.info(f"텔레그램 메시지 전송 중: {chat_id}")
+                logger.info(f"Sending Telegram message: {chat_id}")
                 try:
                     # 텔레그램 메시지 길이 제한 (4096자)
                     MAX_MESSAGE_LENGTH = 4096
-                    
+
                     if len(message) <= MAX_MESSAGE_LENGTH:
                         # 메시지가 짧으면 한 번에 전송
                         await self.telegram_bot.send_message(
@@ -1584,7 +1443,7 @@ class StockTrackingAgent:
                         # 메시지가 길면 분할 전송
                         parts = []
                         current_part = ""
-                        
+
                         for line in message.split('\n'):
                             if len(current_part) + len(line) + 1 <= MAX_MESSAGE_LENGTH:
                                 current_part += line + '\n'
@@ -1592,10 +1451,10 @@ class StockTrackingAgent:
                                 if current_part:
                                     parts.append(current_part.rstrip())
                                 current_part = line + '\n'
-                        
+
                         if current_part:
                             parts.append(current_part.rstrip())
-                        
+
                         # 분할된 메시지 전송
                         for i, part in enumerate(parts, 1):
                             await self.telegram_bot.send_message(
@@ -1603,14 +1462,18 @@ class StockTrackingAgent:
                                 text=f"[{i}/{len(parts)}]\n{part}"
                             )
                             await asyncio.sleep(0.5)  # 분할 메시지 간 짧은 지연
-                    
-                    logger.info(f"텔레그램 메시지 전송 완료: {chat_id}")
+
+                    logger.info(f"Telegram message sent: {chat_id}")
                 except TelegramError as e:
-                    logger.error(f"텔레그램 메시지 전송 실패: {e}")
+                    logger.error(f"Telegram message send failed: {e}")
                     success = False
 
                 # API 제한 방지를 위한 지연
                 await asyncio.sleep(1)
+
+            # Send to translation channels if configured
+            if hasattr(self, 'telegram_config') and self.telegram_config and self.telegram_config.translation_languages:
+                await self._send_to_translation_channels(self.message_queue)
 
             # 메시지 큐 초기화
             self.message_queue = []
@@ -1618,60 +1481,141 @@ class StockTrackingAgent:
             return success
 
         except Exception as e:
-            logger.error(f"텔레그램 메시지 전송 중 오류: {str(e)}")
+            logger.error(f"Error sending Telegram message: {str(e)}")
             logger.error(traceback.format_exc())
             return False
 
-    async def run(self, pdf_report_paths: List[str], chat_id: str = None) -> bool | None:
+    async def _send_to_translation_channels(self, messages: List[str]):
         """
-        주식 트래킹 시스템 메인 실행 함수
+        Send messages to translation channels
 
         Args:
-            pdf_report_paths: 분석 보고서 파일 경로 리스트
-            chat_id: 텔레그램 채널 ID (None이면 메시지를 전송하지 않음)
-
-        Returns:
-            bool: 실행 성공 여부
+            messages: List of original Korean messages
         """
         try:
-            logger.info("트래킹 시스템 배치 실행 시작")
+            from cores.agents.telegram_translator_agent import translate_telegram_message
 
-            # 초기화
-            await self.initialize()
+            for lang in self.telegram_config.translation_languages:
+                try:
+                    # Get channel ID for this language
+                    channel_id = self.telegram_config.get_translation_channel_id(lang)
+                    if not channel_id:
+                        logger.warning(f"No channel ID configured for language: {lang}")
+                        continue
 
-            try:
-                # 보고서 처리
-                buy_count, sell_count = await self.process_reports(pdf_report_paths)
+                    logger.info(f"Sending tracking messages to {lang} channel")
 
-                # 텔레그램 메시지 전송 (chat_id가 제공된 경우에만)
-                if chat_id:
-                    message_sent = await self.send_telegram_message(chat_id)
-                    if message_sent:
-                        logger.info("텔레그램 메시지 전송 완료")
-                    else:
-                        logger.warning("텔레그램 메시지 전송 실패")
-                else:
-                    logger.info("텔레그램 채널 ID가 제공되지 않아 메시지 전송을 스킵합니다.")
-                    # chat_id가 None이어도 메시지 큐 정리를 위해 호출
-                    await self.send_telegram_message(None)
+                    # Translate and send each message
+                    for message in messages:
+                        try:
+                            # Translate message
+                            logger.info(f"Translating tracking message to {lang}")
+                            translated_message = await translate_telegram_message(
+                                message,
+                                model="gpt-5-nano",
+                                from_lang="ko",
+                                to_lang=lang
+                            )
 
-                logger.info("트래킹 시스템 배치 실행 완료")
-                return True
-            finally:
-                # finally 블록으로 이동하여 항상 연결 종료 보장
-                if self.conn:
-                    self.conn.close()
-                    logger.info("데이터베이스 연결 종료")
+                            # Send translated message
+                            MAX_MESSAGE_LENGTH = 4096
+
+                            if len(translated_message) <= MAX_MESSAGE_LENGTH:
+                                await self.telegram_bot.send_message(
+                                    chat_id=channel_id,
+                                    text=translated_message
+                                )
+                            else:
+                                # Split long messages
+                                parts = []
+                                current_part = ""
+
+                                for line in translated_message.split('\n'):
+                                    if len(current_part) + len(line) + 1 <= MAX_MESSAGE_LENGTH:
+                                        current_part += line + '\n'
+                                    else:
+                                        if current_part:
+                                            parts.append(current_part.rstrip())
+                                        current_part = line + '\n'
+
+                                if current_part:
+                                    parts.append(current_part.rstrip())
+
+                                # Send split messages
+                                for i, part in enumerate(parts, 1):
+                                    await self.telegram_bot.send_message(
+                                        chat_id=channel_id,
+                                        text=f"[{i}/{len(parts)}]\n{part}"
+                                    )
+                                    await asyncio.sleep(0.5)
+
+                            logger.info(f"Tracking message sent successfully to {lang} channel")
+                            await asyncio.sleep(1)
+
+                        except Exception as e:
+                            logger.error(f"Error sending tracking message to {lang}: {str(e)}")
+
+                except Exception as e:
+                    logger.error(f"Error processing language {lang}: {str(e)}")
 
         except Exception as e:
-            logger.error(f"트래킹 시스템 실행 중 오류: {str(e)}")
+            logger.error(f"Error in _send_to_translation_channels: {str(e)}")
+
+    async def run(self, pdf_report_paths: List[str], chat_id: str = None, language: str = "ko", telegram_config=None) -> bool | None:
+        """
+        Main execution function for stock tracking system
+
+        Args:
+            pdf_report_paths: List of analysis report file paths
+            chat_id: Telegram channel ID (no messages sent if None)
+            language: Message language ("ko" or "en")
+            telegram_config: TelegramConfig object for multi-language support
+
+        Returns:
+            bool: Execution success status
+        """
+        try:
+            logger.info("Starting tracking system batch execution")
+
+            # Store telegram_config for use in send_telegram_message
+            self.telegram_config = telegram_config
+
+            # Initialize with language parameter
+            await self.initialize(language)
+
+            try:
+                # Process reports
+                buy_count, sell_count = await self.process_reports(pdf_report_paths)
+
+                # Send Telegram message (only if chat_id is provided)
+                if chat_id:
+                    message_sent = await self.send_telegram_message(chat_id, language)
+                    if message_sent:
+                        logger.info("Telegram message sent successfully")
+                    else:
+                        logger.warning("Telegram message send failed")
+                else:
+                    logger.info("Telegram channel ID not provided, skipping message send")
+                    # Call even if chat_id is None to clean up message queue
+                    await self.send_telegram_message(None, language)
+
+                logger.info("Tracking system batch execution complete")
+                return True
+            finally:
+                # Move to finally block to ensure connection is always closed
+                if self.conn:
+                    self.conn.close()
+                    logger.info("Database connection closed")
+
+        except Exception as e:
+            logger.error(f"Error during tracking system execution: {str(e)}")
             logger.error(traceback.format_exc())
 
-            # 데이터베이스 연결 확인 및 종료
+            # Check and close database connection
             if hasattr(self, 'conn') and self.conn:
                 try:
                     self.conn.close()
-                    logger.info("오류 발생 후 데이터베이스 연결 종료")
+                    logger.info("Database connection closed after error")
                 except:
                     pass
 
@@ -1693,7 +1637,7 @@ async def main():
     args = parser.parse_args()
 
     if not args.reports:
-        local_logger.error("보고서 경로가 지정되지 않았습니다.")
+        local_logger.error("Report path not specified")
         return False
 
     async with app.run():
@@ -1707,6 +1651,6 @@ if __name__ == "__main__":
         # asyncio 실행
         asyncio.run(main())
     except Exception as e:
-        logger.error(f"프로그램 실행 중 오류: {str(e)}")
+        logger.error(f"Error during program execution: {str(e)}")
         logger.error(traceback.format_exc())
         sys.exit(1)

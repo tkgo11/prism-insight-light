@@ -15,31 +15,38 @@ logger = logging.getLogger(__name__)
 class TelegramConfig:
     """
     텔레그램 설정 관리 클래스
-    
+
     텔레그램 사용 여부와 관련 설정을 중앙화하여 관리합니다.
+    다국어 채널 ID도 함께 관리합니다.
     """
-    
-    def __init__(self, use_telegram: bool = True, channel_id: Optional[str] = None, bot_token: Optional[str] = None):
+
+    def __init__(self, use_telegram: bool = True, channel_id: Optional[str] = None, bot_token: Optional[str] = None, translation_languages: list = None):
         """
         텔레그램 설정 초기화
-        
+
         Args:
             use_telegram: 텔레그램 사용 여부 (기본값: True)
             channel_id: 텔레그램 채널 ID (환경변수에서 자동 로드 가능)
             bot_token: 텔레그램 봇 토큰 (환경변수에서 자동 로드 가능)
+            translation_languages: 번역할 언어 목록 (예: ['en', 'ja', 'zh'])
         """
         self._use_telegram = use_telegram
         self._channel_id = channel_id
         self._bot_token = bot_token
-        
+        self._translation_languages = translation_languages or []
+        self._translation_channel_ids = {}
+
         # .env 파일 로드
         self._load_env()
-        
+
         # 환경변수에서 자동 로드 (명시적으로 전달되지 않은 경우)
         if not self._channel_id:
             self._channel_id = os.getenv("TELEGRAM_CHANNEL_ID")
         if not self._bot_token:
             self._bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+
+        # 번역 언어별 채널 ID 로드
+        self._load_translation_channels()
     
     def _load_env(self):
         """
@@ -53,6 +60,22 @@ class TelegramConfig:
             logger.warning("python-dotenv가 설치되지 않았습니다. 환경변수를 직접 설정해주세요.")
         except Exception as e:
             logger.warning(f".env 파일 로드 중 오류: {str(e)}")
+
+    def _load_translation_channels(self):
+        """
+        번역 언어별 텔레그램 채널 ID 로드
+        .env 파일에서 TELEGRAM_CHANNEL_ID_{LANG} 형식으로 로드
+        """
+        for lang in self._translation_languages:
+            lang_upper = lang.upper()
+            env_key = f"TELEGRAM_CHANNEL_ID_{lang_upper}"
+            channel_id = os.getenv(env_key)
+
+            if channel_id:
+                self._translation_channel_ids[lang] = channel_id
+                logger.info(f"번역 채널 로드 완료: {lang} -> {channel_id[:10]}...")
+            else:
+                logger.warning(f"번역 채널 ID가 설정되지 않음: {lang} (환경변수: {env_key})")
     
     @property
     def use_telegram(self) -> bool:
@@ -68,6 +91,23 @@ class TelegramConfig:
     def bot_token(self) -> Optional[str]:
         """텔레그램 봇 토큰 반환"""
         return self._bot_token
+
+    @property
+    def translation_languages(self) -> list:
+        """번역할 언어 목록 반환"""
+        return self._translation_languages
+
+    def get_translation_channel_id(self, language: str) -> Optional[str]:
+        """
+        특정 언어의 채널 ID 반환
+
+        Args:
+            language: 언어 코드 (예: 'en', 'ja', 'zh')
+
+        Returns:
+            해당 언어의 채널 ID, 없으면 None
+        """
+        return self._translation_channel_ids.get(language)
     
     def is_configured(self) -> bool:
         """
