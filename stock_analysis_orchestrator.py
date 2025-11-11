@@ -218,13 +218,14 @@ class StockAnalysisOrchestrator:
 
         return message_paths
 
-    async def send_telegram_messages(self, message_paths, pdf_paths):
+    async def send_telegram_messages(self, message_paths, pdf_paths, report_paths=None):
         """
         Send telegram messages and PDF files
 
         Args:
             message_paths (list): List of telegram message file paths
             pdf_paths (list): List of PDF file paths
+            report_paths (list): List of markdown report file paths (for translation)
         """
         # Skip if telegram is disabled
         if not self.telegram_config.use_telegram:
@@ -265,20 +266,20 @@ class StockAnalysisOrchestrator:
                 await asyncio.sleep(1)
 
             # Send to broadcast channels asynchronously (non-blocking)
-            if self.telegram_config.broadcast_languages:
-                asyncio.create_task(self._send_translated_messages_and_pdfs(bot_agent, message_paths, pdf_paths))
+            if self.telegram_config.broadcast_languages and report_paths:
+                asyncio.create_task(self._send_translated_messages_and_pdfs(bot_agent, message_paths, report_paths))
 
         except Exception as e:
             logger.error(f"Error during telegram message transmission: {str(e)}")
 
-    async def _send_translated_messages_and_pdfs(self, bot_agent, message_paths, pdf_paths):
+    async def _send_translated_messages_and_pdfs(self, bot_agent, message_paths, report_paths):
         """
         Send translated messages and PDFs to additional language channels
 
         Args:
             bot_agent: TelegramBotAgent instance
             message_paths: List of original message file paths
-            pdf_paths: List of original PDF file paths (currently not translated, send originals)
+            report_paths: List of original markdown report file paths
         """
         try:
             from cores.agents.telegram_translator_agent import translate_telegram_message
@@ -291,9 +292,9 @@ class StockAnalysisOrchestrator:
                         logger.warning(f"No channel ID configured for language: {lang}")
                         continue
 
-                    logger.info(f"Sending translated messages to {lang} channel")
+                    logger.info(f"Sending translated content to {lang} channel")
 
-                    # Translate and send each message
+                    # Translate and send each telegram message
                     for message_path in message_paths:
                         try:
                             # Read original message
@@ -301,7 +302,7 @@ class StockAnalysisOrchestrator:
                                 original_message = f.read()
 
                             # Translate message
-                            logger.info(f"Translating message from {message_path} to {lang}")
+                            logger.info(f"Translating telegram message from {message_path} to {lang}")
                             translated_message = await translate_telegram_message(
                                 original_message,
                                 model="gpt-5-nano",
@@ -313,31 +314,62 @@ class StockAnalysisOrchestrator:
                             success = await bot_agent.send_message(channel_id, translated_message)
 
                             if success:
-                                logger.info(f"Message sent successfully to {lang} channel")
+                                logger.info(f"Telegram message sent successfully to {lang} channel")
                             else:
-                                logger.error(f"Failed to send message to {lang} channel")
+                                logger.error(f"Failed to send telegram message to {lang} channel")
 
                             await asyncio.sleep(1)
 
                         except Exception as e:
                             logger.error(f"Error translating/sending message {message_path} to {lang}: {str(e)}")
 
-                    # Send PDFs to this language channel (using original PDFs for now)
-                    # TODO: In future, translate PDF reports and send translated versions
-                    for pdf_path in pdf_paths:
+                    # Translate markdown reports, convert to PDF, and send
+                    for report_path in report_paths:
                         try:
-                            logger.info(f"Sending PDF {pdf_path} to {lang} channel")
-                            success = await bot_agent.send_document(channel_id, str(pdf_path))
+                            logger.info(f"Translating markdown report {report_path} to {lang}")
 
-                            if success:
-                                logger.info(f"PDF sent successfully to {lang} channel")
+                            # Read original markdown report
+                            with open(report_path, 'r', encoding='utf-8') as f:
+                                original_report = f.read()
+
+                            # Translate the report
+                            translated_report = await translate_telegram_message(
+                                original_report,
+                                model="gpt-5-nano",
+                                from_lang="ko",
+                                to_lang=lang
+                            )
+
+                            # Create translated markdown file path
+                            report_file = Path(report_path)
+                            translated_report_path = report_file.parent / f"{report_file.stem}_{lang}.md"
+
+                            # Save translated markdown
+                            with open(translated_report_path, 'w', encoding='utf-8') as f:
+                                f.write(translated_report)
+
+                            logger.info(f"Translated report saved: {translated_report_path}")
+
+                            # Convert to PDF
+                            translated_pdf_paths = await self.convert_to_pdf([str(translated_report_path)])
+
+                            if translated_pdf_paths and len(translated_pdf_paths) > 0:
+                                # Send translated PDF
+                                translated_pdf_path = translated_pdf_paths[0]
+                                logger.info(f"Sending translated PDF {translated_pdf_path} to {lang} channel")
+                                success = await bot_agent.send_document(channel_id, str(translated_pdf_path))
+
+                                if success:
+                                    logger.info(f"Translated PDF sent successfully to {lang} channel")
+                                else:
+                                    logger.error(f"Failed to send translated PDF to {lang} channel")
+
+                                await asyncio.sleep(1)
                             else:
-                                logger.error(f"Failed to send PDF to {lang} channel")
-
-                            await asyncio.sleep(1)
+                                logger.error(f"Failed to convert translated report to PDF: {translated_report_path}")
 
                         except Exception as e:
-                            logger.error(f"Error sending PDF {pdf_path} to {lang}: {str(e)}")
+                            logger.error(f"Error processing report {report_path} for {lang}: {str(e)}")
 
                 except Exception as e:
                     logger.error(f"Error processing language {lang}: {str(e)}")
@@ -605,7 +637,7 @@ class StockAnalysisOrchestrator:
                 message_paths = await self.generate_telegram_messages(pdf_paths, language)
 
                 # 5. Send telegram messages and PDFs
-                await self.send_telegram_messages(message_paths, pdf_paths)
+                await self.send_telegram_messages(message_paths, pdf_paths, report_paths)
             else:
                 logger.info("Telegram disabled - skipping message generation and transmission steps")
 
