@@ -264,9 +264,9 @@ class StockAnalysisOrchestrator:
                 # Transmission interval
                 await asyncio.sleep(1)
 
-            # Send to broadcast channels asynchronously
+            # Send to broadcast channels asynchronously (non-blocking)
             if self.telegram_config.broadcast_languages:
-                await self._send_translated_messages_and_pdfs(bot_agent, message_paths, pdf_paths)
+                asyncio.create_task(self._send_translated_messages_and_pdfs(bot_agent, message_paths, pdf_paths))
 
         except Exception as e:
             logger.error(f"Error during telegram message transmission: {str(e)}")
@@ -414,9 +414,9 @@ class StockAnalysisOrchestrator:
                 else:
                     logger.error("Prism Signal alert transmission failed")
 
-                # Send to broadcast channels asynchronously
+                # Send to broadcast channels asynchronously (non-blocking)
                 if self.telegram_config.broadcast_languages:
-                    await self._send_translated_trigger_alert(bot_agent, message, mode)
+                    asyncio.create_task(self._send_translated_trigger_alert(bot_agent, message, mode))
 
                 return success
 
