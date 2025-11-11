@@ -53,7 +53,7 @@ load_dotenv(dotenv_path=str(ENV_FILE))
 class PortfolioTelegramReporter:
     """포트폴리오 상황을 텔레그램으로 리포트하는 클래스"""
 
-    def __init__(self, telegram_token: str = None, chat_id: str = None, trading_mode: str = None, translation_languages: list = None):
+    def __init__(self, telegram_token: str = None, chat_id: str = None, trading_mode: str = None, broadcast_languages: list = None):
         """
         초기화
 
@@ -61,13 +61,13 @@ class PortfolioTelegramReporter:
             telegram_token: 텔레그램 봇 토큰
             chat_id: 텔레그램 채널 ID
             trading_mode: 트레이딩 모드 ('demo' 또는 'real', None이면 yaml 설정 사용)
-            translation_languages: 번역할 언어 목록 (예: ['en', 'ja', 'zh'])
+            broadcast_languages: 병렬 브로드캐스트할 언어 목록 (예: ['en', 'ja', 'zh'])
         """
         # 텔레그램 설정
         self.telegram_token = telegram_token or os.environ.get("TELEGRAM_BOT_TOKEN")
         self.chat_id = chat_id or os.environ.get("TELEGRAM_CHANNEL_ID")
-        self.translation_languages = translation_languages or []
-        self.translation_channel_ids = {}
+        self.broadcast_languages = broadcast_languages or []
+        self.broadcast_channel_ids = {}
 
         if not self.telegram_token:
             raise ValueError("텔레그램 봇 토큰이 필요합니다. 환경 변수 TELEGRAM_BOT_TOKEN 또는 파라미터로 제공해주세요.")
@@ -75,8 +75,8 @@ class PortfolioTelegramReporter:
         if not self.chat_id:
             raise ValueError("텔레그램 채널 ID가 필요합니다. 환경 변수 TELEGRAM_CHANNEL_ID 또는 파라미터로 제공해주세요.")
 
-        # Load translation channel IDs
-        self._load_translation_channels()
+        # Load broadcast channel IDs
+        self._load_broadcast_channels()
 
         # 트레이딩 설정 - yaml 파일의 default_mode를 기본값으로 사용
         self.trading_mode = trading_mode if trading_mode is not None else _cfg["default_mode"]
@@ -85,20 +85,20 @@ class PortfolioTelegramReporter:
         logger.info(f"PortfolioTelegramReporter 초기화 완료")
         logger.info(f"트레이딩 모드: {self.trading_mode} (yaml 설정: {_cfg['default_mode']})")
 
-    def _load_translation_channels(self):
+    def _load_broadcast_channels(self):
         """
-        번역 언어별 텔레그램 채널 ID 로드
+        브로드캐스트 언어별 텔레그램 채널 ID 로드
         """
-        for lang in self.translation_languages:
+        for lang in self.broadcast_languages:
             lang_upper = lang.upper()
             env_key = f"TELEGRAM_CHANNEL_ID_{lang_upper}"
             channel_id = os.getenv(env_key)
 
             if channel_id:
-                self.translation_channel_ids[lang] = channel_id
-                logger.info(f"번역 채널 로드 완료: {lang} -> {channel_id[:10]}...")
+                self.broadcast_channel_ids[lang] = channel_id
+                logger.info(f"브로드캐스트 채널 로드 완료: {lang} -> {channel_id[:10]}...")
             else:
-                logger.warning(f"번역 채널 ID가 설정되지 않음: {lang} (환경변수: {env_key})")
+                logger.warning(f"브로드캐스트 채널 ID가 설정되지 않음: {lang} (환경변수: {env_key})")
 
     def format_currency(self, amount: float) -> str:
         """금액을 한국 원화 형식으로 포맷팅"""
@@ -231,8 +231,8 @@ class PortfolioTelegramReporter:
             else:
                 logger.error("포트폴리오 리포트 전송 실패!")
 
-            # Send to translation channels
-            if self.translation_languages:
+            # Send to broadcast channels
+            if self.broadcast_languages:
                 await self._send_translated_portfolio_report(message)
 
             return success
@@ -259,10 +259,10 @@ class PortfolioTelegramReporter:
 
             from agents.telegram_translator_agent import translate_telegram_message
 
-            for lang in self.translation_languages:
+            for lang in self.broadcast_languages:
                 try:
                     # Get channel ID for this language
-                    channel_id = self.translation_channel_ids.get(lang)
+                    channel_id = self.broadcast_channel_ids.get(lang)
                     if not channel_id:
                         logger.warning(f"No channel ID configured for language: {lang}")
                         continue
@@ -360,13 +360,13 @@ async def main():
                        default="full", help="리포트 타입")
     parser.add_argument("--token", help="텔레그램 봇 토큰")
     parser.add_argument("--chat-id", help="텔레그램 채널 ID")
-    parser.add_argument("--translation-languages", type=str, default="",
-                       help="Additional languages for parallel telegram channels (comma-separated, e.g., 'en,ja,zh')")
+    parser.add_argument("--broadcast-languages", type=str, default="",
+                       help="Additional languages for parallel telegram channel broadcasting (comma-separated, e.g., 'en,ja,zh')")
 
     args = parser.parse_args()
 
-    # Parse translation languages
-    translation_languages = [lang.strip() for lang in args.translation_languages.split(",") if lang.strip()]
+    # Parse broadcast languages
+    broadcast_languages = [lang.strip() for lang in args.broadcast_languages.split(",") if lang.strip()]
 
     try:
         # 리포터 초기화 (mode가 None이면 yaml 설정 사용)
@@ -374,7 +374,7 @@ async def main():
             telegram_token=args.token,
             chat_id=args.chat_id,
             trading_mode=args.mode,  # None이면 yaml의 default_mode 사용
-            translation_languages=translation_languages
+            broadcast_languages=broadcast_languages
         )
         
         # 리포트 타입에 따른 실행

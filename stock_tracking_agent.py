@@ -1471,8 +1471,8 @@ class StockTrackingAgent:
                 # API 제한 방지를 위한 지연
                 await asyncio.sleep(1)
 
-            # Send to translation channels if configured
-            if hasattr(self, 'telegram_config') and self.telegram_config and self.telegram_config.translation_languages:
+            # Send to broadcast channels if configured
+            if hasattr(self, 'telegram_config') and self.telegram_config and self.telegram_config.broadcast_languages:
                 await self._send_to_translation_channels(self.message_queue)
 
             # 메시지 큐 초기화
@@ -1495,10 +1495,10 @@ class StockTrackingAgent:
         try:
             from cores.agents.telegram_translator_agent import translate_telegram_message
 
-            for lang in self.telegram_config.translation_languages:
+            for lang in self.telegram_config.broadcast_languages:
                 try:
                     # Get channel ID for this language
-                    channel_id = self.telegram_config.get_translation_channel_id(lang)
+                    channel_id = self.telegram_config.get_broadcast_channel_id(lang)
                     if not channel_id:
                         logger.warning(f"No channel ID configured for language: {lang}")
                         continue

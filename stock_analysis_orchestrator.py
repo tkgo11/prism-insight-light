@@ -264,8 +264,8 @@ class StockAnalysisOrchestrator:
                 # Transmission interval
                 await asyncio.sleep(1)
 
-            # Send to translation channels asynchronously
-            if self.telegram_config.translation_languages:
+            # Send to broadcast channels asynchronously
+            if self.telegram_config.broadcast_languages:
                 await self._send_translated_messages_and_pdfs(bot_agent, message_paths, pdf_paths)
 
         except Exception as e:
@@ -283,10 +283,10 @@ class StockAnalysisOrchestrator:
         try:
             from cores.agents.telegram_translator_agent import translate_telegram_message
 
-            for lang in self.telegram_config.translation_languages:
+            for lang in self.telegram_config.broadcast_languages:
                 try:
                     # Get channel ID for this language
-                    channel_id = self.telegram_config.get_translation_channel_id(lang)
+                    channel_id = self.telegram_config.get_broadcast_channel_id(lang)
                     if not channel_id:
                         logger.warning(f"No channel ID configured for language: {lang}")
                         continue
@@ -414,8 +414,8 @@ class StockAnalysisOrchestrator:
                 else:
                     logger.error("Prism Signal alert transmission failed")
 
-                # Send to translation channels asynchronously
-                if self.telegram_config.translation_languages:
+                # Send to broadcast channels asynchronously
+                if self.telegram_config.broadcast_languages:
                     await self._send_translated_trigger_alert(bot_agent, message, mode)
 
                 return success
@@ -440,10 +440,10 @@ class StockAnalysisOrchestrator:
         try:
             from cores.agents.telegram_translator_agent import translate_telegram_message
 
-            for lang in self.telegram_config.translation_languages:
+            for lang in self.telegram_config.broadcast_languages:
                 try:
                     # Get channel ID for this language
-                    channel_id = self.telegram_config.get_translation_channel_id(lang)
+                    channel_id = self.telegram_config.get_broadcast_channel_id(lang)
                     if not channel_id:
                         logger.warning(f"No channel ID configured for language: {lang}")
                         continue
@@ -737,20 +737,20 @@ async def main():
                         help="Execution mode (morning, afternoon, both)")
     parser.add_argument("--language", choices=["ko", "en"], default="ko",
                         help="Analysis language (ko: Korean, en: English)")
-    parser.add_argument("--translation-languages", type=str, default="",
-                        help="Additional languages for parallel telegram channels (comma-separated, e.g., 'en,ja,zh')")
+    parser.add_argument("--broadcast-languages", type=str, default="",
+                        help="Additional languages for parallel telegram channel broadcasting (comma-separated, e.g., 'en,ja,zh')")
     parser.add_argument("--no-telegram", action="store_true",
                         help="Disable telegram message transmission. "
                              "Use when testing without telegram configuration or running locally.")
 
     args = parser.parse_args()
 
-    # Parse translation languages
-    translation_languages = [lang.strip() for lang in args.translation_languages.split(",") if lang.strip()]
+    # Parse broadcast languages
+    broadcast_languages = [lang.strip() for lang in args.broadcast_languages.split(",") if lang.strip()]
 
     # Create telegram configuration
     from telegram_config import TelegramConfig
-    telegram_config = TelegramConfig(use_telegram=not args.no_telegram, translation_languages=translation_languages)
+    telegram_config = TelegramConfig(use_telegram=not args.no_telegram, broadcast_languages=broadcast_languages)
 
     # Validate telegram configuration (only when enabled)
     if telegram_config.use_telegram:
