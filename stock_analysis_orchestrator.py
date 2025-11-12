@@ -14,6 +14,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -54,6 +55,56 @@ class StockAnalysisOrchestrator:
 
         self.selected_tickers = {}  # Store selected stock information
         self.telegram_config = telegram_config or TelegramConfig(use_telegram=True)
+
+    @staticmethod
+    def _extract_base64_images(markdown_text: str) -> tuple[str, dict]:
+        """
+        Extract base64 images from markdown and replace with placeholders
+
+        Args:
+            markdown_text: Original markdown text with base64 images
+
+        Returns:
+            Tuple of (text_without_images, images_dict)
+        """
+        images = {}
+        counter = 0
+
+        def replace_image(match):
+            nonlocal counter
+            # Use placeholder format that won't be translated
+            placeholder = f"[__IMAGE_PLACEHOLDER_{counter}__]"
+            images[placeholder] = match.group(0)  # Store entire image markdown
+            logger.info(f"Extracted image {counter}, size: {len(match.group(0))} chars")
+            counter += 1
+            return placeholder
+
+        # Pattern to match base64 images in markdown: ![alt](data:image/...;base64,...)
+        pattern = r'!\[([^\]]*)\]\(data:image/[^;]+;base64,[A-Za-z0-9+/=]+\)'
+        text_without_images = re.sub(pattern, replace_image, markdown_text)
+
+        logger.info(f"Extracted {len(images)} base64 images from markdown")
+        return text_without_images, images
+
+    @staticmethod
+    def _restore_base64_images(translated_text: str, images: dict) -> str:
+        """
+        Restore base64 images to translated text
+
+        Args:
+            translated_text: Translated text with placeholders
+            images: Dictionary of placeholder -> original image markdown
+
+        Returns:
+            Text with restored images
+        """
+        restored_text = translated_text
+        for placeholder, original_image in images.items():
+            restored_text = restored_text.replace(placeholder, original_image)
+            logger.debug(f"Restored image: {placeholder}")
+
+        logger.info(f"Restored {len(images)} base64 images to translated text")
+        return restored_text
 
     async def run_trigger_batch(self, mode):
         """
@@ -363,13 +414,21 @@ class StockAnalysisOrchestrator:
                             with open(report_path, 'r', encoding='utf-8') as f:
                                 original_report = f.read()
 
-                            # Translate the report
+                            # Extract base64 images before translation
+                            text_for_translation, images = self._extract_base64_images(original_report)
+                            logger.info(f"Prepared report for translation: {len(text_for_translation)} chars (extracted {len(images)} images)")
+
+                            # Translate the report (without images)
                             translated_report = await translate_telegram_message(
-                                original_report,
+                                text_for_translation,
                                 model="gpt-5-nano",
                                 from_lang="ko",
                                 to_lang=lang
                             )
+
+                            # Restore base64 images to translated text
+                            translated_report = self._restore_base64_images(translated_report, images)
+                            logger.info(f"Restored images to translated report: {len(translated_report)} chars")
 
                             # Create translated markdown file path
                             report_file = Path(report_path)
