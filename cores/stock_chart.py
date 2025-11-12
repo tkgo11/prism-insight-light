@@ -1094,8 +1094,16 @@ def create_trading_volume_chart(ticker, company_name=None, days=730, save_path=N
     fig, axes = plt.subplots(2, 1, figsize=(12, 10), gridspec_kw={'height_ratios': [2, 3]})
 
     # 1. 주요 투자자 누적 순매수량
-    # 주요 투자자 선택
+    # 주요 투자자 선택 (Korean names used for data access)
     investor_types = ['기관합계', '외국인합계', '개인', '기타법인']
+
+    # English mapping for display
+    investor_names_en = {
+        '기관합계': 'Institutions',
+        '외국인합계': 'Foreigners',
+        '개인': 'Individuals',
+        '기타법인': 'Other Corps'
+    }
 
     # 순매수량 컬럼 선택
     if '순매수' in df_volume.columns:
@@ -1118,11 +1126,9 @@ def create_trading_volume_chart(ticker, company_name=None, days=730, save_path=N
 
         axes[0].set_xticks(pos)
 
-        # X축 라벨에 한글 폰트 적용
-        if KOREAN_FONT_PROP:
-            axes[0].set_xticklabels(investor_data.index, rotation=45, fontproperties=KOREAN_FONT_PROP)
-        else:
-            axes[0].set_xticklabels(investor_data.index, rotation=45)
+        # X축 라벨을 영어로 표시
+        english_labels = [investor_names_en.get(name, name) for name in investor_data.index]
+        axes[0].set_xticklabels(english_labels, rotation=45)
 
         axes[0].axhline(y=0, color='black', linestyle='-', alpha=0.3)
         axes[0].grid(axis='y', linestyle='--', alpha=0.7)
@@ -1179,12 +1185,14 @@ def create_trading_volume_chart(ticker, company_name=None, days=730, save_path=N
 
     # 차트 그리기
     for i, investor in enumerate(key_investors):
+        # 영어 레이블 사용
+        english_label = investor_names_en.get(investor, investor)
         axes[1].plot(
             df_cumulative.index,
             df_cumulative[investor],
             color=PRIMARY_COLORS[i % len(PRIMARY_COLORS)],
             linewidth=2,
-            label=investor
+            label=english_label
         )
 
     # Label and title settings
