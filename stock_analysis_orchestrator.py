@@ -79,9 +79,16 @@ class StockAnalysisOrchestrator:
             counter += 1
             return placeholder
 
-        # Pattern to match base64 images in markdown: ![alt](data:image/...;base64,...)
-        pattern = r'!\[([^\]]*)\]\(data:image/[^;]+;base64,[A-Za-z0-9+/=]+\)'
-        text_without_images = re.sub(pattern, replace_image, markdown_text)
+        # Pattern to match base64 images in HTML img tags: <img src="data:image/...;base64,..." ... />
+        # Also supports markdown format: ![alt](data:image/...;base64,...)
+        patterns = [
+            r'<img\s+src="data:image/[^;]+;base64,[A-Za-z0-9+/=]+"\s+[^>]*>',  # HTML img tag
+            r'!\[([^\]]*)\]\(data:image/[^;]+;base64,[A-Za-z0-9+/=]+\)',  # Markdown format
+        ]
+
+        text_without_images = markdown_text
+        for pattern in patterns:
+            text_without_images = re.sub(pattern, replace_image, text_without_images)
 
         logger.info(f"Extracted {len(images)} base64 images from markdown")
         return text_without_images, images
@@ -112,8 +119,9 @@ class StockAnalysisOrchestrator:
                 match = re.search(r'<<<__BASE64_IMAGE_(\d+)__>>>', placeholder)
                 if match:
                     img_num = match.group(1)
-                    # Look for common translation patterns
+                    # Look for common translation patterns (both HTML and markdown)
                     patterns = [
+                        rf'<img\s+[^>]*>',  # HTML img tag (translated or not)
                         rf'\[Image[^\]]*\]',  # [Image: ...]
                         rf'!\[[^\]]*\]\([^\)]*\)',  # ![alt](url) that's not base64
                         rf'\[图片[^\]]*\]',  # Chinese: [图片...]
