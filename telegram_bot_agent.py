@@ -3,7 +3,8 @@ import os
 import logging
 from pathlib import Path
 from telegram import Bot
-from telegram.error import TelegramError
+from telegram.error import TelegramError, RetryAfter, TimedOut
+from telegram.request import HTTPXRequest
 
 # 로깅 설정
 logging.basicConfig(
@@ -28,9 +29,18 @@ class TelegramBotAgent:
         if not self.token:
             raise ValueError("텔레그램 봇 토큰이 필요합니다. 환경 변수 또는 파라미터로 제공해주세요.")
 
-        self.bot = Bot(token=self.token)
+        # Configure request with longer timeouts
+        request = HTTPXRequest(
+            connection_pool_size=8,
+            connect_timeout=30.0,
+            read_timeout=30.0,
+            write_timeout=30.0,
+            pool_timeout=30.0
+        )
 
-    async def send_message(self, chat_id, message, parse_mode="Markdown"):
+        self.bot = Bot(token=self.token, request=request)
+
+    async def send_message(self, chat_id, message, parse_mode="Markdown", retry_count=0, max_retries=3):
         """
         텔레그램 채널로 메시지 전송
 
@@ -38,6 +48,8 @@ class TelegramBotAgent:
             chat_id (str): 텔레그램 채널 ID
             message (str): 전송할 메시지
             parse_mode (str): 파싱 모드 ("Markdown", "MarkdownV2", "HTML", None)
+            retry_count (int): 현재 재시도 횟수
+            max_retries (int): 최대 재시도 횟수
 
         Returns:
             bool: 전송 성공 여부
@@ -51,22 +63,44 @@ class TelegramBotAgent:
             )
             logger.info(f"메시지 전송 성공 ({parse_mode}): {chat_id}")
             return True
+        except RetryAfter as e:
+            # Rate limit hit, wait and retry
+            wait_time = e.retry_after + 1
+            logger.warning(f"Rate limit hit. Waiting {wait_time} seconds before retry...")
+            await asyncio.sleep(wait_time)
+            if retry_count < max_retries:
+                return await self.send_message(chat_id, message, parse_mode, retry_count + 1, max_retries)
+            else:
+                logger.error(f"Max retries reached after rate limit")
+                return False
+        except TimedOut as e:
+            # Timeout occurred, retry with exponential backoff
+            if retry_count < max_retries:
+                wait_time = 2 ** retry_count  # 1, 2, 4 seconds
+                logger.warning(f"Timeout occurred. Retrying in {wait_time} seconds... (attempt {retry_count + 1}/{max_retries})")
+                await asyncio.sleep(wait_time)
+                return await self.send_message(chat_id, message, parse_mode, retry_count + 1, max_retries)
+            else:
+                logger.error(f"Max retries reached after timeout")
+                return False
         except TelegramError as e:
             logger.error(f"텔레그램 메시지 전송 실패 ({parse_mode}): {e}")
-            # 에러 발생 시 일반 텍스트로 재시도
-            try:
-                logger.info("일반 텍스트로 재시도합니다.")
-                await self.bot.send_message(
-                    chat_id=chat_id,
-                    text=message
-                )
-                logger.info(f"메시지 전송 성공 (일반 텍스트): {chat_id}")
-                return True
-            except TelegramError as e2:
-                logger.error(f"일반 텍스트 메시지 전송도 실패: {e2}")
-                return False
+            # 에러 발생 시 일반 텍스트로 재시도 (parse error인 경우)
+            if parse_mode and "parse" in str(e).lower():
+                try:
+                    logger.info("일반 텍스트로 재시도합니다.")
+                    await self.bot.send_message(
+                        chat_id=chat_id,
+                        text=message
+                    )
+                    logger.info(f"메시지 전송 성공 (일반 텍스트): {chat_id}")
+                    return True
+                except TelegramError as e2:
+                    logger.error(f"일반 텍스트 메시지 전송도 실패: {e2}")
+                    return False
+            return False
 
-    async def send_document(self, chat_id, document_path, caption=None):
+    async def send_document(self, chat_id, document_path, caption=None, retry_count=0, max_retries=3):
         """
         텔레그램 채널로 파일 전송
 
@@ -74,6 +108,8 @@ class TelegramBotAgent:
             chat_id (str): 텔레그램 채널 ID
             document_path (str): 전송할 파일 경로
             caption (str, optional): 파일 설명
+            retry_count (int): 현재 재시도 횟수
+            max_retries (int): 최대 재시도 횟수
 
         Returns:
             bool: 전송 성공 여부
@@ -88,6 +124,26 @@ class TelegramBotAgent:
                 )
             logger.info(f"파일 전송 성공: {document_path}")
             return True
+        except RetryAfter as e:
+            # Rate limit hit, wait and retry
+            wait_time = e.retry_after + 1
+            logger.warning(f"Rate limit hit. Waiting {wait_time} seconds before retry...")
+            await asyncio.sleep(wait_time)
+            if retry_count < max_retries:
+                return await self.send_document(chat_id, document_path, caption, retry_count + 1, max_retries)
+            else:
+                logger.error(f"Max retries reached after rate limit")
+                return False
+        except TimedOut as e:
+            # Timeout occurred, retry with exponential backoff
+            if retry_count < max_retries:
+                wait_time = 2 ** retry_count  # 1, 2, 4 seconds
+                logger.warning(f"Timeout occurred. Retrying in {wait_time} seconds... (attempt {retry_count + 1}/{max_retries})")
+                await asyncio.sleep(wait_time)
+                return await self.send_document(chat_id, document_path, caption, retry_count + 1, max_retries)
+            else:
+                logger.error(f"Max retries reached after timeout")
+                return False
         except TelegramError as e:
             logger.error(f"텔레그램 파일 전송 실패: {e}")
             return False
