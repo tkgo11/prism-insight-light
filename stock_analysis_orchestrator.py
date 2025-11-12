@@ -72,8 +72,8 @@ class StockAnalysisOrchestrator:
 
         def replace_image(match):
             nonlocal counter
-            # Use placeholder format that won't be translated
-            placeholder = f"[__IMAGE_PLACEHOLDER_{counter}__]"
+            # Use XML-style placeholder that won't be translated
+            placeholder = f"<<<__BASE64_IMAGE_{counter}__>>>"
             images[placeholder] = match.group(0)  # Store entire image markdown
             logger.info(f"Extracted image {counter}, size: {len(match.group(0))} chars")
             counter += 1
@@ -99,9 +99,43 @@ class StockAnalysisOrchestrator:
             Text with restored images
         """
         restored_text = translated_text
+
+        # First try exact match
         for placeholder, original_image in images.items():
-            restored_text = restored_text.replace(placeholder, original_image)
-            logger.debug(f"Restored image: {placeholder}")
+            if placeholder in restored_text:
+                restored_text = restored_text.replace(placeholder, original_image)
+                logger.debug(f"Restored image (exact match): {placeholder}")
+            else:
+                # Fallback: look for translated variations like [Image: ...] or ![...]
+                # Extract the image number from placeholder
+                import re
+                match = re.search(r'<<<__BASE64_IMAGE_(\d+)__>>>', placeholder)
+                if match:
+                    img_num = match.group(1)
+                    # Look for common translation patterns
+                    patterns = [
+                        rf'\[Image[^\]]*\]',  # [Image: ...]
+                        rf'!\[[^\]]*\]\([^\)]*\)',  # ![alt](url) that's not base64
+                        rf'\[图片[^\]]*\]',  # Chinese: [图片...]
+                        rf'\[画像[^\]]*\]',  # Japanese: [画像...]
+                    ]
+
+                    replaced = False
+                    for pattern in patterns:
+                        # Find the Nth occurrence based on img_num
+                        matches = list(re.finditer(pattern, restored_text))
+                        if int(img_num) < len(matches):
+                            match_obj = matches[int(img_num)]
+                            # Replace this specific match
+                            before = restored_text[:match_obj.start()]
+                            after = restored_text[match_obj.end():]
+                            restored_text = before + original_image + after
+                            logger.info(f"Restored image {img_num} using fallback pattern: {pattern}")
+                            replaced = True
+                            break
+
+                    if not replaced:
+                        logger.warning(f"Could not restore image {img_num}, placeholder not found: {placeholder}")
 
         logger.info(f"Restored {len(images)} base64 images to translated text")
         return restored_text
