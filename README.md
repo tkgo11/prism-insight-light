@@ -17,18 +17,18 @@
 
 > 📖 [한국어 문서](README_ko.md)
 
-AI-Powered Stock Analysis and Trading System
+AI-Powered Korean Stock Market Analysis and Trading System
 - **[Official Telegram Channel](https://t.me/stock_ai_agent)**: Surge stock detection / Stock analysis report download / Trading simulation / Auto-trading reports (https://t.me/stock_ai_agent)
 - **[Official Dashboard](https://analysis.stocksimulation.kr/)**: PRISM-INSIGHT real trading & simulation real-time performance dashboard (additionally provides AI portfolio analysis, trading history, watchlist)
 - **Community**: Not available yet. Temporary discussions available in Telegram channel
 
 ## 📖 Project Overview
 
-PRISM-INSIGHT is a **completely open-source free project** centered on **comprehensive stock analysis using AI analysis agents**. It automatically detects surging stocks daily through a Telegram channel, generates expert-level analyst reports, and performs trading simulations and automated trading.
+PRISM-INSIGHT is a **completely open-source free project** specializing in **Korean stock market (KOSPI/KOSDAQ) analysis** through **comprehensive AI analysis agents**. It automatically detects surging Korean stocks daily through a Telegram channel, generates expert-level analyst reports, and performs trading simulations and automated trading.
 
 **✨ All features are provided 100% free!**
 
-## 📈 Trading Simulator and Real Account Performance as of '25.10.29
+## 📈 Trading Simulator and Real Account Performance as of '25.11.12
 ### ⭐ Season 1 (Ended '25.09.28. No real account trading)
 **Simulator Performance**
 - Start Date: 2025.03.15
@@ -42,20 +42,24 @@ PRISM-INSIGHT is a **completely open-source free project** centered on **compreh
 ### ⭐⭐ Season 2 (In Progress)
 **Simulator Performance**
 - Start Date: 2025.09.29
-- Total Trades: 3
-- Profitable Trades: 2
-- Loss Trades: 1
-- Win Rate: 66.67%
-- **Cumulative Return: 19.47%**
+- Total Trades: 14
+- Profitable Trades: 9
+- Loss Trades: 5
+- Win Rate: 64.29%
+- **Total Cumulative Return from Sold Stocks: 104.65%**
+- **Realized Portfolio Return: 10.46%** (managed across 10 slots, 104.65% ÷ 10)
+- Market Benchmark (from Season 2 start): KOSPI +20.96%, KOSDAQ +7.06%
 - **[Trading Performance Summary Dashboard](https://analysis.stocksimulation.kr/)**
 
 **Real Account Performance**
 - Start Date: 2025.09.29
-- No performance yet
+- Initial Capital: ₩9,969,801
+- Current Total Assets (Valuation + Cash): ₩10,885,246
+- **Return: +9.18%**
 
 ## 🤖 AI Agent System Architecture (Core Feature)
 
-PRISM-INSIGHT is a **multi-agent system where 12 specialized AI agents collaborate**. Each agent specializes in a specific analysis domain and works organically together to deliver expert-level comprehensive analysis and trading.
+PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collaborate**. Each agent specializes in a specific analysis domain and works organically together to deliver expert-level comprehensive analysis and trading.
 
 ### 📊 Analysis Team (6 Agents) - GPT-4.1 Based
 
@@ -127,7 +131,7 @@ PRISM-INSIGHT is a **multi-agent system where 12 specialized AI agents collabora
 
 ---
 
-### 💬 Communication Team (2 Agents) - GPT-4.1
+### 💬 Communication Team (3 Agents) - GPT-4.1 / GPT-5-nano
 
 #### 8-1. Summary Specialist
 <img src="docs/images/aiagent/summary_specialist.jpeg" alt="Summary Specialist" width="300"/>
@@ -146,6 +150,15 @@ PRISM-INSIGHT is a **multi-agent system where 12 specialized AI agents collabora
   - Verifies accuracy, clarity, and format compliance
   - Detects hallucinations and identifies errors
   - Collaborates with Summary Specialist for iterative improvement to EXCELLENT rating
+
+#### 8-3. Translation Specialist
+<img src="docs/images/aiagent/translator_specialist.png" alt="Translation Specialist" width="300"/>
+
+- **Role**: Translates analysis reports and messages to multiple languages
+- **Features**:
+  - Supports multi-language broadcasting (English, Japanese, Chinese, etc.)
+  - Preserves technical terminology and market context
+  - Enables parallel transmission to language-specific Telegram channels
 
 ---
 
@@ -360,6 +373,12 @@ python stock_analysis_orchestrator.py --mode afternoon
 
 # Local test without Telegram (no Telegram setup needed)
 python stock_analysis_orchestrator.py --mode morning --no-telegram
+
+# Generate English reports (default: Korean)
+python stock_analysis_orchestrator.py --mode morning --language en
+
+# Broadcast to multiple language channels (requires setup in .env)
+python stock_analysis_orchestrator.py --mode morning --broadcast-languages en,ja,zh
 ```
 
 #### 💡 Telegram Option (`--no-telegram`)
@@ -379,8 +398,14 @@ You can run the system without Telegram setup:
 **Required Environment Variables (when using Telegram):**
 ```bash
 # .env file
-TELEGRAM_CHANNEL_ID="-1001234567890"
+TELEGRAM_CHANNEL_ID="-1001234567890"  # Main channel (Korean by default)
 TELEGRAM_BOT_TOKEN="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+
+# Multi-language broadcasting (optional)
+# Use with --broadcast-languages argument (e.g., --broadcast-languages en,ja,zh)
+# TELEGRAM_CHANNEL_ID_EN="-1001234567891"  # English channel
+# TELEGRAM_CHANNEL_ID_JA="-1001234567892"  # Japanese channel
+# TELEGRAM_CHANNEL_ID_ZH="-1001234567893"  # Chinese channel
 ```
 
 ### Individual Module Execution
@@ -413,9 +438,12 @@ python telegram_bot_agent.py
 prism-insight/
 ├── 📂 cores/                     # 🤖 Core AI Analysis Engine
 │   ├── 📂 agents/               # AI Agent Modules
-│   │   ├── company_info_agents.py    # Company Information Analysis Agent
-│   │   ├── news_strategy_agents.py   # News and Investment Strategy Agent
-│   │   └── stock_price_agents.py     # Stock Price and Volume Analysis Agent
+│   │   ├── company_info_agents.py        # Company Information Analysis Agent
+│   │   ├── news_strategy_agents.py       # News and Investment Strategy Agent
+│   │   ├── stock_price_agents.py         # Stock Price and Volume Analysis Agent
+│   │   ├── telegram_quality_inspector.py # Quality Inspector Agent
+│   │   ├── telegram_summary_agent.py     # Summary Specialist Agent
+│   │   └── telegram_translator_agent.py  # Translation Specialist Agent
 │   ├── analysis.py              # Comprehensive Stock Analysis (Core)
 │   ├── main.py                  # Main Analysis Execution
 │   ├── report_generation.py     # Report Generation
@@ -556,7 +584,8 @@ Thank you so much! PRISM-INSIGHT continues to operate with your support.
 
 #### 💙 Individual Sponsors
 <!-- sponsors -->
-No sponsors yet. Be the first sponsor! 💙
+**Core Supporter**
+- [@tehryung-ray](https://github.com/tehryung-ray) 💙
 <!-- sponsors -->
 
 ---

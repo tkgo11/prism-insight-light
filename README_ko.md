@@ -15,7 +15,7 @@
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/dragon1086?style=for-the-badge&logo=github-sponsors&color=ff69b4&label=Sponsors)](https://github.com/sponsors/dragon1086)
 [![Stars](https://img.shields.io/github/stars/dragon1086/prism-insight?style=for-the-badge)](https://github.com/dragon1086/prism-insight/stargazers)
 
-AI 기반 주식 분석 및 매매 시스템
+AI 기반 한국 주식시장 분석 및 매매 시스템
 - **[공식 텔레그램 채널](https://t.me/stock_ai_agent)**: 급등주 포착/주식 분석 리포트 다운로드/매매 시뮬레이션/자동매매 리포트 제공 (https://t.me/stock_ai_agent)
 - **[공식 대시보드](https://analysis.stocksimulation.kr/)**: PRISM-INSIGHT 실전매매 & 시뮬레이션 실시간 성과 대시보드 (부가적으로 AI 보유 분석, 거래내역, 관심종목 제공)
 - **커뮤니티**: 아직 없음. 임시로 텔레그램 채널 토론방에서 대화 가능
@@ -23,11 +23,11 @@ AI 기반 주식 분석 및 매매 시스템
 
 ## 📖 프로젝트 개요
 
-PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을 핵심으로 하는 **완전 오픈소스 무료 프로젝트**입니다. 텔레그램 채널을 통해 매일 급등주를 자동으로 포착하고, 전문가 수준의 애널리스트 리포트를 생성하여 매매 시뮬레이션 및 자동매매를 수행합니다.
+PRISM-INSIGHT는 **한국 주식시장(코스피/코스닥) 전문** **AI 분석 에이전트를 활용한 종합 주식 분석**을 핵심으로 하는 **완전 오픈소스 무료 프로젝트**입니다. 텔레그램 채널을 통해 매일 한국 급등주를 자동으로 포착하고, 전문가 수준의 애널리스트 리포트를 생성하여 매매 시뮬레이션 및 자동매매를 수행합니다.
 
 **✨ 모든 기능이 100% 무료로 제공됩니다!**
 
-## 📈 '25.10.29 기준 매매 시뮬레이터 및 실제 계좌 실적
+## 📈 '25.11.12 기준 매매 시뮬레이터 및 실제 계좌 실적
 ### ⭐ 시즌1 ('25.09.28 종료. 실계좌 매매 없음)
 **시뮬레이터 실적**
 - 최초 시작일 : 2025.03.15
@@ -41,20 +41,24 @@ PRISM-INSIGHT는 **AI 분석 에이전트를 활용한 종합 주식 분석**을
 ### ⭐⭐ 시즌2 (진행 중)
 **시뮬레이터 실적**
 - 최초 시작일 : 2025.09.29
-- 총 거래 건수: 3건
-- 수익 거래: 2건
-- 손실 거래: 1건
-- 승률: 66.67%
-- **누적 수익률: 19.47%**
+- 총 거래 건수: 14건
+- 수익 거래: 9건
+- 손실 거래: 5건
+- 승률: 64.29%
+- **매도 종목 누적 수익률: 104.65%**
+- **포트폴리오 실현 수익률: 10.46%** (10개 슬롯으로 분산 관리, 104.65% ÷ 10)
+- 시장 수익률(시즌2 시작 대비): KOSPI +20.96%, KOSDAQ +7.06%
 - **[매매 성과 요약 대시보드](https://analysis.stocksimulation.kr/)**
 
 **실제계좌 실적**
 - 최초 시작일 : 2025.09.29
-- 아직 실적 없음
+- 시작 금액: ₩9,969,801
+- 현재 총자산 (평가금액 + 예수금): ₩10,885,246
+- **수익률: +9.18%**
 
 ## 🤖 AI 에이전트 시스템 아키텍쳐 (핵심 기능)
 
-PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다중 에이전트 시스템**입니다. 각 에이전트는 특정 분석 영역에 특화되어 있으며, 서로 유기적으로 협력하여 전문가 수준의 종합 분석 및 매매를 이행합니다.
+PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다중 에이전트 시스템**입니다. 각 에이전트는 특정 분석 영역에 특화되어 있으며, 서로 유기적으로 협력하여 전문가 수준의 종합 분석 및 매매를 이행합니다.
 
 ### 📊 분석 팀 (6개 에이전트) - GPT-4.1 기반
 
@@ -126,7 +130,7 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
 
 ---
 
-### 💬 커뮤니케이션 팀 (2개 에이전트) - GPT-4.1
+### 💬 커뮤니케이션 팀 (3개 에이전트) - GPT-4.1 / GPT-5-nano
 
 #### 8-1. 요약 전문가 (Summary Specialist)
 <img src="docs/images/aiagent/summary_specialist.jpeg" alt="Summary Specialist" width="300"/>
@@ -145,6 +149,15 @@ PRISM-INSIGHT는 **12개의 전문화된 AI 에이전트들이 협업하는 다�
   - 정확성, 명확성, 포맷 준수 여부 검증
   - 할루시네이션 탐지 및 오류 지적
   - 요약 전문가와 협업하여 EXCELLENT 등급까지 반복 개선
+
+#### 8-3. 번역 전문가 (Translation Specialist)
+<img src="docs/images/aiagent/translator_specialist.png" alt="Translation Specialist" width="300"/>
+
+- **역할**: 분석 리포트와 메시지를 다국어로 번역
+- **특징**:
+  - 다국어 브로드캐스팅 지원 (영어, 일본어, 중국어 등)
+  - 전문 용어와 시장 맥락 보존
+  - 언어별 텔레그램 채널에 병렬 전송 가능
 
 ---
 
@@ -367,6 +380,12 @@ python stock_analysis_orchestrator.py --mode afternoon
 
 # 텔레그램 없이 로컬 테스트 (텔레그램 설정 불필요)
 python stock_analysis_orchestrator.py --mode morning --no-telegram
+
+# 영문 리포트 생성 (기본값: 한국어)
+python stock_analysis_orchestrator.py --mode morning --language en
+
+# 다국어 채널 브로드캐스팅 (.env 설정 필요)
+python stock_analysis_orchestrator.py --mode morning --broadcast-languages en,ja,zh
 ```
 
 #### 💡 텔레그램 옵션 (`--no-telegram`)
@@ -386,8 +405,14 @@ python stock_analysis_orchestrator.py --mode morning --no-telegram
 **필수 환경변수 (텔레그램 사용 시):**
 ```bash
 # .env 파일
-TELEGRAM_CHANNEL_ID="-1001234567890"
+TELEGRAM_CHANNEL_ID="-1001234567890"  # 메인 채널 (기본값: 한국어)
 TELEGRAM_BOT_TOKEN="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+
+# 다국어 브로드캐스팅 (선택사항)
+# --broadcast-languages 인자와 함께 사용 (예: --broadcast-languages en,ja,zh)
+# TELEGRAM_CHANNEL_ID_EN="-1001234567891"  # 영어 채널
+# TELEGRAM_CHANNEL_ID_JA="-1001234567892"  # 일본어 채널
+# TELEGRAM_CHANNEL_ID_ZH="-1001234567893"  # 중국어 채널
 ```
 
 ### 개별 모듈 실행
@@ -420,9 +445,12 @@ python telegram_bot_agent.py
 prism-insight/
 ├── 📂 cores/                     # 🤖 핵심 AI 분석 엔진
 │   ├── 📂 agents/               # AI 에이전트 모듈
-│   │   ├── company_info_agents.py    # 기업 정보 분석 에이전트
-│   │   ├── news_strategy_agents.py   # 뉴스 및 투자 전략 에이전트
-│   │   └── stock_price_agents.py     # 주가 및 거래량 분석 에이전트
+│   │   ├── company_info_agents.py        # 기업 정보 분석 에이전트
+│   │   ├── news_strategy_agents.py       # 뉴스 및 투자 전략 에이전트
+│   │   ├── stock_price_agents.py         # 주가 및 거래량 분석 에이전트
+│   │   ├── telegram_quality_inspector.py # 품질 검수자 에이전트
+│   │   ├── telegram_summary_agent.py     # 요약 전문가 에이전트
+│   │   └── telegram_translator_agent.py  # 번역 전문가 에이전트
 │   ├── analysis.py              # 종합 주식 분석 (핵심)
 │   ├── main.py                  # 메인 분석 실행
 │   ├── report_generation.py     # 보고서 생성
@@ -563,7 +591,8 @@ AI 에이전트가 생성하는 종합 애널리스트 리포트는 다음 섹�
 
 #### 💙 개인 후원자 분들
 <!-- sponsors -->
-아직 후원자가 없습니다. 첫 번째 후원자가 되어주세요! 💙
+**핵심 서포터**
+- [@tehryung-ray](https://github.com/tehryung-ray) 💙
 <!-- sponsors -->
 
 ---
