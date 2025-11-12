@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-포트폴리오 텔레그램 리포터
-- 주기적으로 계좌 및 포트폴리오 상황을 텔레그램으로 전송
-- crontab으로 실행 가능
+Portfolio Telegram Reporter
+- Periodically sends account and portfolio status to Telegram
+- Can be executed via crontab
 """
 
 import asyncio
@@ -15,25 +15,25 @@ from pathlib import Path
 from typing import Dict, Any, List
 from dotenv import load_dotenv
 
-# 현재 스크립트의 디렉토리를 기준으로 경로 설정
+# Set paths based on current script directory
 SCRIPT_DIR = Path(__file__).parent
 TRADING_DIR = SCRIPT_DIR
 
-# trading 모듈 import를 위한 경로 추가
+# Add paths for importing trading module
 PARENT_DIR = SCRIPT_DIR.parent
 sys.path.insert(0, str(PARENT_DIR))
 sys.path.insert(0, str(TRADING_DIR))
 
-# 설정파일 로딩
+# Load configuration file
 CONFIG_FILE = TRADING_DIR / "config" / "kis_devlp.yaml"
 with open(CONFIG_FILE, encoding="UTF-8") as f:
     _cfg = yaml.load(f, Loader=yaml.FullLoader)
 
-# 로컬 모듈 import
+# Import local modules
 from trading.domestic_stock_trading import DomesticStockTrading
 from telegram_bot_agent import TelegramBotAgent
 
-# 로깅 설정
+# Logging configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -44,69 +44,90 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# env파일 로드
+# Load .env file
 SCRIPT_DIR = Path(__file__).parent.absolute()  # trading/
 PROJECT_ROOT = SCRIPT_DIR.parent              # project_root/
 ENV_FILE = PROJECT_ROOT / ".env"
 load_dotenv(dotenv_path=str(ENV_FILE))
 
 class PortfolioTelegramReporter:
-    """포트폴리오 상황을 텔레그램으로 리포트하는 클래스"""
+    """Class for reporting portfolio status to Telegram"""
 
-    def __init__(self, telegram_token: str = None, chat_id: str = None, trading_mode: str = None):
+    def __init__(self, telegram_token: str = None, chat_id: str = None, trading_mode: str = None, broadcast_languages: list = None):
         """
-        초기화
+        Initialize
 
         Args:
-            telegram_token: 텔레그램 봇 토큰
-            chat_id: 텔레그램 채널 ID
-            trading_mode: 트레이딩 모드 ('demo' 또는 'real', None이면 yaml 설정 사용)
+            telegram_token: Telegram bot token
+            chat_id: Telegram channel ID
+            trading_mode: Trading mode ('demo' or 'real', uses yaml config if None)
+            broadcast_languages: List of languages to broadcast in parallel (e.g., ['en', 'ja', 'zh'])
         """
-        # 텔레그램 설정
+        # Telegram configuration
         self.telegram_token = telegram_token or os.environ.get("TELEGRAM_BOT_TOKEN")
         self.chat_id = chat_id or os.environ.get("TELEGRAM_CHANNEL_ID")
-        
-        if not self.telegram_token:
-            raise ValueError("텔레그램 봇 토큰이 필요합니다. 환경 변수 TELEGRAM_BOT_TOKEN 또는 파라미터로 제공해주세요.")
-        
-        if not self.chat_id:
-            raise ValueError("텔레그램 채널 ID가 필요합니다. 환경 변수 TELEGRAM_CHANNEL_ID 또는 파라미터로 제공해주세요.")
+        self.broadcast_languages = broadcast_languages or []
+        self.broadcast_channel_ids = {}
 
-        # 트레이딩 설정 - yaml 파일의 default_mode를 기본값으로 사용
+        if not self.telegram_token:
+            raise ValueError("Telegram bot token is required. Please provide via environment variable TELEGRAM_BOT_TOKEN or parameter.")
+
+        if not self.chat_id:
+            raise ValueError("Telegram channel ID is required. Please provide via environment variable TELEGRAM_CHANNEL_ID or parameter.")
+
+        # Load broadcast channel IDs
+        self._load_broadcast_channels()
+
+        # Trading configuration - use yaml default_mode as default value
         self.trading_mode = trading_mode if trading_mode is not None else _cfg["default_mode"]
         self.telegram_bot = TelegramBotAgent(token=self.telegram_token)
-        
-        logger.info(f"PortfolioTelegramReporter 초기화 완료")
-        logger.info(f"트레이딩 모드: {self.trading_mode} (yaml 설정: {_cfg['default_mode']})")
+
+        logger.info(f"PortfolioTelegramReporter initialized")
+        logger.info(f"Trading mode: {self.trading_mode} (yaml config: {_cfg['default_mode']})")
+
+    def _load_broadcast_channels(self):
+        """
+        Load telegram channel IDs for broadcast languages
+        """
+        for lang in self.broadcast_languages:
+            lang_upper = lang.upper()
+            env_key = f"TELEGRAM_CHANNEL_ID_{lang_upper}"
+            channel_id = os.getenv(env_key)
+
+            if channel_id:
+                self.broadcast_channel_ids[lang] = channel_id
+                logger.info(f"Broadcast channel loaded: {lang} -> {channel_id[:10]}...")
+            else:
+                logger.warning(f"Broadcast channel ID not configured for language: {lang} (env var: {env_key})")
 
     def format_currency(self, amount: float) -> str:
-        """금액을 한국 원화 형식으로 포맷팅"""
+        """Format amount in Korean Won"""
         return f"{amount:,.0f}원" if amount else "0원"
 
     def format_percentage(self, rate: float) -> str:
-        """퍼센트를 포맷팅"""
+        """Format percentage"""
         return f"{rate:+.2f}%" if rate else "0.00%"
 
     def create_portfolio_message(self, portfolio: List[Dict[str, Any]], account_summary: Dict[str, Any]) -> str:
         """
-        포트폴리오와 계좌 요약을 기반으로 텔레그램 메시지 생성
+        Generate telegram message based on portfolio and account summary
 
         Args:
-            portfolio: 포트폴리오 데이터
-            account_summary: 계좌 요약 데이터
+            portfolio: Portfolio data
+            account_summary: Account summary data
 
         Returns:
-            포맷팅된 텔레그램 메시지
+            Formatted telegram message
         """
         current_time = datetime.datetime.now().strftime("%m/%d %H:%M")
         mode_emoji = "🧪" if self.trading_mode == "demo" else "💰"
         mode_text = "모의투자" if self.trading_mode == "demo" else "실전투자"
 
-        # 헤더
+        # Header
         message = f"📊 포트폴리오 리포트 {mode_emoji}\n"
         message += f"🕐 {current_time} | {mode_text}\n\n"
 
-        # 계좌 요약
+        # Account summary
         if account_summary:
             total_eval = account_summary.get('total_eval_amount', 0)
             total_profit = account_summary.get('total_profit_amount', 0)
@@ -150,7 +171,7 @@ class PortfolioTelegramReporter:
 
                 profit_sign = "+" if profit_amount >= 0 else ""
 
-                # 종목별 정보
+                # Stock information
                 message += f"\n*{i}. {stock_name}* ({stock_code}) {status_emoji}\n"
                 message += f"  평가금액: `{self.format_currency(eval_amount)}`\n"
                 message += f"  평균단가: `{self.format_currency(avg_price)}` ({quantity}주)\n"
@@ -164,155 +185,215 @@ class PortfolioTelegramReporter:
 
     async def get_trading_data(self) -> tuple:
         """
-        트레이딩 데이터를 가져옴
+        Fetch trading data
 
         Returns:
-            (portfolio, account_summary) 튜플
+            (portfolio, account_summary) tuple
         """
         try:
             trader = DomesticStockTrading(mode=self.trading_mode)
-            
-            logger.info("포트폴리오 데이터 조회 중...")
+
+            logger.info("Fetching portfolio data...")
             portfolio = trader.get_portfolio()
-            
-            logger.info("계좌 요약 데이터 조회 중...")
+
+            logger.info("Fetching account summary...")
             account_summary = trader.get_account_summary()
-            
-            logger.info(f"데이터 조회 완료: 보유종목 {len(portfolio)}개")
+
+            logger.info(f"Data fetch complete: {len(portfolio)} holdings")
             return portfolio, account_summary
-            
+
         except Exception as e:
-            logger.error(f"트레이딩 데이터 조회 중 오류: {str(e)}")
+            logger.error(f"Error fetching trading data: {str(e)}")
             return [], {}
 
     async def send_portfolio_report(self) -> bool:
         """
-        포트폴리오 리포트를 텔레그램으로 전송
+        Send portfolio report to Telegram
 
         Returns:
-            전송 성공 여부
+            Success status
         """
         try:
-            logger.info("포트폴리오 리포트 생성 시작...")
-            
-            # 트레이딩 데이터 조회
+            logger.info("Starting portfolio report generation...")
+
+            # Fetch trading data
             portfolio, account_summary = await self.get_trading_data()
-            
-            # 메시지 생성
+
+            # Generate message
             message = self.create_portfolio_message(portfolio, account_summary)
-            
-            logger.info("텔레그램 메시지 전송 중...")
-            # 텔레그램 전송
+
+            logger.info("Sending telegram message...")
+            # Send to main channel
             success = await self.telegram_bot.send_message(self.chat_id, message)
-            
+
             if success:
-                logger.info("포트폴리오 리포트 전송 성공!")
-                return True
+                logger.info("Portfolio report sent successfully!")
             else:
-                logger.error("포트폴리오 리포트 전송 실패!")
-                return False
-                
+                logger.error("Failed to send portfolio report!")
+
+            # Send to broadcast channels (non-blocking)
+            if self.broadcast_languages:
+                asyncio.create_task(self._send_translated_portfolio_report(message))
+
+            return success
+
         except Exception as e:
-            logger.error(f"포트폴리오 리포트 전송 중 오류: {str(e)}")
+            logger.error(f"Error sending portfolio report: {str(e)}")
             return False
+
+    async def _send_translated_portfolio_report(self, original_message: str):
+        """
+        Send translated portfolio report to additional language channels
+
+        Args:
+            original_message: Original Korean message
+        """
+        try:
+            import sys
+            from pathlib import Path
+
+            # Add cores directory to path for importing translator agent
+            cores_path = Path(__file__).parent.parent / "cores"
+            if str(cores_path) not in sys.path:
+                sys.path.insert(0, str(cores_path))
+
+            from agents.telegram_translator_agent import translate_telegram_message
+
+            for lang in self.broadcast_languages:
+                try:
+                    # Get channel ID for this language
+                    channel_id = self.broadcast_channel_ids.get(lang)
+                    if not channel_id:
+                        logger.warning(f"No channel ID configured for language: {lang}")
+                        continue
+
+                    logger.info(f"Translating portfolio report to {lang}")
+
+                    # Translate message
+                    translated_message = await translate_telegram_message(
+                        original_message,
+                        model="gpt-5-nano",
+                        from_lang="ko",
+                        to_lang=lang
+                    )
+
+                    # Send translated message
+                    success = await self.telegram_bot.send_message(channel_id, translated_message)
+
+                    if success:
+                        logger.info(f"Portfolio report sent successfully to {lang} channel")
+                    else:
+                        logger.error(f"Failed to send portfolio report to {lang} channel")
+
+                except Exception as e:
+                    logger.error(f"Error sending portfolio report to {lang}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error in _send_translated_portfolio_report: {str(e)}")
 
     async def send_simple_status(self, status_type: str = "morning") -> bool:
         """
-        간단한 상태 메시지 전송
+        Send simple status message
 
         Args:
-            status_type: 상태 타입 ('morning', 'evening', 'market_close' 등)
+            status_type: Status type ('morning', 'evening', 'market_close', etc.)
 
         Returns:
-            전송 성공 여부
+            Success status
         """
         try:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             mode_emoji = "🧪" if self.trading_mode == "demo" else "💰"
-            
-            # 상태별 메시지 설정
+
+            # Status message settings
             status_messages = {
                 "morning": "🌅 **장 시작 전 체크**",
-                "evening": "🌆 **장 마감 후 정리**", 
+                "evening": "🌆 **장 마감 후 정리**",
                 "market_close": "🔔 **시장 마감**",
                 "weekend": "🏖️ **주말 상태 체크**"
             }
-            
+
             title = status_messages.get(status_type, "📊 **상태 체크**")
-            
-            # 간단한 계좌 요약만 조회
+
+            # Fetch only account summary
             _, account_summary = await self.get_trading_data()
-            
+
             message = f"{title} {mode_emoji}\n"
             message += f"📅 {current_time}\n\n"
-            
+
             if account_summary:
                 total_eval = account_summary.get('total_eval_amount', 0)
                 total_profit = account_summary.get('total_profit_amount', 0)
                 total_profit_rate = account_summary.get('total_profit_rate', 0)
-                
+
                 profit_emoji = "📈" if total_profit >= 0 else "📉"
-                
+
                 message += f"💼 총 평가: {self.format_currency(total_eval)}\n"
                 message += f"{profit_emoji} 손익: {self.format_currency(total_profit)} ({self.format_percentage(total_profit_rate)})\n"
             else:
                 message += "❌ 계좌 정보 조회 실패\n"
-            
+
             message += "\n🤖 자동 상태 체크"
-            
+
             success = await self.telegram_bot.send_message(self.chat_id, message)
-            
+
             if success:
-                logger.info(f"{status_type} 상태 메시지 전송 성공!")
+                logger.info(f"{status_type} status message sent successfully!")
                 return True
             else:
-                logger.error(f"{status_type} 상태 메시지 전송 실패!")
+                logger.error(f"Failed to send {status_type} status message!")
                 return False
-                
+
         except Exception as e:
-            logger.error(f"상태 메시지 전송 중 오류: {str(e)}")
+            logger.error(f"Error sending status message: {str(e)}")
             return False
 
 
 async def main():
-    """메인 함수"""
+    """Main function"""
     import argparse
-    
-    parser = argparse.ArgumentParser(description="포트폴리오 텔레그램 리포터")
-    parser.add_argument("--mode", choices=["demo", "real"], 
-                       help=f"트레이딩 모드 (demo: 모의투자, real: 실전투자, 기본값: {_cfg['default_mode']})")
-    parser.add_argument("--type", choices=["full", "simple", "morning", "evening", "market_close", "weekend"], 
-                       default="full", help="리포트 타입")
-    parser.add_argument("--token", help="텔레그램 봇 토큰")
-    parser.add_argument("--chat-id", help="텔레그램 채널 ID")
-    
+
+    parser = argparse.ArgumentParser(description="Portfolio Telegram Reporter")
+    parser.add_argument("--mode", choices=["demo", "real"],
+                       help=f"Trading mode (demo: paper trading, real: live trading, default: {_cfg['default_mode']})")
+    parser.add_argument("--type", choices=["full", "simple", "morning", "evening", "market_close", "weekend"],
+                       default="full", help="Report type")
+    parser.add_argument("--token", help="Telegram bot token")
+    parser.add_argument("--chat-id", help="Telegram channel ID")
+    parser.add_argument("--broadcast-languages", type=str, default="",
+                       help="Additional languages for parallel telegram channel broadcasting (comma-separated, e.g., 'en,ja,zh')")
+
     args = parser.parse_args()
-    
+
+    # Parse broadcast languages
+    broadcast_languages = [lang.strip() for lang in args.broadcast_languages.split(",") if lang.strip()]
+
     try:
-        # 리포터 초기화 (mode가 None이면 yaml 설정 사용)
+        # Initialize reporter (uses yaml config if mode is None)
         reporter = PortfolioTelegramReporter(
             telegram_token=args.token,
             chat_id=args.chat_id,
-            trading_mode=args.mode  # None이면 yaml의 default_mode 사용
+            trading_mode=args.mode,  # Uses yaml's default_mode if None
+            broadcast_languages=broadcast_languages
         )
-        
-        # 리포트 타입에 따른 실행
+
+        # Execute based on report type
         if args.type == "full":
             success = await reporter.send_portfolio_report()
         else:
-            # simple 또는 특정 상태 메시지
+            # Simple or specific status message
             status_type = args.type if args.type != "simple" else "morning"
             success = await reporter.send_simple_status(status_type)
-        
+
         if success:
-            logger.info("프로그램 실행 완료 - 성공")
+            logger.info("Program completed successfully")
             sys.exit(0)
         else:
-            logger.error("프로그램 실행 완료 - 실패")
+            logger.error("Program completed with failure")
             sys.exit(1)
-            
+
     except Exception as e:
-        logger.error(f"프로그램 실행 중 오류: {str(e)}")
+        logger.error(f"Error during program execution: {str(e)}")
         sys.exit(1)
 
 
