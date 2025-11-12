@@ -1,7 +1,8 @@
 "use client"
 
-import { Moon, Sun, TrendingUp, Github, Send } from "lucide-react"
+import { Moon, Sun, TrendingUp, Github, Send, Languages } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useLanguage } from "@/components/language-provider"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -18,21 +19,22 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: DashboardHeaderProps) {
   const { theme, setTheme } = useTheme()
+  const { language, setLanguage, t } = useLanguage()
 
   const formatLastUpdated = () => {
-    if (!lastUpdated) return "실시간 업데이트"
-    
+    if (!lastUpdated) return t("header.realtimeUpdate")
+
     try {
       const date = new Date(lastUpdated)
-      if (isNaN(date.getTime())) return "실시간 업데이트"
-      return date.toLocaleString("ko-KR", {
+      if (isNaN(date.getTime())) return t("header.realtimeUpdate")
+      return date.toLocaleString(language === "ko" ? "ko-KR" : "en-US", {
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
       })
     } catch {
-      return "실시간 업데이트"
+      return t("header.realtimeUpdate")
     }
   }
 
@@ -50,28 +52,28 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
                   Prism Insight
                 </h1>
                 <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-gradient-to-r from-primary to-purple-600 text-white">
-                  Season 2
+                  {t("header.season")}
                 </span>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-500 cursor-help">
-                        Open Source
+                        {t("header.openSource")}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="text-xs">AI 기반 주식 분석 및 매매 시스템 • MIT License</p>
+                      <p className="text-xs">{t("header.tooltip.openSource")}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
               <div className="flex items-center gap-3 mt-0.5">
                 <p className="text-xs text-muted-foreground">
-                  시작: 2025.09.29
+                  {t("header.startDate")}
                 </p>
                 <span className="text-muted-foreground/30">•</span>
                 <p className="text-xs text-muted-foreground">
-                  업데이트: {formatLastUpdated()}
+                  {t("header.updated")}: {formatLastUpdated()}
                 </p>
               </div>
             </div>
@@ -83,28 +85,28 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
               onClick={() => onTabChange("dashboard")}
               className="font-medium"
             >
-              대시보드
+              {t("header.dashboard")}
             </Button>
             <Button
               variant={activeTab === "ai-decisions" ? "secondary" : "ghost"}
               onClick={() => onTabChange("ai-decisions")}
               className="font-medium"
             >
-              AI 보유 분석
+              {t("header.aiDecisions")}
             </Button>
             <Button
               variant={activeTab === "trading" ? "secondary" : "ghost"}
               onClick={() => onTabChange("trading")}
               className="font-medium"
             >
-              거래 내역
+              {t("header.trading")}
             </Button>
             <Button
               variant={activeTab === "watchlist" ? "secondary" : "ghost"}
               onClick={() => onTabChange("watchlist")}
               className="font-medium"
             >
-              관심 종목
+              {t("header.watchlist")}
             </Button>
           </nav>
 
@@ -129,7 +131,7 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">GitHub 저장소</p>
+                  <p className="text-xs">{t("header.tooltip.github")}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -154,7 +156,26 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">텔레그램 채널</p>
+                  <p className="text-xs">{t("header.tooltip.telegram")}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setLanguage(language === "ko" ? "en" : "ko")}
+                    className="rounded-full"
+                  >
+                    <Languages className="h-5 w-5" />
+                    <span className="sr-only">Toggle Language</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{language === "ko" ? "English" : "한국어"}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -167,7 +188,7 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
             >
               <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">테마 전환</span>
+              <span className="sr-only">{t("header.tooltip.theme")}</span>
             </Button>
           </div>
         </div>
@@ -180,7 +201,7 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
             size="sm"
             className="font-medium whitespace-nowrap"
           >
-            대시보드
+            {t("header.dashboard")}
           </Button>
           <Button
             variant={activeTab === "ai-decisions" ? "secondary" : "ghost"}
@@ -188,7 +209,7 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
             size="sm"
             className="font-medium whitespace-nowrap"
           >
-            AI 보유 분석
+            {t("header.aiDecisions")}
           </Button>
           <Button
             variant={activeTab === "trading" ? "secondary" : "ghost"}
@@ -196,7 +217,7 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
             size="sm"
             className="font-medium whitespace-nowrap"
           >
-            거래 내역
+            {t("header.trading")}
           </Button>
           <Button
             variant={activeTab === "watchlist" ? "secondary" : "ghost"}
@@ -204,7 +225,7 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
             size="sm"
             className="font-medium whitespace-nowrap"
           >
-            관심 종목
+            {t("header.watchlist")}
           </Button>
         </nav>
       </div>

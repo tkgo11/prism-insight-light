@@ -151,91 +151,61 @@ class TelegramSummaryGenerator:
         logger.warning(f"종목 {stock_code}의 트리거 유형을 결과 파일에서 찾지 못함, 기본값 사용")
         return "주목할 패턴", "unknown"
 
-    def create_optimizer_agent(self, metadata, current_date):
+    def create_optimizer_agent(self, metadata, current_date, from_lang="ko", to_lang="ko"):
         """
         텔레그램 요약 생성 에이전트 생성
-        """
-        warning_message = ""
-        if metadata.get('trigger_mode') == 'morning':
-            warning_message = '메시지 중간에 "⚠️ 주의: 본 정보는 장 시작 후 10분 시점 데이터 기준으로, 현재 시장 상황과 차이가 있을 수 있습니다." 문구를 반드시 포함해 주세요.'
 
-        return Agent(
-            name="telegram_summary_optimizer",
-            instruction=f"""당신은 주식 정보 요약 전문가입니다. 
-                        상세한 주식 분석 보고서를 읽고, 일반 투자자를 위한 가치 있는 텔레그램 메시지로 요약해야 합니다.
-                        메시지는 핵심 정보와 통찰력을 포함해야 하며, 아래 형식을 따라야 합니다:
-                        
-                        1. 이모지와 함께 트리거 유형 표시 (📊, 📈, 💰 등 적절한 이모지)
-                        2. 종목명(코드) 정보 및 간략한 사업 설명 (1-2문장)
-                        3. 핵심 거래 정보 - 현재 날짜({current_date}) 기준으로 통일하여 작성하고, 
-                            get_stock_ohlcv tool을 사용하여 현재 날짜({current_date})로부터 
-                            약 5일간의 데이터를 조회해서 메모리에 저장한 뒤 참고하여 작성합니다.:
-                           - 현재가
-                           - 전일 대비 등락률
-                           - 최근 거래량 (전일 대비 증감 퍼센트 포함)
-                        4. 시가총액 정보 및 동종 업계 내 위치 (시가총액은 get_stock_market_cap tool 사용해서 현재 날짜({current_date})로부터 약 5일간의 데이터를 조회해서 참고)
-                        5. 가장 관련 있는 최근 뉴스 1개와 잠재적 영향 (출처 링크 반드시 포함)
-                        6. 핵심 기술적 패턴 2-3개 (지지선/저항선 수치 포함)
-                        7. 투자 관점 - 단기/중기 전망 또는 주요 체크포인트
-                        
-                        전체 메시지는 400자 내외로 작성하세요. 투자자가 즉시 활용할 수 있는 실질적인 정보에 집중하세요.
-                        수치는 가능한 구체적으로 표현하고, 주관적 투자 조언이나 '추천'이라는 단어는 사용하지 마세요.
-                        
-                        {warning_message}
-                        
-                        메시지 끝에는 "본 정보는 투자 참고용이며, 투자 결정과 책임은 투자자에게 있습니다." 문구를 반드시 포함하세요.
-                        
-                        ##주의사항 : load_all_tickers tool은 절대 사용 금지!!
-                        """,
-            server_names=["kospi_kosdaq"]
+        Args:
+            metadata: 종목 메타데이터
+            current_date: 현재 날짜 (YYYY.MM.DD)
+            from_lang: 보고서 원본 언어 (default: "ko")
+            to_lang: 요약 타겟 언어 (default: "ko")
+        """
+        from cores.agents.telegram_summary_optimizer_agent import create_telegram_summary_optimizer_agent
+
+        return create_telegram_summary_optimizer_agent(
+            metadata=metadata,
+            current_date=current_date,
+            from_lang=from_lang,
+            to_lang=to_lang
         )
 
-    def create_evaluator_agent(self, current_date):
+    def create_evaluator_agent(self, current_date, from_lang="ko", to_lang="ko"):
         """
         텔레그램 요약 평가 에이전트 생성
-        """
-        return Agent(
-            name="telegram_summary_evaluator",
-            instruction=f"""당신은 주식 정보 요약 메시지를 평가하는 전문가입니다.
-                        주식 분석 보고서와 생성된 텔레그램 메시지를 비교하여 다음 기준에 따라 평가해야 합니다:
-                        
-                        1. 정확성: 메시지가 보고서의 사실을 정확하게 반영하는가? 할루시네이션이나 오류가 없는가?
-                        (이 때, 거래 정보 검증은 get_stock_ohlcv tool을 사용하여 현재 날짜({current_date})로부터 약 5일간의 데이터를 조회해서 검증 진행함.)
-                        또한, 시가총액은 get_stock_market_cap tool을 사용해서 마찬가지로 현재 날짜({current_date})로부터 약 5일간의 데이터를 조회해서 검증 진행.)
-                        
-                        2. 포맷 준수: 지정된 형식(이모지, 종목 정보, 거래 정보 등)을 올바르게 따르고 있는가?
-                        3. 명확성: 정보가 명확하고 이해하기 쉽게 전달되는가?
-                        4. 관련성: 가장 중요하고 관련성 높은 정보를 포함하고 있는가?
-                        5. 경고 문구: 트리거 모드에 따른 경고 문구를 적절히 포함하고 있는가?
-                        6. 길이: 메시지 길이가 400자 내외로 적절한가?
 
-                        각 기준에 대해:
-                        - EXCELLENT, GOOD, FAIR, POOR 중 하나의 등급을 매기세요.
-                        - 구체적인 피드백과 개선 제안을 제공하세요.
-                        
-                        최종 평가는 다음 구조로 제공하세요:
-                        - 전체 품질 등급
-                        - 각 기준별 세부 평가
-                        - 개선을 위한 구체적인 제안
-                        - 특히 할루시네이션이 있다면 명확하게 지적
-                        
-                        ##주의사항 : load_all_tickers tool은 절대 사용 금지!!
-                        """,
-            server_names=["kospi_kosdaq"]
+        Args:
+            current_date: 현재 날짜 (YYYY.MM.DD)
+            from_lang: 보고서 원본 언어 (default: "ko")
+            to_lang: 요약 타겟 언어 (default: "ko")
+        """
+        from cores.agents.telegram_summary_evaluator_agent import create_telegram_summary_evaluator_agent
+
+        return create_telegram_summary_evaluator_agent(
+            current_date=current_date,
+            from_lang=from_lang,
+            to_lang=to_lang
         )
 
-    async def generate_telegram_message(self, report_content, metadata, trigger_type):
+    async def generate_telegram_message(self, report_content, metadata, trigger_type, from_lang="ko", to_lang="ko"):
         """
         텔레그램 메시지 생성 (평가 및 최적화 기능 추가)
+
+        Args:
+            report_content: 보고서 내용
+            metadata: 종목 메타데이터
+            trigger_type: 트리거 유형
+            from_lang: 보고서 원본 언어 (default: "ko")
+            to_lang: 요약 타겟 언어 (default: "ko")
         """
         # 현재 날짜 설정 (YYYY.MM.DD 형식)
         current_date = datetime.now().strftime("%Y.%m.%d")
 
         # 최적화 에이전트 생성
-        optimizer = self.create_optimizer_agent(metadata, current_date)
+        optimizer = self.create_optimizer_agent(metadata, current_date, from_lang, to_lang)
 
         # 평가 에이전트 생성
-        evaluator = self.create_evaluator_agent(current_date)
+        evaluator = self.create_evaluator_agent(current_date, from_lang, to_lang)
 
         # 평가-최적화 워크플로우 설정
         evaluator_optimizer = EvaluatorOptimizerLLM(
@@ -348,9 +318,15 @@ class TelegramSummaryGenerator:
             logger.error(f"텔레그램 메시지 저장 실패: {e}")
             raise
 
-    async def process_report(self, report_pdf_path, output_dir="telegram_messages"):
+    async def process_report(self, report_pdf_path, output_dir="telegram_messages", from_lang="ko", to_lang="ko"):
         """
         보고서 파일을 처리하여 텔레그램 요약 메시지 생성
+
+        Args:
+            report_pdf_path: 보고서 파일 경로
+            output_dir: 출력 디렉토리
+            from_lang: 보고서 원본 언어 (default: "ko")
+            to_lang: 요약 타겟 언어 (default: "ko")
         """
         try:
             # 출력 디렉토리 생성
@@ -378,7 +354,7 @@ class TelegramSummaryGenerator:
 
             # 텔레그램 요약 메시지 생성
             telegram_message = await self.generate_telegram_message(
-                report_content, metadata, trigger_type
+                report_content, metadata, trigger_type, from_lang, to_lang
             )
 
             # 출력 파일 경로 생성
@@ -395,9 +371,16 @@ class TelegramSummaryGenerator:
             logger.error(f"보고서 처리 중 오류 발생: {e}")
             raise
 
-async def process_all_reports(reports_dir="pdf_reports", output_dir="telegram_messages", date_filter=None):
+async def process_all_reports(reports_dir="pdf_reports", output_dir="telegram_messages", date_filter=None, from_lang="ko", to_lang="ko"):
     """
     지정된 디렉토리 내의 모든 보고서 파일을 처리
+
+    Args:
+        reports_dir: 보고서 디렉토리
+        output_dir: 출력 디렉토리
+        date_filter: 날짜 필터
+        from_lang: 보고서 원본 언어 (default: "ko")
+        to_lang: 요약 타겟 언어 (default: "ko")
     """
     # 텔레그램 요약 생성기 초기화
     generator = TelegramSummaryGenerator()
@@ -424,7 +407,7 @@ async def process_all_reports(reports_dir="pdf_reports", output_dir="telegram_me
     # 각 보고서 처리
     for report_file in report_files:
         try:
-            await generator.process_report(str(report_file), output_dir)
+            await generator.process_report(str(report_file), output_dir, from_lang, to_lang)
         except Exception as e:
             logger.error(f"{report_file.name} 처리 중 오류 발생: {e}")
 
@@ -442,6 +425,8 @@ async def main():
     parser.add_argument("--date", help="특정 날짜의 보고서만 처리 (YYYYMMDD 형식)")
     parser.add_argument("--today", action="store_true", help="오늘 날짜의 보고서만 처리")
     parser.add_argument("--report", help="특정 보고서 파일만 처리")
+    parser.add_argument("--from-lang", default="ko", help="보고서 원본 언어 코드 (default: ko)")
+    parser.add_argument("--to-lang", default="ko", help="요약 타겟 언어 코드 (default: ko)")
 
     args = parser.parse_args()
 
@@ -456,7 +441,12 @@ async def main():
                 return
 
             generator = TelegramSummaryGenerator()
-            telegram_message = await generator.process_report(report_pdf_path, args.output_dir)
+            telegram_message = await generator.process_report(
+                report_pdf_path,
+                args.output_dir,
+                args.from_lang,
+                args.to_lang
+            )
 
             # 생성된 메시지 출력
             print("\n생성된 텔레그램 메시지:")
@@ -476,7 +466,9 @@ async def main():
             await process_all_reports(
                 reports_dir=args.reports_dir,
                 output_dir=args.output_dir,
-                date_filter=date_filter
+                date_filter=date_filter,
+                from_lang=args.from_lang,
+                to_lang=args.to_lang
             )
 
 if __name__ == "__main__":

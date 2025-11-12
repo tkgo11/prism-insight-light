@@ -1,157 +1,159 @@
-# 대시보드 설정 가이드
+# Dashboard Setup Guide
 
-이 문서는 대시보드 프론트엔드의 설치 및 실행 방법을 안내합니다.
+> 📖 [한국어 문서](DASHBOARD_README_ko.md)
 
-## 사전 요구사항
+This document guides you through the installation and execution of the dashboard frontend.
 
-- Node.js 및 npm 설치
-- Python 환경 구성
-- 프로젝트 루트 디렉토리 접근 권한
-- PM2 설치 (`npm install -g pm2`)
+## Prerequisites
 
-## 포트 정보
+- Node.js and npm installed
+- Python environment configured
+- Access to project root directory
+- PM2 installed (`npm install -g pm2`)
 
-- **대시보드**: 포트 3000 (Next.js 기본 포트)
-- **Streamlit 앱**: 포트 8501 (Streamlit 기본 포트)
+## Port Information
 
-> 두 서비스는 서로 다른 포트를 사용하므로 **포트 충돌 없이** 동시 실행 가능합니다.
+- **Dashboard**: Port 3000 (Next.js default port)
+- **Streamlit App**: Port 8501 (Streamlit default port)
 
-### 포트 변경이 필요한 경우
+> The two services use different ports, so they can run **without port conflicts** simultaneously.
 
-만약 포트 3000이 이미 사용 중이라면 다음과 같이 포트를 변경할 수 있습니다:
+### If Port Change is Needed
+
+If port 3000 is already in use, you can change the port as follows:
 
 ```bash
-# 개발 모드에서 포트 변경
+# Change port in development mode
 PORT=3001 npm run dev
 
-# 프로덕션 모드에서 포트 변경
+# Change port in production mode
 PORT=3001 npm start
 
-# PM2에서 포트 변경
+# Change port with PM2
 PORT=3001 pm2 start npm --name "dashboard" -- start
 ```
 
-## 설정 방법
+## Setup Instructions
 
-### 1. 데이터 자동 갱신 설정 (Crontab)
+### 1. Data Auto-Refresh Setup (Crontab)
 
-대시보드 데이터를 주기적으로 갱신하기 위해 crontab에 다음 내용을 추가합니다:
+Add the following to crontab to periodically refresh dashboard data:
 
 ```bash
-# crontab 편집
+# Edit crontab
 crontab -e
 
-# 아래 내용 추가
-# 매일 오전 11시 05분 대시보드 데이터 갱신
+# Add the following content
+# Refresh dashboard data daily at 11:05 AM
 05 11 * * * cd /project-root/examples && python generate_dashboard_json.py >> /project-root/logs/generate_dashboard_json.log 2>&1
 
-# 매일 오후 05시 05분 대시보드 데이터 갱신
+# Refresh dashboard data daily at 05:05 PM
 05 17 * * * cd /project-root/examples && python generate_dashboard_json.py >> /project-root/logs/generate_dashboard_json.log 2>&1
 ```
 
-> **참고**: `/project-root`를 실제 프로젝트의 절대 경로로 변경해야 합니다.
+> **Note**: Replace `/project-root` with the actual absolute path of your project.
 
-### 2. 대시보드 디렉토리로 이동
+### 2. Navigate to Dashboard Directory
 
 ```bash
 cd examples/dashboard
 ```
 
-### 3. 의존성 설치
+### 3. Install Dependencies
 
 ```bash
 npm install react-is --legacy-peer-deps
 ```
 
-### 4. 프로젝트 빌드
+### 4. Build Project
 
 ```bash
 npm run build
 ```
 
-### 5. PM2로 대시보드 실행
+### 5. Run Dashboard with PM2
 
 ```bash
-# PM2로 애플리케이션 시작 (기본 포트 3000)
+# Start application with PM2 (default port 3000)
 pm2 start npm --name "dashboard" -- start
 
-# 특정 포트로 시작하려면
+# To start on a specific port
 PORT=3001 pm2 start npm --name "dashboard" -- start
 
-# PM2 프로세스 목록 확인
+# Check PM2 process list
 pm2 list
 
-# 로그 확인
+# Check logs
 pm2 logs dashboard
 
-# 서버 재부팅 시 자동 시작 설정
+# Setup auto-start on server reboot
 pm2 startup
 pm2 save
 ```
 
-## PM2 주요 명령어
+## PM2 Key Commands
 
 ```bash
-# 대시보드 상태 확인
+# Check dashboard status
 pm2 status
 
-# 대시보드 재시작
+# Restart dashboard
 pm2 restart dashboard
 
-# 대시보드 중지
+# Stop dashboard
 pm2 stop dashboard
 
-# 대시보드 삭제
+# Delete dashboard
 pm2 delete dashboard
 
-# 실시간 로그 보기
+# View real-time logs
 pm2 logs dashboard --lines 100
 
-# 모니터링
+# Monitoring
 pm2 monit
 ```
 
-## 문제 해결
+## Troubleshooting
 
-- 의존성 설치 중 오류가 발생하면 `--legacy-peer-deps` 플래그를 사용하세요.
-- crontab 설정 후 로그 파일(`/project-root/logs/generate_dashboard_json.log`)을 확인하여 스크립트가 정상적으로 실행되는지 확인하세요.
-- 로그 디렉토리(`/project-root/logs`)가 존재하는지 확인하세요. 없다면 생성해야 합니다:
+- If errors occur during dependency installation, use the `--legacy-peer-deps` flag.
+- After crontab setup, check the log file (`/project-root/logs/generate_dashboard_json.log`) to verify the script is running normally.
+- Ensure the logs directory (`/project-root/logs`) exists. If not, create it:
   ```bash
   mkdir -p /project-root/logs
   ```
-- PM2가 설치되지 않았다면 다음 명령어로 설치하세요:
+- If PM2 is not installed, install it with the following command:
   ```bash
   npm install -g pm2
   ```
-- 포트 3000이 이미 사용 중이라면:
+- If port 3000 is already in use:
   ```bash
-  # 포트 사용 확인
+  # Check port usage
   lsof -i :3000
-  
-  # 또는 다른 포트로 실행
+
+  # Or run on a different port
   PORT=3001 pm2 start npm --name "dashboard" -- start
   ```
 
-## 실행 확인
+## Verify Execution
 
-대시보드가 정상적으로 실행되면 브라우저에서 다음 주소로 접속하여 확인할 수 있습니다:
+Once the dashboard is running successfully, you can access it in your browser at:
 
-- 기본 포트: `http://localhost:3000`
-- 포트 변경 시: `http://localhost:{변경한_포트}`
+- Default port: `http://localhost:3000`
+- Custom port: `http://localhost:{your_custom_port}`
 
-PM2 대시보드에서 프로세스 상태를 확인할 수도 있습니다:
+You can also check the process status in PM2 dashboard:
 ```bash
 pm2 status
 ```
 
-## 서비스 구조
+## Service Structure
 
 ```
-프로젝트
+Project
 ├── examples/
-│   ├── dashboard/          # Next.js 대시보드 (포트 3000)
-│   └── streamlit/          # Streamlit 앱 (포트 8501)
+│   ├── dashboard/          # Next.js dashboard (port 3000)
+│   └── streamlit/          # Streamlit app (port 8501)
 └── ...
 ```
 
-두 서비스는 독립적으로 실행되며 포트 충돌 없이 동시 운영이 가능합니다.
+Both services run independently and can operate simultaneously without port conflicts.
