@@ -26,7 +26,7 @@ Run Ubuntu 24.04-based AI stock analysis system easily with Docker.
 - **Python**: 3.12.x (virtual environment)
 - **Node.js**: 22.x LTS
 - **UV**: Python package manager
-- **wkhtmltopdf**: PDF conversion tool
+- **Playwright**: Chromium-based PDF generation (modern HTML to PDF converter)
 - **Korean Fonts**: Nanum font family
 
 #### Python Packages
@@ -153,10 +153,8 @@ docker build -t prism-insight:latest .
 
 # Run container
 docker run -it --name prism-insight-container \
-  -v $(pwd)/data:/app/prism-insight/data \
-  -v $(pwd)/.env:/app/prism-insight/.env \
-  -v $(pwd)/mcp_agent.config.yaml:/app/prism-insight/mcp_agent.config.yaml \
-  -v $(pwd)/mcp_agent.secrets.yaml:/app/prism-insight/mcp_agent.secrets.yaml \
+  -v prism-data:/app/prism-insight/data \
+  -v prism-db:/app/prism-insight \
   -v $(pwd)/reports:/app/prism-insight/reports \
   -v $(pwd)/pdf_reports:/app/prism-insight/pdf_reports \
   prism-insight:latest
@@ -384,7 +382,54 @@ docker cp prism-insight-container:/tmp/backup.tar.gz \
 
 ## 🔧 Troubleshooting
 
-### Command Execution Location
+### 1. Volume Mount Error (SQLite Database File)
+
+**Error Message:**
+```
+failed to create task for container: failed to create shim task: OCI runtime create failed: 
+error mounting "/root/prism-insight/stock_tracking_db.sqlite": not a directory
+```
+
+**Cause:** Docker cannot mount a file that doesn't exist on the host. The updated configuration uses Named Volumes instead.
+
+**Solution:**
+```bash
+# The docker-compose.yml now uses Named Volume (prism-db)
+# No manual file creation needed
+
+# Access DB file inside container
+docker-compose exec prism-insight ls -la /app/prism-insight/*.sqlite
+
+# Backup DB to host
+docker cp prism-insight-container:/app/prism-insight/stock_tracking_db.sqlite ./backup_db.sqlite
+```
+
+### 2. Configuration File Management
+
+Configuration files are initially created inside the container.
+
+**Options for editing:**
+
+```bash
+# Option 1: Edit directly in container (recommended for first-time setup)
+docker-compose exec prism-insight nano /app/prism-insight/.env
+
+# Option 2: Copy to host, edit, then copy back
+docker cp prism-insight-container:/app/prism-insight/.env ./.env
+# Edit on host
+nano .env
+# Copy back
+docker cp ./.env prism-insight-container:/app/prism-insight/.env
+docker-compose restart
+
+# Option 3: Volume mount (after creating files on host)
+# Uncomment these lines in docker-compose.yml:
+# - ./.env:/app/prism-insight/.env
+# - ./mcp_agent.config.yaml:/app/prism-insight/mcp_agent.config.yaml
+# - ./mcp_agent.secrets.yaml:/app/prism-insight/mcp_agent.secrets.yaml
+```
+
+### 3. Command Execution Location
 
 | Symptom/Task | Execution Location | Example |
 |----------|----------|------|

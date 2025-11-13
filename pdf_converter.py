@@ -3,9 +3,12 @@
 마크다운 파일을 PDF로 변환하는 모듈
 
 다양한 변환 방식 제공:
-1. pdfkit 기반 HTML 중간 변환 (wkhtmltopdf 필요)
-2. reportlab 직접 렌더링
-3. mdpdf 간편 변환 (추가됨)
+1. Playwright 기반 HTML 중간 변환 (권장) - Chromium 브라우저 엔진 사용
+2. pdfkit 기반 HTML 중간 변환 (레거시) - wkhtmltopdf 필요, 2023년 아카이브됨
+3. reportlab 직접 렌더링 - 테마 미지원
+4. mdpdf 간편 변환 - 테마 미지원
+
+권장 순서: Playwright > pdfkit > reportlab > mdpdf
 """
 import os
 import logging
@@ -270,7 +273,7 @@ def markdown_to_html(md_file_path, add_css=True, add_theme=False, logo_path=None
                 <div class="report-header">
                     <div class="title-area">
                         <h1>{title}</h1>
-                        <div class="report-date">발행일: {today}</div>
+                        <div class="report-date">Publication date: {today}</div>
                     </div>
                     <img src="{logo_path}" alt="프리즘 인사이트 로고" class="logo">
                 </div>
@@ -331,9 +334,209 @@ def markdown_to_html(md_file_path, add_css=True, add_theme=False, logo_path=None
         logger.error(f"HTML 변환 중 오류: {str(e)}")
         raise
 
+def _ensure_playwright_browser():
+    """
+    Playwright 브라우저가 설치되어 있는지 확인하고, 없으면 자동 설치
+    
+    Returns:
+        bool: 브라우저 설치 성공 여부
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+        
+        # 브라우저가 설치되어 있는지 확인
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch()
+                browser.close()
+            return True
+        except Exception as e:
+            if "Executable doesn't exist" in str(e):
+                logger.warning("Playwright 브라우저가 설치되지 않았습니다. 자동 설치를 시도합니다...")
+                
+                # 자동 설치 시도
+                import subprocess
+                import sys
+                
+                try:
+                    # playwright install chromium 실행
+                    result = subprocess.run(
+                        [sys.executable, "-m", "playwright", "install", "chromium"],
+                        capture_output=True,
+                        text=True,
+                        timeout=300  # 5분 타임아웃
+                    )
+                    
+                    if result.returncode == 0:
+                        logger.info("Playwright 브라우저 설치 완료")
+                        return True
+                    else:
+                        logger.error(f"Playwright 브라우저 설치 실패: {result.stderr}")
+                        return False
+                        
+                except subprocess.TimeoutExpired:
+                    logger.error("Playwright 브라우저 설치 타임아웃")
+                    return False
+                except Exception as install_error:
+                    logger.error(f"Playwright 브라우저 자동 설치 중 오류: {str(install_error)}")
+                    return False
+            else:
+                raise
+                
+    except Exception as e:
+        logger.error(f"Playwright 브라우저 확인 중 오류: {str(e)}")
+        return False
+
+def markdown_to_pdf_playwright(md_file_path, pdf_file_path, add_theme=False, logo_path=None, enable_watermark=False, watermark_opacity=0.02):
+    """
+    Playwright를 사용하여 마크다운을 PDF로 변환
+    
+    wkhtmltopdf의 현대적인 대안으로, Chromium 기반 렌더링 사용
+    asyncio 환경에서도 안전하게 작동
+    브라우저가 없으면 자동으로 설치 시도
+    
+    설치 방법:
+    pip install playwright
+    playwright install chromium
+
+    Args:
+        md_file_path (str): 마크다운 파일 경로
+        pdf_file_path (str): 출력 PDF 파일 경로
+        add_theme (bool): 테마 및 로고 추가 여부
+        logo_path (str): 로고 이미지 경로 (None인 경우 기본 로고 사용)
+        enable_watermark (bool): 배경에 로고 워터마크 적용 여부
+        watermark_opacity (float): 워터마크 투명도 (0.0-1.0)
+    """
+    try:
+        # Playwright 브라우저 확인 및 설치
+        if not _ensure_playwright_browser():
+            raise RuntimeError("Playwright 브라우저를 설치할 수 없습니다. 수동으로 'playwright install chromium'을 실행하세요.")
+        
+        # asyncio 이벤트 루프 확인
+        import asyncio
+        import concurrent.futures
+        
+        try:
+            # 현재 실행 중인 이벤트 루프가 있는지 확인
+            loop = asyncio.get_running_loop()
+            # 이벤트 루프가 실행 중이면 별도 스레드에서 동기 함수 실행
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(
+                    _markdown_to_pdf_playwright_sync,
+                    md_file_path, pdf_file_path, add_theme, logo_path, enable_watermark, watermark_opacity
+                )
+                return future.result()
+        except RuntimeError:
+            # 이벤트 루프가 없으면 동기 버전 직접 실행
+            _markdown_to_pdf_playwright_sync(
+                md_file_path, pdf_file_path, add_theme, logo_path, enable_watermark, watermark_opacity
+            )
+
+    except ImportError:
+        logger.error("Playwright 라이브러리가 설치되지 않았습니다. 'pip install playwright && playwright install chromium'로 설치하세요.")
+        raise
+    except Exception as e:
+        logger.error(f"Playwright 변환 중 오류: {str(e)}")
+        raise
+
+async def _markdown_to_pdf_playwright_async(md_file_path, pdf_file_path, add_theme, logo_path, enable_watermark, watermark_opacity):
+    """Playwright Async API를 사용한 PDF 변환 (asyncio 환경용)"""
+    from playwright.async_api import async_playwright
+    
+    # 마크다운을 HTML로 변환
+    html_content = markdown_to_html(
+        md_file_path, 
+        add_theme=add_theme, 
+        logo_path=logo_path, 
+        enable_watermark=enable_watermark,
+        watermark_opacity=watermark_opacity
+    )
+
+    # HTML을 임시 파일로 저장
+    with tempfile.NamedTemporaryFile(suffix='.html', delete=False, mode='w', encoding='utf-8') as f:
+        f.write(html_content)
+        temp_html = f.name
+
+    # Playwright Async로 PDF 생성
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+        
+        # 파일 URL로 로드 (로컬 파일 접근 허용)
+        await page.goto(f'file://{os.path.abspath(temp_html)}')
+        
+        # PDF 생성 옵션
+        await page.pdf(
+            path=pdf_file_path,
+            format='A4',
+            margin={
+                'top': '20mm',
+                'right': '20mm',
+                'bottom': '20mm',
+                'left': '20mm'
+            },
+            print_background=True  # 배경색/이미지 포함
+        )
+        
+        await browser.close()
+
+    # 임시 파일 삭제
+    os.unlink(temp_html)
+
+    logger.info(f"Playwright로 PDF 변환 완료: {pdf_file_path}")
+
+def _markdown_to_pdf_playwright_sync(md_file_path, pdf_file_path, add_theme, logo_path, enable_watermark, watermark_opacity):
+    """Playwright Sync API를 사용한 PDF 변환 (일반 환경용)"""
+    from playwright.sync_api import sync_playwright
+    
+    # 마크다운을 HTML로 변환
+    html_content = markdown_to_html(
+        md_file_path, 
+        add_theme=add_theme, 
+        logo_path=logo_path, 
+        enable_watermark=enable_watermark,
+        watermark_opacity=watermark_opacity
+    )
+
+    # HTML을 임시 파일로 저장
+    with tempfile.NamedTemporaryFile(suffix='.html', delete=False, mode='w', encoding='utf-8') as f:
+        f.write(html_content)
+        temp_html = f.name
+
+    # Playwright Sync로 PDF 생성
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        
+        # 파일 URL로 로드 (로컬 파일 접근 허용)
+        page.goto(f'file://{os.path.abspath(temp_html)}')
+        
+        # PDF 생성 옵션
+        page.pdf(
+            path=pdf_file_path,
+            format='A4',
+            margin={
+                'top': '20mm',
+                'right': '20mm',
+                'bottom': '20mm',
+                'left': '20mm'
+            },
+            print_background=True  # 배경색/이미지 포함
+        )
+        
+        browser.close()
+
+    # 임시 파일 삭제
+    os.unlink(temp_html)
+
+    logger.info(f"Playwright로 PDF 변환 완료: {pdf_file_path}")
+
 def markdown_to_pdf_pdfkit(md_file_path, pdf_file_path, add_theme=False, logo_path=None, enable_watermark=False, watermark_opacity=0.02):
     """
     pdfkit(wkhtmltopdf)를 사용하여 마크다운을 PDF로 변환
+    
+    ⚠️ 주의: wkhtmltopdf는 2023년에 아카이브되어 더 이상 유지보수되지 않습니다.
+    Playwright 사용을 권장합니다.
 
     Linux 설치 방법: dnf install wkhtmltopdf
 
@@ -544,14 +747,15 @@ def markdown_to_pdf_mdpdf(md_file_path, pdf_file_path):
         logger.error(f"mdpdf 변환 중 오류: {str(e)}")
         raise
 
-def markdown_to_pdf(md_file_path, pdf_file_path, method='pdfkit', add_theme=False, logo_path=None, enable_watermark=False, watermark_opacity=0.02):
+def markdown_to_pdf(md_file_path, pdf_file_path, method='playwright', add_theme=False, logo_path=None, enable_watermark=False, watermark_opacity=0.02):
     """
     마크다운 파일을 PDF로 변환 (기본 메서드 선택)
 
     Args:
         md_file_path (str): 마크다운 파일 경로
         pdf_file_path (str): 출력 PDF 파일 경로
-        method (str): 변환 방식 ('pdfkit', 'reportlab', 'mdpdf')
+        method (str): 변환 방식 ('playwright', 'pdfkit', 'reportlab', 'mdpdf')
+                     기본값: 'playwright' (권장)
         add_theme (bool): 테마 및 로고 추가 여부
         logo_path (str): 로고 이미지 경로 (None인 경우 기본 로고 사용)
         enable_watermark (bool): 배경에 로고 워터마크 적용 여부
@@ -560,7 +764,9 @@ def markdown_to_pdf(md_file_path, pdf_file_path, method='pdfkit', add_theme=Fals
     logger.info(f"마크다운 PDF 변환 시작: {md_file_path} -> {pdf_file_path}")
 
     try:
-        if method == 'pdfkit':
+        if method == 'playwright':
+            markdown_to_pdf_playwright(md_file_path, pdf_file_path, add_theme, logo_path, enable_watermark, watermark_opacity)
+        elif method == 'pdfkit':
             markdown_to_pdf_pdfkit(md_file_path, pdf_file_path, add_theme, logo_path, enable_watermark, watermark_opacity)
         elif method == 'reportlab':
             # 참고: reportlab 메서드는 현재 테마 지원이 없습니다
@@ -569,16 +775,20 @@ def markdown_to_pdf(md_file_path, pdf_file_path, method='pdfkit', add_theme=Fals
             # 참고: mdpdf 메서드는 현재 테마 지원이 없습니다
             markdown_to_pdf_mdpdf(md_file_path, pdf_file_path)
         else:
-            # 기본값은 pdfkit 시도 후 실패하면 reportlab, 마지막으로 mdpdf
+            # 기본값은 playwright 시도 후 실패하면 pdfkit, reportlab, 마지막으로 mdpdf
             try:
-                markdown_to_pdf_pdfkit(md_file_path, pdf_file_path, add_theme, logo_path, enable_watermark, watermark_opacity)
+                markdown_to_pdf_playwright(md_file_path, pdf_file_path, add_theme, logo_path, enable_watermark, watermark_opacity)
             except Exception as e1:
-                logger.warning(f"pdfkit 실패, ReportLab 시도: {str(e1)}")
+                logger.warning(f"Playwright 실패, pdfkit 시도: {str(e1)}")
                 try:
-                    markdown_to_pdf_reportlab(md_file_path, pdf_file_path)
+                    markdown_to_pdf_pdfkit(md_file_path, pdf_file_path, add_theme, logo_path, enable_watermark, watermark_opacity)
                 except Exception as e2:
-                    logger.warning(f"ReportLab 실패, mdpdf 시도: {str(e2)}")
-                    markdown_to_pdf_mdpdf(md_file_path, pdf_file_path)
+                    logger.warning(f"pdfkit 실패, ReportLab 시도: {str(e2)}")
+                    try:
+                        markdown_to_pdf_reportlab(md_file_path, pdf_file_path)
+                    except Exception as e3:
+                        logger.warning(f"ReportLab 실패, mdpdf 시도: {str(e3)}")
+                        markdown_to_pdf_mdpdf(md_file_path, pdf_file_path)
 
     except Exception as e:
         logger.error(f"PDF 변환 실패: {str(e)}")
