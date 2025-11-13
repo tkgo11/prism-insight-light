@@ -29,6 +29,7 @@ RUN apt-get update && apt-get upgrade -y && \
     gnupg \
     locales \
     tzdata \
+    ghostscript \
     fonts-nanum \
     fonts-nanum-coding \
     fonts-nanum-extra \
