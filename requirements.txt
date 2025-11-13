@@ -19,7 +19,8 @@ python-dotenv>=1.0.0
 
 
 # PDF 변환 관련 패키지
-pdfkit>=1.0.0  # wkhtmltopdf 기반 PDF 변환 (기본 방식)
+playwright>=1.40.0  # Chromium 기반 PDF 변환 (권장)
+pdfkit>=1.0.0  # wkhtmltopdf 기반 PDF 변환 (레거시, 백업용)
 reportlab>=4.0.0  # 직접 PDF 생성 (대체 방식)
 mdpdf>=0.0.9  # 간편한 마크다운 변환 (대체 방식)
 
