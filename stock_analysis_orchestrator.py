@@ -258,7 +258,7 @@ class StockAnalysisOrchestrator:
                 pdf_file = PDF_REPORTS_DIR / f"{report_file.stem}.pdf"
 
                 # Convert markdown to PDF
-                markdown_to_pdf(report_path, pdf_file, 'pdfkit', add_theme=True, enable_watermark=False)
+                markdown_to_pdf(report_path, pdf_file, 'playwright', add_theme=True, enable_watermark=False)
 
                 logger.info(f"PDF conversion complete: {pdf_file}")
                 pdf_paths.append(pdf_file)

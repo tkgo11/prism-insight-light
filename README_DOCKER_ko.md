@@ -24,7 +24,7 @@ Ubuntu 24.04 기반 AI 주식 분석 시스템을 Docker로 간편하게 실행�
 - **Python**: 3.12.x (가상환경)
 - **Node.js**: 22.x LTS
 - **UV**: Python 패키지 관리자
-- **wkhtmltopdf**: PDF 변환 도구
+- **Playwright**: Chromium 기반 PDF 생성 (현대적인 HTML to PDF 변환기)
 - **한글 폰트**: Nanum 폰트 패밀리
 
 #### Python 패키지
@@ -151,10 +151,8 @@ docker build -t prism-insight:latest .
 
 # 컨테이너 실행
 docker run -it --name prism-insight-container \
-  -v $(pwd)/data:/app/prism-insight/data \
-  -v $(pwd)/.env:/app/prism-insight/.env \
-  -v $(pwd)/mcp_agent.config.yaml:/app/prism-insight/mcp_agent.config.yaml \
-  -v $(pwd)/mcp_agent.secrets.yaml:/app/prism-insight/mcp_agent.secrets.yaml \
+  -v prism-data:/app/prism-insight/data \
+  -v prism-db:/app/prism-insight \
   -v $(pwd)/reports:/app/prism-insight/reports \
   -v $(pwd)/pdf_reports:/app/prism-insight/pdf_reports \
   prism-insight:latest
@@ -382,7 +380,54 @@ docker cp prism-insight-container:/tmp/backup.tar.gz \
 
 ## 🔧 문제 해결
 
-### 명령어 실행 위치
+### 1. 볼륨 마운트 에러 (SQLite 데이터베이스 파일)
+
+**에러 메시지:**
+```
+failed to create task for container: failed to create shim task: OCI runtime create failed: 
+error mounting "/root/prism-insight/stock_tracking_db.sqlite": not a directory
+```
+
+**원인:** 호스트에 존재하지 않는 파일을 마운트하려고 하면 디렉토리로 생성되어 타입 불일치가 발생합니다.
+
+**해결방법:**
+```bash
+# 업데이트된 docker-compose.yml은 Named Volume(prism-db) 사용
+# 수동 파일 생성 불필요
+
+# 컨테이너 내부에서 DB 파일 확인
+docker-compose exec prism-insight ls -la /app/prism-insight/*.sqlite
+
+# 호스트로 DB 백업
+docker cp prism-insight-container:/app/prism-insight/stock_tracking_db.sqlite ./backup_db.sqlite
+```
+
+### 2. 설정 파일 관리
+
+설정 파일(.env, mcp_agent.config.yaml, mcp_agent.secrets.yaml)은 기본적으로 컨테이너 내부에 생성됩니다.
+
+**설정 파일 수정 방법:**
+
+```bash
+# 방법 1: 컨테이너 내부에서 직접 편집 (초기 설정 시 권장)
+docker-compose exec prism-insight nano /app/prism-insight/.env
+
+# 방법 2: 호스트로 복사, 편집 후 다시 복사
+docker cp prism-insight-container:/app/prism-insight/.env ./.env
+# 호스트에서 편집
+nano .env
+# 다시 컨테이너로 복사
+docker cp ./.env prism-insight-container:/app/prism-insight/.env
+docker-compose restart
+
+# 방법 3: 볼륨 마운트 사용 (호스트에 파일 생성 후)
+# docker-compose.yml에서 다음 줄 주석 해제:
+# - ./.env:/app/prism-insight/.env
+# - ./mcp_agent.config.yaml:/app/prism-insight/mcp_agent.config.yaml
+# - ./mcp_agent.secrets.yaml:/app/prism-insight/mcp_agent.secrets.yaml
+```
+
+### 3. 명령어 실행 위치
 
 | 증상/작업 | 실행 위치 | 예시 |
 |----------|----------|------|
