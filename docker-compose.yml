@@ -13,22 +13,24 @@ services:
     
     # 볼륨 마운트
     volumes:
-      # 데이터 영속성을 위한 볼륨 (디렉토리 전체 마운트)
+      # 데이터 영속성을 위한 볼륨
       - prism-data:/app/prism-insight/data
-      - prism-db:/app/prism-insight
       - ./reports:/app/prism-insight/reports
       - ./pdf_reports:/app/prism-insight/pdf_reports
       - ./html_reports:/app/prism-insight/html_reports
       - ./charts:/app/prism-insight/charts
       - ./telegram_messages:/app/prism-insight/telegram_messages
-      
-      # 설정 파일 (호스트에서 수정 가능) - 파일이 존재하는 경우에만
-      # - ./.env:/app/prism-insight/.env
-      # - ./mcp_agent.config.yaml:/app/prism-insight/mcp_agent.config.yaml
-      # - ./mcp_agent.secrets.yaml:/app/prism-insight/mcp_agent.secrets.yaml
-      
+
+      # 설정 파일 (호스트에서 수정 가능)
+      - ./.env:/app/prism-insight/.env
+      - ./mcp_agent.config.yaml:/app/prism-insight/mcp_agent.config.yaml
+      - ./mcp_agent.secrets.yaml:/app/prism-insight/mcp_agent.secrets.yaml
+
       # 로그 파일
       - ./logs:/app/prism-insight/logs
+
+      # SQLite DB (파일 단위 마운트)
+      - ./stock_tracking_db.sqlite:/app/prism-insight/stock_tracking_db.sqlite
     
     # 작업 디렉토리
     working_dir: /app/prism-insight
@@ -53,6 +55,4 @@ services:
 # 볼륨 정의
 volumes:
   prism-data:
-    driver: local
-  prism-db:
     driver: local
