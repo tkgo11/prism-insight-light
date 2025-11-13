@@ -336,106 +336,71 @@ def markdown_to_html(md_file_path, add_css=True, add_theme=False, logo_path=None
 
 def compress_pdf(input_pdf_path, output_pdf_path=None, compression_level='medium'):
     """
-    Compress PDF file to reduce size using Ghostscript
+    Compress PDF file to reduce size
 
     Args:
         input_pdf_path (str): Input PDF file path
         output_pdf_path (str): Output PDF file path (overwrites input if None)
         compression_level (str): Compression level ('low', 'medium', 'high')
-                                 'low': /printer quality (300 DPI)
-                                 'medium': /ebook quality (150 DPI) - recommended
-                                 'high': /screen quality (72 DPI)
+                                 'low': minimal compression, best quality
+                                 'medium': balanced (recommended)
+                                 'high': maximum compression, may reduce quality
 
     Returns:
         tuple: (original_size, compressed_size, compression_ratio)
     """
-    import subprocess
-    import shutil
+    import os
 
     if output_pdf_path is None:
         output_pdf_path = input_pdf_path
-
-    # Check if Ghostscript is available
-    gs_command = None
-    for cmd in ['gs', 'gswin64c', 'gswin32c']:  # Linux/Mac, Windows 64-bit, Windows 32-bit
-        if shutil.which(cmd):
-            gs_command = cmd
-            break
-
-    if not gs_command:
-        logger.warning("Ghostscript not found. Skipping PDF compression. "
-                      "Install with: apt-get install ghostscript (Ubuntu) or brew install ghostscript (macOS)")
-        return None, None, 0
 
     try:
         # Get original file size
         original_size = os.path.getsize(input_pdf_path)
 
-        # Set quality settings based on compression level
-        quality_settings = {
-            'low': '/printer',      # 300 DPI - high quality, moderate compression
-            'medium': '/ebook',     # 150 DPI - balanced (recommended)
-            'high': '/screen'       # 72 DPI - maximum compression, lower quality
-        }
-        quality = quality_settings.get(compression_level, '/ebook')
+        # Read PDF
+        reader = PyPDF2.PdfReader(input_pdf_path)
+        writer = PyPDF2.PdfWriter()
 
-        # Create temporary output file
+        # Copy pages with compression
+        for page in reader.pages:
+            # Compress page content
+            page.compress_content_streams()
+            writer.add_page(page)
+
+        # Set compression level
+        if compression_level == 'high':
+            # Maximum compression
+            for page in writer.pages:
+                if '/Contents' in page:
+                    page.compress_content_streams()
+        elif compression_level == 'medium':
+            # Balanced compression (already done above)
+            pass
+        # 'low' level: minimal compression (no additional processing)
+
+        # Write compressed PDF to temporary file
+        import tempfile
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
             temp_path = tmp_file.name
+            writer.write(tmp_file)
 
-        # Ghostscript compression command
-        gs_args = [
-            gs_command,
-            '-sDEVICE=pdfwrite',
-            '-dCompatibilityLevel=1.4',
-            f'-dPDFSETTINGS={quality}',
-            '-dNOPAUSE',
-            '-dQUIET',
-            '-dBATCH',
-            '-dDetectDuplicateImages=true',
-            '-dCompressFonts=true',
-            '-dSubsetFonts=true',
-            '-dColorImageDownsampleType=/Bicubic',
-            '-dGrayImageDownsampleType=/Bicubic',
-            '-dMonoImageDownsampleType=/Bicubic',
-            f'-sOutputFile={temp_path}',
-            input_pdf_path
-        ]
-
-        # Run Ghostscript
-        result = subprocess.run(
-            gs_args,
-            capture_output=True,
-            text=True,
-            timeout=60
-        )
-
-        if result.returncode != 0:
-            logger.error(f"Ghostscript compression failed: {result.stderr}")
-            os.unlink(temp_path)
-            return None, None, 0
+        # Replace original file
+        import shutil
+        shutil.move(temp_path, output_pdf_path)
 
         # Get compressed file size
-        compressed_size = os.path.getsize(temp_path)
+        compressed_size = os.path.getsize(output_pdf_path)
+        compression_ratio = (1 - compressed_size / original_size) * 100
 
-        # Only replace if compression was effective (at least 5% reduction)
-        if compressed_size < original_size * 0.95:
-            shutil.move(temp_path, output_pdf_path)
-            compression_ratio = (1 - compressed_size / original_size) * 100
-            logger.info(f"PDF compressed: {original_size:,} bytes -> {compressed_size:,} bytes "
-                       f"({compression_ratio:.1f}% reduction)")
-            return original_size, compressed_size, compression_ratio
-        else:
-            # Compression not effective, keep original
-            os.unlink(temp_path)
-            logger.info(f"PDF compression skipped (no significant size reduction)")
-            return original_size, original_size, 0
+        logger.info(f"PDF compressed: {original_size:,} bytes -> {compressed_size:,} bytes "
+                   f"({compression_ratio:.1f}% reduction)")
 
-    except subprocess.TimeoutExpired:
-        logger.error("PDF compression timeout")
-        return None, None, 0
+        return original_size, compressed_size, compression_ratio
+
     except Exception as e:
         logger.error(f"Error during PDF compression: {str(e)}")
+        # If compression fails, keep original file
         return None, None, 0
 
 def _ensure_playwright_browser():

@@ -292,7 +292,7 @@ cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
 4. **설정 파일 편집**
 복사한 설정 파일들을 편집하여 필요한 API 키와 설정값들을 입력하세요.
 
-5. **Playwright 및 Ghostscript 설치** (PDF 변환용)
+5. **Playwright 설치** (PDF 변환용)
 
 시스템이 첫 실행 시 **자동으로 Playwright 브라우저를 설치**합니다. 수동 설치 방법:
 
@@ -302,16 +302,6 @@ pip install playwright
 
 # Chromium 브라우저 다운로드
 python3 -m playwright install chromium
-
-# Ghostscript 설치 (PDF 압축용 - 권장)
-# macOS
-brew install ghostscript
-
-# Ubuntu/Debian
-sudo apt-get install ghostscript
-
-# Rocky Linux 8 / CentOS / RHEL
-sudo dnf install ghostscript
 ```
 
 **플랫폼별 설치 방법:**
@@ -320,25 +310,20 @@ sudo dnf install ghostscript
 # macOS
 pip3 install playwright
 python3 -m playwright install chromium
-brew install ghostscript
 
 # Ubuntu/Debian
 pip install playwright
 python3 -m playwright install --with-deps chromium
-sudo apt-get install ghostscript
 
 # Rocky Linux 8 / CentOS / RHEL
 pip3 install playwright
 python3 -m playwright install --with-deps chromium
-sudo dnf install ghostscript
 
 # 또는 설치 스크립트 사용
 cd utils
 chmod +x setup_playwright.sh
 ./setup_playwright.sh
 ```
-
-**참고**: Ghostscript는 선택 사항이지만, PDF 압축을 위해 **강력히 권장**합니다 (파일 크기 50-70% 감소).
 
 **📖 자세한 설치 가이드:** [utils/PLAYWRIGHT_SETUP_ko.md](utils/PLAYWRIGHT_SETUP_ko.md)
 
