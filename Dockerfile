@@ -29,7 +29,6 @@ RUN apt-get update && apt-get upgrade -y && \
     gnupg \
     locales \
     tzdata \
-    wkhtmltopdf \
     fonts-nanum \
     fonts-nanum-coding \
     fonts-nanum-extra \
@@ -71,6 +70,9 @@ WORKDIR /app/prism-insight
 # Python 의존성 설치
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
+
+# Playwright 브라우저 설치 (Chromium만)
+RUN playwright install --with-deps chromium
 
 # perplexity-ask MCP 서버 설치
 WORKDIR /app/prism-insight/perplexity-ask
