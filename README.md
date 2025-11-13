@@ -257,7 +257,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 - OpenAI API Key (GPT-4.1, GPT-5)
 - Anthropic API Key (Claude-Sonnet-4.5)
 - Telegram Bot Token and Channel ID
-- wkhtmltopdf (for PDF conversion)
+- Playwright (for PDF conversion)
 - Korea Investment & Securities API app key and secret key
 
 ### Installation
@@ -285,17 +285,40 @@ cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
 4. **Edit Configuration Files**
 Edit the copied configuration files to enter necessary API keys and settings.
 
-5. **Install wkhtmltopdf** (for PDF conversion)
+5. **Install Playwright** (for PDF conversion)
+
+The system will **automatically install** Playwright browser on first run. For manual installation:
+
+```bash
+# Install Playwright package (included in requirements.txt)
+pip install playwright
+
+# Download Chromium browser
+python3 -m playwright install chromium
+```
+
+**Platform-specific installation:**
+
 ```bash
 # macOS
-brew install wkhtmltopdf
+pip3 install playwright
+python3 -m playwright install chromium
 
 # Ubuntu/Debian
-sudo apt-get install wkhtmltopdf
+pip install playwright
+python3 -m playwright install --with-deps chromium
 
-# CentOS/RHEL
-sudo yum install wkhtmltopdf
+# Rocky Linux 8 / CentOS / RHEL
+pip3 install playwright
+python3 -m playwright install --with-deps chromium
+
+# Or use the installation script
+cd utils
+chmod +x setup_playwright.sh
+./setup_playwright.sh
 ```
+
+**📖 For detailed installation instructions, see:** [utils/PLAYWRIGHT_SETUP.md](utils/PLAYWRIGHT_SETUP.md)
 
 6. **Install perplexity-ask MCP Server**
 ```bash

@@ -264,7 +264,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
 - OpenAI API 키 (GPT-4.1, GPT-5)
 - Anthropic API 키 (Claude-Sonnet-4.5)
 - 텔레그램 봇 토큰 및 채널 ID
-- wkhtmltopdf (PDF 변환용)
+- Playwright (PDF 변환용)
 - 한국투자증권 API 관련 앱키 및 시크릿키
 
 ### 설치
@@ -292,17 +292,40 @@ cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
 4. **설정 파일 편집**
 복사한 설정 파일들을 편집하여 필요한 API 키와 설정값들을 입력하세요.
 
-5. **wkhtmltopdf 설치** (PDF 변환용)
+5. **Playwright 설치** (PDF 변환용)
+
+시스템이 첫 실행 시 **자동으로 Playwright 브라우저를 설치**합니다. 수동 설치 방법:
+
+```bash
+# Playwright 패키지 설치 (requirements.txt에 포함됨)
+pip install playwright
+
+# Chromium 브라우저 다운로드
+python3 -m playwright install chromium
+```
+
+**플랫폼별 설치 방법:**
+
 ```bash
 # macOS
-brew install wkhtmltopdf
+pip3 install playwright
+python3 -m playwright install chromium
 
 # Ubuntu/Debian
-sudo apt-get install wkhtmltopdf
+pip install playwright
+python3 -m playwright install --with-deps chromium
 
-# CentOS/RHEL
-sudo yum install wkhtmltopdf
+# Rocky Linux 8 / CentOS / RHEL
+pip3 install playwright
+python3 -m playwright install --with-deps chromium
+
+# 또는 설치 스크립트 사용
+cd utils
+chmod +x setup_playwright.sh
+./setup_playwright.sh
 ```
+
+**📖 자세한 설치 가이드:** [utils/PLAYWRIGHT_SETUP_ko.md](utils/PLAYWRIGHT_SETUP_ko.md)
 
 6. **perplexity-ask MCP 서버 설치**
 ```bash
