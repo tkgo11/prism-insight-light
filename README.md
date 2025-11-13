@@ -285,7 +285,7 @@ cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
 4. **Edit Configuration Files**
 Edit the copied configuration files to enter necessary API keys and settings.
 
-5. **Install Playwright and Ghostscript** (for PDF conversion)
+5. **Install Playwright** (for PDF conversion)
 
 The system will **automatically install** Playwright browser on first run. For manual installation:
 
@@ -295,16 +295,6 @@ pip install playwright
 
 # Download Chromium browser
 python3 -m playwright install chromium
-
-# Install Ghostscript (for PDF compression - RECOMMENDED)
-# macOS
-brew install ghostscript
-
-# Ubuntu/Debian
-sudo apt-get install ghostscript
-
-# Rocky Linux 8 / CentOS / RHEL
-sudo dnf install ghostscript
 ```
 
 **Platform-specific installation:**
@@ -313,25 +303,20 @@ sudo dnf install ghostscript
 # macOS
 pip3 install playwright
 python3 -m playwright install chromium
-brew install ghostscript
 
 # Ubuntu/Debian
 pip install playwright
 python3 -m playwright install --with-deps chromium
-sudo apt-get install ghostscript
 
 # Rocky Linux 8 / CentOS / RHEL
 pip3 install playwright
 python3 -m playwright install --with-deps chromium
-sudo dnf install ghostscript
 
 # Or use the installation script
 cd utils
 chmod +x setup_playwright.sh
 ./setup_playwright.sh
 ```
-
-**Note**: Ghostscript is optional but **highly recommended** for PDF compression (achieves 50-70% file size reduction).
 
 **📖 For detailed installation instructions, see:** [utils/PLAYWRIGHT_SETUP.md](utils/PLAYWRIGHT_SETUP.md)
 
