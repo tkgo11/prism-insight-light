@@ -699,7 +699,10 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
 
     # Title and label settings
     title = f"{company_name} ({ticker}) - Market Cap Trend"
-    ax.set_title(title, fontsize=16, fontweight='bold', pad=15)
+    if KOREAN_FONT_PROP:
+        ax.set_title(title, fontsize=16, fontweight='bold', pad=15, fontproperties=KOREAN_FONT_PROP)
+    else:
+        ax.set_title(title, fontsize=16, fontweight='bold', pad=15)
     ax.set_ylabel('Market Cap', fontsize=12, labelpad=10)
 
     ax.set_xlabel('', fontsize=12)
@@ -986,12 +989,21 @@ def create_fundamentals_chart(ticker, company_name=None, days=730, save_path=Non
         )
 
     # Overall title
-    fig.suptitle(
-        f"{company_name} ({ticker}) - Fundamental Analysis",
-        fontsize=16,
-        fontweight='bold',
-        y=0.98
-    )
+    if KOREAN_FONT_PROP:
+        fig.suptitle(
+            f"{company_name} ({ticker}) - Fundamental Analysis",
+            fontsize=16,
+            fontweight='bold',
+            y=0.98,
+            fontproperties=KOREAN_FONT_PROP
+        )
+    else:
+        fig.suptitle(
+            f"{company_name} ({ticker}) - Fundamental Analysis",
+            fontsize=16,
+            fontweight='bold',
+            y=0.98
+        )
 
     # 레이블 폰트 설정 강화
     for ax in axes:
@@ -1217,12 +1229,21 @@ def create_trading_volume_chart(ticker, company_name=None, days=730, save_path=N
     plt.setp(axes[1].xaxis.get_majorticklabels(), rotation=45, ha='right')
 
     # Overall title
-    fig.suptitle(
-        f"{company_name} ({ticker}) - Trading by Investor Type",
-        fontsize=16,
-        fontweight='bold',
-        y=0.98
-    )
+    if KOREAN_FONT_PROP:
+        fig.suptitle(
+            f"{company_name} ({ticker}) - Trading by Investor Type",
+            fontsize=16,
+            fontweight='bold',
+            y=0.98,
+            fontproperties=KOREAN_FONT_PROP
+        )
+    else:
+        fig.suptitle(
+            f"{company_name} ({ticker}) - Trading by Investor Type",
+            fontsize=16,
+            fontweight='bold',
+            y=0.98
+        )
 
     # 워터마크 추가
     fig.text(
