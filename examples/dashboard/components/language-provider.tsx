@@ -133,6 +133,10 @@ const translations: Record<Language, Record<string, string>> = {
     "chart.prismReturn": "프리즘 시뮬레이터 (누적 실현)",
     "chart.returnComparisonKospi": "수익률 비교 (KOSPI 기준)",
     "chart.returnComparisonKosdaq": "수익률 비교 (KOSDAQ 기준)",
+    "chart.market": "시장",
+    "chart.prism": "프리즘",
+    "chart.return": "수익률",
+    "chart.index": "지수",
 
     // Stock Detail Modal
     "modal.stockDetail": "종목 상세",
@@ -428,6 +432,10 @@ const translations: Record<Language, Record<string, string>> = {
     "chart.prismReturn": "Prism Simulator (Realized)",
     "chart.returnComparisonKospi": "Return Comparison (KOSPI)",
     "chart.returnComparisonKosdaq": "Return Comparison (KOSDAQ)",
+    "chart.market": "Market",
+    "chart.prism": "Prism",
+    "chart.return": "Return",
+    "chart.index": "Index",
 
     // Stock Detail Modal
     "modal.stockDetail": "Stock Details",
