@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { useLanguage } from "@/components/language-provider"
 import type { Holding } from "@/types/dashboard"
 
 interface StockDetailModalProps {
@@ -14,6 +15,8 @@ interface StockDetailModalProps {
 }
 
 export function StockDetailModal({ stock, onClose, isRealTrading = false }: StockDetailModalProps) {
+  const { t } = useLanguage()
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("ko-KR", {
       style: "currency",
@@ -39,7 +42,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
     })
   }
 
-  const stockName = stock.company_name || stock.name || "알 수 없음"
+  const stockName = stock.company_name || stock.name || t("table.unknown")
   const scenario = stock.scenario
   
   return (
@@ -198,7 +201,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-sm font-semibold text-primary">매수 결정</p>
-                      <Badge variant={scenario.decision === "진입" ? "default" : "secondary"}>
+                      <Badge variant={scenario.decision === t("watchlist.entry") ? "default" : "secondary"}>
                         {scenario.decision}
                       </Badge>
                     </div>
@@ -280,11 +283,11 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                       {Object.entries(scenario.trading_scenarios.key_levels).map(([key, value]) => {
                         // 한글 레이블 매핑
                         const labelMap: Record<string, string> = {
-                          'primary_support': '1차 지지선',
-                          'secondary_support': '2차 지지선',
-                          'primary_resistance': '1차 저항선',
-                          'secondary_resistance': '2차 저항선',
-                          'volume_baseline': '거래량 베이스라인'
+                          'primary_support': t("modal.primarySupport"),
+                          'secondary_support': t("modal.secondarySupport"),
+                          'primary_resistance': t("modal.primaryResistance"),
+                          'secondary_resistance': t("modal.secondaryResistance"),
+                          'volume_baseline': t("modal.volumeBaseline")
                         }
                         const label = labelMap[key] || key
                         

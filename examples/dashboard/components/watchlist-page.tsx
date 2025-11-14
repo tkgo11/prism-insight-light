@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Eye, AlertCircle, TrendingUp, Target, Brain, BarChart3, Filter, ChevronDown, ChevronUp, FileJson } from "lucide-react"
+import { useLanguage } from "@/components/language-provider"
 import type { WatchlistStock } from "@/types/dashboard"
 
 interface WatchlistPageProps {
@@ -13,6 +14,7 @@ interface WatchlistPageProps {
 }
 
 export function WatchlistPage({ watchlist }: WatchlistPageProps) {
+  const { t } = useLanguage()
   const [expandedStocks, setExpandedStocks] = useState<Set<number>>(new Set())
   const [selectedScenario, setSelectedScenario] = useState<any>(null)
 
@@ -64,7 +66,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
 
   // 섹터별 분포
   const sectorDistribution = watchlist.reduce((acc, stock) => {
-    const sector = stock.sector || "기타"
+    const sector = stock.sector || t("common.other")
     acc[sector] = (acc[sector] || 0) + 1
     return acc
   }, {} as Record<string, number>)
@@ -246,17 +248,17 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
 
                           {/* 결정 & 사유 */}
                           <div className={`p-4 rounded-lg border ${
-                            stock.decision === "진입" 
+                            stock.decision === t("watchlist.entry")
                               ? "bg-success/10 border-success/20"
                               : "bg-amber-500/10 border-amber-500/20"
                           }`}>
                             <div className="flex items-start gap-2">
                               <AlertCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                                stock.decision === "진입" ? "text-success" : "text-amber-600 dark:text-amber-400"
+                                stock.decision === t("watchlist.entry") ? "text-success" : "text-amber-600 dark:text-amber-400"
                               }`} />
                               <div className="flex-1">
                                 <p className={`text-sm font-semibold mb-1 ${
-                                  stock.decision === "진입" ? "text-success" : "text-amber-600 dark:text-amber-400"
+                                  stock.decision === t("watchlist.entry") ? "text-success" : "text-amber-600 dark:text-amber-400"
                                 }`}>
                                   결정: {stock.decision}
                                 </p>
@@ -352,11 +354,11 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                                                   <div className="grid grid-cols-2 gap-2">
                                                     {Object.entries(ts.key_levels).map(([key, value]) => {
                                                       const labelMap: Record<string, string> = {
-                                                        'primary_support': '1차 지지선',
-                                                        'secondary_support': '2차 지지선',
-                                                        'primary_resistance': '1차 저항선',
-                                                        'secondary_resistance': '2차 저항선',
-                                                        'volume_baseline': '거래량 베이스라인'
+                                                        'primary_support': t("modal.primarySupport"),
+                                                        'secondary_support': t("modal.secondarySupport"),
+                                                        'primary_resistance': t("modal.primaryResistance"),
+                                                        'secondary_resistance': t("modal.secondaryResistance"),
+                                                        'volume_baseline': t("modal.volumeBaseline")
                                                       }
                                                       const label = labelMap[key] || key
                                                       

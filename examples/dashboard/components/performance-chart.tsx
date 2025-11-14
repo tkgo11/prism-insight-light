@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts"
 import type { MarketCondition, TradingHistory, Holding, Summary } from "@/types/dashboard"
+import { useLanguage } from "@/components/language-provider"
 
 interface PerformanceChartProps {
   data: MarketCondition[]
@@ -12,6 +13,8 @@ interface PerformanceChartProps {
 }
 
 export function PerformanceChart({ data, tradingHistory = [], holdings = [], summary }: PerformanceChartProps) {
+  const { t } = useLanguage()
+
   const formatNumber = (value: number) => {
     return new Intl.NumberFormat("ko-KR", {
       maximumFractionDigits: 0,
@@ -179,17 +182,17 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
               formatter={(value: number, name: string) => {
                 const labels: Record<string, string> = {
                   market_return: `${title.includes('KOSPI') ? 'KOSPI' : 'KOSDAQ'} 수익률`,
-                  prism_return: "프리즘 시뮬레이터 (누적 실현)"
+                  prism_return: t("chart.prismReturn")
                 }
                 return [formatPercent(value), labels[name] || name]
               }}
             />
-            <Legend 
+            <Legend
               wrapperStyle={{ paddingTop: "20px" }}
               formatter={(value: string) => {
                 const labels: Record<string, string> = {
                   market_return: `${title.includes('KOSPI') ? 'KOSPI' : 'KOSDAQ'} 수익률`,
-                  prism_return: "프리즘 시뮬레이터 (누적 실현)"
+                  prism_return: t("chart.prismReturn")
                 }
                 return labels[value] || value
               }}
@@ -223,14 +226,14 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ComparisonChart
           chartData={kospiChartData}
-          title="수익률 비교 (KOSPI 기준)"
+          title={t("chart.returnComparisonKospi")}
           marketColor="#3b82f6"
           yDomain={kospiYDomain}
           latestData={latestKospi}
         />
         <ComparisonChart
           chartData={kosdaqChartData}
-          title="수익률 비교 (KOSDAQ 기준)"
+          title={t("chart.returnComparisonKosdaq")}
           marketColor="#10b981"
           yDomain={kosdaqYDomain}
           latestData={latestKosdaq}
