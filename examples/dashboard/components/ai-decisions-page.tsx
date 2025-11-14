@@ -4,12 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Brain, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Target, BarChart3 } from "lucide-react"
 import type { DashboardData } from "@/types/dashboard"
+import { useLanguage } from "@/components/language-provider"
 
 interface AIDecisionsPageProps {
   data: DashboardData
 }
 
 export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
+  const { t, language } = useLanguage()
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("ko-KR", {
       style: "currency",
@@ -24,9 +27,9 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("ko-KR", { 
+    return date.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
       year: "numeric",
-      month: "long", 
+      month: "long",
       day: "numeric",
     })
   }
@@ -61,12 +64,12 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
             <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-foreground">AI 보유 분석</h2>
-            <p className="text-sm text-muted-foreground">보유 종목에 대한 AI의 일일 판단 기록</p>
+            <h2 className="text-2xl font-bold text-foreground">{t("aiDecisions.title")}</h2>
+            <p className="text-sm text-muted-foreground">{t("aiDecisions.pageDescription")}</p>
           </div>
         </div>
         <Badge variant="outline" className="text-sm">
-          총 {data.holding_decisions?.length || 0}건의 분석
+          {t("aiDecisions.totalAnalysis")} {data.holding_decisions?.length || 0}{t("aiDecisions.recordsCount")}
         </Badge>
       </div>
 
@@ -76,13 +79,13 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <CheckCircle className="w-5 h-5 text-success" />
-              <span className="text-sm text-muted-foreground">총 분석 기록</span>
+              <span className="text-sm text-muted-foreground">{t("aiDecisions.totalAnalysisRecords")}</span>
             </div>
             <p className="text-3xl font-bold text-foreground">
-              {data.holding_decisions?.length || 0}건
+              {data.holding_decisions?.length || 0}{t("aiDecisions.records")}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              모두 보유 유지 판단
+              {t("aiDecisions.allHoldDecisions")}
             </p>
           </CardContent>
         </Card>
@@ -91,13 +94,13 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              <span className="text-sm text-muted-foreground">조정 필요</span>
+              <span className="text-sm text-muted-foreground">{t("aiDecisions.adjustmentNeeded")}</span>
             </div>
             <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
-              {data.holding_decisions?.filter(d => d.portfolio_adjustment_needed === 1).length || 0}건
+              {data.holding_decisions?.filter(d => d.portfolio_adjustment_needed === 1).length || 0}{t("aiDecisions.records")}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              포트폴리오 재조정 권고
+              {t("aiDecisions.portfolioRebalanceRecommended")}
             </p>
           </CardContent>
         </Card>
@@ -106,13 +109,13 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <BarChart3 className="w-5 h-5 text-chart-3" />
-              <span className="text-sm text-muted-foreground">분석 종목 수</span>
+              <span className="text-sm text-muted-foreground">{t("aiDecisions.analyzedStocksCount")}</span>
             </div>
             <p className="text-3xl font-bold text-chart-3">
-              {new Set(data.holding_decisions?.map(d => d.ticker)).size || 0}개
+              {new Set(data.holding_decisions?.map(d => d.ticker)).size || 0}{t("aiDecisions.stocksCount")}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              누적 종목 기준
+              {t("aiDecisions.cumulativeBasis")}
             </p>
           </CardContent>
         </Card>
@@ -129,7 +132,7 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                   {formatDate(date)}
                 </CardTitle>
                 <Badge variant="secondary">
-                  {decisionsByDate[date].length}개 분석
+                  {decisionsByDate[date].length}{t("aiDecisions.analysisCount")}
                 </Badge>
               </div>
             </CardHeader>
@@ -153,15 +156,15 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                                 </Badge>
                                 <Badge className="bg-success/20 text-success border-success/30">
                                   <CheckCircle className="w-3 h-3 mr-1" />
-                                  보유 유지
+                                  {t("aiDecisions.holdMaintain")}
                                 </Badge>
                               </div>
                               <p className="text-sm text-muted-foreground">
-                                분석 시각: {formatTime(decision.decision_time)}
+                                {t("aiDecisions.analysisTime")}: {formatTime(decision.decision_time)}
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm text-muted-foreground mb-1">신뢰도</p>
+                              <p className="text-sm text-muted-foreground mb-1">{t("aiDecisions.confidence")}</p>
                               <div className="flex items-center gap-2">
                                 <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
                                   <div 
@@ -180,23 +183,23 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                           {stock && (
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-lg bg-background border border-border/50">
                               <div>
-                                <p className="text-xs text-muted-foreground mb-1">분석 시점 가격</p>
+                                <p className="text-xs text-muted-foreground mb-1">{t("aiDecisions.analysisPricePoint")}</p>
                                 <p className="font-semibold text-foreground">{formatCurrency(decision.current_price)}</p>
                               </div>
                               <div>
-                                <p className="text-xs text-muted-foreground mb-1">매수가</p>
+                                <p className="text-xs text-muted-foreground mb-1">{t("table.buyPrice")}</p>
                                 <p className="font-semibold text-foreground">{formatCurrency(stock.buy_price || 0)}</p>
                               </div>
                               <div>
-                                <p className="text-xs text-muted-foreground mb-1">목표가</p>
+                                <p className="text-xs text-muted-foreground mb-1">{t("table.targetPrice")}</p>
                                 <p className="font-semibold text-success">{formatCurrency(stock.target_price || 0)}</p>
                               </div>
                               <div>
-                                <p className="text-xs text-muted-foreground mb-1">손절가</p>
+                                <p className="text-xs text-muted-foreground mb-1">{t("table.stopLoss")}</p>
                                 <p className="font-semibold text-destructive">{formatCurrency(stock.stop_loss || 0)}</p>
                               </div>
                               <div>
-                                <p className="text-xs text-muted-foreground mb-1">수익률</p>
+                                <p className="text-xs text-muted-foreground mb-1">{t("table.profitRate")}</p>
                                 <p className={`font-semibold ${(stock.profit_rate || 0) >= 0 ? "text-success" : "text-destructive"}`}>
                                   {formatPercent(stock.profit_rate || 0)}
                                 </p>
@@ -209,7 +212,7 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                             <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                               <div className="flex items-start gap-2 mb-2">
                                 <Brain className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                <p className="text-sm font-semibold text-primary">AI 판단 근거</p>
+                                <p className="text-sm font-semibold text-primary">{t("aiDecisions.aiJudgementBasis")}</p>
                               </div>
                               <p className="text-sm text-foreground leading-relaxed pl-6">
                                 {decision.sell_reason}
@@ -221,28 +224,28 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                               <div className="p-4 rounded-lg bg-muted/50 border border-border/30">
                                 <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
                                   <TrendingUp className="w-4 h-4" />
-                                  기술적 추세
+                                  {t("aiDecisions.technicalTrend")}
                                 </p>
                                 <p className="text-sm text-foreground">{decision.technical_trend}</p>
                               </div>
                               <div className="p-4 rounded-lg bg-muted/50 border border-border/30">
                                 <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
                                   <BarChart3 className="w-4 h-4" />
-                                  거래량 분석
+                                  {t("aiDecisions.volumeAnalysis")}
                                 </p>
                                 <p className="text-sm text-foreground">{decision.volume_analysis}</p>
                               </div>
                               <div className="p-4 rounded-lg bg-muted/50 border border-border/30">
                                 <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
                                   <Target className="w-4 h-4" />
-                                  시장 영향
+                                  {t("aiDecisions.marketImpact")}
                                 </p>
                                 <p className="text-sm text-foreground">{decision.market_condition_impact}</p>
                               </div>
                               <div className="p-4 rounded-lg bg-muted/50 border border-border/30">
                                 <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
                                   <Clock className="w-4 h-4" />
-                                  시간 요인
+                                  {t("aiDecisions.timeFactor2")}
                                 </p>
                                 <p className="text-sm text-foreground">{decision.time_factor}</p>
                               </div>
@@ -267,20 +270,20 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                                         ? "text-amber-600 dark:text-amber-400"
                                         : "text-success"
                                     }`}>
-                                      {decision.portfolio_adjustment_needed === 1 
-                                        ? "포트폴리오 조정 필요" 
-                                        : "현재 전략 유지"}
+                                      {decision.portfolio_adjustment_needed === 1
+                                        ? t("aiDecisions.portfolioAdjustmentNeeded")
+                                        : t("aiDecisions.maintainStrategy")}
                                     </p>
                                     {decision.adjustment_urgency && (
-                                      <Badge 
-                                        variant="outline" 
+                                      <Badge
+                                        variant="outline"
                                         className={
                                           decision.portfolio_adjustment_needed === 1
                                             ? "border-amber-500/50 text-amber-600 dark:text-amber-400 text-xs"
                                             : "border-success/50 text-success text-xs"
                                         }
                                       >
-                                        긴급도: {decision.adjustment_urgency}
+                                        {t("aiDecisions.urgency")}: {decision.adjustment_urgency}
                                       </Badge>
                                     )}
                                   </div>
@@ -291,7 +294,7 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                                     <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-border/30">
                                       {decision.new_target_price > 0 && (
                                         <div>
-                                          <p className="text-xs text-muted-foreground mb-1">신규 목표가 이력</p>
+                                          <p className="text-xs text-muted-foreground mb-1">{t("aiDecisions.newTargetPriceHistory")}</p>
                                           <div className="flex items-center gap-2">
                                             <p className="text-sm line-through text-muted-foreground">
                                               {formatCurrency(stock?.scenario?.target_price || 0)}
@@ -305,7 +308,7 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                                       )}
                                       {decision.new_stop_loss > 0 && (
                                         <div>
-                                          <p className="text-xs text-muted-foreground mb-1">신규 손절가 이력</p>
+                                          <p className="text-xs text-muted-foreground mb-1">{t("aiDecisions.newStopLossHistory")}</p>
                                           <div className="flex items-center gap-2">
                                             <p className="text-sm line-through text-muted-foreground">
                                               {formatCurrency(stock?.scenario?.stop_loss || 0)}
@@ -338,7 +341,7 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
         <Card className="border-border/50">
           <CardContent className="p-12 text-center">
             <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-muted-foreground">아직 AI 보유 분석 내역이 없습니다.</p>
+            <p className="text-muted-foreground">{t("aiDecisions.noAnalysisDataYet")}</p>
           </CardContent>
         </Card>
       )}

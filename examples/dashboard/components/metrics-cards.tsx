@@ -2,6 +2,7 @@
 
 import { TrendingUp, TrendingDown, Wallet, DollarSign, BarChart3, Zap, Clock } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { useLanguage } from "@/components/language-provider"
 import type { Summary } from "@/types/dashboard"
 
 interface MetricsCardsProps {
@@ -20,7 +21,7 @@ interface MetricsCardsProps {
   tradingHistoryLossCount?: number
 }
 
-export function MetricsCards({ 
+export function MetricsCards({
   summary,
   realPortfolio = [],
   tradingHistoryCount = 0,
@@ -31,8 +32,10 @@ export function MetricsCards({
   tradingHistoryWinCount = 0,
   tradingHistoryLossCount = 0
 }: MetricsCardsProps) {
+  const { language, t } = useLanguage()
+
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ko-KR", {
+    return new Intl.NumberFormat(language === "en" ? "en-US" : "ko-KR", {
       style: "currency",
       currency: "KRW",
       maximumFractionDigits: 0,
@@ -66,38 +69,38 @@ export function MetricsCards({
 
   const realMetrics = [
     {
-      label: "실전 총 자산",
+      label: t("metrics.realTotalAssets"),
       value: formatCurrency(totalAssets),
-      change: `시작금액 ${formatCurrency(season2StartAmount)} (${formatPercent(totalAssetsReturn)})`,
-      changeValue: summary.real_trading.available_amount > 0 
-        ? `예수금 ${formatCurrency(summary.real_trading.available_amount)} | ${summary.real_trading.total_stocks || 0}개 종목`
-        : `전액 투자중 | ${summary.real_trading.total_stocks || 0}개 종목`,
-      description: "평가금액 + 예수금",
+      change: `${t("metrics.startAmount")} ${formatCurrency(season2StartAmount)} (${formatPercent(totalAssetsReturn)})`,
+      changeValue: summary.real_trading.available_amount > 0
+        ? `${t("metrics.deposit")} ${formatCurrency(summary.real_trading.available_amount)} | ${summary.real_trading.total_stocks || 0}${t("metrics.stocks")}`
+        : `${t("metrics.fullyInvested")} | ${summary.real_trading.total_stocks || 0}${t("metrics.stocks")}`,
+      description: t("metrics.assetsDesc"),
       isPositive: true,
       icon: Wallet,
       gradient: "from-blue-500/20 to-blue-500/5",
     },
     {
-      label: "실전 보유종목 평가손익",
+      label: t("metrics.realHoldingsProfit"),
       value: formatCurrency(summary.real_trading.total_profit_amount || 0),
       change: formatPercent(summary.real_trading.total_profit_rate || 0),
-      changeValue: "현재 보유중인 종목의 손익",
-      description: "실현손익 제외",
+      changeValue: t("metrics.holdingsProfitDesc"),
+      description: t("metrics.excludeRealized"),
       isPositive: (summary.real_trading.total_profit_amount || 0) >= 0,
       icon: (summary.real_trading.total_profit_amount || 0) >= 0 ? TrendingUp : TrendingDown,
       gradient:
-        (summary.real_trading.total_profit_amount || 0) >= 0 
-          ? "from-success/20 to-success/5" 
+        (summary.real_trading.total_profit_amount || 0) >= 0
+          ? "from-success/20 to-success/5"
           : "from-destructive/20 to-destructive/5",
     },
     {
-      label: "실전 포트폴리오 손익 분포",
-      value: `${profitStocks.length}승 ${lossStocks.length}패`,
-      change: `승률 ${winRateReal.toFixed(0)}%`,
-      changeValue: breakEvenStocks.length > 0 
-        ? `보합 ${breakEvenStocks.length}개` 
-        : `총 ${realPortfolio.length}개 종목`,
-      description: "현재 보유 종목 수익/손실 현황",
+      label: t("metrics.realProfitDist"),
+      value: `${profitStocks.length}${t("metrics.wins")} ${lossStocks.length}${t("metrics.losses")}`,
+      change: `${t("metrics.winRate")} ${winRateReal.toFixed(0)}%`,
+      changeValue: breakEvenStocks.length > 0
+        ? `${t("metrics.breakEven")} ${breakEvenStocks.length}${t("metrics.stocks")}`
+        : `${t("metrics.totalStocks")} ${realPortfolio.length}${t("metrics.stocks")}`,
+      description: t("metrics.profitDistDesc"),
       isPositive: profitStocks.length >= lossStocks.length,
       icon: BarChart3,
       gradient: profitStocks.length >= lossStocks.length
@@ -108,39 +111,39 @@ export function MetricsCards({
 
   const simulatorMetrics = [
     {
-      label: "시뮬레이터 매도종목 누적수익률",
-      value: tradingHistoryCount > 0 ? formatPercent(tradingHistoryTotalProfit) : "매도 대기중",
-      change: tradingHistoryCount > 0 
-        ? `${tradingHistoryCount}건 매도` 
-        : "현재 보유만 존재",
+      label: t("metrics.simSoldProfit"),
+      value: tradingHistoryCount > 0 ? formatPercent(tradingHistoryTotalProfit) : t("metrics.waitingSell"),
+      change: tradingHistoryCount > 0
+        ? `${tradingHistoryCount}${t("common.trades")} ${t("metrics.sold")}`
+        : t("metrics.onlyHolding"),
       changeValue: tradingHistoryCount > 0
-        ? `${tradingHistoryWinCount}승 ${tradingHistoryLossCount}패 (평균 ${formatPercent(tradingHistoryAvgProfit)})`
-        : "매도 시 업데이트",
-      description: "매도 완료한 종목 수익률 합계",
+        ? `${tradingHistoryWinCount}${t("metrics.wins")} ${tradingHistoryLossCount}${t("metrics.losses")} (${t("metrics.avgProfit")} ${formatPercent(tradingHistoryAvgProfit)})`
+        : t("metrics.updateOnSell"),
+      description: t("metrics.soldProfitDesc"),
       isPositive: tradingHistoryCount === 0 || tradingHistoryTotalProfit >= 0,
       icon: DollarSign,
       gradient: "from-purple-500/20 to-purple-500/5",
     },
     {
-      label: "시뮬레이터 평균 보유기간",
-      value: tradingHistoryCount > 0 ? `${Math.round(tradingHistoryAvgDays)}일` : "-일",
-      change: tradingHistoryCount > 0 
-        ? `${tradingHistoryCount}건 매도 기준` 
-        : "매도 대기중",
+      label: t("metrics.simAvgHoldingDays"),
+      value: tradingHistoryCount > 0 ? `${Math.round(tradingHistoryAvgDays)}${t("common.days")}` : `-${t("common.days")}`,
+      change: tradingHistoryCount > 0
+        ? `${tradingHistoryCount}${t("metrics.soldBasis")}`
+        : t("metrics.waitingSell"),
       changeValue: tradingHistoryCount > 0
-        ? `승률 ${tradingHistoryWinRate.toFixed(0)}%`
-        : "보유 전략 확인 필요",
-      description: "매도까지 평균 소요 기간",
+        ? `${t("metrics.winRate")} ${tradingHistoryWinRate.toFixed(0)}%`
+        : t("metrics.needStrategy"),
+      description: t("metrics.avgHoldingDesc"),
       isPositive: true,
       icon: Clock,
       gradient: "from-indigo-500/20 to-indigo-500/5",
     },
     {
-      label: "시뮬레이터 보유종목 누적수익률",
+      label: t("metrics.simCurrentProfit"),
       value: formatPercent(summary.portfolio.total_profit || 0),
-      change: `보유 ${summary.portfolio.total_stocks || 0}개 (평균 ${formatPercent(summary.portfolio.avg_profit_rate || 0)})`,
-      changeValue: `슬롯 사용률 ${summary.portfolio.slot_usage}`,
-      description: "현재 보유 종목 수익률 합계",
+      change: `${t("metrics.holding")} ${summary.portfolio.total_stocks || 0}${t("metrics.stocks")} (${t("metrics.avgProfit")} ${formatPercent(summary.portfolio.avg_profit_rate || 0)})`,
+      changeValue: `${t("metrics.slotUsage")} ${summary.portfolio.slot_usage}`,
+      description: t("metrics.currentProfitDesc"),
       isPositive: (summary.portfolio.total_profit || 0) >= 0,
       icon: Zap,
       gradient: "from-pink-500/20 to-pink-500/5",
@@ -149,19 +152,19 @@ export function MetricsCards({
 
   return (
     <div className="space-y-4">
-      {/* 실전투자 섹션 */}
+      {/* Real Trading Section */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="h-1 w-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-            <h2 className="text-sm font-semibold text-muted-foreground">실전투자 (Season 2)</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground">{t("metrics.realTrading")}</h2>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-              2025.09.29 시작
+              2025.09.29 {t("metrics.started")}
             </span>
             <span className="text-xs text-muted-foreground">
-              ({daysElapsed}일 경과)
+              ({daysElapsed}{t("metrics.elapsed")})
             </span>
           </div>
         </div>
@@ -204,19 +207,19 @@ export function MetricsCards({
         </div>
       </div>
 
-      {/* 시뮬레이터 섹션 */}
+      {/* Simulator Section */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="h-1 w-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
-            <h2 className="text-sm font-semibold text-muted-foreground">프리즘 시뮬레이터</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground">{t("metrics.simulator")}</h2>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
-              2025.09.29 시작
+              2025.09.29 {t("metrics.started")}
             </span>
             <span className="text-xs text-muted-foreground">
-              ({daysElapsed}일 경과)
+              ({daysElapsed}{t("metrics.elapsed")})
             </span>
           </div>
         </div>
