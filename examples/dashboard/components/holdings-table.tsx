@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown } from "lucide-react"
+import { useLanguage } from "@/components/language-provider"
 import type { Holding } from "@/types/dashboard"
 
 interface HoldingsTableProps {
@@ -14,9 +15,11 @@ interface HoldingsTableProps {
 }
 
 export function HoldingsTable({ holdings, onStockClick, title = "보유 종목", isRealTrading = false }: HoldingsTableProps) {
+  const { language, t } = useLanguage()
+
   const formatCurrency = (value: number | undefined) => {
     if (value === undefined || value === null) return "₩0"
-    return new Intl.NumberFormat("ko-KR", {
+    return new Intl.NumberFormat(language === "en" ? "en-US" : "ko-KR", {
       style: "currency",
       currency: "KRW",
       maximumFractionDigits: 0,
@@ -42,15 +45,15 @@ export function HoldingsTable({ holdings, onStockClick, title = "보유 종목",
             {isRealTrading ? (
               <div className="flex items-center gap-2">
                 <Badge variant="default" className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                  실전투자
+                  {t("badge.realTrading")}
                 </Badge>
                 <Badge variant="outline" className="border-blue-500/50 text-blue-600 dark:text-blue-400">
-                  Season 2
+                  {t("badge.season2")}
                 </Badge>
               </div>
             ) : (
               <Badge variant="outline" className="border-purple-500/50 text-purple-600 dark:text-purple-400">
-                AI 시뮬레이션
+                {t("badge.aiSimulation")}
               </Badge>
             )}
           </div>
@@ -61,34 +64,34 @@ export function HoldingsTable({ holdings, onStockClick, title = "보유 종목",
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-border/50">
-                <TableHead className="font-semibold">종목명</TableHead>
-                {!isRealTrading && <TableHead className="font-semibold">섹터</TableHead>}
+                <TableHead className="font-semibold">{t("table.stockName")}</TableHead>
+                {!isRealTrading && <TableHead className="font-semibold">{t("table.sector")}</TableHead>}
                 {isRealTrading ? (
                   <>
-                    <TableHead className="text-right font-semibold">수량</TableHead>
-                    <TableHead className="text-right font-semibold">평균단가</TableHead>
-                    <TableHead className="text-right font-semibold">현재가</TableHead>
-                    <TableHead className="text-right font-semibold">평가금액</TableHead>
-                    <TableHead className="text-right font-semibold">평가손익</TableHead>
-                    <TableHead className="text-right font-semibold">수익률</TableHead>
-                    <TableHead className="text-right font-semibold">비중</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.quantity")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.avgPrice")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.currentPrice")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.totalValue")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.profitAmount")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.profitRate")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.weight")}</TableHead>
                   </>
                 ) : (
                   <>
-                    <TableHead className="text-right font-semibold">매수가</TableHead>
-                    <TableHead className="text-right font-semibold">현재가</TableHead>
-                    <TableHead className="text-right font-semibold">목표가</TableHead>
-                    <TableHead className="text-right font-semibold">손절가</TableHead>
-                    <TableHead className="text-right font-semibold">수익률</TableHead>
-                    <TableHead className="text-right font-semibold">보유일</TableHead>
-                    <TableHead className="text-right font-semibold">기간</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.buyPrice")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.currentPrice")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.targetPrice")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.stopLoss")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.profitRate")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.holdingDays")}</TableHead>
+                    <TableHead className="text-right font-semibold">{t("table.period")}</TableHead>
                   </>
                 )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {holdings.map((holding) => {
-                const stockName = holding.company_name || holding.name || "알 수 없음"
+                const stockName = holding.company_name || holding.name || t("table.unknown")
                 const buyPrice = holding.buy_price || holding.avg_price || 0
                 
                 return (
@@ -115,7 +118,7 @@ export function HoldingsTable({ holdings, onStockClick, title = "보유 종목",
                     {isRealTrading ? (
                       <>
                         <TableCell className="text-right font-medium">
-                          {(holding.quantity || 0).toLocaleString()}주
+                          {(holding.quantity || 0).toLocaleString()}{t("common.shares")}
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground">
                           {formatCurrency(holding.avg_price)}

@@ -3,6 +3,7 @@
 import { Server, ExternalLink, Heart } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useLanguage } from "@/components/language-provider"
 import Image from "next/image"
 
 interface OperatingCost {
@@ -26,6 +27,8 @@ interface OperatingCostsCardProps {
 }
 
 export function OperatingCostsCard({ costs }: OperatingCostsCardProps) {
+  const { language, t } = useLanguage()
+
   // 기본값 설정 (2025년 10월)
   const defaultCosts = {
     server_hosting: 31.68,
@@ -40,7 +43,7 @@ export function OperatingCostsCard({ costs }: OperatingCostsCardProps) {
 
   const costItems: OperatingCost[] = [
     {
-      name: "서버 호스팅",
+      name: t("costs.serverHosting"),
       amount: actualCosts.server_hosting,
       icon: Server,
       color: "text-blue-600 dark:text-blue-400",
@@ -90,35 +93,39 @@ export function OperatingCostsCard({ costs }: OperatingCostsCardProps) {
   // 월 표시 포맷팅
   const formatMonth = (monthStr: string) => {
     const [year, month] = monthStr.split('-')
-    return `${year}년 ${parseInt(month)}월`
+    if (language === "en") {
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+      return `${monthNames[parseInt(month) - 1]} ${year}`
+    }
+    return `${year}${t("date.year")} ${parseInt(month)}${t("date.month")}`
   }
 
   return (
     <Card className="border-2 border-primary/20 shadow-xl bg-gradient-to-br from-primary/5 via-background to-background">
       <CardContent className="p-6">
         <div className="space-y-6">
-          {/* 헤더 */}
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Heart className="w-5 h-5 text-red-500 fill-red-500 animate-pulse" />
                 <h2 className="text-xl font-bold text-foreground">
-                  프로젝트 운영 비용 투명 공개
+                  {t("costs.title")}
                 </h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                오픈소스 프로젝트의 지속 가능한 운영을 위해 전월 비용을 공개합니다
+                {t("costs.description")}
               </p>
             </div>
             <div className="text-right space-y-1">
               <div className="text-xs text-muted-foreground">
-                {formatMonth(actualCosts.month)} 기준
+                {formatMonth(actualCosts.month)} {t("costs.basis")}
               </div>
               <div className="text-3xl font-bold text-primary">
                 {formatCurrency(totalCost)}
               </div>
               <div className="text-xs text-muted-foreground">
-                / 월
+                {t("costs.perMonth")}
               </div>
             </div>
           </div>
@@ -169,14 +176,14 @@ export function OperatingCostsCard({ costs }: OperatingCostsCardProps) {
             })}
           </div>
 
-          {/* 하단 CTA */}
+          {/* Bottom CTA */}
           <div className="flex items-center justify-between p-4 rounded-lg bg-primary/5 border border-primary/20">
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">
-                이 프로젝트가 도움이 되셨나요?
+                {t("costs.helpQuestion")}
               </p>
               <p className="text-xs text-muted-foreground">
-                GitHub Sponsor를 통해 프로젝트의 지속 가능한 개발을 지원해주세요
+                {t("costs.sponsorDesc")}
               </p>
             </div>
             <Button
@@ -185,7 +192,7 @@ export function OperatingCostsCard({ costs }: OperatingCostsCardProps) {
               onClick={() => window.open('https://github.com/sponsors/dragon1086', '_blank')}
             >
               <Heart className="w-4 h-4" />
-              스폰서 되기
+              {t("costs.becomeSponsor")}
               <ExternalLink className="w-3 h-3" />
             </Button>
           </div>
