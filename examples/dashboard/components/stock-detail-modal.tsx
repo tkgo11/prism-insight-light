@@ -57,13 +57,13 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {isRealTrading ? (
                   <Badge variant="default" className="bg-gradient-to-r from-blue-600 to-indigo-600">
                     <DollarSign className="w-3 h-3 mr-1" />
-                    실전투자
+                    {t("badge.realTrading")}
                   </Badge>
                 ) : (
                   <>
                     <Badge variant="default" className="bg-gradient-to-r from-purple-600 to-pink-600">
                       <Brain className="w-3 h-3 mr-1" />
-                      AI 시뮬레이터
+                      {t("badge.aiSimulation")}
                     </Badge>
                     {scenario?.sector && (
                       <Badge variant="outline">{scenario.sector}</Badge>
@@ -76,7 +76,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {isRealTrading && (
                   <Badge variant="secondary" className="text-xs">
                     <Activity className="w-3 h-3 mr-1" />
-                    한국투자증권
+                    {t("badge.koreanInvestment")}
                   </Badge>
                 )}
                 {!isRealTrading && scenario?.investment_period && (
@@ -88,7 +88,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {!isRealTrading && scenario?.buy_score && (
                   <Badge variant="secondary" className="text-xs">
                     <Zap className="w-3 h-3 mr-1" />
-                    매수점수 {scenario.buy_score}/10
+                    {t("modal.buyScore")} {scenario.buy_score}/10
                   </Badge>
                 )}
               </div>
@@ -101,11 +101,11 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
           {/* 현재가 및 수익률 */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
-              <p className="text-sm text-muted-foreground mb-1">현재가</p>
+              <p className="text-sm text-muted-foreground mb-1">{t("modal.currentPrice")}</p>
               <p className="text-2xl font-bold text-foreground">{formatCurrency(stock.current_price ?? 0)}</p>
             </div>
             <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
-              <p className="text-sm text-muted-foreground mb-1">수익률</p>
+              <p className="text-sm text-muted-foreground mb-1">{t("modal.profitRate")}</p>
               <div className="flex items-center gap-2">
                 {(stock.profit_rate ?? 0) >= 0 ? (
                   <TrendingUp className="w-5 h-5 text-success" />
@@ -123,28 +123,28 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
           {isRealTrading && (
             <>
               <div className="space-y-3 mb-6">
-                <h3 className="text-sm font-semibold text-foreground mb-3">보유 정보</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-3">{t("modal.holdingInfo")}</h3>
                 <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">보유 수량</span>
-                  <span className="font-medium text-foreground">{(stock.quantity ?? 0).toLocaleString()}주</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.holdingQuantity")}</span>
+                  <span className="font-medium text-foreground">{(stock.quantity ?? 0).toLocaleString()}{t("common.shares")}</span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">평균 매입가</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.avgBuyPrice")}</span>
                   <span className="font-medium text-foreground">{formatCurrency(stock.avg_price ?? 0)}</span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">평가 금액</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.evaluationAmount")}</span>
                   <span className="font-medium text-foreground">{formatCurrency(stock.value ?? 0)}</span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">평가 손익</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.evaluationPL")}</span>
                   <span className={`font-semibold ${(stock.profit ?? 0) >= 0 ? "text-success" : "text-destructive"}`}>
                     {formatCurrency(stock.profit ?? 0)}
                   </span>
                 </div>
                 {stock.weight !== undefined && stock.weight > 0 && (
                   <div className="flex justify-between items-center py-3">
-                    <span className="text-sm text-muted-foreground">포트폴리오 비중</span>
+                    <span className="text-sm text-muted-foreground">{t("modal.portfolioWeight")}</span>
                     <span className="font-medium text-foreground">{(stock.weight ?? 0).toFixed(2)}%</span>
                   </div>
                 )}
@@ -156,29 +156,29 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
           {!isRealTrading && (
             <>
               <div className="space-y-3 mb-6">
-                <h3 className="text-sm font-semibold text-foreground mb-3">매매 정보</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-3">{t("modal.tradingInfo")}</h3>
                 <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">매수일</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.buyDate")}</span>
                   <span className="font-medium text-foreground">{formatDate(stock.buy_date)}</span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">매수가</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.buyPrice")}</span>
                   <span className="font-medium text-foreground">{formatCurrency(stock.buy_price ?? 0)}</span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">목표가</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.targetPrice")}</span>
                   <span className="font-medium text-success">{formatCurrency(stock.target_price ?? 0)}</span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">손절가</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.stopLossPrice")}</span>
                   <span className="font-medium text-destructive">{formatCurrency(stock.stop_loss ?? 0)}</span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">보유 일수</span>
-                  <span className="font-medium text-foreground">{stock.holding_days ?? 0}일</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.holdingDays")}</span>
+                  <span className="font-medium text-foreground">{stock.holding_days ?? 0}{t("common.days")}</span>
                 </div>
                 <div className="flex justify-between items-center py-3">
-                  <span className="text-sm text-muted-foreground">최근 업데이트</span>
+                  <span className="text-sm text-muted-foreground">{t("modal.lastUpdate")}</span>
                   <span className="font-medium text-foreground text-xs">{formatDate(stock.last_updated)}</span>
                 </div>
               </div>
@@ -193,14 +193,14 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Brain className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-semibold text-foreground">AI 매매 시나리오</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{t("modal.aiTradingScenario")}</h3>
                 </div>
 
                 {/* 매수 결정 */}
                 {scenario.decision && (
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-primary">매수 결정</p>
+                      <p className="text-sm font-semibold text-primary">{t("modal.buyDecision")}</p>
                       <Badge variant={scenario.decision === t("watchlist.entry") ? "default" : "secondary"}>
                         {scenario.decision}
                       </Badge>
@@ -218,7 +218,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                       <div className="p-3 rounded-lg bg-success/10 border border-success/20">
                         <div className="flex items-center gap-2 mb-1">
                           <Target className="w-4 h-4 text-success" />
-                          <p className="text-xs font-semibold text-success">목표가</p>
+                          <p className="text-xs font-semibold text-success">{t("modal.targetPrice")}</p>
                         </div>
                         <p className="text-lg font-bold text-foreground">{formatCurrency(scenario.target_price)}</p>
                       </div>
@@ -227,7 +227,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                       <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                         <div className="flex items-center gap-2 mb-1">
                           <AlertTriangle className="w-4 h-4 text-destructive" />
-                          <p className="text-xs font-semibold text-destructive">손절가</p>
+                          <p className="text-xs font-semibold text-destructive">{t("modal.stopLossPrice")}</p>
                         </div>
                         <p className="text-lg font-bold text-foreground">{formatCurrency(scenario.stop_loss)}</p>
                       </div>
@@ -238,7 +238,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {/* 포트폴리오 분석 */}
                 {scenario.portfolio_analysis && (
                   <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">포트폴리오 분석</p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">{t("modal.portfolioAnalysis")}</p>
                     <p className="text-sm text-foreground leading-relaxed">{scenario.portfolio_analysis}</p>
                   </div>
                 )}
@@ -246,7 +246,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {/* 밸류에이션 분석 */}
                 {scenario.valuation_analysis && (
                   <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">밸류에이션 분석</p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">{t("modal.valuationAnalysis")}</p>
                     <p className="text-sm text-foreground leading-relaxed">{scenario.valuation_analysis}</p>
                   </div>
                 )}
@@ -254,7 +254,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {/* 섹터 전망 */}
                 {scenario.sector_outlook && (
                   <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">섹터 전망</p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">{t("modal.sectorOutlook")}</p>
                     <p className="text-sm text-foreground leading-relaxed">{scenario.sector_outlook}</p>
                   </div>
                 )}
@@ -262,7 +262,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {/* 시장 상황 */}
                 {scenario.market_condition && (
                   <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">시장 상황</p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">{t("modal.marketCondition")}</p>
                     <p className="text-sm text-foreground leading-relaxed">{scenario.market_condition}</p>
                   </div>
                 )}
@@ -270,7 +270,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {/* 최대 포트폴리오 규모 */}
                 {scenario.max_portfolio_size && (
                   <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                    <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2">최대 포트폴리오 규모</p>
+                    <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2">{t("modal.maxPortfolioSize")}</p>
                     <p className="text-sm text-foreground leading-relaxed">{scenario.max_portfolio_size}</p>
                   </div>
                 )}
@@ -278,7 +278,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {/* 주요 가격대 */}
                 {scenario.trading_scenarios?.key_levels && Object.keys(scenario.trading_scenarios.key_levels).length > 0 && (
                   <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-3">주요 가격대</p>
+                    <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-3">{t("modal.keyPriceLevels")}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {Object.entries(scenario.trading_scenarios.key_levels).map(([key, value]) => {
                         // 한글 레이블 매핑
@@ -307,7 +307,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {/* 매도 트리거 */}
                 {scenario.trading_scenarios?.sell_triggers && scenario.trading_scenarios.sell_triggers.length > 0 && (
                   <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
-                    <p className="text-xs font-semibold text-destructive mb-3">매도 트리거</p>
+                    <p className="text-xs font-semibold text-destructive mb-3">{t("modal.sellTriggers")}</p>
                     <ul className="space-y-2">
                       {scenario.trading_scenarios.sell_triggers.map((trigger, index) => (
                         <li key={index} className="text-sm text-foreground flex items-start gap-2">
@@ -322,7 +322,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {/* 보유 조건 */}
                 {scenario.trading_scenarios?.hold_conditions && scenario.trading_scenarios.hold_conditions.length > 0 && (
                   <div className="p-4 rounded-lg bg-success/10 border border-success/20">
-                    <p className="text-xs font-semibold text-success mb-3">보유 조건</p>
+                    <p className="text-xs font-semibold text-success mb-3">{t("modal.holdConditions")}</p>
                     <ul className="space-y-2">
                       {scenario.trading_scenarios.hold_conditions.map((condition, index) => (
                         <li key={index} className="text-sm text-foreground flex items-start gap-2">
@@ -337,7 +337,7 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {/* 포트폴리오 맥락 */}
                 {scenario.trading_scenarios?.portfolio_context && (
                   <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                    <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-2">포트폴리오 맥락</p>
+                    <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-2">{t("modal.portfolioContext")}</p>
                     <p className="text-sm text-foreground leading-relaxed">{scenario.trading_scenarios.portfolio_context}</p>
                   </div>
                 )}
