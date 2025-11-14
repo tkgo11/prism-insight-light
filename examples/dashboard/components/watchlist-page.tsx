@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Eye, AlertCircle, TrendingUp, Target, Brain, BarChart3, Filter, ChevronDown, ChevronUp, FileJson } from "lucide-react"
+import { useLanguage } from "@/components/language-provider"
 import type { WatchlistStock } from "@/types/dashboard"
 
 interface WatchlistPageProps {
@@ -13,6 +14,7 @@ interface WatchlistPageProps {
 }
 
 export function WatchlistPage({ watchlist }: WatchlistPageProps) {
+  const { t, language } = useLanguage()
   const [expandedStocks, setExpandedStocks] = useState<Set<number>>(new Set())
   const [selectedScenario, setSelectedScenario] = useState<any>(null)
 
@@ -26,7 +28,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("ko-KR", {
+    return date.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -64,7 +66,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
 
   // 섹터별 분포
   const sectorDistribution = watchlist.reduce((acc, stock) => {
-    const sector = stock.sector || "기타"
+    const sector = stock.sector || t("common.other")
     acc[sector] = (acc[sector] || 0) + 1
     return acc
   }, {} as Record<string, number>)
@@ -92,12 +94,12 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
             <Eye className="w-6 h-6 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-foreground">관심 종목</h2>
-            <p className="text-sm text-muted-foreground">AI가 분석한 투자 후보 종목 (최근 1개월)</p>
+            <h2 className="text-2xl font-bold text-foreground">{t("watchlist.title")}</h2>
+            <p className="text-sm text-muted-foreground">{t("watchlist.description")}</p>
           </div>
         </div>
         <Badge variant="outline" className="text-sm">
-          총 {totalStocks}개 종목
+          {t("watchlist.totalStocks")} {totalStocks}{t("watchlist.stocksUnit")}
         </Badge>
       </div>
 
@@ -107,11 +109,11 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <Eye className="w-5 h-5 text-primary" />
-              <span className="text-sm text-muted-foreground">전체 종목</span>
+              <span className="text-sm text-muted-foreground">{t("watchlist.totalStocks")}</span>
             </div>
-            <p className="text-3xl font-bold text-foreground">{totalStocks}개</p>
+            <p className="text-3xl font-bold text-foreground">{totalStocks}{t("watchlist.stocksCount")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              최근 1개월 분석
+              {t("watchlist.lastMonthAnalysis")}
             </p>
           </CardContent>
         </Card>
@@ -120,11 +122,11 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <Target className="w-5 h-5 text-success" />
-              <span className="text-sm text-muted-foreground">최고 점수</span>
+              <span className="text-sm text-muted-foreground">{t("watchlist.highestScore")}</span>
             </div>
-            <p className="text-3xl font-bold text-success">{highestScore}점</p>
+            <p className="text-3xl font-bold text-success">{highestScore}{t("watchlist.scoreUnit")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              가장 유망한 종목
+              {t("watchlist.mostPromising")}
             </p>
           </CardContent>
         </Card>
@@ -133,11 +135,11 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <BarChart3 className="w-5 h-5 text-chart-3" />
-              <span className="text-sm text-muted-foreground">평균 점수</span>
+              <span className="text-sm text-muted-foreground">{t("watchlist.avgScore")}</span>
             </div>
-            <p className="text-3xl font-bold text-chart-3">{avgScore.toFixed(1)}점</p>
+            <p className="text-3xl font-bold text-chart-3">{avgScore.toFixed(1)}{t("watchlist.scoreUnit")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              10점 만점 기준
+              {t("watchlist.outOf10")}
             </p>
           </CardContent>
         </Card>
@@ -146,11 +148,11 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              <span className="text-sm text-muted-foreground">최근 7일</span>
+              <span className="text-sm text-muted-foreground">{t("watchlist.recentWeek")}</span>
             </div>
-            <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">{recentStocks}개</p>
+            <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">{recentStocks}{t("watchlist.stocksCount")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              최근 분석 종목
+              {t("watchlist.recentlyAnalyzed")}
             </p>
           </CardContent>
         </Card>
@@ -162,7 +164,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
           <CardHeader>
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-chart-3" />
-              섹터별 분포 TOP 3
+              {t("watchlist.sectorDistributionTop3")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -175,7 +177,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                     </div>
                     <p className="font-medium text-foreground">{sector}</p>
                   </div>
-                  <Badge variant="secondary">{count}개</Badge>
+                  <Badge variant="secondary">{count}{t("watchlist.stocksCount")}</Badge>
                 </div>
               ))}
             </div>
@@ -193,7 +195,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                   {formatDate(date)}
                 </CardTitle>
                 <Badge variant="secondary">
-                  {groupedByDate[date].length}개 분석
+                  {groupedByDate[date].length}{t("watchlist.analyses")}
                 </Badge>
               </div>
             </CardHeader>
@@ -231,34 +233,34 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                           {/* 가격 정보 */}
                           <div className="grid grid-cols-3 gap-3">
                             <div className="p-3 rounded-lg bg-background border border-border/50">
-                              <p className="text-xs text-muted-foreground mb-1">현재가</p>
+                              <p className="text-xs text-muted-foreground mb-1">{t("watchlist.currentPrice")}</p>
                               <p className="text-sm font-bold text-foreground">{formatCurrency(stock.current_price)}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-background border border-border/50">
-                              <p className="text-xs text-muted-foreground mb-1">목표가</p>
+                              <p className="text-xs text-muted-foreground mb-1">{t("watchlist.targetPrice")}</p>
                               <p className="text-sm font-bold text-success">{formatCurrency(stock.target_price)}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-background border border-border/50">
-                              <p className="text-xs text-muted-foreground mb-1">손절가</p>
+                              <p className="text-xs text-muted-foreground mb-1">{t("watchlist.stopLoss")}</p>
                               <p className="text-sm font-bold text-destructive">{formatCurrency(stock.stop_loss)}</p>
                             </div>
                           </div>
 
                           {/* 결정 & 사유 */}
                           <div className={`p-4 rounded-lg border ${
-                            stock.decision === "진입" 
+                            stock.decision === t("watchlist.entry")
                               ? "bg-success/10 border-success/20"
                               : "bg-amber-500/10 border-amber-500/20"
                           }`}>
                             <div className="flex items-start gap-2">
                               <AlertCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                                stock.decision === "진입" ? "text-success" : "text-amber-600 dark:text-amber-400"
+                                stock.decision === t("watchlist.entry") ? "text-success" : "text-amber-600 dark:text-amber-400"
                               }`} />
                               <div className="flex-1">
                                 <p className={`text-sm font-semibold mb-1 ${
-                                  stock.decision === "진입" ? "text-success" : "text-amber-600 dark:text-amber-400"
+                                  stock.decision === t("watchlist.entry") ? "text-success" : "text-amber-600 dark:text-amber-400"
                                 }`}>
-                                  결정: {stock.decision}
+                                  {t("watchlist.decision")}: {stock.decision}
                                 </p>
                                 <p className="text-sm text-foreground leading-relaxed">{stock.skip_reason}</p>
                               </div>
@@ -274,7 +276,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                               className="flex-1"
                             >
                               <Brain className="w-4 h-4 mr-2" />
-                              AI 분석 상세
+                              {t("watchlist.aiAnalysisDetails")}
                               {isExpanded ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
                             </Button>
                             
@@ -294,69 +296,69 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                             <div className="space-y-3 pt-2 border-t border-border/30">
                                   {stock.rationale && (
                                     <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                                      <p className="text-xs font-semibold text-primary mb-2">매매 근거</p>
+                                      <p className="text-xs font-semibold text-primary mb-2">{t("watchlist.tradingRationale")}</p>
                                       <p className="text-sm text-foreground leading-relaxed">{stock.rationale}</p>
                                     </div>
                                   )}
-                                  
+
                                   {(stock.scenario?.max_portfolio_size || stock.max_portfolio_size) && (
                                     <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                                      <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2">최대 포트폴리오 규모</p>
+                                      <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2">{t("modal.maxPortfolioSize")}</p>
                                       <p className="text-sm text-foreground leading-relaxed">
-                                        {stock.scenario?.max_portfolio_size || stock.max_portfolio_size}개 종목
+                                        {stock.scenario?.max_portfolio_size || stock.max_portfolio_size}{t("watchlist.stocksUnit")}
                                       </p>
                                     </div>
                                   )}
-                                  
+
                                   {stock.portfolio_analysis && (
                                     <div className="p-4 rounded-lg bg-muted/50 border border-border/30">
-                                      <p className="text-xs font-semibold text-muted-foreground mb-2">포트폴리오 분석</p>
+                                      <p className="text-xs font-semibold text-muted-foreground mb-2">{t("modal.portfolioAnalysis")}</p>
                                       <p className="text-sm text-foreground leading-relaxed">{stock.portfolio_analysis}</p>
                                     </div>
                                   )}
-                                  
+
                                   {stock.valuation_analysis && (
                                     <div className="p-4 rounded-lg bg-muted/50 border border-border/30">
-                                      <p className="text-xs font-semibold text-muted-foreground mb-2">밸류에이션 분석</p>
+                                      <p className="text-xs font-semibold text-muted-foreground mb-2">{t("modal.valuationAnalysis")}</p>
                                       <p className="text-sm text-foreground leading-relaxed">{stock.valuation_analysis}</p>
                                     </div>
                                   )}
-                                  
+
                                   {stock.sector_outlook && (
                                     <div className="p-4 rounded-lg bg-muted/50 border border-border/30">
-                                      <p className="text-xs font-semibold text-muted-foreground mb-2">섹터 전망</p>
+                                      <p className="text-xs font-semibold text-muted-foreground mb-2">{t("modal.sectorOutlook")}</p>
                                       <p className="text-sm text-foreground leading-relaxed">{stock.sector_outlook}</p>
                                     </div>
                                   )}
-                                  
+
                                   {stock.market_condition && (
                                     <div className="p-4 rounded-lg bg-muted/50 border border-border/30">
-                                      <p className="text-xs font-semibold text-muted-foreground mb-2">시장 상황</p>
+                                      <p className="text-xs font-semibold text-muted-foreground mb-2">{t("modal.marketCondition")}</p>
                                       <p className="text-sm text-foreground leading-relaxed">{stock.market_condition}</p>
                                     </div>
                                   )}
-                                  
+
                                   {(stock.scenario?.trading_scenarios || stock.trading_scenarios) && (
                                     <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-3">매매 시나리오</p>
+                                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-3">{t("modal.tradingScenarios")}</p>
                                       <div className="space-y-3">
                                         {(() => {
                                           const ts = stock.scenario?.trading_scenarios || stock.trading_scenarios
                                           if (!ts) return null
-                                          
+
                                           return (
                                             <>
                                               {ts.key_levels && typeof ts.key_levels === 'object' && (
                                                 <div>
-                                                  <p className="text-xs font-medium text-muted-foreground mb-2">주요 가격대</p>
+                                                  <p className="text-xs font-medium text-muted-foreground mb-2">{t("modal.keyPriceLevels")}</p>
                                                   <div className="grid grid-cols-2 gap-2">
                                                     {Object.entries(ts.key_levels).map(([key, value]) => {
                                                       const labelMap: Record<string, string> = {
-                                                        'primary_support': '1차 지지선',
-                                                        'secondary_support': '2차 지지선',
-                                                        'primary_resistance': '1차 저항선',
-                                                        'secondary_resistance': '2차 저항선',
-                                                        'volume_baseline': '거래량 베이스라인'
+                                                        'primary_support': t("modal.primarySupport"),
+                                                        'secondary_support': t("modal.secondarySupport"),
+                                                        'primary_resistance': t("modal.primaryResistance"),
+                                                        'secondary_resistance': t("modal.secondaryResistance"),
+                                                        'volume_baseline': t("modal.volumeBaseline")
                                                       }
                                                       const label = labelMap[key] || key
                                                       
@@ -375,7 +377,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                                               
                                               {ts.sell_triggers && Array.isArray(ts.sell_triggers) && ts.sell_triggers.length > 0 && (
                                                 <div>
-                                                  <p className="text-xs font-medium text-muted-foreground mb-2">매도 트리거</p>
+                                                  <p className="text-xs font-medium text-muted-foreground mb-2">{t("modal.sellTriggers")}</p>
                                                   <ul className="space-y-1">
                                                     {ts.sell_triggers.map((trigger, idx) => (
                                                       <li key={idx} className="text-sm text-foreground flex items-start gap-2">
@@ -386,10 +388,10 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                                                   </ul>
                                                 </div>
                                               )}
-                                              
+
                                               {ts.hold_conditions && Array.isArray(ts.hold_conditions) && ts.hold_conditions.length > 0 && (
                                                 <div>
-                                                  <p className="text-xs font-medium text-muted-foreground mb-2">보유 조건</p>
+                                                  <p className="text-xs font-medium text-muted-foreground mb-2">{t("modal.holdConditions")}</p>
                                                   <ul className="space-y-1">
                                                     {ts.hold_conditions.map((condition, idx) => (
                                                       <li key={idx} className="text-sm text-foreground flex items-start gap-2">
@@ -400,10 +402,10 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                                                   </ul>
                                                 </div>
                                               )}
-                                              
+
                                               {ts.portfolio_context && (
                                                 <div>
-                                                  <p className="text-xs font-medium text-muted-foreground mb-2">포트폴리오 맥락</p>
+                                                  <p className="text-xs font-medium text-muted-foreground mb-2">{t("modal.portfolioContext")}</p>
                                                   <p className="text-sm text-foreground leading-relaxed">
                                                     {ts.portfolio_context}
                                                   </p>
@@ -432,7 +434,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
         <Card className="border-border/50">
           <CardContent className="p-12 text-center">
             <Eye className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-muted-foreground">아직 관심 종목이 없습니다.</p>
+            <p className="text-muted-foreground">{t("watchlist.noData")}</p>
           </CardContent>
         </Card>
       )}
@@ -460,14 +462,14 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                   navigator.clipboard.writeText(JSON.stringify(selectedScenario, null, 2))
                 }}
               >
-                클립보드 복사
+                {t("watchlist.copyToClipboard")}
               </Button>
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => setSelectedScenario(null)}
               >
-                닫기
+                {t("modal.close")}
               </Button>
             </div>
           </div>
