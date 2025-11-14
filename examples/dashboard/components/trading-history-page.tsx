@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { History, TrendingUp, TrendingDown, Award, Calendar, Target, Brain, Trophy, AlertCircle } from "lucide-react"
 import type { Trade, Summary } from "@/types/dashboard"
+import { useLanguage } from "@/components/language-provider"
 
 interface TradingHistoryPageProps {
   history: Trade[]
@@ -11,6 +12,8 @@ interface TradingHistoryPageProps {
 }
 
 export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps) {
+  const { t } = useLanguage()
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("ko-KR", {
       style: "currency",
@@ -45,7 +48,7 @@ export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps
 
   // 섹터별 수익률 (scenario.sector 활용)
   const sectorPerformance = history.reduce((acc, trade) => {
-    const sector = trade.scenario?.sector || "기타"
+    const sector = trade.scenario?.sector || t("common.other")
     if (!acc[sector]) {
       acc[sector] = { total: 0, count: 0, avgProfit: 0 }
     }
@@ -61,7 +64,7 @@ export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps
 
   // 투자기간별 수익률
   const periodPerformance = history.reduce((acc, trade) => {
-    const period = trade.scenario?.investment_period || "미분류"
+    const period = trade.scenario?.investment_period || t("common.unclassified")
     if (!acc[period]) {
       acc[period] = { total: 0, count: 0, avgProfit: 0 }
     }
