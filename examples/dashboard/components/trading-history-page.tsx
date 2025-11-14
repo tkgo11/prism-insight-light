@@ -12,7 +12,7 @@ interface TradingHistoryPageProps {
 }
 
 export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("ko-KR", {
@@ -28,9 +28,9 @@ export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("ko-KR", { 
+    return date.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
       year: "numeric",
-      month: "long", 
+      month: "long",
       day: "numeric"
     })
   }

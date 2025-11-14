@@ -177,7 +177,7 @@ export function HoldingsTable({ holdings, onStockClick, title = "보유 종목",
                           </div>
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground">
-                          {holding.holding_days || 0}일
+                          {holding.holding_days || 0}{t("common.days")}
                         </TableCell>
                         <TableCell className="text-right">
                           <Badge variant={holding.investment_period === "단기" ? "secondary" : "outline"} className="text-xs">

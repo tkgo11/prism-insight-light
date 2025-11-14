@@ -15,7 +15,7 @@ interface StockDetailModalProps {
 }
 
 export function StockDetailModal({ stock, onClose, isRealTrading = false }: StockDetailModalProps) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("ko-KR", {
@@ -33,9 +33,9 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-"
     const date = new Date(dateString)
-    return date.toLocaleDateString("ko-KR", { 
-      year: "numeric", 
-      month: "long", 
+    return date.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
+      year: "numeric",
+      month: "long",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit"

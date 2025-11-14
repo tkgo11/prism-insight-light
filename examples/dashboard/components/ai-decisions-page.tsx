@@ -11,7 +11,7 @@ interface AIDecisionsPageProps {
 }
 
 export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("ko-KR", {
@@ -27,9 +27,9 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("ko-KR", { 
+    return date.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
       year: "numeric",
-      month: "long", 
+      month: "long",
       day: "numeric",
     })
   }

@@ -14,7 +14,7 @@ interface WatchlistPageProps {
 }
 
 export function WatchlistPage({ watchlist }: WatchlistPageProps) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [expandedStocks, setExpandedStocks] = useState<Set<number>>(new Set())
   const [selectedScenario, setSelectedScenario] = useState<any>(null)
 
@@ -28,7 +28,7 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("ko-KR", {
+    return date.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
