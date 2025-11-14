@@ -290,9 +290,14 @@ Return the translations in the same numbered format.""",
             'sector_outlook',
             'market_condition',
             'decision',
+            'max_portfolio_size',  # "7~8개" 같은 값
             # trading_scenarios 내부
             'portfolio_context',
-            'volume_baseline',
+            'volume_baseline',  # "20일 평균 거래량의 2배" 같은 값
+            'primary_support',
+            'secondary_support',
+            'primary_resistance',
+            'secondary_resistance',
             # 최상위 필드
             'company_name',
             'name',  # real_portfolio의 name
