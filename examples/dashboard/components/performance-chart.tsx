@@ -115,19 +115,22 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
   const kospiYDomain = getYDomain(getAllValues(kospiChartData))
   const kosdaqYDomain = getYDomain(getAllValues(kosdaqChartData))
 
-  const ComparisonChart = ({ 
-    chartData, 
-    title, 
+  const ComparisonChart = ({
+    chartData,
+    title,
     marketColor,
     yDomain,
     latestData
-  }: { 
+  }: {
     chartData: typeof kospiChartData
     title: string
     marketColor: string
     yDomain: [number, number]
     latestData: typeof latestKospi
-  }) => (
+  }) => {
+    const { t } = useLanguage()
+
+    return (
     <Card className="border-border/50">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -135,10 +138,10 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
           <div className="text-right text-xs space-y-1">
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">
-                시장: <span style={{ color: marketColor }} className="font-semibold">{formatPercent(latestData.market_return)}</span>
+                {t("chart.market")}: <span style={{ color: marketColor }} className="font-semibold">{formatPercent(latestData.market_return)}</span>
               </span>
               <span className="text-muted-foreground">
-                프리즘: <span className={`font-semibold ${latestData.prism_return >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-destructive'}`}>{formatPercent(latestData.prism_return)}</span>
+                {t("chart.prism")}: <span className={`font-semibold ${latestData.prism_return >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-destructive'}`}>{formatPercent(latestData.prism_return)}</span>
               </span>
             </div>
           </div>
@@ -181,7 +184,7 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
               }}
               formatter={(value: number, name: string) => {
                 const labels: Record<string, string> = {
-                  market_return: `${title.includes('KOSPI') ? 'KOSPI' : 'KOSDAQ'} 수익률`,
+                  market_return: `${title.includes('KOSPI') ? 'KOSPI' : 'KOSDAQ'} ${t("chart.return")}`,
                   prism_return: t("chart.prismReturn")
                 }
                 return [formatPercent(value), labels[name] || name]
@@ -191,7 +194,7 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
               wrapperStyle={{ paddingTop: "20px" }}
               formatter={(value: string) => {
                 const labels: Record<string, string> = {
-                  market_return: `${title.includes('KOSPI') ? 'KOSPI' : 'KOSDAQ'} 수익률`,
+                  market_return: `${title.includes('KOSPI') ? 'KOSPI' : 'KOSDAQ'} ${t("chart.return")}`,
                   prism_return: t("chart.prismReturn")
                 }
                 return labels[value] || value
@@ -218,7 +221,8 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
         </ResponsiveContainer>
       </CardContent>
     </Card>
-  )
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -248,6 +252,8 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
 
 // 기존 KOSPI/KOSDAQ 지수 차트를 별도 컴포넌트로 분리
 function IndexCharts({ data }: { data: MarketCondition[] }) {
+  const { t } = useLanguage()
+
   const formatNumber = (value: number) => {
     return new Intl.NumberFormat("ko-KR", {
       maximumFractionDigits: 0,
@@ -302,7 +308,7 @@ function IndexCharts({ data }: { data: MarketCondition[] }) {
     <Card className="border-border/50">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">{title} 지수</CardTitle>
+          <CardTitle className="text-lg font-semibold">{title} {t("chart.index")}</CardTitle>
           <div className="text-right">
             <p className="text-2xl font-bold">{formatNumber(stats.current)}</p>
             <p className={`text-sm font-medium ${stats.change >= 0 ? 'text-success' : 'text-destructive'}`}>
