@@ -17,8 +17,6 @@
 
 > 📖 [한국어 문서](README_ko.md)
 
-아래는 자연스럽고 전문적인 영어 번역입니다:
-
 ---
 
 ### 📊 AI-Powered Korean Stock Market Analysis & Trading System
