@@ -17,10 +17,28 @@
 
 > 📖 [한국어 문서](README_ko.md)
 
-AI-Powered Korean Stock Market Analysis and Trading System
-- **[Official Telegram Channel](https://t.me/stock_ai_agent)**: Surge stock detection / Stock analysis report download / Trading simulation / Auto-trading reports (https://t.me/stock_ai_agent)
-- **[Official Dashboard](https://analysis.stocksimulation.kr/)**: PRISM-INSIGHT real trading & simulation real-time performance dashboard (additionally provides AI portfolio analysis, trading history, watchlist)
-- **Community**: Not available yet. Temporary discussions available in Telegram channel
+아래는 자연스럽고 전문적인 영어 번역입니다:
+
+---
+
+### 📊 AI-Powered Korean Stock Market Analysis & Trading System
+
+* **[Official Telegram Channel](https://t.me/prism_insight_global_en)**
+  Features include surge-stock detection, stock analysis report downloads, trading simulations, and automated trading reports.
+
+    * **➡️ Global (English) Channel:**
+      [https://t.me/prism_insight_global_en](https://t.me/prism_insight_global_en)
+    * **➡️ Korean Channel:**
+      [https://t.me/stock_ai_agent](https://t.me/stock_ai_agent)
+
+* **[Official Dashboard](https://analysis.stocksimulation.kr/)**:
+  Real-time performance dashboard for PRISM-INSIGHT live trading & simulations
+  (Includes AI portfolio analysis, trading history, and watchlists)
+
+* **Community**:
+  Via **[GitHub Discussions](https://github.com/dragon1086/prism-insight/discussions)** or the Telegram discussion group (@prism_insight_discuss)
+
+---
 
 ## 📖 Project Overview
 

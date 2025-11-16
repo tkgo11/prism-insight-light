@@ -15,10 +15,26 @@
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/dragon1086?style=for-the-badge&logo=github-sponsors&color=ff69b4&label=Sponsors)](https://github.com/sponsors/dragon1086)
 [![Stars](https://img.shields.io/github/stars/dragon1086/prism-insight?style=for-the-badge)](https://github.com/dragon1086/prism-insight/stargazers)
 
-AI 기반 한국 주식시장 분석 및 매매 시스템
-- **[공식 텔레그램 채널](https://t.me/stock_ai_agent)**: 급등주 포착/주식 분석 리포트 다운로드/매매 시뮬레이션/자동매매 리포트 제공 (https://t.me/stock_ai_agent)
-- **[공식 대시보드](https://analysis.stocksimulation.kr/)**: PRISM-INSIGHT 실전매매 & 시뮬레이션 실시간 성과 대시보드 (부가적으로 AI 보유 분석, 거래내역, 관심종목 제공)
-- **커뮤니티**: 아직 없음. 임시로 텔레그램 채널 토론방에서 대화 가능
+아래처럼 **섹션 제목·설명·하위 링크를 단계적으로 들여쓰기**하면 깔끔하고 읽기 쉬운 계층 구조가 됩니다.
+필요하면 아이콘이나 구분선도 넣을 수 있어요.
+
+---
+
+### 📊 AI 기반 한국 주식시장 분석 및 매매 시스템
+
+* **[공식 텔레그램 채널](https://t.me/prism_insight_global_en)**
+  급등주 포착 · 주식 분석 리포트 다운로드 · 매매 시뮬레이션 · 자동매매 리포트 제공
+
+    * **➡️ 글로벌(영어) 채널:**
+      [https://t.me/prism_insight_global_en](https://t.me/prism_insight_global_en)
+    * **➡️ 한국 채널:**
+      [https://t.me/stock_ai_agent](https://t.me/stock_ai_agent)
+
+* **[공식 대시보드](https://analysis.stocksimulation.kr/)**: PRISM-INSIGHT 실전매매 & 시뮬레이션 실시간 성과 대시보드 (부가적으로 AI 보유 분석, 거래내역, 관심종목 제공)
+* **커뮤니티**: [깃허브 디스커션](https://github.com/dragon1086/prism-insight/discussions) 또는 텔레그램 토론방 (@prism_insight_discuss)
+---
+
+
 
 
 ## 📖 프로젝트 개요
