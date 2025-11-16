@@ -27,7 +27,7 @@ PRISM-INSIGHT는 **한국 주식시장(코스피/코스닥) 전문** **AI 분석
 
 **✨ 모든 기능이 100% 무료로 제공됩니다!**
 
-## 📈 '25.11.12 기준 매매 시뮬레이터 및 실제 계좌 실적
+## 📈 '25.11.17 기준 매매 시뮬레이터 및 실제 계좌 실적
 ### ⭐ 시즌1 ('25.09.28 종료. 실계좌 매매 없음)
 **시뮬레이터 실적**
 - 최초 시작일 : 2025.03.15
@@ -42,19 +42,19 @@ PRISM-INSIGHT는 **한국 주식시장(코스피/코스닥) 전문** **AI 분석
 **시뮬레이터 실적**
 - 최초 시작일 : 2025.09.29
 - 총 거래 건수: 14건
-- 수익 거래: 9건
-- 손실 거래: 5건
-- 승률: 64.29%
-- **매도 종목 누적 수익률: 104.65%**
-- **포트폴리오 실현 수익률: 10.46%** (10개 슬롯으로 분산 관리, 104.65% ÷ 10)
-- 시장 수익률(시즌2 시작 대비): KOSPI +20.96%, KOSDAQ +7.06%
+- 수익 거래: 10건
+- 손실 거래: 6건
+- 승률: 62.50%
+- **매도 종목 누적 수익률: 110.99%**
+- **포트폴리오 실현 수익률: 11.10%** (10개 슬롯으로 분산 관리, 110.99% ÷ 10)
+- 시장 수익률(시즌2 시작 대비): KOSPI +16.91%, KOSDAQ +6.05%
 - **[매매 성과 요약 대시보드](https://analysis.stocksimulation.kr/)**
 
 **실제계좌 실적**
 - 최초 시작일 : 2025.09.29
 - 시작 금액: ₩9,969,801
-- 현재 총자산 (평가금액 + 예수금): ₩10,885,246
-- **수익률: +9.18%**
+- 현재 총자산 (평가금액 + 예수금): ₩10,901,561
+- **수익률: +9.35%**
 
 ## 🤖 AI 에이전트 시스템 아키텍쳐 (핵심 기능)
 
@@ -212,7 +212,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
 
 ## 🔄 에이전트 협업 워크플로우
 
-  <img src="docs/images/aiagent/agent_workflow.png" alt="시뮬레이션2" width="500">
+  <img src="docs/images/aiagent/agent_workflow2.png" alt="시뮬레이션2" width="700">
 
 
 ## 🎯 주요 기능
@@ -239,13 +239,22 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
 
 - **💱 자동매매**: 한국투자증권 API를 통해 매매시뮬레이션 결과대로 자동매매
 
-- **🎨 시각화**: 주가, 거래량, 시가총액 등 다양한 차트 생성
+- **🎨 실시간 대시보드**: AI가 매매한 종목 포트폴리오, 시장대비 실적, AI의 매매 근거, 매매히스토리, 관심종목, 시스템 유지 비용에 대한 모든 정보를 투명하게 공개
+
+  <img src="docs/images/dashboard1.png" alt="Dashboard 1" width="500">
+  <img src="docs/images/dashboard2.png" alt="Dashboard 2" width="500">
+  <img src="docs/images/dashboard3.png" alt="Dashboard 3" width="500">
+  <img src="docs/images/dashboard4.png" alt="Dashboard 4" width="500">
+  <img src="docs/images/dashboard5.png" alt="Dashboard 5" width="500">
+  <img src="docs/images/dashboard6.png" alt="Dashboard 6" width="500">
+  <img src="docs/images/dashboard7.png" alt="Dashboard 7" width="500">
 
 ## 🧠 AI 모델 활용
 
 - **핵심 분석**: OpenAI GPT-4.1 (종합 주식 분석 에이전트)
 - **매매 시뮬레이션**: OpenAI GPT-5 (투자 전략 시뮬레이션)
 - **텔레그램 대화**: Anthropic Claude Sonnet 4.5 (봇과의 상호작용)
+- **번역**: OpenAI GPT-5-NANO (텔레그램 채널 다중 언어 송출)
 
 ## 💡 사용한 MCP Servers
 

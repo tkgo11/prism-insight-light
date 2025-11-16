@@ -28,7 +28,7 @@ PRISM-INSIGHT is a **completely open-source free project** specializing in **Kor
 
 **✨ All features are provided 100% free!**
 
-## 📈 Trading Simulator and Real Account Performance as of '25.11.12
+## 📈 Trading Simulator and Real Account Performance as of '25.11.17
 ### ⭐ Season 1 (Ended '25.09.28. No real account trading)
 **Simulator Performance**
 - Start Date: 2025.03.15
@@ -42,20 +42,20 @@ PRISM-INSIGHT is a **completely open-source free project** specializing in **Kor
 ### ⭐⭐ Season 2 (In Progress)
 **Simulator Performance**
 - Start Date: 2025.09.29
-- Total Trades: 14
-- Profitable Trades: 9
-- Loss Trades: 5
-- Win Rate: 64.29%
-- **Total Cumulative Return from Sold Stocks: 104.65%**
-- **Realized Portfolio Return: 10.46%** (managed across 10 slots, 104.65% ÷ 10)
-- Market Benchmark (from Season 2 start): KOSPI +20.96%, KOSDAQ +7.06%
+- Total Trades: 16
+- Profitable Trades: 10
+- Loss Trades: 6
+- Win Rate: 62.50%
+- **Total Cumulative Return from Sold Stocks: 110.99%**
+- **Realized Portfolio Return: 11.10%** (managed across 10 slots, 110.99% ÷ 10)
+- Market Benchmark (from Season 2 start): KOSPI +16.91%, KOSDAQ +6.05%
 - **[Trading Performance Summary Dashboard](https://analysis.stocksimulation.kr/)**
 
 **Real Account Performance**
 - Start Date: 2025.09.29
 - Initial Capital: ₩9,969,801
-- Current Total Assets (Valuation + Cash): ₩10,885,246
-- **Return: +9.18%**
+- Current Total Assets (Valuation + Cash): ₩10,901,561
+- **Return: +9.35%**
 
 ## 🤖 AI Agent System Architecture (Core Feature)
 
@@ -213,7 +213,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 
 ## 🔄 Agent Collaboration Workflow
 
-  <img src="docs/images/aiagent/agent_workflow.png" alt="Agent Workflow" width="500">
+  <img src="docs/images/aiagent/agent_workflow2.png" alt="Agent Workflow" width="700">
 
 ## 🎯 Key Features
 
@@ -221,25 +221,33 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
   [![Analysis Report Demo](https://img.youtube.com/vi/4WNtaaZug74/maxresdefault.jpg)](https://youtu.be/4WNtaaZug74)
 
 - **📊 Automatic Surge Stock Detection**: Watchlist selection through hourly (morning/afternoon) market trend analysis
-  <img src="docs/images/trigger.png" alt="Surge Stock Detection" width="500">
+  <img src="docs/images/trigger-en.png" alt="Surge Stock Detection" width="500">
 
 - **📱 Automatic Telegram Transmission**: Real-time transmission of analysis results to Telegram channel
-  <img src="docs/images/summary.png" alt="Summary Transmission" width="500">
+  <img src="docs/images/summary-en.png" alt="Summary Transmission" width="500">
 
 - **📈 Trading Simulation**: Investment strategy simulation using GPT-5 based generated reports
-  <img src="docs/images/simulation1.png" alt="Simulation 1" width="500">
-  <img src="docs/images/simulation2.png" alt="Simulation 2" width="500">
+  <img src="docs/images/simulation1-en.png" alt="Simulation 1" width="500">
+  <img src="docs/images/simulation2-en.png" alt="Simulation 2" width="500">
   <img src="docs/images/season1_dashboard.png" alt="Simulation Performance" width="500">
 
 - **💱 Automated Trading**: Automatic trading according to trading simulation results through Korea Investment & Securities API
 
-- **🎨 Visualization**: Various chart generation including stock price, trading volume, market capitalization
+- **🎨 Realtime Dashboard**: We transparently disclose all information on the AI-traded portfolio, its performance relative to the market, the AI’s trading rationale, full trading history, watchlist, and system maintenance costs.
+  <img src="docs/images/dashboard1-en.png" alt="Dashboard 1" width="500">
+  <img src="docs/images/dashboard2-en.png" alt="Dashboard 2" width="500">
+  <img src="docs/images/dashboard3-en.png" alt="Dashboard 3" width="500">
+  <img src="docs/images/dashboard4-en.png" alt="Dashboard 4" width="500">
+  <img src="docs/images/dashboard5-en.png" alt="Dashboard 5" width="500">
+  <img src="docs/images/dashboard6-en.png" alt="Dashboard 6" width="500">
+  <img src="docs/images/dashboard7-en.png" alt="Dashboard 7" width="500">
 
 ## 🧠 AI Model Usage
 
 - **Core Analysis**: OpenAI GPT-4.1 (Comprehensive stock analysis agent)
 - **Trading Simulation**: OpenAI GPT-5 (Investment strategy simulation)
 - **Telegram Conversation**: Anthropic Claude Sonnet 4.5 (Bot interaction)
+- **Translation**: OpenAI GPT-5-NANO (Multilingual broadcasting on a Telegram channel)
 
 ## 💡 MCP Servers Used
 
