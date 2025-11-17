@@ -15,9 +15,6 @@
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/dragon1086?style=for-the-badge&logo=github-sponsors&color=ff69b4&label=Sponsors)](https://github.com/sponsors/dragon1086)
 [![Stars](https://img.shields.io/github/stars/dragon1086/prism-insight?style=for-the-badge)](https://github.com/dragon1086/prism-insight/stargazers)
 
-아래처럼 **섹션 제목·설명·하위 링크를 단계적으로 들여쓰기**하면 깔끔하고 읽기 쉬운 계층 구조가 됩니다.
-필요하면 아이콘이나 구분선도 넣을 수 있어요.
-
 ---
 
 ### 📊 AI 기반 한국 주식시장 분석 및 매매 시스템
