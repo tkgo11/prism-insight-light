@@ -115,10 +115,10 @@ def create_trading_scenario_agent(language: str = "ko"):
 
         ### 4. Momentum Bonus Factors
         Add buy score when these signals confirmed:
-        - Volume surge (rising interest)
+        - Volume surge (Interest rising. Need to look closely at the flow of previous breakthrough attempts and understand the flow of volume the stock needs to break through. In particular, it should be significantly stronger than the volume of cases that failed after the breakthrough attempt.)
         - Institutional/foreign net buying (capital inflow)
-        - Technical breakout 1 (trend reversal)
-        - Technical breakout 2 (box breakout upward)
+        - Technological trend shift (However, the minimum condition is that the previous high should be drilled with strong trading volume, as it can be a simple test of supply and demand of forces. Whether the trend changes or not should be accurately weighed using volume and several auxiliary indicators.)
+        - Technical box-up breakthrough (however, the candle should not only reach the high point of the existing box, but also show the movement to upgrade the box)
         - Undervalued vs peers
         - Positive industry-wide outlook
 
@@ -297,10 +297,10 @@ def create_trading_scenario_agent(language: str = "ko"):
 
         ### 4. 모멘텀 가산점 요소
         다음 신호 확인 시 매수 점수 가산:
-        - 거래량 급증 (관심 상승)
+        - 거래량 급증 (관심 상승. 이전의 돌파 시도 흐름을 면밀히 살펴보고, 이 종목이 돌파에 필요한 거래량의 흐름을 파악해야 함. 특히, 돌파 시도 후 실패했던 케이스의 거래량보다 현저히 힘이 강해야 함.)
         - 기관/외국인 순매수 (자금 유입)
-        - 기술적 돌파1 (추세 전환)
-        - 기술적 돌파2 (박스권 상향 돌파)
+        - 기술적 추세 전환 (단, 세력의 단순 수급 테스트같은 속임수일 수 있으니, 최소조건으로 직전 고점은 거래량 동반과 함께 힘있게 뚫어야 함. 추세 전환 여부를 거래량 및 여러 보조지표를 활용해 정밀하게 따져봐야 함) 
+        - 기술적 박스권 상향 돌파 (단, 캔들이 기존 박스 고점까지 가는데 그치지 않고, 박스 업그레이드 되는 움직임이 보여야 함)
         - 동종업계 대비 저평가
         - 업종 전반 긍정적 전망
 
