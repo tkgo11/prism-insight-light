@@ -604,26 +604,37 @@ class DomesticStockTrading:
                     'message': f'예약주문 매수 완료 ({buy_quantity}주, {order_type_str}, {period_str})'
                 }
             else:
-                error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
-                logger.error(f"예약주문 매수 실패: {error_msg}")
+                # 예약주문 실패 시 시장가 매수를 한번 더 시도
+                logger.error(f"예약주문 매수 실패: {res.getErrorCode()} - {res.getErrorMessage()}")
+                market_price_result = self.buy_market_price(stock_code, amount)
+                if market_price_result.get('success', False):
+                    logger.info(f"[{stock_code}] 시장가 매수를 재시도하여 성공")
+                    return market_price_result
+                else:
+                    logger.error(f"[{stock_code}] 예약주문/시장가 모두 실패")
+                    return {
+                        'success': False,
+                        'order_no': None,
+                        'stock_code': stock_code,
+                        'quantity': buy_quantity,
+                        'message': f"예약주문 실패: {res.getErrorCode()} - {res.getErrorMessage()} / 시장가 매수도 실패: {market_price_result.get('message')}"
+                    }
 
+        except Exception as e:
+            logger.error(f"예약주문 매수 중 오류: {str(e)}")
+            market_price_result = self.buy_market_price(stock_code, amount)
+            if market_price_result.get('success', False):
+                logger.info(f"[{stock_code}] 시장가 매수 재시도 성공")
+                return market_price_result
+            else:
+                logger.error(f"[{stock_code}] 예약주문/시장가 모두 오류")
                 return {
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
-                    'message': f'예약주문 실패: {error_msg}'
+                    'message': f"예약주문 매수 중 오류: {str(e)} / 시장가 매수도 오류: {market_price_result.get('message')}"
                 }
-
-        except Exception as e:
-            logger.error(f"예약주문 매수 중 오류: {str(e)}")
-            return {
-                'success': False,
-                'order_no': None,
-                'stock_code': stock_code,
-                'quantity': buy_quantity,
-                'message': f'예약주문 중 오류: {str(e)}'
-            }
 
     def sell_all_market_price(self, stock_code: str) -> Dict[str, Any]:
         """
@@ -933,26 +944,37 @@ class DomesticStockTrading:
                     'message': f'예약주문 매도 완료 ({buy_quantity}주, {order_type_str}, {period_str})'
                 }
             else:
-                error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
-                logger.error(f"예약주문 매도 실패: {error_msg}")
+                # 예약주문 실패 시 시장가 전량매도를 한번 더 시도
+                logger.error(f"예약주문 매도 실패: {res.getErrorCode()} - {res.getErrorMessage()}")
+                market_sell_result = self.sell_all_market_price(stock_code)
+                if market_sell_result.get('success', False):
+                    logger.info(f"[{stock_code}] 시장가 전량매도 재시도 성공")
+                    return market_sell_result
+                else:
+                    logger.error(f"[{stock_code}] 예약주문/시장가 매도 모두 실패")
+                    return {
+                        'success': False,
+                        'order_no': None,
+                        'stock_code': stock_code,
+                        'quantity': buy_quantity,
+                        'message': f"예약주문 실패: {res.getErrorCode()} - {res.getErrorMessage()} / 시장가 매도도 실패: {market_sell_result.get('message')}"
+                    }
 
+        except Exception as e:
+            logger.error(f"예약주문 매도 중 오류: {str(e)}")
+            market_sell_result = self.sell_all_market_price(stock_code)
+            if market_sell_result.get('success', False):
+                logger.info(f"[{stock_code}] 시장가 전량매도 재시도 성공")
+                return market_sell_result
+            else:
+                logger.error(f"[{stock_code}] 예약주문/시장가 매도 모두 오류")
                 return {
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
-                    'message': f'예약주문 실패: {error_msg}'
+                    'message': f"예약주문 매도 중 오류: {str(e)} / 시장가 매도도 오류: {market_sell_result.get('message')}"
                 }
-
-        except Exception as e:
-            logger.error(f"예약주문 매도 중 오류: {str(e)}")
-            return {
-                'success': False,
-                'order_no': None,
-                'stock_code': stock_code,
-                'quantity': buy_quantity,
-                'message': f'예약주문 중 오류: {str(e)}'
-            }
 
     async def _get_stock_lock(self, stock_code: str) -> asyncio.Lock:
         """종목별 락 반환 (동시 매매 방지)"""
