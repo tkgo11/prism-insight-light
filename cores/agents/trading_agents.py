@@ -115,10 +115,10 @@ def create_trading_scenario_agent(language: str = "ko"):
 
         ### 4. Momentum Bonus Factors
         Add buy score when these signals confirmed:
-        - Volume surge (rising interest)
+        - Volume surge (Interest rising. Need to look closely at the flow of previous breakthrough attempts and understand the flow of volume the stock needs to break through. In particular, it should be significantly stronger than the volume of cases that failed after the breakthrough attempt.)
         - Institutional/foreign net buying (capital inflow)
-        - Technical breakout 1 (trend reversal)
-        - Technical breakout 2 (box breakout upward)
+        - Technological trend shift (However, the minimum condition is that the previous high should be drilled with strong trading volume, as it can be a simple test of supply and demand of forces. Whether the trend changes or not should be accurately weighed using volume and several auxiliary indicators.)
+        - Technical box-up breakthrough (however, the candle should not only reach the high point of the existing box, but also show the movement to upgrade the box)
         - Undervalued vs peers
         - Positive industry-wide outlook
 
