@@ -437,6 +437,21 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                         else:
                             logger.error(f"Actual purchase failed: {trade_result['message']}")
 
+                        # [Optional] Redis Streams로 매수 시그널 발행
+                        # Redis가 설정되지 않으면 자동으로 스킵됨 (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN 필요)
+                        try:
+                            from messaging.redis_signal_publisher import publish_buy_signal
+                            await publish_buy_signal(
+                                ticker=ticker,
+                                company_name=company_name,
+                                price=current_price,
+                                scenario=scenario,
+                                source="AI분석",
+                                trade_result=trade_result
+                            )
+                        except Exception as signal_err:
+                            logger.warning(f"Buy signal publish failed (non-critical): {signal_err}")
+
                     if buy_success:
                         buy_count += 1
                         logger.info(f"Purchase complete: {company_name}({ticker}) @ {current_price:,.0f} KRW")
