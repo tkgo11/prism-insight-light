@@ -1120,6 +1120,22 @@ class StockTrackingAgent:
                         else:
                             logger.error(f"Actual sell failed: {trade_result['message']}")
 
+                        # [Optional] Redis Streams로 매도 시그널 발행
+                        # Redis가 설정되지 않으면 자동으로 스킵됨 (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN 필요)
+                        try:
+                            from messaging.redis_signal_publisher import publish_sell_signal
+                            await publish_sell_signal(
+                                ticker=ticker,
+                                company_name=company_name,
+                                price=current_price,
+                                buy_price=stock.get('buy_price', 0),
+                                profit_rate=((current_price - stock.get('buy_price', 0)) / stock.get('buy_price', 0) * 100),
+                                sell_reason=sell_reason,
+                                trade_result=trade_result
+                            )
+                        except Exception as signal_err:
+                            logger.warning(f"Buy signal publish failed (non-critical): {signal_err}")
+
                     if sell_success:
                         sold_stocks.append({
                             "ticker": ticker,
@@ -1347,6 +1363,21 @@ class StockTrackingAgent:
                             logger.info(f"Actual purchase successful: {trade_result['message']}")
                         else:
                             logger.error(f"Actual purchase failed: {trade_result['message']}")
+
+                        # [Optional] Redis Streams로 매수 시그널 발행
+                        # Redis가 설정되지 않으면 자동으로 스킵됨 (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN 필요)
+                        try:
+                            from messaging.redis_signal_publisher import publish_buy_signal
+                            await publish_buy_signal(
+                                ticker=ticker,
+                                company_name=company_name,
+                                price=current_price,
+                                scenario=scenario,
+                                source="AI분석",
+                                trade_result=trade_result
+                            )
+                        except Exception as signal_err:
+                            logger.warning(f"Buy signal publish failed (non-critical): {signal_err}")
 
                     if buy_success:
                         buy_count += 1
