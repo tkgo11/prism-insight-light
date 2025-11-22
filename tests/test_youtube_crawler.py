@@ -214,10 +214,24 @@ async def main():
     logger.info("YouTube Event Fund Crawler - Test Suite")
     logger.info("🧪 "*40 + "\n")
 
-    # Check environment
-    if not os.getenv("OPENAI_API_KEY"):
-        logger.error("❌ OPENAI_API_KEY not found in environment")
-        logger.error("Please set OPENAI_API_KEY in .env file")
+    # Check mcp_agent.secrets.yaml exists
+    secrets_file = Path(__file__).parent.parent / "mcp_agent.secrets.yaml"
+    if not secrets_file.exists():
+        logger.error("❌ mcp_agent.secrets.yaml not found")
+        logger.error("Please copy mcp_agent.secrets.yaml.example and configure your API keys")
+        return
+
+    import yaml
+    try:
+        with open(secrets_file, 'r') as f:
+            secrets = yaml.safe_load(f)
+        openai_api_key = secrets.get('openai', {}).get('api_key')
+        if not openai_api_key or openai_api_key == "example key":
+            logger.error("❌ OPENAI_API_KEY not configured in mcp_agent.secrets.yaml")
+            logger.error("Please set openai.api_key in the secrets file")
+            return
+    except Exception as e:
+        logger.error(f"❌ Error loading secrets file: {e}")
         return
 
     results = []
