@@ -65,13 +65,23 @@ brew install ffmpeg
 sudo dnf install ffmpeg
 ```
 
-### 2. 환경 변수 설정
+### 2. API 키 설정
 
-`.env` 파일에 OpenAI API 키가 설정되어 있는지 확인:
+`mcp_agent.secrets.yaml` 파일에 OpenAI API 키가 설정되어 있는지 확인:
 
+```yaml
+# mcp_agent.secrets.yaml
+openai:
+  api_key: "sk-..."
+
+anthropic:
+  api_key: "sk-ant-..."
+```
+
+파일이 없다면 example 파일을 복사하여 생성:
 ```bash
-# .env
-OPENAI_API_KEY="sk-..."
+cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
+# 그 후 파일을 편집하여 API 키 입력
 ```
 
 ### 3. 실행 권한 부여
@@ -258,13 +268,20 @@ sudo dnf install ffmpeg
 
 **증상**:
 ```
-Error: OPENAI_API_KEY not found
+Error: OPENAI_API_KEY not found or not configured in mcp_agent.secrets.yaml
 ```
 
 **해결**:
-`.env` 파일에 API 키 추가:
+`mcp_agent.secrets.yaml` 파일에 API 키 설정:
+```yaml
+openai:
+  api_key: "sk-..."
+```
+
+파일이 없다면:
 ```bash
-OPENAI_API_KEY="sk-..."
+cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
+# 파일을 편집하여 실제 API 키 입력
 ```
 
 ### 문제 3: RSS 피드 파싱 실패

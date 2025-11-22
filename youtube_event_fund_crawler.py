@@ -19,10 +19,10 @@ import sys
 import json
 import logging
 import asyncio
+import yaml
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
-from dotenv import load_dotenv
 
 # Third-party imports
 import feedparser
@@ -30,9 +30,6 @@ import yt_dlp
 from openai import OpenAI
 from mcp_agent.agents.agent import Agent
 from mcp_agent.app import App
-
-# Load environment variables
-load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -57,9 +54,26 @@ class YouTubeEventFundCrawler:
 
     def __init__(self):
         """Initialize crawler with OpenAI client"""
-        self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        if not self.openai_client.api_key:
-            raise ValueError("OPENAI_API_KEY not found in environment variables")
+        # Load API key from mcp_agent.secrets.yaml
+        secrets_file = Path("mcp_agent.secrets.yaml")
+        if not secrets_file.exists():
+            raise FileNotFoundError(
+                "mcp_agent.secrets.yaml not found. "
+                "Please copy mcp_agent.secrets.yaml.example and configure your API keys."
+            )
+
+        with open(secrets_file, 'r', encoding='utf-8') as f:
+            secrets = yaml.safe_load(f)
+
+        openai_api_key = secrets.get('openai', {}).get('api_key')
+        if not openai_api_key or openai_api_key == "example key":
+            raise ValueError(
+                "OPENAI_API_KEY not found or not configured in mcp_agent.secrets.yaml. "
+                "Please set openai.api_key in the secrets file."
+            )
+
+        self.openai_client = OpenAI(api_key=openai_api_key)
+        logger.info("OpenAI client initialized successfully")
 
     def fetch_latest_videos(self) -> List[Dict[str, str]]:
         """
