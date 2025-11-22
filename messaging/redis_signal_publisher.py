@@ -1,16 +1,16 @@
 """
 Redis Streams Signal Publisher
 
-PRISM-INSIGHT 매수/매도 시그널을 Redis Streams로 발행하는 모듈입니다.
-구독자들은 이 스트림을 구독하여 실시간 트레이딩 시그널을 받을 수 있습니다.
+Module for publishing PRISM-INSIGHT buy/sell signals to Redis Streams.
+Subscribers can receive real-time trading signals by subscribing to this stream.
 
-사용법:
+Usage:
     from messaging.redis_signal_publisher import SignalPublisher
 
     async with SignalPublisher() as publisher:
         await publisher.publish_buy_signal(
             ticker="005930",
-            company_name="삼성전자",
+            company_name="Samsung Electronics",
             price=82000,
             scenario=scenario_dict
         )
@@ -23,63 +23,63 @@ from typing import Dict, Any, Optional
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-# .env 파일 로드
+# Load .env file
 try:
     from dotenv import load_dotenv
-    # 프로젝트 루트 찾기 (messaging 폴더의 상위)
+    # Find project root (parent of messaging folder)
     project_root = Path(__file__).parent.parent
     env_path = project_root / ".env"
     if env_path.exists():
         load_dotenv(env_path)
 except ImportError:
-    pass  # dotenv 없으면 환경변수에서 직접 읽음
+    pass  # If dotenv is not available, read from environment variables directly
 
 logger = logging.getLogger(__name__)
 
 
 class SignalPublisher:
-    """Redis Streams 기반 트레이딩 시그널 퍼블리셔"""
-    
-    # 스트림 이름
+    """Redis Streams-based trading signal publisher"""
+
+    # Stream name
     STREAM_NAME = "prism:trading-signals"
-    
+
     def __init__(
         self,
         redis_url: Optional[str] = None,
         redis_token: Optional[str] = None
     ):
         """
-        SignalPublisher 초기화
-        
+        Initialize SignalPublisher
+
         Args:
-            redis_url: Upstash Redis REST URL (없으면 환경변수에서 읽음)
-            redis_token: Upstash Redis REST Token (없으면 환경변수에서 읽음)
+            redis_url: Upstash Redis REST URL (reads from environment variables if not provided)
+            redis_token: Upstash Redis REST Token (reads from environment variables if not provided)
         """
         self.redis_url = redis_url or os.environ.get("UPSTASH_REDIS_REST_URL")
         self.redis_token = redis_token or os.environ.get("UPSTASH_REDIS_REST_TOKEN")
         self._redis = None
-        
+
         if not self.redis_url or not self.redis_token:
             logger.warning(
                 "Redis credentials not configured. "
                 "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables."
             )
-    
+
     async def __aenter__(self):
-        """비동기 컨텍스트 매니저 진입"""
+        """Async context manager entry"""
         await self.connect()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """비동기 컨텍스트 매니저 종료"""
+        """Async context manager exit"""
         await self.disconnect()
-    
+
     async def connect(self):
-        """Redis 연결"""
+        """Connect to Redis"""
         if not self.redis_url or not self.redis_token:
             logger.warning("Redis not configured, signals will not be published")
             return
-            
+
         try:
             from upstash_redis import Redis
             self._redis = Redis(url=self.redis_url, token=self.redis_token)
@@ -92,48 +92,48 @@ class SignalPublisher:
         except Exception as e:
             logger.error(f"Redis connection failed: {str(e)}")
             self._redis = None
-    
+
     async def disconnect(self):
-        """Redis 연결 해제"""
-        # upstash-redis는 HTTP 기반이라 명시적 disconnect 불필요
+        """Disconnect from Redis"""
+        # upstash-redis is HTTP-based, no explicit disconnect needed
         self._redis = None
         logger.info("Redis disconnected")
-    
+
     def _is_connected(self) -> bool:
-        """연결 상태 확인"""
+        """Check connection status"""
         return self._redis is not None
-    
+
     async def publish_signal(
         self,
         signal_type: str,
         ticker: str,
         company_name: str,
         price: float,
-        source: str = "AI분석",
+        source: str = "AI Analysis",
         scenario: Optional[Dict[str, Any]] = None,
         extra_data: Optional[Dict[str, Any]] = None
     ) -> Optional[str]:
         """
-        트레이딩 시그널 발행
-        
+        Publish trading signal
+
         Args:
-            signal_type: 시그널 타입 ("BUY", "SELL", "EVENT" 등)
-            ticker: 종목 코드
-            company_name: 종목명
-            price: 현재가/매수가/매도가
-            source: 시그널 소스 (기본: "AI분석")
-            scenario: 매매 시나리오 정보
-            extra_data: 추가 데이터
-            
+            signal_type: Signal type ("BUY", "SELL", "EVENT", etc.)
+            ticker: Stock ticker
+            company_name: Company name
+            price: Current/buy/sell price
+            source: Signal source (default: "AI Analysis")
+            scenario: Trading scenario information
+            extra_data: Additional data
+
         Returns:
-            str: 메시지 ID (실패 시 None)
+            str: Message ID (None on failure)
         """
         if not self._is_connected():
             logger.debug(f"Redis not connected, skipping signal publish: {signal_type} {ticker}")
             return None
-        
+
         try:
-            # 시그널 데이터 구성
+            # Build signal data
             signal_data = {
                 "type": signal_type,
                 "ticker": ticker,
@@ -142,8 +142,8 @@ class SignalPublisher:
                 "source": source,
                 "timestamp": datetime.now().isoformat(),
             }
-            
-            # 시나리오 정보 추가 (주요 필드만)
+
+            # Add scenario information (key fields only)
             if scenario:
                 signal_data["target_price"] = scenario.get("target_price", 0)
                 signal_data["stop_loss"] = scenario.get("stop_loss", 0)
@@ -151,58 +151,58 @@ class SignalPublisher:
                 signal_data["sector"] = scenario.get("sector", "")
                 signal_data["rationale"] = scenario.get("rationale", "")
                 signal_data["buy_score"] = scenario.get("buy_score", 0)
-            
-            # 추가 데이터 병합
+
+            # Merge additional data
             if extra_data:
                 signal_data.update(extra_data)
-            
-            # Redis Streams에 발행 (XADD)
-            # upstash-redis 1.5.0+ 시그니처: xadd(key, id, data)
-            # id="*"로 자동 생성된 ID 사용
+
+            # Publish to Redis Streams (XADD)
+            # upstash-redis 1.5.0+ signature: xadd(key, id, data)
+            # Use id="*" for auto-generated ID
             message_id = self._redis.xadd(
                 self.STREAM_NAME,
                 "*",  # auto-generate message ID
                 {"data": json.dumps(signal_data, ensure_ascii=False)}
             )
-            
+
             logger.info(
                 f"Signal published: {signal_type} {company_name}({ticker}) "
-                f"@ {price:,.0f}원 [ID: {message_id}]"
+                f"@ {price:,.0f} KRW [ID: {message_id}]"
             )
             return message_id
-            
+
         except Exception as e:
             logger.error(f"Signal publish failed: {str(e)}")
             return None
-    
+
     async def publish_buy_signal(
         self,
         ticker: str,
         company_name: str,
         price: float,
         scenario: Optional[Dict[str, Any]] = None,
-        source: str = "AI분석",
+        source: str = "AI Analysis",
         trade_result: Optional[Dict[str, Any]] = None
     ) -> Optional[str]:
         """
-        매수 시그널 발행
-        
+        Publish buy signal
+
         Args:
-            ticker: 종목 코드
-            company_name: 종목명
-            price: 매수가
-            scenario: 매매 시나리오
-            source: 시그널 소스
-            trade_result: 실제 매매 결과 (성공 여부 등)
-            
+            ticker: Stock ticker
+            company_name: Company name
+            price: Buy price
+            scenario: Trading scenario
+            source: Signal source
+            trade_result: Actual trade result (success status, etc.)
+
         Returns:
-            str: 메시지 ID
+            str: Message ID
         """
         extra_data = {}
         if trade_result:
             extra_data["trade_success"] = trade_result.get("success", False)
             extra_data["trade_message"] = trade_result.get("message", "")
-        
+
         return await self.publish_signal(
             signal_type="BUY",
             ticker=ticker,
@@ -212,7 +212,7 @@ class SignalPublisher:
             scenario=scenario,
             extra_data=extra_data
         )
-    
+
     async def publish_sell_signal(
         self,
         ticker: str,
@@ -224,39 +224,39 @@ class SignalPublisher:
         trade_result: Optional[Dict[str, Any]] = None
     ) -> Optional[str]:
         """
-        매도 시그널 발행
-        
+        Publish sell signal
+
         Args:
-            ticker: 종목 코드
-            company_name: 종목명
-            price: 매도가
-            buy_price: 매수가
-            profit_rate: 수익률
-            sell_reason: 매도 사유
-            trade_result: 실제 매매 결과
-            
+            ticker: Stock ticker
+            company_name: Company name
+            price: Sell price
+            buy_price: Buy price
+            profit_rate: Profit rate
+            sell_reason: Sell reason
+            trade_result: Actual trade result
+
         Returns:
-            str: 메시지 ID
+            str: Message ID
         """
         extra_data = {
             "buy_price": buy_price,
             "profit_rate": profit_rate,
             "sell_reason": sell_reason,
         }
-        
+
         if trade_result:
             extra_data["trade_success"] = trade_result.get("success", False)
             extra_data["trade_message"] = trade_result.get("message", "")
-        
+
         return await self.publish_signal(
             signal_type="SELL",
             ticker=ticker,
             company_name=company_name,
             price=price,
-            source="AI분석",
+            source="AI Analysis",
             extra_data=extra_data
         )
-    
+
     async def publish_event_signal(
         self,
         ticker: str,
@@ -267,18 +267,18 @@ class SignalPublisher:
         event_description: str
     ) -> Optional[str]:
         """
-        이벤트 기반 시그널 발행 (유튜버 영상, 뉴스 등)
-        
+        Publish event-based signal (YouTuber video, news, etc.)
+
         Args:
-            ticker: 종목 코드
-            company_name: 종목명
-            price: 현재가
-            event_type: 이벤트 타입 (예: "YOUTUBE", "NEWS", "DISCLOSURE")
-            event_source: 이벤트 소스 (예: 유튜버 이름, 뉴스 매체)
-            event_description: 이벤트 설명
-            
+            ticker: Stock ticker
+            company_name: Company name
+            price: Current price
+            event_type: Event type (e.g., "YOUTUBE", "NEWS", "DISCLOSURE")
+            event_source: Event source (e.g., YouTuber name, news outlet)
+            event_description: Event description
+
         Returns:
-            str: 메시지 ID
+            str: Message ID
         """
         return await self.publish_signal(
             signal_type="EVENT",
@@ -293,12 +293,12 @@ class SignalPublisher:
         )
 
 
-# 편의를 위한 글로벌 인스턴스 (선택적 사용)
+# Global instance for convenience (optional usage)
 _global_publisher: Optional[SignalPublisher] = None
 
 
 async def get_signal_publisher() -> SignalPublisher:
-    """글로벌 SignalPublisher 인스턴스 반환"""
+    """Return global SignalPublisher instance"""
     global _global_publisher
     if _global_publisher is None:
         _global_publisher = SignalPublisher()
@@ -311,10 +311,10 @@ async def publish_buy_signal(
     company_name: str,
     price: float,
     scenario: Optional[Dict[str, Any]] = None,
-    source: str = "AI분석",
+    source: str = "AI Analysis",
     trade_result: Optional[Dict[str, Any]] = None
 ) -> Optional[str]:
-    """글로벌 퍼블리셔를 통한 매수 시그널 발행 (편의 함수)"""
+    """Publish buy signal via global publisher (convenience function)"""
     publisher = await get_signal_publisher()
     return await publisher.publish_buy_signal(
         ticker=ticker,
@@ -335,7 +335,7 @@ async def publish_sell_signal(
     sell_reason: str,
     trade_result: Optional[Dict[str, Any]] = None
 ) -> Optional[str]:
-    """글로벌 퍼블리셔를 통한 매도 시그널 발행 (편의 함수)"""
+    """Publish sell signal via global publisher (convenience function)"""
     publisher = await get_signal_publisher()
     return await publisher.publish_sell_signal(
         ticker=ticker,
