@@ -116,7 +116,22 @@ cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
 # 그 후 파일을 편집하여 API 키 입력
 ```
 
-### 3. 실행 권한 부여
+### 3. MCP Agent 설정 확인
+
+`mcp_agent.config.yaml` 파일의 OpenAI 설정을 확인:
+
+```yaml
+# mcp_agent.config.yaml
+openai:
+  default_model: gpt-4.1
+  reasoning_effort: medium  # 'low', 'medium', 'high' 중 하나 (필수)
+```
+
+**중요**: `reasoning_effort`는 반드시 `low`, `medium`, `high` 중 하나여야 합니다.
+- ❌ `none` (에러 발생)
+- ✅ `low`, `medium`, `high`
+
+### 4. 실행 권한 부여
 
 ```bash
 chmod +x youtube_event_fund_crawler.py
@@ -374,6 +389,47 @@ Error extracting audio
 - FFmpeg 설치 확인
 - 디스크 공간 확인
 - YouTube 영상 접근 가능 여부 확인
+
+### 문제 5: MCP Agent 설정 에러
+
+**증상**:
+```
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+openai.reasoning_effort
+  Input should be 'low', 'medium' or 'high' [type=literal_error, input_value='none', input_type=str]
+```
+
+**원인**:
+`mcp_agent.config.yaml` 파일의 `reasoning_effort` 설정이 잘못됨
+
+**해결**:
+`mcp_agent.config.yaml` 파일을 수정:
+```yaml
+# mcp_agent.config.yaml
+openai:
+  default_model: gpt-4.1
+  reasoning_effort: medium  # 'none' 대신 'low', 'medium', 'high' 중 하나 사용
+```
+
+**유효한 값**:
+- ✅ `low`
+- ✅ `medium`
+- ✅ `high`
+- ❌ `none` (에러 발생)
+
+### 문제 6: pydub ImportError
+
+**증상**:
+```
+ImportError: No module named 'pydub'
+```
+
+**해결**:
+```bash
+pip install pydub
+```
+
+참고: pydub는 내부적으로 FFmpeg를 사용하므로 FFmpeg도 필수입니다.
 
 ---
 
