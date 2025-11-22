@@ -498,34 +498,34 @@ class StockTrackingAgent:
                 )
             )
 
-            # JSON 파싱
-            # todo : model을 만들어서 generate_structured 함수 호출하여 코드 유지보수성 증가
-            # todo : json 변환함수 utils로 이관하여 유지보수성 증가
+            # JSON parsing
+            # TODO: Create model and call generate_structured function to improve code maintainability
+            # TODO: Move JSON conversion function to utils for better maintainability
             try:
-                # JSON 문자열 추출 함수
+                # JSON string extraction function
                 def fix_json_syntax(json_str):
-                    """JSON 문법 오류 수정"""
-                    # 1. 마지막 쉼표 제거
+                    """Fix JSON syntax errors"""
+                    # 1. Remove trailing commas
                     json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
-                    
-                    # 2. 배열 뒤에 객체 속성이 오는 경우 쉼표 추가
-                    # ] 다음에 " 가 오면 쉼표 추가 (배열 끝나고 새 속성 시작)
+
+                    # 2. Add comma after array before object property
+                    # Add comma if " follows ] (array ends and new property starts)
                     json_str = re.sub(r'(\])\s*(\n\s*")', r'\1,\2', json_str)
-                    
-                    # 3. 객체 뒤에 객체 속성이 오는 경우 쉼표 추가
-                    # } 다음에 " 가 오면 쉼표 추가 (객체 끝나고 새 속성 시작)
+
+                    # 3. Add comma after object before object property
+                    # Add comma if " follows } (object ends and new property starts)
                     json_str = re.sub(r'(})\s*(\n\s*")', r'\1,\2', json_str)
-                    
-                    # 4. 숫자나 문자열 뒤에 속성이 오는 경우 쉼표 추가
-                    # 숫자 또는 "로 끝나는 문자열 다음에 새 줄과 "가 오면 쉼표 추가
+
+                    # 4. Add comma after number or string before property
+                    # Add comma if new line and " follows number or string ending with "
                     json_str = re.sub(r'([0-9]|")\s*(\n\s*")', r'\1,\2', json_str)
-                    
-                    # 5. 중복 쉼표 제거
+
+                    # 5. Remove duplicate commas
                     json_str = re.sub(r',\s*,', ',', json_str)
-                    
+
                     return json_str
 
-                # 마크다운 코드 블록에서 JSON 추출 시도 (```json ... ```)
+                # Try extracting JSON from markdown code block (```json ... ```)
                 markdown_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', response, re.DOTALL)
                 if markdown_match:
                     json_str = markdown_match.group(1)
@@ -534,7 +534,7 @@ class StockTrackingAgent:
                     logger.info(f"Scenario parsed from markdown code block: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
 
-                # 일반 JSON 객체 추출 시도
+                # Try extracting regular JSON object
                 json_match = re.search(r'({[\s\S]*?})(?:\s*$|\n\n)', response, re.DOTALL)
                 if json_match:
                     json_str = json_match.group(1)
@@ -543,7 +543,7 @@ class StockTrackingAgent:
                     logger.info(f"Scenario parsed from regular JSON format: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
 
-                # 전체 응답이 JSON인 경우
+                # If full response is JSON
                 clean_response = fix_json_syntax(response)
                 scenario_json = json.loads(clean_response)
                 logger.info(f"Full response scenario: {json.dumps(scenario_json, ensure_ascii=False)}")
@@ -553,30 +553,30 @@ class StockTrackingAgent:
                 logger.error(f"Trading scenario JSON parse error: {json_err}")
                 logger.error(f"Original response: {response}")
 
-                # 추가 복구 시도: 더 강력한 JSON 수정
+                # Additional recovery attempt: More robust JSON fixing
                 try:
                     clean_response = re.sub(r'```(?:json)?|```', '', response).strip()
-                    
-                    # 모든 가능한 JSON 문법 오류 수정
-                    # 1. 배열/객체 끝 다음에 속성이 오는 경우 쉼표 추가
+
+                    # Fix all possible JSON syntax errors
+                    # 1. Add comma after array/object end before property
                     clean_response = re.sub(r'(\]|\})\s*(\n\s*"[^"]+"\s*:)', r'\1,\2', clean_response)
-                    
-                    # 2. 값 다음에 속성이 오는 경우 쉼표 추가
+
+                    # 2. Add comma after value before property
                     clean_response = re.sub(r'(["\d\]\}])\s*\n\s*("[^"]+"\s*:)', r'\1,\n    \2', clean_response)
-                    
-                    # 3. 마지막 쉼표 제거
+
+                    # 3. Remove trailing commas
                     clean_response = re.sub(r',(\s*[}\]])', r'\1', clean_response)
-                    
-                    # 4. 중복 쉼표 제거
+
+                    # 4. Remove duplicate commas
                     clean_response = re.sub(r',\s*,+', ',', clean_response)
-                    
+
                     scenario_json = json.loads(clean_response)
                     logger.info(f"Scenario parsed with additional recovery: {json.dumps(scenario_json, ensure_ascii=False)}")
                     return scenario_json
                 except Exception as e:
                     logger.error(f"Additional recovery attempt failed: {str(e)}")
-                    
-                    # 최후의 시도: json_repair 라이브러리 사용 가능한 경우
+
+                    # Last resort: Use json_repair library if available
                     try:
                         import json_repair
                         repaired = json_repair.repair_json(response)
@@ -586,7 +586,7 @@ class StockTrackingAgent:
                     except (ImportError, Exception):
                         pass
 
-                # 모든 파싱 시도 실패 시 기본값 반환
+                # Return default scenario if all parsing attempts fail
                 return self._default_scenario()
 
         except Exception as e:
@@ -886,13 +886,13 @@ class StockTrackingAgent:
 
     async def _analyze_sell_decision(self, stock_data: Dict[str, Any]) -> Tuple[bool, str]:
         """
-        매도 의사결정 분석
+        Sell decision analysis
 
         Args:
-            stock_data: 종목 정보
+            stock_data: Stock information
 
         Returns:
-            Tuple[bool, str]: 매도 여부, 매도 이유
+            Tuple[bool, str]: Whether to sell, sell reason
         """
         try:
             ticker = stock_data.get('ticker', '')
@@ -902,16 +902,16 @@ class StockTrackingAgent:
             target_price = stock_data.get('target_price', 0)
             stop_loss = stock_data.get('stop_loss', 0)
 
-            # 수익률 계산
+            # Calculate profit rate
             profit_rate = ((current_price - buy_price) / buy_price) * 100
 
-            # 매수일로부터 경과 일수
+            # Days elapsed from buy date
             buy_datetime = datetime.strptime(buy_date, "%Y-%m-%d %H:%M:%S")
             days_passed = (datetime.now() - buy_datetime).days
 
-            # 시나리오 정보 추출
+            # Extract scenario information
             scenario_str = stock_data.get('scenario', '{}')
-            investment_period = "중기"  # 기본값
+            investment_period = "중기"  # Default value
 
             try:
                 if isinstance(scenario_str, str):
@@ -920,46 +920,46 @@ class StockTrackingAgent:
             except:
                 pass
 
-            # 손절매 조건 확인
+            # Check stop-loss condition
             if stop_loss > 0 and current_price <= stop_loss:
                 return True, f"손절매 조건 도달 (손절가: {stop_loss:,.0f}원)"
 
-            # 목표가 도달 확인
+            # Check target price reached
             if target_price > 0 and current_price >= target_price:
                 return True, f"목표가 달성 (목표가: {target_price:,.0f}원)"
 
-            # 투자 기간별 매도 조건
+            # Sell conditions by investment period
             if investment_period == "단기":
-                # 단기 투자의 경우 더 빠른 매도 (15일 이상 보유 + 5% 이상 수익)
+                # Short-term investment: quicker sell (15+ days holding + 5%+ profit)
                 if days_passed >= 15 and profit_rate >= 5:
                     return True, f"단기 투자 목표 달성 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
-                # 단기 투자 손실 방어 (10일 이상 + 3% 이상 손실)
+                # Short-term investment loss protection (10+ days + 3%+ loss)
                 if days_passed >= 10 and profit_rate <= -3:
                     return True, f"단기 투자 손실 방어 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
-            # 기존 매도 조건
-            # 10% 이상 수익 시 매도
+            # Existing sell conditions
+            # Sell if profit >= 10%
             if profit_rate >= 10:
                 return True, f"수익률 10% 이상 달성 (현재 수익률: {profit_rate:.2f}%)"
 
-            # 5% 이상 손실 시 매도
+            # Sell if loss >= 5%
             if profit_rate <= -5:
                 return True, f"손실 -5% 이상 발생 (현재 수익률: {profit_rate:.2f}%)"
 
-            # 30일 이상 보유 시 손실이면 매도
+            # Sell if holding 30+ days with loss
             if days_passed >= 30 and profit_rate < 0:
                 return True, f"30일 이상 보유 중이며 손실 상태 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
-            # 60일 이상 보유 시 3% 이상 수익이면 매도
+            # Sell if holding 60+ days with 3%+ profit
             if days_passed >= 60 and profit_rate >= 3:
                 return True, f"60일 이상 보유 중이며 3% 이상 수익 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
-            # 장기 투자 케이스 추가 (90일 이상 보유 + 손실 상태)
+            # Long-term investment case (90+ days holding + loss)
             if investment_period == "장기" and days_passed >= 90 and profit_rate < 0:
                 return True, f"장기 투자 손실 정리 (보유일: {days_passed}일, 수익률: {profit_rate:.2f}%)"
 
-            # 기본적으로 계속 보유
+            # Continue holding by default
             return False, "계속 보유"
 
         except Exception as e:
@@ -968,14 +968,14 @@ class StockTrackingAgent:
 
     async def sell_stock(self, stock_data: Dict[str, Any], sell_reason: str) -> bool:
         """
-        주식 매도 처리
+        Stock sell processing
 
         Args:
-            stock_data: 매도할 종목 정보
-            sell_reason: 매도 이유
+            stock_data: Stock information to sell
+            sell_reason: Sell reason
 
         Returns:
-            bool: 매도 성공 여부
+            bool: Sell success status
         """
         try:
             ticker = stock_data.get('ticker', '')
@@ -985,18 +985,18 @@ class StockTrackingAgent:
             current_price = stock_data.get('current_price', 0)
             scenario_json = stock_data.get('scenario', '{}')
 
-            # 수익률 계산
+            # Calculate profit rate
             profit_rate = ((current_price - buy_price) / buy_price) * 100
 
-            # 보유 기간 계산 (일수)
+            # Calculate holding period (days)
             buy_datetime = datetime.strptime(buy_date, "%Y-%m-%d %H:%M:%S")
             now_datetime = datetime.now()
             holding_days = (now_datetime - buy_datetime).days
 
-            # 현재 시간
+            # Current time
             now = now_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
-            # 매매 내역 테이블에 추가
+            # Add to trading history table
             self.cursor.execute(
                 """
                 INSERT INTO trading_history 
@@ -1016,16 +1016,16 @@ class StockTrackingAgent:
                 )
             )
 
-            # 보유종목에서 제거
+            # Remove from holdings
             self.cursor.execute(
                 "DELETE FROM stock_holdings WHERE ticker = ?",
                 (ticker,)
             )
 
-            # 변경사항 저장
+            # Save changes
             self.conn.commit()
 
-            # 매도 메시지 추가
+            # Add sell message
             arrow = "🔺" if profit_rate > 0 else "🔻" if profit_rate < 0 else "➖"
             message = f"📉 매도: {company_name}({ticker})\n" \
                       f"매수가: {buy_price:,.0f}원\n" \
@@ -1046,18 +1046,18 @@ class StockTrackingAgent:
 
     async def update_holdings(self) -> List[Dict[str, Any]]:
         """
-        보유 종목 정보 업데이트 및 매도 의사결정
+        Update holdings information and make sell decisions
 
         Returns:
-            List[Dict]: 매도된 종목 정보 리스트
+            List[Dict]: List of sold stock information
         """
         try:
             logger.info("Starting holdings info update")
 
-            # 보유 종목 목록 조회
+            # Query holdings list
             self.cursor.execute(
-                """SELECT ticker, company_name, buy_price, buy_date, current_price, 
-                   scenario, target_price, stop_loss, last_updated 
+                """SELECT ticker, company_name, buy_price, buy_date, current_price,
+                   scenario, target_price, stop_loss, last_updated
                    FROM stock_holdings"""
             )
             holdings = [dict(row) for row in self.cursor.fetchall()]
@@ -1072,7 +1072,7 @@ class StockTrackingAgent:
                 ticker = stock.get('ticker')
                 company_name = stock.get('company_name')
 
-                # 현재 주가 조회
+                # Query current stock price
                 current_price = await self._get_current_stock_price(ticker)
 
                 if current_price <= 0:
@@ -1080,16 +1080,16 @@ class StockTrackingAgent:
                     logger.warning(f"{ticker} Current price query failed, keeping previous price: {old_price}")
                     current_price = old_price
 
-                # 주가 정보 업데이트
+                # Update stock price information
                 stock['current_price'] = current_price
 
-                # 시나리오 JSON 문자열 확인
+                # Check scenario JSON string
                 scenario_str = stock.get('scenario', '{}')
                 try:
                     if isinstance(scenario_str, str):
                         scenario_json = json.loads(scenario_str)
 
-                        # 목표가/손절가 확인 및 업데이트
+                        # Check and update target price/stop-loss
                         if 'target_price' in scenario_json and stock.get('target_price', 0) == 0:
                             stock['target_price'] = scenario_json['target_price']
 
@@ -1098,21 +1098,21 @@ class StockTrackingAgent:
                 except:
                     logger.warning(f"{ticker} Scenario JSON parse failed")
 
-                # 현재 시간
+                # Current time
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-                # 매도 여부 분석
+                # Analyze sell decision
                 should_sell, sell_reason = await self._analyze_sell_decision(stock)
 
                 if should_sell:
-                    # 매도 처리
+                    # Process sell
                     sell_success = await self.sell_stock(stock, sell_reason)
 
                     if sell_success:
-                        # 실제 계좌 매매 함수 호출(비동기)
+                        # Call actual account trading function (async)
                         from trading.domestic_stock_trading import AsyncTradingContext
                         async with AsyncTradingContext() as trading:
-                            # 비동기 매도 실행
+                            # Execute async sell
                             trade_result = await trading.async_sell_stock(stock_code=ticker)
 
                         if trade_result['success']:
@@ -1120,8 +1120,8 @@ class StockTrackingAgent:
                         else:
                             logger.error(f"Actual sell failed: {trade_result['message']}")
 
-                        # [Optional] Redis Streams로 매도 시그널 발행
-                        # Redis가 설정되지 않으면 자동으로 스킵됨 (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN 필요)
+                        # [Optional] Publish sell signal via Redis Streams
+                        # Auto-skipped if Redis not configured (requires UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN)
                         try:
                             from messaging.redis_signal_publisher import publish_sell_signal
                             await publish_sell_signal(
@@ -1146,10 +1146,10 @@ class StockTrackingAgent:
                             "reason": sell_reason
                         })
                 else:
-                    # 현재가 업데이트
+                    # Update current price
                     self.cursor.execute(
-                        """UPDATE stock_holdings 
-                           SET current_price = ?, last_updated = ? 
+                        """UPDATE stock_holdings
+                           SET current_price = ?, last_updated = ?
                            WHERE ticker = ?""",
                         (current_price, now, ticker)
                     )
@@ -1165,37 +1165,37 @@ class StockTrackingAgent:
 
     async def generate_report_summary(self) -> str:
         """
-        보유 종목 및 수익률 통계 요약 생성
+        Generate holdings and profit statistics summary
 
         Returns:
-            str: 요약 메시지
+            str: Summary message
         """
         try:
-            # 보유 종목 조회
+            # Query holdings
             self.cursor.execute(
                 "SELECT ticker, company_name, buy_price, current_price, buy_date, scenario, target_price, stop_loss FROM stock_holdings"
             )
             holdings = [dict(row) for row in self.cursor.fetchall()]
 
-            # 거래 내역에서 총 수익률 계산
+            # Calculate total profit from trading history
             self.cursor.execute("SELECT SUM(profit_rate) FROM trading_history")
             total_profit = self.cursor.fetchone()[0] or 0
 
-            # 거래 내역 건수
+            # Number of trades
             self.cursor.execute("SELECT COUNT(*) FROM trading_history")
             total_trades = self.cursor.fetchone()[0] or 0
 
-            # 성공/실패 거래 건수
+            # Number of successful/failed trades
             self.cursor.execute("SELECT COUNT(*) FROM trading_history WHERE profit_rate > 0")
             successful_trades = self.cursor.fetchone()[0] or 0
 
-            # 메시지 생성
+            # Generate message
             message = f"📊 프리즘 시뮬레이터 | 실시간 포트폴리오 ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n\n"
 
-            # 1. 포트폴리오 요약
+            # 1. Portfolio summary
             message += f"🔸 현재 보유 종목: {len(holdings) if holdings else 0}/{self.max_slots}개\n"
 
-            # 최고 수익/손실 종목 정보 (있는 경우)
+            # Best profit/loss stock information (if any)
             if holdings and len(holdings) > 0:
                 profit_rates = []
                 for h in holdings:
@@ -1214,7 +1214,7 @@ class StockTrackingAgent:
 
             message += "\n"
 
-            # 2. 산업군 분포 분석
+            # 2. Sector distribution analysis
             sector_counts = {}
 
             if holdings and len(holdings) > 0:
@@ -1229,7 +1229,7 @@ class StockTrackingAgent:
                     target_price = stock.get('target_price', 0)
                     stop_loss = stock.get('stop_loss', 0)
 
-                    # 시나리오에서 섹터 정보 추출
+                    # Extract sector information from scenario
                     sector = "알 수 없음"
                     try:
                         if isinstance(scenario_str, str):
@@ -1238,7 +1238,7 @@ class StockTrackingAgent:
                     except:
                         pass
 
-                    # 산업군 카운트 업데이트
+                    # Update sector count
                     sector_counts[sector] = sector_counts.get(sector, 0) + 1
 
                     profit_rate = ((current_price - buy_price) / buy_price) * 100 if buy_price else 0
@@ -1261,7 +1261,7 @@ class StockTrackingAgent:
             else:
                 message += "보유 중인 종목이 없습니다.\n\n"
 
-            # 3. 매매 이력 통계
+            # 3. Trading history statistics
             message += f"🔸 매매 이력 통계\n"
             message += f"- 총 거래 건수: {total_trades}건\n"
             message += f"- 수익 거래: {successful_trades}건\n"
@@ -1289,22 +1289,22 @@ class StockTrackingAgent:
 
     async def process_reports(self, pdf_report_paths: List[str]) -> Tuple[int, int]:
         """
-        분석 보고서를 처리하여 매매 의사결정 수행
+        Process analysis reports and make buy/sell decisions
 
         Args:
-            pdf_report_paths: pdf 분석 보고서 파일 경로 리스트
+            pdf_report_paths: List of pdf analysis report file paths
 
         Returns:
-            Tuple[int, int]: 매수 건수, 매도 건수
+            Tuple[int, int]: Buy count, sell count
         """
         try:
             logger.info(f"Starting processing of {len(pdf_report_paths)} reports")
 
-            # 매수, 매도 카운터
+            # Buy/sell counters
             buy_count = 0
             sell_count = 0
 
-            # 1. 기존 보유 종목 업데이트 및 매도 의사결정
+            # 1. Update existing holdings and make sell decisions
             sold_stocks = await self.update_holdings()
             sell_count = len(sold_stocks)
 
@@ -1315,21 +1315,21 @@ class StockTrackingAgent:
             else:
                 logger.info("No stocks sold")
 
-            # 2. 새로운 보고서 분석 및 매수 의사결정
+            # 2. Analyze new reports and make buy decisions
             for pdf_report_path in pdf_report_paths:
-                # 보고서 분석
+                # Analyze report
                 analysis_result = await self.analyze_report(pdf_report_path)
 
                 if not analysis_result.get("success", False):
-                    logger.error(f"Report analysis failed: {pdf_report_path} - {analysis_result.get('error', '알 수 없는 오류')}")
+                    logger.error(f"Report analysis failed: {pdf_report_path} - {analysis_result.get('error', 'Unknown error')}")
                     continue
 
-                # 이미 보유 중인 종목이면 스킵
+                # Skip if already holding this stock
                 if analysis_result.get("decision") == "보유 중":
                     logger.info(f"Skipping stock in holdings: {analysis_result.get('ticker')} - {analysis_result.get('company_name')}")
                     continue
 
-                # 종목 정보 및 시나리오
+                # Stock information and scenario
                 ticker = analysis_result.get("ticker")
                 company_name = analysis_result.get("company_name")
                 current_price = analysis_result.get("current_price", 0)
@@ -1339,24 +1339,24 @@ class StockTrackingAgent:
                 rank_change_msg = analysis_result.get("rank_change_msg", "")
                 rank_change_percentage = analysis_result.get("rank_change_percentage", 0)
 
-                # 산업군 다양성 체크 실패 시 스킵
+                # Skip if sector diversity check fails
                 if not sector_diverse:
                     logger.info(f"Purchase deferred: {company_name}({ticker}) - Preventing sector over-investment '.*'")
                     continue
 
-                # 진입 결정이면 매수 처리
+                # Process buy if entry decision
                 buy_score = scenario.get("buy_score", 0)
                 min_score = scenario.get("min_score", 0)
                 logger.info(f"Buy score check: {company_name}({ticker}) - Score: {buy_score}")
                 if analysis_result.get("decision") == "진입":
-                    # 매수 처리
+                    # Process buy
                     buy_success = await self.buy_stock(ticker, company_name, current_price, scenario, rank_change_msg)
 
                     if buy_success:
-                        # 실제 계좌 매매 함수 호출(비동기)
+                        # Call actual account trading function (async)
                         from trading.domestic_stock_trading import AsyncTradingContext
                         async with AsyncTradingContext() as trading:
-                            # 비동기 매수 실행
+                            # Execute async buy
                             trade_result = await trading.async_buy_stock(stock_code=ticker)
 
                         if trade_result['success']:
@@ -1364,8 +1364,8 @@ class StockTrackingAgent:
                         else:
                             logger.error(f"Actual purchase failed: {trade_result['message']}")
 
-                        # [Optional] Redis Streams로 매수 시그널 발행
-                        # Redis가 설정되지 않으면 자동으로 스킵됨 (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN 필요)
+                        # [Optional] Publish buy signal via Redis Streams
+                        # Auto-skipped if Redis not configured (requires UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN)
                         try:
                             from messaging.redis_signal_publisher import publish_buy_signal
                             await publish_buy_signal(
@@ -1403,41 +1403,41 @@ class StockTrackingAgent:
 
     async def send_telegram_message(self, chat_id: str, language: str = "ko") -> bool:
         """
-        텔레그램으로 메시지 전송
+        Send message via Telegram
 
         Args:
-            chat_id: 텔레그램 채널 ID (None이면 전송하지 않음)
-            language: 메시지 언어 ("ko" or "en")
+            chat_id: Telegram channel ID (no sending if None)
+            language: Message language ("ko" or "en")
 
         Returns:
-            bool: 전송 성공 여부
+            bool: Send success status
         """
         try:
-            # chat_id가 None이면 텔레그램 전송 스킵
+            # Skip Telegram sending if chat_id is None
             if not chat_id:
                 logger.info("No Telegram channel ID. Skipping message send")
 
-                # 메시지 로그 출력
+                # Log message output
                 for message in self.message_queue:
                     logger.info(f"[Message (not sent)] {message[:100]}...")
 
-                # 메시지 큐 초기화
+                # Initialize message queue
                 self.message_queue = []
-                return True  # 의도적 스킵은 성공으로 간주
+                return True  # Consider intentional skip as success
 
-            # 텔레그램 봇이 초기화되지 않았다면 로그만 출력
+            # If Telegram bot not initialized, only output logs
             if not self.telegram_bot:
                 logger.warning("Telegram bot not initialized. Please check token")
 
-                # 메시지 출력만 하고 실제 전송은 하지 않음
+                # Only output messages without actual sending
                 for message in self.message_queue:
                     logger.info(f"[Telegram message (bot not initialized)] {message[:100]}...")
 
-                # 메시지 큐 초기화
+                # Initialize message queue
                 self.message_queue = []
                 return False
 
-            #요약 보고서 생성
+            # Generate summary report
             summary = await self.generate_report_summary()
             self.message_queue.append(summary)
 
@@ -1656,17 +1656,17 @@ class StockTrackingAgent:
             return False
 
 async def main():
-    """메인 함수"""
+    """Main function"""
     import argparse
     import logging
 
-    # 로거 가져오기
+    # Get logger
     local_logger = logging.getLogger(__name__)
 
-    parser = argparse.ArgumentParser(description="주식 트래킹 및 매매 에이전트")
-    parser.add_argument("--reports", nargs="+", help="분석 보고서 파일 경로 리스트")
-    parser.add_argument("--chat-id", help="텔레그램 채널 ID")
-    parser.add_argument("--telegram-token", help="텔레그램 봇 토큰")
+    parser = argparse.ArgumentParser(description="Stock tracking and trading agent")
+    parser.add_argument("--reports", nargs="+", help="List of analysis report file paths")
+    parser.add_argument("--chat-id", help="Telegram channel ID")
+    parser.add_argument("--telegram-token", help="Telegram bot token")
 
     args = parser.parse_args()
 
@@ -1682,7 +1682,7 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        # asyncio 실행
+        # Execute asyncio
         asyncio.run(main())
     except Exception as e:
         logger.error(f"Error during program execution: {str(e)}")
