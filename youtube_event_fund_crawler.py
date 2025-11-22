@@ -29,7 +29,9 @@ import feedparser
 import yt_dlp
 from openai import OpenAI
 from mcp_agent.agents.agent import Agent
-from mcp_agent.app import App
+from mcp_agent.app import MCPApp
+from mcp_agent.workflows.llm.augmented_llm import RequestParams
+from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 
 # Setup directories
 EVENTS_DIR = Path("events")
@@ -383,12 +385,20 @@ class YouTubeEventFundCrawler:
         try:
             agent = self.create_analysis_agent(video_info, transcript)
 
-            async with App() as app:
-                # Generate analysis using the agent
-                result = await agent.generate_str(
-                    "위 지시사항에 따라 영상을 분석하고 역발상 투자 전략을 제시해주세요.",
-                    app=app
+            # Attach LLM to agent
+            llm = await agent.attach_llm(OpenAIAugmentedLLM)
+
+            # Generate analysis using the agent
+            result = await llm.generate_str(
+                message="위 지시사항에 따라 영상을 분석하고 역발상 투자 전략을 제시해주세요.",
+                request_params=RequestParams(
+                    model="gpt-4.1",
+                    maxTokens=16000,
+                    max_iterations=3,
+                    parallel_tool_calls=False,
+                    use_history=True
                 )
+            )
 
             logger.info("Analysis completed successfully")
             return result
