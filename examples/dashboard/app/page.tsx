@@ -9,6 +9,7 @@ import { PerformanceChart } from "@/components/performance-chart"
 import { AIDecisionsPage } from "@/components/ai-decisions-page"
 import { TradingHistoryPage } from "@/components/trading-history-page"
 import { WatchlistPage } from "@/components/watchlist-page"
+import { JeoninguLabPage } from "@/components/jeoningu-lab-page"
 import { StockDetailModal } from "@/components/stock-detail-modal"
 import { ProjectFooter } from "@/components/project-footer"
 import { useLanguage } from "@/components/language-provider"
@@ -17,7 +18,7 @@ import type { DashboardData, Holding } from "@/types/dashboard"
 export default function Page() {
   const { language, t } = useLanguage()
   const [data, setData] = useState<DashboardData | null>(null)
-  const [activeTab, setActiveTab] = useState<"dashboard" | "ai-decisions" | "trading" | "watchlist">("dashboard")
+  const [activeTab, setActiveTab] = useState<"dashboard" | "ai-decisions" | "trading" | "watchlist" | "jeoningu-lab">("dashboard")
   const [selectedStock, setSelectedStock] = useState<Holding | null>(null)
   const [isRealTrading, setIsRealTrading] = useState(false)
 
@@ -64,9 +65,9 @@ export default function Page() {
           <div className="space-y-6">
             {/* 운영 비용 카드 - 최상단 배치 */}
             <OperatingCostsCard costs={data.operating_costs} />
-            
+
             {/* 핵심 지표 카드 */}
-            <MetricsCards 
+            <MetricsCards
               summary={data.summary}
               realPortfolio={data.real_portfolio || []}
               tradingHistoryCount={data.trading_history?.length || 0}
@@ -95,7 +96,7 @@ export default function Page() {
                 data.trading_history?.filter(t => t.profit_rate <= 0).length || 0
               }
             />
-            
+
             {/* 실전투자 포트폴리오 - 최우선 표시 */}
             {data.real_portfolio && data.real_portfolio.length > 0 && (
               <HoldingsTable
@@ -113,9 +114,9 @@ export default function Page() {
               title={t("table.simulator")}
               isRealTrading={false}
             />
-            
+
             {/* 시장 지수 차트 - 하단 배치 */}
-            <PerformanceChart 
+            <PerformanceChart
               data={data.market_condition}
               tradingHistory={data.trading_history}
               holdings={data.holdings}
@@ -129,6 +130,8 @@ export default function Page() {
         {activeTab === "trading" && <TradingHistoryPage history={data.trading_history} summary={data.summary} />}
 
         {activeTab === "watchlist" && <WatchlistPage watchlist={data.watchlist} />}
+
+        {activeTab === "jeoningu-lab" && data.jeoningu_lab && <JeoninguLabPage data={data.jeoningu_lab} />}
       </main>
 
       {/* 프로젝트 소개 Footer */}

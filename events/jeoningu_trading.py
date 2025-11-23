@@ -3,11 +3,12 @@
 Jeon Ingu Contrarian Trading System - '전인구경제연구소' Analysis & Trading Simulator
 
 Simplified strategy:
-- Jeon says UP → Buy KODEX Inverse (114800)
+- Jeon says UP → Buy KODEX Inverse 2X (252670)
 - Jeon says NEUTRAL → Sell all positions
-- Jeon says DOWN → Buy KODEX 200 (069500)
+- Jeon says DOWN → Buy KODEX Leverage (122630)
 
 Always hold max 1 position at a time. Switch positions when sentiment changes.
+Use full balance for each trade (all-in strategy).
 """
 
 import os
@@ -40,8 +41,18 @@ from events.jeoningu_price_fetcher import get_current_price
 DATA_DIR = Path(__file__).parent
 SECRETS_DIR = Path(__file__).parent.parent
 
+# Output directories - 산출물을 하위 디렉토리에 정리
+LOGS_DIR = DATA_DIR / "logs"
+TRANSCRIPTS_DIR = DATA_DIR / "transcripts"
+AUDIO_TEMP_DIR = DATA_DIR / "audio_temp"
+
+# Create directories if not exist
+LOGS_DIR.mkdir(exist_ok=True)
+TRANSCRIPTS_DIR.mkdir(exist_ok=True)
+AUDIO_TEMP_DIR.mkdir(exist_ok=True)
+
 # Configure logging
-log_file = DATA_DIR / f"jeoningu_{datetime.now().strftime('%Y%m%d')}.log"
+log_file = LOGS_DIR / f"jeoningu_{datetime.now().strftime('%Y%m%d')}.log"
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -56,15 +67,14 @@ logger = logging.getLogger(__name__)
 CHANNEL_ID = "UCznImSIaxZR7fdLCICLdgaQ"  # 전인구경제연구소
 RSS_URL = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
 VIDEO_HISTORY_FILE = DATA_DIR / "jeoningu_video_history.json"
-AUDIO_FILE = DATA_DIR / "temp_audio.mp3"
+AUDIO_FILE = AUDIO_TEMP_DIR / "temp_audio.mp3"
 
 # Trading configuration
 INITIAL_CAPITAL = 10000000  # 1천만원 초기 자본
-POSITION_SIZE = 1000000  # 100만원 고정 포지션
 
 # Stock codes
-KODEX_200 = "069500"
-KODEX_INVERSE = "114800"
+KODEX_LEVERAGE = "122630"  # KODEX 레버리지
+KODEX_INVERSE_2X = "252670"  # KODEX 200선물인버스2X
 
 
 class JeoninguTrading:
@@ -157,8 +167,8 @@ class JeoninguTrading:
         """Extract audio from YouTube"""
         logger.info(f"Extracting audio: {video_url}")
 
-        # Clean up old files
-        for temp_file in DATA_DIR.glob('temp_audio.*'):
+        # Clean up old files in audio_temp directory
+        for temp_file in AUDIO_TEMP_DIR.glob('temp_audio.*'):
             try:
                 temp_file.unlink()
             except Exception:
@@ -166,7 +176,7 @@ class JeoninguTrading:
 
         ydl_opts = {
             'format': 'bestaudio/best',
-            'outtmpl': str(DATA_DIR / 'temp_audio.%(ext)s'),
+            'outtmpl': str(AUDIO_TEMP_DIR / 'temp_audio.%(ext)s'),
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -194,23 +204,43 @@ class JeoninguTrading:
 
         try:
             file_size = Path(audio_file).stat().st_size
-            max_size = 25 * 1024 * 1024  # 25MB
+            file_size_mb = file_size / 1024 / 1024
+            max_size = 20 * 1024 * 1024  # 20MB (보수적으로 설정)
+
+            logger.info(f"File size: {file_size_mb:.2f}MB")
+            
+            # Try to get audio duration
+            try:
+                from pydub import AudioSegment
+                audio = AudioSegment.from_mp3(audio_file)
+                duration_sec = len(audio) / 1000
+                logger.info(f"Audio duration: {duration_sec / 60:.1f} minutes ({duration_sec:.0f}s)")
+            except Exception:
+                logger.debug("Could not determine audio duration")
 
             if file_size <= max_size:
+                logger.info("Sending file to OpenAI Whisper API... (this may take several minutes for long audio)")
+                import time
+                start_time = time.time()
+                
                 with open(audio_file, "rb") as f:
                     result = self.openai_client.audio.transcriptions.create(
                         model="whisper-1",
                         file=f,
-                        language="ko"
+                        language="ko",
+                        timeout=600.0  # 10분 타임아웃 (긴 오디오 대비)
                     )
-                logger.info(f"Transcription done ({len(result.text)} chars)")
+                
+                elapsed = time.time() - start_time
+                logger.info(f"Transcription completed in {elapsed:.1f}s ({len(result.text)} chars)")
                 return result.text
             else:
                 # Split large files
+                logger.info(f"File size {file_size_mb:.2f}MB exceeds 20MB limit, splitting...")
                 return self._transcribe_large_file(audio_file)
 
         except Exception as e:
-            logger.error(f"Transcription error: {e}")
+            logger.error(f"Transcription error: {e}", exc_info=True)
             return None
 
     def _transcribe_large_file(self, audio_file: str) -> Optional[str]:
@@ -219,14 +249,25 @@ class JeoninguTrading:
             from pydub import AudioSegment
 
             audio = AudioSegment.from_mp3(audio_file)
-            chunk_length_ms = 10 * 60 * 1000  # 10 minutes
+            chunk_length_ms = 5 * 60 * 1000  # 5분 (20MB 제한을 고려한 안전한 크기)
             chunks = []
             transcripts = []
 
+            total_duration_sec = len(audio) / 1000
+            num_chunks = (len(audio) + chunk_length_ms - 1) // chunk_length_ms
+            logger.info(f"Audio duration: {total_duration_sec:.1f}s, splitting into {num_chunks} chunks")
+
             for i in range(0, len(audio), chunk_length_ms):
                 chunk = audio[i:i + chunk_length_ms]
-                chunk_file = DATA_DIR / f"temp_audio_chunk_{i//chunk_length_ms}.mp3"
+                chunk_file = AUDIO_TEMP_DIR / f"temp_audio_chunk_{i//chunk_length_ms}.mp3"
                 chunk.export(chunk_file, format="mp3")
+                
+                # Verify chunk size doesn't exceed 20MB
+                chunk_size = chunk_file.stat().st_size
+                if chunk_size > 20 * 1024 * 1024:
+                    logger.warning(f"Chunk {i//chunk_length_ms} size {chunk_size / 1024 / 1024:.2f}MB exceeds 20MB!")
+                    # Continue anyway, but log the warning
+                
                 chunks.append(chunk_file)
 
             for idx, chunk_file in enumerate(chunks, 1):
@@ -250,6 +291,7 @@ class JeoninguTrading:
                 except Exception:
                     pass
 
+            logger.info(f"Large file transcription completed: {len(transcripts)} chunks processed")
             return " ".join(transcripts)
 
         except ImportError:
@@ -264,9 +306,9 @@ class JeoninguTrading:
         Create AI agent for analysis
 
         Simplified strategy:
-        - Jeon UP → Inverse (114800)
+        - Jeon UP → Inverse 2X (252670)
         - Jeon NEUTRAL → Sell all
-        - Jeon DOWN → KODEX 200 (069500)
+        - Jeon DOWN → Leverage (122630)
         """
         instruction = f"""당신은 전인구경제연구소 콘텐츠를 분석하는 역발상 투자 전문가입니다.
 
@@ -294,18 +336,19 @@ class JeoninguTrading:
 ### 3단계: 역발상 전략 결정
 
 **투자 종목 (2개만 사용)**:
-- KODEX 200 (069500): 코스피 200 지수 추종
-- KODEX 인버스 (114800): 코스피 200 반대 방향
+- KODEX 레버리지 (122630): 코스피 200 지수 2배 추종
+- KODEX 200선물인버스2X (252670): 코스피 200 반대 방향 2배
 
 **전략 규칙**:
-1. 전인구 **상승** 기조 → 반대로 **하락**에 베팅 → **KODEX 인버스(114800) 매수**
+1. 전인구 **상승** 기조 → 반대로 **하락**에 베팅 → **KODEX 200선물인버스2X(252670) 매수**
 2. 전인구 **중립** 기조 → 관망 → **보유 종목 전량 매도 (현금화)**
-3. 전인구 **하락** 기조 → 반대로 **상승**에 베팅 → **KODEX 200(069500) 매수**
+3. 전인구 **하락** 기조 → 반대로 **상승**에 베팅 → **KODEX 레버리지(122630) 매수**
 
 **포지션 관리**:
-- 항상 1개 종목만 보유 (069500 또는 114800)
+- 항상 1개 종목만 보유 (122630 또는 252670)
 - 다른 종목으로 전환 시: 기존 보유 종목 매도 → 새 종목 매수
 - 중립일 때: 보유 종목 있으면 무조건 매도
+- 매수 시: **가용 잔액 전액 투자** (올인 전략)
 
 ## 출력 형식 (JSON)
 
@@ -322,10 +365,10 @@ class JeoninguTrading:
   "content_type": "본인의견" | "스킵",
   "jeon_sentiment": "상승" | "하락" | "중립",
   "jeon_reasoning": "전인구의 핵심 발언을 2-3개 문장으로 요약",
-  "contrarian_action": "인버스매수" | "KODEX매수" | "전량매도",
+  "contrarian_action": "인버스2X매수" | "레버리지매수" | "전량매도",
   "target_stock": {{
-    "code": "114800" | "069500" | null,
-    "name": "KODEX 인버스" | "KODEX 200" | null
+    "code": "252670" | "122630" | null,
+    "name": "KODEX 200선물인버스2X" | "KODEX 레버리지" | null
   }},
   "telegram_summary": "텔레그램 메시지 내용 (5줄 이내, 이모지 포함)"
 }}
@@ -334,7 +377,7 @@ class JeoninguTrading:
 ## 중요 사항
 - **반드시 valid JSON만 출력** (마크다운 코드블록 제거)
 - 자막 내용만 근거로 분석 (추측 금지)
-- 종목은 069500, 114800 중 하나만 선택
+- 종목은 122630, 252670 중 하나만 선택
 - 중립일 때는 target_stock을 null로 설정
 """
 
@@ -397,20 +440,36 @@ class JeoninguTrading:
 
             summary = analysis.get('telegram_summary', '')
             video_url = analysis['video_info']['video_url']
+            video_title = analysis['video_info']['title']
             sentiment = analysis.get('jeon_sentiment', '알 수 없음')
             action = analysis.get('contrarian_action', '관망')
 
             message_text = f"""
-📺 전인구 최신 분석 (역발상 관점)
+🧪 <b>전인구 역발상 투자 실험</b>
+
+<i>전인구경제연구소의 예측과 정반대로 베팅하는 시뮬레이션입니다.
+커뮤니티에서 유명한 '전반꿀' 전략의 실제 효과를 검증하는 실험입니다.</i>
+
+━━━━━━━━━━━━━━━━━━━━
+
+📺 <b>최신 영상 분석</b>
+<b>{video_title}</b>
 
 {summary}
 
-📊 전인구 기조: {sentiment}
-💡 역발상 액션: {action}
+📊 전인구 기조: <b>{sentiment}</b>
+💡 역발상 액션: <b>{action}</b>
 
-🔗 영상: {video_url}
+🔗 <a href="{video_url}">영상 보기</a>
 
-⚠️ 투자 권유 아님. 참고용 정보입니다.
+━━━━━━━━━━━━━━━━━━━━
+
+📈 <b>실시간 실적 확인</b>
+https://stocksimulation.kr/ 접속 후
+<b>'실험실'</b> 탭을 클릭하세요!
+
+⚠️ 본 정보는 투자 권유가 아닌 참고용 정보입니다.
+💼 모든 투자 결정과 그 결과에 대한 책임은 투자자 본인에게 있습니다.
 """.strip()
 
             bot = Bot(token=self.telegram_bot_token)
@@ -418,7 +477,7 @@ class JeoninguTrading:
                 chat_id=self.telegram_channel_id,
                 text=message_text,
                 parse_mode='HTML',
-                disable_web_page_preview=False
+                disable_web_page_preview=True
             )
 
             logger.info(f"Telegram sent (message_id: {message.message_id})")
@@ -428,16 +487,86 @@ class JeoninguTrading:
             logger.error(f"Telegram send error: {e}")
             return None
 
+    async def send_portfolio_status_message(self) -> Optional[int]:
+        """Send portfolio status summary to Telegram"""
+        if not self.use_telegram:
+            return None
+
+        try:
+            from telegram import Bot
+
+            # Get current data
+            position = await self.db.get_current_position()
+            balance = await self.db.get_latest_balance()
+            metrics = await self.db.calculate_performance_metrics()
+
+            # Build message
+            message_parts = ["📊 **포트폴리오 현황**\n"]
+
+            # Current position
+            if position:
+                current_price = get_current_price(position['stock_code'])
+                current_value = position['quantity'] * current_price
+                unrealized_pl = current_value - position['buy_amount']
+                unrealized_pl_pct = (unrealized_pl / position['buy_amount']) * 100
+
+                message_parts.append(f"🔹 보유 종목: {position['stock_name']}")
+                message_parts.append(f"  - 수량: {position['quantity']:,}주")
+                message_parts.append(f"  - 매수가: {position['buy_price']:,.0f}원")
+                message_parts.append(f"  - 현재가: {current_price:,.0f}원")
+                message_parts.append(f"  - 평가액: {current_value:,.0f}원")
+                message_parts.append(f"  - 평가손익: {unrealized_pl:+,.0f}원 ({unrealized_pl_pct:+.2f}%)\n")
+            else:
+                message_parts.append(f"🔹 보유 종목: 없음 (현금 보유)\n")
+
+            # Balance
+            message_parts.append(f"💰 현재 잔액: {balance:,.0f}원")
+            message_parts.append(f"💵 초기 자본: {INITIAL_CAPITAL:,.0f}원\n")
+
+            # Performance metrics
+            message_parts.append(f"📈 **누적 성과**")
+            message_parts.append(f"  - 총 거래 횟수: {metrics['total_trades']}회")
+            message_parts.append(f"  - 승리: {metrics['winning_trades']}회 / 패배: {metrics['losing_trades']}회")
+            message_parts.append(f"  - 승률: {metrics['win_rate']:.1f}%")
+            message_parts.append(f"  - 누적 수익률: {metrics['cumulative_return']:+.2f}%")
+            
+            if metrics['total_trades'] > 0:
+                message_parts.append(f"  - 평균 거래당 수익률: {metrics['avg_return_per_trade']:+.2f}%")
+
+            message_text = "\n".join(message_parts)
+
+            bot = Bot(token=self.telegram_bot_token)
+            message = await bot.send_message(
+                chat_id=self.telegram_channel_id,
+                text=message_text,
+                parse_mode='Markdown',
+                disable_web_page_preview=True
+            )
+
+            logger.info(f"Portfolio status sent (message_id: {message.message_id})")
+            return message.message_id
+
+        except Exception as e:
+            logger.error(f"Portfolio status send error: {e}")
+            return None
+
     async def execute_trading_strategy(self, analysis: Dict):
         """
         Execute trading strategy based on analysis
 
         Strategy:
-        - UP → Buy Inverse (114800)
+        - UP → Buy Inverse 2X (252670) with full balance
         - NEUTRAL → Sell all
-        - DOWN → Buy KODEX 200 (069500)
+        - DOWN → Buy Leverage (122630) with full balance
         """
         try:
+            video_info = analysis['video_info']
+            
+            # Check if this video was already processed
+            if await self.db.video_id_exists(video_info['video_id']):
+                logger.warning(f"Video {video_info['video_id']} already processed, skipping trade execution")
+                return
+
             sentiment = analysis.get('jeon_sentiment')
             action = analysis.get('contrarian_action')
             target_stock = analysis.get('target_stock', {})
@@ -450,7 +579,6 @@ class JeoninguTrading:
             if current_balance == 0:
                 current_balance = INITIAL_CAPITAL
 
-            video_info = analysis['video_info']
             analyzed_date = datetime.now().isoformat()
 
             # Determine what to do
@@ -583,9 +711,9 @@ class JeoninguTrading:
                     logger.info(f"이미 {target_name} 보유 중")
                     return
 
-                # Step 2: Buy target stock - get real price
+                # Step 2: Buy target stock with FULL BALANCE - get real price
                 buy_price = get_current_price(target_code)
-                quantity = int(POSITION_SIZE / buy_price)
+                quantity = int(current_balance / buy_price)  # 전액 투자
                 buy_amount = quantity * buy_price
 
                 buy_trade = {
@@ -606,11 +734,11 @@ class JeoninguTrading:
                     'balance_before': current_balance,
                     'balance_after': current_balance,  # Balance unchanged (cash→stock)
                     'cumulative_return_pct': ((current_balance - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100,
-                    'notes': f"{sentiment} 기조 → 역발상 {target_name} 매수"
+                    'notes': f"{sentiment} 기조 → 역발상 {target_name} 전액 매수 ({buy_amount:,.0f}원)"
                 }
                 await self.db.insert_trade(buy_trade)
                 trades_executed.append(buy_trade)
-                logger.info(f"✅ BUY: {target_name} x {quantity} @ {buy_price}")
+                logger.info(f"✅ BUY: {target_name} x {quantity} @ {buy_price:,} (전액 투자: {buy_amount:,.0f}원)")
 
             # Log performance metrics
             metrics = await self.db.calculate_performance_metrics()
@@ -621,11 +749,12 @@ class JeoninguTrading:
 
     def cleanup_temp_files(self):
         """Cleanup temporary audio files"""
-        for temp_file in DATA_DIR.glob('temp_audio*'):
+        for temp_file in AUDIO_TEMP_DIR.glob('temp_audio*'):
             try:
                 temp_file.unlink()
-            except Exception:
-                pass
+                logger.debug(f"Cleaned up: {temp_file.name}")
+            except Exception as e:
+                logger.warning(f"Failed to clean up {temp_file.name}: {e}")
 
     async def process_new_video(self, video_info: Dict) -> Optional[Dict]:
         """Process new video: extract, transcribe, analyze, trade"""
@@ -642,12 +771,14 @@ class JeoninguTrading:
             if not transcript:
                 return None
 
-            # Save transcript
-            transcript_file = DATA_DIR / f"transcript_{video_info['id']}.txt"
+            # Save transcript to transcripts directory
+            transcript_file = TRANSCRIPTS_DIR / f"transcript_{video_info['id']}.txt"
             with open(transcript_file, 'w', encoding='utf-8') as f:
                 f.write(f"Video: {video_info['title']}\n")
-                f.write(f"URL: {video_info['link']}\n\n")
+                f.write(f"URL: {video_info['link']}\n")
+                f.write(f"Date: {video_info['published']}\n\n")
                 f.write(transcript)
+            logger.info(f"Transcript saved: {transcript_file.name}")
 
             # Analyze
             analysis = await self.analyze_video(video_info, transcript)
@@ -659,11 +790,14 @@ class JeoninguTrading:
                 logger.info("Content type '스킵', skipping")
                 return analysis
 
-            # Send Telegram
+            # Send Telegram (analysis summary)
             await self.send_telegram_message(analysis)
 
             # Execute trading
             await self.execute_trading_strategy(analysis)
+
+            # Send portfolio status message
+            await self.send_portfolio_status_message()
 
             return analysis
 
