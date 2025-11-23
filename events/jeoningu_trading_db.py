@@ -1,8 +1,10 @@
 """
-Jeon Ingu Contrarian Trading - SQLite Database Schema (Simplified)
+Jeon Ingu Contrarian Trading - Integrated with stock_tracking_db.sqlite
 
-Single table design for event-specific trading simulation.
-Stores video analysis and trade history in one unified table.
+Enhanced table design:
+- Each video creates one row
+- Trade information recorded when action taken
+- Proper linking between BUY and SELL via related_buy_id
 """
 
 import aiosqlite
@@ -15,8 +17,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Database file location
-DB_FILE = Path(__file__).parent / "jeoningu_trading.db"
+# Database file location - shared with main PRISM trading system
+DB_FILE = Path(__file__).parent.parent / "stock_tracking_db.sqlite"
 
 
 class JeoninguTradingDB:
@@ -26,26 +28,27 @@ class JeoninguTradingDB:
         self.db_path = db_path
 
     async def initialize(self):
-        """Initialize database table"""
+        """Initialize jeoningu_trades table in shared database"""
         async with aiosqlite.connect(self.db_path) as db:
-            # Single unified table for all trading history
+            # Single table for all Jeon Ingu trading history
+            # Each video = 1 row, with optional trade information
             await db.execute("""
                 CREATE TABLE IF NOT EXISTS jeoningu_trades (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-                    -- Video information
-                    video_id TEXT NOT NULL,
+                    -- Video information (every row has this)
+                    video_id TEXT NOT NULL UNIQUE,
                     video_title TEXT NOT NULL,
                     video_date TEXT NOT NULL,
                     video_url TEXT NOT NULL,
                     analyzed_date TEXT NOT NULL,
 
-                    -- Analysis results
+                    -- AI Analysis results (every row has this)
                     jeon_sentiment TEXT NOT NULL,
                     jeon_reasoning TEXT,
                     contrarian_action TEXT NOT NULL,
 
-                    -- Trade execution
+                    -- Trade execution (only when action taken)
                     trade_type TEXT,
                     stock_code TEXT,
                     stock_name TEXT,
@@ -53,38 +56,49 @@ class JeoninguTradingDB:
                     price REAL DEFAULT 0,
                     amount REAL DEFAULT 0,
 
-                    -- Performance tracking
+                    -- Profit tracking (only for SELL)
+                    related_buy_id INTEGER,
                     profit_loss REAL DEFAULT 0,
                     profit_loss_pct REAL DEFAULT 0,
-                    cumulative_balance REAL NOT NULL,
+
+                    -- Portfolio tracking
+                    balance_before REAL NOT NULL,
+                    balance_after REAL NOT NULL,
                     cumulative_return_pct REAL DEFAULT 0,
 
                     -- Metadata
                     notes TEXT,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+                    FOREIGN KEY (related_buy_id) REFERENCES jeoningu_trades(id)
                 )
             """)
 
-            # Create index for faster queries
+            # Create indexes
             await db.execute("""
-                CREATE INDEX IF NOT EXISTS idx_video_id
+                CREATE INDEX IF NOT EXISTS idx_jeoningu_video_id
                 ON jeoningu_trades(video_id)
             """)
 
             await db.execute("""
-                CREATE INDEX IF NOT EXISTS idx_trade_date
-                ON jeoningu_trades(analyzed_date)
+                CREATE INDEX IF NOT EXISTS idx_jeoningu_analyzed_date
+                ON jeoningu_trades(analyzed_date DESC)
+            """)
+
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_jeoningu_trade_type
+                ON jeoningu_trades(trade_type)
             """)
 
             await db.commit()
-            logger.info(f"Database initialized at {self.db_path}")
+            logger.info(f"Jeon Ingu tables initialized in {self.db_path}")
 
     async def insert_trade(self, trade_data: Dict[str, Any]) -> int:
         """
-        Insert trade record
+        Insert video analysis and optional trade
 
         Args:
-            trade_data: Dictionary containing trade information
+            trade_data: Dictionary with video info + analysis + optional trade info
 
         Returns:
             Inserted row ID
@@ -95,9 +109,9 @@ class JeoninguTradingDB:
                     video_id, video_title, video_date, video_url, analyzed_date,
                     jeon_sentiment, jeon_reasoning, contrarian_action,
                     trade_type, stock_code, stock_name, quantity, price, amount,
-                    profit_loss, profit_loss_pct, cumulative_balance, cumulative_return_pct,
-                    notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    related_buy_id, profit_loss, profit_loss_pct,
+                    balance_before, balance_after, cumulative_return_pct, notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 trade_data['video_id'],
                 trade_data['video_title'],
@@ -113,27 +127,24 @@ class JeoninguTradingDB:
                 trade_data.get('quantity', 0),
                 trade_data.get('price', 0),
                 trade_data.get('amount', 0),
+                trade_data.get('related_buy_id'),
                 trade_data.get('profit_loss', 0),
                 trade_data.get('profit_loss_pct', 0),
-                trade_data['cumulative_balance'],
+                trade_data['balance_before'],
+                trade_data['balance_after'],
                 trade_data.get('cumulative_return_pct', 0),
                 trade_data.get('notes', '')
             ))
             await db.commit()
             trade_id = cursor.lastrowid
-            logger.info(f"Trade inserted: ID {trade_id}, Action {trade_data['contrarian_action']}")
+            logger.info(f"Jeon Ingu trade inserted: ID {trade_id}, Action {trade_data['contrarian_action']}")
             return trade_id
 
     async def get_latest_balance(self) -> float:
-        """
-        Get latest cumulative balance
-
-        Returns:
-            Latest balance, or 0 if no records
-        """
+        """Get latest balance after last trade"""
         async with aiosqlite.connect(self.db_path) as db:
             async with db.execute("""
-                SELECT cumulative_balance
+                SELECT balance_after
                 FROM jeoningu_trades
                 ORDER BY id DESC
                 LIMIT 1
@@ -143,16 +154,17 @@ class JeoninguTradingDB:
 
     async def get_current_position(self) -> Optional[Dict[str, Any]]:
         """
-        Get current holding position (if any)
+        Get current holding position
 
-        Returns:
-            Dictionary with position info, or None if no position
+        Logic:
+        - Find last BUY
+        - Check if there's a SELL after it
+        - If no SELL, that's the current position
         """
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
 
-            # Find last BUY that hasn't been SELL yet
-            # Strategy: only 1 position at a time, so last BUY is current position
+            # Find last BUY
             async with db.execute("""
                 SELECT * FROM jeoningu_trades
                 WHERE trade_type = 'BUY'
@@ -164,38 +176,31 @@ class JeoninguTradingDB:
             if not last_buy:
                 return None
 
-            # Check if there's a SELL after this BUY
+            # Check if there's a SELL that references this BUY
             async with db.execute("""
                 SELECT COUNT(*) FROM jeoningu_trades
-                WHERE trade_type = 'SELL' AND id > ?
+                WHERE trade_type = 'SELL' AND related_buy_id = ?
             """, (last_buy['id'],)) as cursor:
                 sell_count = (await cursor.fetchone())[0]
 
             if sell_count > 0:
-                # Position was already sold
+                # Position was sold
                 return None
 
             # Return current position
             return {
+                'buy_id': last_buy['id'],
                 'stock_code': last_buy['stock_code'],
                 'stock_name': last_buy['stock_name'],
                 'quantity': last_buy['quantity'],
                 'buy_price': last_buy['price'],
                 'buy_amount': last_buy['amount'],
                 'buy_date': last_buy['analyzed_date'],
-                'buy_id': last_buy['id']
+                'video_id': last_buy['video_id']
             }
 
     async def get_trade_history(self, limit: int = 100) -> List[Dict[str, Any]]:
-        """
-        Get trade history
-
-        Args:
-            limit: Maximum number of records to return
-
-        Returns:
-            List of trade dictionaries
-        """
+        """Get trade history (all rows, including HOLD)"""
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
             async with db.execute("""
@@ -207,16 +212,11 @@ class JeoninguTradingDB:
                 return [dict(row) for row in rows]
 
     async def calculate_performance_metrics(self) -> Dict[str, Any]:
-        """
-        Calculate overall performance metrics
-
-        Returns:
-            Dictionary with performance metrics
-        """
+        """Calculate performance metrics from SELL trades"""
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
 
-            # Get all SELL trades for win/loss calculation
+            # Get all SELL trades
             async with db.execute("""
                 SELECT profit_loss, profit_loss_pct
                 FROM jeoningu_trades
@@ -241,45 +241,40 @@ class JeoninguTradingDB:
 
             # Get latest cumulative return
             async with db.execute("""
-                SELECT cumulative_return_pct
+                SELECT cumulative_return_pct, balance_after
                 FROM jeoningu_trades
                 ORDER BY id DESC
                 LIMIT 1
             """) as cursor:
                 latest = await cursor.fetchone()
                 cumulative_return = latest['cumulative_return_pct'] if latest else 0.0
+                latest_balance = latest['balance_after'] if latest else 0.0
 
             # Calculate average return per trade
-            avg_return = sum(t['profit_loss_pct'] for t in sell_trades) / total_trades if total_trades > 0 else 0.0
+            avg_return = sum(t['profit_loss_pct'] for t in sell_trades) / total_trades
 
-            metrics = {
+            return {
                 "total_trades": total_trades,
                 "winning_trades": winning_trades,
                 "losing_trades": losing_trades,
                 "win_rate": (winning_trades / total_trades * 100) if total_trades > 0 else 0.0,
                 "cumulative_return": cumulative_return,
-                "avg_return_per_trade": avg_return
+                "avg_return_per_trade": avg_return,
+                "latest_balance": latest_balance
             }
 
-            return metrics
-
-    async def get_dashboard_summary(self) -> Dict[str, Any]:
-        """
-        Get summary data for dashboard visualization
-
-        Returns:
-            Dictionary with summary data
-        """
+    async def get_dashboard_data(self) -> Dict[str, Any]:
+        """Get all data for dashboard visualization"""
         metrics = await self.calculate_performance_metrics()
-        recent_trades = await self.get_trade_history(limit=20)
-        current_position = await self.get_current_position()
-        latest_balance = await self.get_latest_balance()
+        history = await self.get_trade_history(limit=50)
+        position = await self.get_current_position()
+        balance = await self.get_latest_balance()
 
         return {
             "performance": metrics,
-            "recent_trades": recent_trades,
-            "current_position": current_position,
-            "latest_balance": latest_balance,
+            "trade_history": history,
+            "current_position": position,
+            "current_balance": balance,
             "generated_at": datetime.now().isoformat()
         }
 
@@ -287,10 +282,10 @@ class JeoninguTradingDB:
 # Utility functions
 
 async def init_database():
-    """Initialize database (call once on first run)"""
+    """Initialize database tables"""
     db = JeoninguTradingDB()
     await db.initialize()
-    logger.info("Database initialized successfully")
+    logger.info("Jeon Ingu database initialized")
 
 
 # Test function
@@ -299,15 +294,15 @@ async def test_database():
     db = JeoninguTradingDB()
     await db.initialize()
 
-    # Test initial trade
-    trade_data = {
-        "video_id": "test123",
-        "video_title": "Test Video",
+    # Scenario 1: First video → BUY
+    buy_trade = {
+        "video_id": "test001",
+        "video_title": "전인구: 시장 상승할 것 같다",
         "video_date": "2025-11-23",
-        "video_url": "https://youtube.com/watch?v=test123",
+        "video_url": "https://youtube.com/watch?v=test001",
         "analyzed_date": datetime.now().isoformat(),
         "jeon_sentiment": "상승",
-        "jeon_reasoning": "긍정적 지표",
+        "jeon_reasoning": "긍정적 지표 언급",
         "contrarian_action": "인버스매수",
         "trade_type": "BUY",
         "stock_code": "114800",
@@ -315,10 +310,58 @@ async def test_database():
         "quantity": 100,
         "price": 10000,
         "amount": 1000000,
-        "cumulative_balance": 10000000,
-        "notes": "Test trade"
+        "balance_before": 10000000,
+        "balance_after": 9000000,  # 1M used for purchase
+        "notes": "첫 매수"
     }
-    trade_id = await db.insert_trade(trade_data)
+    buy_id = await db.insert_trade(buy_trade)
+    print(f"✅ BUY trade inserted: ID {buy_id}")
+
+    # Scenario 2: Second video → SELL (neutral sentiment)
+    sell_trade = {
+        "video_id": "test002",
+        "video_title": "전인구: 잘 모르겠다",
+        "video_date": "2025-11-24",
+        "video_url": "https://youtube.com/watch?v=test002",
+        "analyzed_date": datetime.now().isoformat(),
+        "jeon_sentiment": "중립",
+        "jeon_reasoning": "명확한 방향성 없음",
+        "contrarian_action": "전량매도",
+        "trade_type": "SELL",
+        "stock_code": "114800",
+        "stock_name": "KODEX 인버스",
+        "quantity": 100,
+        "price": 10500,
+        "amount": 1050000,
+        "related_buy_id": buy_id,  # Link to previous BUY
+        "profit_loss": 50000,
+        "profit_loss_pct": 5.0,
+        "balance_before": 9000000,
+        "balance_after": 10050000,
+        "cumulative_return_pct": 0.5,  # (10050000 - 10000000) / 10000000 * 100
+        "notes": "중립 기조로 전량 매도"
+    }
+    sell_id = await db.insert_trade(sell_trade)
+    print(f"✅ SELL trade inserted: ID {sell_id}, linked to BUY ID {buy_id}")
+
+    # Scenario 3: Third video → HOLD (same sentiment, no action)
+    hold_trade = {
+        "video_id": "test003",
+        "video_title": "전인구: 여전히 중립",
+        "video_date": "2025-11-25",
+        "video_url": "https://youtube.com/watch?v=test003",
+        "analyzed_date": datetime.now().isoformat(),
+        "jeon_sentiment": "중립",
+        "jeon_reasoning": "계속 애매함",
+        "contrarian_action": "관망",
+        "trade_type": "HOLD",  # No actual trade
+        "balance_before": 10050000,
+        "balance_after": 10050000,
+        "cumulative_return_pct": 0.5,
+        "notes": "보유 종목 없음, 현금 보유"
+    }
+    hold_id = await db.insert_trade(hold_trade)
+    print(f"✅ HOLD record inserted: ID {hold_id}")
 
     # Check current position
     position = await db.get_current_position()
@@ -328,7 +371,7 @@ async def test_database():
     metrics = await db.calculate_performance_metrics()
     print(f"Metrics: {metrics}")
 
-    print(f"✅ Test completed. Trade ID: {trade_id}")
+    print("✅ Test completed!")
 
 
 if __name__ == "__main__":
