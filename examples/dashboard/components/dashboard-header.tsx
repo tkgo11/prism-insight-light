@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/tooltip"
 
 interface DashboardHeaderProps {
-  activeTab: "dashboard" | "ai-decisions" | "trading" | "watchlist"
-  onTabChange: (tab: "dashboard" | "ai-decisions" | "trading" | "watchlist") => void
+  activeTab: "dashboard" | "ai-decisions" | "trading" | "watchlist" | "jeoningu-lab"
+  onTabChange: (tab: "dashboard" | "ai-decisions" | "trading" | "watchlist" | "jeoningu-lab") => void
   lastUpdated?: string
 }
 
@@ -107,6 +107,17 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
               className="font-medium"
             >
               {t("header.watchlist")}
+            </Button>
+            <Button
+              variant={activeTab === "jeoningu-lab" ? "secondary" : "ghost"}
+              onClick={() => onTabChange("jeoningu-lab")}
+              className={`font-medium ${
+                activeTab === "jeoningu-lab"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                  : "hover:bg-purple-50 dark:hover:bg-purple-950"
+              }`}
+            >
+              🧪 {language === "ko" ? "실험실" : "Lab"}
             </Button>
           </nav>
 
@@ -226,6 +237,18 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
             className="font-medium whitespace-nowrap"
           >
             {t("header.watchlist")}
+          </Button>
+          <Button
+            variant={activeTab === "jeoningu-lab" ? "secondary" : "ghost"}
+            onClick={() => onTabChange("jeoningu-lab")}
+            size="sm"
+            className={`font-medium whitespace-nowrap ${
+              activeTab === "jeoningu-lab"
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                : "hover:bg-purple-50 dark:hover:bg-purple-950"
+            }`}
+          >
+            🧪 {language === "ko" ? "실험실" : "Lab"}
           </Button>
         </nav>
       </div>

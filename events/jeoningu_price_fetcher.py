@@ -1,7 +1,7 @@
 """
 Jeon Ingu Trading - Real-time price fetcher using pykrx
 
-Fetches current prices for KODEX 200 and KODEX Inverse
+Fetches current prices for KODEX Leverage and KODEX Inverse 2X
 """
 
 from pykrx import stock
@@ -11,8 +11,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Stock codes
-KODEX_200 = "069500"
-KODEX_INVERSE = "114800"
+KODEX_LEVERAGE = "122630"
+KODEX_INVERSE_2X = "252670"
 
 
 def get_latest_trading_date() -> str:
@@ -96,7 +96,7 @@ def get_stock_price(stock_code: str, date: str = None) -> dict:
 
 def get_kodex_prices(date: str = None) -> dict:
     """
-    Get prices for both KODEX 200 and KODEX Inverse
+    Get prices for both KODEX Leverage and KODEX Inverse 2X
 
     Args:
         date: Date in YYYYMMDD format (default: latest trading day)
@@ -107,13 +107,13 @@ def get_kodex_prices(date: str = None) -> dict:
     if date is None:
         date = get_latest_trading_date()
 
-    kodex_200_price = get_stock_price(KODEX_200, date)
-    kodex_inverse_price = get_stock_price(KODEX_INVERSE, date)
+    kodex_leverage_price = get_stock_price(KODEX_LEVERAGE, date)
+    kodex_inverse_2x_price = get_stock_price(KODEX_INVERSE_2X, date)
 
     return {
         "date": date,
-        "KODEX_200": kodex_200_price,
-        "KODEX_INVERSE": kodex_inverse_price
+        "KODEX_LEVERAGE": kodex_leverage_price,
+        "KODEX_INVERSE_2X": kodex_inverse_2x_price
     }
 
 
@@ -134,10 +134,10 @@ def get_current_price(stock_code: str) -> int:
     else:
         # Fallback to mock prices if API fails
         logger.warning(f"Using mock price for {stock_code}")
-        if stock_code == KODEX_200:
-            return 10000  # Mock
-        elif stock_code == KODEX_INVERSE:
-            return 10000  # Mock
+        if stock_code == KODEX_LEVERAGE:
+            return 20000  # Mock for Leverage
+        elif stock_code == KODEX_INVERSE_2X:
+            return 5000  # Mock for Inverse 2X
         else:
             return 10000
 
@@ -154,11 +154,11 @@ if __name__ == "__main__":
 
     # Get KODEX prices
     prices = get_kodex_prices()
-    print(f"\nKODEX 200: {prices['KODEX_200']}")
-    print(f"KODEX Inverse: {prices['KODEX_INVERSE']}")
+    print(f"\nKODEX Leverage: {prices['KODEX_LEVERAGE']}")
+    print(f"KODEX Inverse 2X: {prices['KODEX_INVERSE_2X']}")
 
     # Get current price
-    current_200 = get_current_price(KODEX_200)
-    current_inverse = get_current_price(KODEX_INVERSE)
-    print(f"\nCurrent KODEX 200: {current_200:,}원")
-    print(f"Current KODEX Inverse: {current_inverse:,}원")
+    current_leverage = get_current_price(KODEX_LEVERAGE)
+    current_inverse_2x = get_current_price(KODEX_INVERSE_2X)
+    print(f"\nCurrent KODEX Leverage: {current_leverage:,}원")
+    print(f"Current KODEX Inverse 2X: {current_inverse_2x:,}원")
