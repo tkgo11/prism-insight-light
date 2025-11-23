@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Jeon Contrarian Trading System - '전인구경제연구소' Analysis & Trading Bot
+Jeon Ingu Contrarian Trading System - '전인구경제연구소' Analysis & Trading Simulator
 
 This bot monitors the YouTube channel '전인구경제연구소', analyzes content using AI,
 and implements contrarian trading strategies (betting against Jeon's predictions).
@@ -8,9 +8,9 @@ and implements contrarian trading strategies (betting against Jeon's predictions
 Workflow:
 1. Monitor RSS feed for new videos
 2. Extract and transcribe audio using OpenAI Whisper
-3. Analyze content with AI to detect market sentiment
-4. Generate contrarian investment recommendations
-5. Execute automated trading (future integration)
+3. Analyze content with AI to detect market sentiment → Structured JSON output
+4. Generate Telegram message and send to channel
+5. Execute simulated trading and save to SQLite database
 """
 
 import os
@@ -20,9 +20,10 @@ import logging
 import asyncio
 import yaml
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
+from decimal import Decimal
 
 # Third-party imports
 import feedparser
@@ -33,12 +34,17 @@ from mcp_agent.app import MCPApp
 from mcp_agent.workflows.llm.augmented_llm import RequestParams
 from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 
+# Add parent directory to path for imports
+sys.path.append(str(Path(__file__).parent.parent))
+
+from events.jeoningu_trading_db import JeoninguTradingDB
+
 # Setup directories - script is now in events/ directory
-DATA_DIR = Path(".")  # Current directory (events/)
-SECRETS_DIR = Path("..")  # Parent directory for config files
+DATA_DIR = Path(__file__).parent  # events/ directory
+SECRETS_DIR = Path(__file__).parent.parent  # Parent directory for config files
 
 # Configure logging
-log_file = DATA_DIR / f"jeon_contrarian_{datetime.now().strftime('%Y%m%d')}.log"
+log_file = DATA_DIR / f"jeoningu_{datetime.now().strftime('%Y%m%d')}.log"
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -52,15 +58,24 @@ logger = logging.getLogger(__name__)
 # Constants
 CHANNEL_ID = "UCznImSIaxZR7fdLCICLdgaQ"  # 전인구경제연구소
 RSS_URL = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
-VIDEO_HISTORY_FILE = DATA_DIR / "jeon_video_history.json"
+VIDEO_HISTORY_FILE = DATA_DIR / "jeoningu_video_history.json"
 AUDIO_FILE = DATA_DIR / "temp_audio.mp3"
 
+# Trading configuration
+INITIAL_CAPITAL = 10000000  # 1천만원 초기 자본
+DEFAULT_POSITION_SIZE = 1000000  # 100만원 기본 포지션 크기
 
-class JeonContrarianTrading:
-    """Main trading bot class for contrarian strategy based on Jeon's analysis"""
 
-    def __init__(self):
-        """Initialize trading bot with OpenAI client"""
+class JeoninguTrading:
+    """Main trading bot class for contrarian strategy based on Jeon Ingu's analysis"""
+
+    def __init__(self, use_telegram: bool = True):
+        """
+        Initialize trading bot with OpenAI client and database
+
+        Args:
+            use_telegram: Whether to send messages to Telegram
+        """
         # Load API key from mcp_agent.secrets.yaml
         secrets_file = SECRETS_DIR / "mcp_agent.secrets.yaml"
         if not secrets_file.exists():
@@ -80,7 +95,28 @@ class JeonContrarianTrading:
             )
 
         self.openai_client = OpenAI(api_key=openai_api_key)
-        logger.info("OpenAI client initialized successfully")
+        self.db = JeoninguTradingDB()
+        self.use_telegram = use_telegram
+
+        # Load Telegram config if enabled
+        if self.use_telegram:
+            self._load_telegram_config()
+
+        logger.info("JeoninguTrading initialized successfully")
+
+    def _load_telegram_config(self):
+        """Load Telegram bot token and channel ID from .env"""
+        from dotenv import load_dotenv
+        load_dotenv(SECRETS_DIR / ".env")
+
+        self.telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+        self.telegram_channel_id = os.getenv("TELEGRAM_CHANNEL_ID")
+
+        if not self.telegram_bot_token or not self.telegram_channel_id:
+            logger.warning("Telegram not configured - disabling Telegram features")
+            self.use_telegram = False
+        else:
+            logger.info("Telegram configuration loaded")
 
     def fetch_latest_videos(self) -> List[Dict[str, str]]:
         """
@@ -326,6 +362,7 @@ class JeonContrarianTrading:
     def create_analysis_agent(self, video_info: Dict, transcript: str) -> Agent:
         """
         Create AI agent for content analysis and investment recommendation
+        Returns structured JSON output instead of Markdown
 
         Args:
             video_info: Video metadata dictionary
@@ -346,129 +383,119 @@ class JeonContrarianTrading:
 
 ## 분석 과제
 
+당신의 임무는 영상을 분석하고 **구조화된 JSON 형식**으로 결과를 출력하는 것입니다.
+
 ### 1단계: 콘텐츠 유형 판별
-다음을 확인하세요:
 - 전인구 본인이 직접 출연하여 의견을 제시하는 영상인가?
 - 단순 뉴스 요약이나 게스트 인터뷰만 있는 영상은 아닌가?
 
-**판별 결과**: "전인구 본인 의견" 또는 "스킵 대상" 중 하나로 명시
+**판별 결과**: "본인의견" 또는 "스킵" 중 하나
 
-### 2단계: 시장 전망 분석 (전인구 본인 의견인 경우만)
-전인구가 시장에 대해 어떤 기조로 말하고 있는지 분석:
-- **상승 기조**: 낙관적 전망, 매수 추천, 긍정적 시그널 강조
-- **하락 기조**: 비관적 전망, 매도/관망 추천, 부정적 시그널 강조
-- **중립 기조**: 명확한 방향성 없음
+### 2단계: 시장 전망 분석
+전인구가 시장에 대해 어떤 기조로 말하고 있는지:
+- **상승**: 낙관적 전망, 매수 추천, 긍정적 시그널 강조
+- **하락**: 비관적 전망, 매도/관망 추천, 부정적 시그널 강조
+- **중립**: 명확한 방향성 없음
 
-**시장 기조 판단**: 상승/하락/중립 중 하나로 명시
-**근거**: 자막에서 해당 판단을 내린 핵심 발언 인용 (3-5개)
+### 3단계: 역발상 투자 전략
+전인구의 의견과 **반대** 방향으로 베팅:
 
-### 3단계: 콘텐츠 요약
-영상의 핵심 내용을 3-5개 불릿 포인트로 요약
-- 주요 논점
-- 언급된 경제 지표나 이슈
-- 구체적으로 언급된 종목/섹터 (있는 경우)
+**상승 기조 → 하락에 베팅 (인버스 ETF)**:
+- KODEX 인버스 (114800)
+- TIGER 인버스 (252670)
+- KODEX 코스닥150 인버스 (251340)
 
-### 4단계: 역발상 투자 전략 (Contrarian Investment)
-전인구의 의견과 **반대** 방향으로 베팅하는 전략 제시:
+**하락 기조 → 상승에 베팅 (레버리지 ETF)**:
+- KODEX 레버리지 (122630)
+- TIGER 레버리지 (233740)
+- KODEX 코스닥150 레버리지 (233160)
 
-**만약 상승 기조라면 (하락에 베팅)**:
-- 인버스(Inverse) ETF/ETN 추천
-  - KODEX 인버스 (114800)
-  - TIGER 인버스 (252670)
-  - KODEX 코스닥150 인버스 (251340)
-- 방어주 추천 (헬스케어, 필수소비재 등)
-- 풋옵션 전략 가능 종목
+**중립 기조 → 관망**
 
-**만약 하락 기조라면 (상승에 베팅)**:
-- 레버리지(Leverage) ETF/ETN 추천
-  - KODEX 레버리지 (122630)
-  - TIGER 레버리지 (233740)
-  - KODEX 코스닥150 레버리지 (233160)
-- 성장주/모멘텀주 추천
-- 콜옵션 전략 가능 종목
+## 출력 형식 (JSON)
 
-**만약 중립 기조라면**:
-- 관망 추천
-- 변동성 관련 상품 검토
+다음 JSON 스키마를 **반드시** 따라 출력하세요:
 
-### 5단계: 리스크 경고
-역발상 전략의 리스크 명시:
-- 전인구의 의견이 맞을 경우의 손실 시나리오
-- 권장 손절매 비율 (예: -5%, -10%)
-- 포지션 사이징 권장 (전체 자산의 몇 %로 제한)
-
-## 출력 형식
-다음 형식으로 구조화된 분석 결과를 출력하세요:
-
-```
-# 전인구경제연구소 역발상 투자 분석
-
-## 📺 영상 정보
-- **제목**: {video_info['title']}
-- **게시일**: {video_info['published']}
-- **URL**: {video_info['link']}
-
-## 1️⃣ 콘텐츠 유형 판별
-[전인구 본인 의견 / 스킵 대상]
-
-## 2️⃣ 시장 기조 분석
-**판단**: [상승/하락/중립]
-
-**근거**:
-- [인용1]
-- [인용2]
-- [인용3]
-
-## 3️⃣ 영상 내용 요약
-- 핵심 논점 1
-- 핵심 논점 2
-- 핵심 논점 3
-
-## 4️⃣ 역발상 투자 전략
-### 추천 포지션: [매수/매도/관망]
-
-### 추천 종목/상품
-1. **[종목명] (종목코드)**
-   - 유형: [ETF/ETN/개별주]
-   - 이유: ...
-
-2. **[종목명] (종목코드)**
-   - 유형: [ETF/ETN/개별주]
-   - 이유: ...
-
-### 진입 전략
-- 타이밍: ...
-- 분할매수 권장: ...
-
-## 5️⃣ 리스크 관리
-- ⚠️ 손절매: -X% 도달 시 무조건 청산
-- ⚠️ 포지션 크기: 전체 자산의 Y% 이하로 제한
-- ⚠️ 전인구 의견이 맞을 경우 예상 손실: ...
+```json
+{{
+  "video_info": {{
+    "video_id": "{video_info['id']}",
+    "title": "{video_info['title']}",
+    "published_date": "{video_info['published']}",
+    "video_url": "{video_info['link']}",
+    "analyzed_date": "{datetime.now().isoformat()}"
+  }},
+  "content_type": "본인의견" | "스킵",
+  "jeon_analysis": {{
+    "market_sentiment": "상승" | "하락" | "중립",
+    "key_quotes": [
+      "자막에서 인용한 핵심 발언 1",
+      "자막에서 인용한 핵심 발언 2",
+      "자막에서 인용한 핵심 발언 3"
+    ],
+    "summary": [
+      "핵심 논점 1",
+      "핵심 논점 2",
+      "핵심 논점 3"
+    ],
+    "mentioned_stocks": [
+      {{"code": "005930", "name": "삼성전자"}},
+      {{"code": "000660", "name": "SK하이닉스"}}
+    ]
+  }},
+  "contrarian_strategy": {{
+    "action": "매수" | "매도" | "관망",
+    "reasoning": "역발상 전략의 근거를 2-3문장으로 설명",
+    "target_stocks": [
+      {{
+        "code": "114800",
+        "name": "KODEX 인버스",
+        "type": "ETF",
+        "reason": "전인구의 상승 전망에 반대하여 하락 베팅"
+      }}
+    ],
+    "entry_timing": "즉시 진입" | "조정 대기" | "분할 매수",
+    "position_size_pct": 10,
+    "confidence_score": 0.75
+  }},
+  "risk_management": {{
+    "stop_loss_pct": -7,
+    "target_profit_pct": 15,
+    "max_position_pct": 10,
+    "warning": "역발상 전략의 리스크 경고 메시지"
+  }},
+  "telegram_summary": {{
+    "title": "📺 전인구 최신 분석 (역발상 관점)",
+    "content": "텔레그램 메시지로 보낼 요약 (5-7줄, 이모지 포함)",
+    "hashtags": ["#전인구", "#역발상투자", "#인버스ETF"]
+  }}
+}}
 ```
 
-## 주의사항
-- 자막 내용만을 근거로 분석하세요 (추측 금지)
-- 전인구가 직접 언급하지 않은 종목은 신중하게 추천하세요
-- 역발상 전략의 높은 리스크를 명확히 경고하세요
-- 투자 권유가 아닌 정보 제공 목적임을 명시하세요
+## 중요 사항
+- **반드시 valid JSON만 출력**하세요 (마크다운 코드블록 없이)
+- 자막 내용만을 근거로 분석 (추측 금지)
+- confidence_score는 0.0~1.0 사이 값
+- 텔레그램 요약은 간결하고 실용적으로 작성
 """
 
         return Agent(
-            name="youtube_event_fund_analyst",
+            name="jeoningu_contrarian_analyst",
             instruction=instruction,
             server_names=[]  # No MCP servers needed for transcript analysis
         )
 
-    async def analyze_video(self, video_info: Dict, transcript: str) -> str:
+    async def analyze_video(self, video_info: Dict, transcript: str) -> Optional[Dict]:
         """
         Analyze video content using AI agent
+        Returns structured JSON data instead of markdown text
 
         Args:
             video_info: Video metadata
             transcript: Transcribed text
 
         Returns:
-            Analysis result text
+            Analysis result as dictionary, or None on failure
         """
         logger.info(f"Analyzing video: {video_info['title']}")
 
@@ -476,7 +503,7 @@ class JeonContrarianTrading:
             agent = self.create_analysis_agent(video_info, transcript)
 
             # Initialize MCPApp context
-            app = MCPApp(name="jeon_contrarian_trading_analysis")
+            app = MCPApp(name="jeoningu_trading_analysis")
 
             async with app.run() as _:
                 # Attach LLM to agent within MCPApp context
@@ -484,7 +511,7 @@ class JeonContrarianTrading:
 
                 # Generate analysis using the agent
                 result = await llm.generate_str(
-                    message="위 지시사항에 따라 영상을 분석하고 역발상 투자 전략을 제시해주세요.",
+                    message="위 지시사항에 따라 영상을 분석하고 역발상 투자 전략을 JSON 형식으로 출력해주세요.",
                     request_params=RequestParams(
                         model="gpt-5",
                         maxTokens=16000,
@@ -494,12 +521,179 @@ class JeonContrarianTrading:
                     )
                 )
 
-            logger.info("Analysis completed successfully")
-            return result
+            # Parse JSON from result
+            # Sometimes LLM returns JSON in markdown code block, clean it
+            result_clean = result.strip()
+            if result_clean.startswith("```json"):
+                result_clean = result_clean[7:]
+            if result_clean.startswith("```"):
+                result_clean = result_clean[3:]
+            if result_clean.endswith("```"):
+                result_clean = result_clean[:-3]
+            result_clean = result_clean.strip()
 
+            analysis_data = json.loads(result_clean)
+            logger.info("Analysis completed successfully")
+
+            return analysis_data
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON from LLM response: {e}")
+            logger.error(f"Raw response: {result[:500]}...")
+            return None
         except Exception as e:
             logger.error(f"Error during analysis: {e}", exc_info=True)
-            return f"분석 실패: {str(e)}"
+            return None
+
+    async def send_telegram_message(self, analysis: Dict) -> Optional[int]:
+        """
+        Send analysis summary to Telegram channel
+
+        Args:
+            analysis: Analysis result dictionary
+
+        Returns:
+            Message ID if sent successfully, None otherwise
+        """
+        if not self.use_telegram:
+            logger.info("Telegram disabled, skipping message send")
+            return None
+
+        try:
+            from telegram import Bot
+
+            telegram_data = analysis.get('telegram_summary', {})
+
+            # Build message text
+            title = telegram_data.get('title', '📺 전인구 최신 분석')
+            content = telegram_data.get('content', '')
+            hashtags = ' '.join(telegram_data.get('hashtags', []))
+
+            video_url = analysis['video_info']['video_url']
+
+            message_text = f"""
+{title}
+
+{content}
+
+🔗 영상 보기: {video_url}
+
+{hashtags}
+
+⚠️ 본 정보는 투자 권유가 아닌 참고용입니다.
+""".strip()
+
+            bot = Bot(token=self.telegram_bot_token)
+            message = await bot.send_message(
+                chat_id=self.telegram_channel_id,
+                text=message_text,
+                parse_mode='HTML',
+                disable_web_page_preview=False
+            )
+
+            logger.info(f"Telegram message sent successfully (message_id: {message.message_id})")
+            return message.message_id
+
+        except Exception as e:
+            logger.error(f"Failed to send Telegram message: {e}", exc_info=True)
+            return None
+
+    async def execute_simulated_trade(self, analysis: Dict) -> Optional[int]:
+        """
+        Execute simulated trade based on analysis and save to database
+
+        Args:
+            analysis: Analysis result dictionary
+
+        Returns:
+            Trade ID if executed, None otherwise
+        """
+        try:
+            contrarian = analysis.get('contrarian_strategy', {})
+            action = contrarian.get('action')
+
+            if action == '관망':
+                logger.info("Strategy is 관망 (wait), skipping trade")
+                return None
+
+            target_stocks = contrarian.get('target_stocks', [])
+            if not target_stocks:
+                logger.warning("No target stocks specified")
+                return None
+
+            # Use first target stock
+            stock = target_stocks[0]
+            stock_code = stock['code']
+            stock_name = stock['name']
+
+            # Get current price (mock for now - integrate with pykrx later)
+            # TODO: Fetch real price from pykrx
+            current_price = 10000  # Mock price
+
+            # Calculate quantity based on position size
+            position_size = DEFAULT_POSITION_SIZE
+            quantity = int(position_size / current_price)
+            total_amount = quantity * current_price
+
+            video_id = analysis['video_info']['video_id']
+
+            # Save video to database
+            await self.db.insert_video({
+                'video_id': video_id,
+                'title': analysis['video_info']['title'],
+                'published_date': analysis['video_info']['published_date'],
+                'analyzed_date': analysis['video_info']['analyzed_date'],
+                'video_url': analysis['video_info']['video_url'],
+                'transcript_summary': ' '.join(analysis['jeon_analysis']['summary'][:3])
+            })
+
+            # Save analysis to database
+            analysis_id = await self.db.insert_analysis({
+                'video_id': video_id,
+                'jeon_prediction': analysis['jeon_analysis']['market_sentiment'],
+                'jeon_reasoning': ' '.join(analysis['jeon_analysis']['key_quotes'][:2]),
+                'contrarian_strategy': action,
+                'contrarian_reasoning': contrarian.get('reasoning', ''),
+                'target_stocks': target_stocks,
+                'confidence_score': contrarian.get('confidence_score', 0.5),
+                'raw_analysis': analysis
+            })
+
+            # Execute BUY trade
+            if action == '매수':
+                trade_id = await self.db.insert_trade({
+                    'video_id': video_id,
+                    'analysis_id': analysis_id,
+                    'stock_code': stock_code,
+                    'stock_name': stock_name,
+                    'trade_type': 'BUY',
+                    'trade_date': datetime.now().isoformat(),
+                    'quantity': quantity,
+                    'price': current_price,
+                    'total_amount': total_amount,
+                    'strategy_note': stock.get('reason', '')
+                })
+
+                # Add to portfolio
+                await self.db.update_portfolio(stock_code, {
+                    'stock_name': stock_name,
+                    'buy_trade_id': trade_id,
+                    'video_id': video_id,
+                    'quantity': quantity,
+                    'avg_buy_price': current_price,
+                    'total_investment': total_amount,
+                    'buy_date': datetime.now().isoformat(),
+                    'strategy_note': stock.get('reason', '')
+                })
+
+                logger.info(f"✅ BUY executed: {stock_name} ({stock_code}) x {quantity} @ {current_price}")
+                return trade_id
+
+            # TODO: Implement SELL logic (check portfolio for existing positions)
+
+        except Exception as e:
+            logger.error(f"Error executing simulated trade: {e}", exc_info=True)
+            return None
 
     def cleanup_temp_files(self):
         """Remove temporary audio files including chunks"""
@@ -527,15 +721,15 @@ class JeonContrarianTrading:
         else:
             logger.debug("No temporary audio files to clean up")
 
-    async def process_new_video(self, video_info: Dict) -> Optional[str]:
+    async def process_new_video(self, video_info: Dict) -> Optional[Dict]:
         """
-        Process a new video: extract audio, transcribe, analyze
+        Process a new video: extract audio, transcribe, analyze, send telegram, execute trade
 
         Args:
             video_info: Video metadata dictionary
 
         Returns:
-            Analysis result text, or None on failure
+            Analysis result dictionary, or None on failure
         """
         logger.info(f"Processing new video: {video_info['title']}")
 
@@ -560,14 +754,38 @@ class JeonContrarianTrading:
                 f.write(transcript)
             logger.info(f"Transcript saved to: {transcript_file}")
 
-            # Step 3: Analyze content
+            # Step 3: Analyze content (get structured JSON)
             analysis = await self.analyze_video(video_info, transcript)
+            if not analysis:
+                logger.error("Analysis failed")
+                return None
 
-            # Save analysis result
-            analysis_file = DATA_DIR / f"analysis_{video_info['id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-            with open(analysis_file, 'w', encoding='utf-8') as f:
-                f.write(analysis)
-            logger.info(f"Analysis saved to: {analysis_file}")
+            # Check if content should be skipped
+            if analysis.get('content_type') == '스킵':
+                logger.info("Content type is '스킵', skipping further processing")
+                return analysis
+
+            # Step 4: Send Telegram message
+            message_id = await self.send_telegram_message(analysis)
+            if message_id:
+                # Record telegram message in DB
+                await self.db.insert_telegram_message({
+                    'video_id': analysis['video_info']['video_id'],
+                    'analysis_id': 0,  # Will be updated after trade execution
+                    'message_text': analysis['telegram_summary']['content'],
+                    'channel_id': self.telegram_channel_id,
+                    'sent_at': datetime.now().isoformat(),
+                    'message_id': message_id
+                })
+
+            # Step 5: Execute simulated trade
+            trade_id = await self.execute_simulated_trade(analysis)
+            if trade_id:
+                logger.info(f"Trade executed successfully (trade_id: {trade_id})")
+
+            # Step 6: Calculate and log performance metrics
+            metrics = await self.db.calculate_performance_metrics()
+            logger.info(f"Performance: Win rate {metrics['win_rate']:.1f}%, Cumulative return {metrics['cumulative_return']:.2f}%")
 
             return analysis
 
@@ -587,10 +805,13 @@ class JeonContrarianTrading:
             video_url: YouTube video URL
         """
         logger.info("="*80)
-        logger.info("Jeon Contrarian Trading - Single Video Mode")
+        logger.info("Jeon Ingu Contrarian Trading - Single Video Mode")
         logger.info("="*80)
 
         try:
+            # Initialize database
+            await self.db.initialize()
+
             # Create video info from URL
             video_info = {
                 'title': 'Manual Video Input',
@@ -606,15 +827,15 @@ class JeonContrarianTrading:
             if analysis:
                 # Print analysis to console
                 print("\n" + "="*80)
-                print("ANALYSIS RESULT")
+                print("ANALYSIS RESULT (JSON)")
                 print("="*80)
-                print(analysis)
+                print(json.dumps(analysis, ensure_ascii=False, indent=2))
                 print("="*80 + "\n")
             else:
                 logger.warning("Failed to analyze video")
 
             logger.info("="*80)
-            logger.info("Jeon Contrarian Trading - Completed")
+            logger.info("Jeon Ingu Contrarian Trading - Completed")
             logger.info("="*80)
 
         except Exception as e:
@@ -624,10 +845,13 @@ class JeonContrarianTrading:
     async def run(self):
         """Main execution workflow"""
         logger.info("="*80)
-        logger.info("Jeon Contrarian Trading - Starting")
+        logger.info("Jeon Ingu Contrarian Trading - Starting")
         logger.info("="*80)
 
         try:
+            # Initialize database
+            await self.db.initialize()
+
             # Step 1: Fetch latest videos from RSS
             current_videos = self.fetch_latest_videos()
             if not current_videos:
@@ -670,11 +894,11 @@ class JeonContrarianTrading:
                 analysis = await self.process_new_video(video)
 
                 if analysis:
-                    # Print analysis to console
+                    # Print analysis summary to console
                     print("\n" + "="*80)
-                    print("ANALYSIS RESULT")
+                    print("ANALYSIS RESULT (JSON)")
                     print("="*80)
-                    print(analysis)
+                    print(json.dumps(analysis, ensure_ascii=False, indent=2))
                     print("="*80 + "\n")
                 else:
                     logger.warning(f"Failed to analyze video: {video['title']}")
@@ -683,7 +907,7 @@ class JeonContrarianTrading:
             self.save_video_history(current_videos)
 
             logger.info("="*80)
-            logger.info("Jeon Contrarian Trading - Completed")
+            logger.info("Jeon Ingu Contrarian Trading - Completed")
             logger.info("="*80)
 
         except Exception as e:
@@ -695,15 +919,18 @@ async def main():
     """Entry point"""
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description="Jeon Contrarian Trading - 전인구경제연구소 역발상 투자 분석",
+        description="Jeon Ingu Contrarian Trading - 전인구경제연구소 역발상 투자 분석 및 시뮬레이션",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Normal mode (monitor RSS feed for new videos)
-  python events/jeon_contrarian_trading.py
+  python events/jeoningu_trading.py
 
   # Test mode (process specific video URL)
-  python events/jeon_contrarian_trading.py --video-url "https://www.youtube.com/watch?v=VIDEO_ID"
+  python events/jeoningu_trading.py --video-url "https://www.youtube.com/watch?v=VIDEO_ID"
+
+  # Disable Telegram
+  python events/jeoningu_trading.py --no-telegram
         """
     )
     parser.add_argument(
@@ -711,19 +938,24 @@ Examples:
         type=str,
         help='Process a specific YouTube video URL (test mode)'
     )
+    parser.add_argument(
+        '--no-telegram',
+        action='store_true',
+        help='Disable Telegram message sending'
+    )
 
     args = parser.parse_args()
 
     try:
-        crawler = YouTubeEventFundCrawler()
+        bot = JeoninguTrading(use_telegram=not args.no_telegram)
 
         if args.video_url:
             # Single video mode
             logger.info(f"🎯 Test mode: Processing single video")
-            await crawler.process_single_video_url(args.video_url)
+            await bot.process_single_video_url(args.video_url)
         else:
             # Normal RSS monitoring mode
-            await crawler.run()
+            await bot.run()
 
     except KeyboardInterrupt:
         logger.info("Interrupted by user")
