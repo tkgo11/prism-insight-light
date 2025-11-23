@@ -12,6 +12,14 @@ events/*
 !events/jeoningu_trading.py
 !events/jeoningu_trading_db.py
 !events/jeoningu_price_fetcher.py
+!events/logs/
+!events/transcripts/
+!events/audio_temp/
+
+# 하위 디렉토리 안의 실제 파일들은 무시
+events/logs/*
+events/transcripts/*
+events/audio_temp/*
 
 # Python cache files
 __pycache__/
