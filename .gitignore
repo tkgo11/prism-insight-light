@@ -6,10 +6,11 @@ mcp_agent.config.yaml
 mcp_agent.secrets.yaml
 config.py
 
-# Jeon Contrarian Trading 출력 파일
+# Jeon Ingu Trading 출력 파일 및 데이터
 events/*
-!events/JEON_CONTRARIAN_TRADING.md
-!events/jeon_contrarian_trading.py
+!events/JEONINGU_TRADING.md
+!events/jeoningu_trading.py
+!events/jeoningu_trading_db.py
 
 # Python cache files
 __pycache__/
