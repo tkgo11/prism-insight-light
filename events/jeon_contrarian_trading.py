@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-YouTube Event Fund Crawler - '전인구경제연구소' Analysis System
+Jeon Contrarian Trading System - '전인구경제연구소' Analysis & Trading Bot
 
-This script monitors the YouTube channel '전인구경제연구소' for new videos,
-transcribes them using OpenAI Whisper API, analyzes the content, and provides
-contrarian investment recommendations.
+This bot monitors the YouTube channel '전인구경제연구소', analyzes content using AI,
+and implements contrarian trading strategies (betting against Jeon's predictions).
 
 Workflow:
-1. Fetch latest videos from RSS feed
-2. Compare with previous video list (stored in JSON)
-3. Extract audio and transcribe with Whisper API
-4. Analyze content and generate contrarian investment recommendations
-5. Log results (future: integrate with automated trading)
+1. Monitor RSS feed for new videos
+2. Extract and transcribe audio using OpenAI Whisper
+3. Analyze content with AI to detect market sentiment
+4. Generate contrarian investment recommendations
+5. Execute automated trading (future integration)
 """
 
 import os
@@ -34,12 +33,12 @@ from mcp_agent.app import MCPApp
 from mcp_agent.workflows.llm.augmented_llm import RequestParams
 from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 
-# Setup directories
-EVENTS_DIR = Path("events")
-EVENTS_DIR.mkdir(exist_ok=True)
+# Setup directories - script is now in events/ directory
+DATA_DIR = Path(".")  # Current directory (events/)
+SECRETS_DIR = Path("..")  # Parent directory for config files
 
 # Configure logging
-log_file = EVENTS_DIR / f"youtube_crawler_{datetime.now().strftime('%Y%m%d')}.log"
+log_file = DATA_DIR / f"jeon_contrarian_{datetime.now().strftime('%Y%m%d')}.log"
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -53,17 +52,17 @@ logger = logging.getLogger(__name__)
 # Constants
 CHANNEL_ID = "UCznImSIaxZR7fdLCICLdgaQ"  # 전인구경제연구소
 RSS_URL = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
-VIDEO_HISTORY_FILE = EVENTS_DIR / "youtube_video_history.json"
-AUDIO_FILE = EVENTS_DIR / "temp_audio.mp3"
+VIDEO_HISTORY_FILE = DATA_DIR / "jeon_video_history.json"
+AUDIO_FILE = DATA_DIR / "temp_audio.mp3"
 
 
-class YouTubeEventFundCrawler:
-    """Main crawler class for YouTube event fund analysis"""
+class JeonContrarianTrading:
+    """Main trading bot class for contrarian strategy based on Jeon's analysis"""
 
     def __init__(self):
-        """Initialize crawler with OpenAI client"""
+        """Initialize trading bot with OpenAI client"""
         # Load API key from mcp_agent.secrets.yaml
-        secrets_file = Path("mcp_agent.secrets.yaml")
+        secrets_file = SECRETS_DIR / "mcp_agent.secrets.yaml"
         if not secrets_file.exists():
             raise FileNotFoundError(
                 "mcp_agent.secrets.yaml not found. "
@@ -177,7 +176,7 @@ class YouTubeEventFundCrawler:
         logger.info(f"Extracting audio from: {video_url}")
 
         # Remove all existing temp_audio files (including intermediates)
-        for temp_file in EVENTS_DIR.glob('temp_audio.*'):
+        for temp_file in DATA_DIR.glob('temp_audio.*'):
             try:
                 temp_file.unlink()
                 logger.debug(f"Removed existing file: {temp_file}")
@@ -186,7 +185,7 @@ class YouTubeEventFundCrawler:
 
         ydl_opts = {
             'format': 'bestaudio/best',
-            'outtmpl': str(EVENTS_DIR / 'temp_audio.%(ext)s'),
+            'outtmpl': str(DATA_DIR / 'temp_audio.%(ext)s'),
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -281,7 +280,7 @@ class YouTubeEventFundCrawler:
 
             for i in range(0, duration_ms, chunk_length_ms):
                 chunk = audio[i:i + chunk_length_ms]
-                chunk_file = EVENTS_DIR / f"temp_audio_chunk_{i//chunk_length_ms}.mp3"
+                chunk_file = DATA_DIR / f"temp_audio_chunk_{i//chunk_length_ms}.mp3"
                 chunk.export(chunk_file, format="mp3")
                 chunks.append(chunk_file)
                 logger.info(f"Created chunk {len(chunks)}: {chunk_file.name}")
@@ -477,7 +476,7 @@ class YouTubeEventFundCrawler:
             agent = self.create_analysis_agent(video_info, transcript)
 
             # Initialize MCPApp context
-            app = MCPApp(name="youtube_event_fund_analysis")
+            app = MCPApp(name="jeon_contrarian_trading_analysis")
 
             async with app.run() as _:
                 # Attach LLM to agent within MCPApp context
@@ -487,7 +486,7 @@ class YouTubeEventFundCrawler:
                 result = await llm.generate_str(
                     message="위 지시사항에 따라 영상을 분석하고 역발상 투자 전략을 제시해주세요.",
                     request_params=RequestParams(
-                        model="gpt-4.1",
+                        model="gpt-5",
                         maxTokens=16000,
                         max_iterations=3,
                         parallel_tool_calls=False,
@@ -508,7 +507,7 @@ class YouTubeEventFundCrawler:
         cleaned_files = []
 
         # Clean up main audio files
-        for temp_file in EVENTS_DIR.glob('temp_audio.*'):
+        for temp_file in DATA_DIR.glob('temp_audio.*'):
             try:
                 temp_file.unlink()
                 cleaned_files.append(temp_file.name)
@@ -516,7 +515,7 @@ class YouTubeEventFundCrawler:
                 logger.warning(f"Failed to clean up {temp_file}: {e}")
 
         # Clean up chunk files
-        for chunk_file in EVENTS_DIR.glob('temp_audio_chunk_*.mp3'):
+        for chunk_file in DATA_DIR.glob('temp_audio_chunk_*.mp3'):
             try:
                 chunk_file.unlink()
                 cleaned_files.append(chunk_file.name)
@@ -552,7 +551,7 @@ class YouTubeEventFundCrawler:
                 return None
 
             # Save transcript for debugging
-            transcript_file = EVENTS_DIR / f"transcript_{video_info['id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            transcript_file = DATA_DIR / f"transcript_{video_info['id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
             with open(transcript_file, 'w', encoding='utf-8') as f:
                 f.write(f"Video: {video_info['title']}\n")
                 f.write(f"URL: {video_info['link']}\n")
@@ -565,7 +564,7 @@ class YouTubeEventFundCrawler:
             analysis = await self.analyze_video(video_info, transcript)
 
             # Save analysis result
-            analysis_file = EVENTS_DIR / f"analysis_{video_info['id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+            analysis_file = DATA_DIR / f"analysis_{video_info['id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
             with open(analysis_file, 'w', encoding='utf-8') as f:
                 f.write(analysis)
             logger.info(f"Analysis saved to: {analysis_file}")
@@ -588,7 +587,7 @@ class YouTubeEventFundCrawler:
             video_url: YouTube video URL
         """
         logger.info("="*80)
-        logger.info("YouTube Event Fund Crawler - Single Video Mode")
+        logger.info("Jeon Contrarian Trading - Single Video Mode")
         logger.info("="*80)
 
         try:
@@ -615,7 +614,7 @@ class YouTubeEventFundCrawler:
                 logger.warning("Failed to analyze video")
 
             logger.info("="*80)
-            logger.info("YouTube Event Fund Crawler - Completed")
+            logger.info("Jeon Contrarian Trading - Completed")
             logger.info("="*80)
 
         except Exception as e:
@@ -625,7 +624,7 @@ class YouTubeEventFundCrawler:
     async def run(self):
         """Main execution workflow"""
         logger.info("="*80)
-        logger.info("YouTube Event Fund Crawler - Starting")
+        logger.info("Jeon Contrarian Trading - Starting")
         logger.info("="*80)
 
         try:
@@ -684,7 +683,7 @@ class YouTubeEventFundCrawler:
             self.save_video_history(current_videos)
 
             logger.info("="*80)
-            logger.info("YouTube Event Fund Crawler - Completed")
+            logger.info("Jeon Contrarian Trading - Completed")
             logger.info("="*80)
 
         except Exception as e:
@@ -696,15 +695,15 @@ async def main():
     """Entry point"""
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description="YouTube Event Fund Crawler - 전인구경제연구소 역발상 투자 분석",
+        description="Jeon Contrarian Trading - 전인구경제연구소 역발상 투자 분석",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Normal mode (monitor RSS feed for new videos)
-  python youtube_event_fund_crawler.py
+  python events/jeon_contrarian_trading.py
 
   # Test mode (process specific video URL)
-  python youtube_event_fund_crawler.py --video-url "https://www.youtube.com/watch?v=VIDEO_ID"
+  python events/jeon_contrarian_trading.py --video-url "https://www.youtube.com/watch?v=VIDEO_ID"
         """
     )
     parser.add_argument(
