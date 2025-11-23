@@ -128,6 +128,25 @@ export function JeoninguLabPage({ data }: JeoninguLabPageProps) {
                     <p className="text-purple-100">
                         전인구경제연구소의 예측과 정반대로 베팅하는 실험 | 레버리지 2X 전략
                     </p>
+                    <p className="text-purple-100 text-sm font-medium">
+                        ⚠️ 이 실험은 실계좌 매매가 아닌, 단순 시뮬레이션입니다.
+                    </p>
+
+                    {/* Background Section */}
+                    <div className="mt-6 p-4 bg-white/10 rounded-lg backdrop-blur-sm border border-white/20">
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                            <span>📖</span>
+                            <span>실험 배경</span>
+                        </h3>
+                        <p className="text-sm text-purple-50 leading-relaxed">
+                            예전부터 커뮤니티에서는 전인구경제연구소 소장님의 말을 반대로 투자하면 돈을 번다는,
+                            이른바 '전반꿀'이 유행하고 있습니다. 어떤 사람은 이 말을 정말로 믿는 것 같고,
+                            어떤 사람은 이 말을 믿고 투자하면 망한다고 합니다.
+                            <strong className="text-white"> 과연 어느쪽이 진실에 더 가까울까요? 전인구는 투자의 신이 맞을까요? 인간일까요?</strong>
+                            <br />
+                            이 가상실험을 통해 전반꿀의 실제 투자효과를 증명하겠습니다.
+                        </p>
+                    </div>
                 </div>
                 <div className="absolute right-0 bottom-0 opacity-10">
                     <svg width="200" height="200" viewBox="0 0 200 200" className="text-white">
