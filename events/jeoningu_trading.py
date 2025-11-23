@@ -34,6 +34,7 @@ from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 sys.path.append(str(Path(__file__).parent.parent))
 
 from events.jeoningu_trading_db import JeoninguTradingDB
+from events.jeoningu_price_fetcher import get_current_price
 
 # Setup directories
 DATA_DIR = Path(__file__).parent
@@ -458,9 +459,8 @@ class JeoninguTrading:
             # Case 1: NEUTRAL → Sell all positions
             if sentiment == '중립':
                 if current_position:
-                    # Sell current position
-                    # TODO: Get current price from pykrx (mock for now)
-                    sell_price = 10500  # Mock
+                    # Sell current position - get real price
+                    sell_price = get_current_price(current_position['stock_code'])
                     sell_amount = current_position['quantity'] * sell_price
                     profit_loss = sell_amount - current_position['buy_amount']
                     profit_loss_pct = (profit_loss / current_position['buy_amount']) * 100
@@ -483,9 +483,11 @@ class JeoninguTrading:
                         'quantity': current_position['quantity'],
                         'price': sell_price,
                         'amount': sell_amount,
+                        'related_buy_id': current_position['buy_id'],
                         'profit_loss': profit_loss,
                         'profit_loss_pct': profit_loss_pct,
-                        'cumulative_balance': new_balance,
+                        'balance_before': current_balance,
+                        'balance_after': new_balance,
                         'cumulative_return_pct': cumulative_return_pct,
                         'notes': f"중립 기조로 전량 매도 (손익: {profit_loss:,.0f}원, {profit_loss_pct:+.2f}%)"
                     }
@@ -503,7 +505,9 @@ class JeoninguTrading:
                         'jeon_sentiment': sentiment,
                         'jeon_reasoning': analysis.get('jeon_reasoning', ''),
                         'contrarian_action': action,
-                        'cumulative_balance': current_balance,
+                        'trade_type': 'HOLD',
+                        'balance_before': current_balance,
+                        'balance_after': current_balance,
                         'cumulative_return_pct': ((current_balance - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100,
                         'notes': '중립 기조, 보유 종목 없음'
                     }
@@ -521,8 +525,8 @@ class JeoninguTrading:
 
                 # Step 1: Sell current position if different stock
                 if current_position and current_position['stock_code'] != target_code:
-                    # Sell different stock
-                    sell_price = 10500  # Mock
+                    # Sell different stock - get real price
+                    sell_price = get_current_price(current_position['stock_code'])
                     sell_amount = current_position['quantity'] * sell_price
                     profit_loss = sell_amount - current_position['buy_amount']
                     profit_loss_pct = (profit_loss / current_position['buy_amount']) * 100
@@ -545,9 +549,11 @@ class JeoninguTrading:
                         'quantity': current_position['quantity'],
                         'price': sell_price,
                         'amount': sell_amount,
+                        'related_buy_id': current_position['buy_id'],
                         'profit_loss': profit_loss,
                         'profit_loss_pct': profit_loss_pct,
-                        'cumulative_balance': new_balance,
+                        'balance_before': current_balance,
+                        'balance_after': new_balance,
                         'cumulative_return_pct': cumulative_return_pct,
                         'notes': f"종목 전환을 위한 매도 → {target_name} 매수 예정"
                     }
@@ -567,7 +573,9 @@ class JeoninguTrading:
                         'jeon_sentiment': sentiment,
                         'jeon_reasoning': analysis.get('jeon_reasoning', ''),
                         'contrarian_action': action,
-                        'cumulative_balance': current_balance,
+                        'trade_type': 'HOLD',
+                        'balance_before': current_balance,
+                        'balance_after': current_balance,
                         'cumulative_return_pct': ((current_balance - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100,
                         'notes': f'이미 {target_name} 보유 중, 액션 없음'
                     }
@@ -575,8 +583,8 @@ class JeoninguTrading:
                     logger.info(f"이미 {target_name} 보유 중")
                     return
 
-                # Step 2: Buy target stock
-                buy_price = 10000  # Mock
+                # Step 2: Buy target stock - get real price
+                buy_price = get_current_price(target_code)
                 quantity = int(POSITION_SIZE / buy_price)
                 buy_amount = quantity * buy_price
 
@@ -595,7 +603,8 @@ class JeoninguTrading:
                     'quantity': quantity,
                     'price': buy_price,
                     'amount': buy_amount,
-                    'cumulative_balance': current_balance,
+                    'balance_before': current_balance,
+                    'balance_after': current_balance,  # Balance unchanged (cash→stock)
                     'cumulative_return_pct': ((current_balance - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100,
                     'notes': f"{sentiment} 기조 → 역발상 {target_name} 매수"
                 }
