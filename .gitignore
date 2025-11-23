@@ -6,6 +6,13 @@ mcp_agent.config.yaml
 mcp_agent.secrets.yaml
 config.py
 
+# Jeon Ingu Trading 출력 파일 및 데이터
+events/*
+!events/JEONINGU_TRADING.md
+!events/jeoningu_trading.py
+!events/jeoningu_trading_db.py
+!events/jeoningu_price_fetcher.py
+
 # Python cache files
 __pycache__/
 *.py[cod]
