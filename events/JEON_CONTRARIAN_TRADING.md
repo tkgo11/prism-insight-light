@@ -1,4 +1,4 @@
-# YouTube Event Fund Crawler - 전인구경제연구소 역발상 투자 분석
+# Jeon Contrarian Trading - 전인구경제연구소 역발상 트레이딩 봇
 
 ## 📋 개요
 
@@ -134,7 +134,7 @@ openai:
 ### 4. 실행 권한 부여
 
 ```bash
-chmod +x youtube_event_fund_crawler.py
+chmod +x jeon_contrarian_trading.py
 ```
 
 ---
@@ -144,24 +144,24 @@ chmod +x youtube_event_fund_crawler.py
 ### 기본 실행 (RSS 모니터링 모드)
 
 ```bash
-python youtube_event_fund_crawler.py
+python jeon_contrarian_trading.py
 ```
 
 ### 테스트 실행 (특정 영상 URL 직접 입력)
 
 ```bash
-python youtube_event_fund_crawler.py --video-url "https://www.youtube.com/watch?v=VIDEO_ID"
+python jeon_contrarian_trading.py --video-url "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
 **예시**:
 ```bash
-python youtube_event_fund_crawler.py --video-url "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+python jeon_contrarian_trading.py --video-url "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 
 ### 도움말 보기
 
 ```bash
-python youtube_event_fund_crawler.py --help
+python jeon_contrarian_trading.py --help
 ```
 
 ### 동작 방식
@@ -276,7 +276,7 @@ crontab -e
 
 다음 라인 추가 (매일 오전 9시 실행):
 ```cron
-0 9 * * * cd /home/user/prism-insight && /usr/bin/python3 youtube_event_fund_crawler.py >> youtube_crawler_cron.log 2>&1
+0 9 * * * cd /home/user/prism-insight && /usr/bin/python3 jeon_contrarian_trading.py >> youtube_crawler_cron.log 2>&1
 ```
 
 ---

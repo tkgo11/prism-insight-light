@@ -6,9 +6,10 @@ mcp_agent.config.yaml
 mcp_agent.secrets.yaml
 config.py
 
-# YouTube Event Fund Crawler 출력 파일
+# Jeon Contrarian Trading 출력 파일
 events/*
-!events/YOUTUBE_EVENT_FUND_CRAWLER.md
+!events/JEON_CONTRARIAN_TRADING.md
+!events/jeon_contrarian_trading.py
 
 # Python cache files
 __pycache__/
