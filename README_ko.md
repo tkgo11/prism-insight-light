@@ -638,6 +638,9 @@ AI 에이전트가 생성하는 종합 애널리스트 리포트는 다음 섹�
 <!-- sponsors -->
 **핵심 서포터**
 - [@tehryung-ray](https://github.com/tehryung-ray) 💙
+
+**서포터**
+- [@ddkerty](https://github.com/ddkerty) 💙
 <!-- sponsors -->
 
 ---
