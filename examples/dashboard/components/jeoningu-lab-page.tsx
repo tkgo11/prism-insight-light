@@ -111,7 +111,16 @@ export function JeoninguLabPage({ data }: JeoninguLabPageProps) {
 
     return (
         <div className="space-y-6">
-            {/* Banner - 항상 표시 */}
+            {/* Banner Image Section - Separate at top */}
+            <div className="relative overflow-hidden rounded-lg shadow-lg">
+                <img
+                    src="/jeoningu_banner.png"
+                    alt="전인구 실험실 배너"
+                    className="w-full h-auto object-cover"
+                />
+            </div>
+
+            {/* Info Banner */}
             <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 p-8 text-white shadow-lg">
                 <div className="absolute inset-0 bg-black opacity-10" />
                 <div className="relative z-10">
