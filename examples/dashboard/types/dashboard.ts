@@ -187,6 +187,55 @@ export interface DashboardData {
   watchlist: WatchlistStock[]
   market_condition: MarketCondition[]
   holding_decisions?: HoldingDecision[]
+  jeoningu_lab?: JeoninguLabData
+}
+
+export interface JeoninguLabData {
+  enabled: boolean
+  message?: string
+  error?: string
+  summary: {
+    total_trades: number
+    winning_trades: number
+    losing_trades: number
+    win_rate: number
+    cumulative_return: number
+    avg_return_per_trade: number
+    initial_capital: number
+    current_balance: number
+  }
+  current_position: {
+    stock_code: string
+    stock_name: string
+    quantity: number
+    buy_price: number
+    buy_amount: number
+    buy_date: string
+    video_id: string
+    video_title: string
+  } | null
+  timeline: Array<{
+    video_id: string
+    video_title: string
+    video_date: string
+    video_url: string
+    analyzed_date: string
+    jeon_sentiment: string
+    jeon_reasoning: string
+    contrarian_action: string
+    trade_type: string
+    stock_code: string | null
+    stock_name: string | null
+    notes: string
+    profit_loss: number | null
+    profit_loss_pct: number | null
+  }>
+  cumulative_chart: Array<{
+    date: string
+    cumulative_return: number
+    balance: number
+  }>
+  trade_history: any[]
 }
 
 export interface HoldingDecision {

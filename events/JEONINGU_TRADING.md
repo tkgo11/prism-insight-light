@@ -40,11 +40,19 @@
 2. Whisper API로 음성을 텍스트로 변환
 3. GPT-5로 시장 전망 분석
 4. 역발상 투자 전략 생성 (JSON 형식)
-5. 텔레그램 채널에 요약 메시지 발송
-6. **시뮬레이션 매매 실행 및 SQLite 이력 저장**
-7. 웹 대시보드를 통한 시각화
+5. 텔레그램 채널에 분석 요약 메시지 발송
+6. **pykrx로 실시간 가격 조회**
+7. **시뮬레이션 매매 실행** (전액 투자 전략)
+8. **SQLite 이력 저장** (단일 통합 테이블)
+9. 텔레그램 채널에 포트폴리오 상태 메시지 발송
+10. 웹 대시보드를 통한 시각화
 
-⚠️ **실제 매매 연동이 아닌 시뮬레이션**입니다. PRISM-INSIGHT의 실제 계좌와 이력이 섞이지 않도록 별도 DB로 관리합니다.
+⚠️ **실제 매매 연동이 아닌 시뮬레이션**입니다. PRISM-INSIGHT의 실제 계좌와 구분되도록 별도 테이블(`jeoningu_trades`)로 관리합니다.
+
+**핵심 전략**:
+- **전액 투자 (All-in)**: 매수 시 가용 잔액 100% 투자
+- **레버리지/인버스 2X**: 수익률 극대화를 위한 고위험-고수익 추구
+- **역발상 베팅**: 전인구의 예측과 정반대 방향으로 투자
 
 ---
 
@@ -73,15 +81,20 @@
 │     ├─ Contrarian strategy generation                       │
 │     └─ Structured JSON output                               │
 │                                                              │
-│  5. Telegram Broadcasting                                   │
-│     └─ Send summary to Telegram channel                     │
+│  5. Telegram Broadcasting (Analysis)                        │
+│     └─ Send analysis summary to Telegram channel           │
 │                                                              │
 │  6. Simulated Trading Execution                             │
-│     ├─ Calculate position size                              │
+│     ├─ Calculate position size (100% all-in)                │
 │     ├─ Execute BUY/SELL (simulated)                         │
 │     └─ Save to SQLite database                              │
 │                                                              │
-│  7. Performance Tracking                                    │
+│  7. Telegram Broadcasting (Portfolio Status)                │
+│     ├─ Send current position info                           │
+│     ├─ Send balance and performance metrics                 │
+│     └─ Show cumulative return                               │
+│                                                              │
+│  8. Performance Tracking                                    │
 │     ├─ Calculate win rate, cumulative return                │
 │     └─ Export data for dashboard visualization              │
 │                                                              │
@@ -102,27 +115,42 @@
 ### 파일 구조
 
 ```
-events/
-├── jeoningu_trading.py          # 메인 스크립트
-├── jeoningu_trading_db.py       # SQLite 데이터베이스 관리
-├── JEONINGU_TRADING.md          # 본 문서
-├── jeoningu_trading.db          # SQLite 데이터베이스 (자동 생성)
-├── jeoningu_video_history.json  # 영상 이력 (자동 생성)
-├── jeoningu_YYYYMMDD.log        # 로그 파일 (자동 생성)
-├── transcript_*.txt             # 자막 파일 (디버깅용)
-└── temp_audio.*                 # 임시 오디오 파일 (자동 삭제)
+prism-insight/
+├── stock_tracking_db.sqlite     # 통합 SQLite DB (PRISM-INSIGHT 메인 DB)
+└── events/
+    ├── jeoningu_trading.py          # 메인 스크립트
+    ├── jeoningu_trading_db.py       # SQLite 데이터베이스 관리
+    ├── jeoningu_price_fetcher.py    # 실시간 가격 조회 (pykrx)
+    ├── JEONINGU_TRADING.md          # 본 문서
+    ├── jeoningu_video_history.json  # 영상 이력 (자동 생성)
+    │
+    ├── logs/                         # 로그 파일 저장 디렉토리
+    │   └── jeoningu_YYYYMMDD.log    # 일별 로그 파일
+    │
+    ├── transcripts/                  # 자막 파일 저장 디렉토리
+    │   └── transcript_*.txt         # 영상별 자막 파일
+    │
+    └── audio_temp/                   # 임시 오디오 파일 디렉토리
+        ├── temp_audio.mp3           # 임시 오디오 (자동 삭제)
+        └── temp_audio_chunk_*.mp3   # 분할된 임시 파일 (자동 삭제)
 ```
+
+**산출물 정리**:
+- ✅ **로그 파일**: `logs/` 디렉토리에 날짜별로 저장
+- ✅ **자막 파일**: `transcripts/` 디렉토리에 영상 ID별로 저장
+- ✅ **임시 오디오**: `audio_temp/` 디렉토리에 저장 후 자동 삭제
+- ✅ `.gitignore`에 하위 디렉토리 설정되어 있음 (버전 관리 제외)
 
 ### 데이터베이스 테이블
 
-- **`videos`**: 분석한 영상 정보
-- **`analysis_results`**: AI 분석 결과
-- **`trades`**: 매수/매도 거래 이력
-- **`portfolio`**: 현재 보유 종목
-- **`performance_metrics`**: 성과 지표
-- **`telegram_messages`**: 발송한 텔레그램 메시지
+**주의**: PRISM-INSIGHT 메인 데이터베이스(`stock_tracking_db.sqlite`)에 통합되어 있습니다.
 
-자세한 스키마는 [데이터베이스 구조](#데이터베이스-구조) 섹션 참조.
+#### 단일 통합 테이블 설계
+
+전인구 시뮬레이션은 **단 1개의 테이블**(`jeoningu_trades`)만 사용합니다:
+- 각 영상당 1개의 row
+- 영상 정보 + AI 분석 + 거래 정보가 모두 포함
+- `related_buy_id`를 통해 매수-매도 연결
 
 ---
 
@@ -162,6 +190,7 @@ pip install -r requirements.txt
 - `aiosqlite`: 비동기 SQLite
 - `python-telegram-bot`: 텔레그램 연동
 - `mcp-agent`: AI 에이전트 프레임워크
+- `pykrx`: 한국 주식 실시간 가격 조회
 
 ### 3. 설정 파일 준비
 
@@ -284,153 +313,159 @@ crontab -e
 
 ## 데이터베이스 구조
 
-### ERD (Entity Relationship Diagram)
+### 통합 데이터베이스 설계
 
+전인구 시뮬레이션은 PRISM-INSIGHT 메인 데이터베이스(`stock_tracking_db.sqlite`)에 **통합**되어 있습니다.
+
+**장점**:
+- 실제 거래 이력과 시뮬레이션 이력이 물리적으로 분리됨
+- 하나의 DB 파일로 전체 시스템 관리
+- 대시보드에서 통합 조회 가능
+
+### 테이블 스키마
+
+#### `jeoningu_trades` - 단일 통합 테이블
+
+각 영상당 1개의 row가 생성되며, 영상 정보 + 분석 결과 + 거래 정보가 모두 포함됩니다.
+
+| 컬럼 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| **기본 키** ||||
+| `id` | INTEGER | ✓ | Auto-increment 거래 ID |
+| **영상 정보** ||||
+| `video_id` | TEXT | ✓ | YouTube 영상 ID (UNIQUE) |
+| `video_title` | TEXT | ✓ | 영상 제목 |
+| `video_date` | TEXT | ✓ | 영상 게시 날짜 (ISO 8601) |
+| `video_url` | TEXT | ✓ | YouTube URL |
+| `analyzed_date` | TEXT | ✓ | AI 분석 수행 날짜 |
+| **AI 분석 결과** ||||
+| `jeon_sentiment` | TEXT | ✓ | 전인구 기조 (상승/하락/중립) |
+| `jeon_reasoning` | TEXT | | 전인구의 핵심 발언 요약 |
+| `contrarian_action` | TEXT | ✓ | 역발상 액션 (인버스매수/KODEX매수/전량매도) |
+| **거래 실행 정보** ||||
+| `trade_type` | TEXT | | 거래 유형 (BUY/SELL/HOLD) |
+| `stock_code` | TEXT | | 종목 코드 (069500 또는 114800) |
+| `stock_name` | TEXT | | 종목명 (KODEX 200 또는 KODEX 인버스) |
+| `quantity` | INTEGER | | 매수/매도 수량 |
+| `price` | REAL | | 체결 가격 (pykrx에서 조회) |
+| `amount` | REAL | | 거래 금액 (quantity × price) |
+| **수익 추적** ||||
+| `related_buy_id` | INTEGER | | 매도 시 연결된 매수 거래 ID (FK) |
+| `profit_loss` | REAL | | 손익 금액 (매도 시) |
+| `profit_loss_pct` | REAL | | 손익률 (%) |
+| **포트폴리오 상태** ||||
+| `balance_before` | REAL | ✓ | 거래 전 잔액 |
+| `balance_after` | REAL | ✓ | 거래 후 잔액 |
+| `cumulative_return_pct` | REAL | | 누적 수익률 (%) |
+| **메타데이터** ||||
+| `notes` | TEXT | | 추가 메모 |
+| `created_at` | TEXT | | 레코드 생성 시각 (DEFAULT CURRENT_TIMESTAMP) |
+
+**인덱스**:
+- `idx_jeoningu_video_id` on `video_id`
+- `idx_jeoningu_analyzed_date` on `analyzed_date DESC`
+- `idx_jeoningu_trade_type` on `trade_type`
+
+### 데이터 흐름 예시
+
+#### 시나리오 1: 첫 매수
+```sql
+-- 전인구 "상승" → 역발상 인버스 매수
+INSERT INTO jeoningu_trades (
+  video_id, video_title, jeon_sentiment, contrarian_action,
+  trade_type, stock_code, stock_name, quantity, price, amount,
+  balance_before, balance_after
+) VALUES (
+  'abc123', '전인구: 시장 상승 예상', '상승', '인버스매수',
+  'BUY', '114800', 'KODEX 인버스', 100, 10000, 1000000,
+  10000000, 10000000  -- 현금→주식 전환이므로 balance 변동 없음
+);
 ```
-┌───────────────┐
-│    videos     │
-├───────────────┤
-│ video_id (PK) │
-│ title         │
-│ published_date│
-│ analyzed_date │
-│ video_url     │
-│ ...           │
-└───────────────┘
-        │
-        │ 1:N
-        ▼
-┌───────────────────┐
-│ analysis_results  │
-├───────────────────┤
-│ id (PK)           │
-│ video_id (FK)     │
-│ jeon_prediction   │
-│ contrarian_strategy│
-│ target_stocks     │
-│ confidence_score  │
-│ ...               │
-└───────────────────┘
-        │
-        │ 1:N
-        ▼
-┌───────────────────┐       ┌───────────────┐
-│     trades        │──────▶│   portfolio   │
-├───────────────────┤  1:1  ├───────────────┤
-│ id (PK)           │       │ stock_code(PK)│
-│ video_id (FK)     │       │ stock_name    │
-│ analysis_id (FK)  │       │ buy_trade_id  │
-│ stock_code        │       │ quantity      │
-│ trade_type (BUY/  │       │ avg_buy_price │
-│            SELL)  │       │ ...           │
-│ quantity          │       └───────────────┘
-│ price             │
-│ profit_loss       │
-│ cumulative_return │
-│ ...               │
-└───────────────────┘
+
+#### 시나리오 2: 중립 기조로 매도
+```sql
+-- 전인구 "중립" → 전량 매도
+INSERT INTO jeoningu_trades (
+  video_id, video_title, jeon_sentiment, contrarian_action,
+  trade_type, stock_code, stock_name, quantity, price, amount,
+  related_buy_id, profit_loss, profit_loss_pct,
+  balance_before, balance_after, cumulative_return_pct
+) VALUES (
+  'def456', '전인구: 방향성 모호', '중립', '전량매도',
+  'SELL', '114800', 'KODEX 인버스', 100, 10500, 1050000,
+  1, 50000, 5.0,  -- 이전 매수(ID=1) 대비 +5%
+  10000000, 10050000, 0.5  -- 잔액 증가, 누적 수익률 +0.5%
+);
 ```
 
-### 테이블 상세
+#### 시나리오 3: 보유 종목 없을 때 중립
+```sql
+-- 보유 종목 없는 상태에서 중립 → HOLD
+INSERT INTO jeoningu_trades (
+  video_id, video_title, jeon_sentiment, contrarian_action,
+  trade_type, balance_before, balance_after, cumulative_return_pct, notes
+) VALUES (
+  'ghi789', '전인구: 여전히 중립', '중립', '관망',
+  'HOLD', 10050000, 10050000, 0.5, '보유 종목 없음, 현금 보유'
+);
+```
 
-#### `videos` - 영상 정보
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| `video_id` | TEXT (PK) | YouTube 영상 ID |
-| `title` | TEXT | 영상 제목 |
-| `published_date` | TEXT | 게시 날짜 (ISO 8601) |
-| `analyzed_date` | TEXT | 분석 날짜 (ISO 8601) |
-| `video_url` | TEXT | YouTube URL |
-| `transcript_summary` | TEXT | 자막 요약 |
+### 주요 쿼리 패턴
 
-#### `analysis_results` - AI 분석 결과
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| `id` | INTEGER (PK) | 분석 ID (자동 증가) |
-| `video_id` | TEXT (FK) | 영상 ID |
-| `jeon_prediction` | TEXT | 전인구 예측 (상승/하락/중립) |
-| `jeon_reasoning` | TEXT | 예측 근거 |
-| `contrarian_strategy` | TEXT | 역발상 전략 (매수/매도/관망) |
-| `contrarian_reasoning` | TEXT | 전략 근거 |
-| `target_stocks` | TEXT (JSON) | 추천 종목 리스트 |
-| `sentiment_score` | REAL | 감정 점수 |
-| `confidence_score` | REAL | 신뢰도 (0.0~1.0) |
-| `raw_analysis_json` | TEXT (JSON) | 전체 분석 결과 JSON |
-
-#### `trades` - 매매 이력
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| `id` | INTEGER (PK) | 거래 ID (자동 증가) |
-| `video_id` | TEXT (FK) | 관련 영상 ID |
-| `analysis_id` | INTEGER (FK) | 분석 ID |
-| `stock_code` | TEXT | 종목 코드 (6자리) |
-| `stock_name` | TEXT | 종목명 |
-| `trade_type` | TEXT | BUY 또는 SELL |
-| `trade_date` | TEXT | 거래 날짜 (ISO 8601) |
-| `quantity` | INTEGER | 수량 |
-| `price` | REAL | 가격 |
-| `total_amount` | REAL | 총 금액 |
-| `related_buy_id` | INTEGER | 관련 매수 거래 ID (매도 시) |
-| `profit_loss` | REAL | 손익 금액 |
-| `profit_loss_rate` | REAL | 수익률 (%) |
-| `cumulative_return` | REAL | 누적 수익률 (%) |
-| `strategy_note` | TEXT | 전략 메모 |
-
-#### `portfolio` - 현재 보유 종목
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| `stock_code` | TEXT (PK) | 종목 코드 |
-| `stock_name` | TEXT | 종목명 |
-| `buy_trade_id` | INTEGER (FK) | 매수 거래 ID |
-| `video_id` | TEXT (FK) | 관련 영상 ID |
-| `quantity` | INTEGER | 보유 수량 |
-| `avg_buy_price` | REAL | 평균 매수가 |
-| `total_investment` | REAL | 총 투자 금액 |
-| `buy_date` | TEXT | 매수 날짜 |
-| `strategy_note` | TEXT | 전략 메모 |
-
-#### `performance_metrics` - 성과 지표
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| `id` | INTEGER (PK) | 메트릭 ID |
-| `calculation_date` | TEXT | 계산 날짜 |
-| `total_trades` | INTEGER | 전체 거래 수 |
-| `winning_trades` | INTEGER | 수익 거래 수 |
-| `losing_trades` | INTEGER | 손실 거래 수 |
-| `win_rate` | REAL | 승률 (%) |
-| `cumulative_return` | REAL | 누적 수익률 (%) |
-| `avg_return_per_trade` | REAL | 평균 거래당 수익률 (%) |
-| `max_drawdown` | REAL | 최대 낙폭 (MDD) |
-| `sharpe_ratio` | REAL | 샤프 비율 |
-
-### 데이터베이스 쿼리 예시
-
-#### 전체 거래 이력 조회
+#### 현재 보유 종목 확인
 ```python
-from events.jeoningu_trading_db import JeoninguTradingDB
-
-db = JeoninguTradingDB()
-await db.initialize()
-
-# 최근 100개 거래
-trades = await db.get_trade_history(limit=100)
-for trade in trades:
-    print(f"{trade['trade_date']}: {trade['trade_type']} {trade['stock_name']} x {trade['quantity']}")
-```
-
-#### 현재 포트폴리오 조회
-```python
-portfolio = await db.get_portfolio()
-for position in portfolio:
-    print(f"{position['stock_name']}: {position['quantity']}주 @ {position['avg_buy_price']}원")
+# 로직: 마지막 BUY를 찾고, 그 이후 SELL이 있는지 확인
+async def get_current_position():
+    # 1. 마지막 BUY 찾기
+    last_buy = SELECT * FROM jeoningu_trades 
+               WHERE trade_type = 'BUY' 
+               ORDER BY id DESC LIMIT 1
+    
+    # 2. 해당 BUY에 연결된 SELL이 있는지 확인
+    sell_count = SELECT COUNT(*) FROM jeoningu_trades 
+                 WHERE trade_type = 'SELL' 
+                 AND related_buy_id = last_buy.id
+    
+    # 3. SELL이 없으면 현재 보유 중
+    if sell_count == 0:
+        return last_buy
+    return None
 ```
 
 #### 성과 지표 계산
 ```python
-metrics = await db.calculate_performance_metrics()
-print(f"승률: {metrics['win_rate']:.1f}%")
-print(f"누적 수익률: {metrics['cumulative_return']:.2f}%")
+async def calculate_performance_metrics():
+    # 모든 SELL 거래에서 손익 집계
+    sell_trades = SELECT profit_loss, profit_loss_pct 
+                  FROM jeoningu_trades 
+                  WHERE trade_type = 'SELL'
+    
+    total_trades = len(sell_trades)
+    winning_trades = count(profit_loss > 0)
+    win_rate = winning_trades / total_trades * 100
+    
+    # 최신 누적 수익률
+    latest = SELECT cumulative_return_pct, balance_after 
+             FROM jeoningu_trades 
+             ORDER BY id DESC LIMIT 1
+    
+    return {
+        "total_trades": total_trades,
+        "winning_trades": winning_trades,
+        "win_rate": win_rate,
+        "cumulative_return": latest.cumulative_return_pct,
+        "latest_balance": latest.balance_after
+    }
 ```
+
+### 데이터베이스 초기화
+
+```bash
+# Python으로 직접 초기화
+python -c "import asyncio; from events.jeoningu_trading_db import init_database; asyncio.run(init_database())"
+```
+
+또는 `jeoningu_trading.py` 첫 실행 시 자동으로 초기화됩니다.
 
 ---
 
@@ -451,26 +486,43 @@ print(f"누적 수익률: {metrics['cumulative_return']:.2f}%")
 ```python
 # examples/dashboard/backend/api/jeoningu.py
 
+from events.jeoningu_trading_db import JeoninguTradingDB
+
 @app.get("/api/jeoningu/trades")
 async def get_trades(limit: int = 100):
     """Get recent trade history"""
     db = JeoninguTradingDB()
+    await db.initialize()
     trades = await db.get_trade_history(limit=limit)
     return {"trades": trades}
 
-@app.get("/api/jeoningu/portfolio")
-async def get_portfolio():
-    """Get current portfolio"""
+@app.get("/api/jeoningu/position")
+async def get_position():
+    """Get current position"""
     db = JeoninguTradingDB()
-    portfolio = await db.get_portfolio()
-    return {"portfolio": portfolio}
+    await db.initialize()
+    position = await db.get_current_position()
+    balance = await db.get_latest_balance()
+    return {
+        "position": position,
+        "balance": balance
+    }
 
 @app.get("/api/jeoningu/performance")
 async def get_performance():
     """Get performance metrics"""
     db = JeoninguTradingDB()
+    await db.initialize()
     metrics = await db.calculate_performance_metrics()
     return metrics
+
+@app.get("/api/jeoningu/dashboard")
+async def get_dashboard():
+    """Get all dashboard data"""
+    db = JeoninguTradingDB()
+    await db.initialize()
+    data = await db.get_dashboard_data()
+    return data
 ```
 
 #### 프론트엔드 컴포넌트 (React):
@@ -479,21 +531,26 @@ async def get_performance():
 import { useQuery } from 'react-query';
 
 export function JeoninguEventTab() {
-  const { data: trades } = useQuery('jeoningu-trades', fetchTrades);
-  const { data: metrics } = useQuery('jeoningu-performance', fetchPerformance);
+  const { data: dashboard } = useQuery('jeoningu-dashboard', fetchDashboard);
 
   return (
     <div>
       <h2>전인구 역발상 투자 시뮬레이션</h2>
 
       {/* 성과 요약 */}
-      <MetricsSummary metrics={metrics} />
+      <MetricsSummary 
+        metrics={dashboard?.performance} 
+        balance={dashboard?.current_balance}
+      />
+
+      {/* 현재 포지션 */}
+      <CurrentPosition position={dashboard?.current_position} />
 
       {/* 수익률 차트 */}
-      <CumulativeReturnChart trades={trades} />
+      <CumulativeReturnChart history={dashboard?.trade_history} />
 
       {/* 거래 이력 테이블 */}
-      <TradesTable trades={trades} />
+      <TradesTable trades={dashboard?.trade_history} />
     </div>
   );
 }
@@ -585,13 +642,18 @@ openai:
 
 **증상**:
 ```
-sqlite3.OperationalError: no such table: videos
+sqlite3.OperationalError: no such table: jeoningu_trades
 ```
 
 **해결**:
 첫 실행 시 데이터베이스가 자동으로 초기화되지만, 수동으로 초기화하려면:
 ```bash
 python -c "import asyncio; from events.jeoningu_trading_db import init_database; asyncio.run(init_database())"
+```
+
+또는 테스트 스크립트 실행:
+```bash
+python events/jeoningu_trading_db.py
 ```
 
 ### 7. 영상이 감지되지 않음
@@ -608,17 +670,38 @@ python -c "import asyncio; from events.jeoningu_trading_db import init_database;
 
 ## 추가 정보
 
-### 추천 종목 코드
+### 거래 종목
 
-#### 인버스 ETF (하락 베팅)
-- `114800`: KODEX 인버스
-- `252670`: TIGER 인버스
-- `251340`: KODEX 코스닥150 인버스
+본 시스템은 **2개의 레버리지/인버스 ETF만** 사용합니다:
 
-#### 레버리지 ETF (상승 베팅)
-- `122630`: KODEX 레버리지
-- `233740`: TIGER 레버리지
-- `233160`: KODEX 코스닥150 레버리지
+#### 1. KODEX 레버리지 (122630)
+- **용도**: 상승 베팅 (2배 레버리지)
+- **설명**: 코스피 200 지수를 2배로 추종하는 레버리지 ETF
+- **전략**: 전인구 "하락" 예측 → 역발상으로 KODEX 레버리지 매수
+- **특징**: 시장 상승 시 2배 수익, 하락 시 2배 손실
+
+#### 2. KODEX 200선물인버스2X (252670)
+- **용도**: 하락 베팅 (2배 인버스)
+- **설명**: 코스피 200 지수의 반대 방향으로 2배 움직이는 인버스 ETF
+- **전략**: 전인구 "상승" 예측 → 역발상으로 KODEX 200선물인버스2X 매수
+- **특징**: 시장 하락 시 2배 수익, 상승 시 2배 손실
+
+#### 포지션 관리 규칙
+- 항상 **1개 종목만 보유**
+- **전액 투자 전략**: 매수 시 가용 잔액 100% 투자 (All-in)
+- 초기 자본: **1천만원**
+- 종목 전환 시: 기존 종목 매도 → 새 종목 매수
+- 중립 시: 보유 종목 있으면 전량 매도 (현금화)
+
+#### 가격 조회
+- **pykrx** 라이브러리로 실시간 가격 조회
+- `jeoningu_price_fetcher.py` 모듈 사용
+- 최근 거래일의 종가 기준
+
+#### 왜 레버리지/인버스 2X인가?
+- **수익률 극대화**: 일반 ETF 대비 2배의 변동성으로 단기 수익 극대화
+- **명확한 방향성**: 전인구의 예측과 정반대로 베팅하므로, 2배 레버리지가 전략에 부합
+- **리스크 인지**: 2배 손실 가능성도 있지만, 역발상 전략의 특성상 고위험-고수익 추구
 
 ### 참고 자료
 

@@ -93,6 +93,15 @@ class JeoninguTradingDB:
             await db.commit()
             logger.info(f"Jeon Ingu tables initialized in {self.db_path}")
 
+    async def video_id_exists(self, video_id: str) -> bool:
+        """Check if video_id already exists in the database"""
+        async with aiosqlite.connect(self.db_path) as db:
+            async with db.execute("""
+                SELECT COUNT(*) FROM jeoningu_trades WHERE video_id = ?
+            """, (video_id,)) as cursor:
+                count = (await cursor.fetchone())[0]
+                return count > 0
+
     async def insert_trade(self, trade_data: Dict[str, Any]) -> int:
         """
         Insert video analysis and optional trade
@@ -303,16 +312,16 @@ async def test_database():
         "analyzed_date": datetime.now().isoformat(),
         "jeon_sentiment": "상승",
         "jeon_reasoning": "긍정적 지표 언급",
-        "contrarian_action": "인버스매수",
+        "contrarian_action": "인버스2X매수",
         "trade_type": "BUY",
-        "stock_code": "114800",
-        "stock_name": "KODEX 인버스",
-        "quantity": 100,
-        "price": 10000,
-        "amount": 1000000,
+        "stock_code": "252670",
+        "stock_name": "KODEX 200선물인버스2X",
+        "quantity": 2000,
+        "price": 5000,
+        "amount": 10000000,
         "balance_before": 10000000,
-        "balance_after": 9000000,  # 1M used for purchase
-        "notes": "첫 매수"
+        "balance_after": 10000000,  # 현금→주식 전환이므로 balance 변동 없음
+        "notes": "첫 매수 (전액 투자)"
     }
     buy_id = await db.insert_trade(buy_trade)
     print(f"✅ BUY trade inserted: ID {buy_id}")
@@ -328,17 +337,17 @@ async def test_database():
         "jeon_reasoning": "명확한 방향성 없음",
         "contrarian_action": "전량매도",
         "trade_type": "SELL",
-        "stock_code": "114800",
-        "stock_name": "KODEX 인버스",
-        "quantity": 100,
-        "price": 10500,
-        "amount": 1050000,
+        "stock_code": "252670",
+        "stock_name": "KODEX 200선물인버스2X",
+        "quantity": 2000,
+        "price": 5250,
+        "amount": 10500000,
         "related_buy_id": buy_id,  # Link to previous BUY
-        "profit_loss": 50000,
+        "profit_loss": 500000,
         "profit_loss_pct": 5.0,
-        "balance_before": 9000000,
-        "balance_after": 10050000,
-        "cumulative_return_pct": 0.5,  # (10050000 - 10000000) / 10000000 * 100
+        "balance_before": 10000000,
+        "balance_after": 10500000,
+        "cumulative_return_pct": 5.0,  # (10500000 - 10000000) / 10000000 * 100
         "notes": "중립 기조로 전량 매도"
     }
     sell_id = await db.insert_trade(sell_trade)
@@ -355,9 +364,9 @@ async def test_database():
         "jeon_reasoning": "계속 애매함",
         "contrarian_action": "관망",
         "trade_type": "HOLD",  # No actual trade
-        "balance_before": 10050000,
-        "balance_after": 10050000,
-        "cumulative_return_pct": 0.5,
+        "balance_before": 10500000,
+        "balance_after": 10500000,
+        "cumulative_return_pct": 5.0,
         "notes": "보유 종목 없음, 현금 보유"
     }
     hold_id = await db.insert_trade(hold_trade)

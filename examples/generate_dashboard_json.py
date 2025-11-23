@@ -410,6 +410,142 @@ class DashboardDataGenerator:
             'month': '2025-10'
         }
     
+    def get_jeoningu_data(self, conn) -> Dict:
+        """전인구 역발상 투자 실험실 데이터 가져오기"""
+        try:
+            logger.info("전인구 실험실 데이터 수집 중...")
+            
+            # 1. 전체 거래 이력 조회
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM jeoningu_trades
+                ORDER BY id ASC
+            """)
+            
+            trade_history = []
+            for row in cursor.fetchall():
+                trade = self.dict_from_row(row, cursor)
+                trade_history.append(trade)
+            
+            logger.info(f"전인구 거래 이력: {len(trade_history)}건")
+            
+            # 2. 현재 포지션 확인
+            current_position = None
+            latest_balance = 10000000  # 기본값
+            
+            if trade_history:
+                # 마지막 BUY 찾기
+                last_buy = None
+                for trade in reversed(trade_history):
+                    if trade.get('trade_type') == 'BUY':
+                        last_buy = trade
+                        break
+                
+                # 해당 BUY에 연결된 SELL이 있는지 확인
+                if last_buy:
+                    has_sell = any(
+                        t.get('trade_type') == 'SELL' and 
+                        t.get('related_buy_id') == last_buy.get('id')
+                        for t in trade_history
+                    )
+                    
+                    if not has_sell:
+                        current_position = {
+                            'stock_code': last_buy.get('stock_code'),
+                            'stock_name': last_buy.get('stock_name'),
+                            'quantity': last_buy.get('quantity'),
+                            'buy_price': last_buy.get('price'),
+                            'buy_amount': last_buy.get('amount'),
+                            'buy_date': last_buy.get('analyzed_date'),
+                            'video_id': last_buy.get('video_id'),
+                            'video_title': last_buy.get('video_title')
+                        }
+                
+                # 최신 잔액
+                latest_balance = trade_history[-1].get('balance_after', 10000000)
+            
+            # 3. 성과 지표 계산
+            sell_trades = [t for t in trade_history if t.get('trade_type') == 'SELL']
+            
+            winning_trades = sum(1 for t in sell_trades if t.get('profit_loss', 0) > 0)
+            losing_trades = sum(1 for t in sell_trades if t.get('profit_loss', 0) <= 0)
+            total_trades = len(sell_trades)
+            
+            win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+            
+            cumulative_return = 0
+            if trade_history:
+                cumulative_return = trade_history[-1].get('cumulative_return_pct', 0)
+            
+            avg_return_per_trade = 0
+            if sell_trades:
+                avg_return_per_trade = sum(t.get('profit_loss_pct', 0) for t in sell_trades) / len(sell_trades)
+            
+            # 4. 타임라인 데이터 생성 (영상별)
+            timeline = []
+            for trade in trade_history:
+                timeline_entry = {
+                    'video_id': trade.get('video_id'),
+                    'video_title': trade.get('video_title'),
+                    'video_date': trade.get('video_date'),
+                    'video_url': trade.get('video_url'),
+                    'analyzed_date': trade.get('analyzed_date'),
+                    'jeon_sentiment': trade.get('jeon_sentiment'),
+                    'jeon_reasoning': trade.get('jeon_reasoning'),
+                    'contrarian_action': trade.get('contrarian_action'),
+                    'trade_type': trade.get('trade_type'),
+                    'stock_code': trade.get('stock_code'),
+                    'stock_name': trade.get('stock_name'),
+                    'notes': trade.get('notes'),
+                    'profit_loss': trade.get('profit_loss'),
+                    'profit_loss_pct': trade.get('profit_loss_pct')
+                }
+                timeline.append(timeline_entry)
+            
+            # 5. 누적 수익률 차트 데이터
+            cumulative_chart = []
+            for trade in trade_history:
+                if trade.get('cumulative_return_pct') is not None:
+                    cumulative_chart.append({
+                        'date': trade.get('analyzed_date'),
+                        'cumulative_return': trade.get('cumulative_return_pct'),
+                        'balance': trade.get('balance_after')
+                    })
+            
+            return {
+                'enabled': True,
+                'summary': {
+                    'total_trades': total_trades,
+                    'winning_trades': winning_trades,
+                    'losing_trades': losing_trades,
+                    'win_rate': win_rate,
+                    'cumulative_return': cumulative_return,
+                    'avg_return_per_trade': avg_return_per_trade,
+                    'initial_capital': 10000000,
+                    'current_balance': latest_balance
+                },
+                'current_position': current_position,
+                'timeline': timeline,
+                'cumulative_chart': cumulative_chart,
+                'trade_history': trade_history
+            }
+            
+        except sqlite3.OperationalError as e:
+            if "no such table: jeoningu_trades" in str(e):
+                logger.warning("전인구 실험실 테이블이 없습니다. 비활성화 상태로 반환합니다.")
+                return {
+                    'enabled': False,
+                    'message': '전인구 실험실 데이터가 아직 생성되지 않았습니다.'
+                }
+            else:
+                raise
+        except Exception as e:
+            logger.error(f"전인구 실험실 데이터 수집 중 오류: {str(e)}")
+            return {
+                'enabled': False,
+                'error': str(e)
+            }
+    
     def generate(self) -> Dict:
         """전체 대시보드 데이터 생성"""
         try:
@@ -430,6 +566,9 @@ class DashboardDataGenerator:
             kis_data = self.get_kis_trading_data()
             real_portfolio = kis_data.get("portfolio", [])
             account_summary = kis_data.get("account_summary", {})
+            
+            # 전인구 실험실 데이터 수집
+            jeoningu_lab = self.get_jeoningu_data(conn)
             
             # 요약 통계 계산
             portfolio_summary = self.calculate_portfolio_summary(holdings)
@@ -456,12 +595,15 @@ class DashboardDataGenerator:
                 'trading_history': trading_history,
                 'watchlist': watchlist,
                 'market_condition': market_condition,
-                'holding_decisions': holding_decisions
+                'holding_decisions': holding_decisions,
+                'jeoningu_lab': jeoningu_lab  # 전인구 실험실 데이터 추가
             }
             
             conn.close()
             
             logger.info(f"데이터 수집 완료: 보유 {len(holdings)}개, 실전 {len(real_portfolio)}개, 거래 {len(trading_history)}건, 관망 {len(watchlist)}개")
+            if jeoningu_lab.get('enabled'):
+                logger.info(f"전인구 실험실: 거래 {jeoningu_lab['summary']['total_trades']}건, 수익률 {jeoningu_lab['summary']['cumulative_return']:.2f}%")
             
             return dashboard_data
             
