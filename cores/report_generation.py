@@ -81,7 +81,7 @@ async def generate_report(agent, section, company_name, company_code, reference_
         request_params=RequestParams(
             model="gpt-4.1",
             maxTokens=16000,
-            max_iterations=3,
+            max_iterations=6,
             parallel_tool_calls=True,
             use_history=True
         )
