@@ -164,7 +164,7 @@ class JeoninguTrading:
         return new_videos
 
     def extract_audio(self, video_url: str) -> Optional[str]:
-        """Extract audio from YouTube"""
+        """Extract audio from YouTube using Docker"""
         logger.info(f"Extracting audio: {video_url}")
 
         # Clean up old files in audio_temp directory
@@ -174,49 +174,52 @@ class JeoninguTrading:
             except Exception:
                 pass
 
-        # 쿠키 파일 경로 (로컬에서 추출하여 서버에 업로드 필요)
+        # 쿠키 파일 경로
         cookies_file = SECRETS_DIR / "youtube_cookies.txt"
-
-        ydl_opts = {
-            'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best',  # 더 유연한 포맷 선택
-            'outtmpl': str(AUDIO_TEMP_DIR / 'temp_audio.%(ext)s'),
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-            'keepvideo': False,
-            'quiet': True,
-            'no_warnings': True,
-            'extract_flat': False,
-            'ignoreerrors': False,
-        }
         
-        # 쿠키 파일이 있으면 사용
-        if cookies_file.exists():
-            ydl_opts['cookiefile'] = str(cookies_file)
-            logger.info(f"Using cookies file: {cookies_file}")
-        else:
-            logger.warning(f"No cookies file found at {cookies_file}")
-            logger.warning("Run on local: yt-dlp --cookies-from-browser chrome --cookies youtube_cookies.txt --skip-download 'https://www.youtube.com'")
-            logger.warning("Then copy to server: scp youtube_cookies.txt server:/root/prism-insight/")
+        if not cookies_file.exists():
+            logger.error(f"No cookies file found at {cookies_file}")
+            logger.error("Run on local: yt-dlp --cookies-from-browser chrome --cookies youtube_cookies.txt --skip-download 'https://www.youtube.com'")
+            return None
 
         try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([video_url])
-
-            # mp3 파일 찾기 (확장자가 다를 수 있음)
-            for audio_ext in ['mp3', 'm4a', 'webm', 'opus']:
-                audio_path = AUDIO_TEMP_DIR / f'temp_audio.{audio_ext}'
-                if audio_path.exists():
-                    logger.info(f"Audio extraction successful: {audio_path.name}")
-                    return str(audio_path)
+            import subprocess
             
-            # AUDIO_FILE 기본 경로도 확인
-            if AUDIO_FILE.exists():
-                logger.info("Audio extraction successful")
-                return str(AUDIO_FILE)
-                
+            # Docker로 yt-dlp 실행
+            output_template = "/downloads/temp_audio.%(ext)s"
+            
+            cmd = [
+                "docker", "run", "--rm",
+                "-v", f"{SECRETS_DIR}:/downloads",
+                "jauderho/yt-dlp",
+                "--cookies", "/downloads/youtube_cookies.txt",
+                "-f", "bestaudio",
+                "-x", "--audio-format", "mp3",
+                "-o", output_template,
+                video_url
+            ]
+            
+            logger.info(f"Running: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            
+            if result.returncode != 0:
+                logger.error(f"Docker yt-dlp failed: {result.stderr}")
+                return None
+            
+            # 결과 파일 찾기 (SECRETS_DIR에 생성됨)
+            output_file = SECRETS_DIR / "temp_audio.mp3"
+            if output_file.exists():
+                # AUDIO_TEMP_DIR로 이동
+                target_file = AUDIO_TEMP_DIR / "temp_audio.mp3"
+                output_file.rename(target_file)
+                logger.info(f"Audio extraction successful: {target_file}")
+                return str(target_file)
+            
+            logger.error("Output file not found after docker run")
+            return None
+            
+        except subprocess.TimeoutExpired:
+            logger.error("Docker yt-dlp timed out")
             return None
         except Exception as e:
             logger.error(f"Audio extraction error: {e}")
