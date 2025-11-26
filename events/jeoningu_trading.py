@@ -521,44 +521,105 @@ https://stocksimulation.kr/ 접속 후
 
         try:
             from telegram import Bot
+            from datetime import datetime
 
             # Get current data
             position = await self.db.get_current_position()
             balance = await self.db.get_latest_balance()
             metrics = await self.db.calculate_performance_metrics()
+            trade_history = await self.db.get_trade_history(limit=10)
+
+            # Calculate realized P&L from completed trades
+            realized_pl = sum(t.get('profit_loss', 0) for t in trade_history if t.get('trade_type') == 'SELL')
 
             # Build message
-            message_parts = ["📊 **포트폴리오 현황**\n"]
+            message_parts = []
 
-            # Current position
             if position:
+                # 포지션 보유 중
                 current_price = get_current_price(position['stock_code'])
                 current_value = position['quantity'] * current_price
                 unrealized_pl = current_value - position['buy_amount']
-                unrealized_pl_pct = (unrealized_pl / position['buy_amount']) * 100
-
-                message_parts.append(f"🔹 보유 종목: {position['stock_name']}")
-                message_parts.append(f"  - 수량: {position['quantity']:,}주")
-                message_parts.append(f"  - 매수가: {position['buy_price']:,.0f}원")
-                message_parts.append(f"  - 현재가: {current_price:,.0f}원")
-                message_parts.append(f"  - 평가액: {current_value:,.0f}원")
-                message_parts.append(f"  - 평가손익: {unrealized_pl:+,.0f}원 ({unrealized_pl_pct:+.2f}%)\n")
+                unrealized_pl_pct = (unrealized_pl / position['buy_amount']) * 100 if position['buy_amount'] > 0 else 0
+                
+                # 총 자산 = 실현손익 + 현재 평가액
+                total_assets = realized_pl + current_value
+                total_return_pct = ((total_assets - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100
+                
+                # 보유 기간 계산
+                buy_date = datetime.fromisoformat(position['buy_date'].replace('Z', '+00:00')) if position.get('buy_date') else None
+                holding_days = (datetime.now(buy_date.tzinfo if buy_date and buy_date.tzinfo else None) - buy_date).days if buy_date else 0
+                
+                message_parts.append("📊 **현재 포지션**\n")
+                message_parts.append(f"🎯 {position['stock_name']}")
+                message_parts.append(f"┣ 보유: {position['quantity']:,}주 × {current_price:,.0f}원")
+                message_parts.append(f"┣ 평가금액: {current_value:,.0f}원")
+                message_parts.append(f"┣ 매수단가: {position['buy_price']:,.0f}원")
+                
+                # 평가손익 (색상 표시용 이모지)
+                pl_emoji = "🔴" if unrealized_pl < 0 else "🟢" if unrealized_pl > 0 else "⚪"
+                message_parts.append(f"┗ 평가손익: {pl_emoji} {unrealized_pl:+,.0f}원 ({unrealized_pl_pct:+.2f}%)")
+                
+                if holding_days > 0:
+                    message_parts.append(f"\n⏱ 보유 {holding_days}일차")
+                else:
+                    message_parts.append(f"\n⏱ 오늘 진입")
             else:
-                message_parts.append(f"🔹 보유 종목: 없음 (현금 보유)\n")
+                # 현금 보유 중
+                total_assets = balance if balance > 0 else INITIAL_CAPITAL
+                unrealized_pl = 0  # 현금 보유 시 미실현 손익 없음
+                
+                message_parts.append("📊 **현재 포지션**\n")
+                message_parts.append(f"💵 현금 보유 중: {total_assets:,.0f}원")
 
-            # Balance
-            message_parts.append(f"💰 현재 잔액: {balance:,.0f}원")
-            message_parts.append(f"💵 초기 자본: {INITIAL_CAPITAL:,.0f}원\n")
+            # 구분선
+            message_parts.append("\n━━━━━━━━━━━━━━━━━━━━\n")
 
-            # Performance metrics
-            message_parts.append(f"📈 **누적 성과**")
-            message_parts.append(f"  - 총 거래 횟수: {metrics['total_trades']}회")
-            message_parts.append(f"  - 승리: {metrics['winning_trades']}회 / 패배: {metrics['losing_trades']}회")
-            message_parts.append(f"  - 승률: {metrics['win_rate']:.1f}%")
-            message_parts.append(f"  - 누적 수익률: {metrics['cumulative_return']:+.2f}%")
+            # 누적 성과 - 실현손익 기준으로 계산
+            # 총 자산 = 실현손익 + 현재 평가액 (또는 현금)
+            if position:
+                # 포지션 보유 중: 실현손익 + 미실현손익
+                total_pl = realized_pl + unrealized_pl
+            else:
+                # 현금 보유 중: 실현손익만
+                total_pl = realized_pl
             
+            total_assets_actual = INITIAL_CAPITAL + total_pl
+            total_return_pct_actual = (total_pl / INITIAL_CAPITAL) * 100
+            
+            message_parts.append("📈 **누적 성과**")
+            message_parts.append(f"┣ 시작: {INITIAL_CAPITAL/10000:,.0f}만원")
+            message_parts.append(f"┣ 현재: {total_assets_actual/10000:,.0f}만원")
+            
+            return_emoji = "📈" if total_return_pct_actual > 0 else "📉" if total_return_pct_actual < 0 else "➖"
+            message_parts.append(f"┗ 수익률: {return_emoji} {total_return_pct_actual:+.2f}%")
+
+            # 청산 기록이 있으면 트레이딩 통계 표시
             if metrics['total_trades'] > 0:
-                message_parts.append(f"  - 평균 거래당 수익률: {metrics['avg_return_per_trade']:+.2f}%")
+                message_parts.append(f"\n🎲 **트레이딩 기록**")
+                message_parts.append(f"┣ 완료: {metrics['total_trades']}건")
+                message_parts.append(f"┣ 승/패: {metrics['winning_trades']}승 {metrics['losing_trades']}패")
+                message_parts.append(f"┣ 승률: {metrics['win_rate']:.0f}%")
+                message_parts.append(f"┗ 건당 평균: {metrics['avg_return_per_trade']:+.1f}%")
+
+            # 최근 거래 히스토리 (최대 3건)
+            recent_trades = [t for t in trade_history if t.get('trade_type') in ('BUY', 'SELL')][:3]
+            if recent_trades:
+                message_parts.append(f"\n📝 **최근 거래**")
+                for trade in recent_trades:
+                    trade_date = trade.get('analyzed_date', '')[:10]
+                    trade_type = trade.get('trade_type')
+                    stock_name = trade.get('stock_name', '')
+                    # 종목명 축약
+                    short_name = stock_name.replace('KODEX ', '').replace('200선물', '')
+                    
+                    if trade_type == 'BUY':
+                        message_parts.append(f"• {trade_date} 매수 {short_name}")
+                    elif trade_type == 'SELL':
+                        pl = trade.get('profit_loss', 0)
+                        pl_pct = trade.get('profit_loss_pct', 0)
+                        pl_emoji = "✅" if pl > 0 else "❌"
+                        message_parts.append(f"• {trade_date} 매도 {short_name} {pl_emoji}{pl_pct:+.1f}%")
 
             message_text = "\n".join(message_parts)
 
