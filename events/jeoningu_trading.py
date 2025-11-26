@@ -178,15 +178,18 @@ class JeoninguTrading:
         cookies_file = SECRETS_DIR / "youtube_cookies.txt"
 
         ydl_opts = {
-            'format': 'bestaudio/best',
+            'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best',  # 더 유연한 포맷 선택
             'outtmpl': str(AUDIO_TEMP_DIR / 'temp_audio.%(ext)s'),
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
+                'preferredquality': '192',
             }],
             'keepvideo': False,
             'quiet': True,
             'no_warnings': True,
+            'extract_flat': False,
+            'ignoreerrors': False,
         }
         
         # 쿠키 파일이 있으면 사용
@@ -202,9 +205,18 @@ class JeoninguTrading:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([video_url])
 
+            # mp3 파일 찾기 (확장자가 다를 수 있음)
+            for audio_ext in ['mp3', 'm4a', 'webm', 'opus']:
+                audio_path = AUDIO_TEMP_DIR / f'temp_audio.{audio_ext}'
+                if audio_path.exists():
+                    logger.info(f"Audio extraction successful: {audio_path.name}")
+                    return str(audio_path)
+            
+            # AUDIO_FILE 기본 경로도 확인
             if AUDIO_FILE.exists():
                 logger.info("Audio extraction successful")
                 return str(AUDIO_FILE)
+                
             return None
         except Exception as e:
             logger.error(f"Audio extraction error: {e}")
