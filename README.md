@@ -640,9 +640,12 @@ Thank you so much! PRISM-INSIGHT continues to operate with your support.
 <!-- sponsors -->
 **Core Supporter**
 - [@tehryung-ray](https://github.com/tehryung-ray) 💙
-<!-- sponsors -->
+
+**Supporter**
 - [@ddkerty](https://github.com/ddkerty) 💙
 - [@jk5745](https://github.com/jk5745) 💙
+<!-- sponsors -->
+
 ---
 
 **Important:** All features are provided free regardless of sponsorship.
