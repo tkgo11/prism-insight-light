@@ -1,21 +1,36 @@
-MIT License
+GNU AFFERO GENERAL PUBLIC LICENSE
+Version 3, 19 November 2007
+
+Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+
+NOTE: This software is dual-licensed:
+1. AGPL-3.0 for individual, non-commercial, and open-source use
+2. Commercial License for SaaS companies and commercial use
+   (Contact: dragon1086@naver.com for commercial licensing)
+
+For the full AGPL-3.0 license text, please visit:
+https://www.gnu.org/licenses/agpl-3.0.html
+
+IMPORTANT NOTICE FOR COMMERCIAL USE:
+====================================
+If you are a SaaS company or planning to use this software for commercial 
+purposes (including but not limited to providing services to third parties, 
+integrating into commercial products, or using in internal business operations 
+of for-profit organizations), you MUST obtain a separate Commercial License.
+
+The AGPL-3.0 license requires that:
+- Any modifications to this software must be disclosed
+- Any service using this software must make its source code available
+- Network use counts as distribution
+
+If these requirements are not compatible with your business model, please 
+contact us for a Commercial License agreement.
 
 Copyright (c) 2025 PRISM-INSIGHT
+All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+For commercial licensing inquiries:
+Email: dragon1086@naver.com
+GitHub: https://github.com/dragon1086/prism-insight

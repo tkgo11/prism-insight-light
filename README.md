@@ -2,7 +2,7 @@
   <img src="docs/images/prism-insight-logo.jpeg" alt="PRISM-INSIGHT Logo" width="300" style="margin-bottom: 20px;">
 
   <div style="text-align: center;">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+    <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License">
     <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
     <img src="https://img.shields.io/badge/OpenAI-GPT--4.1-green.svg" alt="OpenAI">
     <img src="https://img.shields.io/badge/OpenAI-GPT--5-green.svg" alt="OpenAI">
@@ -566,7 +566,69 @@ You can modify chart colors, styles, and indicators in `cores/stock_chart.py`.
 
 ## 📄 License
 
-This project is distributed under the MIT License. See the `LICENSE` file for details.
+**PRISM-INSIGHT is dual-licensed:**
+
+### For Individual & Open-Source Use
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** for:
+- Individual personal use
+- Non-commercial projects
+- Open-source development
+- Academic research
+
+The AGPL-3.0 license requires:
+- Source code disclosure for any modifications
+- Source code availability for network/service use
+- Same license for derived works
+
+📖 **[Full AGPL-3.0 License Text](LICENSE)**
+
+### For Commercial SaaS Use
+For SaaS companies and commercial use, a separate **Commercial License** is required.
+
+**Commercial License Benefits:**
+- No obligation to disclose source code
+- Freedom to modify without publishing changes
+- Proprietary integration allowed
+- Dedicated technical support
+- Priority feature development
+
+**Pricing:**
+- Startups (<50 employees): $500/month
+- SME (50-500 employees): $2,000/month
+- Enterprise (>500 employees): Custom pricing
+- **Exclusive SaaS License:** Starting from $500/month (1-year commitment)
+
+📧 **Contact for Commercial Licensing:** dragon1086@naver.com  
+📄 **[Commercial License Details](LICENSE-COMMERCIAL.md)**
+
+
+### Why Dual License?
+
+**For the Community:**
+- Free for personal learning and development
+- Contribute to open-source ecosystem
+- Full transparency with AGPL-3.0
+
+**For Sustainability:**
+- Commercial licenses fund ongoing development
+- Maintain server infrastructure ($174/month operating costs)
+- Add new features and AI models
+- Provide quality support
+
+**For Businesses:**
+- Legal clarity for commercial use
+- No source code disclosure requirements
+- Professional support and SLA
+- Customization opportunities
+
+---
+
+**Questions about licensing?**
+- 📧 Email: dragon1086@naver.com
+- 💬 Telegram: [@stock_ai_agent](https://t.me/stock_ai_agent)
+- 🐛 GitHub Issues: [Report here](https://github.com/dragon1086/prism-insight/issues)
 
 ## ⚠️ Disclaimer
 
