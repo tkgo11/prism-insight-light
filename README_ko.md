@@ -2,7 +2,7 @@
   <img src="docs/images/prism-insight-logo.jpeg" alt="PRISM-INSIGHT Logo" width="300" style="margin-bottom: 20px;">
 
   <div style="text-align: center;">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+    <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License">
     <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
     <img src="https://img.shields.io/badge/OpenAI-GPT--4.1-green.svg" alt="OpenAI">
     <img src="https://img.shields.io/badge/OpenAI-GPT--5-green.svg" alt="OpenAI">
@@ -564,7 +564,71 @@ AI 에이전트가 생성하는 종합 애널리스트 리포트는 다음 섹�
 
 ## 📄 라이센스
 
-이 프로젝트는 MIT 라이센스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
+## 📄 라이선스
+
+**PRISM-INSIGHT는 이중 라이선스(Dual License) 방식을 채택하고 있습니다:**
+
+### 개인 및 오픈소스 사용
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+이 프로젝트는 다음 사용에 대해 **GNU Affero General Public License v3.0 (AGPL-3.0)** 라이선스가 적용됩니다:
+- 개인적 사용
+- 비상업적 프로젝트
+- 오픈소스 개발
+- 학술 연구
+
+AGPL-3.0 라이선스 요구사항:
+- 수정한 소스코드를 공개해야 함
+- 네트워크를 통한 서비스 사용도 "배포"로 간주하여 소스코드 공개 필요
+- 파생 저작물도 동일한 라이선스 적용
+
+📖 **[AGPL-3.0 전문 (한글 참고용)](LICENSE-ko.md)** | **[영문 원본](LICENSE)**
+
+### 상업적 SaaS 사용
+SaaS 기업 및 상업적 사용의 경우 별도 **상업 라이선스**가 필요합니다.
+
+**상업 라이선스 혜택:**
+- 소스코드 공개 의무 없음
+- 수정 내용을 비공개로 유지 가능
+- 독점 소프트웨어에 통합 가능
+- 전용 기술 지원
+- 우선 기능 개발
+
+**가격:**
+- 스타트업 (<50명): $500/월
+- 중소기업 (50-500명): $2,000/월
+- 대기업 (>500명): 맞춤 가격
+- **독점 SaaS 라이선스:** $500/월부터 (1년 약정)
+
+📧 **상업 라이선스 문의:** dragon1086@naver.com  
+📄 **[상업 라이선스 상세 (한글)](LICENSE-COMMERCIAL-ko.md)** | **[영문](LICENSE-COMMERCIAL.md)**
+
+
+### 왜 듀얼 라이선스인가?
+
+**커뮤니티를 위해:**
+- 개인 학습 및 개발에 무료
+- 오픈소스 생태계 기여
+- AGPL-3.0으로 완전한 투명성
+
+**지속 가능성을 위해:**
+- 상업 라이선스 수익으로 지속적인 개발 자금 확보
+- 서버 인프라 유지
+- 새로운 기능 및 AI 모델 추가
+- 고품질 지원 제공
+
+**비즈니스를 위해:**
+- 상업적 사용에 대한 법적 명확성
+- 소스코드 공개 요구사항 없음
+- 전문적인 지원 및 SLA
+- 커스터마이징 기회
+
+---
+
+**라이선스 관련 질문이 있으신가요?**
+- 📧 이메일: dragon1086@naver.com
+- 💬 텔레그램: [@stock_ai_agent](https://t.me/stock_ai_agent)
+- 🐛 GitHub Issues: [여기에 보고](https://github.com/dragon1086/prism-insight/issues)
 
 ## ⚠️ 면책 조항
 
