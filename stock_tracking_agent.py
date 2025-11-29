@@ -1134,7 +1134,23 @@ class StockTrackingAgent:
                                 trade_result=trade_result
                             )
                         except Exception as signal_err:
-                            logger.warning(f"Buy signal publish failed (non-critical): {signal_err}")
+                            logger.warning(f"Sell signal publish failed (non-critical): {signal_err}")
+
+                        # [Optional] Publish sell signal via GCP Pub/Sub
+                        # Auto-skipped if GCP not configured (requires GCP_PROJECT_ID, GCP_PUBSUB_TOPIC_ID)
+                        try:
+                            from messaging.gcp_pubsub_signal_publisher import publish_sell_signal as gcp_publish_sell_signal
+                            await gcp_publish_sell_signal(
+                                ticker=ticker,
+                                company_name=company_name,
+                                price=current_price,
+                                buy_price=stock.get('buy_price', 0),
+                                profit_rate=((current_price - stock.get('buy_price', 0)) / stock.get('buy_price', 0) * 100),
+                                sell_reason=sell_reason,
+                                trade_result=trade_result
+                            )
+                        except Exception as signal_err:
+                            logger.warning(f"GCP sell signal publish failed (non-critical): {signal_err}")
 
                     if sell_success:
                         sold_stocks.append({
@@ -1378,6 +1394,21 @@ class StockTrackingAgent:
                             )
                         except Exception as signal_err:
                             logger.warning(f"Buy signal publish failed (non-critical): {signal_err}")
+
+                        # [Optional] Publish buy signal via GCP Pub/Sub
+                        # Auto-skipped if GCP not configured (requires GCP_PROJECT_ID, GCP_PUBSUB_TOPIC_ID)
+                        try:
+                            from messaging.gcp_pubsub_signal_publisher import publish_buy_signal as gcp_publish_buy_signal
+                            await gcp_publish_buy_signal(
+                                ticker=ticker,
+                                company_name=company_name,
+                                price=current_price,
+                                scenario=scenario,
+                                source="AI분석",
+                                trade_result=trade_result
+                            )
+                        except Exception as signal_err:
+                            logger.warning(f"GCP buy signal publish failed (non-critical): {signal_err}")
 
                     if buy_success:
                         buy_count += 1
