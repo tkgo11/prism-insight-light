@@ -452,6 +452,21 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                         except Exception as signal_err:
                             logger.warning(f"Buy signal publish failed (non-critical): {signal_err}")
 
+                        # [Optional] Publish buy signal via GCP Pub/Sub
+                        # Auto-skipped if GCP not configured (requires GCP_PROJECT_ID, GCP_PUBSUB_TOPIC_ID)
+                        try:
+                            from messaging.gcp_pubsub_signal_publisher import publish_buy_signal as gcp_publish_buy_signal
+                            await gcp_publish_buy_signal(
+                                ticker=ticker,
+                                company_name=company_name,
+                                price=current_price,
+                                scenario=scenario,
+                                source="AI분석",
+                                trade_result=trade_result
+                            )
+                        except Exception as signal_err:
+                            logger.warning(f"GCP buy signal publish failed (non-critical): {signal_err}")
+
                     if buy_success:
                         buy_count += 1
                         logger.info(f"Purchase complete: {company_name}({ticker}) @ {current_price:,.0f} KRW")
