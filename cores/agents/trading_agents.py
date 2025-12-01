@@ -639,9 +639,10 @@ def create_sell_decision_agent(language: str = "ko"):
         - 전체 시장 상황 (강세장/약세장/중립)
         - 시장 변동성 수준
 
-        **포트폴리오 관점:**
+        **포트폴리오 관점(첨부한 현재 포트폴리오 상황을 참고):**
         - 전체 포트폴리오 내 비중과 위험도
         - 시장상황과 포트폴리오 상황을 고려한 리밸런싱 필요성
+        - 섹터 편중 현황인 산업군 분포를 면밀히 파악
 
         ### 도구 사용 지침
 
@@ -653,7 +654,7 @@ def create_sell_decision_agent(language: str = "ko"):
         3. get_index_ohlcv: 코스피/코스닥 시장 지수 정보 확인
 
         **sqlite tool로 확인:**
-        1. 현재 포트폴리오 전체 현황 (특히 섹터 편중 현황을 정확히 파악)
+        1. 현재 포트폴리오 전체 현황 (stock_holdings 테이블 참고)
         2. 현재 종목의 매매 정보 (참고사항 : stock_holdings테이블의 scenario 컬럼에 있는 json데이터 내에서 target_price와 stop_loss는 최초 진입시 설정한 목표가와 손절가임)
         3. **DB 업데이트**: portfolio_adjustment에서 목표가/손절가 조정이 필요하면 UPDATE 쿼리 실행
 
