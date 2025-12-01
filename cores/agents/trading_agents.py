@@ -253,9 +253,12 @@ def create_trading_scenario_agent(language: str = "ko"):
         ### 3. 진입 결정 필수 확인사항
 
         #### 3-1. 밸류에이션 분석 (최우선)
-        perplexity-ask tool을 활용하여 확인:
+        1) time-get_current_time tool로 현재 날짜 우선 확인.
+        2) perplexity-ask tool을 활용하여 확인:
         - "[종목명] PER PBR vs [업종명] 업계 평균 밸류에이션 비교"
         - "[종목명] vs 동종업계 주요 경쟁사 밸류에이션 비교"
+        - 질문 시 반드시 기준일로서 현재 날짜 포함: "(파악한 현재 날짜) 기준으로, ..."
+        - 답변의 날짜를 항상 검증할 것
 
         #### 3-2. 기본 체크리스트
         - 재무 건전성 (부채비율, 현금흐름)
@@ -353,8 +356,8 @@ def create_trading_scenario_agent(language: str = "ko"):
             "investment_period": "단기" / "중기" / "장기",
             "rationale": "핵심 투자 근거 (3줄 이내)",
             "sector": "산업군/섹터",
-            "market_condition": "시장 추세 분석 (상승추세/하락추세/횡보)",
-            "max_portfolio_size": "시장 상태 분석 결과 추론된 최대 보유 종목수",
+            "market_condition": "시장 추세 분석 (상승추세/하락추세/횡보 등으로 표현하되 구체적인 근거 같이 제시)",
+            "max_portfolio_size": "시장 상태 분석 결과 추론된 최대 보유 종목수(1개의 숫자로만 표현. 범위표현 안됨. '개'라는 단위 표현도 삭제.)",
             "trading_scenarios": {
                 "key_levels": {
                     "primary_support": 주요 지지선,
