@@ -427,7 +427,7 @@ class JeoninguTrading:
                 result = await llm.generate_str(
                     message="위 지시사항에 따라 영상을 분석하고 역발상 투자 전략을 JSON 형식으로 출력해주세요.",
                     request_params=RequestParams(
-                        model="gpt-5",
+                        model="gpt-4.1",
                         maxTokens=8000,
                         max_iterations=3,
                         parallel_tool_calls=False,
