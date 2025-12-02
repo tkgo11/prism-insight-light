@@ -54,6 +54,12 @@ async def generate_report(agent, section, company_name, company_code, reference_
 2. 섹션 제목과 구조는 에이전트 지침에 명시된 형식을 따르세요.
 3. 가독성을 위해 적절히 단락을 나누고, 중요한 내용은 강조하세요.
 
+## 출력 형식 규칙:
+- 문장은 자연스러운 산문체로 작성하세요. 문장 중간에 개행하지 마세요.
+- 불필요한 bullet point 사용을 금지합니다. 나열이 꼭 필요한 경우에만 사용하세요.
+- 하나의 문단은 완결된 문장들로 구성하세요.
+- 표 데이터가 아닌 일반 설명은 반드시 문장 형태로 작성하세요.
+
 ##분석일: {reference_date}(YYYYMMDD 형식)
 """
     else:  # English or other languages
@@ -73,6 +79,12 @@ async def generate_report(agent, section, company_name, company_code, reference_
 2. Follow the format specified in the agent's instructions for section titles and structure.
 3. Divide paragraphs appropriately for readability and emphasize important content.
 
+## Output Format Rules:
+- Write sentences in natural prose style. Do not break lines in the middle of sentences.
+- Do not use unnecessary bullet points. Use them only when listing is absolutely necessary.
+- Each paragraph should consist of complete sentences.
+- General explanations (not table data) must be written in sentence form.
+
 ##Analysis Date: {reference_date} (YYYYMMDD format)
 """
 
@@ -81,7 +93,6 @@ async def generate_report(agent, section, company_name, company_code, reference_
         request_params=RequestParams(
             model="gpt-4.1",
             maxTokens=16000,
-            max_iterations=6,
             parallel_tool_calls=True,
             use_history=True
         )
@@ -120,6 +131,12 @@ async def generate_market_report(agent, section, reference_date, logger, languag
 2. 섹션 제목과 구조는 에이전트 지침에 명시된 형식을 따르세요.
 3. 가독성을 위해 적절히 단락을 나누고, 중요한 내용은 강조하세요.
 
+## 출력 형식 규칙:
+- 문장은 자연스러운 산문체로 작성하세요. 문장 중간에 개행하지 마세요.
+- 불필요한 bullet point 사용을 금지합니다. 나열이 꼭 필요한 경우에만 사용하세요.
+- 하나의 문단은 완결된 문장들로 구성하세요.
+- 표 데이터가 아닌 일반 설명은 반드시 문장 형태로 작성하세요.
+
 ##분석일: {reference_date}(YYYYMMDD 형식)
 """
     else:  # English or other languages
@@ -138,6 +155,12 @@ async def generate_market_report(agent, section, reference_date, logger, languag
 1. Always start the report with two newline characters (\\n\\n) before the title.
 2. Follow the format specified in the agent's instructions for section titles and structure.
 3. Divide paragraphs appropriately for readability and emphasize important content.
+
+## Output Format Rules:
+- Write sentences in natural prose style. Do not break lines in the middle of sentences.
+- Do not use unnecessary bullet points. Use them only when listing is absolutely necessary.
+- Each paragraph should consist of complete sentences.
+- General explanations (not table data) must be written in sentence form.
 
 ##Analysis Date: {reference_date} (YYYYMMDD format)
 """
@@ -332,6 +355,12 @@ async def generate_investment_strategy(section_reports, combined_reports, compan
 - 구체적인 가격대와 실행 가능한 전략 제시
 - 균형 잡힌 리스크-리워드 분석
 
+## 출력 형식 규칙
+- 문장은 자연스러운 산문체로 작성하세요. 문장 중간에 개행하지 마세요.
+- 불필요한 bullet point 사용을 금지합니다. 나열이 꼭 필요한 경우에만 사용하세요.
+- 하나의 문단은 완결된 문장들로 구성하세요.
+- 표 데이터가 아닌 일반 설명은 반드시 문장 형태로 작성하세요.
+
 ## 보고서 형식
 - 보고서 시작 시 개행문자 2번 삽입(\\n\\n)
 - 제목: "# 5. 투자 전략 및 의견"
@@ -415,6 +444,12 @@ async def generate_investment_strategy(section_reports, combined_reports, compan
 - Provide differentiated strategies considering various investment preferences and timeframes
 - Present specific price ranges and executable strategies
 - Balanced risk-reward analysis
+
+## Output Format Rules
+- Write sentences in natural prose style. Do not break lines in the middle of sentences.
+- Do not use unnecessary bullet points. Use them only when listing is absolutely necessary.
+- Each paragraph should consist of complete sentences.
+- General explanations (not table data) must be written in sentence form.
 
 ## Report Format
 - Insert 2 newline characters at the start of the report (\\n\\n)
