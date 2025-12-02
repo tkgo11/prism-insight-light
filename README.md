@@ -1,17 +1,15 @@
-# PRISM-INSIGHT
+# PRISM-INSIGHT-LIGHT
 
-AI-powered Korean stock market analysis and trading system.
+한국 주식시장(KOSPI/KOSDAQ)을 대상으로 하는 AI 기반 분석 및 자동매매 시스템의 **축약 버전 저장소**입니다.
 
-This **minimal** repository snapshot focuses on:
+현재 이 스냅샷에서는 다음 구성 요소만을 다룹니다.
 
-- Trading integration via Korea Investment & Securities (KIS) API (`trading/`)
-- A simple GCP Pub/Sub trading signal subscriber (`gcp_pubsub_subscriber.py`)
-
-For now, only the files listed below exist and are supported.
+- 한국투자증권(KIS) API 기반 트레이딩 모듈 (`trading/`)
+- GCP Pub/Sub 기반 실시간 트레이딩 시그널 구독 스크립트 (`gcp_pubsub_subscriber.py`)
 
 ---
 
-## Repository Structure (Current)
+## 디렉터리 구조 (현재 실제 기준)
 
 ```text
 prism-insight/
@@ -23,9 +21,7 @@ prism-insight/
 │   └── config/
 │       └── kis_devlp.yaml.example
 ├── gcp_pubsub_subscriber.py
-├── EXTERNAL_SUBSCRIBER_GUIDE.md
 ├── README.md
-├── README_ko.md
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
@@ -33,15 +29,13 @@ prism-insight/
 └── __init__.py
 ```
 
-> If you see references in older documents or issues to other modules (e.g. `cores/`, `utils/`, `examples/streamlit/`), those are **not present in this reduced snapshot** and should be ignored.
-
 ---
 
-## Quick Start (Environment)
+## 빠른 시작 (환경 구성)
 
 ```bash
 git clone https://github.com/tkgo11/prism-insight-light.git
-cd prism-insight
+cd prism-insight-light
 
 python -m venv .venv
 # Windows
@@ -52,53 +46,27 @@ python -m venv .venv
 pip install -r requirements.txt
 
 cp .env.example .env
+cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 ```
 
-Fill your `.env` with at least the following when using the Pub/Sub subscriber:
-
-- `GCP_PROJECT_ID`
-- `GCP_PUBSUB_TOPIC_ID`
-- `GCP_PUBSUB_SUBSCRIPTION_ID`
-- `GCP_CREDENTIALS_PATH`
-
-KIS trading credentials/config live under `trading/config/kis_devlp.yaml.example` (copy and edit for real use).
+필요한 값들을 수정합니다
 
 ---
 
-## GCP Pub/Sub Trading Signal Subscriber
+## GCP Pub/Sub 트레이딩 시그널 구독자
 
-**Main script:** `gcp_pubsub_subscriber.py` (root level)
+### 메인 스크립트
 
-This script:
+- `gcp_pubsub_subscriber.py` (프로젝트 루트 위치)
 
-- Subscribes to a GCP Pub/Sub subscription
-- Receives BUY / SELL / EVENT signals as JSON
-- Logs them
-- Optionally executes trades via `trading.domestic_stock_trading.AsyncTradingContext`
+이 스크립트는:
 
-### Run (dry run, no real trading)
+- GCP Pub/Sub 구독으로부터 메시지를 수신하고
+- `BUY` / `SELL` / `EVENT` 타입의 시그널을 로그로 남기며
+- 옵션에 따라 `trading.domestic_stock_trading.AsyncTradingContext`를 사용해 실제 매수/매도를 실행할 수 있습니다.
 
-```bash
-python gcp_pubsub_subscriber.py --dry-run
-```
+### 실행 방법 요약
 
-### Run (live, may execute trades)
-
-```bash
-python gcp_pubsub_subscriber.py
-```
-
-Make sure `.env` is configured correctly for GCP and, if you want actual trading, for KIS as well.
-
----
-
-## External Subscriber Guide (Full, Korean)
-
-The following is the complete external subscriber guide originally kept in `EXTERNAL_SUBSCRIBER_GUIDE.md`.
-
-> **Note:** This section is written in Korean.
-
----
 
 # PRISM-INSIGHT 실시간 트레이딩 시그널 구독 가이드
 
@@ -185,19 +153,7 @@ gcloud pubsub subscriptions list
 ### 5. 예제 코드 실행
 
 #### Python 환경 설정
-
-```bash
-# 저장소 클론
-git clone https://github.com/tkgo11/prism-insight-light.git
-cd prism-insight
-
-# 가상환경 생성 (권장)
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 패키지 설치
-pip install google-cloud-pubsub python-dotenv
-```
+상단 "빠른 시작 (환경 구성)" 섹션에서 저장소 클론 및 가상환경, 의존성 설치까지 완료되었다고 가정합니다.
 
 #### 환경 변수 설정
 
@@ -284,7 +240,7 @@ def callback(message):
     
     if signal["type"] == "BUY" and signal["buy_score"] >= 8:
         # Slack, Discord, Email 등으로 알림
-        send_notification(f"강력 매수: {signal['company_name']}")
+        send_notification(f"강력 매수: signal['company_name']")
     
     message.ack()
 ```
@@ -406,8 +362,6 @@ gcloud pubsub subscriptions update my-prism-signals \
 ## 📞 지원 및 문의
 
 - **GitHub Issues**: https://github.com/tkgo11/prism-insight-light/issues
-- **Telegram 채널**: @your_channel
-- **문서**: https://github.com/tkgo11/prism-insight-light/docs
 
 ## ⚠️ 면책 조항
 
