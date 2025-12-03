@@ -1,7 +1,7 @@
 streamlit>=1.10.0
 pandas~=2.2.3
 numpy~=2.2.3
-mcp-agent>=0.2.5
+mcp-agent>=0.1.10
 requests~=2.32.3
 aiohttp~=3.11.13
 python-dateutil~=2.9.0.post0
