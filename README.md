@@ -17,6 +17,27 @@
 
 > 📖 [한국어 문서](README_ko.md)
 
+<div align="center">
+
+---
+
+### 🏆 Platinum Sponsor
+
+<a href="https://wrks.ai/en">
+  <img src="docs/images/wrks_ai_logo.png" alt="AI3 WrksAI" width="50">
+</a>
+
+**[AI3](https://www.ai3.kr/) | [WrksAI](https://wrks.ai/en)**
+
+**AI3**, the creators of **WrksAI** – the AI assistant for professionals,<br>
+proudly sponsors **PRISM-INSIGHT** – the AI assistant for investors.
+
+👉 [Learn more about WrksAI](https://wrks.ai/en)
+
+---
+
+</div>
+
 ---
 
 ### 📊 AI-Powered Korean Stock Market Analysis & Trading System

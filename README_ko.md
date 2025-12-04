@@ -15,6 +15,27 @@
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/dragon1086?style=for-the-badge&logo=github-sponsors&color=ff69b4&label=Sponsors)](https://github.com/sponsors/dragon1086)
 [![Stars](https://img.shields.io/github/stars/dragon1086/prism-insight?style=for-the-badge)](https://github.com/dragon1086/prism-insight/stargazers)
 
+<div align="center">
+
+---
+
+### 🏆 Platinum Sponsor
+
+<a href="https://wrks.ai/ko">
+  <img src="docs/images/wrks_ai_logo.png" alt="AI3 WrksAI" width="50">
+</a>
+
+**[AI3](https://www.ai3.kr/) | [WrksAI](https://wrks.ai/ko)**
+
+직장인을 위한 AI 비서 **웍스AI**를 만드는 **AI3**가<br>
+투자자를 위한 AI 비서 **PRISM-INSIGHT**를 후원합니다.
+
+👉 [웍스AI 알아보기](https://wrks.ai/ko)
+
+---
+
+</div>
+
 ---
 
 ### 📊 AI 기반 한국 주식시장 분석 및 매매 시스템
