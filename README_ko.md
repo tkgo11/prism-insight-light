@@ -174,7 +174,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
 
 ---
 
-### 📈 매매 시뮬레이션 팀 (2개 에이전트) - GPT-5 기반
+### 📈 매매 시뮬레이션 팀 (2개 에이전트) - GPT-5.1 기반
 
 #### 9-1. 매수 전문가 (Buy Specialist)
 <img src="docs/images/aiagent/buy_specialist.jpeg" alt="Buy Specialist" width="300"/>
@@ -243,7 +243,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
   <img src="docs/images/summary.png" alt="요약 전송" width="500">
 
 
-- **📈 매매 시뮬레이션**: GPT-5 기반 생성된 리포트를 활용한 투자 전략 시뮬레이션
+- **📈 매매 시뮬레이션**: GPT-5.1 기반 생성된 리포트를 활용한 투자 전략 시뮬레이션
   <img src="docs/images/simulation1.png" alt="시뮬레이션1" width="500">
 
   <img src="docs/images/simulation2.png" alt="시뮬레이션2" width="500">
@@ -265,7 +265,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
 ## 🧠 AI 모델 활용
 
 - **핵심 분석**: OpenAI GPT-4.1 (종합 주식 분석 에이전트)
-- **매매 시뮬레이션**: OpenAI GPT-5 (투자 전략 시뮬레이션)
+- **매매 시뮬레이션**: OpenAI GPT-5.1 (투자 전략 시뮬레이션)
 - **텔레그램 대화**: Anthropic Claude Sonnet 4.5 (봇과의 상호작용)
 - **번역**: OpenAI GPT-5-NANO (텔레그램 채널 다중 언어 송출)
 
@@ -283,7 +283,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
 ### 사전 요구사항
 
 - Python 3.10+
-- OpenAI API 키 (GPT-4.1, GPT-5)
+- OpenAI API 키 (GPT-4.1, GPT-5.1)
 - Anthropic API 키 (Claude-Sonnet-4.5)
 - 텔레그램 봇 토큰 및 채널 ID
 - Playwright (PDF 변환용)
@@ -516,7 +516,7 @@ prism-insight/
 ├── telegram_config.py           # 텔레그램 설정 관리 클래스
 ├── trigger_batch.py             # 급등주 포착 배치
 ├── telegram_bot_agent.py        # 텔레그램 봇 (Claude 기반)
-├── stock_tracking_agent.py      # 매매 시뮬레이션 (GPT-5)
+├── stock_tracking_agent.py      # 매매 시뮬레이션 (GPT-5.1)
 ├── stock_tracking_enhanced_agent.py # 향상된 매매 시뮬레이션
 ├── pdf_converter.py             # PDF 변환
 ├── requirements.txt             # 의존성 목록
@@ -654,7 +654,7 @@ SaaS 기업 및 상업적 사용의 경우 별도 **상업 라이선스**가 필
 ---
 **월 $500 상세**
 
-1. AI 운영비 충당: GPT-5 등 최고급 AI 모델 API 비용 전액
+1. AI 운영비 충당: GPT-5.1 등 최고급 AI 모델 API 비용 전액
 2. 안정화 보상금: 핵심 시스템의 긴급 유지보수 및 안정화 작업에 대한 보상
 ---
 
@@ -680,8 +680,8 @@ SaaS 기업 및 상업적 사용의 경우 별도 **상업 라이선스**가 필
 
 ### 💰 투명한 운영
 
-매월 약 ₩260,000의 API 비용과 서버 비용이 발생합니다 ('25.10월 기준) :
-- OpenAI API (GPT-4.1, GPT-5): ~₩140,000/월
+매월 약 ₩260,000의 API 비용과 서버 비용이 발생합니다 ('25.11월 기준) :
+- OpenAI API (GPT-4.1, GPT-5.1): ~₩170,000/월
 - Anthropic API (Claude Sonnet 4.5): ~₩30,000/월
 - Firecrawl API (MCP Server): ~₩30,000/월
 - Perplexity API (MCP Server): ~₩15,000/월
