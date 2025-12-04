@@ -1,13 +1,11 @@
-<div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
-  <img src="docs/images/prism-insight-logo.jpeg" alt="PRISM-INSIGHT Logo" width="300" style="margin-bottom: 20px;">
-
-  <div style="text-align: center;">
-    <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License">
-    <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
-    <img src="https://img.shields.io/badge/OpenAI-GPT--4.1-green.svg" alt="OpenAI">
-    <img src="https://img.shields.io/badge/OpenAI-GPT--5.1-green.svg" alt="OpenAI">
-    <img src="https://img.shields.io/badge/Anthropic-Claude--Sonnet--4.5-green.svg" alt="Anthropic">
-  </div>
+<div align="center">
+  <img src="docs/images/prism-insight-logo.jpeg" alt="PRISM-INSIGHT Logo" width="300">
+  <br><br>
+  <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License">
+  <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
+  <img src="https://img.shields.io/badge/OpenAI-GPT--4.1-green.svg" alt="OpenAI">
+  <img src="https://img.shields.io/badge/OpenAI-GPT--5.1-green.svg" alt="OpenAI">
+  <img src="https://img.shields.io/badge/Anthropic-Claude--Sonnet--4.5-green.svg" alt="Anthropic">
 </div>
 
 # 🔍 PRISM-INSIGHT
