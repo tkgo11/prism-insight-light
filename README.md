@@ -5,7 +5,7 @@
     <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License">
     <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
     <img src="https://img.shields.io/badge/OpenAI-GPT--4.1-green.svg" alt="OpenAI">
-    <img src="https://img.shields.io/badge/OpenAI-GPT--5-green.svg" alt="OpenAI">
+    <img src="https://img.shields.io/badge/OpenAI-GPT--5.1-green.svg" alt="OpenAI">
     <img src="https://img.shields.io/badge/Anthropic-Claude--Sonnet--4.5-green.svg" alt="Anthropic">
   </div>
 </div>
@@ -16,6 +16,27 @@
 [![Stars](https://img.shields.io/github/stars/dragon1086/prism-insight?style=for-the-badge)](https://github.com/dragon1086/prism-insight/stargazers)
 
 > 📖 [한국어 문서](README_ko.md)
+
+<div align="center">
+
+---
+
+### 🏆 Platinum Sponsor
+
+<a href="https://wrks.ai/en">
+  <img src="docs/images/wrks_ai_logo.png" alt="AI3 WrksAI" width="50">
+</a>
+
+**[AI3](https://www.ai3.kr/) | [WrksAI](https://wrks.ai/en)**
+
+**AI3**, the creators of **WrksAI** – the AI assistant for professionals,<br>
+proudly sponsors **PRISM-INSIGHT** – the AI assistant for investors.
+
+👉 [Learn more about WrksAI](https://wrks.ai/en)
+
+---
+
+</div>
 
 ---
 
@@ -44,7 +65,7 @@ PRISM-INSIGHT is a **completely open-source free project** specializing in **Kor
 
 **✨ All features are provided 100% free!**
 
-## 📈 Trading Simulator and Real Account Performance as of '25.11.17
+## 📈 Trading Simulator and Real Account Performance as of '25.12.05
 ### ⭐ Season 1 (Ended '25.09.28. No real account trading)
 **Simulator Performance**
 - Start Date: 2025.03.15
@@ -58,20 +79,20 @@ PRISM-INSIGHT is a **completely open-source free project** specializing in **Kor
 ### ⭐⭐ Season 2 (In Progress)
 **Simulator Performance**
 - Start Date: 2025.09.29
-- Total Trades: 16
-- Profitable Trades: 10
-- Loss Trades: 6
-- Win Rate: 62.50%
-- **Total Cumulative Return from Sold Stocks: 110.99%**
-- **Realized Portfolio Return: 11.10%** (managed across 10 slots, 110.99% ÷ 10)
-- Market Benchmark (from Season 2 start): KOSPI +16.91%, KOSDAQ +6.05%
+- Total Trades: 28
+- Profitable Trades: 14
+- Loss Trades: 14
+- Win Rate: 50.00%
+- **Total Cumulative Return from Sold Stocks: 87.30%**
+- **Realized Portfolio Return: 8.73%** (managed across 10 slots, 87.30% ÷ 10)
+- Market Benchmark (from Season 2 start): KOSPI +2.21%, KOSDAQ +5.29%
 - **[Trading Performance Summary Dashboard](https://analysis.stocksimulation.kr/)**
 
 **Real Account Performance**
 - Start Date: 2025.09.29
 - Initial Capital: ₩9,969,801
-- Current Total Assets (Valuation + Cash): ₩10,901,561
-- **Return: +9.35%**
+- Current Total Assets (Valuation + Cash): ₩10,816,740
+- **Return: +8.50%**
 
 ## 🤖 AI Agent System Architecture (Core Feature)
 
@@ -178,7 +199,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 
 ---
 
-### 📈 Trading Simulation Team (2 Agents) - GPT-5 Based
+### 📈 Trading Simulation Team (2 Agents) - GPT-5.1 Based
 
 #### 9-1. Buy Specialist
 <img src="docs/images/aiagent/buy_specialist.jpeg" alt="Buy Specialist" width="300"/>
@@ -242,7 +263,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 - **📱 Automatic Telegram Transmission**: Real-time transmission of analysis results to Telegram channel
   <img src="docs/images/summary-en.png" alt="Summary Transmission" width="500">
 
-- **📈 Trading Simulation**: Investment strategy simulation using GPT-5 based generated reports
+- **📈 Trading Simulation**: Investment strategy simulation using GPT-5.1 based generated reports
   <img src="docs/images/simulation1-en.png" alt="Simulation 1" width="500">
   <img src="docs/images/simulation2-en.png" alt="Simulation 2" width="500">
   <img src="docs/images/season1_dashboard.png" alt="Simulation Performance" width="500">
@@ -268,7 +289,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 ## 🧠 AI Model Usage
 
 - **Core Analysis**: OpenAI GPT-4.1 (Comprehensive stock analysis agent)
-- **Trading Simulation**: OpenAI GPT-5 (Investment strategy simulation)
+- **Trading Simulation**: OpenAI GPT-5.1 (Investment strategy simulation)
 - **Telegram Conversation**: Anthropic Claude Sonnet 4.5 (Bot interaction)
 - **Translation**: OpenAI GPT-5-NANO (Multilingual broadcasting on a Telegram channel)
 
@@ -285,7 +306,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 ### Prerequisites
 
 - Python 3.10+
-- OpenAI API Key (GPT-4.1, GPT-5)
+- OpenAI API Key (GPT-4.1, GPT-5.1)
 - Anthropic API Key (Claude-Sonnet-4.5)
 - Telegram Bot Token and Channel ID
 - Playwright (for PDF conversion)
@@ -518,7 +539,7 @@ prism-insight/
 ├── telegram_config.py           # Telegram Configuration Management Class
 ├── trigger_batch.py             # Surge Stock Detection Batch
 ├── telegram_bot_agent.py        # Telegram Bot (Claude Based)
-├── stock_tracking_agent.py      # Trading Simulation (GPT-5)
+├── stock_tracking_agent.py      # Trading Simulation (GPT-5.1)
 ├── stock_tracking_enhanced_agent.py # Enhanced Trading Simulation
 ├── pdf_converter.py             # PDF Conversion
 ├── requirements.txt             # Dependency List

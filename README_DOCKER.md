@@ -30,7 +30,7 @@ Run Ubuntu 24.04-based AI stock analysis system easily with Docker.
 - **Korean Fonts**: Nanum font family
 
 #### Python Packages
-- OpenAI API (GPT-4.1, GPT-5)
+- OpenAI API (GPT-4.1, GPT-5.1)
 - Anthropic API (Claude Sonnet 4.5)
 - MCP Agent and related servers
 - pykrx (Korean stock data)
@@ -205,8 +205,8 @@ mcp:
       command: "uvx"
       args: ["mcp-server-time"]
 openai:
-  default_model: gpt-5
-  reasoning_effort: medium
+  default_model: gpt-5.1
+  reasoning_effort: high
 ```
 
 #### 3. `mcp_agent.secrets.yaml` File

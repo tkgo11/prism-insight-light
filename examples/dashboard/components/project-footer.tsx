@@ -33,7 +33,7 @@ export function ProjectFooter() {
                     <span>•</span>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                      <span>GPT-5</span>
+                      <span>GPT-5.1</span>
                     </div>
                     <span>•</span>
                     <div className="flex items-center gap-1">
