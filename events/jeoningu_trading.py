@@ -750,8 +750,10 @@ https://stocksimulation.kr/ 접속 후
                     new_balance = current_balance + profit_loss
                     cumulative_return_pct = ((new_balance - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100
 
+                    # Use SELL suffix for video_id to avoid UNIQUE constraint
+                    # when both SELL and BUY happen from same video
                     sell_trade = {
-                        'video_id': video_info['video_id'],
+                        'video_id': f"{video_info['video_id']}_SELL",
                         'video_title': video_info['title'],
                         'video_date': video_info['video_date'],
                         'video_url': video_info['video_url'],
@@ -804,8 +806,14 @@ https://stocksimulation.kr/ 접속 후
                 quantity = int(current_balance / buy_price)  # 전액 투자
                 buy_amount = quantity * buy_price
 
+                # Use _BUY suffix when this is part of a position switch
+                # (i.e., when we just sold a different position from the same video)
+                video_id_for_buy = video_info['video_id']
+                if trades_executed:  # We just did a sell, so use suffix
+                    video_id_for_buy = f"{video_info['video_id']}_BUY"
+
                 buy_trade = {
-                    'video_id': video_info['video_id'],
+                    'video_id': video_id_for_buy,
                     'video_title': video_info['title'],
                     'video_date': video_info['video_date'],
                     'video_url': video_info['video_url'],
