@@ -5,7 +5,7 @@
     <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License">
     <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
     <img src="https://img.shields.io/badge/OpenAI-GPT--4.1-green.svg" alt="OpenAI">
-    <img src="https://img.shields.io/badge/OpenAI-GPT--5-green.svg" alt="OpenAI">
+    <img src="https://img.shields.io/badge/OpenAI-GPT--5.1-green.svg" alt="OpenAI">
     <img src="https://img.shields.io/badge/Anthropic-Claude--Sonnet--4.5-green.svg" alt="Anthropic">
   </div>
 </div>
@@ -14,6 +14,27 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/dragon1086?style=for-the-badge&logo=github-sponsors&color=ff69b4&label=Sponsors)](https://github.com/sponsors/dragon1086)
 [![Stars](https://img.shields.io/github/stars/dragon1086/prism-insight?style=for-the-badge)](https://github.com/dragon1086/prism-insight/stargazers)
+
+<div align="center">
+
+---
+
+### 🏆 Platinum Sponsor
+
+<a href="https://wrks.ai/ko">
+  <img src="docs/images/wrks_ai_logo.png" alt="AI3 WrksAI" width="50">
+</a>
+
+**[AI3](https://www.ai3.kr/) | [WrksAI](https://wrks.ai/ko)**
+
+직장인을 위한 AI 비서 **웍스AI**를 만드는 **AI3**가<br>
+투자자를 위한 AI 비서 **PRISM-INSIGHT**를 후원합니다.
+
+👉 [웍스AI 알아보기](https://wrks.ai/ko)
+
+---
+
+</div>
 
 ---
 
@@ -40,7 +61,7 @@ PRISM-INSIGHT는 **한국 주식시장(코스피/코스닥) 전문** **AI 분석
 
 **✨ 모든 기능이 100% 무료로 제공됩니다!**
 
-## 📈 '25.11.17 기준 매매 시뮬레이터 및 실제 계좌 실적
+## 📈 '25.12.05 기준 매매 시뮬레이터 및 실제 계좌 실적
 ### ⭐ 시즌1 ('25.09.28 종료. 실계좌 매매 없음)
 **시뮬레이터 실적**
 - 최초 시작일 : 2025.03.15
@@ -54,20 +75,20 @@ PRISM-INSIGHT는 **한국 주식시장(코스피/코스닥) 전문** **AI 분석
 ### ⭐⭐ 시즌2 (진행 중)
 **시뮬레이터 실적**
 - 최초 시작일 : 2025.09.29
-- 총 거래 건수: 14건
-- 수익 거래: 10건
-- 손실 거래: 6건
-- 승률: 62.50%
-- **매도 종목 누적 수익률: 110.99%**
-- **포트폴리오 실현 수익률: 11.10%** (10개 슬롯으로 분산 관리, 110.99% ÷ 10)
-- 시장 수익률(시즌2 시작 대비): KOSPI +16.91%, KOSDAQ +6.05%
+- 총 거래 건수: 28건
+- 수익 거래: 14건
+- 손실 거래: 14건
+- 승률: 50.00%
+- **매도 종목 누적 수익률: 87.30%**
+- **포트폴리오 실현 수익률: 8.73%** (10개 슬롯으로 분산 관리, 87.30% ÷ 10)
+- 시장 수익률(시즌2 시작 대비): KOSPI +2.21%, KOSDAQ +5.29%
 - **[매매 성과 요약 대시보드](https://analysis.stocksimulation.kr/)**
 
 **실제계좌 실적**
 - 최초 시작일 : 2025.09.29
 - 시작 금액: ₩9,969,801
-- 현재 총자산 (평가금액 + 예수금): ₩10,901,561
-- **수익률: +9.35%**
+- 현재 총자산 (평가금액 + 예수금): ₩10,816,740
+- **수익률: +8.50%**
 
 ## 🤖 AI 에이전트 시스템 아키텍쳐 (핵심 기능)
 
@@ -174,7 +195,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
 
 ---
 
-### 📈 매매 시뮬레이션 팀 (2개 에이전트) - GPT-5 기반
+### 📈 매매 시뮬레이션 팀 (2개 에이전트) - GPT-5.1 기반
 
 #### 9-1. 매수 전문가 (Buy Specialist)
 <img src="docs/images/aiagent/buy_specialist.jpeg" alt="Buy Specialist" width="300"/>
@@ -243,7 +264,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
   <img src="docs/images/summary.png" alt="요약 전송" width="500">
 
 
-- **📈 매매 시뮬레이션**: GPT-5 기반 생성된 리포트를 활용한 투자 전략 시뮬레이션
+- **📈 매매 시뮬레이션**: GPT-5.1 기반 생성된 리포트를 활용한 투자 전략 시뮬레이션
   <img src="docs/images/simulation1.png" alt="시뮬레이션1" width="500">
 
   <img src="docs/images/simulation2.png" alt="시뮬레이션2" width="500">
@@ -265,7 +286,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
 ## 🧠 AI 모델 활용
 
 - **핵심 분석**: OpenAI GPT-4.1 (종합 주식 분석 에이전트)
-- **매매 시뮬레이션**: OpenAI GPT-5 (투자 전략 시뮬레이션)
+- **매매 시뮬레이션**: OpenAI GPT-5.1 (투자 전략 시뮬레이션)
 - **텔레그램 대화**: Anthropic Claude Sonnet 4.5 (봇과의 상호작용)
 - **번역**: OpenAI GPT-5-NANO (텔레그램 채널 다중 언어 송출)
 
@@ -283,7 +304,7 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
 ### 사전 요구사항
 
 - Python 3.10+
-- OpenAI API 키 (GPT-4.1, GPT-5)
+- OpenAI API 키 (GPT-4.1, GPT-5.1)
 - Anthropic API 키 (Claude-Sonnet-4.5)
 - 텔레그램 봇 토큰 및 채널 ID
 - Playwright (PDF 변환용)
@@ -516,7 +537,7 @@ prism-insight/
 ├── telegram_config.py           # 텔레그램 설정 관리 클래스
 ├── trigger_batch.py             # 급등주 포착 배치
 ├── telegram_bot_agent.py        # 텔레그램 봇 (Claude 기반)
-├── stock_tracking_agent.py      # 매매 시뮬레이션 (GPT-5)
+├── stock_tracking_agent.py      # 매매 시뮬레이션 (GPT-5.1)
 ├── stock_tracking_enhanced_agent.py # 향상된 매매 시뮬레이션
 ├── pdf_converter.py             # PDF 변환
 ├── requirements.txt             # 의존성 목록
