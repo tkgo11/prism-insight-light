@@ -28,7 +28,7 @@ Ubuntu 24.04 기반 AI 주식 분석 시스템을 Docker로 간편하게 실행�
 - **한글 폰트**: Nanum 폰트 패밀리
 
 #### Python 패키지
-- OpenAI API (GPT-4.1, GPT-5)
+- OpenAI API (GPT-4.1, GPT-5.1)
 - Anthropic API (Claude Sonnet 4.5)
 - MCP Agent 및 관련 서버들
 - pykrx (한국 주식 데이터)
@@ -203,8 +203,8 @@ mcp:
       command: "uvx"
       args: ["mcp-server-time"]
 openai:
-  default_model: gpt-5
-  reasoning_effort: medium
+  default_model: gpt-5.1
+  reasoning_effort: high
 ```
 
 #### 3. `mcp_agent.secrets.yaml` 파일

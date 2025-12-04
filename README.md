@@ -178,7 +178,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 
 ---
 
-### 📈 Trading Simulation Team (2 Agents) - GPT-5 Based
+### 📈 Trading Simulation Team (2 Agents) - GPT-5.1 Based
 
 #### 9-1. Buy Specialist
 <img src="docs/images/aiagent/buy_specialist.jpeg" alt="Buy Specialist" width="300"/>
@@ -242,7 +242,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 - **📱 Automatic Telegram Transmission**: Real-time transmission of analysis results to Telegram channel
   <img src="docs/images/summary-en.png" alt="Summary Transmission" width="500">
 
-- **📈 Trading Simulation**: Investment strategy simulation using GPT-5 based generated reports
+- **📈 Trading Simulation**: Investment strategy simulation using GPT-5.1 based generated reports
   <img src="docs/images/simulation1-en.png" alt="Simulation 1" width="500">
   <img src="docs/images/simulation2-en.png" alt="Simulation 2" width="500">
   <img src="docs/images/season1_dashboard.png" alt="Simulation Performance" width="500">
@@ -268,7 +268,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 ## 🧠 AI Model Usage
 
 - **Core Analysis**: OpenAI GPT-4.1 (Comprehensive stock analysis agent)
-- **Trading Simulation**: OpenAI GPT-5 (Investment strategy simulation)
+- **Trading Simulation**: OpenAI GPT-5.1 (Investment strategy simulation)
 - **Telegram Conversation**: Anthropic Claude Sonnet 4.5 (Bot interaction)
 - **Translation**: OpenAI GPT-5-NANO (Multilingual broadcasting on a Telegram channel)
 
@@ -285,7 +285,7 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
 ### Prerequisites
 
 - Python 3.10+
-- OpenAI API Key (GPT-4.1, GPT-5)
+- OpenAI API Key (GPT-4.1, GPT-5.1)
 - Anthropic API Key (Claude-Sonnet-4.5)
 - Telegram Bot Token and Channel ID
 - Playwright (for PDF conversion)
@@ -518,7 +518,7 @@ prism-insight/
 ├── telegram_config.py           # Telegram Configuration Management Class
 ├── trigger_batch.py             # Surge Stock Detection Batch
 ├── telegram_bot_agent.py        # Telegram Bot (Claude Based)
-├── stock_tracking_agent.py      # Trading Simulation (GPT-5)
+├── stock_tracking_agent.py      # Trading Simulation (GPT-5.1)
 ├── stock_tracking_enhanced_agent.py # Enhanced Trading Simulation
 ├── pdf_converter.py             # PDF Conversion
 ├── requirements.txt             # Dependency List
@@ -654,7 +654,7 @@ For project inquiries or bug reports, please submit through [GitHub Issues](http
 ---
 **$500/month Details**
 
-1. AI Operation Cost Coverage: Full API cost for premium AI models like GPT-5
+1. AI Operation Cost Coverage: Full API cost for premium AI models like GPT-5.1
 2. Stabilization Compensation: Compensation for emergency maintenance and stabilization work on core systems
 ---
 
@@ -680,8 +680,8 @@ Even small support gives great strength! Support the project with the cost of a 
 
 ### 💰 Transparent Operations
 
-Monthly costs of approximately ₩260,000 for API and server expenses (as of October '25):
-- OpenAI API (GPT-4.1, GPT-5): ~₩140,000/month
+Monthly costs of approximately ₩260,000 for API and server expenses (as of November '25):
+- OpenAI API (GPT-4.1, GPT-5.1): ~₩170,000/month
 - Anthropic API (Claude Sonnet 4.5): ~₩30,000/month
 - Firecrawl API (MCP Server): ~₩30,000/month
 - Perplexity API (MCP Server): ~₩15,000/month
