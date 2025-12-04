@@ -36,7 +36,7 @@ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
 - 상업 제품에 통합
 - 영리 기업 내부 사용
 
-📄 **상업 라이선스 상세**: [LICENSE-COMMERCIAL-ko.md](LICENSE-COMMERCIAL-ko.md)
+📄 **상업 라이선스 상세**: [COMMERCIAL-LICENSE-ko.md](COMMERCIAL-LICENSE-ko.md)
 
 ---
 
@@ -113,7 +113,7 @@ AGPL-3.0의 소스코드 공개 의무가 비즈니스 모델과 맞지 않는�
 - **독점 SaaS 라이선스**: 비용 협의 (1년 약정)
 
 📧 **상업 라이선스 문의**: dragon1086@naver.com  
-📄 **상세 조건**: [LICENSE-COMMERCIAL-ko.md](LICENSE-COMMERCIAL-ko.md)
+📄 **상세 조건**: [COMMERCIAL-LICENSE-ko.md](COMMERCIAL-LICENSE-ko.md)
 
 ---
 
