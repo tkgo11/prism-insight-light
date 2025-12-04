@@ -4,7 +4,7 @@
 
 **이 문서는 참고용 한글 번역본입니다.**
 
-- **법적 효력**: 영문 원본 [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)가 공식 법적 문서입니다
+- **법적 효력**: 영문 원본 [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)가 공식 법적 문서입니다
 - **번역 목적**: 한국어 사용자의 이해를 돕기 위한 참고 자료
 - **분쟁 발생 시**: 영문 원본의 해석이 우선합니다
 
@@ -390,7 +390,7 @@ PRISM-INSIGHT를 다음 용도로 사용하고자 상업 라이선스를 문의�
 이 문서는 PRISM-INSIGHT 상업 라이선스의 일반 조건을 설명합니다.
 실제 계약 조건은 개별 협상을 통해 결정되며, 정식 계약서에 명시됩니다.
 
-**법적 효력**: 영문 원본 [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)가 우선합니다.
+**법적 효력**: 영문 원본 [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)가 우선합니다.
 
 **전문 법률 자문**: 계약 전 법률 전문가와 상담하실 것을 권장합니다.
 
