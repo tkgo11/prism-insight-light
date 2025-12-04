@@ -94,11 +94,16 @@ class JeoninguTradingDB:
             logger.info(f"Jeon Ingu tables initialized in {self.db_path}")
 
     async def video_id_exists(self, video_id: str) -> bool:
-        """Check if video_id already exists in the database"""
+        """Check if video_id already exists in the database
+
+        Also checks for suffixed versions (_SELL, _BUY) used in position switches.
+        """
         async with aiosqlite.connect(self.db_path) as db:
+            # Check for exact match or suffixed versions
             async with db.execute("""
-                SELECT COUNT(*) FROM jeoningu_trades WHERE video_id = ?
-            """, (video_id,)) as cursor:
+                SELECT COUNT(*) FROM jeoningu_trades
+                WHERE video_id = ? OR video_id = ? OR video_id = ?
+            """, (video_id, f"{video_id}_SELL", f"{video_id}_BUY")) as cursor:
                 count = (await cursor.fetchone())[0]
                 return count > 0
 
