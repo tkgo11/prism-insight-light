@@ -5,7 +5,7 @@
     <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License">
     <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
     <img src="https://img.shields.io/badge/OpenAI-GPT--4.1-green.svg" alt="OpenAI">
-    <img src="https://img.shields.io/badge/OpenAI-GPT--5-green.svg" alt="OpenAI">
+    <img src="https://img.shields.io/badge/OpenAI-GPT--5.1-green.svg" alt="OpenAI">
     <img src="https://img.shields.io/badge/Anthropic-Claude--Sonnet--4.5-green.svg" alt="Anthropic">
   </div>
 </div>
