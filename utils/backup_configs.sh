@@ -73,8 +73,8 @@ else
 fi
 
 # 백업 파일 권한 설정 (보안)
-chmod -R 600 $BACKUP_DIR
-chmod 700 $BACKUP_DIR
+find $BACKUP_DIR -type d -exec chmod 700 {} \;
+find $BACKUP_DIR -type f -exec chmod 600 {} \;
 
 # 백업 크기 확인
 BACKUP_SIZE=$(du -sh $BACKUP_DIR | cut -f1)
