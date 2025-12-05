@@ -274,7 +274,7 @@ if __name__ == "__main__":
         ]
 
         logger.info(f"외부 프로세스 실행: {stock_code}")
-        process = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # 10분 타임아웃
+        process = subprocess.run(cmd, capture_output=True, text=True, timeout=1200)  # 20분 타임아웃
 
         # 출력 초기화 - 경고 방지를 위해 변수 미리 선언
         output = ""

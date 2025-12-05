@@ -10,7 +10,7 @@
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_BASE_DIR=~/prism_backups
 BACKUP_DIR=$BACKUP_BASE_DIR/$DATE
-PROJECT_DIR=/root/prism-insight
+PROJECT_DIR=$HOME/prism-insight
 LOG_FILE=$BACKUP_BASE_DIR/backup.log
 
 # 로그 함수
