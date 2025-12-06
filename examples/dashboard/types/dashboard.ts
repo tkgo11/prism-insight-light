@@ -159,6 +159,14 @@ export interface MarketCondition {
   volatility: number
 }
 
+export interface PrismPerformance {
+  date: string
+  cumulative_realized_profit: number
+  prism_simulator_return: number
+  holdings_unrealized_profit: number
+  holdings_return: number
+}
+
 export interface AccountSummary {
   total_eval_amount: number
   total_profit_amount: number
@@ -186,6 +194,7 @@ export interface DashboardData {
   trading_history: Trade[]
   watchlist: WatchlistStock[]
   market_condition: MarketCondition[]
+  prism_performance?: PrismPerformance[]
   holding_decisions?: HoldingDecision[]
   jeoningu_lab?: JeoninguLabData
 }
