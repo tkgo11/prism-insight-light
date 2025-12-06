@@ -2,16 +2,16 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts"
-import type { MarketCondition, TradingHistory, Holding, Summary } from "@/types/dashboard"
+import type { MarketCondition, PrismPerformance, Holding, Summary } from "@/types/dashboard"
 
 interface PerformanceChartProps {
   data: MarketCondition[]
-  tradingHistory?: TradingHistory[]
+  prismPerformance?: PrismPerformance[]
   holdings?: Holding[]
   summary?: Summary
 }
 
-export function PerformanceChart({ data, tradingHistory = [], holdings = [], summary }: PerformanceChartProps) {
+export function PerformanceChart({ data, prismPerformance = [], holdings = [], summary }: PerformanceChartProps) {
   const formatNumber = (value: number) => {
     return new Intl.NumberFormat("ko-KR", {
       maximumFractionDigits: 0,
@@ -53,30 +53,46 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
   const startKospi = filteredData[0]?.kospi_index || 0
   const startKosdaq = filteredData[0]?.kosdaq_index || 0
 
-  // 매도종목 누적수익률 계산
-  const tradingTotalProfit = tradingHistory.reduce((sum, trade) => sum + trade.profit_rate, 0)
-  
-  // 보유종목 평가수익률 계산
+  // 프리즘 퍼포먼스 데이터를 날짜 기준으로 맵핑
+  const prismPerformanceMap = new Map<string, PrismPerformance>()
+  prismPerformance.forEach(p => {
+    prismPerformanceMap.set(p.date, p)
+  })
+
+  // 보유종목 평가수익률 계산 (현재 보유종목의 미실현 수익)
   const holdingsTotalProfit = summary?.portfolio?.total_profit || 0
-  
-  // 프리즘 시뮬레이터 수익률 (10개 슬롯 기준)
-  const prismSimulatorReturn = (tradingTotalProfit + holdingsTotalProfit) / 10
+  const holdingsReturn = holdingsTotalProfit / 10
 
   // 실전 투자 수익률
-  const realTotalAssets = (summary?.real_trading?.total_eval_amount || 0) + 
+  const realTotalAssets = (summary?.real_trading?.total_eval_amount || 0) +
                           (summary?.real_trading?.available_amount || 0)
-  const realReturn = season2StartAmount > 0 
-    ? ((realTotalAssets - season2StartAmount) / season2StartAmount) * 100 
+  const realReturn = season2StartAmount > 0
+    ? ((realTotalAssets - season2StartAmount) / season2StartAmount) * 100
     : 0
 
-  // KOSPI 기준 차트 데이터
+  // 최신 프리즘 시뮬레이터 수익률 (실현 + 미실현)
+  const latestPrismPerformance = prismPerformance.length > 0
+    ? prismPerformance[prismPerformance.length - 1]
+    : null
+  const latestPrismReturn = latestPrismPerformance
+    ? latestPrismPerformance.prism_simulator_return + holdingsReturn
+    : holdingsReturn
+
+  // KOSPI 기준 차트 데이터 - 날짜별 프리즘 수익률 사용
   const kospiChartData = filteredData.map((item) => {
     const kospiReturn = startKospi > 0 ? ((item.kospi_index - startKospi) / startKospi) * 100 : 0
-    
+
+    // 해당 날짜의 프리즘 퍼포먼스 찾기
+    const prismData = prismPerformanceMap.get(item.date)
+    // 실현 수익률 + 현재 미실현 수익률 (보유종목)
+    const prismReturn = prismData
+      ? prismData.prism_simulator_return + holdingsReturn
+      : holdingsReturn
+
     return {
       date: item.date,
       market_return: kospiReturn,
-      prism_return: prismSimulatorReturn,
+      prism_return: prismReturn,
       real_return: realReturn,
     }
   })
@@ -84,11 +100,17 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
   // KOSDAQ 기준 차트 데이터
   const kosdaqChartData = filteredData.map((item) => {
     const kosdaqReturn = startKosdaq > 0 ? ((item.kosdaq_index - startKosdaq) / startKosdaq) * 100 : 0
-    
+
+    // 해당 날짜의 프리즘 퍼포먼스 찾기
+    const prismData = prismPerformanceMap.get(item.date)
+    const prismReturn = prismData
+      ? prismData.prism_simulator_return + holdingsReturn
+      : holdingsReturn
+
     return {
       date: item.date,
       market_return: kosdaqReturn,
-      prism_return: prismSimulatorReturn,
+      prism_return: prismReturn,
       real_return: realReturn,
     }
   })
@@ -139,7 +161,7 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
                 시장: <span style={{ color: marketColor }} className="font-semibold">{formatPercent(latestData.market_return)}</span>
               </span>
               <span className="text-muted-foreground">
-                프리즘: <span className={`font-semibold ${prismSimulatorReturn >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-destructive'}`}>{formatPercent(prismSimulatorReturn)}</span>
+                프리즘: <span className={`font-semibold ${latestPrismReturn >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-destructive'}`}>{formatPercent(latestPrismReturn)}</span>
               </span>
               <span className="text-muted-foreground">
                 실전: <span className={`font-semibold ${realReturn >= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'}`}>{formatPercent(realReturn)}</span>
