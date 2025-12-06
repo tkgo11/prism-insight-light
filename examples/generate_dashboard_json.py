@@ -462,7 +462,7 @@ class DashboardDataGenerator:
             'available_amount': account_summary.get('available_amount', 0)
         }
 
-    def calculate_cumulative_realized_profit(self, trading_history: List[Dict], holdings: List[Dict], market_data: List[Dict]) -> List[Dict]:
+    def calculate_cumulative_realized_profit(self, trading_history: List[Dict], market_data: List[Dict]) -> List[Dict]:
         """
         날짜별 프리즘 시뮬레이터 누적 실현 수익률 계산
 
@@ -492,9 +492,6 @@ class DashboardDataGenerator:
                 cumulative_profit += profit_rate
                 cumulative_by_date[sell_date] = cumulative_profit
 
-        # 현재 보유종목의 미실현 수익률 계산
-        holdings_profit = sum(h.get('profit_rate', 0) for h in holdings)
-
         # 시장 데이터의 각 날짜에 맞춰 프리즘 수익률 데이터 생성
         result = []
         last_cumulative = 0.0
@@ -516,9 +513,7 @@ class DashboardDataGenerator:
             result.append({
                 'date': date,
                 'cumulative_realized_profit': last_cumulative,
-                'prism_simulator_return': prism_return,
-                'holdings_unrealized_profit': holdings_profit,
-                'holdings_return': holdings_profit / 10
+                'prism_simulator_return': prism_return
             })
 
         return result
@@ -756,7 +751,7 @@ class DashboardDataGenerator:
 
             # 날짜별 프리즘 시뮬레이터 누적 수익률 계산
             prism_performance = self.calculate_cumulative_realized_profit(
-                trading_history, holdings, market_condition
+                trading_history, market_condition
             )
 
             # 전체 데이터 구성
