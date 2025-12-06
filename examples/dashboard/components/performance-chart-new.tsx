@@ -59,10 +59,6 @@ export function PerformanceChart({ data, prismPerformance = [], holdings = [], s
     prismPerformanceMap.set(p.date, p)
   })
 
-  // 보유종목 평가수익률 계산 (현재 보유종목의 미실현 수익)
-  const holdingsTotalProfit = summary?.portfolio?.total_profit || 0
-  const holdingsReturn = holdingsTotalProfit / 10
-
   // 실전 투자 수익률
   const realTotalAssets = (summary?.real_trading?.total_eval_amount || 0) +
                           (summary?.real_trading?.available_amount || 0)
@@ -70,24 +66,24 @@ export function PerformanceChart({ data, prismPerformance = [], holdings = [], s
     ? ((realTotalAssets - season2StartAmount) / season2StartAmount) * 100
     : 0
 
-  // 최신 프리즘 시뮬레이터 수익률 (실현 + 미실현)
+  // 최신 프리즘 시뮬레이터 수익률 (누적 실현 수익률만)
   const latestPrismPerformance = prismPerformance.length > 0
     ? prismPerformance[prismPerformance.length - 1]
     : null
   const latestPrismReturn = latestPrismPerformance
-    ? latestPrismPerformance.prism_simulator_return + holdingsReturn
-    : holdingsReturn
+    ? latestPrismPerformance.prism_simulator_return
+    : 0
 
-  // KOSPI 기준 차트 데이터 - 날짜별 프리즘 수익률 사용
+  // KOSPI 기준 차트 데이터 - 누적 실현 수익률만 사용
   const kospiChartData = filteredData.map((item) => {
     const kospiReturn = startKospi > 0 ? ((item.kospi_index - startKospi) / startKospi) * 100 : 0
 
     // 해당 날짜의 프리즘 퍼포먼스 찾기
     const prismData = prismPerformanceMap.get(item.date)
-    // 실현 수익률 + 현재 미실현 수익률 (보유종목)
+    // 누적 실현 수익률만 사용 (cumulative_realized_profit / 10)
     const prismReturn = prismData
-      ? prismData.prism_simulator_return + holdingsReturn
-      : holdingsReturn
+      ? prismData.prism_simulator_return
+      : 0
 
     return {
       date: item.date,
@@ -103,9 +99,10 @@ export function PerformanceChart({ data, prismPerformance = [], holdings = [], s
 
     // 해당 날짜의 프리즘 퍼포먼스 찾기
     const prismData = prismPerformanceMap.get(item.date)
+    // 누적 실현 수익률만 사용
     const prismReturn = prismData
-      ? prismData.prism_simulator_return + holdingsReturn
-      : holdingsReturn
+      ? prismData.prism_simulator_return
+      : 0
 
     return {
       date: item.date,
