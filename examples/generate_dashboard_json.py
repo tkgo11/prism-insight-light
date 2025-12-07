@@ -14,11 +14,19 @@ import sqlite3
 import json
 import sys
 import yaml
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Any
 import logging
 import os
+
+# pykrx import for market index data
+try:
+    from pykrx import stock
+    PYKRX_AVAILABLE = True
+except ImportError:
+    PYKRX_AVAILABLE = False
+    logging.warning("pykrx 패키지가 설치되어 있지 않습니다. 시장 지수 데이터를 가져올 수 없습니다.")
 
 # 번역 유틸리티 import
 try:
@@ -243,20 +251,76 @@ class DashboardDataGenerator:
         return watchlist
     
     def get_market_condition(self, conn) -> List[Dict]:
-        """시장 상황 데이터 가져오기"""
+        """시장 상황 데이터 가져오기 - pykrx를 사용하여 Season2 시작(2025-09-29)부터 데이터 수집"""
+        # Season2 시작일
+        SEASON2_START_DATE = "20250929"
+
+        if not PYKRX_AVAILABLE:
+            logger.warning("pykrx를 사용할 수 없습니다. DB에서 데이터를 가져옵니다.")
+            return self._get_market_condition_from_db(conn)
+
+        try:
+            # 오늘 날짜
+            today = datetime.now().strftime("%Y%m%d")
+
+            logger.info(f"pykrx로 시장 지수 데이터 조회 중... ({SEASON2_START_DATE} ~ {today})")
+
+            # KOSPI 지수 데이터 가져오기 (ticker: 1001)
+            kospi_df = stock.get_index_ohlcv_by_date(SEASON2_START_DATE, today, "1001")
+
+            # KOSDAQ 지수 데이터 가져오기 (ticker: 2001)
+            kosdaq_df = stock.get_index_ohlcv_by_date(SEASON2_START_DATE, today, "2001")
+
+            if kospi_df.empty or kosdaq_df.empty:
+                logger.warning("pykrx에서 지수 데이터를 가져오지 못했습니다. DB fallback.")
+                return self._get_market_condition_from_db(conn)
+
+            # 데이터 병합
+            market_data = []
+
+            for date_idx in kospi_df.index:
+                date_str = date_idx.strftime("%Y-%m-%d")
+
+                kospi_close = kospi_df.loc[date_idx, '종가']
+
+                # KOSDAQ은 같은 날짜가 있을 때만 사용
+                if date_idx in kosdaq_df.index:
+                    kosdaq_close = kosdaq_df.loc[date_idx, '종가']
+                else:
+                    kosdaq_close = 0
+
+                market_data.append({
+                    'date': date_str,
+                    'kospi_index': float(kospi_close),
+                    'kosdaq_index': float(kosdaq_close),
+                    'condition': 0,  # 기본값
+                    'volatility': 0  # 기본값
+                })
+
+            # 날짜 오름차순 정렬 (차트에서 사용하기 위해)
+            market_data.sort(key=lambda x: x['date'])
+
+            logger.info(f"시장 지수 데이터 {len(market_data)}일치 수집 완료")
+            return market_data
+
+        except Exception as e:
+            logger.error(f"pykrx 시장 지수 데이터 조회 중 오류: {str(e)}")
+            return self._get_market_condition_from_db(conn)
+
+    def _get_market_condition_from_db(self, conn) -> List[Dict]:
+        """DB에서 시장 상황 데이터 가져오기 (fallback)"""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT date, kospi_index, kosdaq_index, condition, volatility
             FROM market_condition
-            ORDER BY date DESC
-            LIMIT 30
+            ORDER BY date ASC
         """)
-        
+
         market_data = []
         for row in cursor.fetchall():
             market = self.dict_from_row(row, cursor)
             market_data.append(market)
-        
+
         return market_data
     
     def get_holding_decisions(self, conn) -> List[Dict]:
@@ -389,7 +453,7 @@ class DashboardDataGenerator:
                 'total_profit_rate': 0,
                 'available_amount': 0
             }
-        
+
         return {
             'total_stocks': len(real_portfolio),
             'total_eval_amount': account_summary.get('total_eval_amount', 0),
@@ -397,6 +461,62 @@ class DashboardDataGenerator:
             'total_profit_rate': account_summary.get('total_profit_rate', 0),
             'available_amount': account_summary.get('available_amount', 0)
         }
+
+    def calculate_cumulative_realized_profit(self, trading_history: List[Dict], market_data: List[Dict]) -> List[Dict]:
+        """
+        날짜별 프리즘 시뮬레이터 누적 실현 수익률 계산
+
+        - 10개 슬롯 기준으로 수익률 계산 (매도된 종목의 profit_rate 합계 / 10)
+        - 각 시장 거래일에 맞춰 해당일까지의 누적 수익률 반환
+        """
+        SEASON2_START_DATE = "2025-09-29"
+
+        # 거래 이력을 날짜 기준으로 정렬 (sell_date 기준)
+        sorted_trades = sorted(
+            [t for t in trading_history if t.get('sell_date')],
+            key=lambda x: x.get('sell_date', '')
+        )
+
+        # 날짜별 누적 수익률 계산
+        cumulative_profit = 0.0
+        cumulative_by_date = {}
+
+        for trade in sorted_trades:
+            sell_date = trade.get('sell_date', '')
+            if sell_date:
+                # datetime 형식일 수 있으므로 날짜만 추출
+                if ' ' in sell_date:
+                    sell_date = sell_date.split(' ')[0]
+
+                profit_rate = trade.get('profit_rate', 0)
+                cumulative_profit += profit_rate
+                cumulative_by_date[sell_date] = cumulative_profit
+
+        # 시장 데이터의 각 날짜에 맞춰 프리즘 수익률 데이터 생성
+        result = []
+        last_cumulative = 0.0
+
+        for market_item in market_data:
+            date = market_item.get('date', '')
+
+            if date < SEASON2_START_DATE:
+                continue
+
+            # 해당 날짜까지의 누적 실현 수익률 찾기
+            for trade_date, cum_profit in cumulative_by_date.items():
+                if trade_date <= date:
+                    last_cumulative = cum_profit
+
+            # 10개 슬롯 기준 수익률 계산
+            prism_return = last_cumulative / 10
+
+            result.append({
+                'date': date,
+                'cumulative_realized_profit': last_cumulative,
+                'prism_simulator_return': prism_return
+            })
+
+        return result
     
     def get_operating_costs(self) -> Dict:
         """프로젝트 운영 비용 데이터 반환"""
@@ -628,7 +748,12 @@ class DashboardDataGenerator:
             
             # 실전투자 요약 계산
             real_trading_summary = self.calculate_real_trading_summary(real_portfolio, account_summary)
-            
+
+            # 날짜별 프리즘 시뮬레이터 누적 수익률 계산
+            prism_performance = self.calculate_cumulative_realized_profit(
+                trading_history, market_condition
+            )
+
             # 전체 데이터 구성
             dashboard_data = {
                 'generated_at': datetime.now().isoformat(),
@@ -646,6 +771,7 @@ class DashboardDataGenerator:
                 'trading_history': trading_history,
                 'watchlist': watchlist,
                 'market_condition': market_condition,
+                'prism_performance': prism_performance,  # 날짜별 프리즘 시뮬레이터 수익률 추가
                 'holding_decisions': holding_decisions,
                 'jeoningu_lab': jeoningu_lab  # 전인구 실험실 데이터 추가
             }

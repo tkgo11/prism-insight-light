@@ -2,17 +2,17 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts"
-import type { MarketCondition, TradingHistory, Holding, Summary } from "@/types/dashboard"
+import type { MarketCondition, PrismPerformance, Holding, Summary } from "@/types/dashboard"
 import { useLanguage } from "@/components/language-provider"
 
 interface PerformanceChartProps {
   data: MarketCondition[]
-  tradingHistory?: TradingHistory[]
+  prismPerformance?: PrismPerformance[]
   holdings?: Holding[]
   summary?: Summary
 }
 
-export function PerformanceChart({ data, tradingHistory = [], holdings = [], summary }: PerformanceChartProps) {
+export function PerformanceChart({ data, prismPerformance = [], holdings = [], summary }: PerformanceChartProps) {
   const { t } = useLanguage()
 
   const formatNumber = (value: number) => {
@@ -56,23 +56,30 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
   const startKospi = filteredData[0]?.kospi_index || 0
   const startKosdaq = filteredData[0]?.kosdaq_index || 0
 
-  // 날짜별 누적 실현 수익률 계산 (trading_history 기반)
-  const calculateCumulativeReturn = (date: string): number => {
-    // 해당 날짜까지 매도된 거래들만 필터링
-    const completedTrades = tradingHistory.filter(trade => {
-      const sellDate = trade.sell_date?.split(' ')[0] || trade.sell_date // 날짜 부분만 추출
-      return sellDate && sellDate <= date
-    })
+  // 프리즘 퍼포먼스 데이터를 날짜 기준으로 맵핑
+  const prismPerformanceMap = new Map<string, PrismPerformance>()
+  prismPerformance.forEach(p => {
+    prismPerformanceMap.set(p.date, p)
+  })
 
-    // 누적 수익률 합계를 10으로 나눔 (10개 슬롯 기준)
-    const totalReturn = completedTrades.reduce((sum, trade) => sum + (trade.profit_rate || 0), 0)
-    return totalReturn / 10
-  }
+  // 최신 프리즘 시뮬레이터 수익률 (누적 실현 수익률만)
+  const latestPrismPerformance = prismPerformance.length > 0
+    ? prismPerformance[prismPerformance.length - 1]
+    : null
+  const latestPrismReturn = latestPrismPerformance
+    ? latestPrismPerformance.prism_simulator_return
+    : 0
 
-  // KOSPI 기준 차트 데이터
+  // KOSPI 기준 차트 데이터 - 누적 실현 수익률만 사용
   const kospiChartData = filteredData.map((item) => {
     const kospiReturn = startKospi > 0 ? ((item.kospi_index - startKospi) / startKospi) * 100 : 0
-    const prismReturn = calculateCumulativeReturn(item.date)
+
+    // 해당 날짜의 프리즘 퍼포먼스 찾기
+    const prismData = prismPerformanceMap.get(item.date)
+    // 누적 실현 수익률만 사용 (cumulative_realized_profit / 10)
+    const prismReturn = prismData
+      ? prismData.prism_simulator_return
+      : 0
 
     return {
       date: item.date,
@@ -84,7 +91,13 @@ export function PerformanceChart({ data, tradingHistory = [], holdings = [], sum
   // KOSDAQ 기준 차트 데이터
   const kosdaqChartData = filteredData.map((item) => {
     const kosdaqReturn = startKosdaq > 0 ? ((item.kosdaq_index - startKosdaq) / startKosdaq) * 100 : 0
-    const prismReturn = calculateCumulativeReturn(item.date)
+
+    // 해당 날짜의 프리즘 퍼포먼스 찾기
+    const prismData = prismPerformanceMap.get(item.date)
+    // 누적 실현 수익률만 사용
+    const prismReturn = prismData
+      ? prismData.prism_simulator_return
+      : 0
 
     return {
       date: item.date,
