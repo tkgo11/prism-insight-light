@@ -63,7 +63,7 @@ PRISM-INSIGHT is a **completely open-source free project** specializing in **Kor
 
 **✨ All features are provided 100% free!**
 
-## 📈 Trading Simulator and Real Account Performance as of '25.12.05
+## 📈 Trading Simulator and Real Account Performance as of '25.12.07
 ### ⭐ Season 1 (Ended '25.09.28. No real account trading)
 **Simulator Performance**
 - Start Date: 2025.03.15
@@ -79,11 +79,11 @@ PRISM-INSIGHT is a **completely open-source free project** specializing in **Kor
 - Start Date: 2025.09.29
 - Total Trades: 28
 - Profitable Trades: 14
-- Loss Trades: 14
-- Win Rate: 50.00%
-- **Total Cumulative Return from Sold Stocks: 87.30%**
-- **Realized Portfolio Return: 8.73%** (managed across 10 slots, 87.30% ÷ 10)
-- Market Benchmark (from Season 2 start): KOSPI +2.21%, KOSDAQ +5.29%
+- Loss Trades: 15
+- Win Rate: 48.28%
+- **Total Cumulative Return from Sold Stocks: 79.88%**
+- **Realized Portfolio Return: 7.99%** (managed across 10 slots, 79.88% ÷ 10)
+- Market Benchmark (from Season 2 start): KOSPI +19.49%, KOSDAQ +9.22%
 - **[Trading Performance Summary Dashboard](https://analysis.stocksimulation.kr/)**
 
 **Real Account Performance**
