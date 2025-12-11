@@ -670,7 +670,7 @@ class StockAnalysisOrchestrator:
                 change_rate = stock.get("change_rate", 0)
 
                 # Arrow based on change rate
-                arrow = "🔺" if change_rate > 0 else "🔻" if change_rate < 0 else "➖"
+                arrow = "⬆️" if change_rate > 0 else "⬇️" if change_rate < 0 else "➖"
 
                 # Basic information
                 message += f"· *{name}* ({code})\n"

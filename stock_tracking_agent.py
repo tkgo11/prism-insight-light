@@ -1026,7 +1026,7 @@ class StockTrackingAgent:
             self.conn.commit()
 
             # Add sell message
-            arrow = "🔺" if profit_rate > 0 else "🔻" if profit_rate < 0 else "➖"
+            arrow = "⬆️" if profit_rate > 0 else "⬇️" if profit_rate < 0 else "➖"
             message = f"📉 매도: {company_name}({ticker})\n" \
                       f"매수가: {buy_price:,.0f}원\n" \
                       f"매도가: {current_price:,.0f} \n" \
@@ -1258,7 +1258,7 @@ class StockTrackingAgent:
                     sector_counts[sector] = sector_counts.get(sector, 0) + 1
 
                     profit_rate = ((current_price - buy_price) / buy_price) * 100 if buy_price else 0
-                    arrow = "🔺" if profit_rate > 0 else "🔻" if profit_rate < 0 else "➖"
+                    arrow = "⬆️" if profit_rate > 0 else "⬇️" if profit_rate < 0 else "➖"
 
                     buy_datetime = datetime.strptime(buy_date, "%Y-%m-%d %H:%M:%S") if buy_date else datetime.now()
                     days_passed = (datetime.now() - buy_datetime).days
