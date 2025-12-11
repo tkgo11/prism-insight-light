@@ -756,26 +756,54 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
 
             # JSON 파싱
             try:
-                # 마크다운 코드 블록에서 JSON 추출 시도
+                # 응답이 비어있거나 None인 경우 조기 처리
+                if not response or not response.strip():
+                    logger.warning(f"{ticker} Empty response from LLM, falling back to legacy algorithm")
+                    return await self._fallback_sell_decision(stock_data)
+                
+                decision_json = None
+                json_str = None
+                
+                # 1. 마크다운 코드 블록에서 JSON 추출 시도 (```json ... ``` 또는 ``` ... ```)
                 markdown_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', response, re.DOTALL)
                 if markdown_match:
                     json_str = markdown_match.group(1)
-                    json_str = re.sub(r',(\s*})', r'\1', json_str)
-                    decision_json = json.loads(json_str)
-                    logger.info(f"Sell decision parse successful: {json.dumps(decision_json, ensure_ascii=False)}")
-                else:
-                    # 일반 JSON 객체 추출 시도
-                    json_match = re.search(r'({[\s\S]*?})(?:\s*$|\n\n)', response, re.DOTALL)
+                    logger.debug(f"Found JSON in markdown code block")
+                
+                # 2. 중첩된 중괄호를 포함한 완전한 JSON 객체 추출 시도
+                if not json_str:
+                    # 더 정교한 JSON 객체 매칭 (중첩된 {} 지원)
+                    json_match = re.search(r'(\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})', response, re.DOTALL)
                     if json_match:
                         json_str = json_match.group(1)
-                        json_str = re.sub(r',(\s*})', r'\1', json_str)
-                        decision_json = json.loads(json_str)
-                        logger.info(f"Sell decision parse successful: {json.dumps(decision_json, ensure_ascii=False)}")
-                    else:
-                        # 전체 응답이 JSON인 경우
-                        clean_response = re.sub(r',(\s*})', r'\1', response)
-                        decision_json = json.loads(clean_response)
-                        logger.info(f"Sell decision parse successful: {json.dumps(decision_json, ensure_ascii=False)}")
+                        logger.debug(f"Found JSON object in response")
+                
+                # 3. 전체 응답이 JSON인 경우
+                if not json_str:
+                    # 앞뒤 공백 및 마크다운 제거 후 시도
+                    clean_response = response.strip()
+                    if clean_response.startswith('{') and clean_response.endswith('}'):
+                        json_str = clean_response
+                        logger.debug(f"Using entire response as JSON")
+                
+                # JSON 문자열이 없으면 폴백
+                if not json_str:
+                    logger.warning(f"{ticker} No JSON found in response (length: {len(response)}), falling back to legacy algorithm")
+                    logger.debug(f"Response preview: {response[:500]}...")
+                    return await self._fallback_sell_decision(stock_data)
+                
+                # JSON 전처리: trailing comma 제거
+                json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+                
+                # JSON 파싱 시도
+                try:
+                    decision_json = json.loads(json_str)
+                except json.JSONDecodeError as e:
+                    # 추가 정리 시도: 제어 문자 제거
+                    json_str_cleaned = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_str)
+                    decision_json = json.loads(json_str_cleaned)
+                
+                logger.info(f"Sell decision parse successful: {json.dumps(decision_json, ensure_ascii=False)[:500]}")
 
                 # 결과 추출 - 기존 단일 형식 사용
                 should_sell = decision_json.get("should_sell", False)
