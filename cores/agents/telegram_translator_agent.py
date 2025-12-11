@@ -76,7 +76,7 @@ Your task is to translate {from_lang_name} telegram messages to {to_lang_name}.
 
 ### 6. Emojis and Symbols
 - Keep all emojis: 📈, 📊, 🔔, ✅, ⚠️, etc.
-- Preserve arrows: 🔺, 🔻, ➖, ↔️
+- Preserve arrows: ⬆️, ⬇️, ➖, ↔️
 - Maintain visual hierarchy with emojis
 
 ## Instructions

@@ -163,9 +163,9 @@ class PortfolioTelegramReporter:
 
                 # 수익률 상태
                 if profit_rate > 0:
-                    status_emoji = "🔺"
+                    status_emoji = "⬆️"
                 elif profit_rate < 0:
-                    status_emoji = "🔻"
+                    status_emoji = "⬇️"
                 else:
                     status_emoji = "➖"
 
