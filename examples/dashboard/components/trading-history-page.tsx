@@ -185,82 +185,106 @@ export function TradingHistoryPage({ history, summary, prismPerformance = [], ma
       return { alpha: 0, beta: 0, sharpeRatio: 0, informationRatio: 0 }
     }
 
-    // 프리즘 수익률과 시장 수익률 맵핑
+    // 프리즘 누적 수익률 맵핑
     const prismMap = new Map<string, number>()
     prismPerformance.forEach(p => {
       prismMap.set(p.date, p.prism_simulator_return)
     })
 
-    // 일별 수익률 계산 (전일 대비 변화)
-    const prismReturns: number[] = []
-    const marketReturns: number[] = []
+    // 일별 수익률 계산
+    // 프리즘: 누적 수익률의 차이 (이미 % 단위)
+    // 시장: KOSPI 지수의 일별 변화율 (% 단위)
+    const prismDailyReturns: number[] = []
+    const marketDailyReturns: number[] = []
 
     for (let i = 1; i < filteredMarket.length; i++) {
       const prevDate = filteredMarket[i - 1].date
       const currDate = filteredMarket[i].date
 
+      // 프리즘: 누적 수익률의 일별 변화
       const prevPrism = prismMap.get(prevDate) || 0
       const currPrism = prismMap.get(currDate) || 0
-      const prismDailyReturn = currPrism - prevPrism
+      const prismDailyReturn = currPrism - prevPrism // 이미 % 단위
 
+      // 시장: KOSPI 일별 수익률
       const prevKospi = filteredMarket[i - 1].kospi_index
       const currKospi = filteredMarket[i].kospi_index
       const marketDailyReturn = prevKospi > 0 ? ((currKospi - prevKospi) / prevKospi) * 100 : 0
 
-      prismReturns.push(prismDailyReturn)
-      marketReturns.push(marketDailyReturn)
+      prismDailyReturns.push(prismDailyReturn)
+      marketDailyReturns.push(marketDailyReturn)
     }
 
-    if (prismReturns.length === 0) {
+    if (prismDailyReturns.length === 0) {
       return { alpha: 0, beta: 0, sharpeRatio: 0, informationRatio: 0 }
     }
 
-    // 평균 수익률
-    const avgPrismReturn = prismReturns.reduce((a, b) => a + b, 0) / prismReturns.length
-    const avgMarketReturn = marketReturns.reduce((a, b) => a + b, 0) / marketReturns.length
+    // 누적 수익률 계산 (최종 값)
+    const latestPrismReturn = prismPerformance[prismPerformance.length - 1]?.prism_simulator_return || 0
+    const latestKospi = filteredMarket[filteredMarket.length - 1]?.kospi_index || startKospi
+    const totalMarketReturn = ((latestKospi - startKospi) / startKospi) * 100
 
-    // 분산 및 공분산 계산
+    // ============================================
+    // 알파 (Alpha) - 단순 초과수익률
+    // ============================================
+    // 가장 직관적인 알파: 포트폴리오 수익률 - 벤치마크 수익률
+    const alpha = latestPrismReturn - totalMarketReturn
+
+    // ============================================
+    // 베타 (Beta) - 시장 민감도
+    // ============================================
+    // 일별 수익률 기반 계산
+    const avgPrismDaily = prismDailyReturns.reduce((a, b) => a + b, 0) / prismDailyReturns.length
+    const avgMarketDaily = marketDailyReturns.reduce((a, b) => a + b, 0) / marketDailyReturns.length
+
     let covariance = 0
     let marketVariance = 0
     let prismVariance = 0
 
-    for (let i = 0; i < prismReturns.length; i++) {
-      const prismDiff = prismReturns[i] - avgPrismReturn
-      const marketDiff = marketReturns[i] - avgMarketReturn
+    for (let i = 0; i < prismDailyReturns.length; i++) {
+      const prismDiff = prismDailyReturns[i] - avgPrismDaily
+      const marketDiff = marketDailyReturns[i] - avgMarketDaily
       covariance += prismDiff * marketDiff
       marketVariance += marketDiff * marketDiff
       prismVariance += prismDiff * prismDiff
     }
 
-    covariance /= prismReturns.length
-    marketVariance /= prismReturns.length
-    prismVariance /= prismReturns.length
+    covariance /= prismDailyReturns.length
+    marketVariance /= prismDailyReturns.length
+    prismVariance /= prismDailyReturns.length
 
-    // 베타 = Cov(프리즘, 시장) / Var(시장)
+    // 베타 = Cov(포트폴리오, 시장) / Var(시장)
     const beta = marketVariance > 0 ? covariance / marketVariance : 0
 
-    // 무위험 수익률 (연 3% 가정, 일별로 환산)
-    const riskFreeRate = 3 / 252 / 100 * 100 // 일별 %
+    // ============================================
+    // 샤프 비율 (Sharpe Ratio)
+    // ============================================
+    // 무위험 수익률: 연 3% 가정
+    const annualRiskFreeRate = 3 // %
+    const tradingDays = prismDailyReturns.length
+    const periodRiskFreeRate = (tradingDays / 252) * annualRiskFreeRate // 기간 비례 무위험수익률
 
-    // 알파 = 프리즘 수익률 - (무위험수익률 + 베타 * (시장수익률 - 무위험수익률))
-    // 누적 수익률 기준으로 계산
-    const latestPrismReturn = prismPerformance[prismPerformance.length - 1]?.prism_simulator_return || 0
-    const latestKospi = filteredMarket[filteredMarket.length - 1]?.kospi_index || startKospi
-    const totalMarketReturn = ((latestKospi - startKospi) / startKospi) * 100
-    const totalRiskFree = (prismReturns.length / 252) * 3 // 기간 비례 무위험 수익률
-
-    const alpha = latestPrismReturn - (totalRiskFree + beta * (totalMarketReturn - totalRiskFree))
-
-    // 샤프 비율 = (프리즘 수익률 - 무위험수익률) / 표준편차
+    // 프리즘 표준편차 (일별 수익률 기준)
     const prismStdDev = Math.sqrt(prismVariance)
-    const excessReturn = avgPrismReturn - riskFreeRate
-    const sharpeRatio = prismStdDev > 0 ? (excessReturn / prismStdDev) * Math.sqrt(252) : 0 // 연환산
+    // 연환산 표준편차
+    const annualizedPrismStdDev = prismStdDev * Math.sqrt(252)
 
-    // 정보 비율 = 초과 수익률 / 추적 오차
+    // 샤프 비율 = (연환산 수익률 - 연환산 무위험수익률) / 연환산 표준편차
+    // 기간 수익률을 연환산
+    const annualizedPrismReturn = (latestPrismReturn / tradingDays) * 252
+    const sharpeRatio = annualizedPrismStdDev > 0
+      ? (annualizedPrismReturn - annualRiskFreeRate) / annualizedPrismStdDev
+      : 0
+
+    // ============================================
+    // 정보 비율 (Information Ratio)
+    // ============================================
+    // 추적 오차: 포트폴리오 수익률 - 벤치마크 수익률의 표준편차
     const trackingErrors: number[] = []
-    for (let i = 0; i < prismReturns.length; i++) {
-      trackingErrors.push(prismReturns[i] - marketReturns[i])
+    for (let i = 0; i < prismDailyReturns.length; i++) {
+      trackingErrors.push(prismDailyReturns[i] - marketDailyReturns[i])
     }
+
     const avgTrackingError = trackingErrors.reduce((a, b) => a + b, 0) / trackingErrors.length
     let trackingErrorVariance = 0
     for (const te of trackingErrors) {
@@ -268,7 +292,13 @@ export function TradingHistoryPage({ history, summary, prismPerformance = [], ma
     }
     trackingErrorVariance /= trackingErrors.length
     const trackingErrorStdDev = Math.sqrt(trackingErrorVariance)
-    const informationRatio = trackingErrorStdDev > 0 ? (avgTrackingError / trackingErrorStdDev) * Math.sqrt(252) : 0
+
+    // 정보 비율 = 연환산 초과수익률 / 연환산 추적오차
+    const annualizedAlpha = (alpha / tradingDays) * 252
+    const annualizedTrackingError = trackingErrorStdDev * Math.sqrt(252)
+    const informationRatio = annualizedTrackingError > 0
+      ? annualizedAlpha / annualizedTrackingError
+      : 0
 
     // 데이터 기간 계산
     const startDate = filteredMarket[0]?.date || ''
