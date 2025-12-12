@@ -110,7 +110,7 @@ export function HoldingsTable({ holdings, onStockClick, title = "보유 종목",
                     {!isRealTrading && (
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
-                          {holding.sector}
+                          {holding.sector || holding.scenario?.sector || "-"}
                         </Badge>
                       </TableCell>
                     )}
