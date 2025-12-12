@@ -68,6 +68,10 @@ logger = logging.getLogger(__name__)
 
 
 class DashboardDataGenerator:
+    # Season 2 constants (same as portfolio_telegram_reporter.py)
+    SEASON2_START_DATE = "2025-09-29"
+    SEASON2_START_AMOUNT = 9_969_801  # Starting capital in KRW
+
     def __init__(self, db_path: str = None, output_path: str = None, trading_mode: str = None, enable_translation: bool = True):
         # db_path 기본값: 프로젝트 루트의 stock_tracking_db.sqlite
         if db_path is None:
@@ -444,22 +448,50 @@ class DashboardDataGenerator:
         }
     
     def calculate_real_trading_summary(self, real_portfolio: List[Dict], account_summary: Dict) -> Dict:
-        """실전투자 요약 통계 계산"""
+        """실전투자 요약 통계 계산 (시즌2 정보 포함)"""
         if not real_portfolio and not account_summary:
             return {
                 'total_stocks': 0,
                 'total_eval_amount': 0,
                 'total_profit_amount': 0,
                 'total_profit_rate': 0,
-                'available_amount': 0
+                'deposit': 0,
+                'available_amount': 0,
+                'season2_start_date': self.SEASON2_START_DATE,
+                'season2_start_amount': self.SEASON2_START_AMOUNT,
+                'total_assets': 0,
+                'season_profit': 0,
+                'season_profit_rate': 0,
+                'cash_ratio': 0
             }
+
+        # Note: total_eval_amount (tot_evlu_amt) already includes deposit in KIS API
+        total_eval = account_summary.get('total_eval_amount', 0)
+        deposit = account_summary.get('deposit', 0)
+
+        # total_assets = total_eval (not total_eval + deposit, as KIS API already includes it)
+        total_assets = total_eval
+
+        # Calculate season 2 profit
+        season_profit = total_assets - self.SEASON2_START_AMOUNT
+        season_profit_rate = (season_profit / self.SEASON2_START_AMOUNT * 100) if self.SEASON2_START_AMOUNT > 0 else 0
+
+        # Calculate cash ratio
+        cash_ratio = (deposit / total_assets * 100) if total_assets > 0 else 0
 
         return {
             'total_stocks': len(real_portfolio),
-            'total_eval_amount': account_summary.get('total_eval_amount', 0),
+            'total_eval_amount': total_eval,
             'total_profit_amount': account_summary.get('total_profit_amount', 0),
             'total_profit_rate': account_summary.get('total_profit_rate', 0),
-            'available_amount': account_summary.get('available_amount', 0)
+            'deposit': deposit,
+            'available_amount': account_summary.get('available_amount', 0),
+            'season2_start_date': self.SEASON2_START_DATE,
+            'season2_start_amount': self.SEASON2_START_AMOUNT,
+            'total_assets': total_assets,
+            'season_profit': season_profit,
+            'season_profit_rate': season_profit_rate,
+            'cash_ratio': cash_ratio
         }
 
     def calculate_cumulative_realized_profit(self, trading_history: List[Dict], market_data: List[Dict]) -> List[Dict]:
