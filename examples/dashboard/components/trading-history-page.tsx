@@ -2,16 +2,18 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { History, TrendingUp, TrendingDown, Award, Calendar, Target, Brain, Trophy, AlertCircle, Scale, Percent, Flame, Zap } from "lucide-react"
-import type { Trade, Summary } from "@/types/dashboard"
+import { History, TrendingUp, TrendingDown, Award, Calendar, Target, Brain, Trophy, AlertCircle, Scale, Percent, Flame, Zap, BarChart3, Activity, LineChart, Gauge } from "lucide-react"
+import type { Trade, Summary, PrismPerformance, MarketCondition } from "@/types/dashboard"
 import { useLanguage } from "@/components/language-provider"
 
 interface TradingHistoryPageProps {
   history: Trade[]
   summary: Summary
+  prismPerformance?: PrismPerformance[]
+  marketCondition?: MarketCondition[]
 }
 
-export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps) {
+export function TradingHistoryPage({ history, summary, prismPerformance = [], marketCondition = [] }: TradingHistoryPageProps) {
   const { t, language } = useLanguage()
 
   const formatCurrency = (value: number) => {
@@ -137,6 +139,146 @@ export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps
     }
   })
 
+  // MDD (Maximum Drawdown) 계산
+  const calculateMDD = (performances: PrismPerformance[]): number => {
+    if (performances.length === 0) return 0
+
+    let maxReturn = -Infinity
+    let maxDrawdown = 0
+
+    for (const perf of performances) {
+      const currentReturn = perf.prism_simulator_return
+      if (currentReturn > maxReturn) {
+        maxReturn = currentReturn
+      }
+      const drawdown = maxReturn - currentReturn
+      if (drawdown > maxDrawdown) {
+        maxDrawdown = drawdown
+      }
+    }
+
+    return maxDrawdown
+  }
+
+  const prismMDD = calculateMDD(prismPerformance)
+
+  // 알파, 베타, 샤프 비율 계산
+  const calculateRiskMetrics = () => {
+    if (prismPerformance.length < 2 || marketCondition.length < 2) {
+      return { alpha: 0, beta: 0, sharpeRatio: 0, informationRatio: 0 }
+    }
+
+    // Season2 시작일 기준 필터링
+    const season2StartDate = '2025-09-29'
+    const filteredMarket = marketCondition
+      .filter(m => m.date >= season2StartDate)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+    if (filteredMarket.length < 2) {
+      return { alpha: 0, beta: 0, sharpeRatio: 0, informationRatio: 0 }
+    }
+
+    // 시작 시점 KOSPI 지수
+    const startKospi = filteredMarket[0]?.kospi_index || 0
+    if (startKospi === 0) {
+      return { alpha: 0, beta: 0, sharpeRatio: 0, informationRatio: 0 }
+    }
+
+    // 프리즘 수익률과 시장 수익률 맵핑
+    const prismMap = new Map<string, number>()
+    prismPerformance.forEach(p => {
+      prismMap.set(p.date, p.prism_simulator_return)
+    })
+
+    // 일별 수익률 계산 (전일 대비 변화)
+    const prismReturns: number[] = []
+    const marketReturns: number[] = []
+
+    for (let i = 1; i < filteredMarket.length; i++) {
+      const prevDate = filteredMarket[i - 1].date
+      const currDate = filteredMarket[i].date
+
+      const prevPrism = prismMap.get(prevDate) || 0
+      const currPrism = prismMap.get(currDate) || 0
+      const prismDailyReturn = currPrism - prevPrism
+
+      const prevKospi = filteredMarket[i - 1].kospi_index
+      const currKospi = filteredMarket[i].kospi_index
+      const marketDailyReturn = prevKospi > 0 ? ((currKospi - prevKospi) / prevKospi) * 100 : 0
+
+      prismReturns.push(prismDailyReturn)
+      marketReturns.push(marketDailyReturn)
+    }
+
+    if (prismReturns.length === 0) {
+      return { alpha: 0, beta: 0, sharpeRatio: 0, informationRatio: 0 }
+    }
+
+    // 평균 수익률
+    const avgPrismReturn = prismReturns.reduce((a, b) => a + b, 0) / prismReturns.length
+    const avgMarketReturn = marketReturns.reduce((a, b) => a + b, 0) / marketReturns.length
+
+    // 분산 및 공분산 계산
+    let covariance = 0
+    let marketVariance = 0
+    let prismVariance = 0
+
+    for (let i = 0; i < prismReturns.length; i++) {
+      const prismDiff = prismReturns[i] - avgPrismReturn
+      const marketDiff = marketReturns[i] - avgMarketReturn
+      covariance += prismDiff * marketDiff
+      marketVariance += marketDiff * marketDiff
+      prismVariance += prismDiff * prismDiff
+    }
+
+    covariance /= prismReturns.length
+    marketVariance /= prismReturns.length
+    prismVariance /= prismReturns.length
+
+    // 베타 = Cov(프리즘, 시장) / Var(시장)
+    const beta = marketVariance > 0 ? covariance / marketVariance : 0
+
+    // 무위험 수익률 (연 3% 가정, 일별로 환산)
+    const riskFreeRate = 3 / 252 / 100 * 100 // 일별 %
+
+    // 알파 = 프리즘 수익률 - (무위험수익률 + 베타 * (시장수익률 - 무위험수익률))
+    // 누적 수익률 기준으로 계산
+    const latestPrismReturn = prismPerformance[prismPerformance.length - 1]?.prism_simulator_return || 0
+    const latestKospi = filteredMarket[filteredMarket.length - 1]?.kospi_index || startKospi
+    const totalMarketReturn = ((latestKospi - startKospi) / startKospi) * 100
+    const totalRiskFree = (prismReturns.length / 252) * 3 // 기간 비례 무위험 수익률
+
+    const alpha = latestPrismReturn - (totalRiskFree + beta * (totalMarketReturn - totalRiskFree))
+
+    // 샤프 비율 = (프리즘 수익률 - 무위험수익률) / 표준편차
+    const prismStdDev = Math.sqrt(prismVariance)
+    const excessReturn = avgPrismReturn - riskFreeRate
+    const sharpeRatio = prismStdDev > 0 ? (excessReturn / prismStdDev) * Math.sqrt(252) : 0 // 연환산
+
+    // 정보 비율 = 초과 수익률 / 추적 오차
+    const trackingErrors: number[] = []
+    for (let i = 0; i < prismReturns.length; i++) {
+      trackingErrors.push(prismReturns[i] - marketReturns[i])
+    }
+    const avgTrackingError = trackingErrors.reduce((a, b) => a + b, 0) / trackingErrors.length
+    let trackingErrorVariance = 0
+    for (const te of trackingErrors) {
+      trackingErrorVariance += (te - avgTrackingError) ** 2
+    }
+    trackingErrorVariance /= trackingErrors.length
+    const trackingErrorStdDev = Math.sqrt(trackingErrorVariance)
+    const informationRatio = trackingErrorStdDev > 0 ? (avgTrackingError / trackingErrorStdDev) * Math.sqrt(252) : 0
+
+    // 데이터 기간 계산
+    const startDate = filteredMarket[0]?.date || ''
+    const endDate = filteredMarket[filteredMarket.length - 1]?.date || ''
+    const dataPoints = filteredMarket.length
+
+    return { alpha, beta, sharpeRatio, informationRatio, startDate, endDate, dataPoints }
+  }
+
+  const { alpha, beta, sharpeRatio, informationRatio, startDate: riskStartDate, endDate: riskEndDate, dataPoints } = calculateRiskMetrics()
+
   return (
     <div className="space-y-6">
       {/* 헤더 */}
@@ -211,7 +353,7 @@ export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps
       </div>
 
       {/* 성과 지표 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="border-border/50">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
@@ -245,6 +387,21 @@ export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps
         <Card className="border-border/50">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
+              <BarChart3 className="w-5 h-5 text-orange-600" />
+              <span className="text-sm text-muted-foreground">{t("trading.mdd")}</span>
+            </div>
+            <p className="text-3xl font-bold text-orange-600">
+              {prismMDD > 0 ? `-${prismMDD.toFixed(2)}%` : "0%"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("trading.mddDesc")}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-2">
               <Flame className="w-5 h-5 text-orange-500" />
               <span className="text-sm text-muted-foreground">{t("trading.maxWinStreak")}</span>
             </div>
@@ -268,6 +425,81 @@ export function TradingHistoryPage({ history, summary }: TradingHistoryPageProps
           </CardContent>
         </Card>
       </div>
+
+      {/* 위험조정 성과 지표 (알파, 베타, 샤프비율, 정보비율) */}
+      {(prismPerformance.length > 0 && marketCondition.length > 0 && dataPoints > 0) && (
+        <>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-foreground">{t("trading.riskAdjustedMetrics")}</h3>
+          {riskStartDate && riskEndDate && (
+            <span className="text-xs text-muted-foreground">
+              {t("trading.dataPeriod")}: {riskStartDate} ~ {riskEndDate} ({dataPoints}{t("common.days")})
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="border-border/50 bg-gradient-to-br from-indigo-500/5 to-transparent">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Activity className="w-5 h-5 text-indigo-600" />
+                <span className="text-sm text-muted-foreground">{t("trading.alpha")}</span>
+              </div>
+              <p className={`text-3xl font-bold ${alpha >= 0 ? "text-success" : "text-destructive"}`}>
+                {alpha >= 0 ? "+" : ""}{alpha.toFixed(2)}%
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("trading.alphaDesc")}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-gradient-to-br from-cyan-500/5 to-transparent">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <LineChart className="w-5 h-5 text-cyan-600" />
+                <span className="text-sm text-muted-foreground">{t("trading.beta")}</span>
+              </div>
+              <p className={`text-3xl font-bold ${beta <= 1 ? "text-cyan-600" : "text-orange-600"}`}>
+                {beta.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("trading.betaDesc")}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-gradient-to-br from-violet-500/5 to-transparent">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Gauge className="w-5 h-5 text-violet-600" />
+                <span className="text-sm text-muted-foreground">{t("trading.sharpeRatio")}</span>
+              </div>
+              <p className={`text-3xl font-bold ${sharpeRatio >= 1 ? "text-success" : sharpeRatio >= 0 ? "text-violet-600" : "text-destructive"}`}>
+                {sharpeRatio.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("trading.sharpeDesc")}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-gradient-to-br from-teal-500/5 to-transparent">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Target className="w-5 h-5 text-teal-600" />
+                <span className="text-sm text-muted-foreground">{t("trading.informationRatio")}</span>
+              </div>
+              <p className={`text-3xl font-bold ${informationRatio >= 0.5 ? "text-success" : informationRatio >= 0 ? "text-teal-600" : "text-destructive"}`}>
+                {informationRatio.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("trading.informationRatioDesc")}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        </>
+      )}
 
       {/* 베스트/워스트 거래 */}
       {history.length > 0 && (

@@ -70,6 +70,29 @@ export function PerformanceChart({ data, prismPerformance = [], holdings = [], s
     ? latestPrismPerformance.prism_simulator_return
     : 0
 
+  // MDD (Maximum Drawdown) 계산
+  const calculateMDD = (performances: PrismPerformance[]): number => {
+    if (performances.length === 0) return 0
+
+    let maxReturn = -Infinity
+    let maxDrawdown = 0
+
+    for (const perf of performances) {
+      const currentReturn = perf.prism_simulator_return
+      if (currentReturn > maxReturn) {
+        maxReturn = currentReturn
+      }
+      const drawdown = maxReturn - currentReturn
+      if (drawdown > maxDrawdown) {
+        maxDrawdown = drawdown
+      }
+    }
+
+    return maxDrawdown
+  }
+
+  const prismMDD = calculateMDD(prismPerformance)
+
   // KOSPI 기준 차트 데이터 - 누적 실현 수익률만 사용
   const kospiChartData = filteredData.map((item) => {
     const kospiReturn = startKospi > 0 ? ((item.kospi_index - startKospi) / startKospi) * 100 : 0
@@ -133,13 +156,15 @@ export function PerformanceChart({ data, prismPerformance = [], holdings = [], s
     title,
     marketColor,
     yDomain,
-    latestData
+    latestData,
+    mdd
   }: {
     chartData: typeof kospiChartData
     title: string
     marketColor: string
     yDomain: [number, number]
     latestData: typeof latestKospi
+    mdd: number
   }) => {
     const { t } = useLanguage()
 
@@ -156,6 +181,11 @@ export function PerformanceChart({ data, prismPerformance = [], holdings = [], s
               <span className="text-muted-foreground">
                 {t("chart.prism")}: <span className={`font-semibold ${latestData.prism_return >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-destructive'}`}>{formatPercent(latestData.prism_return)}</span>
               </span>
+              {mdd > 0 && (
+                <span className="text-muted-foreground">
+                  MDD: <span className="font-semibold text-orange-600 dark:text-orange-400">-{mdd.toFixed(2)}%</span>
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -247,6 +277,7 @@ export function PerformanceChart({ data, prismPerformance = [], holdings = [], s
           marketColor="#3b82f6"
           yDomain={kospiYDomain}
           latestData={latestKospi}
+          mdd={prismMDD}
         />
         <ComparisonChart
           chartData={kosdaqChartData}
@@ -254,6 +285,7 @@ export function PerformanceChart({ data, prismPerformance = [], holdings = [], s
           marketColor="#10b981"
           yDomain={kosdaqYDomain}
           latestData={latestKosdaq}
+          mdd={prismMDD}
         />
       </div>
 
