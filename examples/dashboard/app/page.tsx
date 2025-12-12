@@ -127,7 +127,7 @@ export default function Page() {
 
         {activeTab === "ai-decisions" && <AIDecisionsPage data={data} />}
 
-        {activeTab === "trading" && <TradingHistoryPage history={data.trading_history} summary={data.summary} />}
+        {activeTab === "trading" && <TradingHistoryPage history={data.trading_history} summary={data.summary} prismPerformance={data.prism_performance} marketCondition={data.market_condition} />}
 
         {activeTab === "watchlist" && <WatchlistPage watchlist={data.watchlist} />}
 
