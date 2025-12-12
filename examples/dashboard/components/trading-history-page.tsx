@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { History, TrendingUp, TrendingDown, Award, Calendar, Target, Brain, Trophy, AlertCircle, Scale, Percent, Flame, Zap, BarChart3, Activity, LineChart, Gauge } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { History, TrendingUp, TrendingDown, Award, Calendar, Target, Brain, Trophy, AlertCircle, Scale, Percent, Flame, Zap, BarChart3, Activity, LineChart, Gauge, HelpCircle } from "lucide-react"
 import type { Trade, Summary, PrismPerformance, MarketCondition } from "@/types/dashboard"
 import { useLanguage } from "@/components/language-provider"
 
@@ -356,11 +357,25 @@ export function TradingHistoryPage({ history, summary, prismPerformance = [], ma
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="border-border/50">
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-2 mb-2">
               <Scale className="w-5 h-5 text-primary" />
               <span className="text-sm text-muted-foreground">{t("trading.profitFactor")}</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground/50 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs p-3">
+                  <p className="font-semibold mb-1">{t("trading.profitFactor")}</p>
+                  <p className="text-xs mb-2">{t("trading.profitFactorTooltip")}</p>
+                  <div className="text-xs space-y-1 border-t border-border/50 pt-2">
+                    <p className="text-success">{t("trading.profitFactorGood")}</p>
+                    <p className="text-yellow-500">{t("trading.profitFactorNeutral")}</p>
+                    <p className="text-destructive">{t("trading.profitFactorBad")}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <p className={`text-3xl font-bold ${profitFactor >= 1 ? "text-success" : "text-destructive"}`}>
+            <p className={`text-3xl font-bold ${profitFactor >= 1.5 ? "text-success" : profitFactor >= 1 ? "text-yellow-500" : "text-destructive"}`}>
               {profitFactor === Infinity ? "∞" : profitFactor.toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -371,11 +386,25 @@ export function TradingHistoryPage({ history, summary, prismPerformance = [], ma
 
         <Card className="border-border/50">
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-2 mb-2">
               <Percent className="w-5 h-5 text-chart-3" />
               <span className="text-sm text-muted-foreground">{t("trading.riskRewardRatio")}</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground/50 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs p-3">
+                  <p className="font-semibold mb-1">{t("trading.riskRewardRatio")}</p>
+                  <p className="text-xs mb-2">{t("trading.riskRewardTooltip")}</p>
+                  <div className="text-xs space-y-1 border-t border-border/50 pt-2">
+                    <p className="text-success">{t("trading.riskRewardGood")}</p>
+                    <p className="text-yellow-500">{t("trading.riskRewardNeutral")}</p>
+                    <p className="text-destructive">{t("trading.riskRewardBad")}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <p className={`text-3xl font-bold ${riskRewardRatio >= 1 ? "text-success" : "text-chart-3"}`}>
+            <p className={`text-3xl font-bold ${riskRewardRatio >= 2 ? "text-success" : riskRewardRatio >= 1 ? "text-yellow-500" : "text-destructive"}`}>
               {riskRewardRatio === Infinity ? "∞" : riskRewardRatio.toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -386,11 +415,25 @@ export function TradingHistoryPage({ history, summary, prismPerformance = [], ma
 
         <Card className="border-border/50">
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-2 mb-2">
               <BarChart3 className="w-5 h-5 text-orange-600" />
               <span className="text-sm text-muted-foreground">{t("trading.mdd")}</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground/50 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs p-3">
+                  <p className="font-semibold mb-1">{t("trading.mdd")}</p>
+                  <p className="text-xs mb-2">{t("trading.mddTooltip")}</p>
+                  <div className="text-xs space-y-1 border-t border-border/50 pt-2">
+                    <p className="text-success">{t("trading.mddGood")}</p>
+                    <p className="text-yellow-500">{t("trading.mddNeutral")}</p>
+                    <p className="text-destructive">{t("trading.mddBad")}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <p className="text-3xl font-bold text-orange-600">
+            <p className={`text-3xl font-bold ${prismMDD <= 10 ? "text-success" : prismMDD <= 20 ? "text-yellow-500" : "text-destructive"}`}>
               {prismMDD > 0 ? `-${prismMDD.toFixed(2)}%` : "0%"}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -440,9 +483,22 @@ export function TradingHistoryPage({ history, summary, prismPerformance = [], ma
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="border-border/50 bg-gradient-to-br from-indigo-500/5 to-transparent">
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2 mb-2">
                 <Activity className="w-5 h-5 text-indigo-600" />
                 <span className="text-sm text-muted-foreground">{t("trading.alpha")}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs p-3">
+                    <p className="font-semibold mb-1">{t("trading.alpha")}</p>
+                    <p className="text-xs mb-2">{t("trading.alphaTooltip")}</p>
+                    <div className="text-xs space-y-1 border-t border-border/50 pt-2">
+                      <p className="text-success">{t("trading.alphaGood")}</p>
+                      <p className="text-destructive">{t("trading.alphaBad")}</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               </div>
               <p className={`text-3xl font-bold ${alpha >= 0 ? "text-success" : "text-destructive"}`}>
                 {alpha >= 0 ? "+" : ""}{alpha.toFixed(2)}%
@@ -455,9 +511,23 @@ export function TradingHistoryPage({ history, summary, prismPerformance = [], ma
 
           <Card className="border-border/50 bg-gradient-to-br from-cyan-500/5 to-transparent">
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2 mb-2">
                 <LineChart className="w-5 h-5 text-cyan-600" />
                 <span className="text-sm text-muted-foreground">{t("trading.beta")}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs p-3">
+                    <p className="font-semibold mb-1">{t("trading.beta")}</p>
+                    <p className="text-xs mb-2">{t("trading.betaTooltip")}</p>
+                    <div className="text-xs space-y-1 border-t border-border/50 pt-2">
+                      <p className="text-cyan-600">{t("trading.betaLow")}</p>
+                      <p className="text-foreground">{t("trading.betaNeutral")}</p>
+                      <p className="text-orange-600">{t("trading.betaHigh")}</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               </div>
               <p className={`text-3xl font-bold ${beta <= 1 ? "text-cyan-600" : "text-orange-600"}`}>
                 {beta.toFixed(2)}
@@ -470,9 +540,23 @@ export function TradingHistoryPage({ history, summary, prismPerformance = [], ma
 
           <Card className="border-border/50 bg-gradient-to-br from-violet-500/5 to-transparent">
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2 mb-2">
                 <Gauge className="w-5 h-5 text-violet-600" />
                 <span className="text-sm text-muted-foreground">{t("trading.sharpeRatio")}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs p-3">
+                    <p className="font-semibold mb-1">{t("trading.sharpeRatio")}</p>
+                    <p className="text-xs mb-2">{t("trading.sharpeTooltip")}</p>
+                    <div className="text-xs space-y-1 border-t border-border/50 pt-2">
+                      <p className="text-success">{t("trading.sharpeGood")}</p>
+                      <p className="text-violet-600">{t("trading.sharpeNeutral")}</p>
+                      <p className="text-destructive">{t("trading.sharpeBad")}</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               </div>
               <p className={`text-3xl font-bold ${sharpeRatio >= 1 ? "text-success" : sharpeRatio >= 0 ? "text-violet-600" : "text-destructive"}`}>
                 {sharpeRatio.toFixed(2)}
@@ -485,9 +569,23 @@ export function TradingHistoryPage({ history, summary, prismPerformance = [], ma
 
           <Card className="border-border/50 bg-gradient-to-br from-teal-500/5 to-transparent">
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2 mb-2">
                 <Target className="w-5 h-5 text-teal-600" />
                 <span className="text-sm text-muted-foreground">{t("trading.informationRatio")}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs p-3">
+                    <p className="font-semibold mb-1">{t("trading.informationRatio")}</p>
+                    <p className="text-xs mb-2">{t("trading.irTooltip")}</p>
+                    <div className="text-xs space-y-1 border-t border-border/50 pt-2">
+                      <p className="text-success">{t("trading.irGood")}</p>
+                      <p className="text-teal-600">{t("trading.irNeutral")}</p>
+                      <p className="text-destructive">{t("trading.irBad")}</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               </div>
               <p className={`text-3xl font-bold ${informationRatio >= 0.5 ? "text-success" : informationRatio >= 0 ? "text-teal-600" : "text-destructive"}`}>
                 {informationRatio.toFixed(2)}
