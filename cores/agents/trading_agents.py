@@ -152,7 +152,7 @@ def create_trading_scenario_agent(language: str = "ko"):
         - Volume/investor trading: kospi_kosdaq-get_stock_ohlcv, kospi_kosdaq-get_stock_trading_volume
         - Valuation comparison: perplexity_ask tool
         - Current time: time-get_current_time tool
-        - Data query basis: 'Issue date: ' in report
+        - Data query basis: 'Publication date: ' in report
 
         ## Key Report Sections
         - 'Investment Strategy and Opinion': Core investment view
@@ -377,7 +377,7 @@ def create_trading_scenario_agent(language: str = "ko"):
         - 거래량/투자자별 매매: kospi_kosdaq-get_stock_ohlcv, kospi_kosdaq-get_stock_trading_volume
         - 밸류에이션 비교: perplexity_ask tool
         - 현재 시간: time-get_current_time tool
-        - 데이터 조회 기준: 보고서의 '발행일: ' 날짜
+        - 데이터 조회 기준: 보고서의 'Publication date: ' 날짜
         - kospi_kosdaq-load_all_tickers 사용 금지!!!
 
         ## JSON 응답 형식
@@ -574,9 +574,10 @@ def create_sell_decision_agent(language: str = "ko"):
         - Overall market situation (bull/bear/neutral)
         - Market volatility level
 
-        **Portfolio Perspective:**
-        - Weight and risk within total portfolio
-        - Rebalancing necessity considering market and portfolio situation
+        **Portfolio Perspective (Refer to the attached current portfolio status):**
+        - Weight and risk level within the overall portfolio
+        - Rebalancing necessity considering market conditions and portfolio status
+        - Thoroughly analyze sector concentration by examining industry distribution (If mistakenly assuming all holdings are concentrated in the same sector, re-query the stock_holdings table using the sqlite tool to accurately reassess sector concentration)
 
         ### Tool Usage Guide
 
@@ -744,7 +745,7 @@ def create_sell_decision_agent(language: str = "ko"):
         **포트폴리오 관점(첨부한 현재 포트폴리오 상황을 참고):**
         - 전체 포트폴리오 내 비중과 위험도
         - 시장상황과 포트폴리오 상황을 고려한 리밸런싱 필요성
-        - 섹터 편중 현황인 산업군 분포를 면밀히 파악
+        - 섹터 편중 현황인 산업군 분포를 면밀히 파악 (모든 보유 종목이 같은 섹터에 편중되어있다고 착각할 경우, sqlite tool로 stock_holdings 테이블을 다시 참고하여 섹터 편중 현황 재파악)
 
         ### 도구 사용 지침
 
