@@ -140,6 +140,8 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
               <div className="space-y-4">
                 {decisionsByDate[date].map((decision) => {
                   const stock = getStockInfo(decision.ticker)
+                  // company_name은 decision에서 먼저 가져오고, 없으면 stock에서 가져오고, 둘 다 없으면 ticker 표시
+                  const companyName = decision.company_name || stock?.company_name || decision.ticker
                   return (
                     <Card key={decision.id} className="border-border/30 bg-muted/20">
                       <CardContent className="p-6">
@@ -149,7 +151,7 @@ export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <h3 className="text-lg font-bold text-foreground">
-                                  {stock?.company_name || decision.ticker}
+                                  {companyName}
                                 </h3>
                                 <Badge variant="outline" className="text-xs">
                                   {decision.ticker}

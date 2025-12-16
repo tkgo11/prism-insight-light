@@ -325,29 +325,35 @@ class DashboardDataGenerator:
         return market_data
     
     def get_holding_decisions(self, conn) -> List[Dict]:
-        """보유 종목 매도 판단 데이터 가져오기"""
+        """보유 종목 매도 판단 데이터 가져오기 (오늘 날짜만, 종목명 포함)"""
         try:
             cursor = conn.cursor()
+            today = datetime.now().strftime("%Y-%m-%d")
+
+            # stock_holdings와 LEFT JOIN하여 company_name도 함께 가져옴
             cursor.execute("""
-                SELECT id, ticker, decision_date, decision_time, current_price, 
-                       should_sell, sell_reason, confidence, technical_trend, 
-                       volume_analysis, market_condition_impact, time_factor, 
-                       portfolio_adjustment_needed, adjustment_reason, 
-                       new_target_price, new_stop_loss, adjustment_urgency, 
-                       full_json_data, created_at
-                FROM holding_decisions
-                ORDER BY created_at DESC
-            """)
-            
+                SELECT hd.id, hd.ticker, hd.decision_date, hd.decision_time, hd.current_price,
+                       hd.should_sell, hd.sell_reason, hd.confidence, hd.technical_trend,
+                       hd.volume_analysis, hd.market_condition_impact, hd.time_factor,
+                       hd.portfolio_adjustment_needed, hd.adjustment_reason,
+                       hd.new_target_price, hd.new_stop_loss, hd.adjustment_urgency,
+                       hd.full_json_data, hd.created_at,
+                       sh.company_name
+                FROM holding_decisions hd
+                LEFT JOIN stock_holdings sh ON hd.ticker = sh.ticker
+                WHERE hd.decision_date = ?
+                ORDER BY hd.created_at DESC
+            """, (today,))
+
             decisions = []
             for row in cursor.fetchall():
                 decision = self.dict_from_row(row, cursor)
-                
+
                 # full_json_data 파싱
                 decision['full_json_data'] = self.parse_json_field(decision.get('full_json_data', ''))
-                
+
                 decisions.append(decision)
-            
+
             return decisions
         except Exception as e:
             logger.warning(f"holding_decisions 테이블 조회 실패 (테이블이 없을 수 있음): {str(e)}")
