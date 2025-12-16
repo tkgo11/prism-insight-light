@@ -251,6 +251,7 @@ export interface JeoninguLabData {
 export interface HoldingDecision {
   id: number
   ticker: string
+  company_name?: string
   decision_date: string
   decision_time: string
   current_price: number
