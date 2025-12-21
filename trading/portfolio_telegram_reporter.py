@@ -53,6 +53,10 @@ load_dotenv(dotenv_path=str(ENV_FILE))
 class PortfolioTelegramReporter:
     """Class for reporting portfolio status to Telegram"""
 
+    # Season 2 constants
+    SEASON2_START_DATE = "2025.09.29"
+    SEASON2_START_AMOUNT = 9_969_801  # Starting capital in KRW
+
     def __init__(self, telegram_token: str = None, chat_id: str = None, trading_mode: str = None, broadcast_languages: list = None):
         """
         Initialize
@@ -127,22 +131,48 @@ class PortfolioTelegramReporter:
         message = f"📊 포트폴리오 리포트 {mode_emoji}\n"
         message += f"🕐 {current_time} | {mode_text}\n\n"
 
+        # Season 2 info
+        message += f"🏆 *시즌2* (시작일: {self.SEASON2_START_DATE})\n"
+        message += f"💵 시작금액: `{self.format_currency(self.SEASON2_START_AMOUNT)}`\n\n"
+
         # Account summary
         if account_summary:
             total_eval = account_summary.get('total_eval_amount', 0)
             total_profit = account_summary.get('total_profit_amount', 0)
             total_profit_rate = account_summary.get('total_profit_rate', 0)
-            available = account_summary.get('available_amount', 0)
+            deposit = account_summary.get('deposit', 0)  # 예수금 (D+0, 당일 출금가능)
+            # total_cash (D+2 포함)를 사용하고, 없으면 deposit으로 fallback
+            total_cash = account_summary.get('total_cash', deposit)
+            available = account_summary.get('available_amount', 0)  # 주문가능금액
 
-            profit_emoji = "📈" if total_profit >= 0 else "📉"
-            profit_sign = "+" if total_profit >= 0 else ""
+            # Note: total_eval (tot_evlu_amt) already includes deposit in KIS API
+            # So total_assets = total_eval (not total_eval + deposit)
+            total_assets = total_eval
 
-            message += f"💰 총 평가액: `{self.format_currency(total_eval)}`\n"
-            message += f"{profit_emoji} 평가손익: `{profit_sign}{self.format_currency(total_profit)}` "
+            # Calculate season 2 profit rate (from start amount)
+            season_profit = total_assets - self.SEASON2_START_AMOUNT
+            season_profit_rate = (season_profit / self.SEASON2_START_AMOUNT) * 100 if self.SEASON2_START_AMOUNT > 0 else 0
+
+            # Calculate cash ratio (using total_cash which includes D+2)
+            cash_ratio = (total_cash / total_assets * 100) if total_assets > 0 else 0
+
+            # Total assets and season profit
+            season_profit_emoji = "📈" if season_profit >= 0 else "📉"
+            season_profit_sign = "+" if season_profit >= 0 else ""
+
+            message += f"💰 *총 자산*: `{self.format_currency(total_assets)}`\n"
+            message += f"{season_profit_emoji} 시즌 수익: `{season_profit_sign}{self.format_currency(season_profit)}` "
+            message += f"({self.format_percentage(season_profit_rate)})\n\n"
+
+            # Holdings profit (separate from season profit)
+            holdings_profit_emoji = "📈" if total_profit >= 0 else "📉"
+            holdings_profit_sign = "+" if total_profit >= 0 else ""
+
+            message += f"📊 *보유종목 평가손익*: `{holdings_profit_sign}{self.format_currency(total_profit)}` "
             message += f"({self.format_percentage(total_profit_rate)})\n"
 
-            if available > 0:
-                message += f"💳 주문가능: `{self.format_currency(available)}`\n"
+            # Cash info (total_cash = D+2 포함 총 현금, deposit = 예수금)
+            message += f"💳 현금(D+2포함): `{self.format_currency(total_cash)}` (현금비율: {cash_ratio:.1f}%)\n"
             message += "\n"
         else:
             message += "❌ 계좌 정보를 가져올 수 없습니다\n\n"
@@ -163,9 +193,9 @@ class PortfolioTelegramReporter:
 
                 # 수익률 상태
                 if profit_rate > 0:
-                    status_emoji = "🔺"
+                    status_emoji = "⬆️"
                 elif profit_rate < 0:
-                    status_emoji = "🔻"
+                    status_emoji = "⬇️"
                 else:
                     status_emoji = "➖"
 
