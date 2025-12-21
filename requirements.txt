@@ -1,9 +1,10 @@
-agents
-pandas
-protobuf
-pycryptodome
+fastapi
+uvicorn[standard]
+google-cloud-pubsub
 python-dotenv
-pywin32
 PyYAML
-Requests
+pandas
+requests
 websockets
+pycryptodome
+cryptography
