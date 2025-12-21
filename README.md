@@ -7,6 +7,27 @@
 - 한국투자증권(KIS) API 기반 트레이딩 모듈 (`trading/`)
 - GCP Pub/Sub 기반 실시간 트레이딩 시그널 구독 스크립트 (`gcp_pubsub_subscriber.py`)
 
+<div align="center">
+
+---
+
+### 🏆 Platinum Sponsor
+
+<a href="https://wrks.ai/en">
+  <img src="docs/images/wrks_ai_logo.png" alt="AI3 WrksAI" width="50">
+</a>
+
+**[AI3](https://www.ai3.kr/) | [WrksAI](https://wrks.ai/en)**
+
+**AI3**, the creators of **WrksAI** – the AI assistant for professionals,<br>
+proudly sponsors **PRISM-INSIGHT** – the AI assistant for investors.
+
+👉 [Learn more about WrksAI](https://wrks.ai/en)
+
+---
+
+</div>
+
 ---
 
 ## 디렉터리 구조 (현재 실제 기준)
