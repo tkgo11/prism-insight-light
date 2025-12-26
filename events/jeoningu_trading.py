@@ -234,7 +234,7 @@ class JeoninguTrading:
                     result = await llm.generate_str(
                         message="위 제목을 분석하고 '본인의견' 또는 '인터뷰' 중 하나만 출력하세요.",
                         request_params=RequestParams(
-                            model="gpt-4.1-nano",  # Fastest and cheapest model ($0.10/1M in, $0.40/1M out)
+                            model="gpt-4.1-mini",  # Better instruction following than nano ($0.40/1M in, $1.60/1M out)
                             maxTokens=10,
                             max_iterations=1,
                             parallel_tool_calls=False,
