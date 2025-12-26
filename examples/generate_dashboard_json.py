@@ -656,11 +656,9 @@ class DashboardDataGenerator:
             total_pl = realized_pl + unrealized_pl
             cumulative_return = (total_pl / initial_capital * 100) if initial_capital > 0 else 0
             
-            # 총 자산
-            if current_position:
-                total_assets = realized_pl + current_position.get('current_value', 0)
-            else:
-                total_assets = latest_balance
+            # 총 자산 계산
+            # 총 자산 = 초기자본 + 총손익 (실현 + 미실현)
+            total_assets = initial_capital + total_pl
             
             avg_return_per_trade = 0
             if sell_trades:
@@ -687,15 +685,26 @@ class DashboardDataGenerator:
                 }
                 timeline.append(timeline_entry)
             
-            # 5. 누적 수익률 차트 데이터
+            # 5. 누적 수익률 차트 데이터 (하루에 여러 거래가 있으면 마지막 거래만 표시)
             cumulative_chart = []
+            chart_by_date = {}  # 날짜별로 마지막 거래 저장
+            
             for trade in trade_history:
                 if trade.get('cumulative_return_pct') is not None:
-                    cumulative_chart.append({
-                        'date': trade.get('analyzed_date'),
-                        'cumulative_return': trade.get('cumulative_return_pct'),
-                        'balance': trade.get('balance_after')
-                    })
+                    date = trade.get('analyzed_date', '')
+                    if date:
+                        # 날짜만 추출 (시간 제거)
+                        date_only = date.split('T')[0] if 'T' in date else date.split(' ')[0]
+                        
+                        # 같은 날짜의 거래는 덮어쓰기 (마지막 거래만 남음)
+                        chart_by_date[date_only] = {
+                            'date': date_only,
+                            'cumulative_return': trade.get('cumulative_return_pct'),
+                            'balance': trade.get('balance_after')
+                        }
+            
+            # 날짜순 정렬
+            cumulative_chart = sorted(chart_by_date.values(), key=lambda x: x['date'])
             
             return {
                 'enabled': True,
