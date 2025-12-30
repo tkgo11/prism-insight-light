@@ -65,33 +65,39 @@ async def analyze_stock(company_code: str = "000660", company_name: str = "SK하
 
         if parallel_enabled:
             # Parallel execution mode
+            # 각 섹션마다 독립적인 MCPApp 컨텍스트를 생성하여 MCP 서버 충돌 방지
             logger.info(f"Running analysis in PARALLEL mode for {company_name}...")
 
             async def process_section(section):
-                """Process a single section and return (section_name, report)"""
+                """Process a single section with its own MCPApp context"""
                 if section not in agents:
                     return section, None
 
-                logger.info(f"Processing {section} for {company_name}...")
-                try:
-                    agent = agents[section]
-                    if section == "market_index_analysis":
-                        if "report" in _market_analysis_cache:
-                            logger.info(f"Using cached market analysis")
-                            return section, _market_analysis_cache["report"]
-                        else:
-                            logger.info(f"Generating new market analysis")
-                            report = await generate_market_report(agent, section, reference_date, logger, language)
-                            _market_analysis_cache["report"] = report
-                            return section, report
-                    else:
-                        report = await generate_report(agent, section, company_name, company_code, reference_date, logger, language)
-                        return section, report
-                except Exception as e:
-                    logger.error(f"Final failure processing {section}: {e}")
-                    return section, f"Analysis failed: {section}"
+                # 각 섹션마다 독립적인 MCPApp 인스턴스 생성
+                section_app = MCPApp(name=f"stock_analysis_{section}")
 
-            # Execute all sections in parallel
+                async with section_app.run() as section_context:
+                    section_logger = section_context.logger
+                    section_logger.info(f"Processing {section} for {company_name}...")
+                    try:
+                        agent = agents[section]
+                        if section == "market_index_analysis":
+                            if "report" in _market_analysis_cache:
+                                section_logger.info(f"Using cached market analysis")
+                                return section, _market_analysis_cache["report"]
+                            else:
+                                section_logger.info(f"Generating new market analysis")
+                                report = await generate_market_report(agent, section, reference_date, section_logger, language)
+                                _market_analysis_cache["report"] = report
+                                return section, report
+                        else:
+                            report = await generate_report(agent, section, company_name, company_code, reference_date, section_logger, language)
+                            return section, report
+                    except Exception as e:
+                        section_logger.error(f"Final failure processing {section}: {e}")
+                        return section, f"Analysis failed: {section}"
+
+            # Execute all sections in parallel (each with its own MCPApp context)
             results = await asyncio.gather(*[process_section(section) for section in base_sections])
             for section, report in results:
                 if report is not None:
