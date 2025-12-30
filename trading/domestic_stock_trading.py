@@ -9,6 +9,7 @@ import asyncio
 import datetime
 import logging
 import math
+import time
 from pathlib import Path
 from typing import Optional, Dict, List, Any
 
@@ -604,8 +605,9 @@ class DomesticStockTrading:
                     'message': f'예약주문 매수 완료 ({buy_quantity}주, {order_type_str}, {period_str})'
                 }
             else:
-                # 예약주문 실패 시 시장가 매수를 한번 더 시도
+                # 예약주문 실패 시 시장가 매수를 한번 더 시도 (rate limit 방지를 위해 1초 대기)
                 logger.error(f"예약주문 매수 실패: {res.getErrorCode()} - {res.getErrorMessage()}")
+                time.sleep(1.0)  # Rate limit 방지
                 market_price_result = self.buy_market_price(stock_code, amount)
                 if market_price_result.get('success', False):
                     logger.info(f"[{stock_code}] 시장가 매수를 재시도하여 성공")
@@ -622,6 +624,7 @@ class DomesticStockTrading:
 
         except Exception as e:
             logger.error(f"예약주문 매수 중 오류: {str(e)}")
+            time.sleep(1.0)  # Rate limit 방지
             market_price_result = self.buy_market_price(stock_code, amount)
             if market_price_result.get('success', False):
                 logger.info(f"[{stock_code}] 시장가 매수 재시도 성공")
