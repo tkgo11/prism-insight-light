@@ -95,6 +95,23 @@ def clean_markdown(text: str) -> str:
             processed_lines.append(line)
     text = '\n'.join(processed_lines)
 
+    # 6. 헤더/소제목 뒤에 누락된 개행 추가 (GPT-5.2가 개행 없이 붙여쓴 경우)
+    # 패턴: "관점본" -> "관점\n\n본", "계획다음" -> "계획\n\n다음"
+    header_endings = ['관점', '계획', '해석', '동향', '현황', '개요', '전략', '요약', '배경', '결론']
+    sentence_starters = ['본', '다음', '이는', '이번', '해당', '실제', '현재', '그러', '따라', '특히', '또한', '다만', '한편']
+
+    for ending in header_endings:
+        for starter in sentence_starters:
+            # "관점본" -> "관점\n\n본" (개행 없이 붙어있는 경우)
+            text = text.replace(f'{ending}{starter}', f'{ending}\n\n{starter}')
+
+    # 7. 번호 매긴 소제목 뒤 누락된 개행 추가
+    # 패턴: "4) 미래 계획다음은" -> "4) 미래 계획\n\n다음은"
+    for starter in sentence_starters:
+        # "계획다음" 같은 패턴 처리 (위에서 이미 처리됨)
+        # 추가로 "n) 제목단어" 패턴도 처리
+        text = re.sub(rf'(\d+\)\s*[가-힣]+\s*(?:계획|현황|분석|동향|개요|배경))({starter})', rf'\1\n\n\2', text)
+
     return text
 
 
