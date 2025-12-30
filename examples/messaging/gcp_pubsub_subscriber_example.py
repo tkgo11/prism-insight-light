@@ -20,6 +20,10 @@ Usage:
 Options:
     --log-file: Specify log file path (default: logs/subscriber_YYYYMMDD.log)
     --dry-run: Run simulation only without actual trading
+
+Note:
+    모의투자(demo) 모드에서 장외 시간(16:00 이후)에 시그널이 들어오면,
+    다음 영업일 09:05에 자동으로 시장가 매수를 실행합니다.
 """
 import os
 import sys
@@ -27,9 +31,10 @@ import json
 import logging
 import argparse
 import asyncio
-from datetime import datetime
+import threading
+from datetime import datetime, time, timedelta
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 # Project root path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -41,6 +46,227 @@ try:
     load_dotenv(PROJECT_ROOT / ".env")
 except ImportError:
     pass
+
+
+# ============================================================
+# 스케줄링 관련 유틸리티
+# ============================================================
+
+def get_trading_mode() -> str:
+    """kis_devlp.yaml에서 거래 모드 확인 (demo/real)"""
+    try:
+        import yaml
+        config_path = PROJECT_ROOT / "trading" / "config" / "kis_devlp.yaml"
+        with open(config_path, encoding="UTF-8") as f:
+            cfg = yaml.load(f, Loader=yaml.FullLoader)
+        return cfg.get("default_mode", "real")
+    except Exception:
+        return "real"
+
+
+def is_market_hours() -> bool:
+    """현재 시간이 정규 장 시간(09:00~15:30)인지 확인"""
+    now = datetime.now().time()
+    market_open = time(9, 0)
+    market_close = time(15, 30)
+    return market_open <= now <= market_close
+
+
+def is_market_day_check() -> bool:
+    """영업일인지 확인 (check_market_day.py 활용)"""
+    try:
+        from check_market_day import is_market_day
+        return is_market_day()
+    except ImportError:
+        # fallback: 주말만 체크
+        return datetime.now().weekday() < 5
+
+
+def get_next_market_open() -> datetime:
+    """다음 영업일 09:05 시간 계산"""
+    now = datetime.now()
+    next_day = now + timedelta(days=1)
+
+    # 다음 영업일 찾기 (최대 7일까지 탐색)
+    for _ in range(7):
+        # 주말 스킵
+        if next_day.weekday() >= 5:
+            next_day += timedelta(days=1)
+            continue
+
+        # 공휴일 체크 (is_market_day_check 활용)
+        try:
+            from check_market_day import is_market_day
+            from holidays.countries import KR
+
+            # 임시로 해당 날짜가 영업일인지 확인
+            kr_holidays = KR()
+            if next_day.date() in kr_holidays:
+                next_day += timedelta(days=1)
+                continue
+            # 노동절 체크
+            if next_day.month == 5 and next_day.day == 1:
+                next_day += timedelta(days=1)
+                continue
+        except ImportError:
+            pass
+
+        # 영업일 발견
+        break
+
+    # 09:05 설정 (장 시작 후 안정화 시간)
+    return next_day.replace(hour=9, minute=5, second=0, microsecond=0)
+
+
+class ScheduledOrderManager:
+    """
+    예약 주문 관리자
+
+    모의투자 장외 시간에 들어온 시그널을 저장하고,
+    다음 영업일 장 시작 시 자동 실행합니다.
+    """
+
+    def __init__(self, storage_path: Path = None, logger: logging.Logger = None):
+        self.storage_path = storage_path or (PROJECT_ROOT / "logs" / "scheduled_orders.json")
+        self.logger = logger or logging.getLogger("scheduled_orders")
+        self.orders: List[Dict[str, Any]] = []
+        self._lock = threading.Lock()
+        self._scheduler_thread: Optional[threading.Thread] = None
+        self._stop_event = threading.Event()
+
+        # 저장된 예약 주문 로드
+        self._load_orders()
+
+    def _load_orders(self):
+        """파일에서 예약 주문 로드"""
+        try:
+            if self.storage_path.exists():
+                with open(self.storage_path, 'r', encoding='utf-8') as f:
+                    self.orders = json.load(f)
+                if self.orders:
+                    self.logger.info(f"📋 {len(self.orders)}개의 예약 주문 로드됨")
+        except Exception as e:
+            self.logger.error(f"예약 주문 로드 실패: {e}")
+            self.orders = []
+
+    def _save_orders(self):
+        """예약 주문을 파일에 저장"""
+        try:
+            self.storage_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.storage_path, 'w', encoding='utf-8') as f:
+                json.dump(self.orders, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            self.logger.error(f"예약 주문 저장 실패: {e}")
+
+    def add_order(self, signal: Dict[str, Any]) -> bool:
+        """예약 주문 추가"""
+        with self._lock:
+            order = {
+                "signal": signal,
+                "scheduled_at": datetime.now().isoformat(),
+                "execute_after": get_next_market_open().isoformat(),
+                "status": "pending"
+            }
+            self.orders.append(order)
+            self._save_orders()
+
+            ticker = signal.get("ticker", "")
+            company_name = signal.get("company_name", "")
+            execute_time = get_next_market_open().strftime("%Y-%m-%d %H:%M")
+
+            self.logger.info(f"⏰ 예약 주문 등록: {company_name}({ticker}) -> {execute_time} 실행 예정")
+            return True
+
+    def get_pending_orders(self) -> List[Dict[str, Any]]:
+        """실행 대기 중인 주문 조회"""
+        with self._lock:
+            now = datetime.now()
+            pending = []
+            for order in self.orders:
+                if order["status"] == "pending":
+                    execute_after = datetime.fromisoformat(order["execute_after"])
+                    if now >= execute_after:
+                        pending.append(order)
+            return pending
+
+    def mark_executed(self, order: Dict[str, Any], success: bool, message: str = ""):
+        """주문 실행 완료 처리"""
+        with self._lock:
+            order["status"] = "executed" if success else "failed"
+            order["executed_at"] = datetime.now().isoformat()
+            order["result_message"] = message
+            self._save_orders()
+
+    def clear_old_orders(self, days: int = 7):
+        """오래된 주문 정리"""
+        with self._lock:
+            cutoff = datetime.now() - timedelta(days=days)
+            original_count = len(self.orders)
+            self.orders = [
+                o for o in self.orders
+                if o["status"] == "pending" or
+                   datetime.fromisoformat(o.get("executed_at", o["scheduled_at"])) > cutoff
+            ]
+            removed = original_count - len(self.orders)
+            if removed > 0:
+                self._save_orders()
+                self.logger.info(f"🗑️ {removed}개의 오래된 주문 정리됨")
+
+    def start_scheduler(self, execute_callback):
+        """백그라운드 스케줄러 시작"""
+        def scheduler_loop():
+            self.logger.info("🕐 예약 주문 스케줄러 시작됨")
+            while not self._stop_event.is_set():
+                try:
+                    # 1분마다 체크
+                    if self._stop_event.wait(60):
+                        break
+
+                    # 장 시간이고 영업일인 경우에만 실행
+                    if is_market_hours() and is_market_day_check():
+                        pending_orders = self.get_pending_orders()
+                        for order in pending_orders:
+                            signal = order["signal"]
+                            ticker = signal.get("ticker", "")
+                            company_name = signal.get("company_name", "")
+
+                            self.logger.info(f"🚀 예약 주문 실행: {company_name}({ticker})")
+
+                            try:
+                                result = execute_callback(signal)
+                                success = result.get("success", False)
+                                message = result.get("message", "")
+                                self.mark_executed(order, success, message)
+
+                                if success:
+                                    self.logger.info(f"✅ 예약 주문 성공: {company_name}({ticker})")
+                                else:
+                                    self.logger.error(f"❌ 예약 주문 실패: {company_name}({ticker}) - {message}")
+                            except Exception as e:
+                                self.mark_executed(order, False, str(e))
+                                self.logger.error(f"❌ 예약 주문 실행 오류: {e}")
+
+                    # 매일 자정에 오래된 주문 정리
+                    if datetime.now().hour == 0 and datetime.now().minute < 2:
+                        self.clear_old_orders()
+
+                except Exception as e:
+                    self.logger.error(f"스케줄러 오류: {e}")
+
+            self.logger.info("🕐 예약 주문 스케줄러 종료됨")
+
+        self._scheduler_thread = threading.Thread(target=scheduler_loop, daemon=True)
+        self._scheduler_thread.start()
+
+    def stop_scheduler(self):
+        """스케줄러 중지"""
+        self._stop_event.set()
+        if self._scheduler_thread:
+            self._scheduler_thread.join(timeout=5)
+
+
+# Global scheduler manager (will be initialized in main)
+scheduled_order_manager: Optional[ScheduledOrderManager] = None
 
 
 def setup_logging(log_file: str = None) -> logging.Logger:
@@ -147,10 +373,28 @@ def main():
     logger = setup_logging(args.log_file)
 
     # Display mode
+    trading_mode = get_trading_mode()
     if args.dry_run:
         logger.warning("🔸 DRY-RUN mode: No actual trading will be executed.")
     else:
         logger.info("🔹 LIVE mode: Actual trading will be executed!")
+        logger.info(f"🔹 Trading mode: {trading_mode.upper()}")
+
+    # Initialize scheduled order manager (모의투자 장외 시간 스케줄링용)
+    global scheduled_order_manager
+    if not args.dry_run and trading_mode == "demo":
+        scheduled_order_manager = ScheduledOrderManager(logger=logger)
+
+        # 스케줄러 콜백 함수 정의
+        def execute_scheduled_order(signal: dict) -> dict:
+            """스케줄된 주문 실행 (동기 래퍼)"""
+            ticker = signal.get("ticker", "")
+            company_name = signal.get("company_name", "")
+            return asyncio.run(execute_buy_trade(ticker, company_name, logger))
+
+        # 백그라운드 스케줄러 시작
+        scheduled_order_manager.start_scheduler(execute_scheduled_order)
+        logger.info("📅 모의투자 장외 시간 스케줄러 활성화됨")
 
     # Check GCP connection info
     if not args.project_id or not args.subscription_id:
@@ -225,8 +469,20 @@ def main():
 
             # Execute actual buy
             if not args.dry_run:
-                logger.info(f"🚀 Executing buy order: {company_name}({ticker})")
-                asyncio.run(execute_buy_trade(ticker, company_name, logger))
+                trading_mode = get_trading_mode()
+                in_market_hours = is_market_hours()
+
+                # 모의투자 + 장외시간: 다음 영업일로 스케줄링
+                if trading_mode == "demo" and not in_market_hours:
+                    logger.info(f"⏰ [DEMO 모드 장외시간] 다음 영업일 예약 등록: {company_name}({ticker})")
+                    if scheduled_order_manager:
+                        scheduled_order_manager.add_order(signal)
+                    else:
+                        logger.warning("스케줄러 미초기화 - 주문 스킵")
+                else:
+                    # 실전투자 또는 장중: 즉시 실행
+                    logger.info(f"🚀 Executing buy order: {company_name}({ticker})")
+                    asyncio.run(execute_buy_trade(ticker, company_name, logger))
             else:
                 logger.info(f"🔸 [DRY-RUN] Buy skipped: {company_name}({ticker})")
 
@@ -296,6 +552,14 @@ def main():
         streaming_pull_future.result()
     except KeyboardInterrupt:
         streaming_pull_future.cancel()
+
+        # 스케줄러 정리
+        if scheduled_order_manager:
+            scheduled_order_manager.stop_scheduler()
+            pending_count = len([o for o in scheduled_order_manager.orders if o["status"] == "pending"])
+            if pending_count > 0:
+                logger.info(f"📋 {pending_count}개의 예약 주문이 다음 실행 시 처리됩니다.")
+
         logger.info("=" * 60)
         logger.info(f"Subscription ended.")
         logger.info(f"Total {message_count} signals received (Buy: {trade_count['BUY']}, Sell: {trade_count['SELL']})")
