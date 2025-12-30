@@ -22,8 +22,37 @@ def clean_markdown(text: str) -> str:
     # 1. 백틱 블록 제거
     text = re.sub(r'```[^\n]*\n(.*?)\n```', r'\1', text, flags=re.DOTALL)
 
-    # 2. 개행문자 리터럴을 실제 개행으로 변환
-    text = re.sub(r'\\n\\n', '\n\n', text)
+    # 2. 개행문자 리터럴을 실제 개행으로 변환 (GPT-5.2 호환)
+    # 먼저 이중 개행 처리
+    text = text.replace('\\n\\n', '\n\n')
+    # 단일 개행 처리
+    text = text.replace('\\n', '\n')
+
+    # 3. 한글 사이에 끼어든 불필요한 개행 제거 (GPT-5.2 출력 정리)
+    # 예: "코\n리\n아" -> "코리아" (반복 적용)
+    prev_text = None
+    while prev_text != text:
+        prev_text = text
+        text = re.sub(r'([가-힣])\n([가-힣])', r'\1\2', text)
+
+    # 4. 테이블 행 내부의 개행 제거 (마크다운 테이블 수정)
+    # 테이블 행은 | 로 시작하고 | 로 끝나야 함
+    lines = text.split('\n')
+    cleaned_lines = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        # 테이블 행이 | 로 시작하지만 | 로 끝나지 않으면 다음 줄과 병합
+        if line.strip().startswith('|') and not line.strip().endswith('|'):
+            merged = line
+            while i + 1 < len(lines) and not merged.strip().endswith('|'):
+                i += 1
+                merged += lines[i]
+            cleaned_lines.append(merged)
+        else:
+            cleaned_lines.append(line)
+        i += 1
+    text = '\n'.join(cleaned_lines)
 
     return text
 
