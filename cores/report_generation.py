@@ -93,7 +93,7 @@ async def generate_report(agent, section, company_name, company_code, reference_
         request_params=RequestParams(
             model="gpt-5.2",
             reasoning_effort="none",
-            maxTokens=16000,
+            maxTokens=32000,
             parallel_tool_calls=True,
             use_history=True
         )
@@ -171,7 +171,7 @@ async def generate_market_report(agent, section, reference_date, logger, languag
         request_params=RequestParams(
             model="gpt-5.2",
             reasoning_effort="none",
-            maxTokens=16000,
+            maxTokens=32000,
             max_iterations=3,
             parallel_tool_calls=True,
             use_history=True
@@ -281,7 +281,7 @@ Comprehensive Analysis Report:
             request_params=RequestParams(
                 model="gpt-5.2",
                 reasoning_effort="none",
-                maxTokens=6000,
+                maxTokens=16000,
                 max_iterations=2,
                 parallel_tool_calls=True,
                 use_history=True
@@ -511,7 +511,7 @@ Please present a consistent and executable investment strategy that investors ca
             request_params=RequestParams(
                 model="gpt-5.2",
                 reasoning_effort="none",
-                maxTokens=16000,
+                maxTokens=32000,
                 max_iterations=3,
                 parallel_tool_calls=True,
                 use_history=True
