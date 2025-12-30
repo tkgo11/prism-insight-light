@@ -38,11 +38,11 @@ def get_agent_directory(company_name, company_code, reference_date, base_section
         "컨센서스", "경쟁사분석", "지분현황", "업종분석", "최근리포트"
     ]}
     
-    # 날짜 계산 (input token 절감을 위해 1.5년으로 제한)
+    # 날짜 계산 (input token 절감을 위해 1년으로 제한 - 매매 분석에 충분)
     from datetime import datetime, timedelta
     ref_date = datetime.strptime(reference_date, "%Y%m%d")
-    max_years = 1.5
-    max_years_ago = (ref_date - timedelta(days=int(365*max_years))).strftime("%Y%m%d")
+    max_years = 1
+    max_years_ago = (ref_date - timedelta(days=365*max_years)).strftime("%Y%m%d")
     
     agent_creators = {
         "price_volume_analysis": lambda: create_price_volume_analysis_agent(
