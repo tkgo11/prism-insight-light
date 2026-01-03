@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for PRISM-INSIGHT
 
-> **Last Updated**: 2025-11-14
-> **Version**: 1.0
+> **Last Updated**: 2026-01-03
+> **Version**: 1.1
 > **Purpose**: Comprehensive guide for AI assistants working on the PRISM-INSIGHT codebase
 
 ---
@@ -41,26 +41,27 @@ PRISM-INSIGHT is a **production-grade AI-powered Korean stock market analysis an
 Language: Python 3.10+
 AI Framework: mcp-agent (Multi-Agent Orchestration)
 LLM Models:
-  - OpenAI GPT-4.1 (Analysis agents)
-  - OpenAI GPT-5 (Trading agents)
+  - OpenAI GPT-5 (Analysis & Trading agents, default)
   - Anthropic Claude Sonnet 4.5 (Telegram bot)
 Data Sources:
   - pykrx: Korean stock market data
-  - MCP Servers: kospi_kosdaq, firecrawl, perplexity
+  - MCP Servers: kospi_kosdaq, firecrawl, perplexity, deepsearch
 Communication: python-telegram-bot (v20+)
 Trading API: Korea Investment & Securities
 Database: SQLite with aiosqlite (async)
 PDF Generation: Playwright (Chromium-based)
 Charts: matplotlib, seaborn, mplfinance
+Messaging: Redis (Upstash), Google Cloud Pub/Sub (optional)
 ```
 
 ### Project Scale
 
-- **~56 Python files** | **~8,400+ lines of code**
+- **~68+ Python files** | **~10,000+ lines of code**
 - **13+ specialized AI agents** with distinct roles
 - **Multiple entry points** for different workflows
 - **Full async/await** throughout the codebase
 - **Multi-language support** (ko, en, ja, zh, es, fr, de)
+- **Event-driven architecture** with Redis/GCP Pub/Sub integration
 
 ---
 
@@ -160,15 +161,23 @@ prism-insight/
 │   │   └── kis_devlp.yaml             # Actual config (gitignored)
 │   └── 📂 samples/                    # API usage examples
 │
-├── 📂 examples/                        # Web Interfaces
+├── 📂 examples/                        # Web Interfaces & Utilities
 │   ├── 📂 streamlit/                  # Streamlit dashboard
 │   │   ├── app_modern.py              # Main app
 │   │   └── config.py.example          # Config template
-│   └── 📂 dashboard/                  # Next.js frontend
+│   ├── 📂 dashboard/                  # Next.js frontend
+│   ├── 📂 messaging/                  # Event-driven trading signals
+│   │   ├── redis_subscriber_example.py    # Redis/Upstash integration
+│   │   └── gcp_pubsub_subscriber_example.py  # GCP Pub/Sub integration
+│   ├── generate_dashboard_json.py     # Dashboard data generator
+│   └── translation_utils.py           # Multi-language utilities
 │
 ├── 📂 tests/                           # Test Suite
 │   ├── test_async_trading.py          # Trading system tests
 │   ├── test_tracking_agent.py         # Agent tests
+│   ├── test_redis_signal_pubsub.py    # Redis signal tests
+│   ├── test_gcp_pubsub_signal.py      # GCP Pub/Sub tests
+│   ├── test_youtube_crawler.py        # YouTube crawler tests
 │   ├── quick_test.py                  # Quick integration tests
 │   └── test_*.py                      # Various unit tests
 │
@@ -185,16 +194,19 @@ prism-insight/
 ├── 📂 docs/                            # Documentation & Images
 │
 ├── stock_analysis_orchestrator.py     # 🎯 Main Orchestrator
+├── report_generator.py                # Async report generation with global MCPApp
 ├── stock_tracking_agent.py            # Trading Simulation Agent
-├── stock_tracking_enhanced_agent.py   # Enhanced Trading Agent
+├── stock_tracking_enhanced_agent.py   # Enhanced Trading Agent (scipy stats)
 ├── telegram_ai_bot.py                 # Telegram Bot (Claude-based)
 ├── telegram_bot_agent.py              # Bot message handling
 ├── telegram_summary_agent.py          # Summary generation pipeline
+├── run_telegram_pipeline.py           # Telegram message processing pipeline
 ├── trigger_batch.py                   # Surge Stock Detection
 ├── pdf_converter.py                   # Markdown → PDF conversion
 ├── telegram_config.py                 # TelegramConfig class
 ├── analysis_manager.py                # Background job queue
-├── check_market_day.py                # Market holiday validation
+├── check_market_day.py                # Market holiday validation (incl. Dec 31)
+├── update_stock_data.py               # Stock data update utility
 │
 ├── requirements.txt                   # Python dependencies
 ├── .env.example                       # Environment variables template
@@ -209,15 +221,19 @@ prism-insight/
 | File | Purpose | When to Modify |
 |------|---------|----------------|
 | `stock_analysis_orchestrator.py` | Main pipeline orchestrator | Changing overall workflow |
+| `report_generator.py` | Global MCPApp lifecycle management | Resource management, parallel processing |
 | `cores/analysis.py` | Core analysis engine | Modifying agent collaboration |
 | `cores/agents/*.py` | Individual agent definitions | Changing agent prompts/behavior |
 | `cores/report_generation.py` | Report templates | Changing report format |
+| `cores/utils.py` | Utility functions (markdown cleanup) | Output formatting fixes |
 | `trading/domestic_stock_trading.py` | KIS API wrapper | Trading functionality changes |
 | `stock_tracking_agent.py` | Trading decisions | Modifying trading strategy |
+| `stock_tracking_enhanced_agent.py` | Enhanced trading with stats | Advanced trading signals |
 | `trigger_batch.py` | Stock screening | Changing detection criteria |
 | `telegram_config.py` | Telegram configuration | Telegram settings |
 | `pdf_converter.py` | PDF generation | PDF styling/formatting |
 | `cores/language_config.py` | Multi-language templates | Adding/modifying languages |
+| `examples/messaging/*.py` | Event-driven trading signals | Redis/GCP integration |
 
 ---
 
@@ -333,7 +349,7 @@ perf: Performance improvements
 
 ### The 13 Specialized Agents
 
-#### Analysis Team (6 Agents) - GPT-4.1 Based
+#### Analysis Team (6 Agents) - GPT-5 Based
 
 **1. Technical Analyst** (`create_price_volume_analysis_agent`)
 - **File**: `cores/agents/stock_price_agents.py`
@@ -372,7 +388,7 @@ perf: Performance improvements
 - **Output**: Market analysis section
 - **Note**: Results are cached to reduce API calls
 
-#### Strategy Team (1 Agent) - GPT-4.1 Based
+#### Strategy Team (1 Agent) - GPT-5 Based
 
 **7. Investment Strategist** (`create_investment_strategy_agent`)
 - **File**: `cores/agents/news_strategy_agents.py`
@@ -384,26 +400,28 @@ perf: Performance improvements
 
 **8-1. Summary Optimizer** (`telegram_summary_optimizer_agent`)
 - **File**: `cores/agents/telegram_summary_optimizer_agent.py`
-- **Model**: GPT-4.1
+- **Model**: GPT-5
 - **Purpose**: Convert detailed reports to Telegram-optimized summaries
 - **Constraints**: 400 characters max, key points extraction
 - **Output**: Concise Telegram message
 
 **8-2. Quality Evaluator** (`telegram_summary_evaluator_agent`)
 - **File**: `cores/agents/telegram_summary_evaluator_agent.py`
-- **Model**: GPT-4.1
+- **Model**: GPT-5
 - **Purpose**: Evaluate summary quality and suggest improvements
 - **Checks**: Accuracy, clarity, format compliance, hallucination detection
 - **Process**: Iterative improvement loop until EXCELLENT rating
 
 **8-3. Translation Specialist** (`translate_telegram_message`)
 - **File**: `cores/agents/telegram_translator_agent.py`
-- **Model**: GPT-4.1
+- **Model**: GPT-5
 - **Purpose**: Multi-language translation
 - **Languages**: en, ja, zh, es, fr, de
 - **Preserves**: Technical terms, market context, formatting
 
 #### Trading Simulation Team (2 Agents) - GPT-5 Based
+
+> **Note**: All agents now use GPT-5 (gpt-5) as the default model. GPT-5 output formatting requires additional cleanup in `cores/utils.py` (tool artifacts, headers).
 
 **9-1. Buy Specialist** (`create_trading_scenario_agent`)
 - **File**: `cores/agents/trading_agents.py`
@@ -706,6 +724,15 @@ TELEGRAM_CHANNEL_ID_ZH="-1001234567893"     # Chinese
 
 # Optional: Default language
 PRISM_LANGUAGE=ko  # or "en"
+
+# Redis/Upstash (Optional - for event-driven signals)
+UPSTASH_REDIS_REST_URL="https://xxx.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="your-token"
+
+# GCP Pub/Sub (Optional - for event-driven signals)
+GCP_PROJECT_ID="your-gcp-project"
+GCP_PUBSUB_SUBSCRIPTION_ID="your-subscription"
+GCP_CREDENTIALS_PATH="/path/to/service-account.json"
 ```
 
 #### `mcp_agent.config.yaml` - MCP Agent Configuration
@@ -720,18 +747,23 @@ mcp:
     firecrawl: firecrawl-mcp
     perplexity: node perplexity-ask/dist/index.js
 
+    # Deep search (remote MCP server)
+    deepsearch:
+      command: "npx"
+      args: ["-y", "mcp-remote", "http://localhost:8000/sse"]
+
     # Stock market data
     kospi_kosdaq: python3 -m kospi_kosdaq_stock_server
 
     # Database
-    sqlite: uv run mcp-server-sqlite
+    sqlite: uv run mcp-server-sqlite --directory sqlite stock_tracking_db.sqlite
 
     # Utilities
     time: uvx mcp-server-time
 
 openai:
   default_model: gpt-5
-  reasoning_effort: medium
+  reasoning_effort: medium  # Options: none, low, medium, high
 ```
 
 #### `mcp_agent.secrets.yaml` - API Keys
@@ -826,6 +858,10 @@ tests/
 ├── test_portfolio_reporter.py     # Portfolio reporting tests
 ├── test_json_parsing.py           # JSON validation tests
 ├── test_parse_price_value.py      # Utility function tests
+├── test_redis_signal_pubsub.py    # Redis signal integration tests
+├── test_gcp_pubsub_signal.py      # GCP Pub/Sub signal tests
+├── test_youtube_crawler.py        # YouTube event fund crawler tests
+├── test_specific_functions.py     # Focused unit tests
 ├── quick_test.py                  # Quick integration tests
 └── quick_json_test.py             # Rapid JSON validation
 ```
@@ -847,6 +883,12 @@ python tests/quick_test.py
 
 # Trading system test
 python tests/test_async_trading.py
+
+# Redis signal test
+python tests/test_redis_signal_pubsub.py
+
+# GCP Pub/Sub signal test
+python tests/test_gcp_pubsub_signal.py
 ```
 
 ### Writing Tests
@@ -1108,6 +1150,56 @@ def create_your_agent(...):
     )
 ```
 
+### Task 7: Event-Driven Trading Signal Integration
+
+```python
+# Redis/Upstash integration for real-time trading signals
+
+# 1. Configure .env
+UPSTASH_REDIS_REST_URL="https://xxx.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="your-token"
+
+# 2. Run Redis subscriber
+python examples/messaging/redis_subscriber_example.py \
+    --from-beginning \
+    --dry-run  # Test mode without actual trading
+
+# 3. GCP Pub/Sub alternative
+# Configure GCP credentials
+GCP_PROJECT_ID="your-project"
+GCP_PUBSUB_SUBSCRIPTION_ID="your-subscription"
+GCP_CREDENTIALS_PATH="/path/to/credentials.json"
+
+# Run GCP subscriber
+python examples/messaging/gcp_pubsub_subscriber_example.py \
+    --polling-interval 60
+
+# Key features:
+# - Real-time buy/sell signal subscription
+# - Market hours aware scheduling (after 16:00 → next market day 09:05)
+# - Auto-trading execution with demo/real mode
+# - CLI options: --from-beginning, --log-file, --dry-run, --polling-interval
+```
+
+### Task 8: Dashboard JSON Generation
+
+```python
+# Generate dashboard data from trading history
+
+# Run the generator
+python examples/generate_dashboard_json.py
+
+# Output files:
+# - examples/dashboard/public/dashboard_data.json (Korean)
+# - examples/dashboard/public/dashboard_data_en.json (English)
+
+# Features:
+# - Database to JSON conversion from trading history
+# - Multi-language support via translation_utils.py
+# - Market index data integration
+# - Portfolio performance metrics
+```
+
 ---
 
 ## 10. Important Constraints
@@ -1186,6 +1278,23 @@ if mode == "real":
     if confirm.lower() != "yes":
         logger.warning("Real trading cancelled by user")
         return
+```
+
+### Market Holiday Validation
+
+**Holiday Check** (in `check_market_day.py`):
+- Weekends (Saturday, Sunday)
+- Korean public holidays
+- **Year-end close (December 31)** - Added in recent update
+- Other exchange-specific closures
+
+```python
+# check_market_day.py includes Dec 31 check
+def is_market_day(date):
+    # Check for year-end market close
+    if date.month == 12 and date.day == 31:
+        return False
+    # ... other holiday checks
 ```
 
 ### Time-Based Data Accuracy
@@ -1401,7 +1510,30 @@ python tests/quick_json_test.py
 # Ensure trading agents return valid JSON structure
 ```
 
-#### Issue 7: Out of Memory During Analysis
+#### Issue 7: GPT-5 Output Formatting Issues
+
+**Symptoms**:
+- Unexpected `##` headers appearing in output
+- Tool call artifacts in generated text
+- Markdown formatting inconsistencies
+
+**Solution**:
+```python
+# cores/utils.py provides automatic cleanup
+from cores.utils import clean_markdown
+
+# Automatic fixes applied:
+# - Remove GPT-5 tool call artifacts
+# - Convert ## headers to bold text in body
+# - Add missing newlines after headers
+# - Clean up inconsistent markdown
+
+cleaned_text = clean_markdown(raw_output)
+```
+
+**Note**: GPT-5 model output requires additional processing compared to GPT-4.1. The `cores/utils.py` file contains several fixes for GPT-5-specific formatting quirks.
+
+#### Issue 8: Out of Memory During Analysis
 
 **Symptoms**: Process killed during large batch analysis
 
@@ -1465,6 +1597,11 @@ logging.basicConfig(
 | `TELEGRAM_CHANNEL_ID_JA` | Japanese channel | No |
 | `TELEGRAM_CHANNEL_ID_ZH` | Chinese channel | No |
 | `PRISM_LANGUAGE` | Default language | No (defaults to "ko") |
+| `UPSTASH_REDIS_REST_URL` | Redis/Upstash URL | No (for event signals) |
+| `UPSTASH_REDIS_REST_TOKEN` | Redis/Upstash token | No (for event signals) |
+| `GCP_PROJECT_ID` | GCP project ID | No (for GCP signals) |
+| `GCP_PUBSUB_SUBSCRIPTION_ID` | GCP Pub/Sub subscription | No (for GCP signals) |
+| `GCP_CREDENTIALS_PATH` | GCP service account path | No (for GCP signals) |
 
 ### Command-Line Arguments
 
@@ -1486,7 +1623,8 @@ logging.basicConfig(
 |-----------|---------|
 | `/cores/` | Core analysis engine and agents |
 | `/trading/` | Trading system and KIS API |
-| `/examples/` | Web interfaces (Streamlit, Next.js) |
+| `/examples/` | Web interfaces (Streamlit, Next.js), messaging |
+| `/examples/messaging/` | Event-driven trading signal examples |
 | `/tests/` | Test suite |
 | `/utils/` | Utility scripts and setup tools |
 | `/docs/` | Documentation and images |
@@ -1500,8 +1638,15 @@ logging.basicConfig(
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-11-14
+**Document Version**: 1.1
+**Last Updated**: 2026-01-03
 **Maintained By**: PRISM-INSIGHT Development Team
+
+### Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.1 | 2026-01-03 | GPT-5 upgrade, Redis/GCP Pub/Sub integration, new files documentation |
+| 1.0 | 2025-11-14 | Initial comprehensive documentation |
 
 For questions or improvements to this document, please submit a GitHub issue or pull request.
