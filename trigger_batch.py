@@ -63,6 +63,48 @@ def get_previous_snapshot(trade_date: str) -> (pd.DataFrame, str):
 
     return df, prev_date
 
+
+def get_multi_day_snapshots(trade_date: str, days: int = 5) -> dict:
+    """
+    최근 N 영업일간의 OHLCV 스냅샷을 모두 조회합니다.
+
+    Args:
+        trade_date: 기준 거래일 (YYYYMMDD)
+        days: 조회할 일수 (기본값: 5)
+
+    Returns:
+        dict: {날짜: DataFrame} 형태의 딕셔너리
+              최신 날짜가 첫 번째 (trade_date가 가장 최신)
+    """
+    logger.debug(f"get_multi_day_snapshots 호출: 기준일 {trade_date}, {days}일간")
+
+    snapshots = {}
+    current_date = trade_date
+
+    for i in range(days):
+        try:
+            df = stock_api.get_market_ohlcv_by_ticker(current_date)
+            if not df.empty:
+                snapshots[current_date] = df
+                logger.debug(f"Day-{i} 스냅샷 조회 성공: {current_date} ({len(df)}개 종목)")
+            else:
+                logger.warning(f"Day-{i} 스냅샷 비어있음: {current_date}")
+        except Exception as e:
+            logger.warning(f"Day-{i} 스냅샷 조회 실패: {current_date} - {e}")
+
+        # 직전 영업일로 이동
+        try:
+            date_obj = datetime.datetime.strptime(current_date, '%Y%m%d')
+            prev_date_obj = date_obj - datetime.timedelta(days=1)
+            prev_date_str = prev_date_obj.strftime('%Y%m%d')
+            current_date = stock_api.get_nearest_business_day_in_a_week(prev_date_str, prev=True)
+        except Exception as e:
+            logger.warning(f"직전 영업일 조회 실패: {current_date} - {e}")
+            break
+
+    logger.info(f"멀티데이 스냅샷 조회 완료: {len(snapshots)}일치 데이터")
+    return snapshots
+
 def get_market_cap_df(trade_date: str, market: str = "ALL") -> pd.DataFrame:
     """
     지정 거래일의 전체 종목에 대한 시가총액 데이터를 DataFrame으로 반환합니다.
@@ -286,6 +328,210 @@ def trigger_morning_gap_up_momentum(trade_date: str, snapshot: pd.DataFrame, pre
 
     logger.debug(f"갭 상승 모멘텀 포착 종목 수: {len(result)}")
     return enhance_dataframe(result.sort_values("복합점수", ascending=False).head(3))
+
+
+def trigger_morning_pullback_buy(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame,
+                                  cap_df: pd.DataFrame, multi_day_snapshots: dict = None, top_n: int = 15) -> pd.DataFrame:
+    """
+    [오전 트리거2 대체] 눌림목 매수 대기 종목
+
+    trading_agents.py와 궁합을 맞추기 위한 새로운 트리거:
+    - 기존 갭상승 트리거는 "이미 상승한" 종목을 선별 → 손익비 불리
+    - 새 트리거는 "추세 확인 후 조정 시점"의 종목을 선별 → 손익비 유리
+
+    선별 기준:
+    1. 최근 5일 중 3일 이상 양봉 (상승 추세 확인)
+    2. 당일 갭다운 또는 보합 시작 (눌림목/조정)
+    3. 당일 반등 중 (매수세 유입 확인)
+    4. 거래량 전일 대비 70% 이상 유지 (관심 지속)
+    5. RSI 70 미만 (과열 종목 제외)
+    6. 시가총액 500억원 이상
+
+    복합 점수: 추세강도(40%) + 반등강도(30%) + 거래량안정성(30%)
+
+    장점:
+    - 손절가(최근 저점)가 가까움 → 손절폭 축소
+    - 상승 추세 확인 후 조정에서 진입 → 손익비 2:1+ 확보 용이
+    - 급등 직후가 아닌 조정 시점 → 상대적 저평가
+    """
+    logger.debug("trigger_morning_pullback_buy 시작")
+
+    common = snapshot.index.intersection(prev_snapshot.index)
+    snap = snapshot.loc[common].copy()
+    prev = prev_snapshot.loc[common].copy()
+
+    # 시가총액 데이터 병합 및 동전주 필터링
+    if cap_df is not None and not cap_df.empty:
+        snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
+        snap = snap[snap["시가총액"] >= 50000000000]  # 500억원 이상
+        logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
+        if snap.empty:
+            logger.warning("시가총액 필터링 후 종목이 없습니다")
+            return pd.DataFrame()
+
+    # 절대적 기준 적용 (최소 거래대금 5억원)
+    snap = apply_absolute_filters(snap)
+    if snap.empty:
+        logger.debug("절대적 기준 필터링 후 종목 없음")
+        return pd.DataFrame()
+
+    # === 멀티데이 추세 분석 ===
+    if multi_day_snapshots and len(multi_day_snapshots) >= 3:
+        logger.debug(f"멀티데이 추세 분석 시작: {len(multi_day_snapshots)}일치 데이터")
+
+        # 날짜 정렬 (최신 → 과거)
+        sorted_dates = sorted(multi_day_snapshots.keys(), reverse=True)
+
+        # 각 종목별 양봉 일수 계산
+        bullish_days = pd.Series(0, index=snap.index)
+        total_gain = pd.Series(0.0, index=snap.index)  # 누적 상승률
+        recent_high = pd.Series(0.0, index=snap.index)  # 최근 고점
+        recent_low = pd.Series(float('inf'), index=snap.index)  # 최근 저점
+
+        for i, date in enumerate(sorted_dates[:-1]):  # 마지막 날은 비교 대상 없음
+            if date not in multi_day_snapshots:
+                continue
+
+            current_df = multi_day_snapshots[date]
+            next_date = sorted_dates[i + 1] if i + 1 < len(sorted_dates) else None
+
+            if next_date and next_date in multi_day_snapshots:
+                prev_df = multi_day_snapshots[next_date]
+
+                # 공통 종목만
+                common_tickers = snap.index.intersection(current_df.index).intersection(prev_df.index)
+
+                for ticker in common_tickers:
+                    try:
+                        # 양봉 여부 (종가 > 시가)
+                        if current_df.loc[ticker, "종가"] > current_df.loc[ticker, "시가"]:
+                            bullish_days[ticker] += 1
+
+                        # 전일 대비 등락률
+                        daily_return = (current_df.loc[ticker, "종가"] - prev_df.loc[ticker, "종가"]) / prev_df.loc[ticker, "종가"]
+                        total_gain[ticker] += daily_return * 100
+
+                        # 고점/저점 업데이트
+                        recent_high[ticker] = max(recent_high[ticker], current_df.loc[ticker, "고가"])
+                        if current_df.loc[ticker, "저가"] > 0:
+                            recent_low[ticker] = min(recent_low[ticker], current_df.loc[ticker, "저가"])
+                    except (KeyError, ZeroDivisionError):
+                        continue
+
+        snap["양봉일수"] = bullish_days
+        snap["누적상승률"] = total_gain
+        snap["최근5일고점"] = recent_high
+        snap["최근5일저점"] = recent_low.replace(float('inf'), np.nan)
+
+        # RSI 간이 계산 (5일 기준)
+        snap["RSI추정"] = snap.apply(
+            lambda row: min(100, max(0, 50 + row["누적상승률"] * 2)) if pd.notna(row["누적상승률"]) else 50,
+            axis=1
+        )
+
+    else:
+        # 멀티데이 데이터 없으면 전일 데이터만으로 간이 판단
+        logger.debug("멀티데이 데이터 부족, 전일 데이터로 간이 분석")
+        snap["양봉일수"] = (prev["종가"] > prev["시가"]).astype(int)  # 전일 양봉이면 1
+        snap["누적상승률"] = ((prev["종가"] - prev["시가"]) / prev["시가"]) * 100
+        snap["최근5일고점"] = prev["고가"]
+        snap["최근5일저점"] = prev["저가"]
+        snap["RSI추정"] = 50  # 기본값
+
+    # === 핵심 조건 계산 ===
+
+    # 1. 상승 추세 확인 (5일 중 3일 이상 양봉)
+    snap["추세상승"] = snap["양봉일수"] >= 3
+
+    # 2. 당일 눌림목 시작 (갭다운 또는 보합: 시가 <= 전일 종가)
+    snap["눌림목시작"] = snap["시가"] <= prev["종가"]
+    snap["갭률"] = ((snap["시가"] - prev["종가"]) / prev["종가"]) * 100
+
+    # 3. 당일 반등 중 (현재가 > 시가)
+    snap["장중등락률"] = ((snap["종가"] - snap["시가"]) / snap["시가"]) * 100
+    snap["반등중"] = snap["종가"] > snap["시가"]
+
+    # 4. 거래량 유지 (전일 대비 70% 이상)
+    snap["거래량비율"] = snap["거래량"] / prev["거래량"].replace(0, np.nan)
+    snap["거래량유지"] = snap["거래량비율"] >= 0.7
+
+    # 5. 과열 종목 제외 (RSI 70 미만)
+    snap["과열아님"] = snap["RSI추정"] < 70
+
+    # 전일대비등락률 계산 (표시용)
+    snap["전일대비등락률"] = ((snap["종가"] - prev["종가"]) / prev["종가"]) * 100
+
+    # 지지선까지 거리 (손절폭 추정)
+    snap["지지선거리"] = ((snap["종가"] - snap["최근5일저점"]) / snap["종가"]) * 100
+
+    # === 필터링 ===
+    # 멀티데이 데이터가 충분하면 엄격한 필터, 아니면 완화된 필터
+    if multi_day_snapshots and len(multi_day_snapshots) >= 3:
+        candidates = snap[
+            (snap["추세상승"]) &           # 5일 중 3일+ 양봉
+            (snap["눌림목시작"]) &         # 당일 갭다운/보합 시작
+            (snap["반등중"]) &             # 장중 반등
+            (snap["거래량유지"]) &         # 거래량 유지
+            (snap["과열아님"]) &           # RSI 70 미만
+            (snap["장중등락률"] >= 0.3) &  # 최소 0.3% 이상 반등
+            (snap["지지선거리"] <= 10)     # 손절폭 10% 이내 (손익비 확보)
+        ]
+    else:
+        # 완화된 필터 (전일 데이터만 사용)
+        candidates = snap[
+            (snap["눌림목시작"]) &         # 당일 갭다운/보합 시작
+            (snap["반등중"]) &             # 장중 반등
+            (snap["거래량유지"]) &         # 거래량 유지
+            (snap["장중등락률"] >= 0.5)    # 최소 0.5% 이상 반등
+        ]
+
+    if candidates.empty:
+        logger.debug("trigger_morning_pullback_buy: 조건 충족 종목 없음")
+        return pd.DataFrame()
+
+    # === 복합 점수 계산 ===
+    score_cols = []
+
+    # 추세 강도 (양봉일수 기반)
+    if "양봉일수" in candidates.columns:
+        col_max = candidates["양봉일수"].max()
+        col_min = candidates["양봉일수"].min()
+        col_range = col_max - col_min if col_max > col_min else 1
+        candidates["추세강도_norm"] = (candidates["양봉일수"] - col_min) / col_range
+        score_cols.append(("추세강도_norm", 0.4))
+
+    # 반등 강도 (장중등락률 기반)
+    col_max = candidates["장중등락률"].max()
+    col_min = candidates["장중등락률"].min()
+    col_range = col_max - col_min if col_max > col_min else 1
+    candidates["반등강도_norm"] = (candidates["장중등락률"] - col_min) / col_range
+    score_cols.append(("반등강도_norm", 0.3))
+
+    # 거래량 안정성 (거래량비율 기반)
+    col_max = candidates["거래량비율"].max()
+    col_min = candidates["거래량비율"].min()
+    col_range = col_max - col_min if col_max > col_min else 1
+    candidates["거래량안정성_norm"] = (candidates["거래량비율"] - col_min) / col_range
+    score_cols.append(("거래량안정성_norm", 0.3))
+
+    # 복합 점수 계산
+    candidates["복합점수"] = sum(candidates[col] * weight for col, weight in score_cols)
+
+    result = candidates.sort_values("복합점수", ascending=False).head(top_n)
+
+    # 상위 종목 로깅
+    for ticker in result.index[:3]:
+        logger.debug(
+            f"눌림목 후보 - {ticker}: "
+            f"양봉{result.loc[ticker, '양봉일수']}일, "
+            f"갭{result.loc[ticker, '갭률']:.1f}%, "
+            f"반등{result.loc[ticker, '장중등락률']:.1f}%, "
+            f"지지선거리{result.loc[ticker, '지지선거리']:.1f}%"
+        )
+
+    logger.debug(f"눌림목 매수 대기 포착 종목 수: {len(result)}")
+    return enhance_dataframe(result.head(3))
+
 
 def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame, prev_snapshot: pd.DataFrame, cap_df: pd.DataFrame, top_n: int = 10) -> pd.DataFrame:
     """
@@ -652,11 +898,12 @@ def select_final_tickers(triggers: dict) -> dict:
     return final_result
 
 # --- 배치 실행 함수 ---
-def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = None):
+def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = None, use_legacy_gap_trigger: bool = False):
     """
     trigger_time: "morning" 또는 "afternoon"
     log_level: "DEBUG", "INFO", "WARNING", 등 (운영 환경에서는 INFO 추천)
     output_file: 결과를 저장할 JSON 파일 경로 (선택 사항)
+    use_legacy_gap_trigger: True면 기존 갭상승 트리거 사용, False면 새 눌림목 트리거 사용 (기본값: False)
     """
     numeric_level = getattr(logging, log_level.upper(), logging.INFO)
     logger.setLevel(numeric_level)
@@ -681,13 +928,29 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
     cap_df = get_market_cap_df(trade_date, market="ALL")
     logger.debug(f"시가총액 데이터 종목 수: {len(cap_df)}")
 
+    # 오전 트리거용 멀티데이 스냅샷 조회 (눌림목 트리거 사용 시)
+    multi_day_snapshots = None
+    if trigger_time == "morning" and not use_legacy_gap_trigger:
+        logger.info("멀티데이 스냅샷 조회 시작 (눌림목 트리거용)...")
+        multi_day_snapshots = get_multi_day_snapshots(trade_date, days=5)
+
     if trigger_time == "morning":
         logger.info("=== 오전 배치 실행 ===")
         # 오전 트리거 실행 - cap_df 전달
         res1 = trigger_morning_volume_surge(trade_date, snapshot, prev_snapshot, cap_df)
-        res2 = trigger_morning_gap_up_momentum(trade_date, snapshot, prev_snapshot, cap_df)
+
+        # 트리거2: 갭상승 vs 눌림목 선택
+        if use_legacy_gap_trigger:
+            logger.info("기존 갭상승 모멘텀 트리거 사용")
+            res2 = trigger_morning_gap_up_momentum(trade_date, snapshot, prev_snapshot, cap_df)
+            trigger2_name = "갭 상승 모멘텀 상위주"
+        else:
+            logger.info("새 눌림목 매수 트리거 사용 (trading_agents 궁합 최적화)")
+            res2 = trigger_morning_pullback_buy(trade_date, snapshot, prev_snapshot, cap_df, multi_day_snapshots)
+            trigger2_name = "눌림목 매수 대기 상위주"
+
         res3 = trigger_morning_value_to_cap_ratio(trade_date, snapshot, prev_snapshot, cap_df)
-        triggers = {"거래량 급증 상위주": res1, "갭 상승 모멘텀 상위주": res2, "시총 대비 집중 자금 유입 상위주": res3}
+        triggers = {"거래량 급증 상위주": res1, trigger2_name: res2, "시총 대비 집중 자금 유입 상위주": res3}
     elif trigger_time == "afternoon":
         logger.info("=== 오후 배치 실행 ===")
         # 오후 트리거 실행 - cap_df 전달
@@ -741,6 +1004,13 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
                     # 트리거 타입별 특화 데이터 추가
                     if "거래량증가율" in stocks_df.columns and trigger_type == "거래량 급증 상위주":
                         stock_info["volume_increase"] = float(stocks_df.loc[ticker, "거래량증가율"])
+                    elif "양봉일수" in stocks_df.columns and trigger_type == "눌림목 매수 대기 상위주":
+                        # 눌림목 트리거 특화 데이터
+                        stock_info["bullish_days"] = int(stocks_df.loc[ticker, "양봉일수"])
+                        stock_info["gap_rate"] = float(stocks_df.loc[ticker, "갭률"]) if "갭률" in stocks_df.columns else 0
+                        stock_info["intraday_change"] = float(stocks_df.loc[ticker, "장중등락률"]) if "장중등락률" in stocks_df.columns else 0
+                        stock_info["support_distance"] = float(stocks_df.loc[ticker, "지지선거리"]) if "지지선거리" in stocks_df.columns else 0
+                        stock_info["rsi_estimate"] = float(stocks_df.loc[ticker, "RSI추정"]) if "RSI추정" in stocks_df.columns else 50
                     elif "갭상승률" in stocks_df.columns:
                         stock_info["gap_rate"] = float(stocks_df.loc[ticker, "갭상승률"])
                     elif "거래대금비율" in stocks_df.columns:
@@ -755,7 +1025,8 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
         output_data["metadata"] = {
             "run_time": datetime.datetime.now().isoformat(),
             "trigger_mode": trigger_time,
-            "trade_date": trade_date
+            "trade_date": trade_date,
+            "trigger2_type": "pullback" if (trigger_time == "morning" and not use_legacy_gap_trigger) else "gap_momentum"
         }
 
         # JSON 파일 저장
@@ -767,14 +1038,16 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
     return final_results
 
 if __name__ == "__main__":
-    # 사용법: python trigger_batch.py morning [DEBUG|INFO|...] [--output 파일경로]
+    # 사용법: python trigger_batch.py morning [DEBUG|INFO|...] [--output 파일경로] [--legacy-gap]
     import argparse
 
     parser = argparse.ArgumentParser(description="트리거 배치 실행")
     parser.add_argument("mode", help="실행 모드 (morning 또는 afternoon)")
     parser.add_argument("log_level", nargs="?", default="INFO", help="로깅 레벨")
     parser.add_argument("--output", help="결과 저장 JSON 파일 경로")
+    parser.add_argument("--legacy-gap", action="store_true",
+                        help="기존 갭상승 트리거 사용 (기본값: 새 눌림목 트리거)")
 
     args = parser.parse_args()
 
-    run_batch(args.mode, args.log_level, args.output)
+    run_batch(args.mode, args.log_level, args.output, use_legacy_gap_trigger=args.legacy_gap)
