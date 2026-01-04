@@ -11,12 +11,16 @@ import logging
 from krx_data_client import (
     get_market_ohlcv_by_ticker,
     get_nearest_business_day_in_a_week,
+    get_market_cap_by_ticker,
+    get_market_ticker_name,
 )
 
 # pykrx 호환 래퍼 (기존 코드 호환성)
 class stock_api:
     get_market_ohlcv_by_ticker = staticmethod(get_market_ohlcv_by_ticker)
     get_nearest_business_day_in_a_week = staticmethod(get_nearest_business_day_in_a_week)
+    get_market_cap_by_ticker = staticmethod(get_market_cap_by_ticker)
+    get_market_ticker_name = staticmethod(get_market_ticker_name)
 
 # 로거 설정
 logger = logging.getLogger(__name__)
