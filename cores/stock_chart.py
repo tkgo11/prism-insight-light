@@ -394,8 +394,8 @@ def create_mpf_style(base_mpl_style='seaborn-v0_8-whitegrid'):
 
     return s
 
-# stock_api에서 함수들 임포트
-from pykrx.stock.stock_api import (
+# krx_data_client에서 함수들 임포트 (pykrx 호환)
+from krx_data_client import (
     get_market_ohlcv_by_date,
     get_market_cap_by_date,
     get_market_fundamental_by_date,

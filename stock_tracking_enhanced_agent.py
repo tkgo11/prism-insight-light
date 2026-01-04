@@ -129,7 +129,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
     async def _analyze_simple_market_condition(self):
         """Analyze market condition (bull/bear market)"""
         try:
-            from pykrx.stock import stock_api
+            from krx_data_client import get_index_ohlcv_by_date
             import datetime as dt
 
             # Today's date
@@ -139,8 +139,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             one_month_ago = (dt.datetime.now() - dt.timedelta(days=30)).strftime("%Y%m%d")
 
             # Get KOSPI and KOSDAQ index data
-            kospi_df = stock_api.get_index_ohlcv_by_date(one_month_ago, today, "1001")
-            kosdaq_df = stock_api.get_index_ohlcv_by_date(one_month_ago, today, "2001")
+            kospi_df = get_index_ohlcv_by_date(one_month_ago, today, "1001")
+            kosdaq_df = get_index_ohlcv_by_date(one_month_ago, today, "2001")
 
             # Analyze index trends
             kospi_trend = self._calculate_trend(kospi_df['종가'])
@@ -230,9 +230,9 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             start_date = (today - timedelta(days=60)).strftime("%Y%m%d")
             end_date = today.strftime("%Y%m%d")
 
-            # Fetch stock price data using pykrx
-            from pykrx.stock import stock_api
-            df = stock_api.get_market_ohlcv_by_date(start_date, end_date, ticker)
+            # Fetch stock price data using krx_data_client
+            from krx_data_client import get_market_ohlcv_by_date
+            df = get_market_ohlcv_by_date(start_date, end_date, ticker)
 
             if df.empty:
                 logger.warning(f"{ticker} Cannot fetch price data")
@@ -597,8 +597,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             start_date = (today - timedelta(days=days)).strftime("%Y%m%d")
             end_date = today.strftime("%Y%m%d")
 
-            from pykrx.stock import stock_api
-            df = stock_api.get_market_ohlcv_by_date(start_date, end_date, ticker)
+            from krx_data_client import get_market_ohlcv_by_date
+            df = get_market_ohlcv_by_date(start_date, end_date, ticker)
 
             if df.empty:
                 return 0  # Neutral (no data)

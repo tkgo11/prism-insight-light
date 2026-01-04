@@ -35,13 +35,20 @@ sys.path.insert(0, str(SCRIPT_DIR))  # examples/ 폴더 추가 (translation_util
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(TRADING_DIR))
 
-# pykrx import for market index data
+# krx_data_client import for market index data
 try:
-    from pykrx import stock
+    from krx_data_client import get_index_ohlcv_by_date
+
+    # pykrx 호환 래퍼
+    class stock:
+        @staticmethod
+        def get_index_ohlcv_by_date(fromdate, todate, ticker):
+            return get_index_ohlcv_by_date(fromdate, todate, ticker)
+
     PYKRX_AVAILABLE = True
 except ImportError:
     PYKRX_AVAILABLE = False
-    logger.warning("pykrx 패키지가 설치되어 있지 않습니다. 시장 지수 데이터를 가져올 수 없습니다.")
+    logger.warning("krx_data_client 패키지가 설치되어 있지 않습니다. 시장 지수 데이터를 가져올 수 없습니다.")
 
 # 번역 유틸리티 import (경로 설정 후에 import)
 try:
