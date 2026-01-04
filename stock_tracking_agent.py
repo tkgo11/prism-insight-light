@@ -69,13 +69,14 @@ class StockTrackingAgent:
     SCORE_CONSIDER = 7  # Consider buying
     SCORE_UNSUITABLE = 6  # Unsuitable for buying
 
-    def __init__(self, db_path: str = "stock_tracking_db.sqlite", telegram_token: str = None):
+    def __init__(self, db_path: str = "stock_tracking_db.sqlite", telegram_token: str = None, enable_journal: bool = None):
         """
         Initialize agent
 
         Args:
             db_path: SQLite database file path
             telegram_token: Telegram bot token
+            enable_journal: Enable trading journal feature (default: False, reads from ENABLE_TRADING_JOURNAL env)
         """
         self.max_slots = self.MAX_SLOTS
         self.message_queue = []  # For storing Telegram messages
@@ -83,6 +84,14 @@ class StockTrackingAgent:
         self.db_path = db_path
         self.conn = None
         self.cursor = None
+
+        # Set trading journal feature flag
+        # Priority: parameter > environment variable > default (False)
+        if enable_journal is not None:
+            self.enable_journal = enable_journal
+        else:
+            env_value = os.environ.get("ENABLE_TRADING_JOURNAL", "false").lower()
+            self.enable_journal = env_value in ("true", "1", "yes")
 
         # Set Telegram bot token
         self.telegram_token = telegram_token or os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -98,6 +107,7 @@ class StockTrackingAgent:
             language: Language code for agents (default: "ko")
         """
         logger.info("Starting tracking agent initialization")
+        logger.info(f"Trading journal feature: {'enabled' if self.enable_journal else 'disabled'}")
 
         # Store language for later use
         self.language = language
@@ -1221,6 +1231,11 @@ class StockTrackingAgent:
         Returns:
             bool: True if journal entry was created successfully
         """
+        # Skip if journal feature is disabled
+        if not self.enable_journal:
+            logger.debug("Trading journal is disabled, skipping journal entry creation")
+            return False
+
         try:
             from cores.agents.trading_journal_agent import create_trading_journal_agent
 
@@ -1438,6 +1453,10 @@ Please review the following completed trade:
         Returns:
             str: Formatted context string for prompt injection
         """
+        # Skip if journal feature is disabled
+        if not self.enable_journal:
+            return ""
+
         try:
             context_parts = []
 
@@ -1675,6 +1694,11 @@ Please review the following completed trade:
         Returns:
             Dict: Compression results with statistics
         """
+        # Skip if journal feature is disabled
+        if not self.enable_journal:
+            logger.debug("Trading journal is disabled, skipping memory compression")
+            return {"skipped": True, "reason": "journal_disabled"}
+
         try:
             from cores.agents.memory_compressor_agent import create_memory_compressor_agent
 
@@ -2122,8 +2146,12 @@ Please respond in JSON format.
         Returns:
             Dict: Compression statistics
         """
+        # Skip if journal feature is disabled
+        if not self.enable_journal:
+            return {"enabled": False}
+
         try:
-            stats = {}
+            stats = {"enabled": True}
 
             # Count entries by layer
             self.cursor.execute("""
