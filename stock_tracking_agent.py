@@ -147,6 +147,91 @@ class StockTrackingAgent:
                 )
             """)
 
+            # Create trading journal table for retrospective analysis
+            self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS trading_journal (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                    -- Trade basic info
+                    ticker TEXT NOT NULL,
+                    company_name TEXT NOT NULL,
+                    trade_date TEXT NOT NULL,
+                    trade_type TEXT NOT NULL,
+
+                    -- Buy context (for sell retrospective)
+                    buy_price REAL,
+                    buy_date TEXT,
+                    buy_scenario TEXT,
+                    buy_market_context TEXT,
+
+                    -- Sell context
+                    sell_price REAL,
+                    sell_reason TEXT,
+                    profit_rate REAL,
+                    holding_days INTEGER,
+
+                    -- Retrospective results (core)
+                    situation_analysis TEXT,
+                    judgment_evaluation TEXT,
+                    lessons TEXT,
+                    pattern_tags TEXT,
+                    one_line_summary TEXT,
+                    confidence_score REAL,
+
+                    -- Compression management
+                    compression_layer INTEGER DEFAULT 1,
+                    compressed_summary TEXT,
+
+                    -- Metadata
+                    created_at TEXT NOT NULL,
+                    last_compressed_at TEXT
+                )
+            """)
+
+            # Create trading intuitions table for compressed insights
+            self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS trading_intuitions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                    -- Classification
+                    category TEXT NOT NULL,
+                    subcategory TEXT,
+
+                    -- Intuition content
+                    condition TEXT NOT NULL,
+                    insight TEXT NOT NULL,
+                    confidence REAL,
+
+                    -- Evidence
+                    supporting_trades INTEGER,
+                    success_rate REAL,
+                    source_journal_ids TEXT,
+
+                    -- Management
+                    created_at TEXT NOT NULL,
+                    last_validated_at TEXT,
+                    is_active INTEGER DEFAULT 1
+                )
+            """)
+
+            # Create indexes for efficient querying
+            self.cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_journal_ticker
+                ON trading_journal(ticker)
+            """)
+            self.cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_journal_pattern
+                ON trading_journal(pattern_tags)
+            """)
+            self.cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_journal_date
+                ON trading_journal(trade_date)
+            """)
+            self.cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_intuitions_category
+                ON trading_intuitions(category)
+            """)
+
             # Save changes
             self.conn.commit()
 
@@ -410,13 +495,21 @@ class StockTrackingAgent:
             logger.error(f"Error checking sector diversity: {str(e)}")
             return True  # Don't limit by default on error
 
-    async def _extract_trading_scenario(self, report_content: str, rank_change_msg: str = "") -> Dict[str, Any]:
+    async def _extract_trading_scenario(
+        self,
+        report_content: str,
+        rank_change_msg: str = "",
+        ticker: str = None,
+        sector: str = None
+    ) -> Dict[str, Any]:
         """
         Extract trading scenario from report
 
         Args:
             report_content: Analysis report content
             rank_change_msg: Trading value ranking change info
+            ticker: Stock ticker code (for journal context lookup)
+            sector: Stock sector (for journal context lookup)
 
         Returns:
             Dict: Trading scenario information
@@ -443,8 +536,8 @@ class StockTrackingAgent:
                         scenario_data = json.loads(scenario_str)
 
                         # Collect sector info
-                        sector = scenario_data.get('sector', '알 수 없음')
-                        sector_distribution[sector] = sector_distribution.get(sector, 0) + 1
+                        sector_name = scenario_data.get('sector', '알 수 없음')
+                        sector_distribution[sector_name] = sector_distribution.get(sector_name, 0) + 1
 
                         # Collect investment period info
                         period = scenario_data.get('investment_period', '중기')
@@ -459,6 +552,33 @@ class StockTrackingAgent:
             Investment period distribution: {json.dumps(investment_periods, ensure_ascii=False)}
             """
 
+            # Get trading journal context for informed decisions
+            journal_context = ""
+            score_adjustment_info = ""
+            if ticker:
+                journal_context = self._get_relevant_journal_context(
+                    ticker=ticker,
+                    sector=sector,
+                    market_condition=None
+                )
+                # Get score adjustment suggestion
+                adjustment, reasons = self._get_score_adjustment_from_context(ticker, sector)
+                if adjustment != 0 or reasons:
+                    if self.language == "ko":
+                        score_adjustment_info = f"""
+                ### 📊 과거 경험 기반 점수 보정 제안
+                - 권장 점수 조정: {'+' if adjustment > 0 else ''}{adjustment}점
+                - 조정 이유: {', '.join(reasons) if reasons else '해당 없음'}
+                - ⚠️ 이 보정값은 과거 경험에 기반한 참고 사항입니다.
+                """
+                    else:
+                        score_adjustment_info = f"""
+                ### 📊 Score Adjustment Suggestion (Experience-Based)
+                - Recommended Adjustment: {'+' if adjustment > 0 else ''}{adjustment} points
+                - Reason: {', '.join(reasons) if reasons else 'N/A'}
+                - ⚠️ This adjustment is a reference based on past experience.
+                """
+
             # LLM call to generate trading scenario
             llm = await self.trading_agent.attach_llm(OpenAIAugmentedLLM)
 
@@ -472,6 +592,8 @@ class StockTrackingAgent:
 
                 ### 거래대금 분석:
                 {rank_change_msg}
+                {score_adjustment_info}
+                {journal_context}
 
                 ### 보고서 내용:
                 {report_content}
@@ -485,6 +607,8 @@ class StockTrackingAgent:
 
                 ### Trading Value Analysis:
                 {rank_change_msg}
+                {score_adjustment_info}
+                {journal_context}
 
                 ### Report Content:
                 {report_content}
@@ -655,8 +779,13 @@ class StockTrackingAgent:
             from pdf_converter import pdf_to_markdown_text
             report_content = pdf_to_markdown_text(pdf_report_path)
 
-            # Extract trading scenario (pass trading value ranking info)
-            scenario = await self._extract_trading_scenario(report_content, rank_change_msg)
+            # Extract trading scenario (pass trading value ranking info and ticker for journal context)
+            scenario = await self._extract_trading_scenario(
+                report_content,
+                rank_change_msg,
+                ticker=ticker,
+                sector=None  # sector will be determined by the scenario agent
+            )
 
             # Check sector diversity
             sector = scenario.get("sector", "알 수 없음")
@@ -1045,12 +1174,996 @@ class StockTrackingAgent:
             self.message_queue.append(message)
             logger.info(f"{ticker}({company_name}) sell complete (return: {profit_rate:.2f}%)")
 
+            # Create trading journal entry for retrospective analysis
+            try:
+                await self._create_journal_entry(
+                    stock_data=stock_data,
+                    sell_price=current_price,
+                    profit_rate=profit_rate,
+                    holding_days=holding_days,
+                    sell_reason=sell_reason
+                )
+            except Exception as journal_err:
+                # Journal creation failure should not block the sell process
+                logger.warning(f"Journal entry creation failed (non-critical): {journal_err}")
+
             return True
 
         except Exception as e:
             logger.error(f"Error during sell: {str(e)}")
             logger.error(traceback.format_exc())
             return False
+
+    async def _create_journal_entry(
+        self,
+        stock_data: Dict[str, Any],
+        sell_price: float,
+        profit_rate: float,
+        holding_days: int,
+        sell_reason: str
+    ) -> bool:
+        """
+        Create trading journal entry with retrospective analysis.
+
+        This method uses the TradingJournalAgent to analyze the completed trade
+        and extract lessons for future reference.
+
+        Args:
+            stock_data: Original stock data including buy info
+            sell_price: Price at which the stock was sold
+            profit_rate: Realized profit/loss percentage
+            holding_days: Number of days the stock was held
+            sell_reason: Reason for selling
+
+        Returns:
+            bool: True if journal entry was created successfully
+        """
+        try:
+            from cores.agents.trading_journal_agent import create_trading_journal_agent
+
+            ticker = stock_data.get('ticker', '')
+            company_name = stock_data.get('company_name', '')
+            buy_price = stock_data.get('buy_price', 0)
+            buy_date = stock_data.get('buy_date', '')
+            scenario_json = stock_data.get('scenario', '{}')
+
+            logger.info(f"Creating journal entry for {ticker}({company_name})")
+
+            # Parse scenario if string
+            scenario_data = {}
+            if isinstance(scenario_json, str):
+                try:
+                    scenario_data = json.loads(scenario_json)
+                except:
+                    scenario_data = {}
+
+            # Create journal agent and attach LLM
+            journal_agent = create_trading_journal_agent(self.language)
+
+            async with journal_agent:
+                llm = await journal_agent.attach_llm(OpenAIAugmentedLLM)
+
+                # Prepare prompt for retrospective analysis
+                if self.language == "ko":
+                    prompt = f"""
+다음 완료된 매매를 복기해주세요:
+
+## 매수 정보
+- 종목: {company_name}({ticker})
+- 매수가: {buy_price:,.0f}원
+- 매수일: {buy_date}
+- 매수 시나리오:
+  - 매수 점수: {scenario_data.get('buy_score', 'N/A')}
+  - 투자 근거: {scenario_data.get('rationale', 'N/A')}
+  - 목표가: {scenario_data.get('target_price', 'N/A')}원
+  - 손절가: {scenario_data.get('stop_loss', 'N/A')}원
+  - 투자 기간: {scenario_data.get('investment_period', 'N/A')}
+  - 섹터: {scenario_data.get('sector', 'N/A')}
+  - 시장 상황: {scenario_data.get('market_condition', 'N/A')}
+
+## 매도 정보
+- 매도가: {sell_price:,.0f}원
+- 수익률: {profit_rate:.2f}%
+- 보유일수: {holding_days}일
+- 매도 사유: {sell_reason}
+
+## 분석 요청
+1. kospi_kosdaq 도구로 현재 시장 상황과 해당 종목의 최근 흐름을 확인하세요
+2. 매수 시점과 매도 시점의 상황을 비교 분석하세요
+3. 판단의 적절성을 평가하고 교훈을 추출하세요
+4. 패턴 태그를 부여하세요
+"""
+                else:
+                    prompt = f"""
+Please review the following completed trade:
+
+## Buy Information
+- Stock: {company_name}({ticker})
+- Buy Price: {buy_price:,.0f} KRW
+- Buy Date: {buy_date}
+- Buy Scenario:
+  - Buy Score: {scenario_data.get('buy_score', 'N/A')}
+  - Rationale: {scenario_data.get('rationale', 'N/A')}
+  - Target Price: {scenario_data.get('target_price', 'N/A')} KRW
+  - Stop Loss: {scenario_data.get('stop_loss', 'N/A')} KRW
+  - Investment Period: {scenario_data.get('investment_period', 'N/A')}
+  - Sector: {scenario_data.get('sector', 'N/A')}
+  - Market Condition: {scenario_data.get('market_condition', 'N/A')}
+
+## Sell Information
+- Sell Price: {sell_price:,.0f} KRW
+- Profit Rate: {profit_rate:.2f}%
+- Holding Days: {holding_days} days
+- Sell Reason: {sell_reason}
+
+## Analysis Request
+1. Use kospi_kosdaq tools to check current market conditions and recent stock trends
+2. Compare and analyze the situation at buy time vs sell time
+3. Evaluate the appropriateness of decisions and extract lessons
+4. Assign pattern tags
+"""
+
+                # Generate retrospective analysis
+                response = await llm.generate_str(
+                    message=prompt,
+                    request_params=RequestParams(
+                        model="gpt-5",
+                        maxTokens=4000
+                    )
+                )
+
+            # Parse the response
+            journal_data = self._parse_journal_response(response)
+
+            # Save to database
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.cursor.execute(
+                """
+                INSERT INTO trading_journal
+                (ticker, company_name, trade_date, trade_type,
+                 buy_price, buy_date, buy_scenario, buy_market_context,
+                 sell_price, sell_reason, profit_rate, holding_days,
+                 situation_analysis, judgment_evaluation, lessons, pattern_tags,
+                 one_line_summary, confidence_score, compression_layer, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    ticker,
+                    company_name,
+                    now,
+                    'sell',
+                    buy_price,
+                    buy_date,
+                    scenario_json,
+                    json.dumps(scenario_data.get('market_condition', ''), ensure_ascii=False),
+                    sell_price,
+                    sell_reason,
+                    profit_rate,
+                    holding_days,
+                    json.dumps(journal_data.get('situation_analysis', {}), ensure_ascii=False),
+                    json.dumps(journal_data.get('judgment_evaluation', {}), ensure_ascii=False),
+                    json.dumps(journal_data.get('lessons', []), ensure_ascii=False),
+                    json.dumps(journal_data.get('pattern_tags', []), ensure_ascii=False),
+                    journal_data.get('one_line_summary', ''),
+                    journal_data.get('confidence_score', 0.5),
+                    1,  # compression_layer = 1 (detailed)
+                    now
+                )
+            )
+            self.conn.commit()
+
+            logger.info(f"Journal entry created for {ticker}: {journal_data.get('one_line_summary', '')}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error creating journal entry: {str(e)}")
+            logger.error(traceback.format_exc())
+            return False
+
+    def _parse_journal_response(self, response: str) -> Dict[str, Any]:
+        """
+        Parse journal agent response into structured data.
+
+        Args:
+            response: Raw response string from journal agent
+
+        Returns:
+            Dict: Parsed journal data
+        """
+        try:
+            # Try to extract JSON from response
+            # First, try markdown code block
+            markdown_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', response, re.DOTALL)
+            if markdown_match:
+                json_str = markdown_match.group(1)
+                return json.loads(json_str)
+
+            # Try direct JSON
+            json_match = re.search(r'({[\s\S]*})', response, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+                # Fix common JSON issues
+                json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)  # Remove trailing commas
+                return json.loads(json_str)
+
+            # If all parsing fails, try json_repair
+            try:
+                import json_repair
+                repaired = json_repair.repair_json(response)
+                return json.loads(repaired)
+            except:
+                pass
+
+            # Return default structure
+            return {
+                "situation_analysis": {"raw_response": response[:500]},
+                "judgment_evaluation": {},
+                "lessons": [],
+                "pattern_tags": [],
+                "one_line_summary": "분석 파싱 실패",
+                "confidence_score": 0.3
+            }
+
+        except Exception as e:
+            logger.warning(f"Failed to parse journal response: {e}")
+            return {
+                "situation_analysis": {"error": str(e)},
+                "judgment_evaluation": {},
+                "lessons": [],
+                "pattern_tags": [],
+                "one_line_summary": "분석 파싱 오류",
+                "confidence_score": 0.2
+            }
+
+    def _get_relevant_journal_context(
+        self,
+        ticker: str,
+        sector: str = None,
+        market_condition: str = None
+    ) -> str:
+        """
+        Retrieve relevant trading journal context for buy decisions.
+
+        This method searches past trading experiences to provide context
+        for current buy decisions.
+
+        Args:
+            ticker: Stock ticker code
+            sector: Stock sector (optional)
+            market_condition: Current market condition (optional)
+
+        Returns:
+            str: Formatted context string for prompt injection
+        """
+        try:
+            context_parts = []
+
+            # 1. Same stock history
+            self.cursor.execute(
+                """
+                SELECT ticker, company_name, profit_rate, holding_days,
+                       one_line_summary, lessons, pattern_tags, trade_date
+                FROM trading_journal
+                WHERE ticker = ?
+                ORDER BY trade_date DESC
+                LIMIT 3
+                """,
+                (ticker,)
+            )
+            same_stock_entries = self.cursor.fetchall()
+
+            if same_stock_entries:
+                context_parts.append("### 동일 종목 과거 거래 이력")
+                for entry in same_stock_entries:
+                    lessons_str = ""
+                    try:
+                        lessons = json.loads(entry['lessons']) if entry['lessons'] else []
+                        if lessons:
+                            lessons_str = " / 교훈: " + ", ".join(
+                                [l.get('action', '') for l in lessons[:2] if isinstance(l, dict)]
+                            )
+                    except:
+                        pass
+
+                    profit_emoji = "✅" if entry['profit_rate'] > 0 else "❌"
+                    context_parts.append(
+                        f"- [{entry['trade_date'][:10]}] {profit_emoji} 수익률 {entry['profit_rate']:.1f}% "
+                        f"(보유 {entry['holding_days']}일) - {entry['one_line_summary']}{lessons_str}"
+                    )
+                context_parts.append("")
+
+            # 2. Same sector recent trades (if sector provided)
+            if sector and sector != "알 수 없음":
+                self.cursor.execute(
+                    """
+                    SELECT ticker, company_name, profit_rate, one_line_summary,
+                           lessons, trade_date
+                    FROM trading_journal
+                    WHERE buy_scenario LIKE ?
+                      AND ticker != ?
+                    ORDER BY trade_date DESC
+                    LIMIT 5
+                    """,
+                    (f'%"{sector}"%', ticker)
+                )
+                sector_entries = self.cursor.fetchall()
+
+                if sector_entries:
+                    context_parts.append(f"### 동일 섹터({sector}) 최근 거래")
+                    for entry in sector_entries:
+                        profit_emoji = "✅" if entry['profit_rate'] > 0 else "❌"
+                        context_parts.append(
+                            f"- {entry['company_name']}({entry['ticker']}): "
+                            f"{profit_emoji} {entry['profit_rate']:.1f}% - {entry['one_line_summary']}"
+                        )
+                    context_parts.append("")
+
+            # 3. Get accumulated intuitions
+            self.cursor.execute(
+                """
+                SELECT category, condition, insight, confidence, success_rate
+                FROM trading_intuitions
+                WHERE is_active = 1
+                ORDER BY confidence DESC, success_rate DESC
+                LIMIT 10
+                """
+            )
+            intuitions = self.cursor.fetchall()
+
+            if intuitions:
+                context_parts.append("### 축적된 매매 직관")
+                for intuition in intuitions:
+                    confidence_bar = "●" * int(intuition['confidence'] * 5) + "○" * (5 - int(intuition['confidence'] * 5))
+                    context_parts.append(
+                        f"- [{intuition['category']}] {intuition['condition']} → {intuition['insight']} "
+                        f"(신뢰도: {confidence_bar})"
+                    )
+                context_parts.append("")
+
+            # 4. Get top failure patterns (warnings)
+            self.cursor.execute(
+                """
+                SELECT pattern_tags, COUNT(*) as cnt, AVG(profit_rate) as avg_profit
+                FROM trading_journal
+                WHERE profit_rate < 0
+                  AND pattern_tags IS NOT NULL
+                  AND pattern_tags != '[]'
+                GROUP BY pattern_tags
+                HAVING cnt >= 2
+                ORDER BY avg_profit ASC
+                LIMIT 5
+                """
+            )
+            failure_patterns = self.cursor.fetchall()
+
+            if failure_patterns:
+                context_parts.append("### ⚠️ 과거 실패 패턴 (주의)")
+                for pattern in failure_patterns:
+                    try:
+                        tags = json.loads(pattern['pattern_tags'])
+                        if tags:
+                            context_parts.append(
+                                f"- {', '.join(tags)}: {pattern['cnt']}회 발생, "
+                                f"평균 손실 {pattern['avg_profit']:.1f}%"
+                            )
+                    except:
+                        pass
+                context_parts.append("")
+
+            # 5. Overall statistics
+            self.cursor.execute(
+                """
+                SELECT COUNT(*) as total,
+                       SUM(CASE WHEN profit_rate > 0 THEN 1 ELSE 0 END) as wins,
+                       AVG(profit_rate) as avg_profit
+                FROM trading_journal
+                """
+            )
+            stats = self.cursor.fetchone()
+
+            if stats and stats['total'] > 0:
+                win_rate = (stats['wins'] / stats['total']) * 100
+                context_parts.append("### 전체 매매 통계")
+                context_parts.append(
+                    f"- 총 거래: {stats['total']}건, 승률: {win_rate:.1f}%, "
+                    f"평균 수익률: {stats['avg_profit']:.2f}%"
+                )
+                context_parts.append("")
+
+            if context_parts:
+                header = "## 📚 과거 매매 경험 참조\n\n"
+                footer = "\n⚠️ 위 경험들을 참고하여 현재 매수 판단을 보정하세요."
+                return header + "\n".join(context_parts) + footer
+            else:
+                return ""
+
+        except Exception as e:
+            logger.warning(f"Failed to get journal context: {e}")
+            return ""
+
+    def _get_score_adjustment_from_context(
+        self,
+        ticker: str,
+        sector: str = None
+    ) -> Tuple[int, List[str]]:
+        """
+        Calculate score adjustment based on past trading experiences.
+
+        Args:
+            ticker: Stock ticker code
+            sector: Stock sector (optional)
+
+        Returns:
+            Tuple[int, List[str]]: Score adjustment (-2 to +2) and reasons
+        """
+        try:
+            adjustment = 0
+            reasons = []
+
+            # Check same stock history
+            self.cursor.execute(
+                """
+                SELECT profit_rate, one_line_summary
+                FROM trading_journal
+                WHERE ticker = ?
+                ORDER BY trade_date DESC
+                LIMIT 3
+                """,
+                (ticker,)
+            )
+            same_stock = self.cursor.fetchall()
+
+            if same_stock:
+                avg_profit = sum(s['profit_rate'] for s in same_stock) / len(same_stock)
+                if avg_profit < -5:
+                    adjustment -= 1
+                    reasons.append(f"동일 종목 과거 평균 손실 {avg_profit:.1f}%")
+                elif avg_profit > 10:
+                    adjustment += 1
+                    reasons.append(f"동일 종목 과거 평균 수익 {avg_profit:.1f}%")
+
+            # Check sector performance
+            if sector and sector != "알 수 없음":
+                self.cursor.execute(
+                    """
+                    SELECT AVG(profit_rate) as avg_profit, COUNT(*) as cnt
+                    FROM trading_journal
+                    WHERE buy_scenario LIKE ?
+                    """,
+                    (f'%"{sector}"%',)
+                )
+                sector_stats = self.cursor.fetchone()
+
+                if sector_stats and sector_stats['cnt'] >= 3:
+                    if sector_stats['avg_profit'] < -3:
+                        adjustment -= 1
+                        reasons.append(f"{sector} 섹터 평균 손실 {sector_stats['avg_profit']:.1f}%")
+                    elif sector_stats['avg_profit'] > 5:
+                        adjustment += 1
+                        reasons.append(f"{sector} 섹터 평균 수익 {sector_stats['avg_profit']:.1f}%")
+
+            # Cap adjustment
+            adjustment = max(-2, min(2, adjustment))
+
+            return adjustment, reasons
+
+        except Exception as e:
+            logger.warning(f"Failed to calculate score adjustment: {e}")
+            return 0, []
+
+    async def compress_old_journal_entries(
+        self,
+        layer1_age_days: int = 7,
+        layer2_age_days: int = 30,
+        min_entries_for_compression: int = 3
+    ) -> Dict[str, Any]:
+        """
+        Compress old trading journal entries.
+
+        This method implements hierarchical memory compression:
+        - Layer 1 → Layer 2: Entries older than layer1_age_days
+        - Layer 2 → Layer 3: Entries older than layer2_age_days
+
+        Args:
+            layer1_age_days: Days after which Layer 1 entries are compressed to Layer 2
+            layer2_age_days: Days after which Layer 2 entries are compressed to Layer 3
+            min_entries_for_compression: Minimum entries required to trigger compression
+
+        Returns:
+            Dict: Compression results with statistics
+        """
+        try:
+            from cores.agents.memory_compressor_agent import create_memory_compressor_agent
+
+            results = {
+                "layer1_to_layer2": {"processed": 0, "compressed": 0},
+                "layer2_to_layer3": {"processed": 0, "compressed": 0},
+                "intuitions_generated": 0,
+                "errors": []
+            }
+
+            # Get entries that need compression
+            cutoff_layer1 = (datetime.now() - timedelta(days=layer1_age_days)).strftime("%Y-%m-%d")
+            cutoff_layer2 = (datetime.now() - timedelta(days=layer2_age_days)).strftime("%Y-%m-%d")
+
+            # Layer 1 → Layer 2 compression
+            self.cursor.execute("""
+                SELECT id, ticker, company_name, trade_date, profit_rate,
+                       situation_analysis, judgment_evaluation, lessons,
+                       pattern_tags, one_line_summary, buy_scenario
+                FROM trading_journal
+                WHERE compression_layer = 1
+                  AND trade_date < ?
+                ORDER BY trade_date ASC
+            """, (cutoff_layer1,))
+            layer1_entries = [dict(row) for row in self.cursor.fetchall()]
+
+            if len(layer1_entries) >= min_entries_for_compression:
+                logger.info(f"Compressing {len(layer1_entries)} Layer 1 entries to Layer 2")
+                layer2_result = await self._compress_to_layer2(layer1_entries)
+                results["layer1_to_layer2"] = layer2_result
+
+            # Layer 2 → Layer 3 compression
+            self.cursor.execute("""
+                SELECT id, ticker, company_name, trade_date, profit_rate,
+                       compressed_summary, pattern_tags, buy_scenario
+                FROM trading_journal
+                WHERE compression_layer = 2
+                  AND trade_date < ?
+                ORDER BY trade_date ASC
+            """, (cutoff_layer2,))
+            layer2_entries = [dict(row) for row in self.cursor.fetchall()]
+
+            if len(layer2_entries) >= min_entries_for_compression:
+                logger.info(f"Compressing {len(layer2_entries)} Layer 2 entries to Layer 3")
+                layer3_result = await self._compress_to_layer3(layer2_entries)
+                results["layer2_to_layer3"] = layer3_result
+                results["intuitions_generated"] = layer3_result.get("intuitions_generated", 0)
+
+            return results
+
+        except Exception as e:
+            logger.error(f"Error during compression: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e)}
+
+    async def _compress_to_layer2(self, entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Compress Layer 1 entries to Layer 2 (summary format).
+
+        Args:
+            entries: List of Layer 1 journal entries
+
+        Returns:
+            Dict: Compression results
+        """
+        try:
+            from cores.agents.memory_compressor_agent import create_memory_compressor_agent
+
+            results = {"processed": len(entries), "compressed": 0, "errors": []}
+
+            # Group entries by sector for pattern detection
+            sector_groups = {}
+            for entry in entries:
+                try:
+                    scenario = json.loads(entry.get('buy_scenario', '{}')) if entry.get('buy_scenario') else {}
+                    sector = scenario.get('sector', '알 수 없음')
+                except:
+                    sector = '알 수 없음'
+
+                if sector not in sector_groups:
+                    sector_groups[sector] = []
+                sector_groups[sector].append(entry)
+
+            # Create compressor agent
+            compressor_agent = create_memory_compressor_agent(self.language)
+
+            async with compressor_agent:
+                llm = await compressor_agent.attach_llm(OpenAIAugmentedLLM)
+
+                # Prepare entries summary for LLM
+                entries_text = self._format_entries_for_compression(entries)
+
+                if self.language == "ko":
+                    prompt = f"""
+다음 매매일지 항목들을 Layer 2 (요약) 형식으로 압축해주세요.
+
+## 압축 대상 항목들 ({len(entries)}건)
+{entries_text}
+
+## 요청사항
+1. 각 항목을 "{섹터/상황} + {트리거} → {행동} → {결과}" 형식으로 요약
+2. 유사한 패턴들을 그룹화하여 분석
+3. 반복되는 교훈 식별
+4. 섹터별 성과 통계 계산
+
+JSON 형식으로 응답해주세요.
+"""
+                else:
+                    prompt = f"""
+Please compress the following trading journal entries to Layer 2 (summary) format.
+
+## Entries to Compress ({len(entries)} entries)
+{entries_text}
+
+## Requirements
+1. Summarize each entry in "{sector/situation} + {trigger} → {action} → {result}" format
+2. Group and analyze similar patterns
+3. Identify recurring lessons
+4. Calculate sector performance statistics
+
+Please respond in JSON format.
+"""
+
+                response = await llm.generate_str(
+                    message=prompt,
+                    request_params=RequestParams(
+                        model="gpt-5",
+                        maxTokens=8000
+                    )
+                )
+
+            # Parse response
+            compression_data = self._parse_compression_response(response)
+
+            # Update entries with compressed summaries
+            compressed_entries = compression_data.get('compressed_entries', [])
+            for comp_entry in compressed_entries:
+                original_ids = comp_entry.get('original_ids', [])
+                compressed_summary = comp_entry.get('compressed_summary', '')
+                key_lessons = json.dumps(comp_entry.get('key_lessons', []), ensure_ascii=False)
+
+                for entry_id in original_ids:
+                    self.cursor.execute("""
+                        UPDATE trading_journal
+                        SET compression_layer = 2,
+                            compressed_summary = ?,
+                            lessons = ?,
+                            last_compressed_at = ?
+                        WHERE id = ?
+                    """, (compressed_summary, key_lessons, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), entry_id))
+                    results["compressed"] += 1
+
+            # If no specific compression entries, compress all individually
+            if not compressed_entries:
+                for entry in entries:
+                    # Generate simple summary
+                    summary = self._generate_simple_summary(entry)
+                    self.cursor.execute("""
+                        UPDATE trading_journal
+                        SET compression_layer = 2,
+                            compressed_summary = ?,
+                            last_compressed_at = ?
+                        WHERE id = ?
+                    """, (summary, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), entry['id']))
+                    results["compressed"] += 1
+
+            self.conn.commit()
+            return results
+
+        except Exception as e:
+            logger.error(f"Error in Layer 2 compression: {e}")
+            return {"processed": len(entries), "compressed": 0, "errors": [str(e)]}
+
+    async def _compress_to_layer3(self, entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Compress Layer 2 entries to Layer 3 (intuition format).
+
+        This extracts high-confidence patterns and saves them as trading intuitions.
+
+        Args:
+            entries: List of Layer 2 journal entries
+
+        Returns:
+            Dict: Compression results including intuitions generated
+        """
+        try:
+            from cores.agents.memory_compressor_agent import create_memory_compressor_agent
+
+            results = {
+                "processed": len(entries),
+                "compressed": 0,
+                "intuitions_generated": 0,
+                "errors": []
+            }
+
+            # Create compressor agent
+            compressor_agent = create_memory_compressor_agent(self.language)
+
+            async with compressor_agent:
+                llm = await compressor_agent.attach_llm(OpenAIAugmentedLLM)
+
+                # Prepare entries for intuition extraction
+                entries_text = self._format_entries_for_intuition(entries)
+
+                if self.language == "ko":
+                    prompt = f"""
+다음 압축된 매매 기록들에서 직관(Intuition)을 추출해주세요.
+
+## 압축된 기록들 ({len(entries)}건)
+{entries_text}
+
+## 요청사항
+1. 2회 이상 반복되는 패턴에서 직관 추출
+2. "{조건} = {원칙}" 형식으로 직관 생성
+3. 신뢰도와 적중률 계산
+4. 섹터별, 시장상황별, 패턴별로 분류
+5. 실패 패턴과 성공 패턴 모두 포함
+
+JSON 형식으로 응답해주세요.
+"""
+                else:
+                    prompt = f"""
+Please extract intuitions from the following compressed trading records.
+
+## Compressed Records ({len(entries)} entries)
+{entries_text}
+
+## Requirements
+1. Extract intuitions from patterns appearing 2+ times
+2. Generate intuitions in "{condition} = {principle}" format
+3. Calculate confidence and success rate
+4. Categorize by sector, market condition, and pattern
+5. Include both failure and success patterns
+
+Please respond in JSON format.
+"""
+
+                response = await llm.generate_str(
+                    message=prompt,
+                    request_params=RequestParams(
+                        model="gpt-5",
+                        maxTokens=8000
+                    )
+                )
+
+            # Parse response
+            compression_data = self._parse_compression_response(response)
+
+            # Save new intuitions
+            new_intuitions = compression_data.get('new_intuitions', [])
+            for intuition in new_intuitions:
+                saved = self._save_intuition(intuition, [e['id'] for e in entries])
+                if saved:
+                    results["intuitions_generated"] += 1
+
+            # Update entries to Layer 3
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            for entry in entries:
+                self.cursor.execute("""
+                    UPDATE trading_journal
+                    SET compression_layer = 3,
+                        last_compressed_at = ?
+                    WHERE id = ?
+                """, (now, entry['id']))
+                results["compressed"] += 1
+
+            self.conn.commit()
+            return results
+
+        except Exception as e:
+            logger.error(f"Error in Layer 3 compression: {e}")
+            return {"processed": len(entries), "compressed": 0, "intuitions_generated": 0, "errors": [str(e)]}
+
+    def _format_entries_for_compression(self, entries: List[Dict[str, Any]]) -> str:
+        """Format journal entries for LLM compression prompt."""
+        formatted = []
+        for entry in entries:
+            try:
+                lessons = json.loads(entry.get('lessons', '[]')) if entry.get('lessons') else []
+                lessons_str = ", ".join([l.get('action', '') for l in lessons[:3] if isinstance(l, dict)])
+            except:
+                lessons_str = ""
+
+            try:
+                tags = json.loads(entry.get('pattern_tags', '[]')) if entry.get('pattern_tags') else []
+                tags_str = ", ".join(tags)
+            except:
+                tags_str = ""
+
+            profit_emoji = "✅" if entry.get('profit_rate', 0) > 0 else "❌"
+            formatted.append(
+                f"[ID:{entry['id']}] {entry['company_name']}({entry['ticker']}) "
+                f"{profit_emoji} {entry.get('profit_rate', 0):.1f}% | "
+                f"요약: {entry.get('one_line_summary', 'N/A')} | "
+                f"교훈: {lessons_str} | 태그: {tags_str}"
+            )
+
+        return "\n".join(formatted)
+
+    def _format_entries_for_intuition(self, entries: List[Dict[str, Any]]) -> str:
+        """Format compressed entries for intuition extraction."""
+        formatted = []
+        for entry in entries:
+            try:
+                scenario = json.loads(entry.get('buy_scenario', '{}')) if entry.get('buy_scenario') else {}
+                sector = scenario.get('sector', '알 수 없음')
+            except:
+                sector = '알 수 없음'
+
+            try:
+                tags = json.loads(entry.get('pattern_tags', '[]')) if entry.get('pattern_tags') else []
+                tags_str = ", ".join(tags)
+            except:
+                tags_str = ""
+
+            profit_emoji = "✅" if entry.get('profit_rate', 0) > 0 else "❌"
+            formatted.append(
+                f"[ID:{entry['id']}] {entry['company_name']} | 섹터: {sector} | "
+                f"{profit_emoji} {entry.get('profit_rate', 0):.1f}% | "
+                f"요약: {entry.get('compressed_summary', 'N/A')} | 태그: {tags_str}"
+            )
+
+        return "\n".join(formatted)
+
+    def _generate_simple_summary(self, entry: Dict[str, Any]) -> str:
+        """Generate a simple summary for an entry without LLM."""
+        try:
+            scenario = json.loads(entry.get('buy_scenario', '{}')) if entry.get('buy_scenario') else {}
+            sector = scenario.get('sector', '')
+        except:
+            sector = ''
+
+        profit = entry.get('profit_rate', 0)
+        result = "수익" if profit > 0 else "손실"
+
+        summary = entry.get('one_line_summary', '')
+        if summary:
+            return summary[:100]
+
+        return f"{sector} {result} {abs(profit):.1f}%"
+
+    def _save_intuition(self, intuition: Dict[str, Any], source_ids: List[int]) -> bool:
+        """
+        Save a new intuition to the database.
+
+        Args:
+            intuition: Intuition data from compression
+            source_ids: IDs of source journal entries
+
+        Returns:
+            bool: True if saved successfully
+        """
+        try:
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # Check for duplicate intuitions
+            self.cursor.execute("""
+                SELECT id FROM trading_intuitions
+                WHERE condition = ? AND insight = ?
+            """, (intuition.get('condition', ''), intuition.get('insight', '')))
+
+            existing = self.cursor.fetchone()
+            if existing:
+                # Update existing intuition with new evidence
+                self.cursor.execute("""
+                    UPDATE trading_intuitions
+                    SET supporting_trades = supporting_trades + ?,
+                        confidence = (confidence + ?) / 2,
+                        success_rate = (success_rate + ?) / 2,
+                        source_journal_ids = ?,
+                        last_validated_at = ?
+                    WHERE id = ?
+                """, (
+                    intuition.get('supporting_trades', 1),
+                    intuition.get('confidence', 0.5),
+                    intuition.get('success_rate', 0.5),
+                    json.dumps(source_ids),
+                    now,
+                    existing['id']
+                ))
+            else:
+                # Insert new intuition
+                self.cursor.execute("""
+                    INSERT INTO trading_intuitions
+                    (category, subcategory, condition, insight, confidence,
+                     supporting_trades, success_rate, source_journal_ids,
+                     created_at, last_validated_at, is_active)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    intuition.get('category', 'pattern'),
+                    intuition.get('subcategory', ''),
+                    intuition.get('condition', ''),
+                    intuition.get('insight', ''),
+                    intuition.get('confidence', 0.5),
+                    intuition.get('supporting_trades', 1),
+                    intuition.get('success_rate', 0.5),
+                    json.dumps(source_ids),
+                    now,
+                    now,
+                    1
+                ))
+
+            self.conn.commit()
+            return True
+
+        except Exception as e:
+            logger.error(f"Error saving intuition: {e}")
+            return False
+
+    def _parse_compression_response(self, response: str) -> Dict[str, Any]:
+        """Parse compression agent response into structured data."""
+        try:
+            # Try to extract JSON from response
+            markdown_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', response, re.DOTALL)
+            if markdown_match:
+                json_str = markdown_match.group(1)
+                return json.loads(json_str)
+
+            # Try direct JSON
+            json_match = re.search(r'({[\s\S]*})', response, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+                json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+                return json.loads(json_str)
+
+            # Try json_repair
+            try:
+                import json_repair
+                repaired = json_repair.repair_json(response)
+                return json.loads(repaired)
+            except:
+                pass
+
+            return {"compressed_entries": [], "new_intuitions": []}
+
+        except Exception as e:
+            logger.warning(f"Failed to parse compression response: {e}")
+            return {"compressed_entries": [], "new_intuitions": []}
+
+    def get_compression_stats(self) -> Dict[str, Any]:
+        """
+        Get statistics about journal compression status.
+
+        Returns:
+            Dict: Compression statistics
+        """
+        try:
+            stats = {}
+
+            # Count entries by layer
+            self.cursor.execute("""
+                SELECT compression_layer, COUNT(*) as count
+                FROM trading_journal
+                GROUP BY compression_layer
+            """)
+            layer_counts = {row['compression_layer']: row['count'] for row in self.cursor.fetchall()}
+            stats['entries_by_layer'] = {
+                'layer1_detailed': layer_counts.get(1, 0),
+                'layer2_summarized': layer_counts.get(2, 0),
+                'layer3_compressed': layer_counts.get(3, 0)
+            }
+
+            # Count intuitions
+            self.cursor.execute("SELECT COUNT(*) FROM trading_intuitions WHERE is_active = 1")
+            stats['active_intuitions'] = self.cursor.fetchone()[0]
+
+            # Get oldest uncompressed entry
+            self.cursor.execute("""
+                SELECT MIN(trade_date) as oldest
+                FROM trading_journal
+                WHERE compression_layer = 1
+            """)
+            result = self.cursor.fetchone()
+            stats['oldest_uncompressed'] = result['oldest'] if result and result['oldest'] else None
+
+            # Get average confidence of intuitions
+            self.cursor.execute("""
+                SELECT AVG(confidence) as avg_conf, AVG(success_rate) as avg_success
+                FROM trading_intuitions
+                WHERE is_active = 1
+            """)
+            result = self.cursor.fetchone()
+            if result:
+                stats['avg_intuition_confidence'] = result['avg_conf'] or 0
+                stats['avg_intuition_success_rate'] = result['avg_success'] or 0
+
+            return stats
+
+        except Exception as e:
+            logger.error(f"Error getting compression stats: {e}")
+            return {}
 
     async def update_holdings(self) -> List[Dict[str, Any]]:
         """
