@@ -1,6 +1,6 @@
 # Trigger Batch 알고리즘 문서
 
-> **Last Updated**: 2025-01-04
+> **Last Updated**: 2026-01-05
 > **File**: `trigger_batch.py`
 > **Purpose**: 급등주/모멘텀 종목 자동 스크리닝
 
@@ -14,7 +14,6 @@
 4. [오후 트리거 (Afternoon)](#4-오후-트리거-afternoon)
 5. [복합 점수 계산](#5-복합-점수-계산)
 6. [사용법](#6-사용법)
-7. [trading_agents 궁합 분석](#7-trading_agents-궁합-분석)
 
 ---
 
@@ -38,7 +37,7 @@ trading/domestic_stock_trading.py (실제 주문)
 
 ### 데이터 소스
 
-- **pykrx**: KRX(한국거래소) 공식 데이터
+- **kospi_kosdaq_stock_server**: KRX 정보데이터시스템 API
 - **스냅샷 데이터**: OHLCV (시가, 고가, 저가, 종가, 거래량, 거래대금)
 - **시가총액 데이터**: 종목별 시가총액
 
@@ -110,66 +109,9 @@ def apply_absolute_filters(df, min_value=500000000):
 
 ---
 
-### 3.2 눌림목 매수 대기 상위주 (`trigger_morning_pullback_buy`) ⭐ NEW
-
-**목적**: 상승 추세 확인 후 조정 구간에서 매수 기회 포착
-
-> **Note**: 기존 `trigger_morning_gap_up_momentum`을 대체하는 새 트리거입니다.
-> `trading_agents.py`와의 궁합을 최적화하기 위해 설계되었습니다.
-
-#### 설계 철학
-
-| 기존 갭상승 트리거 | 새 눌림목 트리거 |
-|---|---|
-| 이미 상승한 종목 선별 | 조정 중인 종목 선별 |
-| 손절가(지지선) 멀음 | 손절가(최근 저점) 가까움 |
-| 손익비 불리 | 손익비 2:1+ 확보 용이 |
-| 추격 매수 성격 | 눌림목 분할매수 성격 |
-
-#### 선별 조건
-
-| 조건 | 기준 | 목적 |
-|------|------|------|
-| 추세 상승 | 최근 5일 중 3일+ 양봉 | 상승 추세 확인 |
-| 눌림목 시작 | 당일 시가 ≤ 전일 종가 | 조정/갭다운 진입 |
-| 반등 중 | 당일 종가 > 시가 | 매수세 유입 확인 |
-| 거래량 유지 | 전일 대비 70% 이상 | 관심 지속 |
-| 과열 아님 | RSI 추정치 70 미만 | 과열 종목 제외 |
-| 지지선 거리 | 10% 이내 | 손익비 확보 |
-
-#### 복합 점수
-
-```
-복합점수 = 추세강도(40%) + 반등강도(30%) + 거래량안정성(30%)
-```
-
-#### 멀티데이 분석
-
-5일간의 데이터를 분석하여:
-- **양봉 일수**: 5일 중 양봉(종가 > 시가) 일수
-- **누적 상승률**: 5일간 총 등락률
-- **최근 5일 고점/저점**: 지지선/저항선 파악
-- **RSI 추정치**: 간이 RSI 계산
-
-#### 로직 흐름
-
-```
-1. 멀티데이 스냅샷 조회 (5일치)
-2. 각 종목별 양봉 일수, 누적 상승률, 고점/저점 계산
-3. 추세 상승 종목 필터링 (5일 중 3일+ 양봉)
-4. 당일 눌림목 + 반등 종목 필터링
-5. 과열 종목 제외 (RSI 70+)
-6. 지지선 거리 10% 이내 필터링
-7. 복합 점수 계산 및 상위 3개 반환
-```
-
----
-
-### 3.3 기존: 갭 상승 모멘텀 상위주 (`trigger_morning_gap_up_momentum`) [LEGACY]
+### 3.2 갭 상승 모멘텀 상위주 (`trigger_morning_gap_up_momentum`)
 
 **목적**: 갭 상승으로 시작한 모멘텀 종목 포착
-
-> **Note**: `--legacy-gap` 옵션으로만 사용 가능. 기본값은 눌림목 트리거.
 
 #### 선별 조건
 
@@ -188,7 +130,7 @@ def apply_absolute_filters(df, min_value=500000000):
 
 ---
 
-### 3.4 시총 대비 집중 자금 유입 상위주 (`trigger_morning_value_to_cap_ratio`)
+### 3.3 시총 대비 집중 자금 유입 상위주 (`trigger_morning_value_to_cap_ratio`)
 
 **목적**: 시가총액 대비 비정상적으로 높은 거래대금이 유입된 종목 포착
 
@@ -313,7 +255,7 @@ normalized = (value - min) / (max - min)
 ### 기본 실행
 
 ```bash
-# 오전 배치 (새 눌림목 트리거 사용)
+# 오전 배치
 python trigger_batch.py morning INFO
 
 # 오후 배치
@@ -325,9 +267,6 @@ python trigger_batch.py afternoon INFO
 ```bash
 # JSON 결과 저장
 python trigger_batch.py morning INFO --output result.json
-
-# 기존 갭상승 트리거 사용 (레거시)
-python trigger_batch.py morning INFO --legacy-gap
 
 # 디버그 모드
 python trigger_batch.py morning DEBUG
@@ -348,70 +287,22 @@ python trigger_batch.py morning DEBUG
       "volume_increase": 150.5
     }
   ],
-  "눌림목 매수 대기 상위주": [
+  "갭 상승 모멘텀 상위주": [
     {
       "code": "000660",
       "name": "SK하이닉스",
       "current_price": 180000,
-      "change_rate": 1.2,
-      "bullish_days": 4,
-      "gap_rate": -0.8,
-      "intraday_change": 1.5,
-      "support_distance": 5.2,
-      "rsi_estimate": 62
+      "change_rate": 2.8,
+      "gap_rate": 1.5
     }
   ],
   "metadata": {
-    "run_time": "2025-01-04T10:30:00",
+    "run_time": "2026-01-05T10:30:00",
     "trigger_mode": "morning",
-    "trade_date": "20250103",
-    "trigger2_type": "pullback"
+    "trade_date": "20260102"
   }
 }
 ```
-
----
-
-## 7. trading_agents 궁합 분석
-
-### 문제점 (기존)
-
-`trigger_batch.py`가 선별한 종목이 `trading_agents.py`에서 대부분 **관망** 처리되는 문제가 있었습니다.
-
-#### 근본 원인
-
-| trigger_batch 특성 | trading_agents 요구사항 | 충돌 |
-|---|---|---|
-| 이미 상승 중인 종목 선별 | 손익비 2:1 이상 필요 | 상승 후 진입 시 손익비 불리 |
-| 갭상승 1%+ 종목 선별 | 손절폭 -7% 이내 우선 | 갭상승 후 지지선이 멀어짐 |
-| 거래량 급증 + 상승 조건 | 저평가(밸류에이션) 확인 | 급등주는 이미 고평가 |
-
-#### 실제 데이터 (2025년 12월)
-
-```
-총 분석 종목: 54개
-매수 결정: 0개 (0%)
-관망 결정: 46개 (85%)
-평균 점수: 5.41점
-```
-
-### 해결책: 눌림목 트리거
-
-새로운 `trigger_morning_pullback_buy` 트리거는 다음을 개선합니다:
-
-| 항목 | 기존 갭상승 | 새 눌림목 |
-|---|---|---|
-| 진입 시점 | 상승 중 | 조정 중 |
-| 손절가 거리 | 멀음 | 가까움 (최근 5일 저점) |
-| 손익비 | 불리 | 2:1+ 확보 용이 |
-| 밸류에이션 | 급등 후 고평가 | 조정 시점 상대적 저평가 |
-| 과열 종목 | 포함 | RSI 70+ 제외 |
-
-### 기대 효과
-
-1. **매수 결정 비율 증가**: 손익비 요건 충족 용이
-2. **리스크 감소**: 지지선 가까워 손절 시 손실 최소화
-3. **수익률 개선**: 조정 후 반등 시 상승 여력 확보
 
 ---
 
@@ -421,15 +312,13 @@ python trigger_batch.py morning DEBUG
 |--------|----------|------|
 | `get_snapshot` | 데이터 | 당일 OHLCV 조회 |
 | `get_previous_snapshot` | 데이터 | 전일 OHLCV 조회 |
-| `get_multi_day_snapshots` | 데이터 | N일치 OHLCV 조회 |
 | `get_market_cap_df` | 데이터 | 시가총액 조회 |
 | `apply_absolute_filters` | 필터 | 절대적 기준 필터 |
 | `filter_low_liquidity` | 필터 | 저유동성 필터 |
 | `normalize_and_score` | 점수 | 정규화 및 복합점수 |
 | `enhance_dataframe` | 유틸 | 종목명/업종 추가 |
 | `trigger_morning_volume_surge` | 오전 | 거래량 급증 |
-| `trigger_morning_pullback_buy` | 오전 | 눌림목 매수 (NEW) |
-| `trigger_morning_gap_up_momentum` | 오전 | 갭상승 (LEGACY) |
+| `trigger_morning_gap_up_momentum` | 오전 | 갭상승 모멘텀 |
 | `trigger_morning_value_to_cap_ratio` | 오전 | 시총 대비 자금유입 |
 | `trigger_afternoon_daily_rise_top` | 오후 | 일중 상승률 |
 | `trigger_afternoon_closing_strength` | 오후 | 마감 강도 |
@@ -439,5 +328,5 @@ python trigger_batch.py morning DEBUG
 
 ---
 
-**Document Version**: 1.0
+**Document Version**: 2.0
 **Author**: PRISM-INSIGHT Development Team
