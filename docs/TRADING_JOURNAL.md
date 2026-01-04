@@ -308,3 +308,11 @@ python tests/test_trading_journal.py
 1. **Intuition Validator Agent**: 직관을 최근 거래 결과와 대조하여 신뢰도 자동 조정
 2. **Context Retriever Agent**: 매수 결정 시 관련 과거 경험을 능동적으로 검색
 3. **Dashboard 통합**: 직관 목록과 압축 상태를 웹 대시보드에서 시각화
+
+## 참고 문헌
+
+| 논문 | 관련 기능 |
+|------|----------|
+| [Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory](https://arxiv.org/abs/2504.19413) (2025) | Layer 1→2→3 계층적 메모리 압축, 핵심 정보 추출 및 통합 |
+| [Human-inspired Episodic Memory for Infinite Context LLMs](https://arxiv.org/abs/2407.09450) (2024) | 매매 복기 분석, 에피소딕 기억 구조 |
+| [Memory in the Age of AI Agents: A Survey](https://arxiv.org/abs/2512.13564) (2025) | 에이전트 메모리 시스템 전반, 장기기억 관리 |

@@ -216,6 +216,16 @@ PRISM-INSIGHT는 **13개의 전문화된 AI 에이전트들이 협업하는 다�
   - 포트폴리오 최적화 조정 제안
   - 100% 매도 특성을 고려한 신중한 결정
 
+#### 9-3. 매매일지 에이전트 (Trading Journal) - Optional
+
+- **역할**: 완료된 매매를 복기 분석하고 장기기억으로 축적
+- **특징**:
+  - 매수/매도 맥락 비교 분석 및 교훈 추출
+  - 계층적 기억 압축 (상세 → 요약 → 직관)
+  - 과거 경험 기반 매수 점수 조정
+  - 기본값 비활성화 (`.env`에 `ENABLE_TRADING_JOURNAL=true`로 활성화)
+  - 📖 자세한 내용: [docs/TRADING_JOURNAL.md](docs/TRADING_JOURNAL.md)
+
 ---
 
 ### 💬 사용자 상담 팀 (2개 에이전트) - Claude Sonnet 4.5 기반
@@ -333,12 +343,24 @@ cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
 4. **설정 파일 편집**
 복사한 설정 파일들을 편집하여 필요한 API 키와 설정값들을 입력하세요.
 
-**중요:** KRX 데이터 마켓플레이스 인증을 위해 `.env` 파일에 `KAKAO_ID`와 `KAKAO_PW`를 설정하세요:
+**중요:** KRX 데이터 마켓플레이스 인증을 위해 카카오 계정 정보를 설정하세요:
 ```bash
 # .env
 KAKAO_ID=your_kakao_email@example.com
 KAKAO_PW=your_kakao_password
 ```
+
+```yaml
+# mcp_agent.config.yaml
+kospi_kosdaq:
+  command: "python3"
+  args: ["-m", "kospi_kosdaq_stock_server"]
+  env:
+    KAKAO_ID: "your_kakao_id"
+    KAKAO_PW: "your_kakao_password"
+```
+
+> **💡 2단계 인증 사용자:** 카카오 2단계 인증이 설정되어 있으면 매 분석시마다 앱에서 확인이 필요합니다. 번거로우시다면 카카오앱 > 전체 설정 > 카카오계정 > 계정 보안 > 2단계 인증 '사용 안함'으로 변경하세요.
 
 5. **Playwright 설치** (PDF 변환용)
 
@@ -579,6 +601,8 @@ AI 에이전트가 생성하는 종합 애널리스트 리포트는 다음 섹�
 - 거래량 증가율 임계값
 - 주가 상승률 기준
 - 시가총액 필터링 조건
+
+> **📖 하이브리드 선별 알고리즘:** 트리거가 매수/매도 에이전트와 궁합이 좋은 종목을 선정하는 방식으로 개선되었습니다. 자세한 내용은 [docs/TRIGGER_BATCH_ALGORITHMS.md](docs/TRIGGER_BATCH_ALGORITHMS.md)를 참조하세요.
 
 ### AI 프롬프트 수정
 `cores/agents/` 디렉토리의 각 에이전트 파일에서 분석 지침을 커스터마이징할 수 있습니다.
