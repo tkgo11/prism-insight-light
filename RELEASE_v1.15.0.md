@@ -49,6 +49,7 @@ ENABLE_TRADING_JOURNAL=true
 
 ### 업데이트 방법
 ```bash
+git pull
 pip install -r requirements.txt
 python3 -m playwright install chromium
 ```

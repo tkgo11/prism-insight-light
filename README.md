@@ -220,6 +220,16 @@ PRISM-INSIGHT is a **multi-agent system where 13 specialized AI agents collabora
   - Portfolio optimization adjustment suggestions
   - Prudent decisions considering 100% exit characteristics
 
+#### 9-3. Trading Journal Agent - Optional
+
+- **Role**: Retrospective analysis of completed trades and long-term memory accumulation
+- **Features**:
+  - Buy/sell context comparison and lesson extraction
+  - Hierarchical memory compression (detailed → summary → intuition)
+  - Buy score adjustment based on past experience
+  - Disabled by default (enable with `ENABLE_TRADING_JOURNAL=true` in `.env`)
+  - 📖 Details: [docs/TRADING_JOURNAL.md](docs/TRADING_JOURNAL.md)
+
 ---
 
 ### 💬 User Consultation Team (2 Agents) - Claude Sonnet 4.5 Based
@@ -335,12 +345,24 @@ cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
 4. **Edit Configuration Files**
 Edit the copied configuration files to enter necessary API keys and settings.
 
-**Important:** Set `KAKAO_ID` and `KAKAO_PW` in `.env` file for KRX Data Marketplace authentication:
+**Important:** Set Kakao account credentials for KRX Data Marketplace authentication:
 ```bash
 # .env
 KAKAO_ID=your_kakao_email@example.com
 KAKAO_PW=your_kakao_password
 ```
+
+```yaml
+# mcp_agent.config.yaml
+kospi_kosdaq:
+  command: "python3"
+  args: ["-m", "kospi_kosdaq_stock_server"]
+  env:
+    KAKAO_ID: "your_kakao_id"
+    KAKAO_PW: "your_kakao_password"
+```
+
+> **💡 2-Step Verification Users:** If Kakao 2-step verification is enabled, you'll need to confirm in the app for each analysis. To disable: Kakao App > Settings > Kakao Account > Account Security > 2-Step Verification 'Off'.
 
 5. **Install Playwright** (for PDF conversion)
 
@@ -581,6 +603,8 @@ In `trigger_batch.py`, you can modify:
 - Trading volume increase threshold
 - Stock price increase criteria
 - Market capitalization filtering conditions
+
+> **📖 Hybrid Selection Algorithm:** The trigger now selects stocks that are more compatible with buy/sell agent criteria. See [docs/TRIGGER_BATCH_ALGORITHMS.md](docs/TRIGGER_BATCH_ALGORITHMS.md) for details.
 
 ### Modify AI Prompts
 You can customize analysis instructions in each agent file in the `cores/agents/` directory.
