@@ -495,19 +495,13 @@ def create_price_chart(ticker, company_name=None, days=730, save_path=None, adju
     # 날짜 오름차순 정렬
     df = df.sort_index()
 
-    # 이동평균선 계산
-    df['MA20'] = df['종가'].rolling(window=20).mean()
-    df['MA60'] = df['종가'].rolling(window=60).mean()
-    df['MA120'] = df['종가'].rolling(window=120).mean()
+    # 이동평균선 계산 (krx_data_client는 영어 컬럼명 반환)
+    df['MA20'] = df['Close'].rolling(window=20).mean()
+    df['MA60'] = df['Close'].rolling(window=60).mean()
+    df['MA120'] = df['Close'].rolling(window=120).mean()
 
-    # mplfinance에 맞는 컬럼명으로 변경
-    ohlc_df = df.rename(columns={
-        '시가': 'Open',
-        '고가': 'High',
-        '저가': 'Low',
-        '종가': 'Close',
-        '거래량': 'Volume'
-    })
+    # mplfinance용 DataFrame (이미 영어 컬럼명이므로 그대로 사용)
+    ohlc_df = df[['Open', 'High', 'Low', 'Close', 'Volume']].copy()
 
     # 한글 지원 mplfinance 스타일 생성
     s = create_mpf_style()
@@ -559,16 +553,16 @@ def create_price_chart(ticker, company_name=None, days=730, save_path=None, adju
     ax1.legend(['MA20', 'MA60', 'MA120'], loc='upper left')
 
     # 중요 가격 포인트에 주석 추가
-    max_point = df['종가'].idxmax()
-    min_point = df['종가'].idxmin()
+    max_point = df['Close'].idxmax()
+    min_point = df['Close'].idxmin()
     last_point = df.index[-1]
 
     # Add annotations to important price points
     bbox_props = dict(boxstyle="round,pad=0.3", fc="#f8f9fa", ec="none", alpha=0.9)
 
     ax1.annotate(
-        f"High: {df.loc[max_point, '종가']:,.0f}",
-        xy=(max_point, df.loc[max_point, '종가']),
+        f"High: {df.loc[max_point, 'Close']:,.0f}",
+        xy=(max_point, df.loc[max_point, 'Close']),
         xytext=(0, 15),
         textcoords='offset points',
         ha='center',
@@ -577,8 +571,8 @@ def create_price_chart(ticker, company_name=None, days=730, save_path=None, adju
     )
 
     ax1.annotate(
-        f"Low: {df.loc[min_point, '종가']:,.0f}",
-        xy=(min_point, df.loc[min_point, '종가']),
+        f"Low: {df.loc[min_point, 'Close']:,.0f}",
+        xy=(min_point, df.loc[min_point, 'Close']),
         xytext=(0, -15),
         textcoords='offset points',
         ha='center',
@@ -587,8 +581,8 @@ def create_price_chart(ticker, company_name=None, days=730, save_path=None, adju
     )
 
     ax1.annotate(
-        f"Current: {df.loc[last_point, '종가']:,.0f}",
-        xy=(last_point, df.loc[last_point, '종가']),
+        f"Current: {df.loc[last_point, 'Close']:,.0f}",
+        xy=(last_point, df.loc[last_point, 'Close']),
         xytext=(15, 0),
         textcoords='offset points',
         ha='left',
@@ -597,7 +591,7 @@ def create_price_chart(ticker, company_name=None, days=730, save_path=None, adju
     )
 
     # Y축 포맷터 설정
-    max_price = df['고가'].max()
+    max_price = df['High'].max()
     formatter = select_number_formatter(max_price)
     ax1.yaxis.set_major_formatter(formatter)
 
@@ -684,17 +678,17 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
     # 차트 생성
     fig, ax = plt.subplots(figsize=(12, 6))
 
-    # 시가총액 플롯
+    # 시가총액 플롯 (krx_data_client는 영어 컬럼명 'MarketCap' 반환)
     ax.fill_between(
         df.index,
         0,
-        df['시가총액'],
+        df['MarketCap'],
         color=PRIMARY_COLORS[0],
         alpha=0.2
     )
     ax.plot(
         df.index,
-        df['시가총액'],
+        df['MarketCap'],
         color=PRIMARY_COLORS[0],
         linewidth=2.5
     )
@@ -710,7 +704,7 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
     ax.set_xlabel('', fontsize=12)
 
     # Y축 포맷터 설정
-    max_cap = df['시가총액'].max()
+    max_cap = df['MarketCap'].max()
     formatter = select_number_formatter(max_cap)
     ax.yaxis.set_major_formatter(formatter)
 
@@ -724,9 +718,9 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
 
     # 주요 포인트 주석 추가
     latest_point = df.iloc[-1]
-    max_point_idx = df['시가총액'].idxmax()
+    max_point_idx = df['MarketCap'].idxmax()
     max_point = df.loc[max_point_idx]
-    min_point_idx = df['시가총액'].idxmin()
+    min_point_idx = df['MarketCap'].idxmin()
     min_point = df.loc[min_point_idx]
 
     # 최신 포인트
@@ -734,8 +728,8 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
 
     # Add annotations to key points
     ax.annotate(
-        f"{latest_point['시가총액']/1000000000000:.2f}T KRW",
-        xy=(latest_point.name, latest_point['시가총액']),
+        f"{latest_point['MarketCap']/1000000000000:.2f}T KRW",
+        xy=(latest_point.name, latest_point['MarketCap']),
         xytext=(10, 0),
         textcoords='offset points',
         ha='left',
@@ -747,8 +741,8 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
     # Highest point
     if max_point_idx != df.index[-1]:
         ax.annotate(
-            f"High: {max_point['시가총액']/1000000000000:.2f}T KRW",
-            xy=(max_point.name, max_point['시가총액']),
+            f"High: {max_point['MarketCap']/1000000000000:.2f}T KRW",
+            xy=(max_point.name, max_point['MarketCap']),
             xytext=(0, 15),
             textcoords='offset points',
             ha='center',
@@ -760,8 +754,8 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
     # Lowest point
     if min_point_idx != df.index[0]:
         ax.annotate(
-            f"Low: {min_point['시가총액']/1000000000000:.2f}T KRW",
-            xy=(min_point.name, min_point['시가총액']),
+            f"Low: {min_point['MarketCap']/1000000000000:.2f}T KRW",
+            xy=(min_point.name, min_point['MarketCap']),
             xytext=(0, -15),
             textcoords='offset points',
             ha='center',
@@ -772,7 +766,7 @@ def create_market_cap_chart(ticker, company_name=None, days=730, save_path=None)
 
     # Calculate and display YTD or 1-year change rate
     first_point = df.iloc[0]
-    pct_change = (latest_point['시가총액'] - first_point['시가총액']) / first_point['시가총액'] * 100
+    pct_change = (latest_point['MarketCap'] - first_point['MarketCap']) / first_point['MarketCap'] * 100
     period = "YTD" if df.index[0].year == df.index[-1].year else "1Y"
     change_text = f"{period} Change: {pct_change:.1f}%"
 
@@ -1134,9 +1128,11 @@ def create_trading_volume_chart(ticker, company_name=None, days=30, save_path=No
         '기타외국인': 'Other Foreigners',  # pykrx 추가 투자자 유형
     }
 
-    # 순매수량 컬럼 선택
-    if '순매수' in df_volume.columns:
-        investor_data = df_volume['순매수']
+    # 투자자별 순매수량 합계 계산 (krx_data_client는 날짜별 데이터 반환)
+    # 각 투자자별 컬럼의 합계를 계산
+    investor_cols = [col for col in df_volume.columns if col in investor_types]
+    if investor_cols:
+        investor_data = df_volume[investor_cols].sum()
 
         # 차트 그리기
         bar_width = 0.6
