@@ -941,12 +941,12 @@ async def main():
 
 if __name__ == "__main__":
     # Check market holiday
-    # from check_market_day import is_market_day
-    #
-    # if not is_market_day():
-    #     current_date = datetime.now().date()  # Use datetime.now()
-    #     logger.info(f"Today ({current_date}) is a stock market holiday. Not executing batch job.")
-    #     sys.exit(0)
+    from check_market_day import is_market_day
+
+    if not is_market_day():
+        current_date = datetime.now().date()  # Use datetime.now()
+        logger.info(f"Today ({current_date}) is a stock market holiday. Not executing batch job.")
+        sys.exit(0)
 
     # Start timer thread and execute main function only on business days
     import threading
