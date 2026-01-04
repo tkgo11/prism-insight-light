@@ -390,6 +390,9 @@ def trigger_morning_pullback_buy(trade_date: str, snapshot: pd.DataFrame, prev_s
         logger.debug("절대적 기준 필터링 후 종목 없음")
         return pd.DataFrame()
 
+    # 필터링 후 prev도 snap.index에 맞춰 재정렬 (인덱스 불일치 방지)
+    prev = prev.loc[snap.index]
+
     # === 멀티데이 추세 분석 ===
     if multi_day_snapshots and len(multi_day_snapshots) >= 3:
         logger.debug(f"멀티데이 추세 분석 시작: {len(multi_day_snapshots)}일치 데이터")
