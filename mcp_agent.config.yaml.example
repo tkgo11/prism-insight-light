@@ -31,6 +31,9 @@ mcp:
           "-m",
           "kospi_kosdaq_stock_server"
         ]
+       env:
+        KAKAO_ID: "your_kakao_id"
+        KAKAO_PW: "your_kakao_password"
 
     perplexity:
       command: "node"
