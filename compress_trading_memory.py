@@ -88,8 +88,8 @@ async def run_compression(
     logger.info("=" * 60)
 
     try:
-        # Initialize agent
-        agent = StockTrackingAgent(db_path=db_path)
+        # Initialize agent with journal enabled (required for compression)
+        agent = StockTrackingAgent(db_path=db_path, enable_journal=True)
         agent.trading_agent = MagicMock()  # Mock to avoid MCP initialization
         await agent.initialize(language=language)
 
