@@ -333,6 +333,13 @@ cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
 4. **설정 파일 편집**
 복사한 설정 파일들을 편집하여 필요한 API 키와 설정값들을 입력하세요.
 
+**중요:** KRX 데이터 마켓플레이스 인증을 위해 `.env` 파일에 `KAKAO_ID`와 `KAKAO_PW`를 설정하세요:
+```bash
+# .env
+KAKAO_ID=your_kakao_email@example.com
+KAKAO_PW=your_kakao_password
+```
+
 5. **Playwright 설치** (PDF 변환용)
 
 시스템이 첫 실행 시 **자동으로 Playwright 브라우저를 설치**합니다. 수동 설치 방법:
@@ -358,7 +365,13 @@ python3 -m playwright install --with-deps chromium
 
 # Rocky Linux 8 / CentOS / RHEL
 pip3 install playwright
-python3 -m playwright install --with-deps chromium
+playwright install chromium
+
+# --with-deps가 동작하지 않으면 수동으로 의존성 설치:
+dnf install -y epel-release
+dnf install -y nss nspr atk at-spi2-atk cups-libs libdrm \
+    libxkbcommon libXcomposite libXdamage libXfixes \
+    libXrandr mesa-libgbm alsa-lib pango cairo
 
 # 또는 설치 스크립트 사용
 cd utils
