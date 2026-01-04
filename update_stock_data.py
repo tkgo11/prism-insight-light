@@ -11,9 +11,19 @@ import argparse
 from datetime import datetime
 
 try:
-    from pykrx import stock
+    from krx_data_client import get_market_ticker_list, get_market_ticker_name
+
+    # pykrx 호환 래퍼
+    class stock:
+        @staticmethod
+        def get_market_ticker_list(market="KOSPI"):
+            return get_market_ticker_list(market=market)
+
+        @staticmethod
+        def get_market_ticker_name(ticker):
+            return get_market_ticker_name(ticker)
 except ImportError:
-    print("pykrx 패키지가 설치되어 있지 않습니다. 'pip install pykrx'로 설치하세요.")
+    print("krx_data_client 패키지가 설치되어 있지 않습니다. 'pip install kospi-kosdaq-stock-server'로 설치하세요.")
     exit(1)
 
 # 로깅 설정

@@ -202,18 +202,18 @@ class StockTrackingAgent:
             float: Current stock price
         """
         try:
-            from pykrx.stock import stock_api
+            from krx_data_client import get_nearest_business_day_in_a_week, get_market_ohlcv_by_ticker
             import datetime
 
             # Today's date
             today = datetime.datetime.now().strftime("%Y%m%d")
 
             # Get the most recent business day
-            trade_date = stock_api.get_nearest_business_day_in_a_week(today, prev=True)
+            trade_date = get_nearest_business_day_in_a_week(today, prev=True)
             logger.info(f"Target date: {trade_date}")
 
             # Get OHLCV data for the trading day
-            df = stock_api.get_market_ohlcv_by_ticker(trade_date)
+            df = get_market_ohlcv_by_ticker(trade_date)
 
             # Extract specific stock data
             if ticker in df.index:
@@ -267,7 +267,7 @@ class StockTrackingAgent:
             Tuple[float, str]: Ranking change percentage, analysis result message
         """
         try:
-            from pykrx.stock import stock_api
+            from krx_data_client import get_nearest_business_day_in_a_week, get_market_ohlcv_by_ticker
             import datetime
             import pandas as pd
 
@@ -275,9 +275,9 @@ class StockTrackingAgent:
             today = datetime.datetime.now().strftime("%Y%m%d")
 
             # Get recent 2 business days
-            recent_date = stock_api.get_nearest_business_day_in_a_week(today, prev=True)
+            recent_date = get_nearest_business_day_in_a_week(today, prev=True)
             previous_date_obj = datetime.datetime.strptime(recent_date, "%Y%m%d") - timedelta(days=1)
-            previous_date = stock_api.get_nearest_business_day_in_a_week(
+            previous_date = get_nearest_business_day_in_a_week(
                 previous_date_obj.strftime("%Y%m%d"),
                 prev=True
             )
@@ -285,8 +285,8 @@ class StockTrackingAgent:
             logger.info(f"Recent trading day: {recent_date}, Previous trading day: {previous_date}")
 
             # Get OHLCV data for the trading days (including trading value)
-            recent_df = stock_api.get_market_ohlcv_by_ticker(recent_date)
-            previous_df = stock_api.get_market_ohlcv_by_ticker(previous_date)
+            recent_df = get_market_ohlcv_by_ticker(recent_date)
+            previous_df = get_market_ohlcv_by_ticker(previous_date)
 
             # Sort by trading value to generate rankings
             recent_rank = recent_df.sort_values(by="거래대금", ascending=False).reset_index()

@@ -5,7 +5,15 @@ import datetime
 import pandas as pd
 import numpy as np
 import logging
-from pykrx.stock import stock_api
+from krx_data_client import (
+    get_market_ohlcv_by_ticker,
+    get_nearest_business_day_in_a_week,
+)
+
+# pykrx 호환 래퍼 (기존 코드 호환성)
+class stock_api:
+    get_market_ohlcv_by_ticker = staticmethod(get_market_ohlcv_by_ticker)
+    get_nearest_business_day_in_a_week = staticmethod(get_nearest_business_day_in_a_week)
 
 # 로거 설정
 logger = logging.getLogger(__name__)
