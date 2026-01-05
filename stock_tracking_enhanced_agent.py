@@ -146,8 +146,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             kosdaq_df = get_index_ohlcv_by_date(one_month_ago, today, "2001")
 
             # Analyze index trends
-            kospi_trend = self._calculate_trend(kospi_df['종가'])
-            kosdaq_trend = self._calculate_trend(kosdaq_df['종가'])
+            kospi_trend = self._calculate_trend(kospi_df['Close'])
+            kosdaq_trend = self._calculate_trend(kosdaq_df['Close'])
 
             # Determine overall market condition
             # Bull market (1) if both trending up, bear market (-1) if both down, neutral (0) otherwise
@@ -159,8 +159,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 market_condition = 0  # Neutral
 
             # Calculate market volatility (average of KOSPI and KOSDAQ volatility)
-            kospi_volatility = self._calculate_volatility(kospi_df['종가'])
-            kosdaq_volatility = self._calculate_volatility(kosdaq_df['종가'])
+            kospi_volatility = self._calculate_volatility(kospi_df['Close'])
+            kosdaq_volatility = self._calculate_volatility(kosdaq_df['Close'])
             avg_volatility = (kospi_volatility + kosdaq_volatility) / 2
 
             # Store market condition
@@ -176,8 +176,8 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 """,
                 (
                     current_date,
-                    kospi_df['종가'].iloc[-1],
-                    kosdaq_df['종가'].iloc[-1],
+                    kospi_df['Close'].iloc[-1],
+                    kosdaq_df['Close'].iloc[-1],
                     market_condition,
                     avg_volatility
                 )
@@ -242,7 +242,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 return 15.0  # Default volatility (15%)
 
             # Calculate standard deviation of daily returns
-            daily_returns = df['종가'].pct_change().dropna()
+            daily_returns = df['Close'].pct_change().dropna()
             volatility = daily_returns.std() * 100  # Convert to percentage
 
             # Store in volatility table
@@ -607,7 +607,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 return 0  # Neutral (no data)
 
             # Calculate trend
-            prices = df['종가'].values
+            prices = df['Close'].values
             x = np.arange(len(prices))
 
             # Calculate trend using linear regression

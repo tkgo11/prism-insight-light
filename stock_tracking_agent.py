@@ -316,7 +316,7 @@ class StockTrackingAgent:
             # Extract specific stock data
             if ticker in df.index:
                 # Extract closing price
-                current_price = df.loc[ticker, "종가"]
+                current_price = df.loc[ticker, "Close"]
                 logger.info(f"{ticker} current price: {current_price:,.0f} KRW")
                 return float(current_price)
             else:
@@ -387,8 +387,8 @@ class StockTrackingAgent:
             previous_df = get_market_ohlcv_by_ticker(previous_date)
 
             # Sort by trading value to generate rankings
-            recent_rank = recent_df.sort_values(by="거래대금", ascending=False).reset_index()
-            previous_rank = previous_df.sort_values(by="거래대금", ascending=False).reset_index()
+            recent_rank = recent_df.sort_values(by="Amount", ascending=False).reset_index()
+            previous_rank = previous_df.sort_values(by="Amount", ascending=False).reset_index()
 
             # Find ranking for ticker
             if ticker in recent_rank['티커'].values:
@@ -410,8 +410,8 @@ class StockTrackingAgent:
             rank_change_percentage = (rank_change / previous_ticker_rank) * 100
 
             # Ranking info and trading value data
-            recent_value = int(recent_df.loc[ticker, "거래대금"]) if ticker in recent_df.index else 0
-            previous_value = int(previous_df.loc[ticker, "거래대금"]) if ticker in previous_df.index else 0
+            recent_value = int(recent_df.loc[ticker, "Amount"]) if ticker in recent_df.index else 0
+            previous_value = int(previous_df.loc[ticker, "Amount"]) if ticker in previous_df.index else 0
             value_change_percentage = ((recent_value - previous_value) / previous_value * 100) if previous_value > 0 else 0
 
             result_msg = (
