@@ -1325,7 +1325,7 @@ Please review the following completed trade:
                 response = await llm.generate_str(
                     message=prompt,
                     request_params=RequestParams(
-                        model="gpt-5",
+                        model="gpt-5.2",
                         maxTokens=4000
                     )
                 )
@@ -1826,7 +1826,7 @@ Please respond in JSON format.
                 response = await llm.generate_str(
                     message=prompt,
                     request_params=RequestParams(
-                        model="gpt-5",
+                        model="gpt-5.2",
                         maxTokens=8000
                     )
                 )
@@ -1940,7 +1940,7 @@ Please respond in JSON format.
                 response = await llm.generate_str(
                     message=prompt,
                     request_params=RequestParams(
-                        model="gpt-5",
+                        model="gpt-5.2",
                         maxTokens=8000
                     )
                 )
