@@ -153,7 +153,10 @@ class StockAnalysisOrchestrator:
 
     async def run_trigger_batch(self, mode):
         """
-        Execute trigger batch and save results (async version)
+        Execute trigger batch and save results (direct import version)
+
+        Uses direct import instead of subprocess to share KRX session,
+        reducing login attempts.
 
         Args:
             mode (str): 'morning' or 'afternoon'
@@ -163,80 +166,57 @@ class StockAnalysisOrchestrator:
         """
         logger.info(f"Starting trigger batch execution: {mode}")
         try:
-            # Execute batch process
-            import subprocess
+            # Direct import instead of subprocess to share KRX session
+            from trigger_batch import run_batch
 
-            # Save results to temporary file
+            # Results file path
             results_file = f"trigger_results_{mode}_{datetime.now().strftime('%Y%m%d')}.json"
 
-            # Execute command - run asynchronously using asyncio.create_subprocess_exec
-            import asyncio
-            process = await asyncio.create_subprocess_exec(
-                sys.executable, "trigger_batch.py", mode, "INFO", "--output", results_file,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+            # Run batch directly (synchronous call in async context)
+            # run_batch is CPU-bound, so running it directly is acceptable
+            loop = asyncio.get_event_loop()
+            results = await loop.run_in_executor(
+                None,
+                lambda: run_batch(mode, "INFO", results_file)
             )
 
-            stdout, stderr = await process.communicate()
-
-            # Log output - resolve encoding issues
-            if stdout:
-                try:
-                    stdout_text = stdout.decode('utf-8')
-                except UnicodeDecodeError:
-                    try:
-                        stdout_text = stdout.decode('cp949')  # Windows Korean encoding
-                    except UnicodeDecodeError:
-                        stdout_text = stdout.decode('utf-8', errors='ignore')
-                logger.info(f"Batch output:\n{stdout_text}")
-
-            if stderr:
-                try:
-                    stderr_text = stderr.decode('utf-8')
-                except UnicodeDecodeError:
-                    try:
-                        stderr_text = stderr.decode('cp949')  # Windows Korean encoding
-                    except UnicodeDecodeError:
-                        stderr_text = stderr.decode('utf-8', errors='ignore')
-                logger.warning(f"Batch error:\n{stderr_text}")
-
-            if process.returncode != 0:
-                logger.error(f"Batch process failed: exit code {process.returncode}")
+            if not results:
+                logger.warning("Batch returned empty results")
                 return []
 
-            # Read results file
+            # Read results file for full data with metadata
             if os.path.exists(results_file):
                 with open(results_file, 'r', encoding='utf-8') as f:
-                    results = json.load(f)
-
+                    full_results = json.load(f)
                 # Save results
-                self.selected_tickers[mode] = results
+                self.selected_tickers[mode] = full_results
 
-                # Extract stock codes - modified to match JSON structure
-                tickers = []
-                ticker_codes = set()  # For duplicate checking
+            # Extract stock codes from results
+            tickers = []
+            ticker_codes = set()  # For duplicate checking
 
-                # Extract stocks by trigger type (excluding metadata)
-                for trigger_type, stocks in results.items():
-                    if trigger_type != "metadata" and isinstance(stocks, list):
-                        for stock in stocks:
-                            if isinstance(stock, dict) and 'code' in stock:
-                                code = stock['code']
-                                if code not in ticker_codes:  # Remove duplicates
-                                    ticker_codes.add(code)
-                                    tickers.append({
-                                        'code': code,
-                                        'name': stock.get('name', '')
-                                    })
+            # results is dict like {"거래량 급증 상위주": DataFrame, ...}
+            for trigger_type, stocks_df in results.items():
+                if hasattr(stocks_df, 'index'):  # It's a DataFrame
+                    for ticker in stocks_df.index:
+                        if ticker not in ticker_codes:
+                            ticker_codes.add(ticker)
+                            # Get stock name
+                            name = ""
+                            if "종목명" in stocks_df.columns:
+                                name = stocks_df.loc[ticker, "종목명"]
+                            tickers.append({
+                                'code': ticker,
+                                'name': name
+                            })
 
-                logger.info(f"Number of selected stocks: {len(tickers)}")
-                return tickers
-            else:
-                logger.error(f"Results file was not created: {results_file}")
-                return []
+            logger.info(f"Number of selected stocks: {len(tickers)}")
+            return tickers
 
         except Exception as e:
             logger.error(f"Error during trigger batch execution: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
             return []
 
     async def convert_to_pdf(self, report_paths):
