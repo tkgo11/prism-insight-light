@@ -45,30 +45,6 @@ PDF_REPORTS_DIR.mkdir(exist_ok=True)
 (TELEGRAM_MSGS_DIR / "sent").mkdir(exist_ok=True)
 
 
-def prewarm_krx_session(stage_name: str = ""):
-    """
-    KRX 세션 프리워밍 - 각 파이프라인 단계 시작 전 호출
-
-    세션이 만료되었을 수 있으므로, 주요 단계 시작 전에 세션 유효성을 확인합니다.
-    파일 락으로 동시 로그인을 방지하고, 이미 유효한 세션이 있으면 재사용합니다.
-
-    Args:
-        stage_name: 로깅용 단계 이름
-    """
-    try:
-        from krx_data_client import ensure_session_valid
-        stage_info = f" ({stage_name})" if stage_name else ""
-        logger.info(f"KRX 세션 확인 중...{stage_info}")
-        if ensure_session_valid():
-            logger.debug(f"KRX 세션 유효{stage_info}")
-        else:
-            logger.warning(f"KRX 세션 프리워밍 실패{stage_info}")
-    except ImportError:
-        pass  # krx_data_client 없으면 무시
-    except Exception as e:
-        logger.warning(f"KRX 세션 확인 중 오류: {e}")
-
-
 class StockAnalysisOrchestrator:
     """Stock Analysis and Telegram Transmission Orchestrator"""
 
@@ -773,9 +749,6 @@ class StockAnalysisOrchestrator:
             if self.telegram_config.use_telegram:
                 logger.info("Telegram enabled - proceeding with message generation and transmission steps")
 
-                # Pre-warm KRX session before telegram message generation
-                prewarm_krx_session("telegram message generation")
-
                 # 4. Generate telegram messages
                 message_paths = await self.generate_telegram_messages(pdf_paths, language)
 
@@ -788,9 +761,6 @@ class StockAnalysisOrchestrator:
             if pdf_paths:
                 try:
                     logger.info("Starting stock tracking system batch execution")
-
-                    # Pre-warm KRX session before tracking batch
-                    prewarm_krx_session("tracking batch")
 
                     # Import tracking agent
                     from stock_tracking_enhanced_agent import EnhancedStockTrackingAgent as StockTrackingAgent
@@ -910,9 +880,6 @@ async def main():
     """
     Main function - command line interface
     """
-    # Pre-warm KRX session at pipeline start
-    prewarm_krx_session("pipeline start")
-
     parser = argparse.ArgumentParser(description="Stock analysis and telegram transmission orchestrator")
     parser.add_argument("--mode", choices=["morning", "afternoon", "both"], default="both",
                         help="Execution mode (morning, afternoon, both)")
