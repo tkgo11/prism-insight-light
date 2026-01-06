@@ -31,9 +31,15 @@ mcp:
           "-m",
           "kospi_kosdaq_stock_server"
         ]
-       env:
-        KAKAO_ID: "your_kakao_id"
-        KAKAO_PW: "your_kakao_password"
+      env:
+        # Option 1: KRX Direct Login (Recommended)
+        KRX_ID: "your_krx_id"
+        KRX_PW: "your_krx_password"
+        KRX_LOGIN_METHOD: "krx"  # "krx" (default) or "kakao"
+        # Option 2: Kakao SNS Login (uncomment if using Kakao)
+        # KAKAO_ID: "your_kakao_id"
+        # KAKAO_PW: "your_kakao_password"
+        # KRX_LOGIN_METHOD: "kakao"
 
     perplexity:
       command: "node"
