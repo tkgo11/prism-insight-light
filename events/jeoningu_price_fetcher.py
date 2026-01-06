@@ -98,11 +98,11 @@ def get_stock_price(stock_code: str, date: str = None) -> dict:
         return {
             "stock_code": stock_code,
             "date": date,
-            "open": int(latest['시가']),
-            "high": int(latest['고가']),
-            "low": int(latest['저가']),
-            "close": int(latest['종가']),
-            "volume": int(latest['거래량'])
+            "open": int(latest['Open']),
+            "high": int(latest['High']),
+            "low": int(latest['Low']),
+            "close": int(latest['Close']),
+            "volume": int(latest['Volume'])
         }
 
     except Exception as e:
