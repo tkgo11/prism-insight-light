@@ -35,7 +35,7 @@ logger.addHandler(ch)
 def get_snapshot(trade_date: str) -> pd.DataFrame:
     """
     지정 거래일의 전체 종목 OHLCV 스냅샷을 반환합니다.
-    컬럼: "시가", "고가", "저가", "종가", "거래량", "거래대금"
+    컬럼: "Open", "High", "Low", "Close", "Volume", "Amount"
     """
     logger.debug(f"get_snapshot 호출: {trade_date}")
     df = stock_api.get_market_ohlcv_by_ticker(trade_date)
@@ -89,7 +89,7 @@ def get_multi_day_ohlcv(ticker: str, end_date: str, days: int = 10) -> pd.DataFr
         days: 조회할 영업일 수 (기본값: 10일)
 
     Returns:
-        DataFrame with columns: 시가, 고가, 저가, 종가, 거래량, 거래대금
+        DataFrame with columns: Open, High, Low, Close, Volume, Amount
         Index: 날짜
     """
     from krx_data_client import get_market_ohlcv_by_date
@@ -128,8 +128,8 @@ def filter_low_liquidity(df: pd.DataFrame, threshold: float = 0.2) -> pd.DataFra
     """
     거래량 하위 N% 종목을 제외합니다 (저유동성 종목 필터링)
     """
-    volume_cutoff = np.percentile(df['거래량'], threshold * 100)
-    return df[df['거래량'] > volume_cutoff]
+    volume_cutoff = np.percentile(df['Volume'], threshold * 100)
+    return df[df['Volume'] > volume_cutoff]
 
 def apply_absolute_filters(df: pd.DataFrame, min_value: int = 500000000) -> pd.DataFrame:
     """
@@ -138,12 +138,12 @@ def apply_absolute_filters(df: pd.DataFrame, min_value: int = 500000000) -> pd.D
     - 유동성 충분한 종목
     """
     # 최소 거래대금 필터 (5억원 이상)
-    filtered_df = df[df['거래대금'] >= min_value]
+    filtered_df = df[df['Amount'] >= min_value]
 
     # 시장 평균의 20% 이상 거래량 필터
-    avg_volume = df['거래량'].mean()
+    avg_volume = df['Volume'].mean()
     min_volume = avg_volume * 0.2
-    filtered_df = filtered_df[filtered_df['거래량'] >= min_volume]
+    filtered_df = filtered_df[filtered_df['Volume'] >= min_volume]
 
     return filtered_df
 
@@ -303,7 +303,7 @@ def score_candidates_by_agent_criteria(candidates_df: pd.DataFrame, trade_date: 
     후보 종목들에 대해 에이전트 기준 점수를 계산하여 DataFrame에 추가합니다.
 
     Args:
-        candidates_df: 후보 종목 DataFrame (index: 종목코드, 종가 컬럼 필수)
+        candidates_df: 후보 종목 DataFrame (index: 종목코드, Close 컬럼 필수)
         trade_date: 기준 거래일
         lookback_days: 조회할 과거 영업일 수
 
@@ -323,7 +323,7 @@ def score_candidates_by_agent_criteria(candidates_df: pd.DataFrame, trade_date: 
     result_df["에이전트점수"] = 0.0
 
     for ticker in result_df.index:
-        current_price = result_df.loc[ticker, "종가"]
+        current_price = result_df.loc[ticker, "Close"]
         metrics = calculate_agent_fit_metrics(ticker, current_price, trade_date, lookback_days)
 
         result_df.loc[ticker, "손절가"] = metrics["stop_loss_price"]
@@ -361,34 +361,34 @@ def trigger_morning_volume_surge(trade_date: str, snapshot: pd.DataFrame, prev_s
             return pd.DataFrame()
 
     # 디버깅 정보
-    logger.debug(f"전일 종가 데이터 샘플: {prev['종가'].head()}")
-    logger.debug(f"당일 종가 데이터 샘플: {snap['종가'].head()}")
+    logger.debug(f"전일 종가 데이터 샘플: {prev['Close'].head()}")
+    logger.debug(f"당일 종가 데이터 샘플: {snap['Close'].head()}")
 
     # 절대적 기준 적용 (최소 거래대금, 거래량)
     snap = apply_absolute_filters(snap)
 
     # 거래량 비율 계산
-    snap["거래량비율"] = snap["거래량"] / prev["거래량"].replace(0, np.nan)
+    snap["거래량비율"] = snap["Volume"] / prev["Volume"].replace(0, np.nan)
     # 거래량 증가율 계산 (백분율)
     snap["거래량증가율"] = (snap["거래량비율"] - 1) * 100
 
     # 두 가지 등락률 계산
-    snap["장중등락률"] = (snap["종가"] / snap["시가"] - 1) * 100  # 시가 대비 현재가
+    snap["장중등락률"] = (snap["Close"] / snap["Open"] - 1) * 100  # 시가 대비 현재가
 
     # 전일대비등락률 계산 - 변경된 방식으로
-    snap["전일대비등락률"] = ((snap["종가"] - prev["종가"]) / prev["종가"]) * 100
+    snap["전일대비등락률"] = ((snap["Close"] - prev["Close"]) / prev["Close"]) * 100
 
     # 첫 10개 종목의 전일대비등락률 계산 과정 디버깅
     for ticker in snap.index[:5]:
         try:
-            today_close = snap.loc[ticker, "종가"]
-            yesterday_close = prev.loc[ticker, "종가"]
+            today_close = snap.loc[ticker, "Close"]
+            yesterday_close = prev.loc[ticker, "Close"]
             change_rate = ((today_close - yesterday_close) / yesterday_close) * 100
             logger.debug(f"종목 {ticker} - 오늘종가: {today_close}, 전일종가: {yesterday_close}, 전일대비등락률: {change_rate:.2f}%")
         except Exception as e:
             logger.debug(f"디버깅 중 오류: {e}")
 
-    snap["상승여부"] = snap["종가"] > snap["시가"]
+    snap["상승여부"] = snap["Close"] > snap["Open"]
 
     # 거래량 증가율 30% 이상 필터링
     snap = snap[snap["거래량증가율"] >= 30.0]
@@ -398,7 +398,7 @@ def trigger_morning_volume_surge(trade_date: str, snapshot: pd.DataFrame, prev_s
         return pd.DataFrame()
 
     # 1차 필터링: 복합 점수 기준 상위 종목 선정
-    scored = normalize_and_score(snap, "거래량증가율", "거래량", 0.6, 0.4)
+    scored = normalize_and_score(snap, "거래량증가율", "Volume", 0.6, 0.4)
     candidates = scored.head(top_n)
 
     # 2차 필터링: 상승세 종목만 선별
@@ -438,10 +438,10 @@ def trigger_morning_gap_up_momentum(trade_date: str, snapshot: pd.DataFrame, pre
     snap = apply_absolute_filters(snap)
 
     # 갭 상승률 계산
-    snap["갭상승률"] = (snap["시가"] / prev["종가"] - 1) * 100
-    snap["장중등락률"] = (snap["종가"] / snap["시가"] - 1) * 100  # 당일 시가 대비 등락률
-    snap["전일대비등락률"] = ((snap["종가"] - prev["종가"]) / prev["종가"]) * 100  # 전일 종가 대비 등락률
-    snap["상승지속"] = snap["종가"] > snap["시가"]
+    snap["갭상승률"] = (snap["Open"] / prev["Close"] - 1) * 100
+    snap["장중등락률"] = (snap["Close"] / snap["Open"] - 1) * 100  # 당일 시가 대비 등락률
+    snap["전일대비등락률"] = ((snap["Close"] - prev["Close"]) / prev["Close"]) * 100  # 전일 종가 대비 등락률
+    snap["상승지속"] = snap["Close"] > snap["Open"]
 
     # 1차 필터링: 갭상승률 1% 이상인 종목만 선택
     snap = snap[snap["갭상승률"] >= 1.0]
@@ -449,7 +449,7 @@ def trigger_morning_gap_up_momentum(trade_date: str, snapshot: pd.DataFrame, pre
     # 점수 계산 (커스텀 복합 점수)
     if not snap.empty:
         # 각 지표별 정규화
-        for col in ["갭상승률", "장중등락률", "거래대금"]:
+        for col in ["갭상승률", "장중등락률", "Amount"]:
             col_max = snap[col].max()
             col_min = snap[col].min()
             col_range = col_max - col_min if col_max > col_min else 1
@@ -459,7 +459,7 @@ def trigger_morning_gap_up_momentum(trade_date: str, snapshot: pd.DataFrame, pre
         snap["복합점수"] = (
                 snap["갭상승률_norm"] * 0.5 +
                 snap["장중등락률_norm"] * 0.3 +
-                snap["거래대금_norm"] * 0.2
+                snap["Amount_norm"] * 0.2
         )
 
         # 점수 기준 상위 종목 선정
@@ -544,7 +544,7 @@ def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame, 
         logger.info(f"필터링 완료: {len(merged)}개 종목")
 
         # 방어 코드 4: 필수 컬럼 재확인
-        required_columns = ['거래대금', '시가총액', '종가', '시가']
+        required_columns = ['Amount', '시가총액', 'Close', 'Open']
         missing_columns = [col for col in required_columns if col not in merged.columns]
         if missing_columns:
             logger.error(f"필수 컬럼이 없습니다: {missing_columns}")
@@ -552,12 +552,12 @@ def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame, 
 
         # 거래대금/시가총액 비율 계산
         logger.debug("거래대금비율 계산 시작")
-        merged["거래대금비율"] = (merged["거래대금"] / merged["시가총액"]) * 100
+        merged["거래대금비율"] = (merged["Amount"] / merged["시가총액"]) * 100
 
         # 두 가지 등락률 계산
-        merged["장중등락률"] = (merged["종가"] / merged["시가"] - 1) * 100  # 시가 대비 현재가
-        merged["전일대비등락률"] = ((merged["종가"] - prev["종가"]) / prev["종가"]) * 100  # 증권사 앱과 동일
-        merged["상승여부"] = merged["종가"] > merged["시가"]
+        merged["장중등락률"] = (merged["Close"] / merged["Open"] - 1) * 100  # 시가 대비 현재가
+        merged["전일대비등락률"] = ((merged["Close"] - prev["Close"]) / prev["Close"]) * 100  # 증권사 앱과 동일
+        merged["상승여부"] = merged["Close"] > merged["Open"]
 
         # 시총 필터링 - 최소 500억원 이상 종목 (동전주 제외)
         merged = merged[merged["시가총액"] >= 50000000000]
@@ -570,7 +570,7 @@ def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame, 
         # 복합 점수 계산
         if not merged.empty:
             # 각 지표별 정규화
-            for col in ["거래대금비율", "거래대금", "장중등락률"]:
+            for col in ["거래대금비율", "Amount", "장중등락률"]:
                 col_max = merged[col].max()
                 col_min = merged[col].min()
                 col_range = col_max - col_min if col_max > col_min else 1
@@ -579,7 +579,7 @@ def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame, 
             # 복합 점수 계산
             merged["복합점수"] = (
                     merged["거래대금비율_norm"] * 0.5 +
-                    merged["거래대금_norm"] * 0.3 +
+                    merged["Amount_norm"] * 0.3 +
                     merged["장중등락률_norm"] * 0.2
             )
 
@@ -634,8 +634,8 @@ def trigger_afternoon_daily_rise_top(trade_date: str, snapshot: pd.DataFrame, pr
     snap = apply_absolute_filters(snap.copy(), min_value=1000000000)
 
     # 두 가지 등락률 계산
-    snap["장중등락률"] = (snap["종가"] / snap["시가"] - 1) * 100  # 시가 대비 현재가
-    snap["전일대비등락률"] = ((snap["종가"] - prev["종가"]) / prev["종가"]) * 100  # 증권사 앱과 동일
+    snap["장중등락률"] = (snap["Close"] / snap["Open"] - 1) * 100  # 시가 대비 현재가
+    snap["전일대비등락률"] = ((snap["Close"] - prev["Close"]) / prev["Close"]) * 100  # 증권사 앱과 동일
 
     # 추가 필터: 장중등락률 3% 이상
     snap = snap[snap["장중등락률"] >= 3.0]
@@ -645,7 +645,7 @@ def trigger_afternoon_daily_rise_top(trade_date: str, snapshot: pd.DataFrame, pr
         return pd.DataFrame()
 
     # 복합 점수 계산
-    scored = normalize_and_score(snap, "장중등락률", "거래대금", 0.6, 0.4)
+    scored = normalize_and_score(snap, "장중등락률", "Amount", 0.6, 0.4)
 
     # 상위 종목 선별
     result = scored.head(top_n).copy()
@@ -681,18 +681,18 @@ def trigger_afternoon_closing_strength(trade_date: str, snapshot: pd.DataFrame, 
 
     # 마감 강도 계산 (종가가 고가에 가까울수록 1에 가까움)
     snap["마감강도"] = 0.0  # 기본값 설정
-    valid_range = (snap["고가"] != snap["저가"])  # 0으로 나누기 방지
-    snap.loc[valid_range, "마감강도"] = (snap.loc[valid_range, "종가"] - snap.loc[valid_range, "저가"]) / (snap.loc[valid_range, "고가"] - snap.loc[valid_range, "저가"])
+    valid_range = (snap["High"] != snap["Low"])  # 0으로 나누기 방지
+    snap.loc[valid_range, "마감강도"] = (snap.loc[valid_range, "Close"] - snap.loc[valid_range, "Low"]) / (snap.loc[valid_range, "High"] - snap.loc[valid_range, "Low"])
 
     # 거래량 증가 여부 계산
-    snap["거래량증가율"] = (snap["거래량"] / prev["거래량"].replace(0, np.nan) - 1) * 100
+    snap["거래량증가율"] = (snap["Volume"] / prev["Volume"].replace(0, np.nan) - 1) * 100
 
     # 두 가지 등락률 계산
-    snap["장중등락률"] = (snap["종가"] / snap["시가"] - 1) * 100  # 시가 대비 현재가
-    snap["전일대비등락률"] = ((snap["종가"] - prev["종가"]) / prev["종가"]) * 100  # 증권사 앱과 동일
+    snap["장중등락률"] = (snap["Close"] / snap["Open"] - 1) * 100  # 시가 대비 현재가
+    snap["전일대비등락률"] = ((snap["Close"] - prev["Close"]) / prev["Close"]) * 100  # 증권사 앱과 동일
 
-    snap["거래량증가"] = (snap["거래량"] - prev["거래량"].replace(0, np.nan)) > 0
-    snap["상승여부"] = snap["종가"] > snap["시가"]
+    snap["거래량증가"] = (snap["Volume"] - prev["Volume"].replace(0, np.nan)) > 0
+    snap["상승여부"] = snap["Close"] > snap["Open"]
 
     # 1차 필터링: 거래량 증가 종목만 선별
     candidates = snap[snap["거래량증가"] == True].copy()
@@ -700,7 +700,7 @@ def trigger_afternoon_closing_strength(trade_date: str, snapshot: pd.DataFrame, 
     # 복합 점수 계산
     if not candidates.empty:
         # 각 지표별 정규화
-        for col in ["마감강도", "거래량증가율", "거래대금"]:
+        for col in ["마감강도", "거래량증가율", "Amount"]:
             col_max = candidates[col].max()
             col_min = candidates[col].min()
             col_range = col_max - col_min if col_max > col_min else 1
@@ -710,7 +710,7 @@ def trigger_afternoon_closing_strength(trade_date: str, snapshot: pd.DataFrame, 
         candidates["복합점수"] = (
                 candidates["마감강도_norm"] * 0.5 +
                 candidates["거래량증가율_norm"] * 0.3 +
-                candidates["거래대금_norm"] * 0.2
+                candidates["Amount_norm"] * 0.2
         )
 
         # 점수 기준 상위 종목 선정
@@ -753,11 +753,11 @@ def trigger_afternoon_volume_surge_flat(trade_date: str, snapshot: pd.DataFrame,
     snap = apply_absolute_filters(snap)
 
     # 거래량 증가율 계산
-    snap["거래량증가율"] = (snap["거래량"] / prev["거래량"].replace(0, np.nan) - 1) * 100
+    snap["거래량증가율"] = (snap["Volume"] / prev["Volume"].replace(0, np.nan) - 1) * 100
 
     # 두 가지 등락률 계산
-    snap["장중등락률"] = (snap["종가"] / snap["시가"] - 1) * 100  # 시가 대비 현재가
-    snap["전일대비등락률"] = ((snap["종가"] - prev["종가"]) / prev["종가"]) * 100  # 증권사 앱과 동일
+    snap["장중등락률"] = (snap["Close"] / snap["Open"] - 1) * 100  # 시가 대비 현재가
+    snap["전일대비등락률"] = ((snap["Close"] - prev["Close"]) / prev["Close"]) * 100  # 증권사 앱과 동일
 
     # 횡보주 여부 판단 (장중등락률 ±5% 이내)
     snap["횡보여부"] = (snap["장중등락률"].abs() <= 5)
@@ -770,7 +770,7 @@ def trigger_afternoon_volume_surge_flat(trade_date: str, snapshot: pd.DataFrame,
         return pd.DataFrame()
 
     # 복합 점수 계산
-    scored = normalize_and_score(snap, "거래량증가율", "거래대금", 0.6, 0.4)
+    scored = normalize_and_score(snap, "거래량증가율", "Amount", 0.6, 0.4)
 
     # 1차 필터링: 복합 점수 기준 상위 종목
     candidates = scored.head(top_n)
@@ -786,7 +786,7 @@ def trigger_afternoon_volume_surge_flat(trade_date: str, snapshot: pd.DataFrame,
     for ticker in result.index[:3]:
         logger.debug(f"횡보주 디버깅 - {ticker}: 거래량증가율 {result.loc[ticker, '거래량증가율']:.2f}%, "
                      f"장중등락률 {result.loc[ticker, '장중등락률']:.2f}%, 전일대비등락률 {result.loc[ticker, '전일대비등락률']:.2f}%, "
-                     f"거래량 {result.loc[ticker, '거래량']:,}주, 전일거래량 {prev.loc[ticker, '거래량']:,}주")
+                     f"거래량 {result.loc[ticker, 'Volume']:,}주, 전일거래량 {prev.loc[ticker, 'Volume']:,}주")
 
     logger.debug(f"거래량 증가 횡보 포착 종목 수: {len(result)}")
     return enhance_dataframe(result.sort_values("복합점수", ascending=False).head(10))
@@ -990,10 +990,10 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
                     stock_info = {
                         "code": ticker,
                         "name": stocks_df.loc[ticker, "종목명"] if "종목명" in stocks_df.columns else "",
-                        "current_price": float(stocks_df.loc[ticker, "종가"]) if "종가" in stocks_df.columns else 0,
+                        "current_price": float(stocks_df.loc[ticker, "Close"]) if "Close" in stocks_df.columns else 0,
                         "change_rate": float(stocks_df.loc[ticker, "전일대비등락률"]) if "전일대비등락률" in stocks_df.columns else 0,
-                        "volume": int(stocks_df.loc[ticker, "거래량"]) if "거래량" in stocks_df.columns else 0,
-                        "trade_value": float(stocks_df.loc[ticker, "거래대금"]) if "거래대금" in stocks_df.columns else 0,
+                        "volume": int(stocks_df.loc[ticker, "Volume"]) if "Volume" in stocks_df.columns else 0,
+                        "trade_value": float(stocks_df.loc[ticker, "Amount"]) if "Amount" in stocks_df.columns else 0,
                     }
 
                     # 트리거 타입별 특화 데이터 추가

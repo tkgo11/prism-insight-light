@@ -292,11 +292,11 @@ class DashboardDataGenerator:
             for date_idx in kospi_df.index:
                 date_str = date_idx.strftime("%Y-%m-%d")
 
-                kospi_close = kospi_df.loc[date_idx, '종가']
+                kospi_close = kospi_df.loc[date_idx, 'Close']
 
                 # KOSDAQ은 같은 날짜가 있을 때만 사용
                 if date_idx in kosdaq_df.index:
-                    kosdaq_close = kosdaq_df.loc[date_idx, '종가']
+                    kosdaq_close = kosdaq_df.loc[date_idx, 'Close']
                 else:
                     kosdaq_close = 0
 
