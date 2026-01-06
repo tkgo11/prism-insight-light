@@ -353,8 +353,8 @@ def trigger_morning_volume_surge(trade_date: str, snapshot: pd.DataFrame, prev_s
     # 시가총액 데이터 병합 및 동전주 필터링
     if cap_df is not None and not cap_df.empty:
         snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
-        # 시가총액 500억원 이상만 선별 (동전주 제외)
-        snap = snap[snap["시가총액"] >= 50000000000]
+        # 시가총액 3000억원 이상만 선별 (소형주/동전주 제외, 스윙트레이딩에 적합한 중형주 이상)
+        snap = snap[snap["시가총액"] >= 300000000000]
         logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
         if snap.empty:
             logger.warning("시가총액 필터링 후 종목이 없습니다")
@@ -427,8 +427,8 @@ def trigger_morning_gap_up_momentum(trade_date: str, snapshot: pd.DataFrame, pre
     # 시가총액 데이터 병합 및 동전주 필터링
     if cap_df is not None and not cap_df.empty:
         snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
-        # 시가총액 500억원 이상만 선별 (동전주 제외)
-        snap = snap[snap["시가총액"] >= 50000000000]
+        # 시가총액 3000억원 이상만 선별 (소형주/동전주 제외, 스윙트레이딩에 적합한 중형주 이상)
+        snap = snap[snap["시가총액"] >= 300000000000]
         logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
         if snap.empty:
             logger.warning("시가총액 필터링 후 종목이 없습니다")
@@ -559,8 +559,8 @@ def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame, 
         merged["전일대비등락률"] = ((merged["Close"] - prev["Close"]) / prev["Close"]) * 100  # 증권사 앱과 동일
         merged["상승여부"] = merged["Close"] > merged["Open"]
 
-        # 시총 필터링 - 최소 500억원 이상 종목 (동전주 제외)
-        merged = merged[merged["시가총액"] >= 50000000000]
+        # 시총 필터링 - 최소 3000억원 이상 종목 (소형주/동전주 제외, 스윙트레이딩에 적합한 중형주 이상)
+        merged = merged[merged["시가총액"] >= 300000000000]
         if merged.empty:
             logger.warning("시총 필터링 후 종목이 없습니다")
             return pd.DataFrame()
@@ -623,8 +623,8 @@ def trigger_afternoon_daily_rise_top(trade_date: str, snapshot: pd.DataFrame, pr
     # 시가총액 데이터 병합 및 동전주 필터링
     if cap_df is not None and not cap_df.empty:
         snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
-        # 시가총액 500억원 이상만 선별 (동전주 제외)
-        snap = snap[snap["시가총액"] >= 50000000000]
+        # 시가총액 3000억원 이상만 선별 (소형주/동전주 제외, 스윙트레이딩에 적합한 중형주 이상)
+        snap = snap[snap["시가총액"] >= 300000000000]
         logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
         if snap.empty:
             logger.warning("시가총액 필터링 후 종목이 없습니다")
@@ -669,8 +669,8 @@ def trigger_afternoon_closing_strength(trade_date: str, snapshot: pd.DataFrame, 
     # 시가총액 데이터 병합 및 동전주 필터링
     if cap_df is not None and not cap_df.empty:
         snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
-        # 시가총액 500억원 이상만 선별 (동전주 제외)
-        snap = snap[snap["시가총액"] >= 50000000000]
+        # 시가총액 3000억원 이상만 선별 (소형주/동전주 제외, 스윙트레이딩에 적합한 중형주 이상)
+        snap = snap[snap["시가총액"] >= 300000000000]
         logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
         if snap.empty:
             logger.warning("시가총액 필터링 후 종목이 없습니다")
@@ -742,8 +742,8 @@ def trigger_afternoon_volume_surge_flat(trade_date: str, snapshot: pd.DataFrame,
     # 시가총액 데이터 병합 및 동전주 필터링
     if cap_df is not None and not cap_df.empty:
         snap = snap.merge(cap_df[["시가총액"]], left_index=True, right_index=True, how="inner")
-        # 시가총액 500억원 이상만 선별 (동전주 제외)
-        snap = snap[snap["시가총액"] >= 50000000000]
+        # 시가총액 3000억원 이상만 선별 (소형주/동전주 제외, 스윙트레이딩에 적합한 중형주 이상)
+        snap = snap[snap["시가총액"] >= 300000000000]
         logger.debug(f"시가총액 필터링 후 종목 수: {len(snap)}")
         if snap.empty:
             logger.warning("시가총액 필터링 후 종목이 없습니다")
