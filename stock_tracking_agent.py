@@ -1326,9 +1326,11 @@ Please review the following completed trade:
                     message=prompt,
                     request_params=RequestParams(
                         model="gpt-5.2",
-                        maxTokens=4000
+                        maxTokens=16000
                     )
                 )
+                logger.info(f"Journal agent response received: {len(response)} chars")
+                logger.debug(f"Journal agent raw response: {response[:500]}...")
 
             # Parse the response
             journal_data = self._parse_journal_response(response)
