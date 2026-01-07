@@ -391,13 +391,13 @@ class StockTrackingAgent:
             previous_rank = previous_df.sort_values(by="Amount", ascending=False).reset_index()
 
             # Find ranking for ticker
-            if ticker in recent_rank['티커'].values:
-                recent_ticker_rank = recent_rank[recent_rank['티커'] == ticker].index[0] + 1
+            if ticker in recent_rank['Ticker'].values:
+                recent_ticker_rank = recent_rank[recent_rank['Ticker'] == ticker].index[0] + 1
             else:
                 recent_ticker_rank = 0
 
-            if ticker in previous_rank['티커'].values:
-                previous_ticker_rank = previous_rank[previous_rank['티커'] == ticker].index[0] + 1
+            if ticker in previous_rank['Ticker'].values:
+                previous_ticker_rank = previous_rank[previous_rank['Ticker'] == ticker].index[0] + 1
             else:
                 previous_ticker_rank = 0
 
