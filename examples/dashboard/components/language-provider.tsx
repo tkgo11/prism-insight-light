@@ -363,7 +363,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Trading Insights Page
     "insights.title": "매매 인사이트",
-    "insights.description": "AI 매매 경험에서 추출한 원칙, 교훈, 직관",
+    "insights.description": "트리거 성과 분석, AI 매매 원칙, 교훈, 축적 직관",
     "insights.principles": "범용 원칙",
     "insights.principlesDescription": "모든 매매에 적용되는 핵심 원칙",
     "insights.journal": "매매일지",
@@ -812,7 +812,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Trading Insights Page
     "insights.title": "Trading Insights",
-    "insights.description": "Principles, lessons, and intuitions extracted from AI trading experience",
+    "insights.description": "Trigger performance analysis, AI trading principles, lessons, and accumulated intuitions",
     "insights.principles": "Universal Principles",
     "insights.principlesDescription": "Core principles applicable to all trades",
     "insights.journal": "Trading Journal",

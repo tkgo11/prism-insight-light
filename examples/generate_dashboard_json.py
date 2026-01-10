@@ -866,17 +866,19 @@ class DashboardDataGenerator:
             traded_data = traded_vs_watched.get('traded', {})
             watched_data = traded_vs_watched.get('watched', {})
             if traded_data.get('count', 0) >= 5 and watched_data.get('count', 0) >= 5:
+                # avg_30d는 이미 퍼센트 값 (예: 3.57 = 3.57%)
                 traded_avg = traded_data.get('avg_30d') or 0
                 watched_avg = watched_data.get('avg_30d') or 0
 
-                if watched_avg > traded_avg and watched_avg - traded_avg > 0.05:
+                # 5%p 이상 차이나면 권고 (값이 이미 퍼센트이므로 5로 비교)
+                if watched_avg > traded_avg and watched_avg - traded_avg > 5:
                     recommendations.append(
-                        f"⚠️ 관망 종목({watched_avg*100:.1f}%)이 매매 종목({traded_avg*100:.1f}%)보다 "
+                        f"⚠️ 관망 종목({watched_avg:.1f}%)이 매매 종목({traded_avg:.1f}%)보다 "
                         f"30일 평균 수익률이 높습니다. 필터 완화를 고려하세요."
                     )
-                elif traded_avg > watched_avg and traded_avg - watched_avg > 0.05:
+                elif traded_avg > watched_avg and traded_avg - watched_avg > 5:
                     recommendations.append(
-                        f"✅ 매매 종목({traded_avg*100:.1f}%)이 관망 종목({watched_avg*100:.1f}%)보다 "
+                        f"✅ 매매 종목({traded_avg:.1f}%)이 관망 종목({watched_avg:.1f}%)보다 "
                         f"30일 평균 수익률이 높습니다. 현재 필터가 효과적입니다."
                     )
 
@@ -884,9 +886,10 @@ class DashboardDataGenerator:
             if trigger_performance:
                 best = trigger_performance[0]  # 이미 avg_30d_return DESC로 정렬됨
                 if best.get('avg_30d_return') and best['count'] >= 3:
+                    # avg_30d_return은 이미 퍼센트 값 (예: 3.57 = 3.57%)
                     recommendations.append(
                         f"🏆 가장 좋은 트리거: '{best['trigger_type']}' "
-                        f"(30일 평균 {best['avg_30d_return']*100:.1f}%, 승률 {(best['win_rate_30d'] or 0)*100:.0f}%)"
+                        f"(30일 평균 {best['avg_30d_return']:.1f}%, 승률 {(best['win_rate_30d'] or 0)*100:.0f}%)"
                     )
 
             # 데이터 부족 경고
