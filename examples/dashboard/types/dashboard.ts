@@ -286,8 +286,8 @@ export interface TradingJournal {
   company_name: string
   trade_date: string
   trade_type: string
-  entry_price: number
-  exit_price: number
+  buy_price: number
+  sell_price: number
   profit_rate: number
   holding_days: number
   one_line_summary: string
