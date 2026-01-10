@@ -518,10 +518,11 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         decision: str,
         skip_reason: str,
         scenario: Dict[str, Any],
-        sector: str
+        sector: str,
+        was_traded: bool = False
     ) -> bool:
         """
-        Save stocks not purchased to watchlist_history table
+        Save stocks not purchased to watchlist_history table and analysis_performance_tracker
 
         Args:
             ticker: Stock ticker
@@ -533,6 +534,7 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             skip_reason: Deferral reason
             scenario: Complete scenario information
             sector: Sector
+            was_traded: Whether the stock was actually traded
 
         Returns:
             bool: Save success status
@@ -551,15 +553,21 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
             market_condition = scenario.get('market_condition', '')
             rationale = scenario.get('rationale', '')
 
-            # Save to DB
+            # Get trigger info from parent's trigger_info_map
+            trigger_info = getattr(self, 'trigger_info_map', {}).get(ticker, {})
+            trigger_type = trigger_info.get('trigger_type', '')
+            trigger_mode = trigger_info.get('trigger_mode', '')
+            risk_reward_ratio = trigger_info.get('risk_reward_ratio', scenario.get('risk_reward_ratio', 0))
+
+            # Save to watchlist_history with trigger info
             self.cursor.execute(
                 """
                 INSERT INTO watchlist_history
                 (ticker, company_name, current_price, analyzed_date, buy_score, min_score,
                  decision, skip_reason, target_price, stop_loss, investment_period, sector,
                  scenario, portfolio_analysis, valuation_analysis, sector_outlook,
-                 market_condition, rationale)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 market_condition, rationale, trigger_type, trigger_mode, risk_reward_ratio, was_traded)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     ticker,
@@ -579,12 +587,50 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                     valuation_analysis,
                     sector_outlook,
                     market_condition,
-                    rationale
+                    rationale,
+                    trigger_type,
+                    trigger_mode,
+                    risk_reward_ratio,
+                    1 if was_traded else 0
                 )
             )
+
+            # Get the last inserted ID for foreign key reference
+            watchlist_id = self.cursor.lastrowid
+
+            # Also save to analysis_performance_tracker for tracking
+            self.cursor.execute(
+                """
+                INSERT INTO analysis_performance_tracker
+                (watchlist_id, ticker, company_name, trigger_type, trigger_mode,
+                 analyzed_date, analyzed_price, decision, was_traded, skip_reason,
+                 buy_score, min_score, target_price, stop_loss, risk_reward_ratio,
+                 tracking_status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+                """,
+                (
+                    watchlist_id,
+                    ticker,
+                    company_name,
+                    trigger_type,
+                    trigger_mode,
+                    now,
+                    current_price,
+                    decision,
+                    1 if was_traded else 0,
+                    skip_reason,
+                    buy_score,
+                    min_score,
+                    target_price,
+                    stop_loss,
+                    risk_reward_ratio,
+                    now
+                )
+            )
+
             self.conn.commit()
 
-            logger.info(f"{ticker}({company_name}) Watchlist save complete - Score: {buy_score}/{min_score}, Reason: {skip_reason}")
+            logger.info(f"{ticker}({company_name}) Watchlist save complete - Score: {buy_score}/{min_score}, Reason: {skip_reason}, Trigger: {trigger_type}")
             return True
 
         except Exception as e:

@@ -18,7 +18,15 @@ import {
   AlertCircle,
   CheckCircle,
   Target,
-  Zap
+  Zap,
+  BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
+  Timer,
+  Eye,
+  ShoppingCart,
+  Trophy,
+  XCircle
 } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 import type { TradingInsightsData, TradingPrinciple, TradingJournal, TradingIntuition, SituationAnalysis, JudgmentEvaluation } from "@/types/dashboard"
@@ -181,6 +189,373 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Performance Analysis Section */}
+      {data.performance_analysis && (
+        <Card className="border-2 border-blue-500/20">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
+                <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <CardTitle>{t("insights.performance.title")}</CardTitle>
+                <CardDescription>{t("insights.performance.description")}</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {data.performance_analysis.overview.completed === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <BarChart3 className="w-12 h-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground text-center">{t("insights.performance.noData")}</p>
+                <p className="text-sm text-muted-foreground mt-2">{t("insights.performance.noDataHint")}</p>
+              </div>
+            ) : (
+              <>
+                {/* Overview Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <div className="p-3 rounded-lg bg-muted/50 border">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-blue-500" />
+                      <span className="text-xs text-muted-foreground">{t("insights.performance.total")}</span>
+                    </div>
+                    <p className="text-xl font-bold mt-1">{data.performance_analysis.overview.total}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-xs text-muted-foreground">{t("insights.performance.completed")}</span>
+                    </div>
+                    <p className="text-xl font-bold mt-1 text-green-600">{data.performance_analysis.overview.completed}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <div className="flex items-center gap-2">
+                      <Timer className="w-4 h-4 text-yellow-500" />
+                      <span className="text-xs text-muted-foreground">{t("insights.performance.pending")}</span>
+                    </div>
+                    <p className="text-xl font-bold mt-1 text-yellow-600">{data.performance_analysis.overview.pending}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                    <div className="flex items-center gap-2">
+                      <Timer className="w-4 h-4 text-orange-500" />
+                      <span className="text-xs text-muted-foreground">{t("insights.performance.inProgress")}</span>
+                    </div>
+                    <p className="text-xl font-bold mt-1 text-orange-600">{data.performance_analysis.overview.in_progress}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                    <div className="flex items-center gap-2">
+                      <ShoppingCart className="w-4 h-4 text-purple-500" />
+                      <span className="text-xs text-muted-foreground">{t("insights.performance.traded")}</span>
+                    </div>
+                    <p className="text-xl font-bold mt-1 text-purple-600">{data.performance_analysis.overview.traded_count}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-cyan-500" />
+                      <span className="text-xs text-muted-foreground">{t("insights.performance.watched")}</span>
+                    </div>
+                    <p className="text-xl font-bold mt-1 text-cyan-600">{data.performance_analysis.overview.watched_count}</p>
+                  </div>
+                </div>
+
+                {/* Trigger Type Performance */}
+                {data.performance_analysis.trigger_performance.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-yellow-500" />
+                      {t("insights.performance.triggerType")}
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2 px-3 font-medium text-muted-foreground">
+                              {language === "ko" ? "트리거" : "Trigger"}
+                            </th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.count")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.tradedRate")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.day7")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.day14")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.day30")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.winRate")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.performance_analysis.trigger_performance.map((trigger, idx) => (
+                            <tr key={idx} className="border-b hover:bg-muted/50">
+                              <td className="py-2 px-3 font-medium">{trigger.trigger_type}</td>
+                              <td className="py-2 px-3 text-center">{trigger.count}</td>
+                              <td className="py-2 px-3 text-center">
+                                <Badge variant="outline" className="text-xs">
+                                  {(trigger.traded_rate * 100).toFixed(0)}%
+                                </Badge>
+                              </td>
+                              <td className={`py-2 px-3 text-center ${
+                                trigger.avg_7d_return !== null && trigger.avg_7d_return >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                                {trigger.avg_7d_return !== null ? formatPercent(trigger.avg_7d_return) : "-"}
+                              </td>
+                              <td className={`py-2 px-3 text-center ${
+                                trigger.avg_14d_return !== null && trigger.avg_14d_return >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                                {trigger.avg_14d_return !== null ? formatPercent(trigger.avg_14d_return) : "-"}
+                              </td>
+                              <td className={`py-2 px-3 text-center ${
+                                trigger.avg_30d_return !== null && trigger.avg_30d_return >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                                {trigger.avg_30d_return !== null ? formatPercent(trigger.avg_30d_return) : "-"}
+                              </td>
+                              <td className="py-2 px-3 text-center">
+                                {trigger.win_rate_30d !== null ? (
+                                  <Badge variant={trigger.win_rate_30d >= 0.5 ? "default" : "destructive"} className="text-xs">
+                                    {(trigger.win_rate_30d * 100).toFixed(0)}%
+                                  </Badge>
+                                ) : "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Traded vs Watched Comparison */}
+                {data.performance_analysis.traded_vs_watched && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <Target className="w-4 h-4 text-purple-500" />
+                      {t("insights.performance.tradedVsWatched")}
+                    </h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Traded */}
+                      <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ShoppingCart className="w-5 h-5 text-purple-600" />
+                          <span className="font-medium text-purple-700 dark:text-purple-400">
+                            {t("insights.performance.traded")} ({data.performance_analysis.traded_vs_watched.traded.count})
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">{t("insights.performance.day30")} {t("insights.performance.avgReturn")}</span>
+                            <p className={`font-bold ${
+                              data.performance_analysis.traded_vs_watched.traded.avg_30d !== null &&
+                              data.performance_analysis.traded_vs_watched.traded.avg_30d >= 0 ? "text-green-600" : "text-red-600"
+                            }`}>
+                              {data.performance_analysis.traded_vs_watched.traded.avg_30d !== null
+                                ? formatPercent(data.performance_analysis.traded_vs_watched.traded.avg_30d)
+                                : "-"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">{t("insights.performance.winRate")}</span>
+                            <p className="font-bold">
+                              {data.performance_analysis.traded_vs_watched.traded.win_rate !== null
+                                ? `${(data.performance_analysis.traded_vs_watched.traded.win_rate * 100).toFixed(0)}%`
+                                : "-"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Watched */}
+                      <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Eye className="w-5 h-5 text-cyan-600" />
+                          <span className="font-medium text-cyan-700 dark:text-cyan-400">
+                            {t("insights.performance.watched")} ({data.performance_analysis.traded_vs_watched.watched.count})
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">{t("insights.performance.day30")} {t("insights.performance.avgReturn")}</span>
+                            <p className={`font-bold ${
+                              data.performance_analysis.traded_vs_watched.watched.avg_30d !== null &&
+                              data.performance_analysis.traded_vs_watched.watched.avg_30d >= 0 ? "text-green-600" : "text-red-600"
+                            }`}>
+                              {data.performance_analysis.traded_vs_watched.watched.avg_30d !== null
+                                ? formatPercent(data.performance_analysis.traded_vs_watched.watched.avg_30d)
+                                : "-"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">{t("insights.performance.winRate")}</span>
+                            <p className="font-bold">
+                              {data.performance_analysis.traded_vs_watched.watched.win_rate !== null
+                                ? `${(data.performance_analysis.traded_vs_watched.watched.win_rate * 100).toFixed(0)}%`
+                                : "-"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* T-Test Result */}
+                    {data.performance_analysis.traded_vs_watched.t_test && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge
+                          variant={data.performance_analysis.traded_vs_watched.t_test.significant ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          p={data.performance_analysis.traded_vs_watched.t_test.p_value.toFixed(3)}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {data.performance_analysis.traded_vs_watched.t_test.significant
+                            ? t("insights.performance.significant")
+                            : t("insights.performance.notSignificant")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Risk/Reward Threshold Analysis */}
+                {data.performance_analysis.rr_threshold_analysis.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-blue-500" />
+                      {t("insights.performance.rrAnalysis")}
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.range")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.count")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.traded")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.watched")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.allAvg")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.watchedAvg")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.performance_analysis.rr_threshold_analysis.map((rr, idx) => (
+                            <tr key={idx} className="border-b hover:bg-muted/50">
+                              <td className="py-2 px-3 font-medium">{rr.range}</td>
+                              <td className="py-2 px-3 text-center">{rr.total_count}</td>
+                              <td className="py-2 px-3 text-center text-purple-600">{rr.traded_count}</td>
+                              <td className="py-2 px-3 text-center text-cyan-600">{rr.watched_count}</td>
+                              <td className={`py-2 px-3 text-center ${
+                                rr.avg_all_return !== null && rr.avg_all_return >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                                {rr.avg_all_return !== null ? formatPercent(rr.avg_all_return) : "-"}
+                              </td>
+                              <td className={`py-2 px-3 text-center ${
+                                rr.avg_watched_return !== null && rr.avg_watched_return >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                                {rr.avg_watched_return !== null ? formatPercent(rr.avg_watched_return) : "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Missed Opportunities & Avoided Losses */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* Missed Opportunities */}
+                  {data.performance_analysis.missed_opportunities.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <XCircle className="w-4 h-4 text-red-500" />
+                        {t("insights.performance.missedOpportunities")}
+                        <Badge variant="destructive" className="text-xs">
+                          {data.performance_analysis.missed_opportunities.length}
+                        </Badge>
+                      </h4>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {data.performance_analysis.missed_opportunities.map((opp, idx) => (
+                          <div key={idx} className="p-3 rounded-lg bg-red-500/5 border border-red-500/20">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="font-medium">{opp.company_name}</span>
+                                <span className="text-muted-foreground text-sm ml-2">({opp.ticker})</span>
+                              </div>
+                              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                                {formatPercent(opp.tracked_30d_return)}
+                              </Badge>
+                            </div>
+                            <div className="mt-2 text-xs text-muted-foreground grid grid-cols-2 gap-2">
+                              <div>
+                                <span>{t("insights.performance.skipReason")}: </span>
+                                <span className="text-red-600">{opp.skip_reason}</span>
+                              </div>
+                              <div>
+                                <span>{language === "ko" ? "트리거" : "Trigger"}: </span>
+                                <span>{opp.trigger_type}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Avoided Losses */}
+                  {data.performance_analysis.avoided_losses.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-green-500" />
+                        {t("insights.performance.avoidedLosses")}
+                        <Badge variant="default" className="bg-green-500 text-xs">
+                          {data.performance_analysis.avoided_losses.length}
+                        </Badge>
+                      </h4>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {data.performance_analysis.avoided_losses.map((loss, idx) => (
+                          <div key={idx} className="p-3 rounded-lg bg-green-500/5 border border-green-500/20">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="font-medium">{loss.company_name}</span>
+                                <span className="text-muted-foreground text-sm ml-2">({loss.ticker})</span>
+                              </div>
+                              <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20">
+                                {formatPercent(loss.tracked_30d_return)}
+                              </Badge>
+                            </div>
+                            <div className="mt-2 text-xs text-muted-foreground grid grid-cols-2 gap-2">
+                              <div>
+                                <span>{t("insights.performance.skipReason")}: </span>
+                                <span className="text-green-600">{loss.skip_reason}</span>
+                              </div>
+                              <div>
+                                <span>{language === "ko" ? "트리거" : "Trigger"}: </span>
+                                <span>{loss.trigger_type}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recommendations */}
+                {data.performance_analysis.recommendations.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4 text-amber-500" />
+                      {t("insights.performance.recommendations")}
+                    </h4>
+                    <div className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                      <ul className="space-y-2">
+                        {data.performance_analysis.recommendations.map((rec, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm">
+                            <span className="text-amber-500 mt-0.5">•</span>
+                            <span>{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Principles Section */}
       <Card>

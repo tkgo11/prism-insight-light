@@ -3221,7 +3221,7 @@ Please respond in JSON format.
         except Exception as e:
             logger.error(f"Error in _send_to_translation_channels: {str(e)}")
 
-    async def run(self, pdf_report_paths: List[str], chat_id: str = None, language: str = "ko", telegram_config=None) -> bool | None:
+    async def run(self, pdf_report_paths: List[str], chat_id: str = None, language: str = "ko", telegram_config=None, trigger_results_file: str = None) -> bool | None:
         """
         Main execution function for stock tracking system
 
@@ -3230,6 +3230,7 @@ Please respond in JSON format.
             chat_id: Telegram channel ID (no messages sent if None)
             language: Message language ("ko" or "en")
             telegram_config: TelegramConfig object for multi-language support
+            trigger_results_file: Path to trigger results JSON file for tracking trigger types
 
         Returns:
             bool: Execution success status
@@ -3239,6 +3240,32 @@ Please respond in JSON format.
 
             # Store telegram_config for use in send_telegram_message
             self.telegram_config = telegram_config
+
+            # Load trigger type mapping from trigger_results file
+            self.trigger_info_map = {}
+            if trigger_results_file:
+                try:
+                    import os
+                    if os.path.exists(trigger_results_file):
+                        with open(trigger_results_file, 'r', encoding='utf-8') as f:
+                            trigger_data = json.load(f)
+                        # Build ticker -> trigger info mapping
+                        for trigger_type, stocks in trigger_data.items():
+                            if trigger_type == 'metadata':
+                                self.trigger_mode = trigger_data.get('metadata', {}).get('trigger_mode', '')
+                                continue
+                            if isinstance(stocks, list):
+                                for stock in stocks:
+                                    ticker = stock.get('code', '')
+                                    if ticker:
+                                        self.trigger_info_map[ticker] = {
+                                            'trigger_type': trigger_type,
+                                            'trigger_mode': trigger_data.get('metadata', {}).get('trigger_mode', ''),
+                                            'risk_reward_ratio': stock.get('risk_reward_ratio', 0)
+                                        }
+                        logger.info(f"Loaded trigger info for {len(self.trigger_info_map)} stocks")
+                except Exception as e:
+                    logger.warning(f"Failed to load trigger results file: {e}")
 
             # Initialize with language parameter
             await self.initialize(language)

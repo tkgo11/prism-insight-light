@@ -206,9 +206,18 @@ class StockAnalysisOrchestrator:
                             name = ""
                             if "종목명" in stocks_df.columns:
                                 name = stocks_df.loc[ticker, "종목명"]
+
+                            # Get risk_reward_ratio if available
+                            rr_ratio = 0
+                            if "손익비" in stocks_df.columns:
+                                rr_ratio = float(stocks_df.loc[ticker, "손익비"])
+
                             tickers.append({
                                 'code': ticker,
-                                'name': name
+                                'name': name,
+                                'trigger_type': trigger_type,
+                                'trigger_mode': mode,
+                                'risk_reward_ratio': rr_ratio
                             })
 
             logger.info(f"Number of selected stocks: {len(tickers)}")
@@ -788,7 +797,13 @@ class StockAnalysisOrchestrator:
 
                         # Pass report paths, telegram configuration, and language
                         chat_id = self.telegram_config.channel_id if self.telegram_config.use_telegram else None
-                        tracking_success = await tracking_agent.run(pdf_paths, chat_id, language, self.telegram_config)
+
+                        # Pass trigger results file for trigger_type tracking
+                        trigger_results_file = f"trigger_results_{mode}_{datetime.now().strftime('%Y%m%d')}.json"
+                        tracking_success = await tracking_agent.run(
+                            pdf_paths, chat_id, language, self.telegram_config,
+                            trigger_results_file=trigger_results_file
+                        )
 
                         if tracking_success:
                             logger.info("Tracking system batch execution complete")
