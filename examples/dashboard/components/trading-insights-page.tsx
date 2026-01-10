@@ -21,10 +21,20 @@ import {
   Zap
 } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
-import type { TradingInsightsData, TradingPrinciple, TradingJournal, TradingIntuition } from "@/types/dashboard"
+import type { TradingInsightsData, TradingPrinciple, TradingJournal, TradingIntuition, SituationAnalysis, JudgmentEvaluation } from "@/types/dashboard"
 
 interface TradingInsightsPageProps {
   data: TradingInsightsData
+}
+
+// Helper to safely parse JSON
+function tryParseJSON<T>(str: string | T): T | null {
+  if (typeof str !== 'string') return str as T
+  try {
+    return JSON.parse(str) as T
+  } catch {
+    return null
+  }
 }
 
 export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
@@ -307,41 +317,212 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
                       </div>
 
                       {/* Situation Analysis */}
-                      {entry.situation_analysis && (
-                        <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                            {t("insights.situationAnalysis")}
-                          </h4>
-                          <p className="text-sm">{entry.situation_analysis}</p>
-                        </div>
-                      )}
+                      {entry.situation_analysis && (() => {
+                        const parsed = tryParseJSON<SituationAnalysis>(entry.situation_analysis)
+                        if (!parsed) return (
+                          <div>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                              {t("insights.situationAnalysis")}
+                            </h4>
+                            <p className="text-sm">{entry.situation_analysis}</p>
+                          </div>
+                        )
+                        return (
+                          <div className="space-y-3">
+                            <h4 className="text-sm font-medium text-muted-foreground">
+                              {t("insights.situationAnalysis")}
+                            </h4>
+                            <div className="grid gap-3 text-sm">
+                              {parsed.buy_context_summary && (
+                                <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/10">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <TrendingUp className="w-4 h-4 text-green-600" />
+                                    <span className="font-medium text-green-700 dark:text-green-400">
+                                      {language === "ko" ? "매수 컨텍스트" : "Buy Context"}
+                                    </span>
+                                  </div>
+                                  <p className="text-muted-foreground">{parsed.buy_context_summary}</p>
+                                </div>
+                              )}
+                              {parsed.sell_context_summary && (
+                                <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/10">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <TrendingDown className="w-4 h-4 text-red-600" />
+                                    <span className="font-medium text-red-700 dark:text-red-400">
+                                      {language === "ko" ? "매도 컨텍스트" : "Sell Context"}
+                                    </span>
+                                  </div>
+                                  <p className="text-muted-foreground">{parsed.sell_context_summary}</p>
+                                </div>
+                              )}
+                              {(parsed.market_at_buy || parsed.market_at_sell) && (
+                                <div className="grid md:grid-cols-2 gap-3">
+                                  {parsed.market_at_buy && (
+                                    <div className="p-2 rounded bg-muted/30">
+                                      <span className="text-xs text-muted-foreground">{language === "ko" ? "매수시점 시장" : "Market at Buy"}</span>
+                                      <p className="text-sm">{parsed.market_at_buy}</p>
+                                    </div>
+                                  )}
+                                  {parsed.market_at_sell && (
+                                    <div className="p-2 rounded bg-muted/30">
+                                      <span className="text-xs text-muted-foreground">{language === "ko" ? "매도시점 시장" : "Market at Sell"}</span>
+                                      <p className="text-sm">{parsed.market_at_sell}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {parsed.key_changes && parsed.key_changes.length > 0 && (
+                                <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Zap className="w-4 h-4 text-blue-600" />
+                                    <span className="font-medium text-blue-700 dark:text-blue-400">
+                                      {language === "ko" ? "핵심 변화" : "Key Changes"}
+                                    </span>
+                                  </div>
+                                  <ul className="space-y-1 text-muted-foreground">
+                                    {parsed.key_changes.map((change, i) => (
+                                      <li key={i} className="flex items-start gap-2">
+                                        <span className="text-blue-500 mt-1">•</span>
+                                        <span>{change}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })()}
 
                       {/* Judgment Evaluation */}
-                      {entry.judgment_evaluation && (
-                        <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                            {t("insights.judgmentEvaluation")}
-                          </h4>
-                          <p className="text-sm">{entry.judgment_evaluation}</p>
-                        </div>
-                      )}
+                      {entry.judgment_evaluation && (() => {
+                        const parsed = tryParseJSON<JudgmentEvaluation>(entry.judgment_evaluation)
+                        if (!parsed) return (
+                          <div>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                              {t("insights.judgmentEvaluation")}
+                            </h4>
+                            <p className="text-sm">{entry.judgment_evaluation}</p>
+                          </div>
+                        )
+                        return (
+                          <div className="space-y-3">
+                            <h4 className="text-sm font-medium text-muted-foreground">
+                              {t("insights.judgmentEvaluation")}
+                            </h4>
+                            <div className="grid md:grid-cols-2 gap-3 text-sm">
+                              {parsed.buy_quality && (
+                                <div className="p-3 rounded-lg bg-muted/30">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Badge variant="outline" className={
+                                      parsed.buy_quality === "적절" || parsed.buy_quality === "Good"
+                                        ? "bg-green-500/10 text-green-600 border-green-500/20"
+                                        : "bg-yellow-500/10 text-yellow-600 border-yellow-500/20"
+                                    }>
+                                      {language === "ko" ? "매수" : "Buy"}: {parsed.buy_quality}
+                                    </Badge>
+                                  </div>
+                                  {parsed.buy_quality_reason && (
+                                    <p className="text-muted-foreground text-xs mt-2">{parsed.buy_quality_reason}</p>
+                                  )}
+                                </div>
+                              )}
+                              {parsed.sell_quality && (
+                                <div className="p-3 rounded-lg bg-muted/30">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Badge variant="outline" className={
+                                      parsed.sell_quality === "적절" || parsed.sell_quality === "Good"
+                                        ? "bg-green-500/10 text-green-600 border-green-500/20"
+                                        : "bg-yellow-500/10 text-yellow-600 border-yellow-500/20"
+                                    }>
+                                      {language === "ko" ? "매도" : "Sell"}: {parsed.sell_quality}
+                                    </Badge>
+                                  </div>
+                                  {parsed.sell_quality_reason && (
+                                    <p className="text-muted-foreground text-xs mt-2">{parsed.sell_quality_reason}</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            {parsed.missed_signals && parsed.missed_signals.length > 0 && (
+                              <div className="p-3 rounded-lg bg-orange-500/5 border border-orange-500/10">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <AlertCircle className="w-4 h-4 text-orange-600" />
+                                  <span className="font-medium text-orange-700 dark:text-orange-400 text-sm">
+                                    {language === "ko" ? "놓친 신호" : "Missed Signals"}
+                                  </span>
+                                </div>
+                                <ul className="space-y-1 text-xs text-muted-foreground">
+                                  {parsed.missed_signals.map((signal, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                      <span className="text-orange-500 mt-0.5">•</span>
+                                      <span>{signal}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {parsed.overreacted_signals && parsed.overreacted_signals.length > 0 && (
+                              <div className="p-3 rounded-lg bg-purple-500/5 border border-purple-500/10">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Target className="w-4 h-4 text-purple-600" />
+                                  <span className="font-medium text-purple-700 dark:text-purple-400 text-sm">
+                                    {language === "ko" ? "과잉 반응 신호" : "Overreacted Signals"}
+                                  </span>
+                                </div>
+                                <ul className="space-y-1 text-xs text-muted-foreground">
+                                  {parsed.overreacted_signals.map((signal, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                      <span className="text-purple-500 mt-0.5">•</span>
+                                      <span>{signal}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })()}
 
                       {/* Lessons */}
                       {entry.lessons && entry.lessons.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-medium text-muted-foreground">
                             {t("insights.lessons")}
                           </h4>
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             {entry.lessons.map((lesson, idx) => (
-                              <div key={idx} className="flex items-start gap-2 text-sm">
-                                <Badge
-                                  variant="outline"
-                                  className={`${getPriorityColor(lesson.priority)} text-xs shrink-0`}
-                                >
-                                  {t(`insights.priority.${lesson.priority}`)}
-                                </Badge>
-                                <span>{lesson.content}</span>
+                              <div key={idx} className="p-3 rounded-lg border bg-card">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge
+                                    variant="outline"
+                                    className={`${getPriorityColor(lesson.priority)} text-xs`}
+                                  >
+                                    {t(`insights.priority.${lesson.priority}`)}
+                                  </Badge>
+                                </div>
+                                <div className="space-y-2 text-sm">
+                                  <div>
+                                    <span className="text-muted-foreground font-medium">
+                                      {language === "ko" ? "조건" : "Condition"}:
+                                    </span>
+                                    <p className="mt-0.5">{lesson.condition}</p>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground font-medium">
+                                      {language === "ko" ? "행동" : "Action"}:
+                                    </span>
+                                    <p className="mt-0.5 text-primary">{lesson.action}</p>
+                                  </div>
+                                  {lesson.reason && (
+                                    <div>
+                                      <span className="text-muted-foreground font-medium">
+                                        {language === "ko" ? "이유" : "Reason"}:
+                                      </span>
+                                      <p className="mt-0.5 text-muted-foreground text-xs">{lesson.reason}</p>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
