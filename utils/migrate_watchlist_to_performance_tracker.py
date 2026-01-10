@@ -249,11 +249,19 @@ def parse_scenario(scenario_str: str) -> dict:
         return {}
 
 
-def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
+def migrate_data(conn: sqlite3.Connection, dry_run: bool = True, reset: bool = False) -> dict:
     """
     watchlist_history + stock_holdings + trading_history → analysis_performance_tracker 마이그레이션
+
+    기간 통일: watchlist_history의 최소 날짜를 기준으로 trading 데이터도 필터링
     """
     cursor = conn.cursor()
+
+    # Reset option: 기존 데이터 삭제 후 다시 마이그레이션
+    if reset and not dry_run:
+        cursor.execute("DELETE FROM analysis_performance_tracker")
+        logger.info("Cleared existing analysis_performance_tracker data for re-migration")
+        conn.commit()
 
     # Get existing records to avoid duplicates (by ticker + date)
     cursor.execute("SELECT ticker, analyzed_date FROM analysis_performance_tracker")
@@ -262,15 +270,27 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
     stats = {
         'total': 0,
         'skipped_existing': 0,
+        'skipped_date_filter': 0,
         'migrated': 0,
         'with_7d': 0,
         'with_14d': 0,
         'with_30d': 0,
         'traded': 0,
-        'watched': 0
+        'watched': 0,
+        'date_range': {}
     }
 
     all_records = []
+
+    # ===== 0. 기간 통일을 위해 watchlist_history 최소 날짜 조회 =====
+    cursor.execute("SELECT MIN(DATE(analyzed_date)) FROM watchlist_history")
+    min_watchlist_date = cursor.fetchone()[0]
+
+    if min_watchlist_date:
+        logger.info(f"Watchlist minimum date: {min_watchlist_date}")
+        stats['date_range']['min_date'] = min_watchlist_date
+    else:
+        min_watchlist_date = '2000-01-01'  # Fallback if no watchlist data
 
     # ===== 1. watchlist_history (관망 결정) =====
     cursor.execute("""
@@ -308,15 +328,21 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
         }
         all_records.append(record)
 
-    # ===== 2. trading_history (완료된 매매) =====
+    # ===== 2. trading_history (완료된 매매) - 기간 필터 적용 =====
     cursor.execute("""
         SELECT
             id, ticker, company_name, buy_price, buy_date, scenario
         FROM trading_history
+        WHERE DATE(buy_date) >= ?
         ORDER BY buy_date
-    """)
+    """, (min_watchlist_date,))
     trading_records = cursor.fetchall()
-    logger.info(f"Found {len(trading_records)} records in trading_history (완료 매매)")
+
+    # 전체 건수 조회 (로깅용)
+    cursor.execute("SELECT COUNT(*) FROM trading_history")
+    total_trading = cursor.fetchone()[0]
+    stats['skipped_date_filter'] += total_trading - len(trading_records)
+    logger.info(f"Found {len(trading_records)} records in trading_history (완료 매매, 기간 필터: >= {min_watchlist_date}, 전체: {total_trading})")
 
     for row in trading_records:
         scenario = parse_scenario(row[5])
@@ -341,15 +367,21 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
         }
         all_records.append(record)
 
-    # ===== 3. stock_holdings (현재 보유) =====
+    # ===== 3. stock_holdings (현재 보유) - 기간 필터 적용 =====
     cursor.execute("""
         SELECT
             ticker, company_name, buy_price, buy_date, scenario
         FROM stock_holdings
+        WHERE DATE(buy_date) >= ?
         ORDER BY buy_date
-    """)
+    """, (min_watchlist_date,))
     holdings_records = cursor.fetchall()
-    logger.info(f"Found {len(holdings_records)} records in stock_holdings (현재 보유)")
+
+    # 전체 건수 조회 (로깅용)
+    cursor.execute("SELECT COUNT(*) FROM stock_holdings")
+    total_holdings = cursor.fetchone()[0]
+    stats['skipped_date_filter'] += total_holdings - len(holdings_records)
+    logger.info(f"Found {len(holdings_records)} records in stock_holdings (현재 보유, 기간 필터: >= {min_watchlist_date}, 전체: {total_holdings})")
 
     for row in holdings_records:
         scenario = parse_scenario(row[4])
@@ -460,6 +492,7 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
 def main():
     parser = argparse.ArgumentParser(description='Migrate watchlist to performance tracker')
     parser.add_argument('--dry-run', action='store_true', help='Preview without making changes')
+    parser.add_argument('--reset', action='store_true', help='Clear existing data and re-migrate')
     parser.add_argument('--db', type=str, help='Database path (optional)')
     args = parser.parse_args()
 
@@ -475,20 +508,29 @@ def main():
     if args.dry_run:
         logger.info("=== DRY RUN MODE (no changes will be made) ===")
 
+    if args.reset:
+        logger.info("=== RESET MODE (existing data will be cleared) ===")
+
     # Connect and migrate
     conn = sqlite3.connect(db_path)
 
     try:
-        stats = migrate_data(conn, dry_run=args.dry_run)
+        stats = migrate_data(conn, dry_run=args.dry_run, reset=args.reset)
 
         print("\n" + "=" * 60)
         print("Migration Summary")
         print("=" * 60)
-        print(f"Total records in watchlist_history: {stats['total']}")
-        print(f"Already migrated (skipped):         {stats['skipped_existing']}")
-        print(f"Records to migrate:                 {stats['migrated']}")
-        print(f"  - Traded:                         {stats['traded']}")
-        print(f"  - Watched:                        {stats['watched']}")
+        if stats['date_range'].get('min_date'):
+            print(f"Date filter (period unification):   >= {stats['date_range']['min_date']}")
+        print(f"Total records found:                {stats['total']}")
+        print(f"  - Skipped (date filter):          {stats['skipped_date_filter']}")
+        print(f"  - Skipped (already migrated):     {stats['skipped_existing']}")
+        print(f"Records migrated:                   {stats['migrated']}")
+        print(f"  - Traded (매매):                  {stats['traded']}")
+        print(f"  - Watched (관망):                 {stats['watched']}")
+        if stats['traded'] + stats['watched'] > 0:
+            trade_rate = stats['traded'] / (stats['traded'] + stats['watched']) * 100
+            print(f"  - Trade rate:                     {trade_rate:.1f}%")
         print(f"  - With 7-day data:                {stats['with_7d']}")
         print(f"  - With 14-day data:               {stats['with_14d']}")
         print(f"  - With 30-day data (completed):   {stats['with_30d']}")
@@ -496,6 +538,7 @@ def main():
 
         if args.dry_run:
             print("\nTo execute migration, run without --dry-run flag")
+            print("To re-migrate (clear + migrate), use: --reset")
         else:
             print(f"\n✓ Successfully migrated {stats['migrated']} records")
 
