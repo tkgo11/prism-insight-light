@@ -275,9 +275,27 @@ export interface HoldingDecision {
 
 // Trading Insights Types
 export interface TradingLesson {
-  content: string
+  condition: string
+  action: string
+  reason?: string
   priority: 'high' | 'medium' | 'low'
-  category?: string
+}
+
+export interface SituationAnalysis {
+  buy_context_summary?: string
+  sell_context_summary?: string
+  market_at_buy?: string
+  market_at_sell?: string
+  key_changes?: string[]
+}
+
+export interface JudgmentEvaluation {
+  buy_quality?: string
+  buy_quality_reason?: string
+  sell_quality?: string
+  sell_quality_reason?: string
+  missed_signals?: string[]
+  overreacted_signals?: string[]
 }
 
 export interface TradingJournal {
