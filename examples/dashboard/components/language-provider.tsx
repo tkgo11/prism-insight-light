@@ -434,6 +434,20 @@ const translations: Record<Language, Record<string, string>> = {
     "insights.performance.noData": "아직 성과 추적 데이터가 없습니다.",
     "insights.performance.noDataHint": "매매 분석 후 7일 이상 경과 시 데이터가 수집됩니다.",
     "insights.performance.skipReason": "스킵 사유",
+    "insights.performance.day7": "7일",
+    "insights.performance.day14": "14일",
+    "insights.performance.day30": "30일",
+    "insights.performance.allAvg": "전체 평균",
+    "insights.performance.watchedAvg": "관망 평균",
+    // Tooltip translations
+    "insights.performance.tooltip.completed": "분석 후 30일이 경과하여 추적이 완료된 종목",
+    "insights.performance.tooltip.pending": "분석 후 7일이 아직 안 된 종목 (추적 대기)",
+    "insights.performance.tooltip.inProgress": "7일~30일 사이로 추적 진행 중인 종목",
+    "insights.performance.tooltip.traded": "분석 후 실제로 매수한 종목 수",
+    "insights.performance.tooltip.watched": "분석 후 매수하지 않고 관망한 종목 수",
+    "insights.performance.tooltip.dayReturn": "분석일로부터 N일 후 평균 수익률 (완료된 추적 기준)",
+    "insights.performance.tooltip.winRate": "30일 후 수익(+)인 종목 비율",
+    "insights.performance.tooltip.tradedRate": "해당 트리거에서 매매로 이어진 비율",
 
     // Footer
     "footer.description": "AI 기반 주식 분석 및 매매 시스템",
@@ -874,6 +888,15 @@ const translations: Record<Language, Record<string, string>> = {
     "insights.performance.analyzedPrice": "Analyzed Price",
     "insights.performance.trackedPrice": "Tracked Price",
     "insights.performance.returnRate": "Return",
+    // Tooltip translations
+    "insights.performance.tooltip.completed": "Stocks with 30 days passed since analysis (tracking complete)",
+    "insights.performance.tooltip.pending": "Stocks with less than 7 days since analysis (awaiting tracking)",
+    "insights.performance.tooltip.inProgress": "Stocks between 7-30 days since analysis (tracking in progress)",
+    "insights.performance.tooltip.traded": "Number of stocks actually purchased after analysis",
+    "insights.performance.tooltip.watched": "Number of stocks watched without purchasing after analysis",
+    "insights.performance.tooltip.dayReturn": "Average return N days after analysis (based on completed tracking)",
+    "insights.performance.tooltip.winRate": "Percentage of stocks with positive return after 30 days",
+    "insights.performance.tooltip.tradedRate": "Percentage of this trigger type that led to actual trades",
 
     // Footer
     "footer.description": "AI-powered Stock Analysis & Trading System",

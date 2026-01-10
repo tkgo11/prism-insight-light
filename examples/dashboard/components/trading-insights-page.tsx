@@ -10,6 +10,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
   Lightbulb,
   BookOpen,
   Brain,
@@ -26,7 +32,8 @@ import {
   Eye,
   ShoppingCart,
   Trophy,
-  XCircle
+  XCircle,
+  HelpCircle
 } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 import type { TradingInsightsData, TradingPrinciple, TradingJournal, TradingIntuition, SituationAnalysis, JudgmentEvaluation } from "@/types/dashboard"
@@ -124,8 +131,8 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+      {/* Summary Cards - 4 key metrics */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
@@ -142,32 +149,6 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
               <span className="text-sm text-muted-foreground">{t("insights.summary.highPriority")}</span>
             </div>
             <p className="text-2xl font-bold mt-2">{data.summary.high_priority_count}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-blue-500" />
-              <span className="text-sm text-muted-foreground">{t("insights.summary.totalTrades")}</span>
-            </div>
-            <p className="text-2xl font-bold mt-2">{data.summary.total_journal_entries}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              {data.summary.avg_profit_rate >= 0 ? (
-                <TrendingUp className="w-4 h-4 text-green-500" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-red-500" />
-              )}
-              <span className="text-sm text-muted-foreground">{t("insights.summary.avgProfit")}</span>
-            </div>
-            <p className={`text-2xl font-bold mt-2 ${
-              data.summary.avg_profit_rate >= 0 ? "text-green-600" : "text-red-600"
-            }`}>
-              {formatPercent(data.summary.avg_profit_rate)}
-            </p>
           </CardContent>
         </Card>
         <Card>
@@ -212,7 +193,7 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
                 <p className="text-sm text-muted-foreground mt-2">{t("insights.performance.noDataHint")}</p>
               </div>
             ) : (
-              <>
+              <TooltipProvider>
                 {/* Overview Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                   <div className="p-3 rounded-lg bg-muted/50 border">
@@ -222,41 +203,81 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
                     </div>
                     <p className="text-xl font-bold mt-1">{data.performance_analysis.overview.total}</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-xs text-muted-foreground">{t("insights.performance.completed")}</span>
-                    </div>
-                    <p className="text-xl font-bold mt-1 text-green-600">{data.performance_analysis.overview.completed}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                    <div className="flex items-center gap-2">
-                      <Timer className="w-4 h-4 text-yellow-500" />
-                      <span className="text-xs text-muted-foreground">{t("insights.performance.pending")}</span>
-                    </div>
-                    <p className="text-xl font-bold mt-1 text-yellow-600">{data.performance_analysis.overview.pending}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                    <div className="flex items-center gap-2">
-                      <Timer className="w-4 h-4 text-orange-500" />
-                      <span className="text-xs text-muted-foreground">{t("insights.performance.inProgress")}</span>
-                    </div>
-                    <p className="text-xl font-bold mt-1 text-orange-600">{data.performance_analysis.overview.in_progress}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                    <div className="flex items-center gap-2">
-                      <ShoppingCart className="w-4 h-4 text-purple-500" />
-                      <span className="text-xs text-muted-foreground">{t("insights.performance.traded")}</span>
-                    </div>
-                    <p className="text-xl font-bold mt-1 text-purple-600">{data.performance_analysis.overview.traded_count}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                    <div className="flex items-center gap-2">
-                      <Eye className="w-4 h-4 text-cyan-500" />
-                      <span className="text-xs text-muted-foreground">{t("insights.performance.watched")}</span>
-                    </div>
-                    <p className="text-xl font-bold mt-1 text-cyan-600">{data.performance_analysis.overview.watched_count}</p>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 cursor-help">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-xs text-muted-foreground">{t("insights.performance.completed")}</span>
+                          <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                        </div>
+                        <p className="text-xl font-bold mt-1 text-green-600">{data.performance_analysis.overview.completed}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>{t("insights.performance.tooltip.completed")}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 cursor-help">
+                        <div className="flex items-center gap-2">
+                          <Timer className="w-4 h-4 text-yellow-500" />
+                          <span className="text-xs text-muted-foreground">{t("insights.performance.pending")}</span>
+                          <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                        </div>
+                        <p className="text-xl font-bold mt-1 text-yellow-600">{data.performance_analysis.overview.pending}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>{t("insights.performance.tooltip.pending")}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 cursor-help">
+                        <div className="flex items-center gap-2">
+                          <Timer className="w-4 h-4 text-orange-500" />
+                          <span className="text-xs text-muted-foreground">{t("insights.performance.inProgress")}</span>
+                          <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                        </div>
+                        <p className="text-xl font-bold mt-1 text-orange-600">{data.performance_analysis.overview.in_progress}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>{t("insights.performance.tooltip.inProgress")}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 cursor-help">
+                        <div className="flex items-center gap-2">
+                          <ShoppingCart className="w-4 h-4 text-purple-500" />
+                          <span className="text-xs text-muted-foreground">{t("insights.performance.traded")}</span>
+                          <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                        </div>
+                        <p className="text-xl font-bold mt-1 text-purple-600">{data.performance_analysis.overview.traded_count}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>{t("insights.performance.tooltip.traded")}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 cursor-help">
+                        <div className="flex items-center gap-2">
+                          <Eye className="w-4 h-4 text-cyan-500" />
+                          <span className="text-xs text-muted-foreground">{t("insights.performance.watched")}</span>
+                          <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                        </div>
+                        <p className="text-xl font-bold mt-1 text-cyan-600">{data.performance_analysis.overview.watched_count}</p>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>{t("insights.performance.tooltip.watched")}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
 
                 {/* Trigger Type Performance */}
@@ -274,11 +295,61 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
                               {language === "ko" ? "트리거" : "Trigger"}
                             </th>
                             <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.count")}</th>
-                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.tradedRate")}</th>
-                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.day7")}</th>
-                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.day14")}</th>
-                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.day30")}</th>
-                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">{t("insights.performance.winRate")}</th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">
+                              <Tooltip>
+                                <TooltipTrigger className="flex items-center gap-1 justify-center cursor-help">
+                                  {t("insights.performance.tradedRate")}
+                                  <HelpCircle className="w-3 h-3" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p>{t("insights.performance.tooltip.tradedRate")}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">
+                              <Tooltip>
+                                <TooltipTrigger className="flex items-center gap-1 justify-center cursor-help">
+                                  {t("insights.performance.day7")}
+                                  <HelpCircle className="w-3 h-3" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p>{t("insights.performance.tooltip.dayReturn")}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">
+                              <Tooltip>
+                                <TooltipTrigger className="flex items-center gap-1 justify-center cursor-help">
+                                  {t("insights.performance.day14")}
+                                  <HelpCircle className="w-3 h-3" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p>{t("insights.performance.tooltip.dayReturn")}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">
+                              <Tooltip>
+                                <TooltipTrigger className="flex items-center gap-1 justify-center cursor-help">
+                                  {t("insights.performance.day30")}
+                                  <HelpCircle className="w-3 h-3" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p>{t("insights.performance.tooltip.dayReturn")}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </th>
+                            <th className="text-center py-2 px-3 font-medium text-muted-foreground">
+                              <Tooltip>
+                                <TooltipTrigger className="flex items-center gap-1 justify-center cursor-help">
+                                  {t("insights.performance.winRate")}
+                                  <HelpCircle className="w-3 h-3" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p>{t("insights.performance.tooltip.winRate")}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -551,7 +622,7 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
                     </div>
                   </div>
                 )}
-              </>
+              </TooltipProvider>
             )}
           </CardContent>
         </Card>
