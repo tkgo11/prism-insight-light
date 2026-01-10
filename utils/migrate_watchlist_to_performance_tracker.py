@@ -238,21 +238,41 @@ def check_was_traded(ticker: str, analyzed_date: str, traded_tickers: dict) -> i
     return 0
 
 
+def parse_scenario(scenario_str: str) -> dict:
+    """Parse scenario JSON string"""
+    if not scenario_str:
+        return {}
+    try:
+        import json
+        return json.loads(scenario_str)
+    except:
+        return {}
+
+
 def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
     """
-    watchlist_history → analysis_performance_tracker 마이그레이션
+    watchlist_history + stock_holdings + trading_history → analysis_performance_tracker 마이그레이션
     """
     cursor = conn.cursor()
 
-    # Get existing records to avoid duplicates
-    cursor.execute("SELECT watchlist_id FROM analysis_performance_tracker")
-    existing_ids = {row[0] for row in cursor.fetchall()}
+    # Get existing records to avoid duplicates (by ticker + date)
+    cursor.execute("SELECT ticker, analyzed_date FROM analysis_performance_tracker")
+    existing_keys = {(row[0], row[1][:10] if row[1] else '') for row in cursor.fetchall()}
 
-    # Get traded tickers
-    traded_tickers = get_traded_tickers(conn)
-    logger.info(f"Found {len(traded_tickers)} traded tickers in trading_history")
+    stats = {
+        'total': 0,
+        'skipped_existing': 0,
+        'migrated': 0,
+        'with_7d': 0,
+        'with_14d': 0,
+        'with_30d': 0,
+        'traded': 0,
+        'watched': 0
+    }
 
-    # Get all watchlist records
+    all_records = []
+
+    # ===== 1. watchlist_history (관망 결정) =====
     cursor.execute("""
         SELECT
             id, ticker, company_name, current_price, analyzed_date,
@@ -263,54 +283,116 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
         FROM watchlist_history
         ORDER BY analyzed_date
     """)
+    watchlist_records = cursor.fetchall()
+    logger.info(f"Found {len(watchlist_records)} records in watchlist_history (관망)")
 
-    records = cursor.fetchall()
-    logger.info(f"Found {len(records)} records in watchlist_history")
-
-    stats = {
-        'total': len(records),
-        'skipped_existing': 0,
-        'migrated': 0,
-        'with_7d': 0,
-        'with_14d': 0,
-        'with_30d': 0,
-        'traded': 0,
-        'watched': 0
-    }
-
-    for row in records:
+    for row in watchlist_records:
         record = {
-            'id': row[0],
+            'source': 'watchlist',
+            'source_id': row[0],
             'ticker': row[1],
             'company_name': row[2],
-            'current_price': row[3],
+            'analyzed_price': row[3],
             'analyzed_date': row[4],
             'buy_score': row[5],
             'min_score': row[6],
-            'decision': row[7],
+            'decision': row[7] or '관망',
             'skip_reason': row[8],
             'target_price': row[9],
             'stop_loss': row[10],
             'risk_reward_ratio': row[11],
             'trigger_type': row[12],
             'trigger_mode': row[13],
-            'was_traded': row[14],
+            'was_traded': 0,  # watchlist = 관망
             'rationale': row[15]
         }
+        all_records.append(record)
+
+    # ===== 2. trading_history (완료된 매매) =====
+    cursor.execute("""
+        SELECT
+            id, ticker, company_name, buy_price, buy_date, scenario
+        FROM trading_history
+        ORDER BY buy_date
+    """)
+    trading_records = cursor.fetchall()
+    logger.info(f"Found {len(trading_records)} records in trading_history (완료 매매)")
+
+    for row in trading_records:
+        scenario = parse_scenario(row[5])
+        record = {
+            'source': 'trading_history',
+            'source_id': row[0],
+            'ticker': row[1],
+            'company_name': row[2],
+            'analyzed_price': row[3],
+            'analyzed_date': row[4],
+            'buy_score': scenario.get('buy_score'),
+            'min_score': scenario.get('min_score'),
+            'decision': scenario.get('decision', '진입'),
+            'skip_reason': None,
+            'target_price': scenario.get('target_price'),
+            'stop_loss': scenario.get('stop_loss'),
+            'risk_reward_ratio': scenario.get('risk_reward_ratio'),
+            'trigger_type': None,
+            'trigger_mode': None,
+            'was_traded': 1,  # trading_history = 매매
+            'rationale': scenario.get('rationale')
+        }
+        all_records.append(record)
+
+    # ===== 3. stock_holdings (현재 보유) =====
+    cursor.execute("""
+        SELECT
+            ticker, company_name, buy_price, buy_date, scenario
+        FROM stock_holdings
+        ORDER BY buy_date
+    """)
+    holdings_records = cursor.fetchall()
+    logger.info(f"Found {len(holdings_records)} records in stock_holdings (현재 보유)")
+
+    for row in holdings_records:
+        scenario = parse_scenario(row[4])
+        record = {
+            'source': 'stock_holdings',
+            'source_id': None,
+            'ticker': row[0],
+            'company_name': row[1],
+            'analyzed_price': row[2],
+            'analyzed_date': row[3],
+            'buy_score': scenario.get('buy_score'),
+            'min_score': scenario.get('min_score'),
+            'decision': scenario.get('decision', '진입'),
+            'skip_reason': None,
+            'target_price': scenario.get('target_price'),
+            'stop_loss': scenario.get('stop_loss'),
+            'risk_reward_ratio': scenario.get('risk_reward_ratio'),
+            'trigger_type': None,
+            'trigger_mode': None,
+            'was_traded': 1,  # stock_holdings = 매매
+            'rationale': scenario.get('rationale')
+        }
+        all_records.append(record)
+
+    stats['total'] = len(all_records)
+    logger.info(f"Total records to process: {stats['total']}")
+
+    for record in all_records:
+        # Create unique key for duplicate check
+        date_key = record['analyzed_date'][:10] if record['analyzed_date'] else ''
+        unique_key = (record['ticker'], date_key)
 
         # Skip if already migrated
-        if record['id'] in existing_ids:
+        if unique_key in existing_keys:
             stats['skipped_existing'] += 1
             continue
 
         # Determine trigger info
         trigger_type = determine_trigger_type(record)
-        trigger_mode = record.get('trigger_mode') or determine_trigger_mode(record['analyzed_date'])
+        trigger_mode = record.get('trigger_mode') or determine_trigger_mode(record['analyzed_date'] or '')
 
-        # Check if actually traded
+        # Use was_traded from record
         was_traded = record.get('was_traded', 0)
-        if not was_traded:
-            was_traded = check_was_traded(record['ticker'], record['analyzed_date'], traded_tickers)
 
         if was_traded:
             stats['traded'] += 1
@@ -319,8 +401,8 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
 
         # Calculate tracking data
         tracking = calculate_tracking_data(
-            record['analyzed_date'],
-            record['current_price'],
+            record['analyzed_date'] or '',
+            record['analyzed_price'],
             record['ticker']
         )
 
@@ -331,8 +413,9 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
         if tracking['tracked_30d_return'] is not None:
             stats['with_30d'] += 1
 
+        source_label = f"[{record['source']}]"
         if dry_run:
-            logger.info(f"[DRY-RUN] Would migrate: {record['ticker']} ({record['analyzed_date']}) "
+            logger.info(f"[DRY-RUN] {source_label} {record['ticker']} ({record['analyzed_date']}) "
                        f"trigger={trigger_type}, traded={was_traded}, status={tracking['tracking_status']}")
         else:
             # Insert into analysis_performance_tracker
@@ -350,9 +433,9 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
                     tracking_status, created_at, updated_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                record['id'], record['ticker'], record['company_name'],
+                record['source_id'], record['ticker'], record['company_name'],
                 trigger_type, trigger_mode,
-                record['analyzed_date'], record['current_price'],
+                record['analyzed_date'], record['analyzed_price'],
                 record['decision'], was_traded, record['skip_reason'],
                 record['buy_score'], record['min_score'],
                 record['target_price'], record['stop_loss'], record['risk_reward_ratio'],
@@ -364,6 +447,8 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
                 datetime.now().isoformat()
             ))
 
+        # Add to existing keys to prevent duplicates within same run
+        existing_keys.add(unique_key)
         stats['migrated'] += 1
 
     if not dry_run:
