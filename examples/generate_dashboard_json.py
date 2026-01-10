@@ -586,7 +586,7 @@ class DashboardDataGenerator:
             # 2. trading_journal 조회
             cursor.execute("""
                 SELECT id, ticker, company_name, trade_date, trade_type,
-                       entry_price, exit_price, profit_rate, holding_days,
+                       buy_price, sell_price, profit_rate, holding_days,
                        one_line_summary, situation_analysis, judgment_evaluation,
                        lessons, pattern_tags, compression_layer
                 FROM trading_journal
