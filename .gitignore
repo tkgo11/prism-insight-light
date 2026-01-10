@@ -5,6 +5,7 @@
 mcp_agent.config.yaml
 mcp_agent.secrets.yaml
 config.py
+.mcp.json
 
 # Jeon Ingu Trading 출력 파일 및 데이터
 events/*

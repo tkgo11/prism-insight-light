@@ -353,9 +353,77 @@ export interface InsightsSummary {
   avg_confidence: number
 }
 
+// Performance Analysis Types
+export interface TriggerPerformance {
+  trigger_type: string
+  count: number
+  traded_count: number
+  traded_rate: number
+  avg_7d_return: number | null
+  avg_14d_return: number | null
+  avg_30d_return: number | null
+  win_rate_30d: number | null
+}
+
+export interface TradedVsWatchedData {
+  count: number
+  avg_7d: number | null
+  avg_14d: number | null
+  avg_30d: number | null
+  win_rate: number | null
+}
+
+export interface TradedVsWatched {
+  traded: TradedVsWatchedData
+  watched: TradedVsWatchedData
+  t_test?: {
+    p_value: number
+    significant: boolean
+  }
+}
+
+export interface RRThresholdAnalysis {
+  range: string
+  total_count: number
+  traded_count: number
+  watched_count: number
+  avg_all_return: number | null
+  avg_watched_return: number | null
+}
+
+export interface MissedOpportunity {
+  ticker: string
+  company_name: string
+  trigger_type: string
+  analyzed_price: number
+  tracked_30d_price: number
+  tracked_30d_return: number
+  skip_reason: string
+}
+
+export interface PerformanceAnalysisOverview {
+  total: number
+  pending: number
+  in_progress: number
+  completed: number
+  traded_count: number
+  watched_count: number
+}
+
+export interface PerformanceAnalysis {
+  overview: PerformanceAnalysisOverview
+  trigger_performance: TriggerPerformance[]
+  traded_vs_watched: TradedVsWatched
+  rr_threshold_analysis: RRThresholdAnalysis[]
+  missed_opportunities: MissedOpportunity[]
+  avoided_losses: MissedOpportunity[]
+  recommendations: string[]
+}
+
 export interface TradingInsightsData {
   summary: InsightsSummary
   principles: TradingPrinciple[]
   journal_entries: TradingJournal[]
   intuitions: TradingIntuition[]
+  performance_analysis?: PerformanceAnalysis
 }
