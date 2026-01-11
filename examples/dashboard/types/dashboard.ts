@@ -354,11 +354,17 @@ export interface InsightsSummary {
 }
 
 // Performance Analysis Types
+export interface TriggerPerformanceByDecision {
+  count: number
+  avg_7d_return: number | null
+  avg_14d_return: number | null
+  avg_30d_return: number | null
+  win_rate_30d: number | null
+}
+
 export interface TriggerPerformance {
   trigger_type: string
   count: number
-  traded_count: number
-  traded_rate: number
   avg_7d_return: number | null
   avg_14d_return: number | null
   avg_30d_return: number | null
@@ -371,11 +377,45 @@ export interface TradedVsWatchedData {
   avg_14d: number | null
   avg_30d: number | null
   win_rate: number | null
+  // 상세 수익/손실 분석 필드
+  win_count?: number
+  loss_count?: number
+  avg_profit?: number | null
+  avg_loss?: number | null
+  max_profit?: number | null
+  max_loss?: number | null
+  profit_factor?: number | null
+}
+
+export interface ActualTradingData {
+  count: number
+  avg_profit_rate: number | null
+  win_rate: number | null
+  win_count: number
+  loss_count: number
+  avg_profit: number | null
+  avg_loss: number | null
+  max_profit: number | null
+  max_loss: number | null
+  profit_factor: number | null
+}
+
+export interface ActualTradingByTrigger {
+  trigger_type: string
+  count: number
+  avg_profit_rate: number | null
+  win_rate: number | null
+  profit_factor: number | null
+  win_count?: number
+  loss_count?: number
+  avg_profit?: number | null
+  avg_loss?: number | null
 }
 
 export interface TradedVsWatched {
   traded: TradedVsWatchedData
   watched: TradedVsWatchedData
+  actual_trading?: ActualTradingData
   t_test?: {
     p_value: number
     significant: boolean
@@ -399,6 +439,8 @@ export interface MissedOpportunity {
   tracked_30d_price: number
   tracked_30d_return: number
   skip_reason: string
+  analyzed_date?: string
+  decision?: string
 }
 
 export interface PerformanceAnalysisOverview {
@@ -413,7 +455,8 @@ export interface PerformanceAnalysisOverview {
 export interface PerformanceAnalysis {
   overview: PerformanceAnalysisOverview
   trigger_performance: TriggerPerformance[]
-  traded_vs_watched: TradedVsWatched
+  actual_trading: ActualTradingData
+  actual_trading_by_trigger?: ActualTradingByTrigger[]
   rr_threshold_analysis: RRThresholdAnalysis[]
   missed_opportunities: MissedOpportunity[]
   avoided_losses: MissedOpportunity[]
