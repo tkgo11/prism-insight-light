@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for PRISM-INSIGHT
 
-> **Last Updated**: 2026-01-03
-> **Version**: 1.1
+> **Last Updated**: 2026-01-11
+> **Version**: 1.2
 > **Purpose**: Comprehensive guide for AI assistants working on the PRISM-INSIGHT codebase
 
 ---
@@ -184,6 +184,9 @@ prism-insight/
 ├── 📂 utils/                           # Utility Scripts
 │   ├── setup_crontab.sh               # Crontab automation setup
 │   ├── setup_playwright.sh            # Playwright installation
+│   ├── backup_configs.sh              # Config & DB backup script
+│   ├── migrate_lessons_to_principles.py        # Migration: lessons → principles
+│   ├── migrate_watchlist_to_performance_tracker.py  # Migration: watchlist → tracker
 │   └── CRONTAB_SETUP.md               # Setup documentation
 │
 ├── 📂 perplexity-ask/                  # MCP Server (Node.js)
@@ -207,6 +210,8 @@ prism-insight/
 ├── analysis_manager.py                # Background job queue
 ├── check_market_day.py                # Market holiday validation (incl. Dec 31)
 ├── update_stock_data.py               # Stock data update utility
+├── compress_trading_memory.py         # Trading memory compression & cleanup
+├── performance_tracker_batch.py       # Daily performance tracking batch job
 │
 ├── requirements.txt                   # Python dependencies
 ├── .env.example                       # Environment variables template
@@ -234,6 +239,10 @@ prism-insight/
 | `pdf_converter.py` | PDF generation | PDF styling/formatting |
 | `cores/language_config.py` | Multi-language templates | Adding/modifying languages |
 | `examples/messaging/*.py` | Event-driven trading signals | Redis/GCP integration |
+| `compress_trading_memory.py` | Memory compression & cleanup | Token optimization |
+| `performance_tracker_batch.py` | Performance tracking | Analysis quality tracking |
+| `utils/backup_configs.sh` | Config & DB backup | Backup automation |
+| `utils/migrate_*.py` | Database migration scripts | Schema migrations |
 
 ---
 
@@ -1189,6 +1198,9 @@ python examples/messaging/gcp_pubsub_subscriber_example.py \
 # Run the generator
 python examples/generate_dashboard_json.py
 
+# Skip English translation (faster)
+python examples/generate_dashboard_json.py --no-translation
+
 # Output files:
 # - examples/dashboard/public/dashboard_data.json (Korean)
 # - examples/dashboard/public/dashboard_data_en.json (English)
@@ -1198,6 +1210,73 @@ python examples/generate_dashboard_json.py
 # - Multi-language support via translation_utils.py
 # - Market index data integration
 # - Portfolio performance metrics
+# - Trading Insights data (principles, journal, intuitions)
+# - Performance analysis (7/14/30 day tracking)
+```
+
+### Task 9: Trading Memory Compression & Cleanup
+
+```bash
+# Weekly memory compression with cleanup (recommended for cron)
+python compress_trading_memory.py
+
+# Preview changes without executing
+python compress_trading_memory.py --dry-run
+
+# Skip cleanup phase (compression only)
+python compress_trading_memory.py --skip-cleanup
+
+# Custom cleanup thresholds
+python compress_trading_memory.py \
+    --max-principles 30 \
+    --max-intuitions 30 \
+    --stale-days 60 \
+    --archive-days 180
+
+# Cleanup thresholds:
+# - max-principles: 50 (default) - Maximum active principles
+# - max-intuitions: 50 (default) - Maximum active intuitions
+# - stale-days: 90 (default) - Deactivate unvalidated items
+# - archive-days: 365 (default) - Delete old Layer 3 journals
+```
+
+### Task 10: Performance Tracking Migration
+
+```bash
+# Migrate watchlist/trading history to performance tracker
+# (For analyzing 7/14/30 day returns of analyzed stocks)
+
+# Preview migration
+python utils/migrate_watchlist_to_performance_tracker.py --dry-run
+
+# Execute migration
+python utils/migrate_watchlist_to_performance_tracker.py
+
+# Reset and re-migrate (deletes existing tracker data)
+python utils/migrate_watchlist_to_performance_tracker.py --reset
+
+# Features:
+# - Fetches 7/14/30 day prices from pykrx
+# - Auto-detects trigger_type (volume_surge, gap_up, etc.)
+# - Period unification: aligns trading history with watchlist dates
+# - Duplicate prevention (ticker + date unique constraint)
+```
+
+### Task 11: Lessons to Principles Migration
+
+```bash
+# Migrate trading_journal lessons to trading_principles table
+
+# Preview migration
+python utils/migrate_lessons_to_principles.py --dry-run
+
+# Execute migration
+python utils/migrate_lessons_to_principles.py
+
+# What it does:
+# - Extracts high-priority lessons as universal principles
+# - Links principles to source journal entries
+# - Sets appropriate scope (universal/sector/market)
 ```
 
 ---
@@ -1371,6 +1450,10 @@ conn = sqlite3.connect("database.db")  # Blocks event loop!
 - `watchlist_history`: Tracked stocks
 - `holding_decisions`: Sell signals
 - `market_condition`: Market analysis cache
+- `trading_journal`: Trade journals with situation analysis and lessons
+- `trading_principles`: Universal trading principles (extracted from lessons)
+- `trading_intuitions`: Accumulated trading intuitions with confidence scores
+- `analysis_performance_tracker`: 7/14/30-day performance tracking for analyzed stocks
 
 ---
 
@@ -1638,14 +1721,15 @@ logging.basicConfig(
 
 ---
 
-**Document Version**: 1.1
-**Last Updated**: 2026-01-03
+**Document Version**: 1.2
+**Last Updated**: 2026-01-11
 **Maintained By**: PRISM-INSIGHT Development Team
 
 ### Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.2 | 2026-01-11 | Trading Journal Memory system (v1.16.0), Universal Principles, Token Cleanup, Trading Insights Dashboard, Performance Tracker |
 | 1.1 | 2026-01-03 | GPT-5 upgrade, Redis/GCP Pub/Sub integration, new files documentation |
 | 1.0 | 2025-11-14 | Initial comprehensive documentation |
 
