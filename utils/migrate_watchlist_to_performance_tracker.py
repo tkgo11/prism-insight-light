@@ -435,13 +435,34 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True, reset: bool = F
         min_watchlist_date = '2000-01-01'  # Fallback if no watchlist data
 
     # ===== 1. watchlist_history (관망 결정) =====
-    cursor.execute("""
-        SELECT
-            id, ticker, company_name, current_price, analyzed_date,
-            buy_score, min_score, decision, skip_reason,
-            target_price, stop_loss, risk_reward_ratio,
-            trigger_type, trigger_mode, was_traded,
-            rationale
+    # Check which columns exist in watchlist_history
+    cursor.execute("PRAGMA table_info(watchlist_history)")
+    watchlist_columns = {col[1] for col in cursor.fetchall()}
+    has_risk_reward = 'risk_reward_ratio' in watchlist_columns
+    has_trigger_type = 'trigger_type' in watchlist_columns
+    has_trigger_mode = 'trigger_mode' in watchlist_columns
+    has_was_traded = 'was_traded' in watchlist_columns
+    has_rationale = 'rationale' in watchlist_columns
+
+    # Build query dynamically based on available columns
+    select_cols = [
+        "id", "ticker", "company_name", "current_price", "analyzed_date",
+        "buy_score", "min_score", "decision", "skip_reason",
+        "target_price", "stop_loss"
+    ]
+    if has_risk_reward:
+        select_cols.append("risk_reward_ratio")
+    if has_trigger_type:
+        select_cols.append("trigger_type")
+    if has_trigger_mode:
+        select_cols.append("trigger_mode")
+    if has_was_traded:
+        select_cols.append("was_traded")
+    if has_rationale:
+        select_cols.append("rationale")
+
+    cursor.execute(f"""
+        SELECT {', '.join(select_cols)}
         FROM watchlist_history
         ORDER BY analyzed_date
     """)
@@ -449,24 +470,41 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True, reset: bool = F
     logger.info(f"Found {len(watchlist_records)} records in watchlist_history (관망)")
 
     for row in watchlist_records:
+        # Build column index mapping
+        col_idx = {col: i for i, col in enumerate(select_cols)}
+
+        # Calculate risk_reward_ratio if not in table
+        target_price = row[col_idx['target_price']]
+        stop_loss = row[col_idx['stop_loss']]
+        analyzed_price = row[col_idx['current_price']]
+        if has_risk_reward:
+            risk_reward_ratio = row[col_idx['risk_reward_ratio']]
+        elif target_price and stop_loss and analyzed_price and stop_loss != analyzed_price:
+            # Calculate: (target - current) / (current - stop_loss)
+            upside = (target_price - analyzed_price) / analyzed_price if analyzed_price else 0
+            downside = (analyzed_price - stop_loss) / analyzed_price if analyzed_price else 0
+            risk_reward_ratio = upside / downside if downside > 0 else None
+        else:
+            risk_reward_ratio = None
+
         record = {
             'source': 'watchlist',
-            'source_id': row[0],
-            'ticker': row[1],
-            'company_name': row[2],
-            'analyzed_price': row[3],
-            'analyzed_date': row[4],
-            'buy_score': row[5],
-            'min_score': row[6],
-            'decision': row[7] or '관망',
-            'skip_reason': row[8],
-            'target_price': row[9],
-            'stop_loss': row[10],
-            'risk_reward_ratio': row[11],
-            'trigger_type': row[12],
-            'trigger_mode': row[13],
+            'source_id': row[col_idx['id']],
+            'ticker': row[col_idx['ticker']],
+            'company_name': row[col_idx['company_name']],
+            'analyzed_price': analyzed_price,
+            'analyzed_date': row[col_idx['analyzed_date']],
+            'buy_score': row[col_idx['buy_score']],
+            'min_score': row[col_idx['min_score']],
+            'decision': row[col_idx['decision']] or '관망',
+            'skip_reason': row[col_idx['skip_reason']],
+            'target_price': target_price,
+            'stop_loss': stop_loss,
+            'risk_reward_ratio': risk_reward_ratio,
+            'trigger_type': row[col_idx['trigger_type']] if has_trigger_type else None,
+            'trigger_mode': row[col_idx['trigger_mode']] if has_trigger_mode else None,
             'was_traded': 0,  # watchlist = 관망
-            'rationale': row[15]
+            'rationale': row[col_idx['rationale']] if has_rationale else None
         }
         all_records.append(record)
 
