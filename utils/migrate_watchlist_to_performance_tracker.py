@@ -360,6 +360,41 @@ def migrate_data(conn: sqlite3.Connection, dry_run: bool = True, reset: bool = F
     """
     cursor = conn.cursor()
 
+    # Create table if not exists
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS analysis_performance_tracker (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            watchlist_id INTEGER,
+            ticker TEXT NOT NULL,
+            company_name TEXT,
+            trigger_type TEXT,
+            trigger_mode TEXT,
+            analyzed_date TEXT NOT NULL,
+            analyzed_price REAL,
+            decision TEXT,
+            was_traded INTEGER DEFAULT 0,
+            skip_reason TEXT,
+            buy_score REAL,
+            min_score REAL,
+            target_price REAL,
+            stop_loss REAL,
+            risk_reward_ratio REAL,
+            tracked_7d_date TEXT,
+            tracked_7d_price REAL,
+            tracked_7d_return REAL,
+            tracked_14d_date TEXT,
+            tracked_14d_price REAL,
+            tracked_14d_return REAL,
+            tracked_30d_date TEXT,
+            tracked_30d_price REAL,
+            tracked_30d_return REAL,
+            tracking_status TEXT DEFAULT 'pending',
+            created_at TEXT,
+            updated_at TEXT
+        )
+    """)
+    conn.commit()
+
     # Load trigger_results map for accurate trigger type detection
     project_root = Path(__file__).parent.parent
     trigger_map = load_trigger_results_map(project_root)
