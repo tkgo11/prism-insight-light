@@ -715,90 +715,39 @@ class DashboardDataGenerator:
                 'watched_count': traded_counts.get('watched', 0)
             }
 
-            # 2. 트리거 유형별 성과 (완료된 것만)
+            # 2. 관망종목의 트리거 유형별 성과 (완료된 것만, was_traded 구분 없이 전체)
             cursor.execute("""
                 SELECT
                     trigger_type,
                     COUNT(*) as count,
-                    SUM(CASE WHEN was_traded = 1 THEN 1 ELSE 0 END) as traded_count,
                     AVG(tracked_7d_return) as avg_7d_return,
                     AVG(tracked_14d_return) as avg_14d_return,
                     AVG(tracked_30d_return) as avg_30d_return,
-                    SUM(CASE WHEN tracked_30d_return > 0 THEN 1 ELSE 0 END) * 1.0 / COUNT(*) as win_rate_30d
+                    SUM(CASE WHEN tracked_30d_return > 0 THEN 1 ELSE 0 END) * 1.0 /
+                        NULLIF(SUM(CASE WHEN tracked_30d_return IS NOT NULL THEN 1 ELSE 0 END), 0) as win_rate_30d
                 FROM analysis_performance_tracker
                 WHERE tracking_status = 'completed'
                 GROUP BY trigger_type
-                ORDER BY avg_30d_return DESC
+                ORDER BY count DESC
             """)
 
+            # 단순화된 트리거 유형별 성과 데이터
             trigger_performance = []
             for row in cursor.fetchall():
                 trigger_type = row[0] or 'unknown'
-                count = row[1]
-                traded_count = row[2] or 0
                 trigger_performance.append({
                     'trigger_type': trigger_type,
-                    'count': count,
-                    'traded_count': traded_count,
-                    'traded_rate': traded_count / count if count > 0 else 0,
-                    'avg_7d_return': row[3],
-                    'avg_14d_return': row[4],
-                    'avg_30d_return': row[5],
-                    'win_rate_30d': row[6]
+                    'count': row[1],
+                    'avg_7d_return': row[2],
+                    'avg_14d_return': row[3],
+                    'avg_30d_return': row[4],
+                    'win_rate_30d': row[5]
                 })
 
             logger.info(f"트리거 유형별 성과 조회 완료: {len(trigger_performance)}개 유형")
 
-            # 3. 매매 vs 관망 비교 (상세 수익/손실 분석 포함)
-            cursor.execute("""
-                SELECT
-                    was_traded,
-                    COUNT(*) as count,
-                    AVG(tracked_7d_return) as avg_7d,
-                    AVG(tracked_14d_return) as avg_14d,
-                    AVG(tracked_30d_return) as avg_30d,
-                    SUM(CASE WHEN tracked_30d_return > 0 THEN 1 ELSE 0 END) as win_count,
-                    SUM(CASE WHEN tracked_30d_return <= 0 THEN 1 ELSE 0 END) as loss_count,
-                    AVG(CASE WHEN tracked_30d_return > 0 THEN tracked_30d_return END) as avg_profit,
-                    AVG(CASE WHEN tracked_30d_return <= 0 THEN tracked_30d_return END) as avg_loss,
-                    MAX(tracked_30d_return) as max_profit,
-                    MIN(tracked_30d_return) as max_loss,
-                    SUM(CASE WHEN tracked_30d_return > 0 THEN tracked_30d_return ELSE 0 END) as total_profit,
-                    SUM(CASE WHEN tracked_30d_return < 0 THEN ABS(tracked_30d_return) ELSE 0 END) as total_loss
-                FROM analysis_performance_tracker
-                WHERE tracking_status = 'completed'
-                GROUP BY was_traded
-            """)
-
-            traded_vs_watched = {'traded': {}, 'watched': {}}
-            for row in cursor.fetchall():
-                key = 'traded' if row[0] else 'watched'
-                count = row[1]
-                win_count = row[5] or 0
-                loss_count = row[6] or 0
-                total_profit = row[11] or 0
-                total_loss = row[12] or 0
-
-                # Profit Factor 계산 (총수익 / 총손실)
-                profit_factor = total_profit / total_loss if total_loss > 0 else None
-
-                traded_vs_watched[key] = {
-                    'count': count,
-                    'avg_7d': row[2],
-                    'avg_14d': row[3],
-                    'avg_30d': row[4],
-                    'win_rate': win_count / count if count > 0 else 0,
-                    # 상세 수익/손실 분석
-                    'win_count': win_count,
-                    'loss_count': loss_count,
-                    'avg_profit': row[7],  # 수익 건만의 평균 수익률
-                    'avg_loss': row[8],    # 손실 건만의 평균 손실률
-                    'max_profit': row[9],  # 최대 수익
-                    'max_loss': row[10],   # 최대 손실
-                    'profit_factor': profit_factor  # 총수익/총손실
-                }
-
-            # 3-1. 실제 매매 수익률 (trading_history 테이블에서, 최근 30일)
+            # 3. 실제 매매 성과 (trading_history 테이블에서, 최근 30일)
+            actual_trading = {}
             try:
                 cursor.execute("""
                     SELECT
@@ -824,8 +773,8 @@ class DashboardDataGenerator:
                     total_loss = row[9] or 0
                     profit_factor = total_profit / total_loss if total_loss > 0 else None
 
-                    # 실제 매매 데이터 추가 (profit_rate는 이미 퍼센트 값이므로 100으로 나눔)
-                    traded_vs_watched['actual_trading'] = {
+                    # 실제 매매 데이터 (profit_rate는 이미 퍼센트 값이므로 100으로 나눔)
+                    actual_trading = {
                         'count': count,
                         'avg_profit_rate': (row[1] or 0) / 100,  # 퍼센트 → 소수
                         'win_rate': win_count / count if count > 0 else 0,
@@ -841,7 +790,50 @@ class DashboardDataGenerator:
                 # trading_history 테이블이 없는 경우
                 pass
 
-            # 4. 손익비 구간별 분석
+            # 4. 실제 매매 종목의 트리거 유형별 성과 (trading_history에서)
+            actual_trading_by_trigger = []
+            try:
+                cursor.execute("""
+                    SELECT
+                        COALESCE(trigger_type, 'AI분석') as trigger_type,
+                        COUNT(*) as count,
+                        AVG(profit_rate) as avg_profit_rate,
+                        SUM(CASE WHEN profit_rate > 0 THEN 1 ELSE 0 END) * 1.0 / COUNT(*) as win_rate,
+                        SUM(CASE WHEN profit_rate > 0 THEN profit_rate ELSE 0 END) as total_profit,
+                        SUM(CASE WHEN profit_rate < 0 THEN ABS(profit_rate) ELSE 0 END) as total_loss,
+                        SUM(CASE WHEN profit_rate > 0 THEN 1 ELSE 0 END) as win_count,
+                        SUM(CASE WHEN profit_rate <= 0 THEN 1 ELSE 0 END) as loss_count,
+                        AVG(CASE WHEN profit_rate > 0 THEN profit_rate END) as avg_profit,
+                        AVG(CASE WHEN profit_rate <= 0 THEN profit_rate END) as avg_loss
+                    FROM trading_history
+                    GROUP BY trigger_type
+                    ORDER BY count DESC
+                """)
+
+                for row in cursor.fetchall():
+                    trigger_type = row[0] or 'AI분석'
+                    total_profit = row[4] or 0
+                    total_loss = row[5] or 0
+                    profit_factor = total_profit / total_loss if total_loss > 0 else None
+
+                    actual_trading_by_trigger.append({
+                        'trigger_type': trigger_type,
+                        'count': row[1],
+                        'avg_profit_rate': (row[2] or 0) / 100,  # 퍼센트 → 소수
+                        'win_rate': row[3] or 0,
+                        'profit_factor': profit_factor,
+                        'win_count': row[6] or 0,
+                        'loss_count': row[7] or 0,
+                        'avg_profit': (row[8] or 0) / 100 if row[8] else None,  # 퍼센트 → 소수
+                        'avg_loss': (row[9] or 0) / 100 if row[9] else None     # 퍼센트 → 소수
+                    })
+
+                logger.info(f"실제 매매 트리거 유형별 성과: {len(actual_trading_by_trigger)}개 유형")
+            except sqlite3.OperationalError:
+                # trigger_type 컬럼이 없는 경우
+                pass
+
+            # 5. 손익비 구간별 분석
             rr_ranges = [
                 (0, 1.0, '0~1.0'),
                 (1.0, 1.5, '1.0~1.5'),
@@ -880,7 +872,8 @@ class DashboardDataGenerator:
             cursor.execute("""
                 SELECT
                     ticker, company_name, trigger_type, analyzed_price,
-                    tracked_30d_price, tracked_30d_return, skip_reason
+                    tracked_30d_price, tracked_30d_return, skip_reason,
+                    analyzed_date, decision
                 FROM analysis_performance_tracker
                 WHERE tracking_status = 'completed'
                   AND was_traded = 0
@@ -898,14 +891,17 @@ class DashboardDataGenerator:
                     'analyzed_price': row[3],
                     'tracked_30d_price': row[4],
                     'tracked_30d_return': row[5],
-                    'skip_reason': row[6] or ''
+                    'skip_reason': row[6] or '',
+                    'analyzed_date': row[7] or '',
+                    'decision': row[8] or ''
                 })
 
             # 6. 회피한 손실 (관망했는데 10%+ 하락)
             cursor.execute("""
                 SELECT
                     ticker, company_name, trigger_type, analyzed_price,
-                    tracked_30d_price, tracked_30d_return, skip_reason
+                    tracked_30d_price, tracked_30d_return, skip_reason,
+                    analyzed_date, decision
                 FROM analysis_performance_tracker
                 WHERE tracking_status = 'completed'
                   AND was_traded = 0
@@ -923,40 +919,25 @@ class DashboardDataGenerator:
                     'analyzed_price': row[3],
                     'tracked_30d_price': row[4],
                     'tracked_30d_return': row[5],
-                    'skip_reason': row[6] or ''
+                    'skip_reason': row[6] or '',
+                    'analyzed_date': row[7] or '',
+                    'decision': row[8] or ''
                 })
 
             # 7. 데이터 기반 권고사항 생성
             recommendations = []
 
-            # 매매 vs 관망 비교 권고
-            traded_data = traded_vs_watched.get('traded', {})
-            watched_data = traded_vs_watched.get('watched', {})
-            if traded_data.get('count', 0) >= 5 and watched_data.get('count', 0) >= 5:
-                # avg_30d는 이미 퍼센트 값 (예: 3.57 = 3.57%)
-                traded_avg = traded_data.get('avg_30d') or 0
-                watched_avg = watched_data.get('avg_30d') or 0
-
-                # 5%p 이상 차이나면 권고 (값이 이미 퍼센트이므로 5로 비교)
-                if watched_avg > traded_avg and watched_avg - traded_avg > 5:
-                    recommendations.append(
-                        f"⚠️ 관망 종목({watched_avg:.1f}%)이 매매 종목({traded_avg:.1f}%)보다 "
-                        f"30일 평균 수익률이 높습니다. 필터 완화를 고려하세요."
-                    )
-                elif traded_avg > watched_avg and traded_avg - watched_avg > 5:
-                    recommendations.append(
-                        f"✅ 매매 종목({traded_avg:.1f}%)이 관망 종목({watched_avg:.1f}%)보다 "
-                        f"30일 평균 수익률이 높습니다. 현재 필터가 효과적입니다."
-                    )
-
-            # 최고 성과 트리거 권고
+            # 최고 성과 트리거 권고 (avg_30d_return 기준 정렬, 최소 3건 이상)
             if trigger_performance:
-                best = trigger_performance[0]  # 이미 avg_30d_return DESC로 정렬됨
-                if best.get('avg_30d_return') and best['count'] >= 3:
-                    # avg_30d_return은 이미 퍼센트 값 (예: 3.57 = 3.57%)
+                # count >= 3인 것만 필터링 후 avg_30d_return 기준 정렬
+                valid_triggers = [t for t in trigger_performance
+                                  if t['count'] >= 3 and t.get('avg_30d_return') is not None]
+                if valid_triggers:
+                    best = max(valid_triggers, key=lambda x: x['avg_30d_return'] or 0)
+                    # avg_30d_return은 소수점 형태 (예: 0.078 = 7.8%)
                     recommendations.append(
                         f"🏆 가장 좋은 트리거: '{best['trigger_type']}' "
-                        f"(30일 평균 {best['avg_30d_return']:.1f}%, 승률 {(best['win_rate_30d'] or 0)*100:.0f}%)"
+                        f"(30일 평균 {(best['avg_30d_return'] or 0)*100:.1f}%, 승률 {(best['win_rate_30d'] or 0)*100:.0f}%)"
                     )
 
             # 데이터 부족 경고
@@ -971,7 +952,8 @@ class DashboardDataGenerator:
             return {
                 'overview': overview,
                 'trigger_performance': trigger_performance,
-                'traded_vs_watched': traded_vs_watched,
+                'actual_trading': actual_trading,
+                'actual_trading_by_trigger': actual_trading_by_trigger,
                 'rr_threshold_analysis': rr_threshold_analysis,
                 'missed_opportunities': missed_opportunities,
                 'avoided_losses': avoided_losses,
@@ -1000,7 +982,8 @@ class DashboardDataGenerator:
                 'watched_count': 0
             },
             'trigger_performance': [],
-            'traded_vs_watched': {'traded': {}, 'watched': {}},
+            'actual_trading': {},
+            'actual_trading_by_trigger': [],
             'rr_threshold_analysis': [],
             'missed_opportunities': [],
             'avoided_losses': [],
