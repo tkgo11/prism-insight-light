@@ -141,8 +141,9 @@ class PerformanceTrackerBatch:
                 logger.warning(f"[{ticker}] 가격 데이터 없음")
                 return None
 
-            # 가장 최근 종가 반환
-            latest_close = df['종가'].iloc[-1]
+            # 가장 최근 종가 반환 (krx_data_client는 영문 컬럼명 사용)
+            close_col = 'Close' if 'Close' in df.columns else '종가'
+            latest_close = df[close_col].iloc[-1]
             return float(latest_close)
 
         except Exception as e:
@@ -153,13 +154,15 @@ class PerformanceTrackerBatch:
         """분석일로부터 경과 일수 계산
 
         Args:
-            analyzed_date: 분석일 (YYYY-MM-DD)
+            analyzed_date: 분석일 (YYYY-MM-DD 또는 YYYY-MM-DD HH:MM:SS)
 
         Returns:
             경과 일수
         """
         try:
-            analyzed = datetime.strptime(analyzed_date, "%Y-%m-%d")
+            # 시간 부분이 포함된 경우 날짜만 추출
+            date_only = analyzed_date.split(' ')[0] if ' ' in analyzed_date else analyzed_date
+            analyzed = datetime.strptime(date_only, "%Y-%m-%d")
             today = datetime.now()
             return (today - analyzed).days
         except Exception as e:

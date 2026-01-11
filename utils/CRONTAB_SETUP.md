@@ -34,10 +34,15 @@ PROJECT_DIR=/opt/prism-insight PYTHON_PATH=/usr/bin/python3 ./setup_crontab.sh -
 
 | Time | Task | Description |
 |------|------|------|
+| 02:00 | Config Backup | Backup important configs and database |
+| 03:00 (Sun) | Memory Compression | Weekly trading memory compression & cleanup |
+| 03:00 | Log Cleanup | Delete old log files |
 | 07:00 | Data Update | Update stock information before market opens |
 | 09:30 | Morning Analysis | Detect and analyze surging stocks after market opens |
+| 11:05 | Dashboard Refresh | Update dashboard JSON data (morning) |
 | 15:40 | Afternoon Analysis | Comprehensive analysis after market closes |
-| 03:00 | Log Cleanup | Delete old log files |
+| 17:00 | Performance Tracker | Update 7/14/30 day performance tracking |
+| 17:10 | Dashboard Refresh | Update dashboard JSON data (afternoon) |
 | 18:00 | Portfolio Report | (Optional) Daily trading performance report |
 
 ### Schedule Details
@@ -62,6 +67,29 @@ PROJECT_DIR=/opt/prism-insight PYTHON_PATH=/usr/bin/python3 ./setup_crontab.sh -
 - Manage disk space
 - System optimization
 
+#### 5. **Config Backup (02:00)**
+- Backup .env, mcp_agent.*.yaml files
+- Backup stock_tracking_db.sqlite
+- Backup trading/config/kis_devlp.yaml
+- Backup examples/streamlit/config.py
+- Auto-delete backups older than 7 days
+
+#### 6. **Memory Compression (Sundays 03:00)**
+- Compress trading journal memory
+- Cleanup low-confidence principles/intuitions
+- Archive old Layer 3 journals
+- Token accumulation prevention
+
+#### 7. **Performance Tracker (17:00)**
+- Update 7/14/30 day price tracking
+- Calculate returns for analyzed stocks
+- Track missed opportunities and avoided losses
+
+#### 8. **Dashboard Refresh (11:05, 17:10)**
+- Generate dashboard_data.json from database
+- Update trading insights data
+- Generate English translation (optional)
+
 ## 🛠️ Manual Setup
 
 ### 1. Edit Crontab
@@ -78,17 +106,44 @@ PYTHONPATH=/path/to/prism-insight
 
 ### 3. Add Schedules
 ```bash
-# Morning analysis (Mon-Fri)
-30 9 * * 1-5 cd /path/to/prism-insight && python stock_analysis_orchestrator.py --mode morning >> logs/morning.log 2>&1
+# -----------------------------------------------------------------------------
+# 백업 및 유지보수 (Backup & Maintenance)
+# -----------------------------------------------------------------------------
 
-# Afternoon analysis (Mon-Fri)
-40 15 * * 1-5 cd /path/to/prism-insight && python stock_analysis_orchestrator.py --mode afternoon >> logs/afternoon.log 2>&1
+# Daily config & database backup at 2 AM
+0 2 * * * chmod +x /path/to/prism-insight/utils/backup_configs.sh && /path/to/prism-insight/utils/backup_configs.sh
 
-# Data update (Mon-Fri)
+# Weekly trading memory compression at 3 AM on Sundays
+0 3 * * 0 cd /path/to/prism-insight && python compress_trading_memory.py >> logs/compression.log 2>&1
+
+# Log cleanup (daily at 3 AM)
+0 3 * * * cd /path/to/prism-insight && utils/cleanup_logs.sh
+
+# -----------------------------------------------------------------------------
+# 주식 분석 배치 (Stock Analysis Batch)
+# -----------------------------------------------------------------------------
+
+# Data update before market opens (Mon-Fri 7 AM)
 0 7 * * 1-5 cd /path/to/prism-insight && python update_stock_data.py >> logs/update.log 2>&1
 
-# Log cleanup (daily)
-0 3 * * * cd /path/to/prism-insight && utils/cleanup_logs.sh
+# Morning analysis (Mon-Fri 9:30 AM)
+30 9 * * 1-5 cd /path/to/prism-insight && python stock_analysis_orchestrator.py --mode morning >> logs/morning.log 2>&1
+
+# Afternoon analysis (Mon-Fri 3:40 PM)
+40 15 * * 1-5 cd /path/to/prism-insight && python stock_analysis_orchestrator.py --mode afternoon >> logs/afternoon.log 2>&1
+
+# -----------------------------------------------------------------------------
+# 대시보드 및 성과 추적 (Dashboard & Performance Tracking)
+# -----------------------------------------------------------------------------
+
+# Dashboard JSON refresh - Morning (Mon-Fri 11:05 AM)
+5 11 * * 1-5 cd /path/to/prism-insight/examples && python generate_dashboard_json.py >> logs/generate_dashboard_json.log 2>&1
+
+# Performance tracker daily update (Mon-Fri 5 PM) - must run before evening dashboard refresh
+0 17 * * 1-5 cd /path/to/prism-insight && python performance_tracker_batch.py >> logs/performance_tracker.log 2>&1
+
+# Dashboard JSON refresh - Afternoon (Mon-Fri 5:10 PM)
+10 17 * * 1-5 cd /path/to/prism-insight/examples && python generate_dashboard_json.py >> logs/generate_dashboard_json.log 2>&1
 ```
 
 ## 🔧 Environment-Specific Setup
@@ -369,4 +424,4 @@ If you encounter problems or need assistance:
 
 ---
 
-*Last Updated: January 2025*
+*Last Updated: January 2026*

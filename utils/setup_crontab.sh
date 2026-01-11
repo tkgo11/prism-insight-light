@@ -48,11 +48,16 @@ USER_HOME="${HOME:-/home/$(whoami)}"
 # =============================================================================
 # 실행 시간 설정 (한국 시간 기준)
 # =============================================================================
-MORNING_BATCH_TIME="30 9"      # 오전 9시 30분
-AFTERNOON_BATCH_TIME="40 15"   # 오후 3시 40분
-DATA_UPDATE_TIME="0 7"         # 오전 7시
-LOG_CLEANUP_TIME="0 3"         # 오전 3시
-PORTFOLIO_REPORT_TIME="0 18"   # 오후 6시
+MORNING_BATCH_TIME="30 9"       # 오전 9시 30분
+AFTERNOON_BATCH_TIME="40 15"    # 오후 3시 40분
+DATA_UPDATE_TIME="0 7"          # 오전 7시
+LOG_CLEANUP_TIME="0 3"          # 오전 3시
+PORTFOLIO_REPORT_TIME="0 18"    # 오후 6시
+CONFIG_BACKUP_TIME="0 2"        # 오전 2시 (매일)
+MEMORY_COMPRESSION_TIME="0 3"   # 오전 3시 (일요일만)
+PERFORMANCE_TRACKER_TIME="0 17" # 오후 5시
+DASHBOARD_REFRESH_AM_TIME="5 11"  # 오전 11시 5분
+DASHBOARD_REFRESH_PM_TIME="10 17" # 오후 5시 10분
 
 # =============================================================================
 # 함수 정의
@@ -162,8 +167,24 @@ PATH=$(generate_path)
 PYTHONPATH=$PROJECT_DIR
 
 # -----------------------------------------------------------------------------
-# 주식 분석 배치 작업
+# 백업 및 유지보수 (Backup & Maintenance)
 # -----------------------------------------------------------------------------
+
+# 매일 오전 2시에 중요 설정 및 데이터베이스 백업
+$CONFIG_BACKUP_TIME * * * chmod +x $PROJECT_DIR/utils/backup_configs.sh && $PROJECT_DIR/utils/backup_configs.sh
+
+# 매주 일요일 오전 3시에 트레이딩 메모리 압축 및 정리
+$MEMORY_COMPRESSION_TIME * * 0 cd $PROJECT_DIR && $PYTHON_PATH compress_trading_memory.py >> $LOG_DIR/compression.log 2>&1
+
+# 매일 오전 3시에 로그 파일 정리
+$LOG_CLEANUP_TIME * * * chmod +x $PROJECT_DIR/utils/cleanup_logs.sh && $PROJECT_DIR/utils/cleanup_logs.sh
+
+# -----------------------------------------------------------------------------
+# 주식 분석 배치 작업 (Stock Analysis Batch)
+# -----------------------------------------------------------------------------
+
+# 매일 오전 7시에 종목 정보 업데이트 (장 시작 전, 월-금)
+$DATA_UPDATE_TIME * * 1-5 cd $PROJECT_DIR && $PYTHON_PATH update_stock_data.py >> $LOG_DIR/stock_update_\$(date +\%Y\%m\%d).log 2>&1
 
 # 매일 오전 9시 30분에 오전 배치 실행 (월-금)
 $MORNING_BATCH_TIME * * 1-5 cd $PROJECT_DIR && $PYTHON_PATH stock_analysis_orchestrator.py --mode morning >> $LOG_DIR/stock_analysis_morning_\$(date +\%Y\%m\%d).log 2>&1
@@ -172,14 +193,17 @@ $MORNING_BATCH_TIME * * 1-5 cd $PROJECT_DIR && $PYTHON_PATH stock_analysis_orche
 $AFTERNOON_BATCH_TIME * * 1-5 cd $PROJECT_DIR && $PYTHON_PATH stock_analysis_orchestrator.py --mode afternoon >> $LOG_DIR/stock_analysis_afternoon_\$(date +\%Y\%m\%d).log 2>&1
 
 # -----------------------------------------------------------------------------
-# 데이터 업데이트 및 유지보수
+# 대시보드 및 성과 추적 (Dashboard & Performance Tracking)
 # -----------------------------------------------------------------------------
 
-# 매일 오전 7시에 종목 정보 업데이트 (장 시작 전, 월-금)
-$DATA_UPDATE_TIME * * 1-5 cd $PROJECT_DIR && $PYTHON_PATH update_stock_data.py >> $LOG_DIR/stock_update_\$(date +\%Y\%m\%d).log 2>&1
+# 매일 오전 11시 5분에 대시보드 데이터 갱신 (월-금)
+$DASHBOARD_REFRESH_AM_TIME * * 1-5 cd $PROJECT_DIR/examples && $PYTHON_PATH generate_dashboard_json.py >> $LOG_DIR/generate_dashboard_json.log 2>&1
 
-# 매일 오전 3시에 로그 파일 정리
-$LOG_CLEANUP_TIME * * * chmod +x $PROJECT_DIR/utils/cleanup_logs.sh && $PROJECT_DIR/utils/cleanup_logs.sh
+# 매일 오후 5시에 성과 추적 업데이트 (월-금) - 대시보드 갱신 전 실행
+$PERFORMANCE_TRACKER_TIME * * 1-5 cd $PROJECT_DIR && $PYTHON_PATH performance_tracker_batch.py >> $LOG_DIR/performance_tracker.log 2>&1
+
+# 매일 오후 5시 10분에 대시보드 데이터 갱신 (월-금)
+$DASHBOARD_REFRESH_PM_TIME * * 1-5 cd $PROJECT_DIR/examples && $PYTHON_PATH generate_dashboard_json.py >> $LOG_DIR/generate_dashboard_json.log 2>&1
 
 # -----------------------------------------------------------------------------
 # 포트폴리오 리포트 (선택사항 - 필요시 주석 해제)
