@@ -170,11 +170,11 @@ class StockTrackingAgent:
 
     async def _get_current_stock_price(self, ticker: str) -> float:
         """Get current stock price (delegates to tracking.helpers)"""
-        return get_current_stock_price(self.cursor, ticker)
+        return await get_current_stock_price(self.cursor, ticker)
 
     async def _get_trading_value_rank_change(self, ticker: str) -> Tuple[float, str]:
         """Calculate trading value ranking change (delegates to tracking.helpers)"""
-        return get_trading_value_rank_change(ticker)
+        return await get_trading_value_rank_change(ticker)
 
     async def _is_ticker_in_holdings(self, ticker: str) -> bool:
         """Check if stock is already in holdings (delegates to tracking.helpers)"""
