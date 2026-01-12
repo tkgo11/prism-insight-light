@@ -26,7 +26,10 @@ def create_price_volume_analysis_agent(company_name, company_code, reference_dat
                         2. Moving Average Analysis (short/medium/long-term moving average golden cross/dead cross)
                         3. Identification and explanation of major support and resistance levels
                         4. Trading Volume Analysis (relationship between volume change patterns and price movements)
-                        5. Interpretation of key technical indicators (RSI, MACD, Bollinger Bands, etc., if calculable from data)
+                        5. **Technical Indicators - MUST CALCULATE from OHLCV data:**
+                           - RSI (14-day): Calculate using closing prices. RS = Avg Gain / Avg Loss, RSI = 100 - (100 / (1 + RS)). Report exact value (e.g., RSI = 72.5)
+                           - MACD: 12-day EMA - 26-day EMA, Signal line = 9-day EMA of MACD. Report MACD value and signal line value
+                           - Bollinger Bands (20-day): Middle = 20-day SMA, Upper/Lower = Middle ± 2×Standard Deviation. Report current price position relative to bands
                         6. Short/medium-term technical outlook
 
                         ## Report Structure
@@ -83,8 +86,11 @@ def create_price_volume_analysis_agent(company_name, company_code, reference_dat
                         2. 이동평균선 분석 (단기/중기/장기 이평선 골든크로스/데드크로스)
                         3. 주요 지지선과 저항선 식별 및 설명
                         4. 거래량 분석 (거래량 증감 패턴과 주가 움직임 관계)
-                        6. 주요 기술적 지표 해석 (RSI, MACD, 볼린저밴드 등이 데이터에서 계산 가능한 경우)
-                        7. 단기/중기 기술적 전망
+                        5. **기술적 지표 - OHLCV 데이터에서 반드시 직접 계산:**
+                           - RSI (14일): 종가 기준 계산. RS = 평균상승폭 / 평균하락폭, RSI = 100 - (100 / (1 + RS)). 정확한 수치 제시 (예: RSI = 72.5)
+                           - MACD: 12일 EMA - 26일 EMA, 시그널선 = MACD의 9일 EMA. MACD 값과 시그널선 값 제시
+                           - 볼린저밴드 (20일): 중심선 = 20일 SMA, 상단/하단 = 중심선 ± 2×표준편차. 현재가의 밴드 내 위치 제시
+                        6. 단기/중기 기술적 전망
 
                         ## 보고서 구성
                         1. 주가 데이터 개요 및 요약 - 최근 추세, 주요 가격대, 변동성
