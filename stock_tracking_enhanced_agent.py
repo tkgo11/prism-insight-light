@@ -84,9 +84,16 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                 valuation_analysis TEXT,
                 sector_outlook TEXT,
                 market_condition TEXT,
-                rationale TEXT
+                rationale TEXT,
+                trigger_type TEXT,
+                trigger_mode TEXT,
+                risk_reward_ratio REAL,
+                was_traded INTEGER DEFAULT 0
             )
         """)
+
+        # Auto-migrate: Add missing columns to existing watchlist_history table
+        await self._migrate_watchlist_history_columns()
 
         # Create holding decision table (store AI holding/selling decisions)
         self.cursor.execute("""
@@ -191,6 +198,33 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
         except Exception as e:
             logger.error(f"Error analyzing market condition: {str(e)}")
             return 0, 0  # Assume neutral on error
+
+    async def _migrate_watchlist_history_columns(self):
+        """Auto-migrate: Add missing columns to existing watchlist_history table"""
+        try:
+            # Get existing columns
+            self.cursor.execute("PRAGMA table_info(watchlist_history)")
+            existing_columns = {row[1] for row in self.cursor.fetchall()}
+
+            # Define columns to add if missing (column_name, column_definition)
+            columns_to_add = [
+                ("trigger_type", "TEXT"),
+                ("trigger_mode", "TEXT"),
+                ("risk_reward_ratio", "REAL"),
+                ("was_traded", "INTEGER DEFAULT 0"),
+            ]
+
+            for column_name, column_def in columns_to_add:
+                if column_name not in existing_columns:
+                    self.cursor.execute(
+                        f"ALTER TABLE watchlist_history ADD COLUMN {column_name} {column_def}"
+                    )
+                    logger.info(f"Added column '{column_name}' to watchlist_history table")
+
+            self.conn.commit()
+
+        except Exception as e:
+            logger.error(f"Error migrating watchlist_history columns: {str(e)}")
 
     async def _cleanup_old_watchlist(self):
         """Delete watchlist data older than 1 month"""
