@@ -196,7 +196,9 @@ class StockTrackingAgent:
         report_content: str,
         rank_change_msg: str = "",
         ticker: str = None,
-        sector: str = None
+        sector: str = None,
+        trigger_type: str = "",
+        trigger_mode: str = ""
     ) -> Dict[str, Any]:
         """
         Extract trading scenario from report
@@ -206,6 +208,8 @@ class StockTrackingAgent:
             rank_change_msg: Trading value ranking change info
             ticker: Stock ticker code (for journal context lookup)
             sector: Stock sector (for journal context lookup)
+            trigger_type: Trigger type that activated this analysis (e.g., '거래량 급증 상위주')
+            trigger_mode: Trigger mode ('morning' or 'afternoon')
 
         Returns:
             Dict: Trading scenario information
@@ -278,6 +282,22 @@ class StockTrackingAgent:
             # LLM call to generate trading scenario
             llm = await self.trading_agent.attach_llm(OpenAIAugmentedLLM)
 
+            # Build trigger info section if available
+            trigger_info_section = ""
+            if trigger_type:
+                if self.language == "ko":
+                    trigger_info_section = f"""
+                ### 📡 트리거 정보 (진입 기준 차별화 필수 참고)
+                - **발동 트리거**: {trigger_type}
+                - **트리거 모드**: {trigger_mode or '알 수 없음'}
+                """
+                else:
+                    trigger_info_section = f"""
+                ### 📡 Trigger Info (Apply Trigger-Based Entry Criteria)
+                - **Triggered By**: {trigger_type}
+                - **Trigger Mode**: {trigger_mode or 'unknown'}
+                """
+
             # Prepare prompt based on language
             if self.language == "ko":
                 prompt_message = f"""
@@ -285,7 +305,7 @@ class StockTrackingAgent:
 
                 ### 현재 포트폴리오 상황:
                 {portfolio_info}
-
+                {trigger_info_section}
                 ### 거래대금 분석:
                 {rank_change_msg}
                 {score_adjustment_info}
@@ -300,7 +320,7 @@ class StockTrackingAgent:
 
                 ### Current Portfolio Status:
                 {portfolio_info}
-
+                {trigger_info_section}
                 ### Trading Value Analysis:
                 {rank_change_msg}
                 {score_adjustment_info}
@@ -465,12 +485,19 @@ class StockTrackingAgent:
             from pdf_converter import pdf_to_markdown_text
             report_content = pdf_to_markdown_text(pdf_report_path)
 
-            # Extract trading scenario (pass trading value ranking info and ticker for journal context)
+            # Get trigger info for this ticker (from trigger_results file loaded at run() time)
+            trigger_info = getattr(self, 'trigger_info_map', {}).get(ticker, {})
+            trigger_type = trigger_info.get('trigger_type', '')
+            trigger_mode = trigger_info.get('trigger_mode', '')
+
+            # Extract trading scenario (pass trading value ranking info, ticker, and trigger info)
             scenario = await self._extract_trading_scenario(
                 report_content,
                 rank_change_msg,
                 ticker=ticker,
-                sector=None  # sector will be determined by the scenario agent
+                sector=None,  # sector will be determined by the scenario agent
+                trigger_type=trigger_type,
+                trigger_mode=trigger_mode
             )
 
             # Check sector diversity
