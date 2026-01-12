@@ -140,7 +140,9 @@ class StockTrackingAgent:
                     last_updated TEXT,
                     scenario TEXT,
                     target_price REAL,
-                    stop_loss REAL
+                    stop_loss REAL,
+                    trigger_type TEXT,
+                    trigger_mode TEXT
                 )
             """)
 
@@ -156,7 +158,9 @@ class StockTrackingAgent:
                     sell_date TEXT NOT NULL,
                     profit_rate REAL NOT NULL,
                     holding_days INTEGER NOT NULL,
-                    scenario TEXT
+                    scenario TEXT,
+                    trigger_type TEXT,
+                    trigger_mode TEXT
                 )
             """)
 
@@ -958,12 +962,17 @@ class StockTrackingAgent:
             # Current time
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+            # Get trigger info from trigger_info_map (loaded from trigger_results file)
+            trigger_info = getattr(self, 'trigger_info_map', {}).get(ticker, {})
+            trigger_type = trigger_info.get('trigger_type', 'AI분석')
+            trigger_mode = trigger_info.get('trigger_mode', getattr(self, 'trigger_mode', 'unknown'))
+
             # Add to holdings table
             self.cursor.execute(
                 """
                 INSERT INTO stock_holdings
-                (ticker, company_name, buy_price, buy_date, current_price, last_updated, scenario, target_price, stop_loss)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (ticker, company_name, buy_price, buy_date, current_price, last_updated, scenario, target_price, stop_loss, trigger_type, trigger_mode)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     ticker,
@@ -974,7 +983,9 @@ class StockTrackingAgent:
                     now,
                     json.dumps(scenario, ensure_ascii=False),
                     scenario.get('target_price', 0),
-                    scenario.get('stop_loss', 0)
+                    scenario.get('stop_loss', 0),
+                    trigger_type,
+                    trigger_mode
                 )
             )
             self.conn.commit()
@@ -1184,6 +1195,8 @@ class StockTrackingAgent:
             buy_date = stock_data.get('buy_date', '')
             current_price = stock_data.get('current_price', 0)
             scenario_json = stock_data.get('scenario', '{}')
+            trigger_type = stock_data.get('trigger_type', 'AI분석')
+            trigger_mode = stock_data.get('trigger_mode', 'unknown')
 
             # Calculate profit rate
             profit_rate = ((current_price - buy_price) / buy_price) * 100
@@ -1199,9 +1212,9 @@ class StockTrackingAgent:
             # Add to trading history table
             self.cursor.execute(
                 """
-                INSERT INTO trading_history 
-                (ticker, company_name, buy_price, buy_date, sell_price, sell_date, profit_rate, holding_days, scenario) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO trading_history
+                (ticker, company_name, buy_price, buy_date, sell_price, sell_date, profit_rate, holding_days, scenario, trigger_type, trigger_mode)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     ticker,
@@ -1212,7 +1225,9 @@ class StockTrackingAgent:
                     now,
                     profit_rate,
                     holding_days,
-                    scenario_json
+                    scenario_json,
+                    trigger_type,
+                    trigger_mode
                 )
             )
 
@@ -1658,7 +1673,7 @@ Please review the following completed trade:
             # 0. Universal trading principles (MOST IMPORTANT - shown first)
             universal_principles = self._get_universal_principles()
             if universal_principles:
-                context_parts.append("### 🎯 핵심 매매 원칙 (모든 거래에 적용)")
+                context_parts.append("#### 🎯 핵심 매매 원칙 (모든 거래에 적용)")
                 context_parts.extend(universal_principles)
                 context_parts.append("")
 
@@ -1677,7 +1692,7 @@ Please review the following completed trade:
             same_stock_entries = self.cursor.fetchall()
 
             if same_stock_entries:
-                context_parts.append("### 동일 종목 과거 거래 이력")
+                context_parts.append("#### 동일 종목 과거 거래 이력")
                 for entry in same_stock_entries:
                     lessons_str = ""
                     try:
@@ -1713,7 +1728,7 @@ Please review the following completed trade:
                 sector_entries = self.cursor.fetchall()
 
                 if sector_entries:
-                    context_parts.append(f"### 동일 섹터({sector}) 최근 거래")
+                    context_parts.append(f"#### 동일 섹터({sector}) 최근 거래")
                     for entry in sector_entries:
                         profit_emoji = "✅" if entry['profit_rate'] > 0 else "❌"
                         context_parts.append(
@@ -1735,7 +1750,7 @@ Please review the following completed trade:
             intuitions = self.cursor.fetchall()
 
             if intuitions:
-                context_parts.append("### 축적된 매매 직관")
+                context_parts.append("#### 축적된 매매 직관")
                 for intuition in intuitions:
                     confidence_bar = "●" * int(intuition['confidence'] * 5) + "○" * (5 - int(intuition['confidence'] * 5))
                     context_parts.append(
@@ -1761,7 +1776,7 @@ Please review the following completed trade:
             failure_patterns = self.cursor.fetchall()
 
             if failure_patterns:
-                context_parts.append("### ⚠️ 과거 실패 패턴 (주의)")
+                context_parts.append("#### ⚠️ 과거 실패 패턴 (주의)")
                 for pattern in failure_patterns:
                     try:
                         tags = json.loads(pattern['pattern_tags'])
@@ -1787,7 +1802,7 @@ Please review the following completed trade:
 
             if stats and stats['total'] > 0:
                 win_rate = (stats['wins'] / stats['total']) * 100
-                context_parts.append("### 전체 매매 통계")
+                context_parts.append("#### 전체 매매 통계")
                 context_parts.append(
                     f"- 총 거래: {stats['total']}건, 승률: {win_rate:.1f}%, "
                     f"평균 수익률: {stats['avg_profit']:.2f}%"
@@ -1795,7 +1810,7 @@ Please review the following completed trade:
                 context_parts.append("")
 
             if context_parts:
-                header = "## 📚 과거 매매 경험 참조\n\n"
+                header = "### 📚 과거 매매 경험 참조\n\n"
                 footer = "\n⚠️ 위 경험들을 참고하여 현재 매수 판단을 보정하세요."
                 return header + "\n".join(context_parts) + footer
             else:
@@ -2652,7 +2667,8 @@ Please respond in JSON format.
             # Query holdings list
             self.cursor.execute(
                 """SELECT ticker, company_name, buy_price, buy_date, current_price,
-                   scenario, target_price, stop_loss, last_updated
+                   scenario, target_price, stop_loss, last_updated,
+                   trigger_type, trigger_mode
                    FROM stock_holdings"""
             )
             holdings = [dict(row) for row in self.cursor.fetchall()]
