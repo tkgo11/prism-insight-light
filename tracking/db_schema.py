@@ -205,3 +205,26 @@ def add_scope_column_if_missing(cursor, conn):
         logger.info("Added scope column to trading_intuitions table")
     except Exception:
         pass  # Column already exists
+
+
+def add_trigger_columns_if_missing(cursor, conn):
+    """
+    Add trigger_type, trigger_mode columns to stock_holdings and trading_history
+    if they don't exist (migration for v1.16.5).
+
+    Args:
+        cursor: SQLite cursor
+        conn: SQLite connection
+    """
+    tables = ["stock_holdings", "trading_history"]
+    columns = ["trigger_type TEXT", "trigger_mode TEXT"]
+
+    for table in tables:
+        for col_def in columns:
+            col_name = col_def.split()[0]
+            try:
+                cursor.execute(f"ALTER TABLE {table} ADD COLUMN {col_def}")
+                conn.commit()
+                logger.info(f"Added {col_name} column to {table} table")
+            except Exception:
+                pass  # Column already exists
