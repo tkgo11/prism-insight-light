@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for PRISM-INSIGHT
 
-> **Last Updated**: 2026-01-11
-> **Version**: 1.2
+> **Last Updated**: 2026-01-14
+> **Version**: 1.3
 > **Purpose**: Comprehensive guide for AI assistants working on the PRISM-INSIGHT codebase
 
 ---
@@ -234,7 +234,7 @@ prism-insight/
 | `trading/domestic_stock_trading.py` | KIS API wrapper | Trading functionality changes |
 | `stock_tracking_agent.py` | Trading decisions | Modifying trading strategy |
 | `stock_tracking_enhanced_agent.py` | Enhanced trading with stats | Advanced trading signals |
-| `trigger_batch.py` | Stock screening | Changing detection criteria |
+| `trigger_batch.py` | Stock screening (v1.16.6: 고정 손절폭, 시총 5000억, 등락률 20%) | Changing detection criteria |
 | `telegram_config.py` | Telegram configuration | Telegram settings |
 | `pdf_converter.py` | PDF generation | PDF styling/formatting |
 | `cores/language_config.py` | Multi-language templates | Adding/modifying languages |
@@ -843,25 +843,32 @@ SECTOR_CONCENTRATION = 0.3  # Maximum 30% in one sector
 
 **Risk Management**:
 ```python
-# Stop Loss Rules
-STOP_LOSS_MIN = -0.05      # -5%
-STOP_LOSS_MAX = -0.07      # -7%
-EXTREME_STOP_LOSS = -0.10  # -10% (extreme cases)
+# v1.16.6: 고정 손절폭 방식 (Fixed Stop Loss)
+# - 현재가 기준 고정 비율로 손절가 계산
+# - 트리거 유형별 기준 적용 (일중 상승률: 5%, 기타: 7%)
+
+# Stop Loss Rules (Trigger-Type Specific)
+TRIGGER_CRITERIA = {
+    "intraday_surge": {"sl_max": 0.05, "rr_target": 1.5},  # 일중 급등: -5%, R/R 1.5+
+    "volume_surge": {"sl_max": 0.07, "rr_target": 2.0},    # 거래량 급증: -7%, R/R 2.0+
+    "gap_up": {"sl_max": 0.07, "rr_target": 2.0},          # 갭상승: -7%, R/R 2.0+
+    "default": {"sl_max": 0.07, "rr_target": 2.0},         # 기본: -7%, R/R 2.0+
+}
+
+# v1.16.6 손절가 계산 방식
+stop_loss_price = current_price * (1 - sl_max)  # 현재가 기준 고정
 
 # Target Price
 TARGET_MIN = 0.10          # +10%
 TARGET_TYPICAL = 0.20      # +20%
 TARGET_MAX = 0.30          # +30%
+TARGET_GUARANTEE = 0.15    # v1.16.6: 최소 +15% 보장
 
 # Risk/Reward Ratio
 MIN_RISK_REWARD_RATIO = 2.0  # Min 2:1 (20% target / 10% stop)
 
-# Validation Example
-if support_level_loss > 0.07:
-    # Support beyond -7% requires Risk/Reward ≥ 2:1
-    risk_reward = expected_gain / abs(support_level_loss)
-    if risk_reward < 2.0:
-        return {"suitable": False, "reason": "Insufficient risk/reward ratio"}
+# v1.16.6 에이전트 적합도 점수 계산
+agent_fit_score = rr_score * 0.6 + sl_score * 0.4  # 손익비 60% + 손절폭 40%
 ```
 
 **Trading Mode Safety**:
@@ -1060,14 +1067,15 @@ logging.basicConfig(level=logging.DEBUG)
 
 ---
 
-**Document Version**: 1.2
-**Last Updated**: 2026-01-11
+**Document Version**: 1.3
+**Last Updated**: 2026-01-14
 **Maintained By**: PRISM-INSIGHT Development Team
 
 ### Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.3 | 2026-01-14 | Trigger Batch Algorithm v3.0 (v1.16.6) - 고정 손절폭 방식, 시총 필터 5000억, 등락률 필터 20%, 에이전트 적합도 점수 시스템 |
 | 1.2 | 2026-01-11 | Trading Journal Memory system (v1.16.0), Universal Principles, Token Cleanup, Trading Insights Dashboard, Performance Tracker |
 | 1.1 | 2026-01-03 | GPT-5 upgrade, Redis/GCP Pub/Sub integration, new files documentation |
 | 1.0 | 2025-11-14 | Initial comprehensive documentation |
