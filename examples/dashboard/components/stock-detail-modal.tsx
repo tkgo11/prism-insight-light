@@ -200,13 +200,25 @@ export function StockDetailModal({ stock, onClose, isRealTrading = false }: Stoc
                 {scenario.decision && (
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-primary">{t("modal.buyDecision")}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-primary">{t("modal.buyDecision")}</p>
+                        {scenario.entry_checklist_passed !== undefined && (
+                          <span className="text-xs text-muted-foreground">
+                            ({t("watchlist.entryChecklist")}: {scenario.entry_checklist_passed}/6)
+                          </span>
+                        )}
+                      </div>
                       <Badge variant={scenario.decision === t("watchlist.entry") ? "default" : "secondary"}>
                         {scenario.decision}
                       </Badge>
                     </div>
                     {scenario.rationale && (
                       <p className="text-sm text-muted-foreground leading-relaxed">{scenario.rationale}</p>
+                    )}
+                    {scenario.rejection_reason && scenario.decision !== t("watchlist.entry") && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 pt-2 border-t border-primary/20">
+                        {t("watchlist.rejectionReason")}: {scenario.rejection_reason}
+                      </p>
                     )}
                   </div>
                 )}

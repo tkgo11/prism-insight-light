@@ -238,7 +238,7 @@ class DashboardDataGenerator:
         return history
     
     def get_watchlist_history(self, conn) -> List[Dict]:
-        """관망 종목 데이터 가져오기"""
+        """미진입 종목 데이터 가져오기"""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, ticker, company_name, current_price, analyzed_date, 

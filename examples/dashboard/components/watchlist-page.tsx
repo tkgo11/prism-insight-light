@@ -290,8 +290,18 @@ export function WatchlistPage({ watchlist }: WatchlistPageProps) {
                                   stock.decision === t("watchlist.entry") ? "text-success" : "text-amber-600 dark:text-amber-400"
                                 }`}>
                                   {t("watchlist.decision")}: {stock.decision}
+                                  {stock.scenario?.entry_checklist_passed !== undefined && (
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                      ({t("watchlist.entryChecklist")}: {stock.scenario.entry_checklist_passed}/6)
+                                    </span>
+                                  )}
                                 </p>
                                 <p className="text-sm text-foreground leading-relaxed">{stock.skip_reason}</p>
+                                {stock.scenario?.rejection_reason && stock.decision !== t("watchlist.entry") && (
+                                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                                    {t("watchlist.rejectionReason")}: {stock.scenario.rejection_reason}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
