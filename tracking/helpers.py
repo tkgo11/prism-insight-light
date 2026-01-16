@@ -296,7 +296,7 @@ def default_scenario() -> Dict[str, Any]:
     return {
         "portfolio_analysis": "Analysis failed",
         "buy_score": 0,
-        "decision": "관망",
+        "decision": "미진입",
         "target_price": 0,
         "stop_loss": 0,
         "investment_period": "단기",

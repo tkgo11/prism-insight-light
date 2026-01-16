@@ -513,7 +513,7 @@ class StockTrackingAgent:
                 "company_name": company_name,
                 "current_price": current_price,
                 "scenario": scenario,
-                "decision": scenario.get("decision", "관망"),
+                "decision": scenario.get("decision", "미진입"),
                 "sector": sector,
                 "sector_diverse": is_sector_diverse,
                 "rank_change_percentage": rank_change_percentage,

@@ -420,16 +420,16 @@ class EnhancedStockTrackingAgent(StockTrackingAgent):
                         reason = f"산업군 '{sector}' 과다 투자 방지"
                     elif buy_score < min_score:
                         if decision == "진입":
-                            decision = "관망"  # "진입"에서 "관망"으로 변경
+                            decision = "미진입"  # "진입"에서 "미진입"으로 변경
                             logger.info(f"Decision changed due to insufficient buy score: {company_name}({ticker}) - Enter → Wait (Score: {buy_score} < {min_score})")
                         reason = f"매수 점수 부족 ({buy_score} < {min_score})"
                     elif decision != "진입":
-                        reason = f"분석 결정이 '관망'"
+                        reason = f"분석 결정이 '미진입'"
 
                     # 시장 상태 정보
                     market_condition_text = scenario.get("market_condition")
 
-                    # 관망 메시지 생성
+                    # 미진입 메시지 생성
                     skip_message = f"⚠️ 매수 보류: {company_name}({ticker})\n" \
                                    f"현재가: {current_price:,.0f}원\n" \
                                    f"매수 Score: {buy_score}/10\n" \

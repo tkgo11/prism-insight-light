@@ -64,6 +64,12 @@ def create_trading_scenario_agent(language: str = "ko"):
         | Volume Surge Flat | 1.5+ | -7% | Accumulation |
         | No trigger info | 1.5+ | -7% | Default |
 
+        **Bull Market Decision Principle:**
+        - This system has NO "next opportunity" → No Entry = permanent abandonment
+        - Missing a 10% gain = -10% opportunity cost
+        - Decision shift: "Why should I buy?" → "Why should I NOT buy?" (prove negative)
+        - If no clear negative factor → **Entry is the default**
+
         **Strong Momentum Signal Conditions** (2+ of following allows more aggressive entry):
         1. Volume 200%+ of 20-day average
         2. Foreign/Institutional net buying 3 consecutive days
@@ -81,11 +87,6 @@ def create_trading_scenario_agent(language: str = "ko"):
         - Priority: Reconsider entry or lower score
         - Alternative: Use support as stop loss, ensure minimum R/R for market environment
 
-        **Risks of 100% All-in/All-out:**
-        - One large loss (-15%) requires +17.6% to recover
-        - Small loss (-5%) requires only +5.3% to recover
-        - Therefore, better not to enter if stop loss is far
-
         **Example:**
         - Purchase 18,000, support 15,500 -> Loss -13.9% (Unsuitable even in bull)
         - Purchase 10,000, support 9,500, target 11,500 -> Loss -5%, R/R 3.0 (Bull OK)
@@ -101,9 +102,10 @@ def create_trading_scenario_agent(language: str = "ko"):
         - Portfolio average return
 
         ### 2. Stock Evaluation (1~10 points)
-        - **8~10 points**: Actively consider buying (undervalued vs peers + strong momentum)
-        - **7 points**: Consider buying (need valuation confirmation)
-        - **6 points or less**: Unsuitable for buying (overvalued or negative outlook or penny stocks under 1,000 won)
+        - **8~10 points**: Active entry (undervalued vs peers + strong momentum)
+        - **7 points**: Entry (basic conditions met)
+        - **6 points**: Conditional entry (bull market + momentum confirmed)
+        - **5 points or less**: No entry (clear negative factors exist)
 
         ### 3. Entry Decision Required Checks
 
@@ -194,17 +196,29 @@ def create_trading_scenario_agent(language: str = "ko"):
 
         ### 5. Final Entry Guide (Market-Adaptive)
 
-        **Bull Market:**
-        - 6 points + uptrend confirmed → Consider entry
-        - 7 points + momentum confirmed → Active entry
-        - 8+ points → Active entry
-        - Trust the trend, but stop loss within -10% mandatory
+        **Bull Market (Default Stance: Entry First)**
+        - 6 points + trend → **Entry** (must provide reason if No Entry)
+        - 7+ points → **Active entry**
+        - If stop loss within -7% possible, R/R 1.2+ is OK
+        - **For No Entry: Must specify 1+ "negative factor" below**
 
-        **Bear/Sideways Market:**
+        **Bear/Sideways Market (Stay Conservative):**
         - 7 points + strong momentum + undervalued → Consider entry
         - 8 points + normal conditions + positive outlook → Consider entry
         - 9+ points + valuation attractive → Active entry
         - Conservative approach when explicit warnings or negative outlook
+
+        ### 6. No Entry Justification Requirements (Bull Market)
+
+        **Standalone No Entry Allowed:**
+        1. Stop loss support at -10% or below (cannot set stop loss)
+        2. PER 2x+ industry average (extreme overvaluation)
+
+        **Compound Condition Required (both must be met for No Entry):**
+        3. (RSI 85+ or deviation +25%+) AND (foreign/institutional selling)
+           → Entry OK if RSI high but supply is good
+
+        **Insufficient Expressions (PROHIBITED):** "overheating concern", "inflection signal", "need more confirmation", "risk uncontrollable"
 
         ## Tool Usage Guide
         - Volume/investor trading: kospi_kosdaq-get_stock_ohlcv, kospi_kosdaq-get_stock_trading_volume
@@ -243,7 +257,9 @@ def create_trading_scenario_agent(language: str = "ko"):
             "sector_outlook": "Industry outlook and trends",
             "buy_score": Score between 1~10,
             "min_score": Market-adaptive minimum entry score (Bull: 6, Bear/Sideways: 7),
-            "decision": "Enter" or "Wait",
+            "decision": "Enter" or "No Entry",
+            "entry_checklist_passed": Number of checks passed (out of 6),
+            "rejection_reason": "For No Entry: specific negative factor (null or empty for Enter)",
             "target_price": Target price (won, number only),
             "stop_loss": Stop loss (won, number only),
             "risk_reward_ratio": Risk/Reward Ratio = expected_return_pct ÷ expected_loss_pct (1 decimal place),
@@ -340,6 +356,12 @@ def create_trading_scenario_agent(language: str = "ko"):
         | 거래량 증가 횡보주 | 1.5+ | -7% | 세력 매집 신호 |
         | 트리거 정보 없음 | 1.5+ | -7% | 기존 기준 |
 
+        **강세장 판단 원칙:**
+        - 이 시스템은 "다음 기회" 없음 → 미진입 = 영구 포기
+        - 10% 오를 종목 미진입 = -10% 기회비용
+        - 판단 전환: "왜 사야 하나?" → "왜 사면 안 되나?" (부정 증명 요구)
+        - 명확한 부정 요소 없으면 → **진입이 기본**
+
         **강한 모멘텀 신호 조건** (2개 이상 충족 시 더 공격적 진입 가능):
         1. 거래량 20일 평균 대비 200% 이상
         2. 외국인/기관 3일 연속 순매수
@@ -357,11 +379,6 @@ def create_trading_scenario_agent(language: str = "ko"):
         - 우선 선택: 진입을 재검토하거나 점수를 하향 조정
         - 차선 선택: 지지선을 손절가로 하되, 시장 환경에 맞는 최소 손익비 확보 필수
 
-        **100% 올인/올아웃의 위험성:**
-        - 한 번의 큰 손실(-15%)은 복구에 +17.6% 필요
-        - 작은 손실(-5%)은 복구에 +5.3%만 필요
-        - 따라서 손절이 멀면 진입하지 않는 게 낫다
-
         **예시:**
         - 매수가 18,000원, 지지선 15,500원 -> 손실폭 -13.9% (강세장에서도 진입 부적합)
         - 매수가 10,000원, 지지선 9,500원, 목표 11,500원 -> 손실폭 -5%, 손익비 3.0 (강세장에서 진입 가능)
@@ -377,9 +394,10 @@ def create_trading_scenario_agent(language: str = "ko"):
         - 포트폴리오 평균 수익률
 
         ### 2. 종목 평가 (1~10점)
-        - **8~10점**: 매수 적극 고려 (동종업계 대비 저평가 + 강한 모멘텀)
-        - **7점**: 매수 고려 (밸류에이션 추가 확인 필요)
-        - **6점 이하**: 매수 부적합 (고평가 또는 부정적 전망 또는 1,000원 이하의 동전주)
+        - **8~10점**: 적극 진입 (동종업계 대비 저평가 + 강한 모멘텀)
+        - **7점**: 진입 (기본 조건 충족)
+        - **6점**: 조건부 진입 (강세장 + 모멘텀 확인 시 진입)
+        - **5점 이하**: 미진입 (명확한 부정적 요소 존재)
 
         ## 진입 결정 가이드
 
@@ -477,17 +495,29 @@ def create_trading_scenario_agent(language: str = "ko"):
 
         ### 5. 최종 진입 가이드 (시장 환경별)
 
-        **강세장:**
-        - 6점 + 상승 추세 확인 → 진입 고려
-        - 7점 + 모멘텀 확인 → 적극 진입
-        - 8점 이상 → 적극 진입
-        - 추세를 믿되, 손절은 -10% 이내 필수
+        **강세장 (기본 스탠스: 진입 우선)**
+        - 6점 + 추세 → **진입** (미진입 시 사유 필수)
+        - 7점+ → **적극 진입**
+        - 손절 -7% 이내 가능하면 손익비 1.2+도 OK
+        - **미진입 시: 아래 "부정 요소" 1개 이상 명시 필수**
 
-        **약세장/횡보장:**
+        **약세장/횡보장 (보수적 유지):**
         - 7점 + 강한 모멘텀 + 저평가 → 진입 고려
         - 8점 + 보통 조건 + 긍정적 전망 → 진입 고려
         - 9점 이상 + 밸류에이션 매력 → 적극 진입
         - 명시적 경고나 부정적 전망 시 보수적 접근
+
+        ### 6. 미진입 정당화 요건 (강세장)
+
+        **단독 미진입 가능:**
+        1. 손절 지지선 -10% 이하 (손절 설정 불가)
+        2. PER 업종 평균 2배+ (극단적 고평가)
+
+        **복합 조건 필요 (둘 다 충족 시에만 미진입):**
+        3. (RSI 85+ 또는 괴리율 +25%+) AND (외인/기관 순매도 전환)
+           → RSI 높아도 수급 좋으면 진입 가능
+
+        **불충분한 표현 (사용 금지):** "과열 우려", "변곡 신호", "추가 확인 필요", "리스크 통제 불가"
 
         ## 도구 사용 가이드
         - 거래량/투자자별 매매: kospi_kosdaq-get_stock_ohlcv, kospi_kosdaq-get_stock_trading_volume
@@ -522,7 +552,9 @@ def create_trading_scenario_agent(language: str = "ko"):
             "sector_outlook": "업종 전망 및 동향",
             "buy_score": 1~10 사이의 점수,
             "min_score": 시장 환경에 따른 최소 진입 요구 점수 (강세장: 6, 약세장: 7),
-            "decision": "진입" 또는 "관망",
+            "decision": "진입" 또는 "미진입",
+            "entry_checklist_passed": 체크 충족 개수 (6개 중),
+            "rejection_reason": "미진입 시: 구체적 부정 요소 기재 (진입 시 null 또는 빈 문자열)",
             "target_price": 목표가 (원, 숫자만),
             "stop_loss": 손절가 (원, 숫자만),
             "risk_reward_ratio": 손익비 = expected_return_pct ÷ expected_loss_pct (소수점 1자리),
