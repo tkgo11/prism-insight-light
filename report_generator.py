@@ -277,7 +277,7 @@ if __name__ == "__main__":
         project_root = os.path.dirname(os.path.abspath(__file__))
 
         logger.info(f"외부 프로세스 실행: {stock_code} (cwd: {project_root})")
-        process = subprocess.run(cmd, capture_output=True, text=True, timeout=1200, cwd=project_root)  # 20분 타임아웃
+        process = subprocess.run(cmd, capture_output=True, text=True, timeout=1800, cwd=project_root)  # 30분 타임아웃
 
         # stderr 로깅 (디버깅용)
         if process.stderr:
