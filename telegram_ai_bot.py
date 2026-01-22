@@ -24,6 +24,7 @@ from telegram import Update, InputFile
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 )
+from telegram.request import HTTPXRequest
 
 from analysis_manager import (
     AnalysisRequest, analysis_queue, start_background_worker
@@ -150,8 +151,14 @@ class TelegramAIBot:
         # 대화 컨텍스트 저장소 추가
         self.conversation_contexts: Dict[int, ConversationContext] = {}
 
-        # 봇 어플리케이션 생성
-        self.application = Application.builder().token(self.token).build()
+        # 봇 어플리케이션 생성 (타임아웃 설정 포함)
+        request = HTTPXRequest(
+            connection_pool_size=8,
+            connect_timeout=30.0,
+            read_timeout=120.0,   # 파일 전송 시 충분한 시간 확보
+            write_timeout=120.0,
+        )
+        self.application = Application.builder().token(self.token).request(request).build()
         self.setup_handlers()
 
         # 백그라운드 작업자 시작
