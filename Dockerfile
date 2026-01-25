@@ -61,14 +61,14 @@ RUN python3 -m venv /app/venv
 # 가상환경 활성화
 ENV PATH="/app/venv/bin:$PATH"
 
-# Git 리포지토리 클론
-RUN git clone https://github.com/dragon1086/prism-insight.git /app/prism-insight
+# Git 리포지토리 클론 (feature/prism-us 브랜치)
+RUN git clone -b feature/prism-us https://github.com/dragon1086/prism-insight.git /app/prism-insight
 
 # 작업 디렉토리 변경
 WORKDIR /app/prism-insight
 
-# Python 의존성 설치
-RUN pip install --no-cache-dir --upgrade pip && \
+# Python 의존성 설치 (setuptools for pykrx compatibility)
+RUN pip install --no-cache-dir --upgrade pip setuptools && \
     pip install --no-cache-dir -r requirements.txt
 
 # Playwright 브라우저 설치 (Chromium만)
