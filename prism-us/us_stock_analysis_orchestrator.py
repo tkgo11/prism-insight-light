@@ -58,6 +58,17 @@ US_PDF_REPORTS_DIR.mkdir(exist_ok=True)
 (US_TELEGRAM_MSGS_DIR / "sent").mkdir(exist_ok=True)
 
 
+# Trigger type translation map (English -> Korean)
+TRIGGER_TYPE_KO = {
+    "Volume Surge Top": "거래량 급증 상위주",
+    "Gap Up Momentum Top": "갭 상승 모멘텀 상위주",
+    "Value-to-Cap Ratio Top": "시총 대비 집중 자금 유입 상위주",
+    "Intraday Rise Top": "일중 상승률 상위주",
+    "Closing Strength Top": "장 마감 강세 상위주",
+    "Volume Surge Sideways": "거래량 급증 횡보주",
+}
+
+
 class USStockAnalysisOrchestrator:
     """US Stock Analysis and Telegram Transmission Orchestrator"""
 
@@ -72,6 +83,74 @@ class USStockAnalysisOrchestrator:
 
         self.selected_tickers = {}
         self.telegram_config = telegram_config or TelegramConfig(use_telegram=True)
+
+    @staticmethod
+    def _extract_base64_images(markdown_text: str) -> tuple:
+        """
+        Extract base64 images from markdown and replace with placeholders
+
+        Args:
+            markdown_text: Original markdown text with base64 images
+
+        Returns:
+            Tuple of (text_without_images, images_dict)
+        """
+        images = {}
+        counter = 0
+
+        def replace_image(match):
+            nonlocal counter
+            # Use XML-style placeholder that won't be translated
+            placeholder = f"<<<__BASE64_IMAGE_{counter}__>>>"
+            images[placeholder] = match.group(0)  # Store entire image markdown
+            logger.info(f"Extracted image {counter}, size: {len(match.group(0))} chars")
+            counter += 1
+            return placeholder
+
+        # Pattern to match base64 images in HTML img tags: <img src="data:image/...;base64,..." ... />
+        # Also supports markdown format: ![alt](data:image/...;base64,...)
+        patterns = [
+            r'<img\s+src="data:image/[^;]+;base64,[A-Za-z0-9+/=]+"\s+[^>]*>',  # HTML img tag
+            r'!\[([^\]]*)\]\(data:image/[^;]+;base64,[A-Za-z0-9+/=]+\)',  # Markdown format
+        ]
+
+        text_without_images = markdown_text
+        for pattern in patterns:
+            text_without_images = re.sub(pattern, replace_image, text_without_images)
+
+        logger.info(f"Extracted {len(images)} base64 images from markdown")
+        return text_without_images, images
+
+    @staticmethod
+    def _restore_base64_images(translated_text: str, images: dict) -> str:
+        """
+        Restore base64 images to translated text
+
+        Args:
+            translated_text: Translated text with placeholders
+            images: Dictionary of placeholder -> original image markdown
+
+        Returns:
+            Text with restored images
+        """
+        restored_text = translated_text
+
+        # First try exact match
+        for placeholder, original_image in images.items():
+            if placeholder in restored_text:
+                restored_text = restored_text.replace(placeholder, original_image)
+                logger.debug(f"Restored image (exact match): {placeholder}")
+            else:
+                # Try without special characters (LLM might have modified the placeholder)
+                import re as regex
+                escaped_placeholder = regex.escape(placeholder)
+                # Also try variations without special chars
+                simple_key = placeholder.replace("<<<", "").replace(">>>", "").replace("__", "_")
+                if simple_key in restored_text:
+                    restored_text = restored_text.replace(simple_key, original_image)
+                    logger.debug(f"Restored image (simple key): {simple_key}")
+
+        return restored_text
 
     async def run_trigger_batch(self, mode: str):
         """
@@ -297,14 +376,18 @@ class USStockAnalysisOrchestrator:
         try:
             bot_agent = TelegramBotAgent()
 
-            # Send messages
+            # Send translated messages to broadcast channels BEFORE process_messages_directory moves files
+            if self.telegram_config.broadcast_languages:
+                await self._send_translated_messages(bot_agent, message_paths)
+
+            # Send messages to main channel (this moves files to sent folder)
             await bot_agent.process_messages_directory(
                 str(US_TELEGRAM_MSGS_DIR),
                 chat_id,
                 str(US_TELEGRAM_MSGS_DIR / "sent")
             )
 
-            # Send PDF files
+            # Send PDF files to main channel
             for pdf_path in pdf_paths:
                 logger.info(f"Sending US PDF file: {pdf_path}")
                 success = await bot_agent.send_document(chat_id, str(pdf_path))
@@ -314,8 +397,152 @@ class USStockAnalysisOrchestrator:
                     logger.error(f"PDF file transmission failed: {pdf_path}")
                 await asyncio.sleep(1)
 
+            # Send translated PDFs to broadcast channels asynchronously (non-blocking)
+            if self.telegram_config.broadcast_languages and report_paths:
+                asyncio.create_task(self._send_translated_pdfs(bot_agent, report_paths))
+
         except Exception as e:
             logger.error(f"Error during telegram message transmission: {str(e)}")
+
+    async def _send_translated_messages(self, bot_agent, message_paths: list):
+        """
+        Send translated telegram messages to broadcast channels (synchronous)
+        Must be called BEFORE process_messages_directory moves the files
+
+        Args:
+            bot_agent: TelegramBotAgent instance
+            message_paths: List of original message file paths
+        """
+        try:
+            from cores.agents.telegram_translator_agent import translate_telegram_message
+
+            for lang in self.telegram_config.broadcast_languages:
+                try:
+                    # Get channel ID for this language
+                    channel_id = self.telegram_config.get_broadcast_channel_id(lang)
+                    if not channel_id:
+                        logger.warning(f"No channel ID configured for language: {lang}")
+                        continue
+
+                    logger.info(f"Sending translated US messages to {lang} channel")
+
+                    # Translate and send each telegram message
+                    for message_path in message_paths:
+                        try:
+                            # Read original message
+                            with open(message_path, 'r', encoding='utf-8') as f:
+                                original_message = f.read()
+
+                            # Translate message
+                            logger.info(f"Translating US telegram message from {message_path} to {lang}")
+                            translated_message = await translate_telegram_message(
+                                original_message,
+                                model="gpt-5-nano",
+                                from_lang="ko",
+                                to_lang=lang
+                            )
+
+                            # Send translated message
+                            success = await bot_agent.send_message(channel_id, translated_message)
+
+                            if success:
+                                logger.info(f"US telegram message sent successfully to {lang} channel")
+                            else:
+                                logger.error(f"Failed to send US telegram message to {lang} channel")
+
+                            await asyncio.sleep(1)
+
+                        except Exception as e:
+                            logger.error(f"Error translating/sending US message {message_path} to {lang}: {str(e)}")
+
+                except Exception as e:
+                    logger.error(f"Error processing language {lang}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error in _send_translated_messages: {str(e)}")
+
+    async def _send_translated_pdfs(self, bot_agent, report_paths: list):
+        """
+        Send translated PDF reports to broadcast channels (asynchronous, runs in background)
+
+        Args:
+            bot_agent: TelegramBotAgent instance
+            report_paths: List of original markdown report file paths
+        """
+        try:
+            from cores.agents.telegram_translator_agent import translate_telegram_message
+
+            for lang in self.telegram_config.broadcast_languages:
+                try:
+                    # Get channel ID for this language
+                    channel_id = self.telegram_config.get_broadcast_channel_id(lang)
+                    if not channel_id:
+                        logger.warning(f"No channel ID configured for language: {lang}")
+                        continue
+
+                    logger.info(f"Sending translated US PDFs to {lang} channel")
+
+                    # Translate markdown reports, convert to PDF, and send
+                    for report_path in report_paths:
+                        try:
+                            logger.info(f"Translating US markdown report {report_path} to {lang}")
+
+                            # Read original markdown report
+                            with open(report_path, 'r', encoding='utf-8') as f:
+                                original_report = f.read()
+
+                            # Extract base64 images before translation
+                            text_for_translation, images = self._extract_base64_images(original_report)
+                            logger.info(f"Prepared US report for translation: {len(text_for_translation)} chars (extracted {len(images)} images)")
+
+                            # Translate the report (without images)
+                            translated_report = await translate_telegram_message(
+                                text_for_translation,
+                                model="gpt-5-nano",
+                                from_lang="ko",
+                                to_lang=lang
+                            )
+
+                            # Restore base64 images to translated text
+                            translated_report = self._restore_base64_images(translated_report, images)
+                            logger.info(f"Restored images to translated US report: {len(translated_report)} chars")
+
+                            # Create translated markdown file path
+                            report_file = Path(report_path)
+                            translated_report_path = report_file.parent / f"{report_file.stem}_{lang}.md"
+
+                            # Save translated markdown
+                            with open(translated_report_path, 'w', encoding='utf-8') as f:
+                                f.write(translated_report)
+
+                            logger.info(f"Translated US report saved: {translated_report_path}")
+
+                            # Convert to PDF
+                            translated_pdf_paths = await self.convert_to_pdf([str(translated_report_path)])
+
+                            if translated_pdf_paths and len(translated_pdf_paths) > 0:
+                                # Send translated PDF
+                                translated_pdf_path = translated_pdf_paths[0]
+                                logger.info(f"Sending translated US PDF {translated_pdf_path} to {lang} channel")
+                                success = await bot_agent.send_document(channel_id, str(translated_pdf_path))
+
+                                if success:
+                                    logger.info(f"Translated US PDF sent successfully to {lang} channel")
+                                else:
+                                    logger.error(f"Failed to send translated US PDF to {lang} channel")
+
+                                await asyncio.sleep(1)
+                            else:
+                                logger.error(f"Failed to convert translated US report to PDF: {translated_report_path}")
+
+                        except Exception as e:
+                            logger.error(f"Error processing US report {report_path} for {lang}: {str(e)}")
+
+                except Exception as e:
+                    logger.error(f"Error processing language {lang}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error in _send_translated_pdfs: {str(e)}")
 
     async def send_trigger_alert(self, mode: str, trigger_results_file: str, language: str = "ko"):
         """
@@ -348,18 +575,8 @@ class USStockAnalysisOrchestrator:
                 logger.warning(f"No US trigger results found.")
                 return False
 
-            # Generate message in Korean (same as Korean stock version)
-            message = self._create_trigger_alert_message(mode, all_results, trade_date)
-
-            # Translate message if English is requested
-            if language == "en":
-                try:
-                    logger.info("Translating US trigger alert message to English")
-                    from cores.agents.telegram_translator_agent import translate_telegram_message
-                    message = await translate_telegram_message(message, model="gpt-5-nano")
-                    logger.info("Translation complete")
-                except Exception as e:
-                    logger.error(f"Translation failed: {str(e)}. Using original Korean message.")
+            # Generate message based on language (no translation needed - direct templates)
+            message = self._create_trigger_alert_message(mode, all_results, trade_date, language)
 
             # Use main channel (Korean) by default
             chat_id = self.telegram_config.channel_id
@@ -378,6 +595,10 @@ class USStockAnalysisOrchestrator:
                 else:
                     logger.error("US Prism Signal alert transmission failed")
 
+                # Send to broadcast channels asynchronously (non-blocking)
+                if self.telegram_config.broadcast_languages:
+                    asyncio.create_task(self._send_translated_trigger_alert(bot_agent, message, mode))
+
                 return success
 
             except Exception as e:
@@ -388,26 +609,93 @@ class USStockAnalysisOrchestrator:
             logger.error(f"Error during US Prism Signal alert generation: {str(e)}")
             return False
 
-    def _create_trigger_alert_message(self, mode: str, results: dict, trade_date: str) -> str:
+    async def _send_translated_trigger_alert(self, bot_agent, original_message: str, mode: str):
         """
-        Generate telegram alert message based on US trigger results (Korean template - same as KR version)
+        Send translated trigger alerts to additional language channels
+
+        Args:
+            bot_agent: TelegramBotAgent instance
+            original_message: Original Korean message
+            mode: 'morning' or 'afternoon'
+        """
+        try:
+            from cores.agents.telegram_translator_agent import translate_telegram_message
+
+            for lang in self.telegram_config.broadcast_languages:
+                try:
+                    # Get channel ID for this language
+                    channel_id = self.telegram_config.get_broadcast_channel_id(lang)
+                    if not channel_id:
+                        logger.warning(f"No channel ID configured for language: {lang}")
+                        continue
+
+                    logger.info(f"Translating US trigger alert to {lang}")
+
+                    # Translate message
+                    translated_message = await translate_telegram_message(
+                        original_message,
+                        model="gpt-5-nano",
+                        from_lang="ko",
+                        to_lang=lang
+                    )
+
+                    # Send translated message
+                    success = await bot_agent.send_message(channel_id, translated_message)
+
+                    if success:
+                        logger.info(f"US trigger alert sent successfully to {lang} channel")
+                    else:
+                        logger.error(f"Failed to send US trigger alert to {lang} channel")
+
+                except Exception as e:
+                    logger.error(f"Error sending translated US trigger alert to {lang}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error in _send_translated_trigger_alert: {str(e)}")
+
+    def _create_trigger_alert_message(self, mode: str, results: dict, trade_date: str, language: str = "ko") -> str:
+        """
+        Generate telegram alert message based on US trigger results
+
+        Args:
+            mode: 'morning' or 'afternoon'
+            results: Trigger results dictionary
+            trade_date: Trade date in YYYYMMDD format
+            language: Message language ('ko' or 'en')
         """
         formatted_date = f"{trade_date[:4]}.{trade_date[4:6]}.{trade_date[6:8]}"
 
-        # Korean template (same as Korean stock version)
-        if mode == "morning":
-            title = "🔔 미국주식 오전 프리즘 시그널 얼럿"
-            time_desc = "장 시작 후 10분 시점"
-        else:
-            title = "🔔 미국주식 오후 프리즘 시그널 얼럿"
-            time_desc = "장 마감 후"
+        # Language-specific templates
+        if language == "ko":
+            if mode == "morning":
+                title = "🔔 미국주식 오전 프리즘 시그널 얼럿"
+                time_desc = "장 시작 후 10분 시점"
+            else:
+                title = "🔔 미국주식 오후 프리즘 시그널 얼럿"
+                time_desc = "장 마감 후"
+            header = f"{title}\n📅 {formatted_date} {time_desc} 포착된 관심종목\n\n"
+            volume_label = "거래량 증가"
+            gap_label = "갭상승"
+            footer = "📋 10~30분 후 상세 분석 리포트가 제공됩니다\n※ 본 정보는 투자 참고용이며, 투자 결정은 본인 책임입니다."
+        else:  # English
+            if mode == "morning":
+                title = "🔔 US Stock Morning Prism Signal Alert"
+                time_desc = "10 minutes after market open"
+            else:
+                title = "🔔 US Stock Afternoon Prism Signal Alert"
+                time_desc = "after market close"
+            header = f"{title}\n📅 {formatted_date} Stocks detected {time_desc}\n\n"
+            volume_label = "Volume Increase"
+            gap_label = "Gap Up"
+            footer = "📋 Detailed analysis report will be available in 10-30 minutes\n※ This is for investment reference only. Investment decisions are your responsibility."
 
-        message = f"{title}\n"
-        message += f"📅 {formatted_date} {time_desc} 포착된 관심종목\n\n"
+        message = header
 
         for trigger_type, stocks in results.items():
             emoji = self._get_trigger_emoji(trigger_type)
-            message += f"{emoji} *{trigger_type}*\n"
+            # Translate trigger type based on language
+            display_trigger_type = TRIGGER_TYPE_KO.get(trigger_type, trigger_type) if language == "ko" else trigger_type
+            message += f"{emoji} {display_trigger_type}\n"
 
             for stock in stocks:
                 ticker = stock.get("ticker", stock.get("code", ""))
@@ -415,24 +703,23 @@ class USStockAnalysisOrchestrator:
                 current_price = stock.get("current_price", 0)
                 change_rate = stock.get("change_rate", 0)
 
-                # Arrow based on change rate (same as KR version)
+                # Arrow based on change rate
                 arrow = "⬆️" if change_rate > 0 else "⬇️" if change_rate < 0 else "➖"
 
-                message += f"· *{name}* ({ticker})\n"
+                message += f"· {name} ({ticker})\n"
                 message += f"  ${current_price:.2f} {arrow} {abs(change_rate):.2f}%\n"
 
                 # Additional information based on trigger type
                 if "volume_increase" in stock and ("Volume" in trigger_type or "거래량" in trigger_type):
                     volume_increase = stock.get("volume_increase", 0)
-                    message += f"  거래량 증가: {volume_increase:.2f}%\n"
+                    message += f"  {volume_label}: {volume_increase:.2f}%\n"
                 elif "gap_rate" in stock and ("Gap" in trigger_type or "갭" in trigger_type):
                     gap_rate = stock.get("gap_rate", 0)
-                    message += f"  갭상승: {gap_rate:.2f}%\n"
+                    message += f"  {gap_label}: {gap_rate:.2f}%\n"
 
                 message += "\n"
 
-        message += "📋 10~30분 후 상세 분석 리포트가 제공됩니다\n"
-        message += "※ 본 정보는 투자 참고용이며, 투자 결정은 본인 책임입니다."
+        message += footer
 
         return message
 
@@ -530,6 +817,7 @@ class USStockAnalysisOrchestrator:
                         trigger_results_file = f"trigger_results_us_{mode}_{datetime.now().strftime('%Y%m%d')}.json"
                         tracking_success = await tracking_agent.run(
                             pdf_paths, chat_id, language,
+                            telegram_config=self.telegram_config,
                             trigger_results_file=trigger_results_file
                         )
 
@@ -560,6 +848,8 @@ async def main():
                         help="Execution mode (morning, afternoon, both)")
     parser.add_argument("--language", choices=["ko", "en"], default="ko",
                         help="Analysis language (ko: Korean, en: English)")
+    parser.add_argument("--broadcast-languages", type=str, default="",
+                        help="Additional languages for parallel telegram channel broadcasting (comma-separated, e.g., 'en,ja,zh')")
     parser.add_argument("--no-telegram", action="store_true",
                         help="Disable telegram message transmission")
     parser.add_argument("--force", action="store_true",
@@ -567,8 +857,11 @@ async def main():
 
     args = parser.parse_args()
 
+    # Parse broadcast languages
+    broadcast_languages = [lang.strip() for lang in args.broadcast_languages.split(",") if lang.strip()]
+
     from telegram_config import TelegramConfig
-    telegram_config = TelegramConfig(use_telegram=not args.no_telegram, broadcast_languages=[])
+    telegram_config = TelegramConfig(use_telegram=not args.no_telegram, broadcast_languages=broadcast_languages)
 
     if telegram_config.use_telegram:
         try:

@@ -200,14 +200,14 @@ class USTelegramSummaryGenerator:
         }
         return trigger_names.get(trigger_type, trigger_type)
 
-    def create_optimizer_agent(self, metadata: dict, current_date: str, language: str = "en") -> Agent:
+    def create_optimizer_agent(self, metadata: dict, current_date: str, language: str = "ko") -> Agent:
         """
         Create telegram summary optimizer agent.
 
         Args:
             metadata: Stock metadata
             current_date: Current date (YYYY.MM.DD)
-            language: Target language (default: "en")
+            language: Target language (default: "ko")
 
         Returns:
             Agent instance for optimization
@@ -216,7 +216,46 @@ class USTelegramSummaryGenerator:
         ticker = metadata.get("ticker", "N/A")
         company_name = metadata.get("company_name", "Unknown")
 
-        instruction = f"""You are a financial analyst specializing in creating concise, engaging Telegram messages for US stock market analysis.
+        # Warning message for morning mode
+        if language == "ko":
+            warning_message = ""
+            if metadata.get('trigger_mode') == 'morning':
+                warning_message = '메시지 중간에 "⚠️ 주의: 본 정보는 장 시작 후 10분 시점 데이터 기준으로, 현재 시장 상황과 차이가 있을 수 있습니다." 문구를 반드시 포함해 주세요.'
+
+            instruction = f"""당신은 미국 주식 정보 요약 전문가입니다.
+상세한 주식 분석 보고서를 읽고, 일반 투자자를 위한 가치 있는 텔레그램 메시지로 요약해야 합니다.
+메시지는 핵심 정보와 통찰력을 포함해야 하며, 아래 형식을 따라야 합니다:
+
+## 현재 맥락
+- 날짜: {current_date}
+- 종목: {company_name} ({ticker})
+- 시장: 미국 (NYSE/NASDAQ)
+
+## 메시지 형식 요구사항
+1. 이모지와 함께 종목 정보 표시 (📊, 📈, 💰 등 적절한 이모지)
+2. 종목명(티커) 및 간략한 사업 설명 (1-2문장)
+3. 핵심 거래 정보:
+   - 현재가 (USD)
+   - 전일 대비 등락률
+   - 최근 거래량 동향
+4. 주요 지지선/저항선 레벨
+5. 기관 보유 현황 (의미있는 변동이 있는 경우)
+6. 투자 관점 - 리스크/리워드 평가
+
+전체 메시지는 2000자 이내로 작성하세요. 투자자가 즉시 활용할 수 있는 실질적인 정보에 집중하세요.
+수치는 가능한 구체적으로 표현하고, 주관적 투자 조언이나 '추천'이라는 단어는 사용하지 마세요.
+
+{warning_message}
+
+메시지 끝에는 "본 정보는 투자 참고용이며, 투자 결정과 책임은 투자자에게 있습니다." 문구를 반드시 포함하세요.
+"""
+
+        else:  # English
+            warning_message = ""
+            if metadata.get('trigger_mode') == 'morning':
+                warning_message = 'IMPORTANT: You must include this warning in the middle of the message: "⚠️ Note: This information is based on data from 10 minutes after market open and may differ from current market conditions."'
+
+            instruction = f"""You are a financial analyst specializing in creating concise, engaging Telegram messages for US stock market analysis.
 
 ## Current Context
 - Date: {current_date}
@@ -245,6 +284,8 @@ Transform the detailed stock analysis report into a compelling Telegram summary 
 4. Institutional Ownership Changes (if significant)
 5. Risk Factors & Target Price Range
 
+{warning_message}
+
 Generate a professional, informative Telegram message."""
 
         return Agent(
@@ -253,18 +294,63 @@ Generate a professional, informative Telegram message."""
             server_names=[]
         )
 
-    def create_evaluator_agent(self, current_date: str, language: str = "en") -> Agent:
+    def create_evaluator_agent(self, current_date: str, language: str = "ko") -> Agent:
         """
         Create telegram summary evaluator agent.
 
         Args:
             current_date: Current date (YYYY.MM.DD)
-            language: Target language (default: "en")
+            language: Target language (default: "ko")
 
         Returns:
             Agent instance for evaluation
         """
-        instruction = f"""You are a quality evaluator for US stock market Telegram messages.
+        # Language-specific instructions
+        if language == "ko":
+            instruction = f"""당신은 미국 주식 정보 요약 메시지를 평가하는 전문가입니다.
+주식 분석 보고서와 생성된 텔레그램 메시지를 비교하여 다음 기준에 따라 평가해야 합니다:
+
+## 평가 날짜
+- 날짜: {current_date}
+
+## 평가 기준 (각 항목별 1-5점)
+
+1. **정확성** (가중치: 30%)
+   - 가격 수준과 변동률이 정확한가?
+   - 기술적 지표가 올바르게 설명되어 있는가?
+   - 기관 보유 현황이 정확히 보고되어 있는가?
+
+2. **명확성** (가중치: 25%)
+   - 메시지가 이해하기 쉬운가?
+   - 구조가 논리적이고 잘 정리되어 있는가?
+   - 복잡한 개념이 쉽게 설명되어 있는가?
+
+3. **완전성** (가중치: 20%)
+   - 주요 가격 수준이 포함되어 있는가?
+   - 리스크와 기회가 언급되어 있는가?
+   - 투자 논거가 명확한가?
+
+4. **참여도** (가중치: 15%)
+   - 이모지가 적절하게 사용되었는가?
+   - 전문적이면서도 접근하기 쉬운 톤인가?
+   - 추가 연구를 권장하고 있는가?
+
+5. **규정 준수** (가중치: 10%)
+   - 적절한 면책 조항이 포함되어 있는가?
+   - 명시적인 매수/매도 권고를 피하고 있는가?
+   - 텔레그램 형식에 맞는가?
+
+## 평가 등급
+- EXCELLENT (5): 게시 준비 완료, 수정 불필요
+- GOOD (4): 약간의 개선 가능
+- FAIR (3): 일부 수정 필요
+- POOR (2): 상당한 문제 있음
+- UNACCEPTABLE (1): 전체 재작성 필요
+
+EXCELLENT 미만인 경우 구체적인 개선 피드백을 제공하세요."""
+
+        else:  # English
+            instruction = f"""You are a quality evaluator for US stock market Telegram messages.
 
 ## Evaluation Date
 - Date: {current_date}
@@ -319,7 +405,7 @@ Provide specific feedback for improvement if rating is below EXCELLENT."""
         report_content: str,
         metadata: dict,
         trigger_type: str,
-        language: str = "en"
+        language: str = "ko"
     ) -> str:
         """
         Generate telegram message with evaluation and optimization.
@@ -328,7 +414,7 @@ Provide specific feedback for improvement if rating is below EXCELLENT."""
             report_content: Report content
             metadata: Stock metadata
             trigger_type: Trigger type
-            language: Target language (default: "en")
+            language: Target language (default: "ko")
 
         Returns:
             Generated telegram message
@@ -391,7 +477,11 @@ Report Content:
 
             # Try to extract actual message content
             emoji_start = re.search(r'(📊|📈|📉|💰|⚠️|🔍)', cleaned_response)
-            message_end = re.search(r'This information is for reference only\..*?investor\.', cleaned_response, re.DOTALL)
+            # Support both Korean and English disclaimers
+            message_end = re.search(
+                r'(This information is for reference only\..*?investor\.|본 정보는 투자 참고용이며.*?있습니다\.)',
+                cleaned_response, re.DOTALL
+            )
 
             if emoji_start and message_end:
                 return cleaned_response[emoji_start.start():message_end.end()]
@@ -415,9 +505,9 @@ Report Content:
         response_str = str(response)
         logger.debug(f"Response string before regex: {response_str[:100]}...")
 
-        # Regex to extract telegram message format
+        # Regex to extract telegram message format (support both Korean and English)
         content_match = re.search(
-            r'(📊|📈|📉|💰|⚠️|🔍).*?This information is for reference only\..*?investor\.',
+            r'(📊|📈|📉|💰|⚠️|🔍).*?(This information is for reference only\..*?investor\.|본 정보는 투자 참고용이며.*?있습니다\.)',
             response_str,
             re.DOTALL
         )
@@ -426,12 +516,22 @@ Report Content:
             logger.info("Extracted message content using regex")
             return content_match.group(0)
 
-        # Fallback: generate default message
+        # Fallback: generate default message (language-aware)
         logger.warning("Unable to extract valid telegram message from response")
         logger.warning(f"Original message (first 100 chars): {response_str[:100]}...")
 
-        # Default message
-        default_message = f"""📊 {metadata['company_name']} ({metadata['ticker']}) - Analysis Summary
+        # Default message based on language
+        if language == "ko":
+            default_message = f"""📊 {metadata['company_name']} ({metadata['ticker']}) - 분석 요약
+
+1. 현재가: (정보 없음)
+2. 최근 추세: (정보 없음)
+3. 주요 체크포인트: 상세 분석 보고서를 참조하세요.
+
+⚠️ 자동 생성 오류로 상세 정보를 표시할 수 없습니다. 전체 보고서를 확인하세요.
+본 정보는 투자 참고용이며, 투자 결정과 책임은 투자자에게 있습니다."""
+        else:
+            default_message = f"""📊 {metadata['company_name']} ({metadata['ticker']}) - Analysis Summary
 
 1. Current Price: (Information unavailable)
 2. Recent Trend: (Information unavailable)
@@ -465,7 +565,7 @@ This information is for reference only. Investment decisions and responsibilitie
         self,
         report_pdf_path: str,
         output_dir: str = None,
-        language: str = "en"
+        language: str = "ko"
     ) -> str:
         """
         Process report file to generate telegram summary message.
@@ -473,7 +573,7 @@ This information is for reference only. Investment decisions and responsibilitie
         Args:
             report_pdf_path: Report file path
             output_dir: Output directory
-            language: Target language (default: "en")
+            language: Target language (default: "ko")
 
         Returns:
             Generated telegram message
@@ -533,7 +633,7 @@ async def process_all_reports(
     reports_dir: str = None,
     output_dir: str = None,
     date_filter: str = None,
-    language: str = "en"
+    language: str = "ko"
 ):
     """
     Process all report files in the specified directory.
@@ -542,7 +642,7 @@ async def process_all_reports(
         reports_dir: Reports directory
         output_dir: Output directory
         date_filter: Date filter (YYYYMMDD)
-        language: Target language (default: "en")
+        language: Target language (default: "ko")
     """
     # Default directories
     if reports_dir is None:
@@ -616,8 +716,8 @@ async def main():
     )
     parser.add_argument(
         "--language",
-        default="en",
-        help="Target language code (default: en)"
+        default="ko",
+        help="Target language code (default: ko)"
     )
 
     args = parser.parse_args()
