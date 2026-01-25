@@ -1066,13 +1066,14 @@ class USStockTrackingAgent:
             self.cursor.execute("SELECT COUNT(*) FROM us_trading_history WHERE profit_rate > 0")
             successful_trades = self.cursor.fetchone()[0] or 0
 
-            # Generate message
-            message = f"PRISM-US Portfolio Summary ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n\n"
+            # Generate message (Korean as default - same as Korean stock version)
+            message = f"📊 프리즘 US 시뮬레이터 | 실시간 포트폴리오 ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n\n"
 
-            # Portfolio summary
-            message += f"Current Holdings: {len(holdings) if holdings else 0}/{self.max_slots}\n"
+            # 1. Portfolio summary
+            message += f"🔸 현재 보유 종목: {len(holdings) if holdings else 0}/{self.max_slots}개\n"
 
-            if holdings:
+            # Best profit/loss stock information (if any)
+            if holdings and len(holdings) > 0:
                 profit_rates = []
                 for h in holdings:
                     buy_price = h.get('buy_price', 0)
@@ -1085,14 +1086,16 @@ class USStockTrackingAgent:
                     best = max(profit_rates, key=lambda x: x[2])
                     worst = min(profit_rates, key=lambda x: x[2])
 
-                    message += f"Best: {best[1]} ({best[0]}) {'+' if best[2] > 0 else ''}{best[2]:.2f}%\n"
-                    message += f"Worst: {worst[1]} ({worst[0]}) {'+' if worst[2] > 0 else ''}{worst[2]:.2f}%\n"
+                    message += f"✅ 최고 수익: {best[1]}({best[0]}) {'+' if best[2] > 0 else ''}{best[2]:.2f}%\n"
+                    message += f"⚠️ 최저 수익: {worst[1]}({worst[0]}) {'+' if worst[2] > 0 else ''}{worst[2]:.2f}%\n"
 
-                message += "\n"
+            message += "\n"
 
-                # Holdings list
-                sector_counts = {}
-                message += "Holdings:\n"
+            # 2. Sector distribution analysis
+            sector_counts = {}
+
+            if holdings and len(holdings) > 0:
+                message += f"🔸 보유 종목 목록:\n"
                 for stock in holdings:
                     ticker = stock.get('ticker', '')
                     company_name = stock.get('company_name', '')
@@ -1101,47 +1104,58 @@ class USStockTrackingAgent:
                     buy_date = stock.get('buy_date', '')
                     target_price = stock.get('target_price', 0)
                     stop_loss = stock.get('stop_loss', 0)
-                    sector = stock.get('sector', 'Unknown')
+                    scenario_str = stock.get('scenario', '{}')
 
+                    # Extract sector information from scenario
+                    sector = "알 수 없음"
+                    try:
+                        if isinstance(scenario_str, str):
+                            scenario_data = json.loads(scenario_str)
+                            sector = scenario_data.get('sector', '알 수 없음')
+                    except:
+                        sector = stock.get('sector', '알 수 없음')
+
+                    # Update sector count
                     sector_counts[sector] = sector_counts.get(sector, 0) + 1
 
                     profit_rate = ((current_price - buy_price) / buy_price) * 100 if buy_price > 0 else 0
-                    arrow = "▲" if profit_rate > 0 else "▼" if profit_rate < 0 else "─"
+                    arrow = "⬆️" if profit_rate > 0 else "⬇️" if profit_rate < 0 else "➖"
 
                     buy_datetime = datetime.strptime(buy_date, "%Y-%m-%d %H:%M:%S") if buy_date else datetime.now()
                     days_passed = (datetime.now() - buy_datetime).days
 
-                    message += f"- {company_name} ({ticker}) [{sector}]\n"
-                    message += f"  Buy: ${buy_price:.2f} / Current: ${current_price:.2f}\n"
-                    message += f"  Target: ${target_price:.2f} / Stop: ${stop_loss:.2f}\n"
-                    message += f"  Return: {arrow} {profit_rate:.2f}% / Days: {days_passed}\n\n"
+                    message += f"- {company_name}({ticker}) [{sector}]\n"
+                    message += f"  매수가: ${buy_price:.2f} / 현재가: ${current_price:.2f}\n"
+                    message += f"  목표가: ${target_price:.2f} / 손절가: ${stop_loss:.2f}\n"
+                    message += f"  수익률: {arrow} {profit_rate:.2f}% / 보유기간: {days_passed}일\n\n"
 
-                # Sector distribution
-                message += "Sector Distribution:\n"
+                # 산업군 분포 추가
+                message += f"🔸 산업군 분포:\n"
                 for sector, count in sector_counts.items():
                     percentage = (count / len(holdings)) * 100
-                    message += f"- {sector}: {count} ({percentage:.1f}%)\n"
+                    message += f"- {sector}: {count}개 ({percentage:.1f}%)\n"
                 message += "\n"
             else:
-                message += "No holdings.\n\n"
+                message += "보유 중인 종목이 없습니다.\n\n"
 
-            # Trading history statistics
-            message += "Trading Statistics:\n"
-            message += f"- Total Trades: {total_trades}\n"
-            message += f"- Profitable: {successful_trades}\n"
-            message += f"- Losing: {total_trades - successful_trades}\n"
+            # 3. Trading history statistics
+            message += f"🔸 매매 이력 통계\n"
+            message += f"- 총 거래 건수: {total_trades}건\n"
+            message += f"- 수익 거래: {successful_trades}건\n"
+            message += f"- 손실 거래: {total_trades - successful_trades}건\n"
 
             if total_trades > 0:
-                message += f"- Win Rate: {(successful_trades / total_trades * 100):.2f}%\n"
+                message += f"- 승률: {(successful_trades / total_trades * 100):.2f}%\n"
             else:
-                message += f"- Win Rate: 0.00%\n"
+                message += f"- 승률: 0.00%\n"
 
-            message += f"- Cumulative Return: {total_profit:.2f}%\n\n"
+            message += f"- 누적 수익률: {total_profit:.2f}%\n\n"
 
-            # Disclaimer
-            message += "Disclaimer:\n"
-            message += "- This is an AI simulation, not actual trading.\n"
-            message += "- For reference only. Investment decisions are your responsibility."
+            # 4. 강화된 면책 조항
+            message += "📝 안내사항:\n"
+            message += "- 이 보고서는 AI 기반 시뮬레이션 결과이며, 실제 매매와 무관합니다.\n"
+            message += "- 본 정보는 단순 참고용이며, 투자 결정과 책임은 전적으로 투자자에게 있습니다.\n"
+            message += "- 이 채널은 리딩방이 아니며, 특정 종목 매수/매도를 권유하지 않습니다."
 
             return message
 
@@ -1261,26 +1275,39 @@ class USStockTrackingAgent:
             logger.error(traceback.format_exc())
             return 0, 0
 
-    async def send_telegram_message(self, chat_id: str) -> bool:
+    async def send_telegram_message(self, chat_id: str, language: str = "ko") -> bool:
         """
         Send message via Telegram.
 
         Args:
-            chat_id: Telegram channel ID
+            chat_id: Telegram channel ID (no sending if None)
+            language: Message language ("ko" or "en")
 
         Returns:
             bool: Send success status
         """
         try:
+            # Skip Telegram sending if chat_id is None
             if not chat_id:
                 logger.info("No Telegram channel ID. Skipping message send")
-                for message in self.message_queue:
-                    logger.info(f"[Message] {message[:100]}...")
-                self.message_queue = []
-                return True
 
+                # Log message output
+                for message in self.message_queue:
+                    logger.info(f"[Message (not sent)] {message[:100]}...")
+
+                # Initialize message queue
+                self.message_queue = []
+                return True  # Consider intentional skip as success
+
+            # If Telegram bot not initialized, only output logs
             if not self.telegram_bot:
-                logger.warning("Telegram bot not initialized")
+                logger.warning("Telegram bot not initialized. Please check token")
+
+                # Only output messages without actual sending
+                for message in self.message_queue:
+                    logger.info(f"[Telegram message (bot not initialized)] {message[:100]}...")
+
+                # Initialize message queue
                 self.message_queue = []
                 return False
 
@@ -1288,17 +1315,37 @@ class USStockTrackingAgent:
             summary = await self.generate_report_summary()
             self.message_queue.append(summary)
 
-            # Send each message
+            # Translate messages if English is requested
+            if language == "en":
+                logger.info(f"Translating {len(self.message_queue)} US messages to English")
+                try:
+                    from cores.agents.telegram_translator_agent import translate_telegram_message
+                    translated_queue = []
+                    for idx, message in enumerate(self.message_queue, 1):
+                        logger.info(f"Translating US message {idx}/{len(self.message_queue)}")
+                        translated = await translate_telegram_message(message, model="gpt-5-nano")
+                        translated_queue.append(translated)
+                    self.message_queue = translated_queue
+                    logger.info("All US messages translated successfully")
+                except Exception as e:
+                    logger.error(f"Translation failed: {str(e)}. Using original Korean messages.")
+
+            # 각 메시지 전송
             success = True
             for message in self.message_queue:
-                logger.info(f"Sending Telegram message: {chat_id}")
+                logger.info(f"Sending US Telegram message: {chat_id}")
                 try:
+                    # 텔레그램 메시지 길이 제한 (4096자)
                     MAX_MESSAGE_LENGTH = 4096
 
                     if len(message) <= MAX_MESSAGE_LENGTH:
-                        await self.telegram_bot.send_message(chat_id=chat_id, text=message)
+                        # 메시지가 짧으면 한 번에 전송
+                        await self.telegram_bot.send_message(
+                            chat_id=chat_id,
+                            text=message
+                        )
                     else:
-                        # Split long messages
+                        # 메시지가 길면 분할 전송
                         parts = []
                         current_part = ""
 
@@ -1313,26 +1360,114 @@ class USStockTrackingAgent:
                         if current_part:
                             parts.append(current_part.rstrip())
 
+                        # 분할된 메시지 전송
                         for i, part in enumerate(parts, 1):
                             await self.telegram_bot.send_message(
                                 chat_id=chat_id,
                                 text=f"[{i}/{len(parts)}]\n{part}"
                             )
-                            await asyncio.sleep(0.5)
+                            await asyncio.sleep(0.5)  # 분할 메시지 간 짧은 지연
 
-                    logger.info(f"Telegram message sent: {chat_id}")
+                    logger.info(f"US Telegram message sent: {chat_id}")
                 except TelegramError as e:
-                    logger.error(f"Telegram message send failed: {e}")
+                    logger.error(f"US Telegram message send failed: {e}")
                     success = False
 
+                # API 제한 방지를 위한 지연
                 await asyncio.sleep(1)
 
+            # Send to broadcast channels if configured (wait for completion)
+            if hasattr(self, 'telegram_config') and self.telegram_config and self.telegram_config.broadcast_languages:
+                # Create task and wait for it to complete
+                translation_task = asyncio.create_task(self._send_to_translation_channels(self.message_queue.copy()))
+                await translation_task
+                logger.info("US broadcast channel messages sent successfully")
+
+            # 메시지 큐 초기화
             self.message_queue = []
+
             return success
 
         except Exception as e:
-            logger.error(f"Error sending Telegram message: {str(e)}")
+            logger.error(f"Error sending US Telegram message: {str(e)}")
+            logger.error(traceback.format_exc())
             return False
+
+    async def _send_to_translation_channels(self, messages: List[str]):
+        """
+        Send messages to translation channels
+
+        Args:
+            messages: List of original Korean messages
+        """
+        try:
+            from cores.agents.telegram_translator_agent import translate_telegram_message
+
+            for lang in self.telegram_config.broadcast_languages:
+                try:
+                    # Get channel ID for this language
+                    channel_id = self.telegram_config.get_broadcast_channel_id(lang)
+                    if not channel_id:
+                        logger.warning(f"No channel ID configured for language: {lang}")
+                        continue
+
+                    logger.info(f"Sending US tracking messages to {lang} channel")
+
+                    # Translate and send each message
+                    for message in messages:
+                        try:
+                            # Translate message
+                            logger.info(f"Translating US tracking message to {lang}")
+                            translated_message = await translate_telegram_message(
+                                message,
+                                model="gpt-5-nano",
+                                from_lang="ko",
+                                to_lang=lang
+                            )
+
+                            # Send translated message
+                            MAX_MESSAGE_LENGTH = 4096
+
+                            if len(translated_message) <= MAX_MESSAGE_LENGTH:
+                                await self.telegram_bot.send_message(
+                                    chat_id=channel_id,
+                                    text=translated_message
+                                )
+                            else:
+                                # Split long messages
+                                parts = []
+                                current_part = ""
+
+                                for line in translated_message.split('\n'):
+                                    if len(current_part) + len(line) + 1 <= MAX_MESSAGE_LENGTH:
+                                        current_part += line + '\n'
+                                    else:
+                                        if current_part:
+                                            parts.append(current_part.rstrip())
+                                        current_part = line + '\n'
+
+                                if current_part:
+                                    parts.append(current_part.rstrip())
+
+                                for i, part in enumerate(parts, 1):
+                                    await self.telegram_bot.send_message(
+                                        chat_id=channel_id,
+                                        text=f"[{i}/{len(parts)}]\n{part}"
+                                    )
+                                    await asyncio.sleep(0.5)
+
+                            logger.info(f"US tracking message sent successfully to {lang} channel")
+
+                            await asyncio.sleep(1)
+
+                        except Exception as e:
+                            logger.error(f"Error translating/sending US message to {lang}: {str(e)}")
+
+                except Exception as e:
+                    logger.error(f"Error processing language {lang}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error in _send_to_translation_channels: {str(e)}")
 
     def get_compression_stats(self) -> Dict[str, Any]:
         """
@@ -1432,14 +1567,15 @@ class USStockTrackingAgent:
         return 0, []
 
     async def run(self, pdf_report_paths: List[str], chat_id: str = None,
-                  language: str = "en", trigger_results_file: str = None) -> bool:
+                  language: str = "ko", telegram_config=None, trigger_results_file: str = None) -> bool:
         """
         Main execution function for US stock tracking system.
 
         Args:
             pdf_report_paths: List of analysis report file paths
             chat_id: Telegram channel ID (optional)
-            language: Message language (default: "en")
+            language: Message language (default: "ko")
+            telegram_config: TelegramConfig object for multi-language support
             trigger_results_file: Path to trigger results JSON file
 
         Returns:
@@ -1447,6 +1583,9 @@ class USStockTrackingAgent:
         """
         try:
             logger.info("Starting US tracking system batch execution")
+
+            # Store telegram_config for use in send_telegram_message
+            self.telegram_config = telegram_config
 
             # Load trigger type mapping
             self.trigger_info_map = {}
@@ -1481,14 +1620,14 @@ class USStockTrackingAgent:
 
                 # Send Telegram message
                 if chat_id:
-                    message_sent = await self.send_telegram_message(chat_id)
+                    message_sent = await self.send_telegram_message(chat_id, language)
                     if message_sent:
-                        logger.info("Telegram message sent successfully")
+                        logger.info("US Telegram message sent successfully")
                     else:
-                        logger.warning("Telegram message send failed")
+                        logger.warning("US Telegram message send failed")
                 else:
                     logger.info("Telegram channel ID not provided, skipping message send")
-                    await self.send_telegram_message(None)
+                    await self.send_telegram_message(None, language)
 
                 logger.info("US tracking system batch execution complete")
                 return True
@@ -1518,7 +1657,7 @@ async def main():
     parser.add_argument("--reports", nargs="+", help="List of analysis report file paths")
     parser.add_argument("--chat-id", help="Telegram channel ID")
     parser.add_argument("--telegram-token", help="Telegram bot token")
-    parser.add_argument("--language", default="en", help="Language (default: en)")
+    parser.add_argument("--language", default="ko", help="Language (default: ko)")
     parser.add_argument(
         "--enable-journal",
         action="store_true",
