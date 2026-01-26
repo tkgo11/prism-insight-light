@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for PRISM-INSIGHT
 
-> **Last Updated**: 2026-01-19
-> **Version**: 1.6
+> **Last Updated**: 2026-01-27
+> **Version**: 1.7
 > **Purpose**: Comprehensive guide for AI assistants working on the PRISM-INSIGHT codebase
 
 ---
@@ -415,7 +415,7 @@ prism-insight/
 | `stock_tracking_enhanced_agent.py` | Enhanced trading with stats | Advanced trading signals |
 | `trigger_batch.py` | Stock screening (v1.16.6: 고정 손절폭, 시총 5000억, 등락률 20%) | Changing detection criteria |
 | `telegram_config.py` | Telegram configuration | Telegram settings |
-| `pdf_converter.py` | PDF generation | PDF styling/formatting |
+| `pdf_converter.py` | PDF generation (Prism Light 테마, 차트 렌더링) | PDF styling/formatting |
 | `cores/language_config.py` | Multi-language templates | Adding/modifying languages |
 | `examples/messaging/*.py` | Event-driven trading signals | Redis/GCP integration |
 | `compress_trading_memory.py` | Memory compression & cleanup | Token optimization |
@@ -1246,14 +1246,15 @@ logging.basicConfig(level=logging.DEBUG)
 
 ---
 
-**Document Version**: 1.6
-**Last Updated**: 2026-01-19
+**Document Version**: 1.7
+**Last Updated**: 2026-01-27
 **Maintained By**: PRISM-INSIGHT Development Team
 
 ### Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.7 | 2026-01-27 | **PDF Prism Light 테마** - 독창적인 스펙트럼 컬러 테마 적용, 차트 렌더링 수정, 마크다운 제목 계층 구조 통일 (KR/US), 회사명/날짜 추출 로직 개선 |
 | 1.6 | 2026-01-19 | **MCP Server 개선** - yahoo-finance-mcp (PyPI), sec-edgar-mcp (PyPI) 추가, uvx 원격 실행 방식으로 변경, SEC EDGAR XBRL 재무제표/내부자 거래 데이터 지원 |
 | 1.5 | 2026-01-18 | **US Stock Module 완료** - Phase 4-8 완료: Core Agents (1,405 LOC), Trading System (2,406 LOC), Orchestrator (13,377 LOC), 221 tests (97% pass). Pipeline 단계별 테스트 가이드 추가 |
 | 1.4 | 2026-01-17 | **US Stock Module (prism-us)** - Phase 1-3 완료: Foundation Setup, MCP Server Integration (yfinance), Database Schema (us_* tables) |
