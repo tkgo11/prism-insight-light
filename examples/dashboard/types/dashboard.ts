@@ -1,3 +1,6 @@
+// Market Type
+export type Market = "KR" | "US"
+
 export interface PortfolioSummary {
   total_stocks: number
   total_profit: number
@@ -155,8 +158,12 @@ export interface WatchlistStock {
 
 export interface MarketCondition {
   date: string
-  kospi_index: number
-  kosdaq_index: number
+  // Korean market indices
+  kospi_index?: number
+  kosdaq_index?: number
+  // US market indices
+  spx_index?: number
+  nasdaq_index?: number
   condition: number
   volatility: number
 }
@@ -188,6 +195,8 @@ export interface OperatingCosts {
 export interface DashboardData {
   generated_at: string
   trading_mode: string
+  market?: Market  // Market identifier (KR or US)
+  currency?: string  // Currency (KRW or USD)
   summary: Summary
   holdings: Holding[]
   real_portfolio: Holding[]
@@ -314,6 +323,7 @@ export interface TradingJournal {
   lessons: TradingLesson[]
   pattern_tags: string[]
   compression_layer: number
+  market?: Market  // KR or US
 }
 
 export interface TradingPrinciple {
@@ -329,6 +339,7 @@ export interface TradingPrinciple {
   is_active: boolean
   created_at: string
   last_validated_at: string | null
+  market?: Market  // KR or US
 }
 
 export interface TradingIntuition {
@@ -341,6 +352,7 @@ export interface TradingIntuition {
   supporting_trades: number
   is_active: boolean
   subcategory?: string
+  market?: Market  // KR or US
 }
 
 export interface InsightsSummary {
