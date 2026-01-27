@@ -344,7 +344,7 @@ async def analyze_us_stock(
 
 ---
 
-{section_reports.get("summary", headers["exec_summary"] + "\n\nSummary not available")}
+{section_reports.get("summary", headers["exec_summary"] + " - Summary not available")}
 
 ---
 
