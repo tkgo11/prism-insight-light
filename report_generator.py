@@ -100,6 +100,218 @@ HTML_REPORTS_DIR.mkdir(exist_ok=True)  # HTML 보고서 디렉토리
 PDF_REPORTS_DIR = Path("pdf_reports")
 PDF_REPORTS_DIR.mkdir(exist_ok=True)  # PDF 보고서 디렉토리
 
+# US 주식 보고서 디렉토리
+US_REPORTS_DIR = Path("prism-us/reports")
+US_REPORTS_DIR.mkdir(exist_ok=True, parents=True)
+US_PDF_REPORTS_DIR = Path("prism-us/pdf_reports")
+US_PDF_REPORTS_DIR.mkdir(exist_ok=True, parents=True)
+
+
+# =============================================================================
+# US 주식 보고서 저장 및 캐시 함수
+# =============================================================================
+
+def get_cached_us_report(ticker: str) -> tuple:
+    """US 주식 캐시된 보고서 검색
+
+    Args:
+        ticker: 티커 심볼 (예: AAPL, MSFT)
+
+    Returns:
+        tuple: (is_cached, content, md_path, pdf_path)
+    """
+    # 티커로 시작하는 모든 보고서 파일 찾기
+    report_files = list(US_REPORTS_DIR.glob(f"{ticker}_*.md"))
+
+    if not report_files:
+        return False, "", None, None
+
+    # 최신순으로 정렬
+    latest_file = max(report_files, key=lambda p: p.stat().st_mtime)
+
+    # 파일이 24시간 이내에 생성되었는지 확인
+    file_age = datetime.now() - datetime.fromtimestamp(latest_file.stat().st_mtime)
+    if file_age.days >= 1:  # 24시간 이상 지난 파일은 캐시로 사용하지 않음
+        return False, "", None, None
+
+    # 해당 PDF 파일도 있는지 확인
+    pdf_file = None
+    pdf_files = list(US_PDF_REPORTS_DIR.glob(f"{ticker}_*.pdf"))
+    if pdf_files:
+        pdf_file = max(pdf_files, key=lambda p: p.stat().st_mtime)
+
+    with open(latest_file, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # PDF 파일이 없으면 생성
+    if not pdf_file:
+        # 회사명 추출 (파일명: {ticker}_{name}_{date}_analysis.md)
+        parts = os.path.basename(latest_file).split('_')
+        company_name = parts[1] if len(parts) > 1 else ticker
+        pdf_file = save_us_pdf_report(ticker, company_name, latest_file)
+
+    return True, content, latest_file, pdf_file
+
+
+def save_us_report(ticker: str, company_name: str, content: str) -> Path:
+    """US 주식 보고서를 파일로 저장
+
+    Args:
+        ticker: 티커 심볼 (예: AAPL)
+        company_name: 회사명
+        content: 보고서 내용
+
+    Returns:
+        Path: 저장된 파일 경로
+    """
+    reference_date = datetime.now().strftime("%Y%m%d")
+    # 파일명에서 공백 및 특수문자 제거
+    safe_company_name = company_name.replace(" ", "_").replace(".", "").replace(",", "")
+    filename = f"{ticker}_{safe_company_name}_{reference_date}_analysis.md"
+    filepath = US_REPORTS_DIR / filename
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    logger.info(f"US 보고서 저장 완료: {filepath}")
+    return filepath
+
+
+def save_us_pdf_report(ticker: str, company_name: str, md_path: Path) -> Path:
+    """US 주식 마크다운 파일을 PDF로 변환하여 저장
+
+    Args:
+        ticker: 티커 심볼
+        company_name: 회사명
+        md_path: 마크다운 파일 경로
+
+    Returns:
+        Path: 생성된 PDF 파일 경로
+    """
+    from pdf_converter import markdown_to_pdf
+
+    reference_date = datetime.now().strftime("%Y%m%d")
+    # 파일명에서 공백 및 특수문자 제거
+    safe_company_name = company_name.replace(" ", "_").replace(".", "").replace(",", "")
+    pdf_filename = f"{ticker}_{safe_company_name}_{reference_date}_analysis.pdf"
+    pdf_path = US_PDF_REPORTS_DIR / pdf_filename
+
+    try:
+        markdown_to_pdf(str(md_path), str(pdf_path), 'playwright', add_theme=True)
+        logger.info(f"US PDF 보고서 생성 완료: {pdf_path}")
+    except Exception as e:
+        logger.error(f"US PDF 변환 중 오류: {e}")
+        raise
+
+    return pdf_path
+
+
+def generate_us_report_response_sync(ticker: str, company_name: str) -> str:
+    """
+    US 주식 상세 보고서를 동기 방식으로 생성 (백그라운드 스레드에서 호출됨)
+
+    Args:
+        ticker: 티커 심볼 (예: AAPL)
+        company_name: 회사명 (예: Apple Inc.)
+
+    Returns:
+        str: 생성된 보고서 내용
+    """
+    try:
+        logger.info(f"US 동기식 보고서 생성 시작: {ticker} ({company_name})")
+
+        # 별도의 프로세스로 US 분석 수행
+        # prism-us/cores/us_analysis.py의 analyze_us_stock 함수 사용
+        cmd = [
+            sys.executable,  # 현재 Python 인터프리터
+            "-c",
+            f"""
+import asyncio
+import json
+import sys
+sys.path.insert(0, 'prism-us')
+from cores.us_analysis import analyze_us_stock
+from check_market_day import get_reference_date
+
+async def run():
+    try:
+        # 마지막 거래일 자동 감지
+        ref_date = get_reference_date()
+        result = await analyze_us_stock(
+            ticker="{ticker}",
+            company_name="{company_name}",
+            reference_date=ref_date,
+            language="ko"
+        )
+        # 구분자를 사용하여 결과 출력의 시작과 끝을 표시
+        print("RESULT_START")
+        print(json.dumps({{"success": True, "result": result}}))
+        print("RESULT_END")
+    except Exception as e:
+        # 구분자를 사용하여 에러 출력의 시작과 끝을 표시
+        print("RESULT_START")
+        print(json.dumps({{"success": False, "error": str(e)}}))
+        print("RESULT_END")
+
+if __name__ == "__main__":
+    asyncio.run(run())
+            """
+        ]
+
+        # 프로젝트 루트 디렉토리 설정
+        project_root = os.path.dirname(os.path.abspath(__file__))
+
+        logger.info(f"US 외부 프로세스 실행: {ticker} (cwd: {project_root})")
+        process = subprocess.run(cmd, capture_output=True, text=True, timeout=1200, cwd=project_root)  # 20분 타임아웃
+
+        # stderr 로깅 (디버깅용)
+        if process.stderr:
+            logger.warning(f"US 외부 프로세스 stderr: {process.stderr[:500]}")
+
+        # 출력 초기화 - 경고 방지를 위해 변수 미리 선언
+        output = ""
+
+        # 출력 파싱 - 구분자를 사용하여 실제 JSON 출력 부분만 추출
+        try:
+            output = process.stdout
+            # 로그 출력에서 RESULT_START와 RESULT_END 사이의 JSON 데이터만 추출
+            if "RESULT_START" in output and "RESULT_END" in output:
+                result_start = output.find("RESULT_START") + len("RESULT_START")
+                result_end = output.find("RESULT_END")
+                json_str = output[result_start:result_end].strip()
+
+                # JSON 파싱
+                parsed_output = json.loads(json_str)
+
+                if parsed_output.get('success', False):
+                    result = parsed_output.get('result', '')
+                    logger.info(f"US 외부 프로세스 결과: {len(result)} 글자")
+                    return result
+                else:
+                    error = parsed_output.get('error', '알 수 없는 오류')
+                    logger.error(f"US 외부 프로세스 오류: {error}")
+                    return f"US 주식 분석 중 오류가 발생했습니다: {error}"
+            else:
+                # 구분자를 찾을 수 없는 경우 - 프로세스 실행 자체에 문제가 있을 수 있음
+                logger.error(f"US 외부 프로세스 출력에서 결과 구분자를 찾을 수 없습니다: {output[:500]}")
+                # stderr에 에러 로그가 있는지 확인
+                if process.stderr:
+                    logger.error(f"US 외부 프로세스 에러 출력: {process.stderr[:500]}")
+                return f"US 주식 분석 결과를 찾을 수 없습니다. 로그를 확인하세요."
+        except json.JSONDecodeError as e:
+            logger.error(f"US 외부 프로세스 출력 파싱 실패: {e}")
+            logger.error(f"출력 내용: {output[:1000]}")
+            return f"US 주식 분석 결과 파싱 중 오류가 발생했습니다. 로그를 확인하세요."
+
+    except subprocess.TimeoutExpired:
+        logger.error(f"US 외부 프로세스 타임아웃: {ticker}")
+        return f"US 주식 분석 시간이 초과되었습니다. 다시 시도해주세요."
+    except Exception as e:
+        logger.error(f"US 동기식 보고서 생성 중 오류: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return f"US 주식 보고서 생성 중 오류가 발생했습니다: {str(e)}"
+
 
 def save_pdf_report(stock_code: str, company_name: str, md_path: Path) -> Path:
     """마크다운 파일을 PDF로 변환하여 저장
