@@ -37,7 +37,6 @@ from cores.us_surge_detector import (
     get_snapshot,
     get_previous_snapshot,
     get_multi_day_ohlcv,
-    get_market_cap_df,
     get_major_tickers,
     get_ticker_name,
     get_nearest_business_day,
@@ -789,8 +788,10 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
     prev_snapshot, prev_date = get_previous_snapshot(trade_date, tickers)
     logger.debug(f"Previous trading day: {prev_date}")
 
-    cap_df = get_market_cap_df(tickers)
-    logger.debug(f"Market cap data: {len(cap_df)} stocks")
+    # Skip market cap filtering - S&P 500/NASDAQ-100 are already large-cap stocks
+    # S&P 500 requires ~$8.2B market cap for inclusion
+    cap_df = None
+    logger.debug("Market cap filter skipped (S&P 500/NASDAQ-100 already large-cap)")
 
     if trigger_time == "morning":
         logger.info("=== Morning Batch Execution ===")
