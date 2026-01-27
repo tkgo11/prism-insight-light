@@ -491,7 +491,14 @@ class TelegramAIBot:
 
         logger.info(f"[REPLY] handle_reply_to_evaluation - user_id: {user_id}, replied_to: {replied_to_msg_id}, text: {text}")
 
-        # 저장된 컨텍스트 확인
+        # 1. 저널 컨텍스트 확인 (저널 답장 처리)
+        if replied_to_msg_id in self.journal_contexts:
+            journal_ctx = self.journal_contexts[replied_to_msg_id]
+            logger.info(f"[REPLY] journal_contexts에서 발견 - ticker: {journal_ctx.get('ticker')}")
+            await self._handle_journal_reply(update, journal_ctx)
+            return
+
+        # 2. 평가 컨텍스트 확인
         if replied_to_msg_id not in self.conversation_contexts:
             # 컨텍스트가 없으면 일반 메시지로 처리
             logger.info(f"[REPLY] conversation_contexts에 없음, 스킵. keys: {list(self.conversation_contexts.keys())[:5]}")
@@ -1748,6 +1755,65 @@ class TelegramAIBot:
         logger.info(f"저널 저장 완료: user={user_id}, ticker={ticker}, memory_id={memory_id}")
 
         return ConversationHandler.END
+
+    async def _handle_journal_reply(self, update: Update, journal_ctx: Dict):
+        """저널 메시지에 대한 답장 처리 - 추가 저널 기록 또는 대화"""
+        user_id = update.effective_user.id
+        text = update.message.text.strip()
+
+        logger.info(f"[JOURNAL_REPLY] 저널 답장 처리 - user_id: {user_id}, text: {text[:50]}...")
+
+        # 컨텍스트 만료 확인 (5분)
+        created_at = journal_ctx.get('created_at')
+        if created_at and (datetime.now() - created_at).total_seconds() > 300:
+            await update.message.reply_text(
+                "이전 저널 세션이 만료되었습니다.\n"
+                "새 저널을 작성하려면 /journal 명령어를 사용해주세요."
+            )
+            return
+
+        # 티커 정보 가져오기 (있으면)
+        ticker = journal_ctx.get('ticker')
+        ticker_name = journal_ctx.get('ticker_name')
+        market_type = journal_ctx.get('market_type', 'kr')
+
+        # 추가 저널로 저장
+        memory_id = self.memory_manager.save_journal(
+            user_id=user_id,
+            text=text,
+            ticker=ticker,
+            ticker_name=ticker_name,
+            market_type=market_type,
+            message_id=update.message.message_id
+        )
+
+        # 확인 메시지
+        if ticker:
+            confirm_msg = (
+                f"✅ 추가 기록 완료!\n\n"
+                f"📝 종목: {ticker_name} ({ticker})\n"
+                f"💭 \"{text[:80]}{'...' if len(text) > 80 else ''}\"\n\n"
+                f"💡 계속 답장하여 추가 기록 가능!"
+            )
+        else:
+            confirm_msg = (
+                f"✅ 추가 기록 완료!\n\n"
+                f"💭 \"{text[:80]}{'...' if len(text) > 80 else ''}\"\n\n"
+                f"💡 계속 답장하여 추가 기록 가능!"
+            )
+
+        sent_message = await update.message.reply_text(confirm_msg)
+
+        # 새 메시지 ID로 컨텍스트 업데이트
+        self.journal_contexts[sent_message.message_id] = {
+            'user_id': user_id,
+            'ticker': ticker,
+            'ticker_name': ticker_name,
+            'market_type': market_type,
+            'created_at': datetime.now()
+        }
+
+        logger.info(f"[JOURNAL_REPLY] 추가 저널 저장 완료: user={user_id}, ticker={ticker}, memory_id={memory_id}")
 
     def _extract_ticker_from_text(self, text: str) -> tuple:
         """
