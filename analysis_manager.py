@@ -9,7 +9,7 @@ from datetime import datetime
 from queue import Queue
 
 from report_generator import (
-    get_cached_report, save_report, save_html_report,
+    get_cached_report, save_report, save_pdf_report,
     generate_report_response_sync
 )
 
@@ -36,7 +36,8 @@ class AnalysisRequest:
         self.status = "pending"
         self.result = None
         self.report_path = None
-        self.html_path = None
+        self.html_path = None  # Legacy field (kept for compatibility)
+        self.pdf_path = None
         self.created_at = datetime.now()
         self.message_id = message_id  # 상태 업데이트를 위한 메시지 ID
 
@@ -59,14 +60,14 @@ def start_background_worker(bot_instance):
 
                 try:
                     # 캐시된 보고서 확인
-                    is_cached, cached_content, cached_file, cached_html = get_cached_report(request.stock_code)
+                    is_cached, cached_content, cached_file, cached_pdf = get_cached_report(request.stock_code)
 
                     if is_cached:
                         logger.info(f"캐시된 보고서 발견: {cached_file}")
                         request.result = cached_content
                         request.status = "completed"
                         request.report_path = cached_file
-                        request.html_path = cached_html
+                        request.pdf_path = cached_pdf
                     else:
                         # 새로운 분석 수행 (동기 실행 버전 사용)
                         logger.info(f"새 분석 수행: {request.stock_code} - {request.company_name}")
@@ -93,10 +94,11 @@ def start_background_worker(bot_instance):
                                 )
                                 request.report_path = md_path
 
-                                html_path = save_html_report(
-                                    request.stock_code, request.company_name, report_result
+                                # PDF 생성
+                                pdf_path = save_pdf_report(
+                                    request.stock_code, request.company_name, md_path
                                 )
-                                request.html_path = html_path
+                                request.pdf_path = pdf_path
                             else:
                                 request.status = "failed"
                                 request.result = "분석 중 오류가 발생했습니다."

@@ -97,10 +97,43 @@ REPORTS_DIR = Path("reports")
 REPORTS_DIR.mkdir(exist_ok=True)  # 디렉토리가 없으면 생성
 HTML_REPORTS_DIR = Path("html_reports")
 HTML_REPORTS_DIR.mkdir(exist_ok=True)  # HTML 보고서 디렉토리
+PDF_REPORTS_DIR = Path("pdf_reports")
+PDF_REPORTS_DIR.mkdir(exist_ok=True)  # PDF 보고서 디렉토리
+
+
+def save_pdf_report(stock_code: str, company_name: str, md_path: Path) -> Path:
+    """마크다운 파일을 PDF로 변환하여 저장
+
+    Args:
+        stock_code: 종목 코드
+        company_name: 회사명
+        md_path: 마크다운 파일 경로
+
+    Returns:
+        Path: 생성된 PDF 파일 경로
+    """
+    from pdf_converter import markdown_to_pdf
+
+    reference_date = datetime.now().strftime("%Y%m%d")
+    pdf_filename = f"{stock_code}_{company_name}_{reference_date}_analysis.pdf"
+    pdf_path = PDF_REPORTS_DIR / pdf_filename
+
+    try:
+        markdown_to_pdf(str(md_path), str(pdf_path), 'playwright', add_theme=True)
+        logger.info(f"PDF 보고서 생성 완료: {pdf_path}")
+    except Exception as e:
+        logger.error(f"PDF 변환 중 오류: {e}")
+        raise
+
+    return pdf_path
 
 
 def get_cached_report(stock_code: str) -> tuple:
-    """캐시된 보고서 검색"""
+    """캐시된 보고서 검색
+
+    Returns:
+        tuple: (is_cached, content, md_path, pdf_path)
+    """
     # 종목 코드로 시작하는 모든 보고서 파일 찾기
     report_files = list(REPORTS_DIR.glob(f"{stock_code}_*.md"))
 
@@ -115,25 +148,22 @@ def get_cached_report(stock_code: str) -> tuple:
     if file_age.days >= 1:  # 24시간 이상 지난 파일은 캐시로 사용하지 않음
         return False, "", None, None
 
-    # 해당 HTML 파일도 있는지 확인
-    html_file = None
-    html_files = list(HTML_REPORTS_DIR.glob(f"{stock_code}_*.html"))
-    if html_files:
-        html_file = max(html_files, key=lambda p: p.stat().st_mtime)
+    # 해당 PDF 파일도 있는지 확인
+    pdf_file = None
+    pdf_files = list(PDF_REPORTS_DIR.glob(f"{stock_code}_*.pdf"))
+    if pdf_files:
+        pdf_file = max(pdf_files, key=lambda p: p.stat().st_mtime)
 
     with open(latest_file, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # HTML 파일이 없으면 생성
-    if not html_file:
-        html_content = convert_to_html(content)
-        html_file = save_html_report_from_content(
-            stock_code,
-            os.path.basename(latest_file).split('_')[1],  # 회사명 추출
-            html_content
-        )
+    # PDF 파일이 없으면 생성
+    if not pdf_file:
+        # 회사명 추출 (파일명: {code}_{name}_{date}_analysis.md)
+        company_name = os.path.basename(latest_file).split('_')[1]
+        pdf_file = save_pdf_report(stock_code, company_name, latest_file)
 
-    return True, content, latest_file, html_file
+    return True, content, latest_file, pdf_file
 
 
 def save_report(stock_code: str, company_name: str, content: str) -> Path:

@@ -382,16 +382,16 @@ class TelegramAIBot:
             return
 
         try:
-            # HTML 파일 전송
-            if request.html_path and os.path.exists(request.html_path):
-                with open(request.html_path, 'rb') as file:
+            # PDF 파일 전송
+            if request.pdf_path and os.path.exists(request.pdf_path):
+                with open(request.pdf_path, 'rb') as file:
                     await self.application.bot.send_document(
                         chat_id=request.chat_id,
-                        document=InputFile(file, filename=f"{request.company_name}_{request.stock_code}_분석.html"),
+                        document=InputFile(file, filename=f"{request.company_name}_{request.stock_code}_분석.pdf"),
                         caption=f"✅ {request.company_name} ({request.stock_code}) 분석 보고서가 완료되었습니다."
                     )
             else:
-                # HTML 파일이 없으면 텍스트로 결과 전송
+                # PDF 파일이 없으면 텍스트로 결과 전송
                 if request.result:
                     # 텍스트가 너무 길면 잘라서 전송
                     max_length = 4000  # 텔레그램 메시지 최대 길이
@@ -539,7 +539,7 @@ class TelegramAIBot:
         )
 
         # 캐시된 보고서가 있는지 확인
-        is_cached, cached_content, cached_file, cached_html = get_cached_report(stock_code)
+        is_cached, cached_content, cached_file, cached_pdf = get_cached_report(stock_code)
 
         if is_cached:
             logger.info(f"캐시된 보고서 발견: {cached_file}")
@@ -547,7 +547,7 @@ class TelegramAIBot:
             request.result = cached_content
             request.status = "completed"
             request.report_path = cached_file
-            request.html_path = cached_html
+            request.pdf_path = cached_pdf
 
             await waiting_message.edit_text(
                 f"✅ {stock_name} ({stock_code}) 분석 보고서가 준비되었습니다. 잠시 후 전송됩니다."
