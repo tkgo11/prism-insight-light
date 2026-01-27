@@ -643,23 +643,27 @@ class UserMemoryManager:
             conn.close()
 
     def _format_journals(self, journals: List[Dict[str, Any]]) -> str:
-        """저널을 포맷팅"""
+        """저널을 포맷팅 (상세 내용 포함)"""
         lines = []
         for j in journals:
             created = j.get('created_at', '')[:10]
             content = j.get('content', {})
-            text = content.get('text', '')[:100]
+            text = content.get('text', '')[:500]  # 500자로 확장 (기존 100자)
             ticker = j.get('ticker', '')
+            ticker_name = j.get('ticker_name', '')
 
-            if ticker:
-                lines.append(f"- [{created}] ({ticker}) \"{text}\"")
+            # 티커와 종목명 함께 표시
+            if ticker and ticker_name:
+                lines.append(f"- [{created}] {ticker_name}({ticker}): {text}")
+            elif ticker:
+                lines.append(f"- [{created}] ({ticker}): {text}")
             else:
-                lines.append(f"- [{created}] \"{text}\"")
+                lines.append(f"- [{created}] {text}")
 
         return '\n'.join(lines)
 
     def _format_evaluations(self, evals: List[Dict[str, Any]]) -> str:
-        """평가를 포맷팅"""
+        """평가를 포맷팅 (상세 내용 포함)"""
         lines = []
         for e in evals:
             created = e.get('created_at', '')[:10]
@@ -669,10 +673,14 @@ class UserMemoryManager:
             summary = e.get('summary')
             if not summary:
                 response = content.get('response_summary', '')
-                summary = response[:100] + '...' if len(response) > 100 else response
+                summary = response[:300] + '...' if len(response) > 300 else response  # 300자로 확장
 
             ticker = e.get('ticker', '')
-            lines.append(f"- [{created}] {ticker}: {summary}")
+            ticker_name = e.get('ticker_name', '')
+            if ticker_name:
+                lines.append(f"- [{created}] {ticker_name}({ticker}): {summary}")
+            else:
+                lines.append(f"- [{created}] {ticker}: {summary}")
 
         return '\n'.join(lines)
 
