@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for PRISM-INSIGHT
 
-> **Last Updated**: 2026-01-27
-> **Version**: 1.7
+> **Last Updated**: 2026-01-28
+> **Version**: 1.8
 > **Purpose**: Comprehensive guide for AI assistants working on the PRISM-INSIGHT codebase
 
 ---
@@ -98,6 +98,7 @@ prism-us/
 ├── us_stock_tracking_agent.py     # 트레이딩 시뮬레이션 에이전트
 ├── us_stock_analysis_orchestrator.py  # 메인 오케스트레이터
 ├── us_telegram_summary_agent.py   # 텔레그램 요약 생성
+├── us_performance_tracker_batch.py # ✅ 7/14/30일 성과 추적 배치
 ├── cores/
 │   ├── __init__.py
 │   ├── us_data_client.py          # ✅ 통합 데이터 클라이언트 (yfinance + finnhub)
@@ -107,7 +108,7 @@ prism-us/
 ├── trading/
 │   └── config/                    # KIS 해외주식 설정 (Phase 6)
 └── tracking/
-    └── db_schema.py               # ✅ US 테이블 스키마
+    └── db_schema.py               # ✅ US 테이블 스키마 (tracking_status, was_traded 추가)
 ```
 
 ### Key Differences from Korean Version
@@ -1254,6 +1255,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.8 | 2026-01-28 | **US Performance Tracker** - us_performance_tracker_batch.py 생성 (7/14/30일 성과 추적), db_schema.py에 tracking_status/was_traded/risk_reward_ratio 컬럼 추가, generate_us_dashboard_json.py 성과 분석 로직 완성 |
 | 1.7 | 2026-01-27 | **PDF Prism Light 테마** - 독창적인 스펙트럼 컬러 테마 적용, 차트 렌더링 수정, 마크다운 제목 계층 구조 통일 (KR/US), 회사명/날짜 추출 로직 개선 |
 | 1.6 | 2026-01-19 | **MCP Server 개선** - yahoo-finance-mcp (PyPI), sec-edgar-mcp (PyPI) 추가, uvx 원격 실행 방식으로 변경, SEC EDGAR XBRL 재무제표/내부자 거래 데이터 지원 |
 | 1.5 | 2026-01-18 | **US Stock Module 완료** - Phase 4-8 완료: Core Agents (1,405 LOC), Trading System (2,406 LOC), Orchestrator (13,377 LOC), 221 tests (97% pass). Pipeline 단계별 테스트 가이드 추가 |
