@@ -259,8 +259,11 @@ services:
       - ENABLE_CRON=true
 
 # 스케줄 (docker/crontab)
-# 한국 주식: 09:10, 15:40
-# 미국 주식: 23:40, 02:10, 06:10 KST
+# 한국 주식: 09:30, 15:40 KST (2회/일)
+# 미국 주식: 00:15, 02:30, 06:30 KST (3회/일)
+#   - Morning: 00:15 KST (10:15 EST) - 개장 45분 후
+#   - Midday: 02:30 KST (12:30 EST) - 점심 시간
+#   - Afternoon: 06:30 KST (16:30 EST) - 마감 30분 후
 ```
 
 ---
@@ -306,6 +309,26 @@ llm = OpenAIAugmentedLLM(
 
 `insights.priority.undefined` 오류 수정 - 우선순위 필드 누락 시 기본값 적용
 
+#### 8.4 대시보드 KR/US 마켓 선택기
+
+대시보드에서 한국/미국 시장 데이터를 전환하여 볼 수 있습니다:
+
+```typescript
+// examples/dashboard/components/market-selector.tsx
+<MarketSelector
+  market={market}  // "KR" | "US"
+  onMarketChange={setMarket}
+/>
+
+// 통화 자동 포맷팅
+formatCurrency(10000, "KR")  // "10,000원"
+formatCurrency(100, "US")    // "$100.00"
+```
+
+**신규 파일:**
+- `examples/dashboard/components/market-selector.tsx` - 마켓 선택 컴포넌트
+- `examples/dashboard/lib/currency.ts` - KRW/USD 통화 포맷팅
+
 ---
 
 ## 변경된 파일
@@ -335,6 +358,8 @@ llm = OpenAIAugmentedLLM(
 | `tracking/user_memory.py` | 사용자 기억 관리자 |
 | `cores/company_name_translator.py` | 회사명 번역 모듈 |
 | `examples/generate_us_dashboard_json.py` | US 대시보드 JSON 생성 |
+| `examples/dashboard/components/market-selector.tsx` | KR/US 마켓 선택기 |
+| `examples/dashboard/lib/currency.ts` | 통화 포맷팅 유틸 |
 | `docker/entrypoint.sh` | Docker 엔트리포인트 |
 | `docker/crontab` | Docker 내장 크론 설정 |
 | `utils/setup_us_crontab.sh` | US 크론 설정 스크립트 |
