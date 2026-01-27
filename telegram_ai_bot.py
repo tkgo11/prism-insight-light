@@ -304,11 +304,12 @@ class TelegramAIBot:
         self.application.add_handler(CommandHandler("help", self.handle_help))
         self.application.add_handler(CommandHandler("cancel", self.handle_cancel_standalone))
 
-        # 답장(Reply) 핸들러 - ConversationHandler보다 먼저 등록
+        # 답장(Reply) 핸들러 - group=1로 등록하여 ConversationHandler(group=0)보다 낮은 우선순위
+        # ConversationHandler가 먼저 처리하고, 매칭되지 않은 답장만 이 핸들러가 처리
         self.application.add_handler(MessageHandler(
             filters.REPLY & filters.TEXT & ~filters.COMMAND,
             self.handle_reply_to_evaluation
-        ))
+        ), group=1)
 
         # 보고서 명령어 핸들러
         report_conv_handler = ConversationHandler(
