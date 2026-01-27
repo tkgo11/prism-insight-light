@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS us_analysis_performance_tracker (
     stop_loss REAL,
     buy_score INTEGER,
     decision TEXT,
+    skip_reason TEXT,                  -- Reason for not entering (if watched)
+    risk_reward_ratio REAL,            -- Risk/Reward ratio at analysis time
 
     -- Performance tracking (updated daily)
     price_7d REAL,                     -- Price after 7 days
@@ -101,6 +103,10 @@ CREATE TABLE IF NOT EXISTS us_analysis_performance_tracker (
 
     hit_target INTEGER DEFAULT 0,      -- 1 if target was hit
     hit_stop_loss INTEGER DEFAULT 0,   -- 1 if stop loss was hit
+
+    -- Tracking status (matches Korean version)
+    tracking_status TEXT DEFAULT 'pending',  -- pending, in_progress, completed
+    was_traded INTEGER DEFAULT 0,            -- 0=watched, 1=traded
 
     -- Metadata
     trigger_type TEXT,
@@ -133,6 +139,7 @@ US_INDEXES = [
     # us_analysis_performance_tracker indexes
     "CREATE INDEX IF NOT EXISTS idx_us_perf_ticker ON us_analysis_performance_tracker(ticker)",
     "CREATE INDEX IF NOT EXISTS idx_us_perf_date ON us_analysis_performance_tracker(analysis_date)",
+    "CREATE INDEX IF NOT EXISTS idx_us_perf_status ON us_analysis_performance_tracker(tracking_status)",
 ]
 
 # =============================================================================
@@ -233,6 +240,55 @@ def add_sector_column_if_missing(cursor, conn):
             pass  # Column already exists
 
 
+def migrate_us_performance_tracker_columns(cursor, conn):
+    """
+    Migrate us_analysis_performance_tracker table to add new columns.
+
+    Adds columns that align with Korean version:
+    - tracking_status: 'pending', 'in_progress', 'completed'
+    - was_traded: 0=watched, 1=traded
+    - risk_reward_ratio: Risk/Reward ratio
+    - skip_reason: Reason for not entering
+
+    Args:
+        cursor: SQLite cursor
+        conn: SQLite connection
+    """
+    migrations = [
+        ("us_analysis_performance_tracker", "tracking_status TEXT DEFAULT 'pending'"),
+        ("us_analysis_performance_tracker", "was_traded INTEGER DEFAULT 0"),
+        ("us_analysis_performance_tracker", "risk_reward_ratio REAL"),
+        ("us_analysis_performance_tracker", "skip_reason TEXT"),
+    ]
+
+    for table_name, column_def in migrations:
+        try:
+            cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_def}")
+            conn.commit()
+            logger.info(f"Added column to {table_name}: {column_def}")
+        except Exception as e:
+            if "duplicate column name" in str(e).lower():
+                logger.debug(f"Column already exists in {table_name}: {column_def}")
+            else:
+                logger.warning(f"Migration warning for {table_name}: {e}")
+
+    # Update existing records to set tracking_status based on populated fields
+    try:
+        cursor.execute("""
+            UPDATE us_analysis_performance_tracker
+            SET tracking_status = CASE
+                WHEN return_30d IS NOT NULL THEN 'completed'
+                WHEN return_7d IS NOT NULL THEN 'in_progress'
+                ELSE 'pending'
+            END
+            WHERE tracking_status IS NULL OR tracking_status = 'pending'
+        """)
+        conn.commit()
+        logger.info("Updated tracking_status for existing records")
+    except Exception as e:
+        logger.warning(f"Error updating tracking_status: {e}")
+
+
 def initialize_us_database(db_path: Optional[str] = None):
     """
     Initialize the US database with all tables and indexes.
@@ -263,6 +319,9 @@ def initialize_us_database(db_path: Optional[str] = None):
 
     # Add market column to shared tables
     add_market_column_to_shared_tables(cursor, conn)
+
+    # Migrate US performance tracker columns (for existing databases)
+    migrate_us_performance_tracker_columns(cursor, conn)
 
     logger.info(f"US database initialized: {db_path}")
 
