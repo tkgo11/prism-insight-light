@@ -5,30 +5,30 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
-import type { Holding } from "@/types/dashboard"
+import { formatCurrency as formatCurrencyUtil, formatPercent as formatPercentUtil } from "@/lib/currency"
+import type { Holding, Market } from "@/types/dashboard"
 
 interface HoldingsTableProps {
   holdings: Holding[]
   onStockClick: (stock: Holding) => void
   title?: string
   isRealTrading?: boolean
+  market?: Market
 }
 
-export function HoldingsTable({ holdings, onStockClick, title = "보유 종목", isRealTrading = false }: HoldingsTableProps) {
+export function HoldingsTable({ holdings, onStockClick, title = "보유 종목", isRealTrading = false, market = "KR" }: HoldingsTableProps) {
   const { language, t } = useLanguage()
 
+  const isUSMarket = market === "US"
+
   const formatCurrency = (value: number | undefined) => {
-    if (value === undefined || value === null) return "₩0"
-    return new Intl.NumberFormat(language === "en" ? "en-US" : "ko-KR", {
-      style: "currency",
-      currency: "KRW",
-      maximumFractionDigits: 0,
-    }).format(value)
+    if (value === undefined || value === null) return isUSMarket ? "$0.00" : "₩0"
+    return formatCurrencyUtil(value, market, language as "ko" | "en")
   }
 
   const formatPercent = (value: number | undefined) => {
     if (value === undefined || value === null) return "0.00%"
-    return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
+    return formatPercentUtil(value, true)
   }
 
   const formatWeight = (value: number | undefined) => {
@@ -36,24 +36,38 @@ export function HoldingsTable({ holdings, onStockClick, title = "보유 종목",
     return `${value.toFixed(2)}%`
   }
 
+  // Market-specific styling
+  const cardBorderClass = isRealTrading
+    ? (isUSMarket ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-50/50 to-transparent dark:from-emerald-950/20' : 'border-blue-500/30 bg-gradient-to-br from-blue-50/50 to-transparent dark:from-blue-950/20')
+    : ''
+  const badgeGradientClass = isUSMarket
+    ? "bg-gradient-to-r from-emerald-600 to-teal-600"
+    : "bg-gradient-to-r from-blue-600 to-indigo-600"
+  const badgeOutlineClass = isUSMarket
+    ? "border-emerald-500/50 text-emerald-600 dark:text-emerald-400"
+    : "border-blue-500/50 text-blue-600 dark:text-blue-400"
+  const simulatorBadgeClass = isUSMarket
+    ? "border-teal-500/50 text-teal-600 dark:text-teal-400"
+    : "border-purple-500/50 text-purple-600 dark:text-purple-400"
+
   return (
-    <Card className={`border-border/50 ${isRealTrading ? 'border-blue-500/30 bg-gradient-to-br from-blue-50/50 to-transparent dark:from-blue-950/20' : ''}`}>
+    <Card className={`border-border/50 ${cardBorderClass}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CardTitle className="text-lg font-semibold">{title}</CardTitle>
             {isRealTrading ? (
               <div className="flex items-center gap-2">
-                <Badge variant="default" className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                  {t("badge.realTrading")}
+                <Badge variant="default" className={badgeGradientClass}>
+                  {isUSMarket ? (language === "ko" ? "미국 실전투자" : "US Real") : t("badge.realTrading")}
                 </Badge>
-                <Badge variant="outline" className="border-blue-500/50 text-blue-600 dark:text-blue-400">
-                  {t("badge.season2")}
+                <Badge variant="outline" className={badgeOutlineClass}>
+                  {isUSMarket ? "Season 1" : t("badge.season2")}
                 </Badge>
               </div>
             ) : (
-              <Badge variant="outline" className="border-purple-500/50 text-purple-600 dark:text-purple-400">
-                {t("badge.aiSimulation")}
+              <Badge variant="outline" className={simulatorBadgeClass}>
+                {isUSMarket ? (language === "ko" ? "미국 시뮬레이션" : "US Simulation") : t("badge.aiSimulation")}
               </Badge>
             )}
           </div>

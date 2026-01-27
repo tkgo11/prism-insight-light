@@ -138,10 +138,20 @@ const translations: Record<Language, Record<string, string>> = {
     "chart.prismReturn": "프리즘 시뮬레이터 (누적 실현)",
     "chart.returnComparisonKospi": "수익률 비교 (KOSPI 기준)",
     "chart.returnComparisonKosdaq": "수익률 비교 (KOSDAQ 기준)",
+    "chart.returnComparisonSP500": "수익률 비교 (S&P 500 기준)",
+    "chart.returnComparisonNasdaq": "수익률 비교 (NASDAQ 기준)",
     "chart.market": "시장",
     "chart.prism": "프리즘",
     "chart.return": "수익률",
     "chart.index": "지수",
+
+    // Market Selector
+    "market.kr": "한국",
+    "market.us": "미국",
+    "market.selector.title": "시장 선택",
+    "market.us.realTrading": "미국 실전투자",
+    "market.us.simulator": "미국 시뮬레이터",
+    "market.us.season": "Season 1",
 
     // Stock Detail Modal
     "modal.stockDetail": "종목 상세",
@@ -590,10 +600,20 @@ const translations: Record<Language, Record<string, string>> = {
     "chart.prismReturn": "Prism Simulator (Realized)",
     "chart.returnComparisonKospi": "Return Comparison (KOSPI)",
     "chart.returnComparisonKosdaq": "Return Comparison (KOSDAQ)",
+    "chart.returnComparisonSP500": "Return Comparison (S&P 500)",
+    "chart.returnComparisonNasdaq": "Return Comparison (NASDAQ)",
     "chart.market": "Market",
     "chart.prism": "Prism",
     "chart.return": "Return",
     "chart.index": "Index",
+
+    // Market Selector
+    "market.kr": "Korea",
+    "market.us": "US",
+    "market.selector.title": "Select Market",
+    "market.us.realTrading": "US Real Trading",
+    "market.us.simulator": "US Simulator",
+    "market.us.season": "Season 1",
 
     // Stock Detail Modal
     "modal.stockDetail": "Stock Details",

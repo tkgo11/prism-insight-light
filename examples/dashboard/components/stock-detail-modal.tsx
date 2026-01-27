@@ -6,23 +6,21 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useLanguage } from "@/components/language-provider"
-import type { Holding } from "@/types/dashboard"
+import { formatCurrency as formatCurrencyUtil } from "@/lib/currency"
+import type { Holding, Market } from "@/types/dashboard"
 
 interface StockDetailModalProps {
   stock: Holding
   onClose: () => void
   isRealTrading?: boolean
+  market?: Market
 }
 
-export function StockDetailModal({ stock, onClose, isRealTrading = false }: StockDetailModalProps) {
+export function StockDetailModal({ stock, onClose, isRealTrading = false, market = "KR" }: StockDetailModalProps) {
   const { t, language } = useLanguage()
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ko-KR", {
-      style: "currency",
-      currency: "KRW",
-      maximumFractionDigits: 0,
-    }).format(value ?? 0)
+    return formatCurrencyUtil(value ?? 0, market, language as "ko" | "en")
   }
 
   const formatPercent = (value: number) => {
