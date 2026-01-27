@@ -10,14 +10,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import type { Market } from "@/types/dashboard"
 
 interface DashboardHeaderProps {
   activeTab: "dashboard" | "ai-decisions" | "trading" | "watchlist" | "insights" | "jeoningu-lab"
   onTabChange: (tab: "dashboard" | "ai-decisions" | "trading" | "watchlist" | "insights" | "jeoningu-lab") => void
   lastUpdated?: string
+  market?: Market
+  onMarketChange?: (market: Market) => void
 }
 
-export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: DashboardHeaderProps) {
+export function DashboardHeader({ activeTab, onTabChange, lastUpdated, market = "KR", onMarketChange }: DashboardHeaderProps) {
   const { theme, setTheme } = useTheme()
   const { language, setLanguage, t } = useLanguage()
 
@@ -41,7 +44,9 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 max-w-[1600px]">
+        {/* Top Row: Logo + Market Tabs + Utils */}
         <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary via-purple-600 to-blue-600">
               <TrendingUp className="w-6 h-6 text-white" />
@@ -51,9 +56,6 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
                 <h1 className="text-xl font-bold bg-gradient-to-r from-primary via-purple-600 to-blue-600 bg-clip-text text-transparent">
                   Prism Insight
                 </h1>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-gradient-to-r from-primary to-purple-600 text-white">
-                  {t("header.season")}
-                </span>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -67,68 +69,58 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <div className="flex items-center gap-3 mt-0.5">
-                <p className="text-xs text-muted-foreground">
-                  {t("header.startDate")}
-                </p>
-                <span className="text-muted-foreground/30">•</span>
-                <p className="text-xs text-muted-foreground">
-                  {t("header.updated")}: {formatLastUpdated()}
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("header.updated")}: {formatLastUpdated()}
+              </p>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-1">
-            <Button
-              variant={activeTab === "dashboard" ? "secondary" : "ghost"}
-              onClick={() => onTabChange("dashboard")}
-              className="font-medium"
-            >
-              {t("header.dashboard")}
-            </Button>
-            <Button
-              variant={activeTab === "ai-decisions" ? "secondary" : "ghost"}
-              onClick={() => onTabChange("ai-decisions")}
-              className="font-medium"
-            >
-              {t("header.aiDecisions")}
-            </Button>
-            <Button
-              variant={activeTab === "trading" ? "secondary" : "ghost"}
-              onClick={() => onTabChange("trading")}
-              className="font-medium"
-            >
-              {t("header.trading")}
-            </Button>
-            <Button
-              variant={activeTab === "watchlist" ? "secondary" : "ghost"}
-              onClick={() => onTabChange("watchlist")}
-              className="font-medium"
-            >
-              {t("header.watchlist")}
-            </Button>
-            <Button
-              variant={activeTab === "insights" ? "secondary" : "ghost"}
-              onClick={() => onTabChange("insights")}
-              className="font-medium"
-            >
-              💡 {t("header.insights")}
-            </Button>
-            <Button
-              variant={activeTab === "jeoningu-lab" ? "secondary" : "ghost"}
-              onClick={() => onTabChange("jeoningu-lab")}
-              className={`font-medium ${
-                activeTab === "jeoningu-lab"
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
-                  : "hover:bg-purple-50 dark:hover:bg-purple-950"
-              }`}
-            >
-              🧪 {language === "ko" ? "실험실" : "Lab"}
-            </Button>
-          </nav>
+          {/* Market Selector - Big Prominent Tabs */}
+          {onMarketChange && (
+            <div className="hidden sm:flex items-center">
+              <div className="flex bg-muted/50 rounded-xl p-1.5 gap-1">
+                <button
+                  onClick={() => onMarketChange("KR")}
+                  className={`
+                    flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200
+                    ${market === "KR"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }
+                  `}
+                >
+                  <span className="text-lg">🇰🇷</span>
+                  <span>{language === "ko" ? "한국주식" : "Korea"}</span>
+                  {market === "KR" && (
+                    <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-white/20 rounded-full">
+                      Season 2
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => onMarketChange("US")}
+                  className={`
+                    flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200
+                    ${market === "US"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/25"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }
+                  `}
+                >
+                  <span className="text-lg">🇺🇸</span>
+                  <span>{language === "ko" ? "미국주식" : "US Stocks"}</span>
+                  {market === "US" && (
+                    <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-white/20 rounded-full">
+                      Season 2
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
-          <div className="flex items-center gap-2">
+          {/* Utility Buttons */}
+          <div className="flex items-center gap-1">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -179,24 +171,16 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
               </Tooltip>
             </TooltipProvider>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setLanguage(language === "ko" ? "en" : "ko")}
-                    className="rounded-full"
-                  >
-                    <Languages className="h-5 w-5" />
-                    <span className="sr-only">Toggle Language</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">{language === "ko" ? "English" : "한국어"}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {/* Language Toggle - Prominent Button */}
+            <button
+              onClick={() => setLanguage(language === "ko" ? "en" : "ko")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors font-medium text-sm"
+            >
+              <Languages className="h-4 w-4" />
+              <span className={language === "ko" ? "text-muted-foreground" : "text-foreground font-semibold"}>EN</span>
+              <span className="text-muted-foreground/50">/</span>
+              <span className={language === "ko" ? "text-foreground font-semibold" : "text-muted-foreground"}>한</span>
+            </button>
 
             <Button
               variant="ghost"
@@ -210,6 +194,93 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
             </Button>
           </div>
         </div>
+
+        {/* Mobile Market Selector */}
+        {onMarketChange && (
+          <div className="sm:hidden flex justify-center pb-3">
+            <div className="flex bg-muted/50 rounded-xl p-1 gap-1 w-full max-w-sm">
+              <button
+                onClick={() => onMarketChange("KR")}
+                className={`
+                  flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all
+                  ${market === "KR"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
+                    : "text-muted-foreground"
+                  }
+                `}
+              >
+                <span>🇰🇷</span>
+                <span>{language === "ko" ? "한국주식" : "Korea"}</span>
+              </button>
+              <button
+                onClick={() => onMarketChange("US")}
+                className={`
+                  flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all
+                  ${market === "US"
+                    ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md"
+                    : "text-muted-foreground"
+                  }
+                `}
+              >
+                <span>🇺🇸</span>
+                <span>{language === "ko" ? "미국주식" : "US"}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Tabs */}
+        <nav className="hidden md:flex items-center gap-1 pb-3 border-t border-border/30 pt-2">
+          <Button
+            variant={activeTab === "dashboard" ? "secondary" : "ghost"}
+            onClick={() => onTabChange("dashboard")}
+            className="font-medium"
+          >
+            {t("header.dashboard")}
+          </Button>
+          <Button
+            variant={activeTab === "ai-decisions" ? "secondary" : "ghost"}
+            onClick={() => onTabChange("ai-decisions")}
+            className="font-medium"
+          >
+            {t("header.aiDecisions")}
+          </Button>
+          <Button
+            variant={activeTab === "trading" ? "secondary" : "ghost"}
+            onClick={() => onTabChange("trading")}
+            className="font-medium"
+          >
+            {t("header.trading")}
+          </Button>
+          <Button
+            variant={activeTab === "watchlist" ? "secondary" : "ghost"}
+            onClick={() => onTabChange("watchlist")}
+            className="font-medium"
+          >
+            {t("header.watchlist")}
+          </Button>
+          <Button
+            variant={activeTab === "insights" ? "secondary" : "ghost"}
+            onClick={() => onTabChange("insights")}
+            className="font-medium"
+          >
+            💡 {t("header.insights")}
+          </Button>
+          {/* Jeoningu Lab - Only show for Korean market */}
+          {market === "KR" && (
+            <Button
+              variant={activeTab === "jeoningu-lab" ? "secondary" : "ghost"}
+              onClick={() => onTabChange("jeoningu-lab")}
+              className={`font-medium ${
+                activeTab === "jeoningu-lab"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                  : "hover:bg-purple-50 dark:hover:bg-purple-950"
+              }`}
+            >
+              🧪 {language === "ko" ? "실험실" : "Lab"}
+            </Button>
+          )}
+        </nav>
 
         {/* Mobile Navigation */}
         <nav className="md:hidden flex items-center gap-1 pb-3 overflow-x-auto">
@@ -253,18 +324,21 @@ export function DashboardHeader({ activeTab, onTabChange, lastUpdated }: Dashboa
           >
             💡 {t("header.insights")}
           </Button>
-          <Button
-            variant={activeTab === "jeoningu-lab" ? "secondary" : "ghost"}
-            onClick={() => onTabChange("jeoningu-lab")}
-            size="sm"
-            className={`font-medium whitespace-nowrap ${
-              activeTab === "jeoningu-lab"
-                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
-                : "hover:bg-purple-50 dark:hover:bg-purple-950"
-            }`}
-          >
-            🧪 {language === "ko" ? "실험실" : "Lab"}
-          </Button>
+          {/* Jeoningu Lab - Only show for Korean market (Mobile) */}
+          {market === "KR" && (
+            <Button
+              variant={activeTab === "jeoningu-lab" ? "secondary" : "ghost"}
+              onClick={() => onTabChange("jeoningu-lab")}
+              size="sm"
+              className={`font-medium whitespace-nowrap ${
+                activeTab === "jeoningu-lab"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                  : "hover:bg-purple-50 dark:hover:bg-purple-950"
+              }`}
+            >
+              🧪 {language === "ko" ? "실험실" : "Lab"}
+            </Button>
+          )}
         </nav>
       </div>
     </header>

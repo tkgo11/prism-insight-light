@@ -7,23 +7,21 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Eye, AlertCircle, TrendingUp, Target, Brain, BarChart3, Filter, ChevronDown, ChevronUp, FileJson } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
-import type { WatchlistStock } from "@/types/dashboard"
+import { formatCurrency as formatCurrencyUtil } from "@/lib/currency"
+import type { WatchlistStock, Market } from "@/types/dashboard"
 
 interface WatchlistPageProps {
   watchlist: WatchlistStock[]
+  market?: Market
 }
 
-export function WatchlistPage({ watchlist }: WatchlistPageProps) {
+export function WatchlistPage({ watchlist, market = "KR" }: WatchlistPageProps) {
   const { t, language } = useLanguage()
   const [expandedStocks, setExpandedStocks] = useState<Set<number>>(new Set())
   const [selectedScenario, setSelectedScenario] = useState<any>(null)
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ko-KR", {
-      style: "currency",
-      currency: "KRW",
-      maximumFractionDigits: 0,
-    }).format(value)
+    return formatCurrencyUtil(value, market, language as "ko" | "en")
   }
 
   const formatDate = (dateString: string) => {

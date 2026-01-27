@@ -3,7 +3,8 @@
 import { TrendingUp, TrendingDown, Wallet, DollarSign, PiggyBank, Zap, Clock } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { useLanguage } from "@/components/language-provider"
-import type { Summary } from "@/types/dashboard"
+import { formatCurrency as formatCurrencyUtil, getSeasonInfo, getDaysElapsed } from "@/lib/currency"
+import type { Summary, Market } from "@/types/dashboard"
 
 interface MetricsCardsProps {
   summary: Summary
@@ -19,6 +20,7 @@ interface MetricsCardsProps {
   tradingHistoryWinRate?: number
   tradingHistoryWinCount?: number
   tradingHistoryLossCount?: number
+  market?: Market
 }
 
 export function MetricsCards({
@@ -30,34 +32,37 @@ export function MetricsCards({
   tradingHistoryAvgDays = 0,
   tradingHistoryWinRate = 0,
   tradingHistoryWinCount = 0,
-  tradingHistoryLossCount = 0
+  tradingHistoryLossCount = 0,
+  market = "KR"
 }: MetricsCardsProps) {
   const { language, t } = useLanguage()
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat(language === "en" ? "en-US" : "ko-KR", {
-      style: "currency",
-      currency: "KRW",
-      maximumFractionDigits: 0,
-    }).format(value)
+    return formatCurrencyUtil(value, market, language as "ko" | "en")
   }
 
   const formatPercent = (value: number) => {
     return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
   }
 
-  // 시즌2 시작일 계산
-  const season2StartDate = new Date('2025-09-29')
-  const today = new Date()
-  const daysElapsed = Math.floor((today.getTime() - season2StartDate.getTime()) / (1000 * 60 * 60 * 24))
+  // Season info based on market
+  const seasonInfo = getSeasonInfo(market)
+  const daysElapsed = getDaysElapsed(market)
 
   // 총 자산 계산 (평가금액 + 예수금)
-  const totalAssets = (summary.real_trading.total_eval_amount || 0) + 
+  const totalAssets = (summary.real_trading.total_eval_amount || 0) +
                       (summary.real_trading.available_amount || 0)
 
-  // Season2 시작 금액
-  const season2StartAmount = 9969801
-  const totalAssetsReturn = totalAssets > 0 ? ((totalAssets - season2StartAmount) / season2StartAmount) * 100 : 0
+  // Season 시작 금액
+  const seasonStartAmount = seasonInfo.startAmount
+  const totalAssetsReturn = totalAssets > 0 ? ((totalAssets - seasonStartAmount) / seasonStartAmount) * 100 : 0
+
+  // Market-specific colors
+  const isUSMarket = market === "US"
+  const primaryGradient = isUSMarket ? "from-emerald-500/20 to-emerald-500/5" : "from-blue-500/20 to-blue-500/5"
+  const secondaryGradient = isUSMarket ? "from-teal-500/20 to-teal-500/5" : "from-indigo-500/20 to-indigo-500/5"
+  const sectionGradient = isUSMarket ? "from-emerald-500 to-teal-500" : "from-blue-500 to-indigo-500"
+  const sectionTextColor = isUSMarket ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"
 
   // 현금 비율 계산 (total_cash 사용: D+2 포함 총 현금, fallback으로 deposit)
   const totalCash = summary.real_trading.total_cash || summary.real_trading.deposit || 0
@@ -68,14 +73,14 @@ export function MetricsCards({
     {
       label: t("metrics.realTotalAssets"),
       value: formatCurrency(totalAssets),
-      change: `${t("metrics.startAmount")} ${formatCurrency(season2StartAmount)} (${formatPercent(totalAssetsReturn)})`,
+      change: `${t("metrics.startAmount")} ${formatCurrency(seasonStartAmount)} (${formatPercent(totalAssetsReturn)})`,
       changeValue: summary.real_trading.available_amount > 0
         ? `${t("metrics.deposit")} ${formatCurrency(summary.real_trading.available_amount)} | ${summary.real_trading.total_stocks || 0}${t("metrics.stocks")}`
         : `${t("metrics.fullyInvested")} | ${summary.real_trading.total_stocks || 0}${t("metrics.stocks")}`,
       description: t("metrics.assetsDesc"),
       isPositive: true,
       icon: Wallet,
-      gradient: "from-blue-500/20 to-blue-500/5",
+      gradient: primaryGradient,
     },
     {
       label: t("metrics.realHoldingsProfit"),
@@ -153,12 +158,15 @@ export function MetricsCards({
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="h-1 w-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-            <h2 className="text-sm font-semibold text-muted-foreground">{t("metrics.realTrading")}</h2>
+            <div className={`h-1 w-8 rounded-full bg-gradient-to-r ${sectionGradient}`} />
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              {isUSMarket ? (language === "ko" ? "미국 실전투자" : "US Real Trading") : t("metrics.realTrading")}
+              {" "}({seasonInfo.seasonName})
+            </h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-              2025.09.29 {t("metrics.started")}
+            <span className={`text-xs font-semibold ${sectionTextColor}`}>
+              {seasonInfo.startDate.replace(/-/g, ".")} {t("metrics.started")}
             </span>
             <span className="text-xs text-muted-foreground">
               ({daysElapsed}{t("metrics.elapsed")})
@@ -209,11 +217,13 @@ export function MetricsCards({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="h-1 w-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
-            <h2 className="text-sm font-semibold text-muted-foreground">{t("metrics.simulator")}</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              {isUSMarket ? (language === "ko" ? "미국 시뮬레이터" : "US Simulator") : t("metrics.simulator")}
+            </h2>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
-              2025.09.29 {t("metrics.started")}
+              {seasonInfo.startDate.replace(/-/g, ".")} {t("metrics.started")}
             </span>
             <span className="text-xs text-muted-foreground">
               ({daysElapsed}{t("metrics.elapsed")})

@@ -3,22 +3,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Brain, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Target, BarChart3 } from "lucide-react"
-import type { DashboardData } from "@/types/dashboard"
+import type { DashboardData, Market } from "@/types/dashboard"
 import { useLanguage } from "@/components/language-provider"
+import { formatCurrency as formatCurrencyUtil } from "@/lib/currency"
 
 interface AIDecisionsPageProps {
   data: DashboardData
+  market?: Market
 }
 
-export function AIDecisionsPage({ data }: AIDecisionsPageProps) {
+export function AIDecisionsPage({ data, market = "KR" }: AIDecisionsPageProps) {
   const { t, language } = useLanguage()
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ko-KR", {
-      style: "currency",
-      currency: "KRW",
-      maximumFractionDigits: 0,
-    }).format(value)
+    return formatCurrencyUtil(value, market, language as "ko" | "en")
   }
 
   const formatPercent = (value: number) => {
