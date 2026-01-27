@@ -256,12 +256,16 @@ The Docker container includes **built-in cron** for automated stock analysis. Cr
 
 | Time (KST) | US Time (EST) | Job | Days |
 |------------|---------------|-----|------|
-| 23:45 | 09:45 | **US Morning batch** | Tue-Sat |
-| 06:10 | 16:10 | **US Afternoon batch** | Tue-Sat |
+| 00:15 | 10:15 | **US Morning batch** | Tue-Sat |
+| 02:30 | 12:30 | **US Midday batch** | Tue-Sat |
+| 06:30 | 16:30 | **US Afternoon batch** | Tue-Sat |
+| 07:30 | 17:30 | US Performance tracker | Tue-Sat |
+| 08:00 | 18:00 | US Dashboard refresh | Tue-Sat |
 | 03:30 | - | US log cleanup (30 days) | Daily |
 | 04:00 | - | US memory compression | Sunday |
 
-> **Note**: US market Tue-Sat in KST corresponds to Mon-Fri in US time due to timezone difference.
+> **Note**: US market runs 3 times daily (no price limits). Tue-Sat in KST = Mon-Fri in US time.
+> Yahoo Finance data has 15-20 min delay, so schedules are adjusted accordingly.
 
 ### Cron Management Commands
 

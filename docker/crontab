@@ -44,13 +44,23 @@ PYTHONPATH=/app/prism-insight
 # US Stock Market (American Stock)
 # Market Hours: 09:30-16:00 EST (23:30-06:00 KST)
 # Note: Uses EST times. Adjust 1 hour earlier during EDT (Mar-Nov).
+# Yahoo Finance data delay: 15-20 min (schedule adjusted accordingly)
 # -----------------------------------------------------------------------------
 
-# US Morning batch at 23:45 KST (09:45 EST) - Tue-Sat (Mon-Fri US)
-45 23 * * 2-6 cd /app/prism-insight && python3 prism-us/us_stock_analysis_orchestrator.py --mode morning >> /app/prism-insight/logs/us_morning_$(date +\%Y\%m\%d).log 2>&1
+# US Morning batch at 00:15 KST (10:15 EST) - Tue-Sat (Mon-Fri US)
+15 0 * * 2-6 cd /app/prism-insight && python3 prism-us/us_stock_analysis_orchestrator.py --mode morning >> /app/prism-insight/logs/us_morning_$(date +\%Y\%m\%d).log 2>&1
 
-# US Afternoon batch at 06:10 KST (16:10 EST) - Tue-Sat (Mon-Fri US)
-10 6 * * 2-6 cd /app/prism-insight && python3 prism-us/us_stock_analysis_orchestrator.py --mode afternoon >> /app/prism-insight/logs/us_afternoon_$(date +\%Y\%m\%d).log 2>&1
+# US Midday batch at 02:30 KST (12:30 EST) - Tue-Sat (Mon-Fri US)
+30 2 * * 2-6 cd /app/prism-insight && python3 prism-us/us_stock_analysis_orchestrator.py --mode midday >> /app/prism-insight/logs/us_midday_$(date +\%Y\%m\%d).log 2>&1
+
+# US Afternoon batch at 06:30 KST (16:30 EST) - Tue-Sat (Mon-Fri US)
+30 6 * * 2-6 cd /app/prism-insight && python3 prism-us/us_stock_analysis_orchestrator.py --mode afternoon >> /app/prism-insight/logs/us_afternoon_$(date +\%Y\%m\%d).log 2>&1
+
+# US Performance tracker at 07:30 KST (17:30 EST) - Tue-Sat (Mon-Fri US)
+30 7 * * 2-6 cd /app/prism-insight && python3 prism-us/us_performance_tracker_batch.py >> /app/prism-insight/logs/us_performance_$(date +\%Y\%m\%d).log 2>&1
+
+# US Dashboard refresh at 08:00 KST (18:00 EST) - Tue-Sat (Mon-Fri US)
+0 8 * * 2-6 cd /app/prism-insight/examples && python3 generate_us_dashboard_json.py >> /app/prism-insight/logs/us_dashboard.log 2>&1
 
 # US log cleanup at 03:30 KST (daily) - keep 30 days
 30 3 * * * find /app/prism-insight/logs -name "us_*.log" -mtime +30 -delete
