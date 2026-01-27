@@ -315,15 +315,23 @@ async def publish_buy_signal(
     price: float,
     scenario: Optional[Dict[str, Any]] = None,
     source: str = "AI Analysis",
-    trade_result: Optional[Dict[str, Any]] = None
+    trade_result: Optional[Dict[str, Any]] = None,
+    market: str = "KR"
 ) -> Optional[str]:
-    """Publish buy signal via global publisher (convenience function)"""
+    """Publish buy signal via global publisher (convenience function)
+
+    Args:
+        market: Market identifier ("KR" for Korea, "US" for US stocks)
+    """
     publisher = await get_signal_publisher()
+    # Include market in scenario for signal data
+    enriched_scenario = dict(scenario) if scenario else {}
+    enriched_scenario["market"] = market
     return await publisher.publish_buy_signal(
         ticker=ticker,
         company_name=company_name,
         price=price,
-        scenario=scenario,
+        scenario=enriched_scenario,
         source=source,
         trade_result=trade_result
     )
@@ -336,16 +344,32 @@ async def publish_sell_signal(
     buy_price: float,
     profit_rate: float,
     sell_reason: str,
-    trade_result: Optional[Dict[str, Any]] = None
+    trade_result: Optional[Dict[str, Any]] = None,
+    market: str = "KR"
 ) -> Optional[str]:
-    """Publish sell signal via global publisher (convenience function)"""
+    """Publish sell signal via global publisher (convenience function)
+
+    Args:
+        market: Market identifier ("KR" for Korea, "US" for US stocks)
+    """
     publisher = await get_signal_publisher()
-    return await publisher.publish_sell_signal(
+    # Include market in extra_data by passing through the publish_signal method
+    extra_data = {
+        "buy_price": buy_price,
+        "profit_rate": profit_rate,
+        "sell_reason": sell_reason,
+        "market": market,
+    }
+
+    if trade_result:
+        extra_data["trade_success"] = trade_result.get("success", False)
+        extra_data["trade_message"] = trade_result.get("message", "")
+
+    return await publisher.publish_signal(
+        signal_type="SELL",
         ticker=ticker,
         company_name=company_name,
         price=price,
-        buy_price=buy_price,
-        profit_rate=profit_rate,
-        sell_reason=sell_reason,
-        trade_result=trade_result
+        source="AI Analysis",
+        extra_data=extra_data
     )
