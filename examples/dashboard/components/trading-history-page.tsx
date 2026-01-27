@@ -4,25 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { History, TrendingUp, TrendingDown, Award, Calendar, Target, Brain, Trophy, AlertCircle, Scale, Percent, Flame, Zap, BarChart3, Activity, LineChart, Gauge, HelpCircle } from "lucide-react"
-import type { Trade, Summary, PrismPerformance, MarketCondition } from "@/types/dashboard"
+import type { Trade, Summary, PrismPerformance, MarketCondition, Market } from "@/types/dashboard"
 import { useLanguage } from "@/components/language-provider"
+import { formatCurrency as formatCurrencyUtil } from "@/lib/currency"
 
 interface TradingHistoryPageProps {
   history: Trade[]
   summary: Summary
   prismPerformance?: PrismPerformance[]
   marketCondition?: MarketCondition[]
+  market?: Market
 }
 
-export function TradingHistoryPage({ history, summary, prismPerformance = [], marketCondition = [] }: TradingHistoryPageProps) {
+export function TradingHistoryPage({ history, summary, prismPerformance = [], marketCondition = [], market = "KR" }: TradingHistoryPageProps) {
   const { t, language } = useLanguage()
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ko-KR", {
-      style: "currency",
-      currency: "KRW",
-      maximumFractionDigits: 0,
-    }).format(value)
+    return formatCurrencyUtil(value, market, language as "ko" | "en")
   }
 
   const formatPercent = (value: number) => {
