@@ -1725,20 +1725,27 @@ class TelegramAIBot:
         )
 
         # 확인 메시지 구성
+        # 500자 초과 시 안내 추가
+        length_note = ""
+        if len(text) > 500:
+            length_note = f"\n⚠️ 참고: AI 대화 시 앞 500자만 참조됩니다. (현재 {len(text)}자)"
+
         if ticker:
             confirm_msg = (
                 f"✅ 저널에 기록했습니다!\n\n"
                 f"📝 종목: {ticker_name} ({ticker})\n"
                 f"💭 \"{text[:100]}{'...' if len(text) > 100 else ''}\"\n"
-                f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n"
-                f"💡 이 메시지에 답장하여 추가 기록 가능!"
+                f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                f"{length_note}\n\n"
+                f"💡 이 메시지에 답장하여 대화를 이어가세요!"
             )
         else:
             confirm_msg = (
                 f"✅ 저널에 기록했습니다!\n\n"
                 f"💭 \"{text[:100]}{'...' if len(text) > 100 else ''}\"\n"
-                f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n"
-                f"💡 이 메시지에 답장하여 추가 기록 가능!"
+                f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                f"{length_note}\n\n"
+                f"💡 이 메시지에 답장하여 대화를 이어가세요!"
             )
 
         sent_message = await update.message.reply_text(confirm_msg)
