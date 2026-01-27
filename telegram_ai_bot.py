@@ -486,10 +486,15 @@ class TelegramAIBot:
         
         # 답장 대상 메시지 ID 확인
         replied_to_msg_id = update.message.reply_to_message.message_id
-        
+        user_id = update.effective_user.id if update.effective_user else "unknown"
+        text = update.message.text[:50] if update.message.text else "no text"
+
+        logger.info(f"[REPLY] handle_reply_to_evaluation - user_id: {user_id}, replied_to: {replied_to_msg_id}, text: {text}")
+
         # 저장된 컨텍스트 확인
         if replied_to_msg_id not in self.conversation_contexts:
             # 컨텍스트가 없으면 일반 메시지로 처리
+            logger.info(f"[REPLY] conversation_contexts에 없음, 스킵. keys: {list(self.conversation_contexts.keys())[:5]}")
             return
         
         conv_context = self.conversation_contexts[replied_to_msg_id]
@@ -624,6 +629,12 @@ class TelegramAIBot:
         if update.message is None:
             logger.warning(f"메시지가 없는 업데이트 수신: {update}")
             return
+
+        # 디버그: 어떤 메시지가 여기로 오는지 확인
+        user_id = update.effective_user.id if update.effective_user else "unknown"
+        chat_id = update.effective_chat.id if update.effective_chat else "unknown"
+        text = update.message.text[:50] if update.message.text else "no text"
+        logger.debug(f"[DEFAULT] handle_default_message - user_id: {user_id}, chat_id: {chat_id}, text: {text}")
 
         return
 
@@ -1653,6 +1664,10 @@ class TelegramAIBot:
         """저널 명령어 처리 - 첫 단계"""
         user_id = update.effective_user.id
         user_name = update.effective_user.first_name
+        chat_id = update.effective_chat.id
+        chat_type = update.effective_chat.type
+
+        logger.info(f"[JOURNAL] handle_journal_start - user_id: {user_id}, chat_id: {chat_id}, chat_type: {chat_type}")
 
         # 채널 구독 여부 확인
         is_subscribed = await self.check_channel_subscription(user_id)
@@ -1677,14 +1692,17 @@ class TelegramAIBot:
             "또는 그냥 생각을 자유롭게 적어주세요."
         )
 
+        logger.info(f"[JOURNAL] JOURNAL_ENTERING 상태로 전환 - user_id: {user_id}")
         return JOURNAL_ENTERING
 
     async def handle_journal_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """저널 입력 처리"""
         user_id = update.effective_user.id
+        chat_id = update.effective_chat.id
         text = update.message.text.strip()
 
-        logger.info(f"저널 입력 받음 - 사용자: {user_id}, 입력: {text[:50]}...")
+        logger.info(f"[JOURNAL] handle_journal_input 호출됨 - user_id: {user_id}, chat_id: {chat_id}")
+        logger.info(f"[JOURNAL] 저널 입력 받음 - 사용자: {user_id}, 입력: {text[:50]}...")
 
         # 티커 추출 (정규식)
         ticker, ticker_name, market_type = self._extract_ticker_from_text(text)
