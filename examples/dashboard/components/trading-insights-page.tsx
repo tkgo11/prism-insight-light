@@ -33,13 +33,17 @@ import {
   XCircle,
   HelpCircle,
   Filter,
-  Target
+  Target,
+  Globe
 } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
-import type { TradingInsightsData, TradingPrinciple, TradingJournal, TradingIntuition, SituationAnalysis, JudgmentEvaluation } from "@/types/dashboard"
+import type { TradingInsightsData, TradingPrinciple, TradingJournal, TradingIntuition, SituationAnalysis, JudgmentEvaluation, Market } from "@/types/dashboard"
+
+type MarketFilter = "all" | "KR" | "US"
 
 interface TradingInsightsPageProps {
   data: TradingInsightsData
+  market?: Market
 }
 
 // Helper to safely parse JSON
@@ -52,8 +56,22 @@ function tryParseJSON<T>(str: string | T): T | null {
   }
 }
 
-export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
+export function TradingInsightsPage({ data, market = "KR" }: TradingInsightsPageProps) {
   const { t, language } = useLanguage()
+  const [marketFilter, setMarketFilter] = useState<MarketFilter>("all")
+
+  // Filter data based on market filter
+  // Note: Journal entries are common (not filtered), but principles and intuitions are market-specific
+  const filteredPrinciples = marketFilter === "all"
+    ? data.principles
+    : data.principles.filter(p => p.market === marketFilter || !p.market)
+
+  const filteredIntuitions = marketFilter === "all"
+    ? data.intuitions
+    : data.intuitions.filter(i => i.market === marketFilter || !i.market)
+
+  // Journal entries are NOT filtered - they are common across markets
+  const journalEntries = data.journal_entries
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "-"
@@ -128,7 +146,7 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500/20 to-yellow-500/20">
             <Lightbulb className="w-6 h-6 text-amber-600 dark:text-amber-400" />
@@ -136,6 +154,51 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
           <div>
             <h2 className="text-2xl font-bold text-foreground">{t("insights.title")}</h2>
             <p className="text-sm text-muted-foreground">{t("insights.description")}</p>
+          </div>
+        </div>
+
+        {/* Market Filter */}
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-muted-foreground" />
+          <div className="flex bg-muted/50 rounded-lg p-1 gap-1">
+            <button
+              onClick={() => setMarketFilter("all")}
+              className={`
+                px-3 py-1.5 rounded-md text-sm font-medium transition-all
+                ${marketFilter === "all"
+                  ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }
+              `}
+            >
+              {language === "ko" ? "전체" : "All"}
+            </button>
+            <button
+              onClick={() => setMarketFilter("KR")}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all
+                ${marketFilter === "KR"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }
+              `}
+            >
+              <span>🇰🇷</span>
+              <span>{language === "ko" ? "한국" : "Korea"}</span>
+            </button>
+            <button
+              onClick={() => setMarketFilter("US")}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all
+                ${marketFilter === "US"
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }
+              `}
+            >
+              <span>🇺🇸</span>
+              <span>{language === "ko" ? "미국" : "US"}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -239,23 +302,52 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
                 <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </div>
               <span className="font-semibold">{t("insights.category.wisdom")}</span>
+              {marketFilter !== "all" && (
+                <Badge variant="outline" className={
+                  marketFilter === "KR"
+                    ? "bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs"
+                    : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs"
+                }>
+                  {marketFilter === "KR" ? "🇰🇷" : "🇺🇸"} {language === "ko" ? "필터 적용" : "Filtered"}
+                </Badge>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-muted-foreground text-xs">{t("insights.summary.totalPrinciples")}</span>
-                <p className="font-bold">{data.summary.total_principles}{language === "ko" ? "개" : ""}</p>
+                <p className="font-bold">
+                  {filteredPrinciples.length}{language === "ko" ? "개" : ""}
+                  {marketFilter !== "all" && filteredPrinciples.length !== data.principles.length && (
+                    <span className="text-muted-foreground font-normal text-xs ml-1">
+                      / {data.principles.length}
+                    </span>
+                  )}
+                </p>
               </div>
               <div>
                 <span className="text-muted-foreground text-xs">{t("insights.summary.highPriority")}</span>
-                <p className="font-bold text-red-600">{data.summary.high_priority_count}{language === "ko" ? "개" : ""}</p>
+                <p className="font-bold text-red-600">
+                  {filteredPrinciples.filter(p => p.priority === "high").length}{language === "ko" ? "개" : ""}
+                </p>
               </div>
               <div>
                 <span className="text-muted-foreground text-xs">{t("insights.summary.totalIntuitions")}</span>
-                <p className="font-bold">{data.summary.total_intuitions}{language === "ko" ? "개" : ""}</p>
+                <p className="font-bold">
+                  {filteredIntuitions.length}{language === "ko" ? "개" : ""}
+                  {marketFilter !== "all" && filteredIntuitions.length !== data.intuitions.length && (
+                    <span className="text-muted-foreground font-normal text-xs ml-1">
+                      / {data.intuitions.length}
+                    </span>
+                  )}
+                </p>
               </div>
               <div>
                 <span className="text-muted-foreground text-xs">{t("insights.summary.avgConfidence")}</span>
-                <p className="font-bold">{(data.summary.avg_confidence * 100).toFixed(0)}%</p>
+                <p className="font-bold">
+                  {filteredIntuitions.length > 0
+                    ? ((filteredIntuitions.reduce((sum, i) => sum + i.confidence, 0) / filteredIntuitions.length) * 100).toFixed(0)
+                    : 0}%
+                </p>
               </div>
             </div>
           </CardContent>
@@ -768,15 +860,30 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
           <div className="flex items-center gap-2">
             <Target className="w-5 h-5 text-purple-500" />
             <CardTitle>{t("insights.principles")}</CardTitle>
+            <Badge variant="secondary" className="text-xs">
+              {filteredPrinciples.length}
+            </Badge>
+            {marketFilter !== "all" && (
+              <Badge
+                variant="outline"
+                className={
+                  marketFilter === "KR"
+                    ? "bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs"
+                    : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs"
+                }
+              >
+                {marketFilter === "KR" ? "🇰🇷" : "🇺🇸"} {marketFilter}
+              </Badge>
+            )}
           </div>
           <CardDescription>{t("insights.principlesDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {data.principles.length === 0 ? (
+          {filteredPrinciples.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">{t("insights.noPrinciples")}</p>
           ) : (
             <div className="space-y-4">
-              {data.principles.map((principle) => (
+              {filteredPrinciples.map((principle) => (
                 <div
                   key={principle.id}
                   className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
@@ -784,6 +891,18 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
+                        {principle.market && (
+                          <Badge
+                            variant="outline"
+                            className={
+                              principle.market === "KR"
+                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                            }
+                          >
+                            {principle.market === "KR" ? "🇰🇷" : "🇺🇸"} {principle.market}
+                          </Badge>
+                        )}
                         <Badge variant="outline" className={getPriorityColor(principle.priority)}>
                           {t(`insights.priority.${principle.priority}`)}
                         </Badge>
@@ -825,21 +944,24 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
         </CardContent>
       </Card>
 
-      {/* Journal Section */}
+      {/* Journal Section - Shared across markets */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-blue-500" />
             <CardTitle>{t("insights.journal")}</CardTitle>
+            <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs">
+              {language === "ko" ? "KR+US 공통" : "All Markets"}
+            </Badge>
           </div>
           <CardDescription>{t("insights.journalDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {data.journal_entries.length === 0 ? (
+          {journalEntries.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">{t("insights.noJournal")}</p>
           ) : (
             <Accordion type="single" collapsible className="w-full">
-              {data.journal_entries.map((entry) => (
+              {journalEntries.map((entry) => (
                 <AccordionItem key={entry.id} value={`journal-${entry.id}`}>
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center justify-between w-full pr-4">
@@ -847,6 +969,11 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
                         <div className={`w-2 h-2 rounded-full ${
                           entry.profit_rate >= 0 ? "bg-green-500" : "bg-red-500"
                         }`} />
+                        {entry.market && (
+                          <span className={`text-sm ${entry.market === "KR" ? "text-blue-500" : "text-emerald-500"}`}>
+                            {entry.market === "KR" ? "🇰🇷" : "🇺🇸"}
+                          </span>
+                        )}
                         <span className="font-medium">{entry.company_name}</span>
                         <span className="text-muted-foreground text-sm">({entry.ticker})</span>
                       </div>
@@ -1149,15 +1276,30 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-cyan-500" />
             <CardTitle>{t("insights.intuitions")}</CardTitle>
+            <Badge variant="secondary" className="text-xs">
+              {filteredIntuitions.length}
+            </Badge>
+            {marketFilter !== "all" && (
+              <Badge
+                variant="outline"
+                className={
+                  marketFilter === "KR"
+                    ? "bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs"
+                    : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs"
+                }
+              >
+                {marketFilter === "KR" ? "🇰🇷" : "🇺🇸"} {marketFilter}
+              </Badge>
+            )}
           </div>
           <CardDescription>{t("insights.intuitionsDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {data.intuitions.length === 0 ? (
+          {filteredIntuitions.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">{t("insights.noIntuitions")}</p>
           ) : (
             <div className="space-y-4">
-              {data.intuitions.map((intuition) => (
+              {filteredIntuitions.map((intuition) => (
                 <div
                   key={intuition.id}
                   className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
@@ -1165,6 +1307,18 @@ export function TradingInsightsPage({ data }: TradingInsightsPageProps) {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
+                        {intuition.market && (
+                          <Badge
+                            variant="outline"
+                            className={
+                              intuition.market === "KR"
+                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                            }
+                          >
+                            {intuition.market === "KR" ? "🇰🇷" : "🇺🇸"} {intuition.market}
+                          </Badge>
+                        )}
                         <Badge variant="outline" className="bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
                           {intuition.category}
                         </Badge>
