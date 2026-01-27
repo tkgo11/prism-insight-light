@@ -670,6 +670,9 @@ class USStockAnalysisOrchestrator:
             if mode == "morning":
                 title = "🔔 미국주식 오전 프리즘 시그널 얼럿"
                 time_desc = "장 시작 후 10분 시점"
+            elif mode == "midday":
+                title = "🔔 미국주식 장중 프리즘 시그널 얼럿"
+                time_desc = "장중 12시 30분 시점"
             else:
                 title = "🔔 미국주식 오후 프리즘 시그널 얼럿"
                 time_desc = "장 마감 후"
@@ -681,6 +684,9 @@ class USStockAnalysisOrchestrator:
             if mode == "morning":
                 title = "🔔 US Stock Morning Prism Signal Alert"
                 time_desc = "10 minutes after market open"
+            elif mode == "midday":
+                title = "🔔 US Stock Midday Prism Signal Alert"
+                time_desc = "at 12:30 PM market time"
             else:
                 title = "🔔 US Stock Afternoon Prism Signal Alert"
                 time_desc = "after market close"
@@ -844,8 +850,8 @@ class USStockAnalysisOrchestrator:
 async def main():
     """Main function - command line interface"""
     parser = argparse.ArgumentParser(description="US stock analysis and telegram transmission orchestrator")
-    parser.add_argument("--mode", choices=["morning", "afternoon", "both"], default="both",
-                        help="Execution mode (morning, afternoon, both)")
+    parser.add_argument("--mode", choices=["morning", "midday", "afternoon", "both"], default="both",
+                        help="Execution mode (morning, midday, afternoon, both)")
     parser.add_argument("--language", choices=["ko", "en"], default="ko",
                         help="Analysis language (ko: Korean, en: English)")
     parser.add_argument("--broadcast-languages", type=str, default="",
@@ -877,6 +883,9 @@ async def main():
 
     if args.mode == "morning" or args.mode == "both":
         await orchestrator.run_full_pipeline("morning", language=args.language)
+
+    if args.mode == "midday":
+        await orchestrator.run_full_pipeline("midday", language=args.language)
 
     if args.mode == "afternoon" or args.mode == "both":
         await orchestrator.run_full_pipeline("afternoon", language=args.language)
