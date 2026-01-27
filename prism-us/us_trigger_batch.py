@@ -375,7 +375,11 @@ def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame,
     """
     logger.info("Value-to-Cap ratio analysis started")
 
-    # Validation
+    # Validation - cap_df is required for value-to-cap ratio calculation
+    if cap_df is None:
+        logger.warning("Value-to-Cap ratio skipped: Market cap data not available (cap_df is None)")
+        return pd.DataFrame()
+
     if snapshot.empty or prev_snapshot.empty or cap_df.empty:
         logger.error("Input data is empty")
         return pd.DataFrame()
