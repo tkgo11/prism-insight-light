@@ -1,6 +1,6 @@
 # US Trigger Batch 데이터 처리 상세 과정
 
-> **문서 작성일**: 2026-01-18
+> **문서 작성일**: 2026-01-18 (Updated: 2026-01-28)
 > **대상 파일**: `prism-us/us_trigger_batch.py`, `prism-us/cores/us_surge_detector.py`
 
 ---
@@ -19,7 +19,7 @@
 │  │     └─ 오늘 → 가장 최근 영업일 (주말/휴일 자동 보정)                  │   │
 │  │                                                                   │   │
 │  │ 1.2 티커 목록 로딩                                                 │   │
-│  │     └─ S&P 500 (Wikipedia) → 실패시 Fallback 36종목               │   │
+│  │     └─ S&P 500 + NASDAQ-100 (Wikipedia) → 약 550개 종목            │   │
 │  │                                                                   │   │
 │  │ 1.3 OHLCV Snapshot 수집                                           │   │
 │  │     ├─ 당일 snapshot (yfinance batch download)                    │   │
@@ -115,16 +115,16 @@ trade_date = get_nearest_business_day(today_str, prev=True)  # → "20260116"
 ### 1.2 티커 목록 로딩
 
 ```
-시도: Wikipedia S&P 500 리스트
-  └─ 성공시: ~500개 티커
-  └─ 실패시 (403 Forbidden): Fallback 36개 주요 종목
-     └─ AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, BRK-B, ...
+S&P 500 + NASDAQ-100 통합 (get_major_tickers)
+  ├─ S&P 500: Wikipedia 파싱 → ~500개 티커
+  ├─ NASDAQ-100: Wikipedia 파싱 → ~100개 티커
+  └─ 중복 제거 후 합산 → 약 550개 티커
 ```
 
-**실제 실행 로그**:
+**S&P 500 실패시 Fallback**:
 ```
 Failed to load S&P 500 tickers: HTTP Error 403: Forbidden
-→ Fallback to 36 major stocks
+→ Fallback to 36 major stocks (AAPL, MSFT, GOOGL, AMZN, ...)
 ```
 
 ### 1.3 OHLCV Snapshot 수집
@@ -140,9 +140,9 @@ prev_snapshot, prev_date = get_previous_snapshot(trade_date, tickers)
 
 **yfinance API 호출**:
 ```
-Request: Download OHLCV for 36 tickers
+Request: Download OHLCV for ~550 tickers (S&P 500 + NASDAQ-100)
 Period: 2026-01-11 ~ 2026-01-17 (5일간)
-Result: MultiIndex DataFrame (5 rows × 180 columns)
+Result: MultiIndex DataFrame (5 rows × ~2750 columns)
 Target: 2026-01-16 row 추출
 ```
 
@@ -185,23 +185,23 @@ Batch 2: (나머지)
 ### 필터링 과정 (Volume Surge 예시)
 
 ```
-시작: 36개 종목 (Snapshot)
+시작: ~550개 종목 (S&P 500 + NASDAQ-100)
 
 Step 1: 시가총액 필터
   └─ snap = snap[snap["MarketCap"] >= $5B]
-  └─ 결과: 36개 → 36개 (Fallback 종목은 대부분 대형주)
+  └─ 결과: ~550개 → ~500개
 
 Step 2: 거래대금 필터
   └─ snap = apply_absolute_filters(snap, min_value=$100M)
-  └─ 결과: 36개 → ~30개
+  └─ 결과: ~500개 → ~400개
 
 Step 3: 등락률 필터
   └─ snap = snap[snap["DailyChange"] <= 20.0]
-  └─ 결과: ~30개 → ~28개
+  └─ 결과: ~400개 → ~380개
 
 Step 4: 거래량 증가율 필터 (트리거 특수 조건)
   └─ snap = snap[snap["VolumeIncreaseRate"] >= 30.0]
-  └─ 결과: ~28개 → 1~5개
+  └─ 결과: ~380개 → 1~10개
 ```
 
 ---
@@ -429,53 +429,53 @@ T+0.0s  시작
   │
 T+0.1s  기준일 결정: 20260118(일) → 20260116(금)
   │
-T+0.2s  티커 로딩 시도 (Wikipedia S&P 500)
-  │       └─ 403 Forbidden → Fallback 36종목
+T+0.2s  티커 로딩 (S&P 500 + NASDAQ-100)
+  │       └─ 약 550개 종목 (중복 제거)
   │
-T+18s   Snapshot 다운로드 (yfinance batch)
-  │       └─ 36 tickers × 5 days = 180 data points
+T+30s   Snapshot 다운로드 (yfinance batch)
+  │       └─ ~550 tickers × 5 days = ~2750 data points
   │
-T+19s   Previous Snapshot 다운로드
+T+45s   Previous Snapshot 다운로드
   │       └─ 20260115 데이터
   │
-T+20s   시가총액 데이터 수집
-  │       └─ 36 API calls (batch 50)
+T+60s   시가총액 데이터 수집
+  │       └─ ~550 API calls (batch 50개씩)
   │
-T+21s   === Morning Batch Execution ===
+T+65s   === Morning Batch Execution ===
   │
-T+21s   Volume Surge Trigger 실행
-  │       ├─ 시총 필터: 36 → 36
-  │       ├─ 거래대금 필터: 36 → 32
-  │       ├─ 등락률 필터: 32 → 30
-  │       ├─ 거래량증가 필터: 30 → 1
-  │       └─ 결과: WMT (1종목)
+T+65s   Volume Surge Trigger 실행
+  │       ├─ 시총 필터: ~550 → ~500
+  │       ├─ 거래대금 필터: ~500 → ~400
+  │       ├─ 등락률 필터: ~400 → ~380
+  │       ├─ 거래량증가 필터: ~380 → 1~10
+  │       └─ 결과: Top 10 (예: WMT 등)
   │
-T+22s   Gap Up Momentum Trigger 실행
-  │       ├─ 시총 필터: 36 → 36
-  │       ├─ 거래대금 필터: 36 → 32
-  │       ├─ 갭상승 필터 (>=1%): 32 → 5
-  │       ├─ 모멘텀 유지 필터: 5 → 3
-  │       └─ 결과: AVGO, NEE, AMZN (3종목)
+T+66s   Gap Up Momentum Trigger 실행
+  │       ├─ 시총 필터: ~550 → ~500
+  │       ├─ 거래대금 필터: ~500 → ~400
+  │       ├─ 갭상승 필터 (>=1%): ~400 → ~50
+  │       ├─ 모멘텀 유지 필터: ~50 → ~20
+  │       └─ 결과: Top 10 (예: AVGO, NEE, AMZN 등)
   │
-T+23s   Value-to-Cap Trigger 실행
-  │       ├─ 시총 필터: 36 → 36
-  │       ├─ 거래대금 필터: 36 → 32
+T+67s   Value-to-Cap Trigger 실행
+  │       ├─ 시총 필터: ~550 → ~500
+  │       ├─ 거래대금 필터: ~500 → ~400
   │       ├─ 회전율 계산 및 정렬
-  │       └─ 결과: WMT, AVGO, MSFT, TXN, JPM, NEE, AMZN (7종목)
+  │       └─ 결과: Top 10 (예: WMT, AVGO, MSFT 등)
   │
-T+24s   Hybrid Scoring 시작 (10일 데이터)
-  │       ├─ Volume Surge: WMT 점수 계산
-  │       ├─ Gap Up: AVGO, NEE, AMZN 점수 계산
-  │       └─ Value-to-Cap: 7종목 점수 계산
+T+70s   Hybrid Scoring 시작 (10일 데이터)
+  │       ├─ Volume Surge: 각 종목 점수 계산
+  │       ├─ Gap Up: 각 종목 점수 계산
+  │       └─ Value-to-Cap: 각 종목 점수 계산
   │
-T+25s   Final Selection
-  │       ├─ Volume Surge 1위: WMT
-  │       ├─ Gap Up 1위: AVGO
-  │       └─ Value-to-Cap 1위: MSFT (WMT 중복 제외)
+T+75s   Final Selection
+  │       ├─ Volume Surge 1위: 선정
+  │       ├─ Gap Up 1위: 선정
+  │       └─ Value-to-Cap 1위: 선정 (중복 제외)
   │
-T+26s   JSON 출력
+T+76s   JSON 출력
   │
-T+26s   완료
+T+76s   완료
 ```
 
 ---
@@ -486,13 +486,13 @@ T+26s   완료
 ┌────────────────────────────────────────────────────────────┐
 │ 단계                    │ 종목수 │ 감소율  │ 누적률       │
 ├────────────────────────────────────────────────────────────┤
-│ 1. 초기 티커 (Fallback) │   36   │   -     │   100%       │
-│ 2. 시총 필터 ($5B)      │   36   │   0%    │   100%       │
-│ 3. 거래대금 ($100M)     │   32   │  11%    │    89%       │
-│ 4. 등락률 필터 (20%)    │   30   │   6%    │    83%       │
-│ 5. 트리거별 특수조건    │  1~7   │ 77~97%  │   3~19%      │
-│ 6. Hybrid 스코어링     │  1~7   │   0%    │    -         │
-│ 7. 최종 선정 (Top 1)   │    3   │   -     │   8.3%       │
+│ 1. 초기 티커 (S&P+NQ)   │  ~550  │   -     │   100%       │
+│ 2. 시총 필터 ($5B)      │  ~500  │   9%    │    91%       │
+│ 3. 거래대금 ($100M)     │  ~400  │  20%    │    73%       │
+│ 4. 등락률 필터 (20%)    │  ~380  │   5%    │    69%       │
+│ 5. 트리거별 특수조건    │  1~20  │ 95~99%  │   0.2~4%     │
+│ 6. Hybrid 스코어링     │  1~20  │   0%    │    -         │
+│ 7. 최종 선정 (Top 1)   │    3   │   -     │   0.5%       │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -520,6 +520,8 @@ T+26s   완료
 
 ---
 
-**문서 버전**: 1.0
+**문서 버전**: 1.1
 **작성자**: Claude
 **기준 코드 버전**: v1.16.6+
+**변경 이력**:
+- v1.1 (2026-01-28): S&P 500 + NASDAQ-100 통합 스캔으로 변경 (~550개 종목)

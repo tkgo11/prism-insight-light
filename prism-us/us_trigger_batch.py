@@ -38,7 +38,7 @@ from cores.us_surge_detector import (
     get_previous_snapshot,
     get_multi_day_ohlcv,
     get_market_cap_df,
-    get_sp500_tickers,
+    get_major_tickers,
     get_ticker_name,
     get_nearest_business_day,
     apply_absolute_filters,
@@ -771,8 +771,8 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
     trade_date = get_nearest_business_day(today_str, prev=True)
     logger.info(f"Batch reference date: {trade_date}")
 
-    # Get S&P 500 tickers
-    tickers = get_sp500_tickers()
+    # Get S&P 500 + NASDAQ-100 tickers (combined, deduplicated)
+    tickers = get_major_tickers()
 
     try:
         snapshot = get_snapshot(trade_date, tickers)
