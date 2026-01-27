@@ -1854,43 +1854,61 @@ class TelegramAIBot:
 
         Returns:
             tuple: (ticker, ticker_name, market_type)
+
+        Note:
+            한국 종목을 우선 확인 (한글 텍스트에서 한국 주식이 더 일반적)
         """
-        # US 티커 패턴 (1-5자리 대문자, 단어 경계)
-        us_pattern = r'\b([A-Z]{1,5})\b'
         # 한국 종목 코드 패턴 (6자리 숫자)
         kr_pattern = r'\b(\d{6})\b'
+        # US 티커 패턴 (1-5자리 대문자, 단어 경계)
+        us_pattern = r'\b([A-Z]{1,5})\b'
 
-        # US 티커 찾기
-        us_matches = re.findall(us_pattern, text)
-        for ticker in us_matches:
-            # 일반적인 단어 제외
-            common_words = {'I', 'A', 'AN', 'THE', 'IN', 'ON', 'AT', 'TO', 'FOR', 'OF', 'AND', 'OR', 'IS', 'IT', 'AI'}
-            if ticker not in common_words:
-                # 캐시 확인
-                if ticker in self._us_ticker_cache:
-                    return ticker, self._us_ticker_cache[ticker]['name'], 'us'
-                # yfinance로 검증
-                try:
-                    import yfinance as yf
-                    stock = yf.Ticker(ticker)
-                    info = stock.info
-                    company_name = info.get('longName') or info.get('shortName')
-                    if company_name:
-                        self._us_ticker_cache[ticker] = {'name': company_name}
-                        return ticker, company_name, 'us'
-                except Exception:
-                    pass
-
-        # 한국 종목 코드 찾기
+        # 1. 한국 종목 코드 먼저 확인 (우선순위)
         kr_matches = re.findall(kr_pattern, text)
         for code in kr_matches:
             if code in self.stock_map:
                 return code, self.stock_map[code], 'kr'
 
-        # 한국 종목명 찾기 (stock_name_map에서 검색)
+        # 2. 한국 종목명 찾기 (stock_name_map에서 검색)
         for name, code in self.stock_name_map.items():
             if name in text:
                 return code, name, 'kr'
+
+        # 3. US 티커 찾기 (한국 종목이 없을 때만)
+        # 제외할 단어들: 일반 영단어 + 금융 용어
+        excluded_words = {
+            # 일반 영단어
+            'I', 'A', 'AN', 'THE', 'IN', 'ON', 'AT', 'TO', 'FOR', 'OF',
+            'AND', 'OR', 'IS', 'IT', 'AI', 'AM', 'PM', 'VS', 'OK', 'NO',
+            'IF', 'AS', 'BY', 'SO', 'UP', 'BE', 'WE', 'HE', 'ME', 'MY',
+            # 금융 지표/용어
+            'PER', 'PBR', 'ROE', 'ROA', 'EPS', 'BPS', 'PSR', 'PCR',
+            'EBITDA', 'EBIT', 'YOY', 'QOQ', 'MOM', 'YTD', 'TTM',
+            'PE', 'PS', 'PB', 'EV', 'FCF', 'DCF', 'WACC', 'CAGR',
+            'IPO', 'M', 'B', 'K', 'KRW', 'USD', 'EUR', 'JPY', 'CNY',
+            # 기타 약어
+            'CEO', 'CFO', 'CTO', 'COO', 'IR', 'PR', 'HR', 'IT', 'AI',
+            'HBM', 'DRAM', 'NAND', 'SSD', 'GPU', 'CPU', 'AP', 'PC',
+        }
+
+        us_matches = re.findall(us_pattern, text)
+        for ticker in us_matches:
+            if ticker in excluded_words:
+                continue
+            # 캐시 확인
+            if ticker in self._us_ticker_cache:
+                return ticker, self._us_ticker_cache[ticker]['name'], 'us'
+            # yfinance로 검증
+            try:
+                import yfinance as yf
+                stock = yf.Ticker(ticker)
+                info = stock.info
+                company_name = info.get('longName') or info.get('shortName')
+                if company_name:
+                    self._us_ticker_cache[ticker] = {'name': company_name}
+                    return ticker, company_name, 'us'
+            except Exception:
+                pass
 
         return None, None, 'kr'
 
