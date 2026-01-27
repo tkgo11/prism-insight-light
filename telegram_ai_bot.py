@@ -178,6 +178,9 @@ class TelegramAIBot:
         # 사용자 기억 관리자 초기화
         self.memory_manager = UserMemoryManager("stock_tracking_db.sqlite")
 
+        # 일일 사용 제한 (user_id:command -> date)
+        self.daily_report_usage: Dict[str, str] = {}
+
         # 봇 어플리케이션 생성 (타임아웃 설정 포함)
         request = HTTPXRequest(
             connection_pool_size=8,
@@ -221,6 +224,17 @@ class TelegramAIBot:
             del self.journal_contexts[key]
             logger.info(f"만료된 저널 컨텍스트 삭제: 메시지 ID {key}")
 
+        # 일일 사용 제한 정리 (오늘이 아닌 날짜 삭제)
+        today = datetime.now().strftime("%Y-%m-%d")
+        daily_limit_expired = [
+            key for key, date in self.daily_report_usage.items()
+            if date != today
+        ]
+        for key in daily_limit_expired:
+            del self.daily_report_usage[key]
+        if daily_limit_expired:
+            logger.info(f"만료된 일일 제한 정리: {len(daily_limit_expired)}건")
+
     def compress_user_memories(self):
         """사용자 기억 압축 (야간 배치)"""
         if self.memory_manager:
@@ -229,6 +243,28 @@ class TelegramAIBot:
                 logger.info(f"사용자 기억 압축 완료: {stats}")
             except Exception as e:
                 logger.error(f"사용자 기억 압축 중 오류: {e}")
+
+    def check_daily_limit(self, user_id: int, command: str) -> bool:
+        """
+        일일 사용 제한 확인.
+
+        Args:
+            user_id: 사용자 ID
+            command: 명령어 (report, us_report)
+
+        Returns:
+            bool: True면 사용 가능, False면 이미 사용함
+        """
+        today = datetime.now().strftime("%Y-%m-%d")
+        key = f"{user_id}:{command}"
+
+        if self.daily_report_usage.get(key) == today:
+            logger.info(f"일일 제한 초과: user={user_id}, command={command}")
+            return False
+
+        self.daily_report_usage[key] = today
+        logger.info(f"일일 사용 기록: user={user_id}, command={command}")
+        return True
 
     def load_stock_map(self):
         """
@@ -668,6 +704,14 @@ class TelegramAIBot:
                 "이 봇은 채널 구독자만 사용할 수 있습니다.\n"
                 "아래 링크를 통해 채널을 구독해주세요:\n\n"
                 "https://t.me/stock_ai_agent"
+            )
+            return ConversationHandler.END
+
+        # 일일 사용 제한 확인
+        if not self.check_daily_limit(user_id, "report"):
+            await update.message.reply_text(
+                "⚠️ /report 명령어는 하루에 1회만 사용할 수 있습니다.\n\n"
+                "내일 다시 이용해 주세요."
             )
             return ConversationHandler.END
 
@@ -1521,6 +1565,14 @@ class TelegramAIBot:
                 "이 봇은 채널 구독자만 사용할 수 있습니다.\n"
                 "아래 링크를 통해 채널을 구독해주세요:\n\n"
                 "https://t.me/stock_ai_agent"
+            )
+            return ConversationHandler.END
+
+        # 일일 사용 제한 확인
+        if not self.check_daily_limit(user_id, "us_report"):
+            await update.message.reply_text(
+                "⚠️ /us_report 명령어는 하루에 1회만 사용할 수 있습니다.\n\n"
+                "내일 다시 이용해 주세요."
             )
             return ConversationHandler.END
 
