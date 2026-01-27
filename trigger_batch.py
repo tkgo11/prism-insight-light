@@ -719,6 +719,12 @@ def trigger_afternoon_closing_strength(trade_date: str, snapshot: pd.DataFrame, 
     snap["장중등락률"] = (snap["Close"] / snap["Open"] - 1) * 100  # 시가 대비 현재가
     snap["전일대비등락률"] = ((snap["Close"] - prev["Close"]) / prev["Close"]) * 100  # 증권사 앱과 동일
 
+    # v1.16.7: 등락률 상한선 (20% 이하, 상한가 종목 제외)
+    snap = snap[snap["전일대비등락률"] <= 20.0]
+    if snap.empty:
+        logger.debug("trigger_afternoon_closing_strength: 등락률 필터링 후 종목 없음")
+        return pd.DataFrame()
+
     snap["거래량증가"] = (snap["Volume"] - prev["Volume"].replace(0, np.nan)) > 0
     snap["상승여부"] = snap["Close"] > snap["Open"]
 

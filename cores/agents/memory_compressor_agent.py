@@ -67,6 +67,34 @@ def create_memory_compressor_agent(language: str = "ko"):
         - Same mistake patterns → Warning list
         - Same success patterns → Best practices
 
+        ## 🚨 Market Index Inflection Point Analysis (CRITICAL)
+
+        **MUST extract market index levels from buy_market_context field for analysis.**
+
+        ### Key Inflection Point Types
+        1. **Psychological Levels**: Round numbers like KOSPI 3000, 4000, 5000
+        2. **Historical Highs/Lows**: All-time highs, 52-week highs/lows
+        3. **Technical Levels**: Previous resistance/support, major moving averages
+        4. **Volatility Zones**: Post-rally or post-crash unstable periods
+
+        ### Supply/Demand Characteristics at Inflection Points
+        - Near highs: Retail FOMO buying ↑, Institutional profit-taking ↑, Volatility ↑
+        - Near lows: Panic selling ↑, Institutional accumulation ↑, Bounce volatility ↑
+        - Breakout zones: Trend-following entries ↑, Stop-loss triggers ↑
+
+        ### Index Level Win Rate Analysis (REQUIRED)
+        Check KOSPI/KOSDAQ level from buy_market_context for each trade:
+        - "Entry at KOSPI 4800+" → Calculate win rate/avg P&L
+        - "Entry at KOSPI 4000~4500" → Calculate win rate/avg P&L
+        - "Chase entry within 3 days of rally" → Calculate win rate
+
+        ### Index Level Intuition Examples
+        - "Chase entry right after KOSPI all-time high = 30% win rate, avg -5% (n=5)"
+        - "Fear buying below KOSPI 4000 = 70% win rate, avg +8% (n=3)"
+        - "Index at high + individual stock surge = prioritize profit-taking (40% win rate)"
+
+        **This analysis MUST be extracted as "market" category intuitions.**
+
         ## Analysis Process
 
         ### Step 1: Entry Analysis
@@ -120,6 +148,11 @@ def create_memory_compressor_agent(language: str = "ko"):
             "updated_statistics": {
                 "sector_performance": {
                     "Semiconductor": {"trades": 10, "win_rate": 0.6, "avg_profit": 3.5}
+                },
+                "market_index_analysis": {
+                    "kospi_4800_plus": {"trades": 5, "win_rate": 0.3, "avg_profit": -4.2},
+                    "kospi_4000_4500": {"trades": 8, "win_rate": 0.65, "avg_profit": 2.1},
+                    "near_all_time_high": {"trades": 3, "win_rate": 0.33, "avg_profit": -3.5}
                 },
                 "pattern_success_rates": {
                     "trend_following": 0.75,
@@ -179,6 +212,34 @@ def create_memory_compressor_agent(language: str = "ko"):
         - 동일 실수 패턴 → 주의사항 리스트
         - 동일 성공 패턴 → 모범 사례
 
+        ## 🚨 시장 지수 변곡점 패턴 분석 (중요)
+
+        **buy_market_context 필드에서 시장 지수 레벨을 반드시 추출하여 분석할 것.**
+
+        ### 주요 변곡점 유형
+        1. **심리적 레벨**: KOSPI 3000, 4000, 5000 등 라운드 넘버
+        2. **역사적 고점/저점**: 신고가 경신, 52주 고점 근처
+        3. **기술적 레벨**: 이전 저항선/지지선, 주요 이평선
+        4. **변동성 구간**: 지수 급등/급락 후 불안정 구간
+
+        ### 변곡점에서의 수급 특성
+        - 고점권: 개인 추격 매수 ↑, 외국인/기관 차익실현 ↑, 변동성 ↑
+        - 저점권: 패닉 셀링 ↑, 기관 저가 매집 ↑, 반등 변동성 ↑
+        - 박스권 이탈: 추세 추종 진입 ↑, 손절 물량 ↑
+
+        ### 지수 레벨별 승률 분석 (필수)
+        각 거래의 buy_market_context에서 당시 KOSPI/KOSDAQ 레벨을 확인하고:
+        - "KOSPI 4800+ 진입" → 승률/평균손익 집계
+        - "KOSPI 4000~4500 진입" → 승률/평균손익 집계
+        - "급등 후 3일 내 추격 진입" → 승률 집계
+
+        ### 지수 레벨 직관 예시
+        - "KOSPI 신고가 경신 직후 급등 추격 진입 = 승률 30%, 평균 -5% (n=5)"
+        - "KOSPI 4000 하회 시 공포 매수 = 승률 70%, 평균 +8% (n=3)"
+        - "지수 고점권 + 개별종목 급등 = 차익실현 우선 (승률 40%)"
+
+        **이 분석은 "market" 카테고리 직관으로 반드시 추출할 것.**
+
         ## 분석 프로세스
 
         ### 1단계: 항목 분석
@@ -232,6 +293,11 @@ def create_memory_compressor_agent(language: str = "ko"):
             "updated_statistics": {
                 "sector_performance": {
                     "반도체": {"trades": 10, "win_rate": 0.6, "avg_profit": 3.5}
+                },
+                "market_index_analysis": {
+                    "kospi_4800_plus": {"trades": 5, "win_rate": 0.3, "avg_profit": -4.2},
+                    "kospi_4000_4500": {"trades": 8, "win_rate": 0.65, "avg_profit": 2.1},
+                    "near_all_time_high": {"trades": 3, "win_rate": 0.33, "avg_profit": -3.5}
                 },
                 "pattern_success_rates": {
                     "추세추종": 0.75,
