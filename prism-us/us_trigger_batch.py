@@ -26,6 +26,7 @@ import os
 import datetime
 import logging
 import json
+from zoneinfo import ZoneInfo
 import pandas as pd
 import numpy as np
 
@@ -365,7 +366,7 @@ def trigger_morning_gap_up_momentum(trade_date: str, snapshot: pd.DataFrame,
 
 
 def trigger_morning_value_to_cap_ratio(trade_date: str, snapshot: pd.DataFrame,
-                                       prev_snapshot: pd.DataFrame, cap_df: pd.DataFrame,
+                                       prev_snapshot: pd.DataFrame, cap_df: pd.DataFrame = None,
                                        top_n: int = 10) -> pd.DataFrame:
     """
     [Morning Trigger 3] Value-to-Cap Ratio Top (Concentrated Capital Inflow)
@@ -770,9 +771,11 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
     ch.setLevel(numeric_level)
     logger.info(f"Log level: {log_level.upper()}")
 
-    today_str = datetime.datetime.today().strftime("%Y%m%d")
+    # Use US Eastern Time for date calculation (not local KST)
+    us_eastern = ZoneInfo("America/New_York")
+    today_str = datetime.datetime.now(tz=us_eastern).strftime("%Y%m%d")
     trade_date = get_nearest_business_day(today_str, prev=True)
-    logger.info(f"Batch reference date: {trade_date}")
+    logger.info(f"Batch reference date: {trade_date} (US Eastern Time)")
 
     # Get S&P 500 + NASDAQ-100 tickers (combined, deduplicated)
     tickers = get_major_tickers()
@@ -823,6 +826,10 @@ def run_batch(trigger_time: str, log_level: str = "INFO", output_file: str = Non
         return
 
     # Log trigger results
+    active_triggers = sum(1 for df in triggers.values() if not df.empty)
+    total_triggers = len(triggers)
+    logger.info(f"Active triggers: {active_triggers}/{total_triggers}")
+
     for name, df in triggers.items():
         if df.empty:
             logger.info(f"{name}: No qualifying stocks")
