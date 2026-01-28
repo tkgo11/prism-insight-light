@@ -1,15 +1,4 @@
-<<<<<<< HEAD
 # PRISM-INSIGHT-LIGHT
-=======
-<div align="center">
-  <img src="docs/images/prism-insight-logo.jpeg" alt="PRISM-INSIGHT Logo" width="300">
-  <br><br>
-  <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License">
-  <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/OpenAI-GPT--5-green.svg" alt="OpenAI">
-  <img src="https://img.shields.io/badge/Anthropic-Claude--Sonnet--4.5-green.svg" alt="Anthropic">
-</div>
->>>>>>> upstream/main
 
 한국 주식시장(KOSPI/KOSDAQ)을 대상으로 하는 AI 기반 분석 및 자동매매 시스템의 **축약 버전 저장소**입니다.
 
@@ -18,41 +7,22 @@
 - 한국투자증권(KIS) API 기반 트레이딩 모듈 (`trading/`)
 - GCP Pub/Sub 기반 실시간 트레이딩 시그널 구독 스크립트 (`gcp_pubsub_subscriber.py`)
 
-<div align="center">
-
----
-
-### 🏆 Platinum Sponsor
-
-<a href="https://wrks.ai/en">
-  <img src="docs/images/wrks_ai_logo.png" alt="AI3 WrksAI" width="50">
-</a>
-
-**[AI3](https://www.ai3.kr/) | [WrksAI](https://wrks.ai/en)**
-
-**AI3**, the creators of **WrksAI** – the AI assistant for professionals,<br>
-proudly sponsors **PRISM-INSIGHT** – the AI assistant for investors.
-
-👉 [Learn more about WrksAI](https://wrks.ai/en)
-
----
-
-</div>
-
 ---
 
 ## 디렉터리 구조 (현재 실제 기준)
 
-<<<<<<< HEAD
 ```text
-prism-insight/
+prism-insight-light/
 ├── trading/
 │   ├── __init__.py
 │   ├── kis_auth.py
 │   ├── domestic_stock_trading.py
 │   ├── portfolio_telegram_reporter.py
-│   └── config/
-│       └── kis_devlp.yaml.example
+│   ├── us_stock_trading.py
+│   ├── config/
+│   │   └── kis_devlp.yaml.example
+│   └── samples/
+│       └── kis_api_sample.py
 ├── gcp_pubsub_subscriber.py
 ├── README.md
 ├── requirements.txt
@@ -60,7 +30,10 @@ prism-insight/
 ├── .gitignore
 ├── LICENSE
 └── __init__.py
-=======
+```
+
+---
+
 * **[Official Telegram Channel](https://t.me/prism_insight_global_en)**
   Features include surge-stock detection, stock analysis report downloads, trading simulations, and automated trading reports.
 
@@ -604,58 +577,25 @@ python telegram_bot_agent.py
 
 ## 📁 Project Structure
 
-```
-prism-insight/
-├── 📂 cores/                     # 🤖 Core AI Analysis Engine (Korean Market)
-│   ├── 📂 agents/               # AI Agent Modules
-│   │   ├── company_info_agents.py        # Company Information Analysis Agent
-│   │   ├── news_strategy_agents.py       # News and Investment Strategy Agent
-│   │   ├── stock_price_agents.py         # Stock Price and Volume Analysis Agent
-│   │   ├── telegram_quality_inspector.py # Quality Inspector Agent
-│   │   ├── telegram_summary_agent.py     # Summary Specialist Agent
-│   │   └── telegram_translator_agent.py  # Translation Specialist Agent
-│   ├── analysis.py              # Comprehensive Stock Analysis (Core)
-│   ├── main.py                  # Main Analysis Execution
-│   ├── report_generation.py     # Report Generation
-│   ├── stock_chart.py           # Chart Generation
-│   └── utils.py                 # Utility Functions
-├── 📂 prism-us/                  # 🇺🇸 US Stock Market Module (NEW)
-│   ├── us_stock_analysis_orchestrator.py  # US Main Orchestrator
-│   ├── us_trigger_batch.py                # US Surge Stock Detection
-│   ├── us_stock_tracking_agent.py         # US Trading Simulation
-│   ├── us_telegram_summary_agent.py       # US Telegram Summary
-│   ├── check_market_day.py                # US Market Holiday Checker
-│   ├── 📂 cores/                          # US Core Analysis
-│   │   ├── us_data_client.py              # Unified Data Client (yfinance + finnhub)
-│   │   ├── us_surge_detector.py           # Surge Detection Module
-│   │   ├── us_analysis.py                 # Core Analysis Module
-│   │   └── 📂 agents/                     # US-specific Agents
-│   └── 📂 tracking/                       # US Database Schema
-├── 📂 examples/streamlit/        # Web Interface
-├── 📂 trading/                   # 💱 Automated Trading System (Korea Investment & Securities API)
-│   ├── kis_auth.py              # KIS API Authentication and Token Management
-│   ├── domestic_stock_trading.py # Domestic Stock Trading Core Module
-│   ├── portfolio_telegram_reporter.py # Portfolio Telegram Reporter
-│   ├── 📂 config/               # Configuration File Directory
-│   │   ├── kis_devlp.yaml       # KIS API Configuration (app key, account number, etc.)
-│   │   └── kis_devlp.yaml.example # Configuration File Example
-│   └── 📂 samples/              # API Sample Code
-├── 📂 utils/                     # Utility Scripts
-├── 📂 tests/                     # Test Code
-├── stock_analysis_orchestrator.py # 🎯 Main Orchestrator (Korean Market)
-├── telegram_config.py           # Telegram Configuration Management Class
-├── trigger_batch.py             # Surge Stock Detection Batch
-├── telegram_bot_agent.py        # Telegram Bot (Claude Based)
-├── stock_tracking_agent.py      # Trading Simulation (GPT-5)
-├── stock_tracking_enhanced_agent.py # Enhanced Trading Simulation
-├── compress_trading_memory.py   # Trading Memory Compression & Cleanup
-├── performance_tracker_batch.py # Daily Performance Tracking
-├── pdf_converter.py             # PDF Conversion
-├── requirements.txt             # Dependency List
-├── .env.example                 # Environment Variable Example
-├── mcp_agent.config.yaml.example    # MCP Agent Configuration Example
-├── mcp_agent.secrets.yaml.example   # MCP Agent Secret Example
->>>>>>> upstream/main
+```text
+prism-insight-light/
+├── trading/
+│   ├── __init__.py
+│   ├── kis_auth.py
+│   ├── domestic_stock_trading.py
+│   ├── portfolio_telegram_reporter.py
+│   ├── us_stock_trading.py
+│   ├── config/
+│   │   └── kis_devlp.yaml.example
+│   └── samples/
+│       └── kis_api_sample.py
+├── gcp_pubsub_subscriber.py
+├── README.md
+├── requirements.txt
+├── .env.example
+├── .gitignore
+├── LICENSE
+└── __init__.py
 ```
 
 ---
@@ -674,16 +614,10 @@ python -m venv .venv
 
 pip install -r requirements.txt
 
-<<<<<<< HEAD
+```bash
 cp .env.example .env
 cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 ```
-=======
-> **📖 Hybrid Selection Algorithm:** The trigger now selects stocks that are more compatible with buy/sell agent criteria. See [docs/TRIGGER_BATCH_ALGORITHMS.md](docs/TRIGGER_BATCH_ALGORITHMS.md) for details.
-
-### Modify AI Prompts
-You can customize analysis instructions in each agent file in the `cores/agents/` directory.
->>>>>>> upstream/main
 
 필요한 값들을 수정합니다
 
@@ -710,19 +644,10 @@ PRISM-INSIGHT의 AI 기반 실시간 매매 시그널을 GCP Pub/Sub을 통해 �
 
 ## 📋 개요
 
-<<<<<<< HEAD
 - **무료 제공**: PRISM-INSIGHT 측 비용 없음
 - **실시간 스트림**: 매수/매도 시그널을 즉시 수신
 - **커스터마이징 가능**: 받은 시그널로 자체 로직 구현 가능
 - **샘플 코드 제공**: Python 예제 코드 포함
-=======
-Monthly costs of approximately ₩290,000 for API and server expenses (as of November '25):
-- OpenAI API (GPT-5, GPT-5): ~₩170,000/month
-- Anthropic API (Claude Sonnet 4.5): ~₩30,000/month
-- Firecrawl API (MCP Server): ~₩30,000/month
-- Perplexity API (MCP Server): ~₩15,000/month
-- Server and Infrastructure: ~₩45,000/month
->>>>>>> upstream/main
 
 ## 💰 비용 안내
 
