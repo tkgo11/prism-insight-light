@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 fastapi
 uvicorn[standard]
 google-cloud-pubsub
@@ -8,3 +9,81 @@ requests
 websockets
 pycryptodome
 cryptography
+=======
+streamlit>=1.10.0
+pandas~=2.2.3
+numpy~=2.2.3
+mcp-agent>=0.2.6
+requests~=2.32.3
+aiohttp~=3.11.13
+python-dateutil~=2.9.0.post0
+email-validator
+openai~=1.64.0
+anthropic~=0.64.0
+markdown>=3.3.0
+python-telegram-bot>=20.0
+aiosqlite>=0.17.0
+mcp-server-sqlite
+
+# 파일 처리 및 로깅
+pathlib>=1.0.1
+python-dotenv>=1.0.0
+
+
+# PDF 변환 관련 패키지
+playwright>=1.40.0  # Chromium 기반 PDF 변환 (권장)
+pdfkit>=1.0.0  # wkhtmltopdf 기반 PDF 변환 (레거시, 백업용)
+reportlab>=4.0.0  # 직접 PDF 생성 (대체 방식)
+mdpdf>=0.0.9  # 간편한 마크다운 변환 (대체 방식)
+
+# 주식 데이터 관련
+pykrx==1.0.48
+
+# 한국투자증권 API 관련
+PyYAML>=6.0.1  # 설정 파일 파싱
+pycryptodome>=3.19.0  # 웹소켓 암호화
+websockets>=12.0  # 실시간 시세 웹소켓
+
+# JSON 처리
+ujson>=5.8.0
+json-repair>=0.1.0  # JSON 문법 오류 자동 복구
+
+# 이미지 처리 (PDF 변환시 필요)
+Pillow>=10.0.0
+
+holidays~=0.68
+
+python-telegram-bot[job-queue]>=20.0
+
+kospi_kosdaq_stock_server>=0.3.37
+DateTime~=5.5
+matplotlib~=3.10.1
+seaborn~=0.13.2
+mplfinance~=0.12.10b0
+
+tenacity
+
+PyPDF2
+html2text
+
+scipy
+
+
+cryptography>=42.0.8,<45.0.0
+
+APScheduler==3.11.0
+
+upstash-redis>=1.0.0
+google-cloud-pubsub>=2.18.0
+
+# YouTube Event Fund Crawler
+yt-dlp>=2024.0.0  # YouTube video/audio downloader
+feedparser>=6.0.0  # RSS feed parser
+pydub>=0.25.1  # Audio file manipulation (for splitting large files)
+
+# US Stock Market (prism-us module)
+yfinance>=0.2.0  # Yahoo Finance data
+pandas-market-calendars>=4.0.0  # US market holidays
+pytz>=2024.1  # Timezone support
+lxml>=4.9.0  # HTML/XML parsing for pandas read_html
+>>>>>>> upstream/main
