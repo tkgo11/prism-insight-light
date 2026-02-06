@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-fastapi
-uvicorn[standard]
-google-cloud-pubsub
-python-dotenv
-PyYAML
-pandas
-requests
-websockets
-pycryptodome
-cryptography
-=======
 streamlit>=1.10.0
 pandas~=2.2.3
 numpy~=2.2.3
@@ -86,4 +74,3 @@ yfinance>=0.2.0  # Yahoo Finance data
 pandas-market-calendars>=4.0.0  # US market holidays
 pytz>=2024.1  # Timezone support
 lxml>=4.9.0  # HTML/XML parsing for pandas read_html
->>>>>>> upstream/main
