@@ -1,0 +1,5 @@
+# config.py
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+SENDER_EMAIL = "example@gmail.com"  # 발신용 Gmail 주소
+SENDER_PASSWORD = "example"   # Gmail 앱 비밀번호

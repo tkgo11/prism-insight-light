@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# ====|  (REST) 접근 토큰 / (Websocket) 웹소켓 접속키 발급 에 필요한 API 호출 샘플 아래 참고하시기 바랍니다.  |=====================
-# ====|  API 호출 공통 함수 포함                                  |=====================
+# ====|  Sample API calls for obtaining (REST) access token / (Websocket) connection key  |=====================
+# ====|  Includes common API call functions                                  |=====================
 
 import asyncio
 import copy
@@ -23,13 +23,13 @@ from typing import Optional, Tuple
 import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-# pip install requests (패키지설치)
+# pip install requests (package installation)
 import requests
 
-# 웹 소켓 모듈을 선언한다.
+# Declare web socket module
 import websockets
 
-# pip install PyYAML (패키지설치)
+# pip install PyYAML (package installation)
 import yaml
 from Crypto.Cipher import AES
 
@@ -39,7 +39,7 @@ from Crypto.Util.Padding import unpad
 from cryptography.fernet import Fernet
 
 class SecurityError(Exception):
-    """보안 관련 오류"""
+    """Security-related errors"""
     pass
 
 
@@ -69,35 +69,35 @@ class TokenRequestError(KISAuthError):
 clearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
 
 key_bytes = 32
-# kis_auth.py 파일이 있는 디렉토리 기준으로 config 폴더 찾기
+# Find config folder based on kis_auth.py file directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.join(current_dir, "config")
-# config_root = "$HOME/KIS/config/"  # 토큰 파일이 저장될 폴더, 제3자가 찾기 어렵도록 경로 설정하시기 바랍니다.
-# token_tmp = config_root + 'KIS000000'  # 토큰 로컬저장시 파일 이름 지정, 파일이름을 토큰값이 유추가능한 파일명은 삼가바랍니다.
-# token_tmp = config_root + 'KIS' + datetime.today().strftime("%Y%m%d%H%M%S")  # 토큰 로컬저장시 파일명 년월일시분초
-# 디렉토리 없으면 생성
+# config_root = "$HOME/KIS/config/"  # Folder where token files are stored, set path to be difficult for third parties to find
+# token_tmp = config_root + 'KIS000000'  # Specify file name for local token storage, avoid file names that can infer token value
+# token_tmp = config_root + 'KIS' + datetime.today().strftime("%Y%m%d%H%M%S")  # Token local storage filename YYYYMMDDHHMMSS
+# Create directory if it doesn't exist
 os.makedirs(config_root, exist_ok=True)
 
-# Unix/Linux에서 디렉토리 권한 설정 (소유자만 접근)
+# Set directory permissions on Unix/Linux (owner only access)
 if os.name != 'nt':
     try:
-        os.chmod(config_root, stat.S_IRWXU)  # 700 권한
+        os.chmod(config_root, stat.S_IRWXU)  # 700 permission
     except:
-        pass  # 권한 변경 실패 시 무시
+        pass  # Ignore permission change failure
 
-# 보안 강화된 토큰 파일명 생성
+# Generate security-enhanced token filename
 def get_token_filename():
-    """예측하기 어려운 토큰 파일명 생성"""
-    # 기본: 날짜 기반 (기존 방식과 호환)
+    """Generate unpredictable token filename"""
+    # Default: Date-based (compatible with existing method)
     date_str = datetime.today().strftime('%Y%m%d')
 
-    # 보안 강화: 랜덤 서픽스 추가 (선택사항)
-    # 환경변수로 보안 레벨 제어
+    # Security enhancement: Add random suffix (optional)
+    # Control security level via environment variable
     if os.environ.get('KIS_SECURE_TOKEN', 'false').lower() == 'true':
         random_suffix = hashlib.md5(os.urandom(8)).hexdigest()[:8]
         return os.path.join(config_root, f"KIS_{date_str}_{random_suffix}.token")
     else:
-        # 기존 방식 유지 (호환성)
+        # Maintain existing method (compatibility)
         return os.path.join(config_root, f"KIS{date_str}")
 
 token_tmp = get_token_filename()
@@ -106,8 +106,8 @@ token_tmp = get_token_filename()
 # Empty token files cause authentication failures and should only be created
 # when saving a valid token via save_token()
 
-# 앱키, 앱시크리트, 토큰, 계좌번호 등 저장관리, 자신만의 경로와 파일명으로 설정하시기 바랍니다.
-# pip install PyYAML (패키지설치)
+# Store and manage app key, app secret, token, account number, etc., set to your own path and filename.
+# pip install PyYAML (package installation)
 with open(os.path.join(config_root, "kis_devlp.yaml"), encoding="UTF-8") as f:
     _cfg = yaml.safe_load(f)
 
@@ -118,7 +118,7 @@ _DEBUG = False
 _isPaper = False
 _smartSleep = 0.1
 
-# 기본 헤더값 정의
+# Define default header values
 _base_headers = {
     "Content-Type": "application/json",
     "Accept": "text/plain",
@@ -127,23 +127,23 @@ _base_headers = {
 }
 
 def _get_or_create_encryption_key():
-    """암호화 키 생성 또는 로드"""
+    """Generate or load encryption key"""
     key_file = os.path.join(config_root, ".token_key")
 
     if os.path.exists(key_file):
         with open(key_file, 'rb') as f:
             key = f.read()
     else:
-        # 새 암호화 키 생성
+        # Generate new encryption key
         key = Fernet.generate_key()
         with open(key_file, 'wb') as f:
             f.write(key)
 
-        # 키 파일 권한 설정 (최고 보안)
+        # Set key file permissions (maximum security)
         if os.name != 'nt':
             os.chmod(key_file, 0o600)
         else:
-            # Windows: 파일 숨김 속성 설정
+            # Windows: Set file hidden attribute
             try:
                 import ctypes
                 ctypes.windll.kernel32.SetFileAttributesW(key_file, 2)  # FILE_ATTRIBUTE_HIDDEN
@@ -152,7 +152,7 @@ def _get_or_create_encryption_key():
 
     return key
 
-# 토큰 발급 받아 저장 (토큰값, 토큰 유효시간,1일, 6시간 이내 발급신청시는 기존 토큰값과 동일, 발급시 알림톡 발송)
+# Obtain and save token (token value, token validity time 1 day, same token value if applied within 6 hours, notification sent when issued)
 def save_token(my_token: str, my_expired: str):
     """
     Save token securely with encryption and atomic write.
@@ -219,7 +219,7 @@ def save_token(my_token: str, my_expired: str):
 
 
 
-# 토큰 확인 (토큰값, 토큰 유효시간_1일, 6시간 이내 발급신청시는 기존 토큰값과 동일, 발급시 알림톡 발송)
+# Check token (token value, token validity 1 day, same token value if applied within 6 hours, notification sent when issued)
 def read_token() -> Optional[str]:
     """
     Read and validate token with auto-recovery.
@@ -359,21 +359,21 @@ def read_token() -> Optional[str]:
         return None
 
 def _set_secure_file_permissions(file_path):
-    """모든 OS에서 안전한 파일 권한 설정"""
+    """Set secure file permissions on all OS"""
     try:
         if os.name == 'nt':  # Windows
-            # Windows에서 ACL 설정으로 소유자만 접근 가능
+            # Set ACL on Windows so only owner can access
             try:
                 import win32security
                 import win32api
                 import ntsecuritycon as con
 
-                # 현재 사용자 SID 획득
+                # Get current user SID
                 username = win32api.GetUserName()
                 domain = win32api.GetComputerName()
                 user_sid, domain, type = win32security.LookupAccountName(domain, username)
 
-                # 새 ACL 생성 - 소유자만 접근
+                # Create new ACL - owner access only
                 sd = win32security.GetFileSecurity(file_path, win32security.DACL_SECURITY_INFORMATION)
                 dacl = win32security.ACL()
                 dacl.AddAccessAllowedAce(win32security.ACL_REVISION,
@@ -383,7 +383,7 @@ def _set_secure_file_permissions(file_path):
 
                 logging.info(f"Windows ACL set for: {file_path}")
             except ImportError:
-                # pywin32가 없으면 기본적인 숨김 속성만 설정
+                # If pywin32 is not available, set basic hidden attribute only
                 try:
                     import ctypes
                     ctypes.windll.kernel32.SetFileAttributesW(file_path, 2)  # FILE_ATTRIBUTE_HIDDEN
@@ -391,21 +391,21 @@ def _set_secure_file_permissions(file_path):
                 except:
                     logging.warning(f"Could not set Windows file attributes for: {file_path}")
         else:  # Unix/Linux/Mac
-            # 600 권한 (소유자만 읽기/쓰기)
+            # 600 permissions (owner read/write only)
             os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)
             logging.info(f"Unix permissions set to 600 for: {file_path}")
 
     except Exception as e:
         logging.error(f"Failed to set secure file permissions for {file_path}: {e}")
-        # 권한 설정 실패는 치명적 오류로 처리
+        # Treat permission setting failure as a fatal error
         raise SecurityError(f"Cannot secure file permissions: {e}")
 
-# 오래된 토큰 파일 정리
+# Clean up old token files
 def cleanup_old_tokens():
-    """1일 이상 된 토큰 파일 자동 삭제"""
+    """Auto-delete token files older than 1 day"""
     try:
-        # 모든 토큰 파일 찾기
-        token_patterns = ["KIS*.token", "KIS20*"]  # 여러 패턴 지원
+        # Find all token files
+        token_patterns = ["KIS*.token", "KIS20*"]  # Support multiple patterns
         token_files = []
 
         for pattern in token_patterns:
@@ -413,11 +413,11 @@ def cleanup_old_tokens():
 
         now = datetime.now()
         for token_file in token_files:
-            # 파일 수정 시간 확인
+            # Check file modification time
             file_mtime = datetime.fromtimestamp(token_file.stat().st_mtime)
             age_days = (now - file_mtime).days
 
-            # 1일 이상 된 파일 삭제
+            # Delete files older than 1 day
             if age_days > 1:
                 try:
                     os.remove(token_file)
@@ -644,73 +644,73 @@ def _atomic_write(file_path_str: str, data: bytes) -> bool:
         raise TokenFileError(f"Atomic write failed: {e}")
 
 
-# 토큰 유효시간 체크해서 만료된 토큰이면 재발급처리
+# Check token validity time and reissue if expired
 def _getBaseHeader():
     if _autoReAuth:
         reAuth()
     return copy.deepcopy(_base_headers)
 
 
-# 가져오기 : 앱키, 앱시크리트, 종합계좌번호(계좌번호 중 숫자8자리), 계좌상품코드(계좌번호 중 숫자2자리), 토큰, 도메인
+# Get: App key, App secret, Account number (8 digits), Account product code (2 digits), Token, Domain
 def _setTRENV(cfg):
     nt1 = namedtuple(
         "KISEnv",
         ["my_app", "my_sec", "my_acct", "my_prod", "my_htsid", "my_token", "my_url", "my_url_ws"],
     )
     d = {
-        "my_app": cfg["my_app"],  # 앱키
-        "my_sec": cfg["my_sec"],  # 앱시크리트
-        "my_acct": cfg["my_acct"],  # 종합계좌번호(8자리)
-        "my_prod": cfg["my_prod"],  # 계좌상품코드(2자리)
+        "my_app": cfg["my_app"],  # App key
+        "my_sec": cfg["my_sec"],  # App secret
+        "my_acct": cfg["my_acct"],  # Account number (8 digits)
+        "my_prod": cfg["my_prod"],  # Account product code (2 digits)
         "my_htsid": cfg["my_htsid"],  # HTS ID
-        "my_token": cfg["my_token"],  # 토큰
+        "my_token": cfg["my_token"],  # Token
         "my_url": cfg[
             "my_url"
-        ],  # 실전 도메인 (https://openapi.koreainvestment.com:9443)
+        ],  # Live domain (https://openapi.koreainvestment.com:9443)
         "my_url_ws": cfg["my_url_ws"],
-    }  # 모의 도메인 (https://openapivts.koreainvestment.com:29443)
+    }  # Demo domain (https://openapivts.koreainvestment.com:29443)
 
     # print(cfg['my_app'])
     global _TRENV
     _TRENV = nt1(**d)
 
 
-def isPaperTrading():  # 모의투자 매매
+def isPaperTrading():  # Paper trading
     return _isPaper
 
 
-# 실전투자면 'prod', 모의투자면 'vps'를 셋팅 하시기 바랍니다.
+# Set 'prod' for live trading, 'vps' for paper trading
 def changeTREnv(token_key, svr="prod", product=_cfg["my_prod"]):
     cfg = dict()
 
     global _isPaper
-    if svr == "prod":  # 실전투자
-        ak1 = "my_app"  # 실전투자용 앱키
-        ak2 = "my_sec"  # 실전투자용 앱시크리트
+    if svr == "prod":  # Live trading
+        ak1 = "my_app"  # App key for live trading
+        ak2 = "my_sec"  # App secret for live trading
         _isPaper = False
         _smartSleep = 0.05
-    elif svr == "vps":  # 모의투자
-        ak1 = "paper_app"  # 모의투자용 앱키
-        ak2 = "paper_sec"  # 모의투자용 앱시크리트
+    elif svr == "vps":  # Paper trading
+        ak1 = "paper_app"  # App key for paper trading
+        ak2 = "paper_sec"  # App secret for paper trading
         _isPaper = True
         _smartSleep = 0.5
 
     cfg["my_app"] = _cfg[ak1]
     cfg["my_sec"] = _cfg[ak2]
 
-    if svr == "prod" and product == "01":  # 실전투자 주식투자, 위탁계좌, 투자계좌
+    if svr == "prod" and product == "01":  # Live trading - stocks, consignment account, investment account
         cfg["my_acct"] = _cfg["my_acct_stock"]
-    elif svr == "prod" and product == "03":  # 실전투자 선물옵션(파생)
+    elif svr == "prod" and product == "03":  # Live trading - futures/options (derivatives)
         cfg["my_acct"] = _cfg["my_acct_future"]
-    elif svr == "prod" and product == "08":  # 실전투자 해외선물옵션(파생)
+    elif svr == "prod" and product == "08":  # Live trading - overseas futures/options (derivatives)
         cfg["my_acct"] = _cfg["my_acct_future"]
-    elif svr == "prod" and product == "22":  # 실전투자 개인연금저축계좌
+    elif svr == "prod" and product == "22":  # Live trading - personal pension savings account
         cfg["my_acct"] = _cfg["my_acct_stock"]
-    elif svr == "prod" and product == "29":  # 실전투자 퇴직연금계좌
+    elif svr == "prod" and product == "29":  # Live trading - retirement pension account
         cfg["my_acct"] = _cfg["my_acct_stock"]
-    elif svr == "vps" and product == "01":  # 모의투자 주식투자, 위탁계좌, 투자계좌
+    elif svr == "vps" and product == "01":  # Paper trading - stocks, consignment account, investment account
         cfg["my_acct"] = _cfg["my_paper_stock"]
-    elif svr == "vps" and product == "03":  # 모의투자 선물옵션(파생)
+    elif svr == "vps" and product == "03":  # Paper trading - futures/options (derivatives)
         cfg["my_acct"] = _cfg["my_paper_future"]
 
     cfg["my_prod"] = product
@@ -734,8 +734,8 @@ def _getResultObject(json_data):
     return _tc_(**json_data)
 
 
-# Token 발급, 유효기간 1일, 6시간 이내 발급시 기존 token값 유지, 발급시 알림톡 무조건 발송
-# 모의투자인 경우  svr='vps', 투자계좌(01)이 아닌경우 product='XX' 변경하세요 (계좌번호 뒤 2자리)
+# Token issuance, validity 1 day, maintains existing token if issued within 6 hours, notification sent on issuance
+# For paper trading use svr='vps', if not investment account(01) change product='XX' (last 2 digits of account number)
 def auth(svr="prod", product=_cfg["my_prod"], url=None):
     """
     Authenticate with KIS API and obtain access token.
@@ -761,12 +761,12 @@ def auth(svr="prod", product=_cfg["my_prod"], url=None):
     }
 
     # Determine which keys to use based on server type
-    if svr == "prod":  # 실전투자
-        ak1 = "my_app"  # 앱키 (실전투자용)
-        ak2 = "my_sec"  # 앱시크리트 (실전투자용)
-    elif svr == "vps":  # 모의투자
-        ak1 = "paper_app"  # 앱키 (모의투자용)
-        ak2 = "paper_sec"  # 앱시크리트 (모의투자용)
+    if svr == "prod":  # Live trading
+        ak1 = "my_app"  # App key (for live trading)
+        ak2 = "my_sec"  # App secret (for live trading)
+    elif svr == "vps":  # Paper trading
+        ak1 = "paper_app"  # App key (for paper trading)
+        ak2 = "paper_sec"  # App secret (for paper trading)
     else:
         raise ValueError(f"Invalid server type: {svr}. Must be 'prod' or 'vps'")
 
@@ -845,15 +845,15 @@ def auth(svr="prod", product=_cfg["my_prod"], url=None):
         print(f"[{_last_auth_time}] => get AUTH Key completed!")
 
 
-# end of initialize, 토큰 재발급, 토큰 발급시 유효시간 1일
-# 프로그램 실행시 _last_auth_time에 저장하여 유효시간 체크, 유효시간 만료시 토큰 발급 처리
+# end of initialize, token reissue, token validity 1 day on issuance
+# Saves to _last_auth_time on program execution to check validity, reissues token on expiry
 def reAuth(svr="prod", product=_cfg["my_prod"]):
     n2 = datetime.now()
     # BUG FIX: Changed .seconds to .total_seconds()
     # .seconds only returns seconds within the current day (0-86399)
     # .total_seconds() returns the total duration in seconds
     # Also reduced to 23 hours (82800s) for safety margin before 24h expiry
-    if (n2 - _last_auth_time).total_seconds() >= 82800:  # 23시간 (안전 마진)
+    if (n2 - _last_auth_time).total_seconds() >= 82800:  # 23 hours (safety margin)
         logging.info("Token approaching expiry, re-authenticating...")
         auth(svr, product)
 
@@ -871,16 +871,16 @@ def smart_sleep():
 
 def getTREnv():
     if _TRENV is None:
-        raise RuntimeError("인증이 완료되지 않았습니다. auth() 함수를 먼저 호출하세요.")
+        raise RuntimeError("Authentication not completed. Call auth() function first.")
     return _TRENV
 
 
-# 주문 API에서 사용할 hash key값을 받아 header에 설정해 주는 함수
-# 현재는 hash key 필수 사항아님, 생략가능, API 호출과정에서 변조 우려를 하는 경우 사용
+# Function to receive hash key value for order API and set it in header
+# Currently hash key is not mandatory, can be omitted, used when concerned about tampering during API calls
 # Input: HTTP Header, HTTP post param
 # Output: None
 def set_order_hash_key(h, p):
-    url = f"{getTREnv().my_url}/uapi/hashkey"  # hashkey 발급 API URL
+    url = f"{getTREnv().my_url}/uapi/hashkey"  # hashkey issuance API URL
 
     res = requests.post(url, data=json.dumps(p), headers=h)
     rescode = res.status_code
@@ -890,7 +890,7 @@ def set_order_hash_key(h, p):
         print("Error:", rescode)
 
 
-# API 호출 응답에 필요한 처리 공통 함수
+# Common function for processing API call responses
 class APIResp:
     def __init__(self, resp):
         self._rescode = resp.status_code
@@ -971,7 +971,7 @@ class APIResp:
 
 class APIRespError(APIResp):
     def __init__(self, status_code, error_text):
-        # 부모 생성자 호출하지 않고 직접 초기화
+        # Initialize directly without calling parent constructor
         self.status_code = status_code
         self.error_text = error_text
         self._error_code = str(status_code)
@@ -987,7 +987,7 @@ class APIRespError(APIResp):
         return self._error_message
 
     def getBody(self):
-        # 빈 객체 리턴 (속성 접근 시 AttributeError 방지)
+        # Return empty object (prevents AttributeError on attribute access)
         class EmptyBody:
             def __getattr__(self, name):
                 return None
@@ -995,7 +995,7 @@ class APIRespError(APIResp):
         return EmptyBody()
 
     def getHeader(self):
-        # 빈 객체 리턴
+        # Return empty object
         class EmptyHeader:
             tr_cont = ""
 
@@ -1016,7 +1016,7 @@ class APIRespError(APIResp):
             print(f"URL: {url}")
 
 
-########### API call wrapping : API 호출 공통
+########### API call wrapping : Common API call
 
 
 def _url_fetch(
@@ -1024,17 +1024,17 @@ def _url_fetch(
 ):
     url = f"{getTREnv().my_url}{api_url}"
 
-    headers = _getBaseHeader()  # 기본 header 값 정리
+    headers = _getBaseHeader()  # Organize basic header values
 
-    # 추가 Header 설정
+    # Set additional Headers
     tr_id = ptr_id
-    if ptr_id[0] in ("T", "J", "C"):  # 실전투자용 TR id 체크
-        if isPaperTrading():  # 모의투자용 TR id 식별
+    if ptr_id[0] in ("T", "J", "C"):  # Check TR id for live trading
+        if isPaperTrading():  # Identify TR id for paper trading
             tr_id = "V" + ptr_id[1:]
 
-    headers["tr_id"] = tr_id  # 트랜젝션 TR id
-    headers["custtype"] = "P"  # 일반(개인고객,법인고객) "P", 제휴사 "B"
-    headers["tr_cont"] = tr_cont  # 트랜젝션 TR id
+    headers["tr_id"] = tr_id  # Transaction TR id
+    headers["custtype"] = "P"  # General (individual/corporate customer) "P", affiliate "B"
+    headers["tr_cont"] = tr_cont  # Transaction TR id
 
     if appendHeaders is not None:
         if len(appendHeaders) > 0:
@@ -1067,7 +1067,7 @@ def _url_fetch(
 # print("Pass through the end of the line")
 
 
-########### New - websocket 대응
+########### New - websocket support
 
 _base_headers_ws = {
     "content-type": "utf-8",
@@ -1094,9 +1094,9 @@ def auth_ws(svr="prod", product=_cfg["my_prod"]):
     p["secretkey"] = _cfg[ak2]
 
     url = f"{_cfg[svr]}/oauth2/Approval"
-    res = requests.post(url, data=json.dumps(p), headers=_getBaseHeader())  # 토큰 발급
+    res = requests.post(url, data=json.dumps(p), headers=_getBaseHeader())  # Token issuance
     rescode = res.status_code
-    if rescode == 200:  # 토큰 정상 발급
+    if rescode == 200:  # Token issued successfully
         approval_key = _getResultObject(res.json()).approval_key
     else:
         print("Get Approval token fail!\nYou have to restart your app!!!")
@@ -1120,7 +1120,7 @@ def reAuth_ws(svr="prod", product=_cfg["my_prod"]):
 
 
 def data_fetch(tr_id, tr_type, params, appendHeaders=None) -> dict:
-    headers = _getBaseHeader_ws()  # 기본 header 값 정리
+    headers = _getBaseHeader_ws()  # Organize basic header values
 
     headers["tr_type"] = tr_type
     headers["custtype"] = "P"
@@ -1143,7 +1143,7 @@ def data_fetch(tr_id, tr_type, params, appendHeaders=None) -> dict:
     return {"header": headers, "body": {"input": inp}}
 
 
-# iv, ekey, encrypt 는 각 기능 메소드 파일에 저장할 수 있도록 dict에서 return 하도록
+# Return iv, ekey, encrypt in dict so they can be saved to each function method file
 def system_resp(data):
     isPingPong = False
     isUnSub = False
@@ -1161,7 +1161,7 @@ def system_resp(data):
     if rdic.get("body", None) is not None:
         isOk = True if rdic["body"]["rt_cd"] == "0" else False
         tr_msg = rdic["body"]["msg1"]
-        # 복호화를 위한 key 를 추출
+        # Extract key for decryption
         if "output" in rdic["body"]:
             iv = rdic["body"]["output"]["iv"]
             ekey = rdic["body"]["output"]["key"]
