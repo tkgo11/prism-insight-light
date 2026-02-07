@@ -1,370 +1,381 @@
-<div align="center">
-  <img src="docs/images/prism-insight-logo.jpeg" alt="PRISM-INSIGHT Logo" width="300">
-  <br><br>
-  <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License">
-  <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/OpenAI-GPT--5-green.svg" alt="OpenAI">
-  <img src="https://img.shields.io/badge/Anthropic-Claude--Sonnet--4.5-green.svg" alt="Anthropic">
-</div>
+# PRISM-INSIGHT-LIGHT
 
-# PRISM-INSIGHT
+한국 주식시장(KOSPI/KOSDAQ)을 대상으로 하는 AI 기반 분석 및 자동매매 시스템의 **축약 버전 저장소**입니다.
 
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/dragon1086?style=for-the-badge&logo=github-sponsors&color=ff69b4&label=Sponsors)](https://github.com/sponsors/dragon1086)
-[![Stars](https://img.shields.io/github/stars/dragon1086/prism-insight?style=for-the-badge)](https://github.com/dragon1086/prism-insight/stargazers)
+현재 이 스냅샷에서는 다음 구성 요소만을 다룹니다.
 
-> **AI-Powered Stock Market Analysis & Trading System**
->
-> 13+ specialized AI agents collaborate to detect surge stocks, generate analyst-grade reports, and execute trades automatically.
-
-📖 [한국어 문서](README_ko.md)
+- 한국투자증권(KIS) API 기반 트레이딩 모듈 (`trading/`)
+- GCP Pub/Sub 기반 실시간 트레이딩 시그널 구독 스크립트 (`gcp_pubsub_subscriber.py`)
 
 ---
 
-### 🏆 Platinum Sponsor
+## 디렉터리 구조 (현재 실제 기준)
 
-<div align="center">
-<a href="https://wrks.ai/en">
-  <img src="docs/images/wrks_ai_logo.png" alt="AI3 WrksAI" width="50">
-</a>
-
-**[AI3](https://www.ai3.kr/) | [WrksAI](https://wrks.ai/en)**
-
-AI3, creator of **WrksAI** - the AI assistant for professionals,<br>
-proudly sponsors **PRISM-INSIGHT** - the AI assistant for investors.
-</div>
-
----
-
-## ⚡ Try It Now (No Installation Required)
-
-### 1. Live Dashboard
-See AI trading performance in real-time:
-👉 **[analysis.stocksimulation.kr](https://analysis.stocksimulation.kr/)**
-
-### 2. Telegram Channels
-Get daily surge stock alerts and AI analysis reports:
-- 🇺🇸 **[English Channel](https://t.me/prism_insight_global_en)**
-- 🇰🇷 **[Korean Channel](https://t.me/stock_ai_agent)**
-
-### 3. Sample Report
-Watch an AI-generated Apple Inc. analysis report:
-
-[![Sample Report - Apple Inc. Analysis](https://img.youtube.com/vi/LVOAdVCh1QE/maxresdefault.jpg)](https://youtu.be/LVOAdVCh1QE)
-
----
-
-## ⚡ Try in 60 Seconds (US Stocks)
-
-The fastest way to try PRISM-INSIGHT. Only requires an **OpenAI API key**.
-
-```bash
-# Clone and run the quickstart script
-git clone https://github.com/dragon1086/prism-insight.git
-cd prism-insight
-./quickstart.sh YOUR_OPENAI_API_KEY
+```text
+prism-insight/
+├── trading/
+│   ├── __init__.py
+│   ├── kis_auth.py
+│   ├── domestic_stock_trading.py
+│   ├── portfolio_telegram_reporter.py
+│   └── config/
+│       └── kis_devlp.yaml.example
+├── gcp_pubsub_subscriber.py
+├── README.md
+├── requirements.txt
+├── .env.example
+├── .gitignore
+├── LICENSE
+└── __init__.py
 ```
 
-This generates an AI analysis report for Apple (AAPL). Try other stocks:
-```bash
-python3 demo.py MSFT              # Microsoft
-python3 demo.py NVDA              # NVIDIA
-python3 demo.py TSLA --language ko  # Tesla (Korean report)
-```
-
-> 💡 **Get your OpenAI API key** from [OpenAI Platform](https://platform.openai.com/api-keys)
->
-> 📰 **Optional**: Add a [Perplexity API key](https://www.perplexity.ai/) to `mcp_agent.config.yaml` for news analysis
-
-Your AI-generated PDF reports will be saved in `prism-us/pdf_reports/`.
-
-<details>
-<summary>🐳 Or use Docker (no Python setup needed)</summary>
-
-```bash
-# 1. Set your OpenAI API key
-export OPENAI_API_KEY=sk-your-key-here
-
-# 2. Start container
-docker-compose -f docker-compose.quickstart.yml up -d
-
-# 3. Run analysis
-docker exec -it prism-quickstart python3 demo.py NVDA
-```
-
-Reports will be saved to `./quickstart-output/`.
-
-</details>
-
 ---
 
-## 🚀 Full Installation
-
-### Prerequisites
-- Python 3.10+ or Docker
-- OpenAI API Key ([get one here](https://platform.openai.com/api-keys))
-
-### Option A: Python Installation
+## 빠른 시작 (환경 구성)
 
 ```bash
-# 1. Clone & Install
-git clone https://github.com/dragon1086/prism-insight.git
-cd prism-insight
+git clone https://github.com/tkgo11/prism-insight-light.git
+cd prism-insight-light
+
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS/Linux
+# source .venv/bin/activate
+
 pip install -r requirements.txt
 
-# 2. Install Playwright for PDF generation
-python3 -m playwright install chromium
-
-# 3. Install perplexity-ask MCP server
-cd perplexity-ask && npm install && npm run build && cd ..
-
-# 4. Setup config
-cp mcp_agent.config.yaml.example mcp_agent.config.yaml
-cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
-# Edit mcp_agent.secrets.yaml with your OpenAI API key
-# Edit mcp_agent.config.yaml with KRX credentials (Kakao account)
-
-# 5. Run analysis (no Telegram required!)
-python stock_analysis_orchestrator.py --mode morning --no-telegram
+cp .env.example .env
+cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 ```
 
-### Option B: Docker (Recommended for Production)
+필요한 값들을 수정합니다
+
+---
+
+## GCP Pub/Sub 트레이딩 시그널 구독자
+
+### 메인 스크립트
+
+- `gcp_pubsub_subscriber.py` (프로젝트 루트 위치)
+
+이 스크립트는:
+
+- GCP Pub/Sub 구독으로부터 메시지를 수신하고
+- `BUY` / `SELL` / `EVENT` 타입의 시그널을 로그로 남기며
+- 옵션에 따라 `trading.domestic_stock_trading.AsyncTradingContext`를 사용해 실제 매수/매도를 실행할 수 있습니다.
+
+### 실행 방법 요약
+
+
+# PRISM-INSIGHT 실시간 트레이딩 시그널 구독 가이드
+
+PRISM-INSIGHT의 AI 기반 실시간 매매 시그널을 GCP Pub/Sub을 통해 받아볼 수 있습니다.
+
+## 📋 개요
+
+- **무료 제공**: PRISM-INSIGHT 측 비용 없음
+- **실시간 스트림**: 매수/매도 시그널을 즉시 수신
+- **커스터마이징 가능**: 받은 시그널로 자체 로직 구현 가능
+- **샘플 코드 제공**: Python 예제 코드 포함
+
+## 💰 비용 안내
+
+### PRISM-INSIGHT 측
+- 무료 (Topic 운영 비용은 PRISM-INSIGHT가 부담)
+
+### 구독자 측 (본인 GCP 프로젝트)
+- **GCP Pub/Sub 요금**: https://cloud.google.com/pubsub/pricing
+- **무료 할당량**: 월 10GB까지 무료
+- **예상 비용**: 시그널이 적어 대부분 무료 범위 내
+
+## 🚀 빠른 시작
+
+### 1. GCP 계정 및 프로젝트 생성
+
+1. GCP 계정이 없다면: https://console.cloud.google.com (무료 계정 가능)
+2. 새 프로젝트 생성:
+   - 프로젝트 이름: 원하는 이름 (예: `my-prism-subscriber`)
+   - 프로젝트 ID 기록: `my-prism-subscriber-12345`
+
+### 2. Pub/Sub API 활성화
 
 ```bash
-# 1. Clone & Configure
-git clone https://github.com/dragon1086/prism-insight.git
-cd prism-insight
-cp mcp_agent.config.yaml.example mcp_agent.config.yaml
-cp mcp_agent.secrets.yaml.example mcp_agent.secrets.yaml
-# Edit config files with your API keys
+# gcloud CLI 설치되어 있다면
+gcloud services enable pubsub.googleapis.com --project=MY_PROJECT_ID
 
-# 2. Build & Run
-docker-compose up -d
-
-# 3. Run analysis manually (optional)
-docker exec prism-insight-container python3 stock_analysis_orchestrator.py --mode morning --no-telegram
+# 또는 웹 콘솔에서
+# GCP Console → API 및 서비스 → 라이브러리 → "Cloud Pub/Sub API" 검색 → 사용
 ```
 
-📖 **Full Setup Guide**: [docs/SETUP.md](docs/SETUP.md)
+### 3. 구독(Subscription) 생성
 
----
-
-## 📖 What is PRISM-INSIGHT?
-
-PRISM-INSIGHT is a **completely open-source, free** AI-powered stock analysis system for **Korean (KOSPI/KOSDAQ)** and **US (NYSE/NASDAQ)** markets.
-
-### Core Capabilities
-- **Surge Stock Detection** - Automatic detection of stocks with unusual volume/price movements
-- **AI Analysis Reports** - Professional analyst-grade reports generated by 13 specialized AI agents
-- **Trading Simulation** - AI-driven buy/sell decisions with portfolio management
-- **Automated Trading** - Real execution via Korea Investment & Securities API
-- **Telegram Integration** - Real-time alerts and multi-language broadcasting
-
-### AI Models
-- **Analysis & Trading**: OpenAI GPT-5
-- **Telegram Bot**: Anthropic Claude Sonnet 4.5
-- **Translation**: OpenAI GPT-5 (EN, JA, ZH support)
-
----
-
-## 🤖 AI Agent System
-
-13+ specialized agents collaborate in teams:
-
-| Team | Agents | Purpose |
-|------|--------|---------|
-| **Analysis** | 6 agents | Technical, Financial, Industry, News, Market analysis |
-| **Strategy** | 1 agent | Investment strategy synthesis |
-| **Communication** | 3 agents | Summary, Quality evaluation, Translation |
-| **Trading** | 3 agents | Buy/Sell decisions, Journal |
-| **Consultation** | 2 agents | User interaction via Telegram |
-
-<details>
-<summary>📊 View Agent Workflow Diagram</summary>
-<br>
-<img src="docs/images/aiagent/agent_workflow2.png" alt="Agent Workflow" width="700">
-</details>
-
-📖 **Detailed Agent Documentation**: [docs/CLAUDE_AGENTS.md](docs/CLAUDE_AGENTS.md)
-
----
-
-## ✨ Key Features
-
-| Feature | Description |
-|---------|-------------|
-| **🤖 AI Analysis** | Expert-level stock analysis through GPT-5 multi-agent system |
-| **📊 Surge Detection** | Automatic watchlist via morning/afternoon market trend analysis |
-| **📱 Telegram** | Real-time analysis distribution to channels |
-| **📈 Trading Sim** | AI-driven investment strategy simulation |
-| **💱 Auto Trading** | Execution via Korea Investment & Securities API |
-| **🎨 Dashboard** | Transparent portfolio, trades, and performance tracking |
-| **🧠 Self-Improving** | Trading journal feedback loop — past trigger win rates automatically inform future buy decisions ([details](docs/TRADING_JOURNAL.md#performance-tracker-피드백-루프-self-improving-trading)) |
-| **🇺🇸 US Markets** | Full support for NYSE/NASDAQ analysis |
-
-<details>
-<summary>🖼️ View Screenshots</summary>
-<br>
-<img src="docs/images/trigger-en.png" alt="Surge Detection" width="500">
-<img src="docs/images/summary-en.png" alt="Summary" width="500">
-<img src="docs/images/dashboard1-en.png" alt="Dashboard" width="500">
-</details>
-
----
-
-## 📈 Trading Performance
-
-### Season 2 (In Progress)
-| Metric | Value |
-|--------|-------|
-| Start Date | 2025.09.29 |
-| Total Trades | 50 |
-| Win Rate | 42.00% |
-| **Cumulative Return** | **127.34%** |
-| Real Account Return | +8.50% |
-
-👉 **[Live Dashboard](https://analysis.stocksimulation.kr/)**
-
----
-
-## 🇺🇸 US Stock Market Module
-
-Same AI-powered workflow for US markets:
+#### 방법 A: gcloud CLI 사용 (권장)
 
 ```bash
-# Run US analysis
-python prism-us/us_stock_analysis_orchestrator.py --mode morning --no-telegram
+# 프로젝트 설정
+gcloud config set project MY_PROJECT_ID
 
-# With English reports
-python prism-us/us_stock_analysis_orchestrator.py --mode morning --language en
+# 구독 생성
+gcloud pubsub subscriptions create my-prism-signals \
+  --topic=projects/galvanized-sled-435607-p6/topics/prism-trading-signals \
+  --project=MY_PROJECT_ID
+
+# 구독 확인
+gcloud pubsub subscriptions list
 ```
 
-**Data Sources**: yahoo-finance-mcp, sec-edgar-mcp (SEC filings, insider trading)
+#### 방법 B: GCP 웹 콘솔 사용
 
----
+1. https://console.cloud.google.com/cloudpubsub/subscription/list
+2. "구독 만들기" 클릭
+3. 구독 ID: `my-prism-signals` (원하는 이름)
+4. "Cloud Pub/Sub 주제 선택" 클릭
+5. "다른 프로젝트의 주제 입력" 선택
+6. 입력: `projects/galvanized-sled-435607-p6/topics/prism-trading-signals`
 
-## 📚 Documentation
+   **개발 중 테스트를 위한 토픽도 따로 있습니다. 처음엔 이 토픽 사용 권장드립니다 (prism-trading-signals-test)**
 
-| Document | Description |
-|----------|-------------|
-| [docs/SETUP.md](docs/SETUP.md) | Complete installation guide |
-| [docs/CLAUDE_AGENTS.md](docs/CLAUDE_AGENTS.md) | AI agent system details |
-| [docs/TRIGGER_BATCH_ALGORITHMS.md](docs/TRIGGER_BATCH_ALGORITHMS.md) | Surge detection algorithms |
-| [docs/TRADING_JOURNAL.md](docs/TRADING_JOURNAL.md) | Trading memory system |
+7. 전송 유형: Pull
+8. "만들기" 클릭
 
----
+### 4. 서비스 계정 생성 및 키 다운로드
 
-## 🎨 Frontend Examples
+1. https://console.cloud.google.com/iam-admin/serviceaccounts
+2. "서비스 계정 만들기" 클릭
+3. 이름: `prism-subscriber`
+4. 역할: "Pub/Sub 구독자" 선택
+5. 완료 후 서비스 계정 클릭
+6. "키" 탭 → "키 추가" → "새 키 만들기"
+7. JSON 선택 → 생성
+8. 다운로드된 JSON 파일 안전하게 보관
 
-### Landing Page
-A modern, responsive landing page built with Next.js and Tailwind CSS.
+### 5. 예제 코드 실행
 
-👉 **[Live Demo](https://prism-insight-landing.vercel.app/)**
+#### Python 환경 설정
+상단 "빠른 시작 (환경 구성)" 섹션에서 저장소 클론 및 가상환경, 의존성 설치까지 완료되었다고 가정합니다.
+
+#### 환경 변수 설정
+
+`.env` 파일 생성:
+```bash
+GCP_PROJECT_ID=MY_PROJECT_ID
+GCP_PUBSUB_SUBSCRIPTION_ID=my-prism-signals
+GCP_CREDENTIALS_PATH=/path/to/downloaded-key.json
+```
+
+#### 구독자 실행
 
 ```bash
-cd examples/landing
-npm install
-npm run dev
-# Visit http://localhost:3000
+# 테스트 모드 (실제 매매 X)
+python gcp_pubsub_subscriber.py --dry-run
+
+# 실제 매매 모드 (주의!)
+python gcp_pubsub_subscriber.py
 ```
 
-**Features**: Matrix rain animation, typewriter effects, GitHub star counter, responsive design
+## 📊 수신되는 데이터 형식
 
-### Dashboard
-Real-time portfolio tracking and performance dashboard.
+### 매수 시그널 (BUY)
+
+```json
+{
+  "type": "BUY",
+  "ticker": "005930",
+  "company_name": "삼성전자",
+  "price": 82000,
+  "timestamp": "2025-01-15T10:30:00",
+  "target_price": 90000,
+  "stop_loss": 75000,
+  "investment_period": "단기",
+  "sector": "반도체",
+  "rationale": "AI 반도체 수요 증가",
+  "buy_score": 8,
+  "source": "AI분석",
+  "trade_success": true,
+  "trade_message": "매수 완료"
+}
+```
+
+### 매도 시그널 (SELL)
+
+```json
+{
+  "type": "SELL",
+  "ticker": "005930",
+  "company_name": "삼성전자",
+  "price": 90000,
+  "timestamp": "2025-01-20T14:20:00",
+  "buy_price": 82000,
+  "profit_rate": 9.76,
+  "sell_reason": "목표가 달성",
+  "source": "AI분석",
+  "trade_success": true,
+  "trade_message": "매도 완료"
+}
+```
+
+### 이벤트 시그널 (EVENT)
+
+```json
+{
+  "type": "EVENT",
+  "ticker": "005930",
+  "company_name": "삼성전자",
+  "price": 82000,
+  "timestamp": "2025-01-15T12:00:00",
+  "event_type": "YOUTUBE",
+  "event_description": "신규 영상 업로드",
+  "source": "유튜버_홍길동"
+}
+```
+
+## 💡 활용 예시
+
+### 1. 커스텀 알림 시스템
+
+```python
+def callback(message):
+    signal = json.loads(message.data.decode("utf-8"))
+    
+    if signal["type"] == "BUY" and signal["buy_score"] >= 8:
+        # Slack, Discord, Email 등으로 알림
+        send_notification(f"강력 매수: signal['company_name']")
+    
+    message.ack()
+```
+
+### 2. 자동매매 봇
+
+```python
+def callback(message):
+    signal = json.loads(message.data.decode("utf-8"))
+    
+    if signal["type"] == "BUY":
+        # 본인의 증권 API로 매수
+        my_broker_api.buy(
+            ticker=signal["ticker"],
+            price=signal["price"]
+        )
+    
+    message.ack()
+```
+
+### 3. 데이터 수집 및 분석
+
+```python
+def callback(message):
+    signal = json.loads(message.data.decode("utf-8"))
+    
+    # 데이터베이스에 저장
+    save_to_database(signal)
+    
+    # 백테스팅 데이터로 활용
+    analyze_signal_performance(signal)
+    
+    message.ack()
+```
+
+### 4. 필터링 및 재가공
+
+```python
+def callback(message):
+    signal = json.loads(message.data.decode("utf-8"))
+    
+    # 특정 섹터만 필터링
+    if signal.get("sector") == "반도체":
+        # 자체 Pub/Sub Topic으로 재발행
+        my_publisher.publish(MY_TOPIC, json.dumps(signal))
+    
+    message.ack()
+```
+
+## 🔧 고급 설정
+
+### 메시지 필터링 (서버 측)
+
+특정 조건의 메시지만 받기:
 
 ```bash
-cd examples/dashboard
-npm install
-npm run dev
-# Visit http://localhost:3000
+gcloud pubsub subscriptions create my-filtered-signals \
+  --topic=projects/PRISM_PROJECT_ID/topics/prism-trading-signals \
+  --filter='attributes.signal_type="BUY"'
 ```
 
-**Features**: Portfolio overview, trading history, performance metrics, market selector (KR/US)
+### 재시도 정책 설정
 
-📖 **Dashboard Setup Guide**: [examples/dashboard/DASHBOARD_README.md](examples/dashboard/DASHBOARD_README.md)
+```bash
+gcloud pubsub subscriptions update my-prism-signals \
+  --min-retry-delay=10s \
+  --max-retry-delay=600s
+```
 
----
+### Dead Letter Queue 설정
 
-## 💡 MCP Servers
+처리 실패한 메시지 별도 관리:
 
-### Korean Market
-- **[kospi_kosdaq](https://github.com/dragon1086/kospi-kosdaq-stock-server)** - KRX stock data
-- **[firecrawl](https://github.com/mendableai/firecrawl-mcp-server)** - Web crawling
-- **[perplexity](https://github.com/perplexityai/modelcontextprotocol)** - Web search
-- **[sqlite](https://github.com/modelcontextprotocol/servers-archived)** - Trading simulation DB
+```bash
+# Dead letter topic 생성
+gcloud pubsub topics create my-prism-dlq
 
-### US Market
-- **[yahoo-finance-mcp](https://pypi.org/project/yahoo-finance-mcp/)** - OHLCV, financials
-- **[sec-edgar-mcp](https://pypi.org/project/sec-edgar-mcp/)** - SEC filings, insider trading
+# 구독에 DLQ 설정
+gcloud pubsub subscriptions update my-prism-signals \
+  --dead-letter-topic=my-prism-dlq \
+  --max-delivery-attempts=5
+```
 
----
+## 🛠️ 문제 해결
 
-## 🤝 Contributing
+### 메시지가 수신되지 않음
 
-1. Fork the project
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Create a Pull Request
+1. **구독 확인**:
+```bash
+gcloud pubsub subscriptions describe my-prism-signals
+```
 
----
+2. **권한 확인**:
+```bash
+gcloud pubsub subscriptions get-iam-policy my-prism-signals
+```
 
-## 📄 License
+3. **Topic 주소 확인**: `projects/PRISM_PROJECT_ID/topics/prism-trading-signals`가 정확한지 확인
 
-**Dual Licensed:**
+### 인증 오류
 
-### For Individual & Open-Source Use
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+```bash
+# 서비스 계정 키 경로 확인
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
 
-Free under AGPL-3.0 for personal use, non-commercial projects, and open-source development.
+# 또는 .env 파일에서
+GCP_CREDENTIALS_PATH=/path/to/key.json
+```
 
-### For Commercial SaaS Use
-Separate commercial license required for SaaS companies.
+### 비용 초과 우려
 
-📧 **Contact**: dragon1086@naver.com
-📄 **Details**: [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)
+1. **할당량 설정**: GCP Console → Pub/Sub → 할당량에서 제한 설정
+2. **구독 일시 중지**:
+```bash
+gcloud pubsub subscriptions update my-prism-signals \
+  --no-enable-message-ordering
+```
 
----
+## 📞 지원 및 문의
 
-## ⚠️ Disclaimer
+- **GitHub Issues**: https://github.com/tkgo11/prism-insight-light/issues
 
-Analysis information is for reference only, not investment advice. All investment decisions and resulting profits/losses are the investor's responsibility.
+## ⚠️ 면책 조항
 
----
+- 본 시그널은 AI 기반 분석 결과이며 투자 권유가 아닙니다.
+- 모든 투자 결정과 손실에 대한 책임은 전적으로 투자자 본인에게 있습니다.
+- 실제 매매 전 충분한 검토와 테스트를 권장합니다.
+- PRISM-INSIGHT는 시그널 정확성을 보장하지 않습니다.
 
-## 💝 Sponsorship
+## 🔄 업데이트 내역
 
-### Support the Project
-
-Monthly operating costs (~$310/month):
-- OpenAI API: ~$235/month
-- Anthropic API: ~$11/month
-- Firecrawl + Perplexity: ~$35/month
-- Server infrastructure: ~$30/month
-
-Currently serving 450+ users for free.
-
-<div align="center">
-  <a href="https://github.com/sponsors/dragon1086">
-    <img src="https://img.shields.io/badge/Sponsor_on_GitHub-❤️-ff69b4?style=for-the-badge&logo=github-sponsors" alt="Sponsor on GitHub">
-  </a>
-</div>
-
-### Individual Sponsors
-<!-- sponsors -->
-- [@jk5745](https://github.com/jk5745) 💙
-<!-- sponsors -->
+- 2025-01-15: 초기 버전 공개
+- Topic 공개: projects/PRISM_PROJECT_ID/topics/prism-trading-signals
 
 ---
 
-## ⭐ Project Growth
+**Happy Trading! 📈**
 
-Achieved **250+ Stars in 10 weeks** since launch!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=dragon1086/prism-insight&type=Date)](https://star-history.com/#dragon1086/prism-insight&Date)
-
----
-
-**⭐ If this project helped you, please give us a Star!**
-
-📞 **Contact**: [GitHub Issues](https://github.com/dragon1086/prism-insight/issues) | [Telegram](https://t.me/stock_ai_agent) | [Discussions](https://github.com/dragon1086/prism-insight/discussions)
