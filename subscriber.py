@@ -24,6 +24,7 @@ from google.cloud import pubsub_v1
 from google.oauth2 import service_account
 
 from trading.domestic_stock_trading import DomesticStockTrading
+from trading.us_stock_trading import USStockTrading
 
 load_dotenv()
 
@@ -147,16 +148,23 @@ async def execute_sell_trade(ticker: str, company_name: str, trade_logger: loggi
 
 async def execute_us_buy_trade(ticker: str, company_name: str, trade_logger: logging.Logger,
                                limit_price: Optional[float] = None) -> Dict:
-    """Execute a US buy trade (not yet implemented)."""
-    trade_logger.warning(f"US buy not implemented: {company_name}({ticker})")
-    return {"success": False, "message": "US trading not implemented"}
+    """Execute a US buy trade."""
+    # Note: limit_price is ignored here as simplified buy_market calculates its own buffer
+    # Or pass it if you want strict limit support.
+    trader = USStockTrading()
+    # For US, amount/price logic might differ. Here we just call async_buy
+    result = await trader.async_buy(ticker)
+    trade_logger.info(f"US Buy result for {company_name}({ticker}): {result.get('message', '')}")
+    return result
 
 
 async def execute_us_sell_trade(ticker: str, company_name: str, trade_logger: logging.Logger,
                                 limit_price: Optional[float] = None) -> Dict:
-    """Execute a US sell trade (not yet implemented)."""
-    trade_logger.warning(f"US sell not implemented: {company_name}({ticker})")
-    return {"success": False, "message": "US trading not implemented"}
+    """Execute a US sell trade."""
+    trader = USStockTrading()
+    result = await trader.async_sell(ticker)
+    trade_logger.info(f"US Sell result for {company_name}({ticker}): {result.get('message', '')}")
+    return result
 
 
 # ---------------------------------------------------------------------------
