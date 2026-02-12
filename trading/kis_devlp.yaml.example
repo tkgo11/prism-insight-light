@@ -1,0 +1,29 @@
+# KIS API Configuration
+# Copy this file to kis_devlp.yaml and fill in your credentials.
+
+# Trading mode: "real" or "demo"
+default_mode: "demo"
+
+# Default buy amount per trade (KRW)
+default_unit_amount: 50000
+
+# Enable auto-trading (set to true to allow real orders)
+auto_trading: false
+
+# API credentials (real account)
+my_app: "YOUR_APP_KEY"
+my_sec: "YOUR_APP_SECRET"
+my_acct: "YOUR_ACCOUNT_NUMBER"
+my_prod: "01"
+
+# API credentials (paper/demo account)
+paper_app: "YOUR_PAPER_APP_KEY"
+paper_sec: "YOUR_PAPER_APP_SECRET"
+
+# Server URLs
+prod: "https://openapi.koreainvestment.com:9443"
+vps: "https://openapivts.koreainvestment.com:29443"
+
+# Debug mode
+debug: false
+rate_limit_sleep: 0.1
