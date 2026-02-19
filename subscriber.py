@@ -29,6 +29,10 @@ import yaml
 
 from trading.domestic_stock_trading import DomesticStockTrading
 from trading.us_stock_trading import AsyncUSTradingContext
+from trading.schemas import TradeSignal
+from trading.database import init_db, SessionLocal, ScheduledOrder, TradeLog
+from trading.notifier import NotifierManager, SlackNotifier, DiscordNotifier
+from trading.analysis import MarketDataBuffer
 
 load_dotenv()
 
@@ -97,87 +101,98 @@ def get_next_market_open() -> datetime.datetime:
 # ---------------------------------------------------------------------------
 
 class ScheduledOrderManager:
-    """Manages orders scheduled for execution during market hours."""
-
-    def __init__(self, save_path: str = "scheduled_orders.json"):
-        self.save_path = save_path
-        self.orders = []
+    """Manages orders scheduled for execution during market hours (SQLite version)."""
+    
+    def __init__(self):
+        init_db()
         self._scheduler_thread = None
         self._running = False
-        self._lock = threading.Lock()
-        self.load_orders()
-
-    def load_orders(self):
-        try:
-            if Path(self.save_path).exists():
-                self.orders = json.loads(Path(self.save_path).read_text(encoding="utf-8"))
-                logger.info(f"Loaded {len(self.orders)} scheduled orders")
-        except Exception:
-            self.orders = []
-
-    def save_orders(self):
-        try:
-            with self._lock:
-                Path(self.save_path).write_text(json.dumps(self.orders, ensure_ascii=False, indent=2), encoding="utf-8")
-        except Exception as e:
-            logger.error(f"Failed to save orders: {e}")
-
+        
     def add_order(self, signal: Dict, signal_type: str = "BUY", market: str = "KR") -> bool:
-        with self._lock:
-            order = {
-                "signal": signal,
-                "signal_type": signal_type,
-                "market": market,
-                "status": "pending",
-                "created_at": datetime.datetime.now().isoformat(),
-                "execute_after": get_next_market_open().isoformat()
-            }
-            self.orders.append(order)
-            self.save_orders()
-            
+        session = SessionLocal()
+        try:
             ticker = signal.get("ticker", "")
-            execute_time = get_next_market_open().strftime("%Y-%m-%d %H:%M")
-            logger.info(f"📅 Scheduled {signal_type} for {ticker} at {execute_time}")
+            execute_after = get_next_market_open()
+            
+            new_order = ScheduledOrder(
+                ticker=ticker,
+                company_name=signal.get("company_name"),
+                signal_type=signal_type,
+                market=market,
+                price=signal.get("price"),
+                execute_after=execute_after,
+                status="pending",
+                signal_data=signal  # Store full JSON payload for reconstruction
+            )
+            session.add(new_order)
+            session.commit()
+            
+            logger.info(f"📅 Scheduled {signal_type} for {ticker} at {execute_after}")
             return True
+        except Exception as e:
+            logger.error(f"Failed to add scheduled order: {e}")
+            return False
+        finally:
+            session.close()
 
     def check_and_execute(self, execute_callback):
         """Execute pending orders if market is open."""
-        if not is_market_hours("KR"):
-            return
+        # Check market hours first per market type? Or iterate all?
+        # Since mixed markets, we iterate pending orders and check condition per order.
+        
+        session = SessionLocal()
+        try:
+            now = datetime.datetime.now()
             
-        with self._lock:
-            pending = [o for o in self.orders if o["status"] == "pending"]
+            # Fetch pending orders that are ready to execute
+            pending_orders = session.query(ScheduledOrder).filter(
+                ScheduledOrder.status == "pending",
+                ScheduledOrder.execute_after <= now
+            ).all()
             
-        if not pending:
-            return
+            if not pending_orders:
+                return
 
-        for order in pending:
-            # Check execution time
-            execute_after = datetime.datetime.fromisoformat(order.get("execute_after", datetime.datetime.min.isoformat()))
-            if datetime.datetime.now() < execute_after:
-                continue
+            for order in pending_orders:
+                # Double check market open status for specific market
+                if not is_market_hours(order.market):
+                    continue
 
-            try:
-                logger.info(f"🚀 Executing scheduled order: {order['signal'].get('ticker')}")
-                execute_callback(order["signal"], order["signal_type"])
-                
-                with self._lock:
-                    order["status"] = "executed"
-                    order["executed_at"] = datetime.datetime.now().isoformat()
-            except Exception as e:
-                with self._lock:
-                    order["status"] = "failed"
-                    order["error"] = str(e)
-                logger.error(f"Scheduled execution failed: {e}")
-                
-        self.save_orders()
+                try:
+                    logger.info(f"🚀 Executing scheduled order #{order.id}: {order.ticker}")
+                    # Reconstruct signal dict or Pydantic model?
+                    # Callback expects dict probably, or however established. 
+                    # Previous code: execute_callback(order["signal"], order["signal_type"])
+                    
+                    signal_payload = order.signal_data
+                    if signal_payload:
+                        execute_callback(signal_payload, order.signal_type)
+                    
+                        order.status = "executed"
+                        order.executed_at = datetime.datetime.now()
+                        session.commit() # Commit success
+                    else:
+                        order.status = "failed"
+                        order.error_message = "Missing signal data"
+                        session.commit()
+
+                except Exception as e:
+                    order.status = "failed"
+                    order.error_message = str(e)
+                    session.commit()
+                    logger.error(f"Scheduled execution failed for #{order.id}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Scheduler check error: {e}")
+        finally:
+            session.close()
 
     def start_scheduler(self, execute_callback):
         """Start background thread to check and execute scheduled orders."""
         self._running = True
-
+        
         def _loop():
-            logger.info("🕐 Scheduler started")
+            logger.info("🕐 Scheduler started (DB)")
             while self._running:
                 try:
                     self.check_and_execute(execute_callback)
@@ -249,6 +264,9 @@ def main():
     # Determine execution mode
     dry_run = args.dry_run
     trading_mode = get_trading_mode()
+    
+    # Initialize DB (for logging and scheduling)
+    init_db()
 
     # Log startup status
     if dry_run:
@@ -285,13 +303,57 @@ def main():
 
     logger.info(f"Starting subscriber on: {subscription_path}")
 
-    def handle_signal(signal: dict):
+    # Market Data Buffer
+    market_buffer = MarketDataBuffer(maxlen=50)
+
+    # Notifier
+    notifier = NotifierManager(
+        slack_webhook=os.getenv("SLACK_WEBHOOK_URL"),
+        discord_webhook=os.getenv("DISCORD_WEBHOOK_URL")
+    )
+
+    def log_trade(signal_type, ticker, price, quantity, success, msg):
+        """Log trade to DB."""
+        session = SessionLocal()
+        try:
+            log = TradeLog(
+                ticker=ticker,
+                action=signal_type,
+                quantity=quantity,
+                price=float(price or 0),
+                total_amount=quantity * float(price or 0),
+                success=success,
+                message=msg
+            )
+            session.add(log)
+            session.commit()
+        except Exception as e:
+            logger.error(f"Failed to log trade: {e}")
+        finally:
+            session.close()
+
+    def handle_signal(signal_data: dict):
         nonlocal message_count
-        signal_type = signal.get("signal_type", "").upper()
-        ticker = signal.get("ticker", "")
-        company = signal.get("company_name", "")
-        price = signal.get("price")
-        market = signal.get("market", "KR").upper()
+        try:
+            # 1. Pydantic Validation
+            signal = TradeSignal(**signal_data)
+        except Exception as e:
+            logger.error(f"⚠️ Signal validation failed: {e}")
+            return
+
+        signal_type = signal.signal_type
+        ticker = signal.ticker
+        company = signal.company_name
+        # Update market buffer
+        if price:
+            try:
+                p_val = float(price)
+                market_buffer.add_price(ticker, p_val)
+                stats = market_buffer.get_stats(ticker)
+                if stats and abs(stats["change_pct"]) > 2.0:
+                    logger.info(f"📊 {ticker} Volatility Alert: {stats['change_pct']:.2f}% change (Last: {p_val}, MA5: {stats['ma5']:.2f})")
+            except ValueError:
+                pass
         
         # Determine emoji based on signal type
         emoji = {"BUY": "📈", "SELL": "📉", "EVENT": "🔔"}.get(signal_type, "📌")
@@ -300,18 +362,20 @@ def main():
 
         if signal_type == "BUY":
             if not dry_run:
-                # Logic: If DEMO mode and Market Closed -> Schedule
                 if trading_mode == "demo" and not is_market_hours(market) and scheduled_order_manager:
-                    scheduled_order_manager.add_order(signal, "BUY", market)
+                    scheduled_order_manager.add_order(signal.model_dump(), "BUY", market)
                 else:
-                    # Real mode OR Demo mode during market hours -> Execute immediately
                     logger.info(f"🚀 Executing BUY: {company}({ticker})")
                     if market == "US":
                         asyncio.run(execute_us_buy_trade(ticker, company, logger,
                                                          limit_price=float(price) if price else None))
+                        log_trade("BUY", ticker, price, 1, True, "Executed") # Simplified quantity logging for now
+                        notifier.send(f"BUY Execution: {company} ({ticker}) @ {price}", color="green")
                     else:
                         asyncio.run(execute_buy_trade(ticker, company, logger,
                                                       limit_price=int(price) if price else None))
+                        log_trade("BUY", ticker, price, 1, True, "Executed")
+                        notifier.send(f"BUY Execution: {company} ({ticker}) @ {price}", color="green")
             else:
                 logger.info(f"🔸 [DRY-RUN] Buy skipped")
             trade_count["BUY"] += 1
@@ -319,27 +383,26 @@ def main():
         elif signal_type == "SELL":
             if not dry_run:
                 if trading_mode == "demo" and not is_market_hours(market) and scheduled_order_manager:
-                    scheduled_order_manager.add_order(signal, "SELL", market)
+                    scheduled_order_manager.add_order(signal.model_dump(), "SELL", market)
                 else:
                     logger.info(f"🚀 Executing SELL: {company}({ticker})")
                     if market == "US":
                         asyncio.run(execute_us_sell_trade(ticker, company, logger,
                                                           limit_price=float(price) if price else None))
+                        log_trade("SELL", ticker, price, 1, True, "Executed")
+                        notifier.send(f"SELL Execution: {company} ({ticker}) @ {price}", color="red")
                     else:
                         asyncio.run(execute_sell_trade(ticker, company, logger,
                                                        limit_price=int(price) if price else None))
+                        log_trade("SELL", ticker, price, 1, True, "Executed")
+                        notifier.send(f"SELL Execution: {company} ({ticker}) @ {price}", color="red")
             else:
                 logger.info(f"🔸 [DRY-RUN] Sell skipped")
             trade_count["SELL"] += 1
 
         elif signal_type == "EVENT":
             details = []
-            if signal.get("event_type"):
-                details.append(f"Event: {signal['event_type']}")
-            if signal.get("source"):
-                details.append(f"Source: {signal['source']}")
-            if signal.get("event_description"):
-                details.append(f"Desc: {signal['event_description'][:100]}")
+            if signal.source: details.append(f"Source: {signal.source}")
             if details:
                 logger.info(f"   -> {' | '.join(details)}")
 
@@ -387,7 +450,10 @@ def main():
         streaming_pull_future.cancel()
         if scheduled_order_manager:
             scheduled_order_manager.stop_scheduler()
-            pending = len([o for o in scheduled_order_manager.orders if o["status"] == "pending"])
+            # pending_count manual check if needed, or query db
+            session = SessionLocal()
+            pending = session.query(ScheduledOrder).filter(ScheduledOrder.status == "pending").count()
+            session.close()
             if pending > 0:
                 logger.info(f"📋 {pending} scheduled orders pending for next run")
         logger.info(f"Ended. {message_count} signals (Buy: {trade_count['BUY']}, Sell: {trade_count['SELL']})")
