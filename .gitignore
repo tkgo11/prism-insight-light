@@ -52,3 +52,13 @@ prism-insight-*.json
 #prompt files
 prompt.md
 PRD.md
+TODO.md
+
+# Database
+trading.db
+
+# Test outputs
+integration_test_output*.txt
+
+# Pytest
+.pytest_cache/

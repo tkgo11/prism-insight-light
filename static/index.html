@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISM INDIGHT Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0f172a',
+                        primary: '#3b82f6',
+                        secondary: '#64748b',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+                PRISM INSIGHT
+            </h1>
+            <p class="text-secondary text-sm">Automated Trading System</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold 
+                {% if system_status == 'ONLINE' %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
+                ● {{ system_status }}
+            </span>
+        </div>
+    </header>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="glass-panel p-6">
+            <h3 class="text-secondary text-sm uppercase tracking-wider mb-2">Scheduled Orders</h3>
+            <div class="text-4xl font-bold text-blue-400">{{ scheduled_count }}</div>
+        </div>
+        <div class="glass-panel p-6">
+            <h3 class="text-secondary text-sm uppercase tracking-wider mb-2">Recent Trades</h3>
+            <div class="text-4xl font-bold text-purple-400">{{ recent_trades|length }}</div>
+        </div>
+        <div class="glass-panel p-6">
+            <h3 class="text-secondary text-sm uppercase tracking-wider mb-2">Pending Signal</h3>
+            <div class="text-4xl font-bold text-gray-400">-</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Scheduled Orders List -->
+        <div class="glass-panel p-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                <span class="text-blue-400">📅</span> Scheduled Execution
+            </h2>
+            <div id="scheduled-list" class="space-y-3">
+                <!-- Items will be populated here -->
+                <div class="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50 text-center text-secondary text-sm">
+                    No scheduled orders pending.
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="glass-panel p-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                <span class="text-green-400">⚡</span> Local Trade Log
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-secondary uppercase bg-slate-800/50">
+                        <tr>
+                            <th class="px-4 py-3">Time</th>
+                            <th class="px-4 py-3">Ticker</th>
+                            <th class="px-4 py-3">Action</th>
+                            <th class="px-4 py-3 text-right">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700/50">
+                        {% for trade in recent_trades %}
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="px-4 py-3 text-secondary">{{ trade.timestamp.strftime('%H:%M:%S') }}</td>
+                            <td class="px-4 py-3 font-medium">{{ trade.ticker }}</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 rounded text-xs font-bold 
+                                    {% if trade.action == 'BUY' %}bg-green-500/10 text-green-400{% else %}bg-red-500/10 text-red-400{% endif %}">
+                                    {{ trade.action }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-right text-gray-300">{{ "{:,.0f}".format(trade.price) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Auto-refresh logic (simple)
+        setTimeout(() => {
+            window.location.reload();
+        }, 30000); // 30s refresh
+    </script>
+</body>
+</html>
