@@ -1,90 +1,133 @@
-# PRISM-INSIGHT-LIGHT
+# PRISM INSIGHT
 
-Automated stock trading pipeline: **GCP Pub/Sub subscriber → KIS API execution (Korea & US stocks)**.
+> Automated stock trading pipeline — **GCP Pub/Sub → KIS API execution** for Korean & US markets.
 
-## What It Does
+## Architecture
 
-Subscribes to a GCP Pub/Sub topic for trading signals (BUY/SELL) and automatically executes trades via the Korea Investment & Securities (KIS) API.
-**Supports both Korean domestic stocks and US overseas stocks.**
+```
+Signal Source (Pub/Sub) → subscriber.py → KIS API (Buy/Sell)
+                              │
+                              ├─ SQLite (scheduled orders, trade logs)
+                              ├─ Notifications (Slack / Discord)
+                              └─ Dashboard (FastAPI, :8000)
+```
 
 ## Project Structure
 
 ```
-prism-insight/
+prism-insight-light/
+├── subscriber.py                # Main entry — Pub/Sub consumer & trade executor
+├── dashboard.py                 # FastAPI web dashboard (status, orders, logs)
 ├── trading/
-│   ├── __init__.py
-│   ├── kis_auth.py                  # KIS API auth & HTTP helpers
-│   ├── domestic_stock_trading.py    # Buy/sell Korean stocks
-│   ├── us_stock_trading.py          # Buy/sell US stocks
-│   └── kis_devlp.yaml.example      # KIS config template
-├── subscriber.py                    # Subscribe & execute trades
-├── .env.example
+│   ├── kis_auth.py              # KIS API auth, async HTTP (aiohttp)
+│   ├── base_trading.py          # Abstract base class for traders
+│   ├── domestic_stock_trading.py  # Korean stock trading
+│   ├── us_stock_trading.py      # US stock trading (NYSE/NASDAQ)
+│   ├── database.py              # SQLAlchemy models (SQLite)
+│   ├── notifier.py              # Slack & Discord webhook notifier
+│   ├── analysis.py              # MarketDataBuffer (circular buffer)
+│   ├── rate_limiter.py          # Async token-bucket rate limiter
+│   ├── schemas.py               # Pydantic signal validation
+│   ├── models.py                # Dataclasses (OrderResult, StockPrice, etc.)
+│   ├── constants.py             # Shared config & market hours
+│   └── kis_devlp.yaml.example   # KIS credentials template
+├── static/
+│   └── index.html               # Dashboard UI
+├── tests/
+│   ├── mock_kis_api.py          # Mock KIS API for offline testing
+│   ├── test_db.py               # Database CRUD tests
+│   ├── test_notifier.py         # Notifier tests (mocked webhooks)
+│   ├── test_analysis.py         # MarketDataBuffer tests
+│   └── test_integration.py      # End-to-end trading flow tests
+├── docs/
+│   ├── API.md                   # Module & endpoint reference
+│   └── RUNBOOK.md               # Deployment & ops guide
 ├── requirements.txt
-├── PRD.md
-├── prompt.md
+├── .env.example
 └── README.md
 ```
 
-## Setup
+## Quick Start
 
-### 1. Install dependencies
+### 1. Install
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configure GCP Pub/Sub
-
-Create a GCP project, enable the Pub/Sub API, then create a subscription:
+### 2. Configure
 
 ```bash
-gcloud pubsub subscriptions create trading-signals-sub --topic=trading-signals
+cp .env.example .env           # GCP project, subscription, webhook URLs
+cp trading/kis_devlp.yaml.example trading/kis_devlp.yaml  # KIS credentials
 ```
 
-Download a service account key JSON file, then configure `.env`:
+| Variable | Description |
+|---|---|
+| `GCP_PROJECT_ID` | Google Cloud project ID |
+| `GCP_PUBSUB_SUBSCRIPTION_ID` | Pub/Sub subscription name |
+| `GCP_CREDENTIALS_PATH` | Path to service account JSON |
+| `SLACK_WEBHOOK_URL` | *(optional)* Slack incoming webhook |
+| `DISCORD_WEBHOOK_URL` | *(optional)* Discord webhook |
+
+KIS API credentials: [KIS Developers Portal](https://apiportal.koreainvestment.com/)
+
+### 3. Run
 
 ```bash
-cp .env.example .env
-# Edit .env with your GCP project ID, subscription ID, and credentials path
-```
-
-### 3. Configure KIS API
-
-```bash
-cp trading/kis_devlp.yaml.example trading/kis_devlp.yaml
-# Edit with your KIS app key, secret, and account number
-```
-
-Get credentials from [KIS Developers](https://apiportal.koreainvestment.com/).
-
-## Usage
-
-### Subscribe and execute trades
-
-```bash
-# Dry-run (log signals without trading)
-python subscriber.py
+# Dry-run (log signals, no real trades)
+python subscriber.py --dry-run
 
 # Live trading
-python subscriber.py --execute
+python subscriber.py
 ```
 
-The subscriber automatically detects the market from the signal:
-- `market: "KR"` (default) → Uses `DomesticStockTrading`
-- `market: "US"` → Uses `USStockTrading`
+### 4. Dashboard
 
-### Direct trading (without Pub/Sub)
-
-```python
-from trading.domestic_stock_trading import DomesticStockTrading
-from trading.us_stock_trading import USStockTrading
-
-# Korea
-kr_trader = DomesticStockTrading(mode="demo")
-print(kr_trader.get_current_price("005930")) # Samsung Electronics
-
-# US
-us_trader = USStockTrading(mode="demo")
-print(us_trader.get_current_price("AAPL"))   # Apple
-# us_trader.buy_market("AAPL", buy_amount_usd=100)
+```bash
+python dashboard.py
+# Open http://localhost:8000
 ```
+
+## Features
+
+| Feature | Description |
+|---|---|
+| **Dual Market** | Korean (KRX) and US (NYSE/NASDAQ) stock trading |
+| **Async I/O** | Non-blocking API calls via `aiohttp` |
+| **Rate Limiting** | Token-bucket limiter per market (KR: 20/s, US: 10/s) |
+| **Signal Validation** | Pydantic schemas for BUY/SELL/EVENT signals |
+| **Persistence** | SQLite for scheduled orders & trade logs |
+| **Scheduled Orders** | Off-hours signals queued and executed at next market open |
+| **Dashboard** | Real-time web UI — system status, orders, trade history |
+| **Notifications** | Slack & Discord alerts on trade execution |
+| **Market Analysis** | Circular buffer tracking price changes & moving averages |
+| **Mock API** | Offline testing without real KIS credentials |
+
+## Signal Format
+
+Pub/Sub messages are expected as JSON:
+
+```json
+{
+  "signal_type": "BUY",
+  "ticker": "005930",
+  "company_name": "삼성전자",
+  "price": "71000",
+  "market": "KR"
+}
+```
+
+- `signal_type`: `BUY` | `SELL` | `EVENT`
+- `market`: `KR` (default) | `US`
+
+## Testing
+
+```bash
+python -m pytest tests/
+```
+
+## Docs
+
+- [API Reference](docs/API.md)
+- [Runbook](docs/RUNBOOK.md)
