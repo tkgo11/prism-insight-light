@@ -34,6 +34,7 @@ dist/
 node_modules/
 
 # Security - never commit
+prism-insight-*.json
 *.pem
 *.key
 *.p12
@@ -41,3 +42,13 @@ node_modules/
 # Backup
 *.bak
 *~
+
+# Old files
+.old/
+
+#original files
+.original/
+
+#prompt files
+prompt.md
+PRD.md
