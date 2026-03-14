@@ -6,8 +6,6 @@ services:
     container_name: prism_subscriber
     restart: unless-stopped
     command: python subscriber.py
-    env_file:
-      - .env
     volumes:
       - /opt/prism-insight-data:/app
 
@@ -18,7 +16,5 @@ services:
     command: python dashboard.py
     ports:
       - "8000:8000"
-    env_file:
-      - .env
     volumes:
       - /opt/prism-insight-data:/app
