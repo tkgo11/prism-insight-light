@@ -19,3 +19,6 @@ ENV PYTHONUNBUFFERED=1
 
 # Expose FastAPI port
 EXPOSE 8000
+
+# Note: Ensure /opt/prism-insight-data on host contains the project files
+# and has proper permissions for the container to write data (trading.db, token.dat, etc.)
