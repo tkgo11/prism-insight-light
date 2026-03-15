@@ -4,7 +4,7 @@ services:
   subscriber:
     build: .
     container_name: prism_subscriber
-    restart: unless-stopped
+    restart: on-failure
     command: python subscriber.py
     volumes:
       - /opt/prism-insight-data:/app
@@ -12,7 +12,7 @@ services:
   dashboard:
     build: .
     container_name: prism_dashboard
-    restart: unless-stopped
+    restart: on-failure
     command: python dashboard.py
     ports:
       - "8000:8000"
