@@ -12,7 +12,8 @@ from trading.models import OrderResult, StockPrice, StockHolding, AccountSummary
 
 from trading.kis_auth import KISAuthManager, APIResp
 
-logger = logging.getLogger(__name__)
+from trading.logger import get_logger
+logger = get_logger(__name__)
 
 class AsyncTradingContext:
     """Context manager for async trading sessions."""

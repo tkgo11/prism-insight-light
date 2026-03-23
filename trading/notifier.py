@@ -4,7 +4,8 @@ import json
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 
-logger = logging.getLogger(__name__)
+from trading.logger import get_logger
+logger = get_logger(__name__)
 
 class BaseNotifier(ABC):
     """Abstract base class for notifiers."""
