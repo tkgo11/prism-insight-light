@@ -14,7 +14,8 @@ from trading.base_trading import BaseStockTrading, AsyncTradingContext as BaseAs
 from trading.constants import MARKET_HOURS
 from trading.models import OrderResult, StockPrice, StockHolding, AccountSummary
 
-logger = logging.getLogger(__name__)
+from trading.logger import get_logger
+logger = get_logger(__name__)
 
 class DomesticStockTrading(BaseStockTrading):
     """Korean stock trader using the KIS API."""
