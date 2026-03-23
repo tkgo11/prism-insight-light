@@ -2,7 +2,8 @@ import asyncio
 import time
 import logging
 
-logger = logging.getLogger(__name__)
+from trading.logger import get_logger
+logger = get_logger(__name__)
 
 class AsyncTokenBucket:
     """

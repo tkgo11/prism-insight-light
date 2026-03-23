@@ -18,7 +18,8 @@ sys.path.append(str(PROJECT_ROOT))
 from subscriber import execute_us_buy_trade, execute_us_sell_trade
 
 # Configure logger
-logger = logging.getLogger("TestUSTrading")
+from trading.logger import get_logger
+logger = get_logger("TestUSTrading")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)

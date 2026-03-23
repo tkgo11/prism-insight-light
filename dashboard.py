@@ -9,8 +9,8 @@ from pathlib import Path
 from trading.database import SessionLocal, ScheduledOrder, TradeLog
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("dashboard")
+from trading.logger import get_logger
+logger = get_logger("dashboard")
 
 app = FastAPI(title="PRISM-INSIGHT Dashboard")
 
