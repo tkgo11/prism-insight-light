@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   subscriber:
     build: .
     container_name: prism_subscriber
     restart: on-failure
-    command: python subscriber.py
+    command: sh -c "python subscriber.py ${SUBSCRIBER_ARGS:-}"
     volumes:
       - /opt/prism-insight-data:/app
 

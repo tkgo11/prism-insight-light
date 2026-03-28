@@ -18,6 +18,8 @@ Signal Source (Pub/Sub) → subscriber.py → KIS API (Buy/Sell)
 prism-insight-light/
 ├── subscriber.py                # Main entry — Pub/Sub consumer & trade executor
 ├── dashboard.py                 # FastAPI web dashboard (status, orders, logs)
+├── scripts/
+│   └── setup_subscriber_cron.sh # Cron installer for Python/Docker subscriber runs
 ├── trading/
 │   ├── kis_auth.py              # KIS API auth, async HTTP (aiohttp)
 │   ├── base_trading.py          # Abstract base class for traders
@@ -82,7 +84,62 @@ python subscriber.py --dry-run
 python subscriber.py
 ```
 
-### 4. Dashboard
+### 4. Run with Docker
+
+```bash
+# Start subscriber + dashboard
+docker compose up -d
+
+# Start subscriber only
+docker compose up -d subscriber
+
+# Pass subscriber flags such as --dry-run
+SUBSCRIBER_ARGS="--dry-run" docker compose up -d subscriber
+```
+
+### 5. Schedule with Cron
+
+Use the helper script on a Linux host if you want cron to start and stop the subscriber automatically. Running `--install` in a terminal now opens an interactive setup wizard by default.
+
+```bash
+# Interactive install for a local Python process
+bash scripts/setup_subscriber_cron.sh --install
+
+# Interactive install for Docker Compose
+EXECUTION_MODE=docker-compose bash scripts/setup_subscriber_cron.sh --install
+
+# Interactive install for an existing container
+EXECUTION_MODE=docker bash scripts/setup_subscriber_cron.sh --install
+
+# Skip prompts and use env/default values
+bash scripts/setup_subscriber_cron.sh --install --non-interactive
+```
+
+Default schedule is KST:
+
+- KR `09:30-10:00` Monday-Friday
+- KR `15:40-16:10` Monday-Friday
+- US `02:30-02:50` Tuesday-Saturday
+- US `06:30-06:50` Tuesday-Saturday
+
+Useful overrides:
+
+```bash
+# Dry-run schedule
+SUBSCRIBER_ARGS="--dry-run" bash scripts/setup_subscriber_cron.sh --install
+
+# Leave subscriber running after each window
+AUTO_SHUTDOWN=false bash scripts/setup_subscriber_cron.sh --install --non-interactive
+
+# Custom KR morning window
+KR_MORNING_START_CRON="35 9 * * 1-5" KR_MORNING_STOP_CRON="5 10 * * 1-5" bash scripts/setup_subscriber_cron.sh --install --non-interactive
+
+# Inspect or remove the managed cron block
+bash scripts/setup_subscriber_cron.sh --show
+bash scripts/setup_subscriber_cron.sh --uninstall
+```
+
+### 6. Dashboard
 
 ```bash
 python dashboard.py
