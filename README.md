@@ -1,5 +1,6 @@
 # PRISM INSIGHT
-
+> This repository is based on [https://github.com/dragon1086/prism-insight](https://github.com/dragon1086/prism-insight)
+> 
 > Automated stock trading pipeline — **GCP Pub/Sub → KIS API execution** for Korean & US markets.
 
 ## Architecture
