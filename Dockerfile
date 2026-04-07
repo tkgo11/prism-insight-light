@@ -1,24 +1,19 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    TZ=Asia/Seoul
 
 WORKDIR /app
 
-# Install basic dependencies if needed
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends tzdata && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy dependencies first for better cache layers
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
-COPY . .
+COPY subscriber.py .
+COPY trading ./trading
+COPY .env.example ./
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-
-# Expose FastAPI port
-EXPOSE 8000
-
-# Note: Ensure /opt/prism-insight-data on host contains the project files
-# and has proper permissions for the container to write data (trading.db, token.dat, etc.)
+CMD ["python", "subscriber.py"]
