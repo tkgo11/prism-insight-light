@@ -1,64 +1,8 @@
-# Environment
+.omx/
 .env
-*.env
-.env.local
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-
-# KIS API credentials & tokens
-trading/kis_devlp.yaml
-trading/kis_*.yaml
-trading/*.token*
-trading/*.key
-trading/token.dat
-trading/token.dat.*
-
-# Logs
-*.log
-logs/
-
-# IDE
-.idea/
-.vscode/
-
-# System
-.DS_Store
-
-# Build artifacts
-dist/
-node_modules/
-
-# Security - never commit
-prism-insight-*.json
-*.pem
-*.key
-*.p12
-
-# Backup
-*.bak
-*~
-
-# Old files
-.old/
-
-#original files
-.original/
-
-#prompt files
-prompt.md
-PRD.md
-TODO.md
-
-# Database
-trading.db
-
-# Test outputs
-integration_test_output*.txt
-
-# Pytest
 .pytest_cache/
+__pycache__/
+*.pyc
+logs/
+runtime/
+trading/config/kis_devlp.yaml
