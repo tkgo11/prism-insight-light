@@ -16,4 +16,6 @@ COPY subscriber.py .
 COPY trading ./trading
 COPY .env.example ./
 
+STOPSIGNAL SIGINT
+
 CMD ["python", "subscriber.py"]

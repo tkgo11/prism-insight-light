@@ -98,3 +98,11 @@ pytest tests/test_signal_schema.py tests/test_dispatch.py tests/test_market_hour
 docker build -t pubsub-trader .
 docker run --rm --env-file .env -v /absolute/path/to/kis_devlp.yaml:/app/trading/config/kis_devlp.yaml pubsub-trader
 ```
+
+장 시간에만 Docker 컨테이너를 자동 운용하려면:
+
+```bash
+bash setup_subscriber_docker_crontab.sh
+```
+
+이 스크립트는 설치 시 컨테이너를 현재 설정으로 한 번 생성하고, 이후에는 시장 시간에 맞춰 `docker start` / `docker stop`만 수행합니다. `.env`를 바꿨다면 스크립트를 다시 실행해 컨테이너 정의를 재생성하세요.
