@@ -232,7 +232,6 @@ def installer_env(tmp_path: Path):
             "STUB_LOG": (state_dir / "commands.log").as_posix(),
             "STUB_STATE_DIR": state_dir.as_posix(),
             "PRISM_INSTALL_ARCHIVE_URL": f"file://{archive_path.as_posix()}",
-            "PRISM_INSTALL_REF": "test-ref-001",
             "PRISM_INSTALL_HOST_OS": "Linux",
             "GCP_PROJECT_ID": "demo-project",
             "GCP_PUBSUB_SUBSCRIPTION_ID": "demo-subscription",
@@ -306,7 +305,7 @@ def test_install_prism_docker_cron_declined_smoke(installer_env):
     assert "docker build -t pubsub-trader ." in log_text
     assert "docker create --name prism-insight-subscriber" in log_text
     assert "crontab" not in log_text
-    assert "설치 ref: test-ref-001" in result.stdout
+    assert "아카이브 URL: file://" in result.stdout
     assert "cron 설치 여부: false" in result.stdout
 
 
