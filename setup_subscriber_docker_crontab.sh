@@ -26,6 +26,9 @@ PROJECT_DIR="${PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 LOG_DIR="${LOG_DIR:-$PROJECT_DIR/logs}"
 RUNTIME_DIR="${RUNTIME_DIR:-$PROJECT_DIR/runtime}"
 DOCKER_BIN="${DOCKER_BIN:-docker}"
+CRONTAB_BIN="${CRONTAB_BIN:-crontab}"
+TIMEDATECTL_BIN="${TIMEDATECTL_BIN:-timedatectl}"
+SUDO_BIN="${SUDO_BIN:-sudo}"
 IMAGE_NAME="${IMAGE_NAME:-pubsub-trader}"
 CONTAINER_NAME="${CONTAINER_NAME:-prism-insight-subscriber}"
 ENV_FILE="${ENV_FILE:-$PROJECT_DIR/.env}"
@@ -106,8 +109,8 @@ generate_path() {
 }
 
 current_timezone() {
-    if command -v timedatectl >/dev/null 2>&1; then
-        timedatectl show -p Timezone --value 2>/dev/null && return 0
+    if command -v "$TIMEDATECTL_BIN" >/dev/null 2>&1; then
+        "$TIMEDATECTL_BIN" show -p Timezone --value 2>/dev/null && return 0
     fi
 
     if [ -f /etc/timezone ]; then
@@ -120,6 +123,7 @@ current_timezone() {
 
 ensure_kst_timezone() {
     local tz
+    local auto_confirm
     tz="$(current_timezone | tr -d '\r')"
 
     if [ "$tz" = "Asia/Seoul" ]; then
@@ -129,18 +133,25 @@ ensure_kst_timezone() {
     echo
     log_warn "현재 시스템 타임존은 '$tz' 입니다."
     log_warn "이 스크립트는 cron 기준 시간을 KST(Asia/Seoul)로 가정합니다."
-    read -r -p "시스템 타임존을 Asia/Seoul로 변경할까요? (y/N): " confirm
+
+    auto_confirm="$(normalize_bool "${AUTO_CONFIRM_TIMEZONE_CHANGE:-false}")"
+    if [ "$auto_confirm" = "true" ]; then
+        confirm="y"
+        log_info "AUTO_CONFIRM_TIMEZONE_CHANGE=true 로 타임존 변경을 자동 승인합니다."
+    else
+        read -r -p "시스템 타임존을 Asia/Seoul로 변경할까요? (y/N): " confirm
+    fi
 
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         log_error "KST가 아니면 스케줄이 어긋날 수 있어 설치를 중단합니다."
         exit 1
     fi
 
-    if command -v timedatectl >/dev/null 2>&1; then
+    if command -v "$TIMEDATECTL_BIN" >/dev/null 2>&1; then
         if [ "$(id -u)" -eq 0 ]; then
-            timedatectl set-timezone Asia/Seoul
-        elif command -v sudo >/dev/null 2>&1; then
-            sudo timedatectl set-timezone Asia/Seoul
+            "$TIMEDATECTL_BIN" set-timezone Asia/Seoul
+        elif command -v "$SUDO_BIN" >/dev/null 2>&1; then
+            "$SUDO_BIN" "$TIMEDATECTL_BIN" set-timezone Asia/Seoul
         else
             log_error "timedatectl 실행 권한이 없습니다. 수동으로 Asia/Seoul로 변경해주세요."
             exit 1
@@ -400,6 +411,17 @@ create_container_definition() {
     log_success "subscriber 컨테이너 정의를 생성했습니다. container=$CONTAINER_NAME"
 }
 
+prepare_runtime() {
+    validate_environment
+    create_container_definition
+}
+
+install_cron_schedule() {
+    ensure_kst_timezone
+    backup_crontab
+    install_crontab
+}
+
 ensure_container_ready() {
     ensure_image_ready || return 1
 
@@ -514,6 +536,32 @@ subscriber Docker 실제 매매 시간 기준 운용 요약
 EOF
 }
 
+print_runtime_ready_summary() {
+    cat <<EOF
+subscriber Docker 런타임 준비가 완료되었습니다.
+
+[현재 상태]
+- 프로젝트 경로: $PROJECT_DIR
+- Docker 이미지: $IMAGE_NAME
+- 컨테이너 이름: $CONTAINER_NAME
+- 환경 파일: $ENV_FILE
+- KIS 설정 파일: $KIS_CONFIG_HOST_PATH
+
+[수동 실행 명령]
+- 시작: $DOCKER_BIN start "$CONTAINER_NAME"
+- 중지: $DOCKER_BIN stop "$CONTAINER_NAME"
+- 상태: bash "$SCRIPT_PATH" --status
+
+[cron 자동화가 필요할 때]
+- 이후에 자동 스케줄을 설치하려면 다음 명령을 실행하세요.
+  bash "$SCRIPT_PATH" --install
+
+설명:
+- 이 상태에서는 subscriber 컨테이너 정의만 준비되어 있습니다.
+- 실제 장 시간 자동 시작/중지는 crontab 설치 후 활성화됩니다.
+EOF
+}
+
 generate_managed_block() {
     local script_path_q project_dir_q docker_bin_q image_name_q container_name_q
     local env_file_q log_dir_q runtime_dir_q kis_host_q kis_container_q
@@ -569,8 +617,8 @@ strip_managed_block() {
 backup_crontab() {
     local backup_file="$PROJECT_DIR/crontab_subscriber_docker_backup_$(date +%Y%m%d_%H%M%S).txt"
 
-    if crontab -l >/dev/null 2>&1; then
-        crontab -l > "$backup_file"
+    if "$CRONTAB_BIN" -l >/dev/null 2>&1; then
+        "$CRONTAB_BIN" -l > "$backup_file"
         log_success "현재 crontab을 백업했습니다: $backup_file"
     else
         log_info "기존 crontab이 없어 백업을 생략합니다."
@@ -583,8 +631,8 @@ install_crontab() {
     temp_current="$(mktemp)"
     temp_clean="$(mktemp)"
 
-    if crontab -l >/dev/null 2>&1; then
-        crontab -l > "$temp_current"
+    if "$CRONTAB_BIN" -l >/dev/null 2>&1; then
+        "$CRONTAB_BIN" -l > "$temp_current"
     else
         : > "$temp_current"
     fi
@@ -597,7 +645,7 @@ install_crontab() {
         generate_managed_block
     } > "$temp_current"
 
-    crontab "$temp_current"
+    "$CRONTAB_BIN" "$temp_current"
     rm -f "$temp_current" "$temp_clean"
     log_success "subscriber Docker 전용 crontab을 설치했습니다."
 }
@@ -608,19 +656,19 @@ uninstall_crontab() {
     temp_current="$(mktemp)"
     temp_clean="$(mktemp)"
 
-    if ! crontab -l >/dev/null 2>&1; then
+    if ! "$CRONTAB_BIN" -l >/dev/null 2>&1; then
         log_info "제거할 crontab이 없습니다."
         rm -f "$temp_current" "$temp_clean"
         return 0
     fi
 
-    crontab -l > "$temp_current"
+    "$CRONTAB_BIN" -l > "$temp_current"
     strip_managed_block "$temp_current" "$temp_clean"
 
     if [ -s "$temp_clean" ]; then
-        crontab "$temp_clean"
+        "$CRONTAB_BIN" "$temp_clean"
     else
-        crontab -r
+        "$CRONTAB_BIN" -r
     fi
 
     rm -f "$temp_current" "$temp_clean"
@@ -628,12 +676,12 @@ uninstall_crontab() {
 }
 
 show_crontab() {
-    if ! crontab -l >/dev/null 2>&1; then
+    if ! "$CRONTAB_BIN" -l >/dev/null 2>&1; then
         log_warn "현재 crontab이 없습니다."
         return 0
     fi
 
-    crontab -l | awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
+    "$CRONTAB_BIN" -l | awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
         $0 == begin { show = 1 }
         show { print }
         $0 == end { exit }
@@ -749,6 +797,8 @@ show_help() {
   -u, --uninstall       Docker crontab 제거
   -s, --show            현재 설치된 관리 블록 표시
   -b, --backup          현재 crontab 백업
+  --prepare-runtime     Docker 이미지/컨테이너 정의만 준비하고 cron은 건너뜀
+  --install-cron-only   이미 준비된 Docker 런타임에 cron 스케줄만 설치
   --summary             실제 매매 시간 및 Docker cron 스케줄 요약 출력
   --status              현재 Docker subscriber 상태 출력
   --enable-auto-build   이미지가 없으면 자동 docker build
@@ -768,6 +818,9 @@ show_help() {
 환경 변수:
   PROJECT_DIR                프로젝트 경로
   DOCKER_BIN                 Docker 실행 파일
+  CRONTAB_BIN                crontab 실행 파일
+  TIMEDATECTL_BIN            timedatectl 실행 파일
+  SUDO_BIN                   sudo 실행 파일
   IMAGE_NAME                 Docker 이미지 이름
   CONTAINER_NAME             Docker 컨테이너 이름
   ENV_FILE                   .env 파일 경로
@@ -779,6 +832,7 @@ show_help() {
   RUNTIME_DIR                런타임 디렉토리
   AUTO_BUILD_IMAGE           true | false
   AUTO_SHUTDOWN              true | false
+  AUTO_CONFIRM_TIMEZONE_CHANGE true | false
   SHUTDOWN_COMMAND           종료 명령
 
 예시:
@@ -815,6 +869,14 @@ main() {
                 ;;
             -b|--backup)
                 action="backup"
+                action_explicit=true
+                ;;
+            --prepare-runtime)
+                action="prepare-runtime"
+                action_explicit=true
+                ;;
+            --install-cron-only)
+                action="install-cron-only"
                 action_explicit=true
                 ;;
             --summary)
@@ -872,14 +934,35 @@ main() {
         install)
             if $interactive; then
                 interactive_install_setup
-                ensure_kst_timezone
             else
                 validate_environment
-                ensure_kst_timezone
             fi
-            create_container_definition
-            backup_crontab
-            install_crontab
+            prepare_runtime
+            install_cron_schedule
+            echo
+            print_schedule_summary
+            ;;
+        prepare-runtime)
+            if $interactive; then
+                interactive_common_settings
+            fi
+            prepare_runtime
+            echo
+            print_runtime_ready_summary
+            ;;
+        install-cron-only)
+            if $interactive; then
+                interactive_common_settings
+                validate_environment
+                read -r -p "subscriber Docker cron 스케줄을 설치할까요? (y/N): " confirm
+                if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+                    log_info "취소되었습니다."
+                    exit 0
+                fi
+            else
+                validate_environment
+            fi
+            install_cron_schedule
             echo
             print_schedule_summary
             ;;
