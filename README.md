@@ -99,12 +99,38 @@ pytest tests/test_signal_schema.py tests/test_dispatch.py tests/test_market_hour
 Linux 호스트에서는 아래 한 줄로 설치 스크립트를 내려받아 바로 실행할 수 있습니다:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tkgo11/prism-insight-light/6e32cb0b7f8433378b1aec5969983221bd90bb2b/install_prism_docker.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tkgo11/prism-insight-light/main/install_prism_docker.sh | bash
 ```
+
+기본 사용에서는 별도로 ref를 지정할 필요가 없습니다. 스크립트는 기본적으로 현재 `main` 기준 아카이브를 내려받아 설치합니다.
+
+### How the one-click installer works
+
+```mermaid
+flowchart TD
+    A[User runs install_prism_docker.sh] --> B[Check Linux host and required tools]
+    B --> C[Download or reuse PRISM-INSIGHT checkout]
+    C --> D[Create or preserve .env]
+    D --> E[Create or preserve kis_devlp.yaml]
+    E --> F{KIS setup mode}
+    F -->|guided| G[Prompt for common-case account and app keys]
+    F -->|manual| H[Open or pause for YAML editing]
+    G --> I[Collect Docker image, container, log, runtime options]
+    H --> I
+    I --> J[Prepare Docker runtime via setup_subscriber_docker_crontab.sh --prepare-runtime]
+    J --> K{Install cron automation?}
+    K -->|yes| L[Install schedule via --install-cron-only]
+    K -->|no| M[Print manual docker start/stop instructions]
+    L --> N[Done]
+    M --> N[Done]
+```
+
+요약하면 설치 스크립트는 **다운로드 → 설정 파일 준비 → KIS 설정 → Docker 런타임 준비 → 선택적 cron 설치** 순서로 진행됩니다.  
+기존 `.env` 와 `kis_devlp.yaml` 이 이미 있으면 기본적으로 유지하고, 명시적으로 교체를 선택했을 때만 다시 작성합니다.
 
 설치 스크립트가 자동으로 처리하는 항목:
 
-- 고정된 ref 기준으로 프로젝트 다운로드
+- `main` 기준 프로젝트 다운로드
 - `.env.example` → `.env` 생성 및 필수 Pub/Sub 값 입력
 - `trading/config/kis_devlp.yaml.example` 기반 KIS 설정 준비
 - Docker 이미지/컨테이너 정의 생성

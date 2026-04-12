@@ -11,8 +11,7 @@ NC='\033[0m'
 SCRIPT_VERSION="2026-04-11"
 DEFAULT_REPO_OWNER="${PRISM_INSTALL_REPO_OWNER:-tkgo11}"
 DEFAULT_REPO_NAME="${PRISM_INSTALL_REPO_NAME:-prism-insight-light}"
-DEFAULT_REPO_REF="${PRISM_INSTALL_REF:-6e32cb0b7f8433378b1aec5969983221bd90bb2b}"
-DEFAULT_ARCHIVE_URL="${PRISM_INSTALL_ARCHIVE_URL:-https://github.com/${DEFAULT_REPO_OWNER}/${DEFAULT_REPO_NAME}/archive/${DEFAULT_REPO_REF}.tar.gz}"
+DEFAULT_ARCHIVE_URL="${PRISM_INSTALL_ARCHIVE_URL:-https://github.com/${DEFAULT_REPO_OWNER}/${DEFAULT_REPO_NAME}/archive/refs/heads/main.tar.gz}"
 DEFAULT_INSTALL_DIR="${INSTALL_DIR:-$HOME/prism-insight-light}"
 DEFAULT_DOCKER_BIN="${DOCKER_BIN:-docker}"
 DEFAULT_IMAGE_NAME="${IMAGE_NAME:-pubsub-trader}"
@@ -24,7 +23,6 @@ DEFAULT_KIS_SETUP_MODE="${KIS_SETUP_MODE:-guided}"
 DEFAULT_KIS_MY_AGENT="${KIS_MY_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36}"
 
 ARCHIVE_URL="$DEFAULT_ARCHIVE_URL"
-DOWNLOAD_REF="$DEFAULT_REPO_REF"
 INSTALL_DIR="$DEFAULT_INSTALL_DIR"
 PROJECT_DIR=""
 REPO_DIR=""
@@ -262,7 +260,6 @@ ensure_project_checkout() {
     local extract_dir="$WORK_DIR/extract"
     local extracted_root
 
-    log_info "설치 ref: $DOWNLOAD_REF"
     log_info "아카이브 URL: $ARCHIVE_URL"
 
     if [ "$DOWNLOAD_TOOL" = "curl" ]; then
@@ -551,7 +548,6 @@ print_final_summary() {
 
 [설치 정보]
 - 설치 스크립트 버전: $SCRIPT_VERSION
-- 다운로드 ref: $DOWNLOAD_REF
 - 프로젝트 경로: $PROJECT_DIR
 - Docker 이미지: $IMAGE_NAME
 - Docker 컨테이너: $CONTAINER_NAME
@@ -593,7 +589,6 @@ show_help() {
   --install-dir PATH     다운로드/설치 디렉토리 (기본값: $DEFAULT_INSTALL_DIR)
   --repo-dir PATH        기존 체크아웃 재사용 (다운로드 건너뜀)
   --archive-url URL      다운로드할 tar.gz URL 오버라이드
-  --ref REF              표시용 다운로드 ref 오버라이드
   --with-cron            cron 설치를 강제로 활성화
   --without-cron         cron 설치를 건너뜀
   --guided-kis           guided KIS 설정 사용
@@ -602,7 +597,7 @@ show_help() {
   -h, --help             도움말 표시
 
 환경 변수:
-  PRISM_INSTALL_ARCHIVE_URL / PRISM_INSTALL_REF / INSTALL_DIR
+  PRISM_INSTALL_ARCHIVE_URL / INSTALL_DIR
   GCP_PROJECT_ID / GCP_PUBSUB_SUBSCRIPTION_ID / GCP_CREDENTIALS_PATH
   DOCKER_BIN / IMAGE_NAME / CONTAINER_NAME / LOG_DIR / RUNTIME_DIR
   AUTO_BUILD_IMAGE / AUTO_SHUTDOWN / SHUTDOWN_COMMAND
@@ -613,7 +608,7 @@ show_help() {
   KIS_ACCOUNT_NUMBER / KIS_ACCOUNT_PRODUCT / KIS_MY_AGENT
 
 예시:
-  curl -fsSL https://raw.githubusercontent.com/$DEFAULT_REPO_OWNER/$DEFAULT_REPO_NAME/$DEFAULT_REPO_REF/install_prism_docker.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/$DEFAULT_REPO_OWNER/$DEFAULT_REPO_NAME/main/install_prism_docker.sh | bash
   bash $0 --install-dir /opt/prism-insight-light
   KIS_SETUP_MODE=manual KIS_EDITOR=vim bash $0 --with-cron
 EOF
@@ -633,10 +628,6 @@ main() {
             --archive-url)
                 shift
                 ARCHIVE_URL="${1:-}"
-                ;;
-            --ref)
-                shift
-                DOWNLOAD_REF="${1:-}"
                 ;;
             --with-cron)
                 INSTALL_CRON="true"
