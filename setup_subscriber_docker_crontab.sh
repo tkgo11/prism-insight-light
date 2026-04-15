@@ -80,6 +80,18 @@ sanitize_input() {
     printf '%s' "${1//$'\r'/}"
 }
 
+resolve_project_path() {
+    local path_value="$1"
+
+    if [ -z "$path_value" ]; then
+        echo ""
+    elif [[ "$path_value" = /* ]] || [[ "$path_value" =~ ^[A-Za-z]:[\\/] ]]; then
+        echo "$path_value"
+    else
+        echo "$PROJECT_DIR/$path_value"
+    fi
+}
+
 generate_path() {
     local paths=()
 
@@ -212,6 +224,15 @@ validate_environment() {
     AUTO_BUILD_IMAGE="$(normalize_bool "$AUTO_BUILD_IMAGE")"
     AUTO_SHUTDOWN="$(normalize_bool "$AUTO_SHUTDOWN")"
     initialize_credentials_path
+
+    ENV_FILE="$(resolve_project_path "$ENV_FILE")"
+    KIS_CONFIG_HOST_PATH="$(resolve_project_path "$KIS_CONFIG_HOST_PATH")"
+    LOG_DIR="$(resolve_project_path "$LOG_DIR")"
+    RUNTIME_DIR="$(resolve_project_path "$RUNTIME_DIR")"
+
+    if [ -n "$CREDENTIALS_HOST_PATH" ]; then
+        CREDENTIALS_HOST_PATH="$(resolve_project_path "$CREDENTIALS_HOST_PATH")"
+    fi
 
     if [ ! -d "$PROJECT_DIR" ]; then
         log_error "프로젝트 디렉토리를 찾을 수 없습니다: $PROJECT_DIR"
@@ -916,11 +937,13 @@ main() {
                 ;;
             --cron-start)
                 action="cron-start"
+                action_explicit=true
                 shift
                 cron_market="${1:-}"
                 ;;
             --cron-stop)
                 action="cron-stop"
+                action_explicit=true
                 shift
                 cron_market="${1:-}"
                 ;;
