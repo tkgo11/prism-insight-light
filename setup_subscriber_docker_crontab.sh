@@ -316,7 +316,7 @@ market_open_now() {
 
     ensure_image_ready >/dev/null 2>&1 || return 2
 
-    "$DOCKER_BIN" run --rm --entrypoint python "$IMAGE_NAME" - "$market" <<'PY'
+    "$DOCKER_BIN" run --rm -i --entrypoint python "$IMAGE_NAME" - "$market" <<'PY'
 import importlib.util
 import sys
 from pathlib import Path
@@ -337,13 +337,17 @@ PY
 
 market_open_label() {
     local market="$1"
+    local status
 
-    if market_open_now "$market" >/dev/null 2>&1; then
+    market_open_now "$market" >/dev/null 2>&1
+    status=$?
+
+    if [ "$status" -eq 0 ]; then
         echo "yes"
         return 0
     fi
 
-    case $? in
+    case "$status" in
         1) echo "no" ;;
         *) echo "unknown" ;;
     esac
