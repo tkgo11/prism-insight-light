@@ -113,6 +113,21 @@ case "$cmd" in
     rm -f "$running_file"
     ;;
   run)
+    stdin_payload="$(cat || true)"
+    printf 'docker-run-stdin %s\n' "$stdin_payload" >> "$STUB_LOG"
+    market=""
+    for arg in "$@"; do
+      if [[ "$arg" == "KR" || "$arg" == "US" ]]; then
+        market="$arg"
+      fi
+    done
+    if [[ "$market" == "KR" ]]; then
+      [[ "${STUB_MARKET_OPEN_KR:-false}" == "true" ]]
+      exit $?
+    elif [[ "$market" == "US" ]]; then
+      [[ "${STUB_MARKET_OPEN_US:-false}" == "true" ]]
+      exit $?
+    fi
     exit "${STUB_DOCKER_RUN_EXIT:-1}"
     ;;
 esac
@@ -461,7 +476,7 @@ def test_setup_subscriber_docker_cron_start_respects_explicit_action(installer_e
     env["LOG_DIR"] = (project_dir / "logs").as_posix()
     env["RUNTIME_DIR"] = (project_dir / "runtime").as_posix()
     env["CREDENTIALS_HOST_PATH"] = env["GCP_CREDENTIALS_PATH"]
-    env["STUB_DOCKER_RUN_EXIT"] = "0"
+    env["STUB_MARKET_OPEN_US"] = "true"
 
     start_result = run_setup_script(project_dir, env, "--cron-start", "US", "--non-interactive")
     log_text = (installer_env["state_dir"] / "commands.log").read_text(encoding="utf-8")
@@ -499,3 +514,27 @@ def test_setup_subscriber_docker_prepare_runtime_resolves_relative_credentials_p
 
     assert prepare_result.returncode == 0, prepare_result.stderr
     assert f"-v {relative_creds.as_posix()}:/app/runtime/gcp-credentials.json:ro" in log_text
+
+
+def test_setup_subscriber_docker_status_uses_interactive_python_market_check(installer_env):
+    result = run_installer(installer_env["tmp_path"], installer_env["env"], "--non-interactive", "--without-cron")
+    assert result.returncode == 0, result.stderr
+
+    project_dir = installer_env["tmp_path"] / "target-install"
+    env = installer_env["env"].copy()
+    env["PROJECT_DIR"] = project_dir.as_posix()
+    env["ENV_FILE"] = (project_dir / ".env").as_posix()
+    env["KIS_CONFIG_HOST_PATH"] = (project_dir / "trading" / "config" / "kis_devlp.yaml").as_posix()
+    env["LOG_DIR"] = (project_dir / "logs").as_posix()
+    env["RUNTIME_DIR"] = (project_dir / "runtime").as_posix()
+    env["CREDENTIALS_HOST_PATH"] = env["GCP_CREDENTIALS_PATH"]
+    env["STUB_MARKET_OPEN_KR"] = "false"
+    env["STUB_MARKET_OPEN_US"] = "true"
+
+    status_result = run_setup_script(project_dir, env, "--status", "--non-interactive")
+    log_text = (installer_env["state_dir"] / "commands.log").read_text(encoding="utf-8")
+
+    assert status_result.returncode == 0, status_result.stderr
+    assert "KR open         : no" in status_result.stdout
+    assert "US open         : yes" in status_result.stdout
+    assert "docker run --rm -i --entrypoint python" in log_text
