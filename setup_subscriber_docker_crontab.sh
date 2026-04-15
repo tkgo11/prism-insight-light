@@ -121,12 +121,23 @@ current_timezone() {
     date +%Z
 }
 
+is_kst_timezone() {
+    case "$1" in
+        Asia/Seoul|KST)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 ensure_kst_timezone() {
     local tz
     local auto_confirm
     tz="$(current_timezone | tr -d '\r')"
 
-    if [ "$tz" = "Asia/Seoul" ]; then
+    if is_kst_timezone "$tz"; then
         return 0
     fi
 

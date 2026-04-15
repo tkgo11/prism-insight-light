@@ -330,6 +330,23 @@ def test_install_prism_docker_with_cron_smoke(installer_env):
     assert "현재 시스템 타임존은 'UTC' 입니다." in result.stdout
 
 
+def test_install_prism_docker_accepts_kst_without_timezone_change(installer_env):
+    installer_env["env"]["STUB_TIMEZONE"] = "KST"
+    result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--with-cron",
+    )
+    assert result.returncode == 0, result.stderr
+
+    log_text = (installer_env["state_dir"] / "commands.log").read_text(encoding="utf-8")
+    assert "timedatectl show -p Timezone --value" in log_text
+    assert "timedatectl set-timezone Asia/Seoul" not in log_text
+    assert "crontab " in log_text
+    assert "현재 시스템 타임존은 'KST' 입니다." not in result.stdout
+
+
 def test_install_prism_docker_preserves_existing_config_on_rerun(installer_env):
     first = run_installer(installer_env["tmp_path"], installer_env["env"], "--non-interactive", "--without-cron")
     assert first.returncode == 0, first.stderr
