@@ -113,7 +113,7 @@ case "$cmd" in
     rm -f "$running_file"
     ;;
   run)
-    exit 1
+    exit "${STUB_DOCKER_RUN_EXIT:-1}"
     ;;
 esac
 """
@@ -287,6 +287,35 @@ def run_installer(tmp_path: Path, env: dict[str, str], *args: str, input_text: s
         check=False,
     )
 
+
+def run_setup_script(
+    project_dir: Path,
+    env: dict[str, str],
+    *args: str,
+    input_text: str = "",
+) -> subprocess.CompletedProcess[str]:
+    script_path = project_dir / "setup_subscriber_docker_crontab.sh"
+    shell_command = (
+        f'export PATH={shlex.quote(env["STUB_BIN_DIR"])}:$PATH; '
+        f"cd {shlex.quote(PROJECT_ROOT.as_posix())}; "
+        + " ".join(
+            shlex.quote(arg)
+            for arg in ["bash", script_path.as_posix(), *args]
+        )
+    )
+    command = [BASH_BIN, "-lc", shell_command]
+    return subprocess.run(
+        command,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        input=input_text,
+        capture_output=True,
+        cwd=PROJECT_ROOT,
+        env=env,
+        check=False,
+    )
+
 def test_install_prism_docker_cron_declined_smoke(installer_env):
     result = run_installer(installer_env["tmp_path"], installer_env["env"], "--non-interactive", "--without-cron")
     assert result.returncode == 0, result.stderr
@@ -418,3 +447,55 @@ def test_install_prism_docker_unsupported_platform_guard(installer_env):
     assert "Linux 호스트용" in result.stderr
     assert not (installer_env["tmp_path"] / "target-install").exists()
     assert not (installer_env["state_dir"] / "crontab.txt").exists()
+
+
+def test_setup_subscriber_docker_cron_start_respects_explicit_action(installer_env):
+    result = run_installer(installer_env["tmp_path"], installer_env["env"], "--non-interactive", "--without-cron")
+    assert result.returncode == 0, result.stderr
+
+    project_dir = installer_env["tmp_path"] / "target-install"
+    env = installer_env["env"].copy()
+    env["PROJECT_DIR"] = project_dir.as_posix()
+    env["ENV_FILE"] = (project_dir / ".env").as_posix()
+    env["KIS_CONFIG_HOST_PATH"] = (project_dir / "trading" / "config" / "kis_devlp.yaml").as_posix()
+    env["LOG_DIR"] = (project_dir / "logs").as_posix()
+    env["RUNTIME_DIR"] = (project_dir / "runtime").as_posix()
+    env["CREDENTIALS_HOST_PATH"] = env["GCP_CREDENTIALS_PATH"]
+    env["STUB_DOCKER_RUN_EXIT"] = "0"
+
+    start_result = run_setup_script(project_dir, env, "--cron-start", "US", "--non-interactive")
+    log_text = (installer_env["state_dir"] / "commands.log").read_text(encoding="utf-8")
+
+    assert start_result.returncode == 0, start_result.stderr
+    assert "subscriber Docker Crontab 메뉴" not in start_result.stdout
+    assert "docker start prism-insight-subscriber" in log_text
+
+
+def test_setup_subscriber_docker_prepare_runtime_resolves_relative_credentials_path(installer_env):
+    result = run_installer(installer_env["tmp_path"], installer_env["env"], "--non-interactive", "--without-cron")
+    assert result.returncode == 0, result.stderr
+
+    project_dir = installer_env["tmp_path"] / "target-install"
+    relative_creds = project_dir / "relative-creds.json"
+    relative_creds.write_text('{"type":"service_account"}\n', encoding="utf-8")
+    (project_dir / ".env").write_text(
+        "GCP_PROJECT_ID=demo-project\n"
+        "GCP_PUBSUB_SUBSCRIPTION_ID=demo-subscription\n"
+        "GCP_CREDENTIALS_PATH=relative-creds.json\n",
+        encoding="utf-8",
+    )
+    (installer_env["state_dir"] / "commands.log").write_text("", encoding="utf-8")
+
+    env = installer_env["env"].copy()
+    env["PROJECT_DIR"] = project_dir.as_posix()
+    env["ENV_FILE"] = (project_dir / ".env").as_posix()
+    env["KIS_CONFIG_HOST_PATH"] = (project_dir / "trading" / "config" / "kis_devlp.yaml").as_posix()
+    env["LOG_DIR"] = (project_dir / "logs").as_posix()
+    env["RUNTIME_DIR"] = (project_dir / "runtime").as_posix()
+    env.pop("CREDENTIALS_HOST_PATH", None)
+
+    prepare_result = run_setup_script(project_dir, env, "--prepare-runtime", "--non-interactive")
+    log_text = (installer_env["state_dir"] / "commands.log").read_text(encoding="utf-8")
+
+    assert prepare_result.returncode == 0, prepare_result.stderr
+    assert f"-v {relative_creds.as_posix()}:/app/runtime/gcp-credentials.json:ro" in log_text
