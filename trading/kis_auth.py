@@ -2,6 +2,8 @@
 # ====|  Sample API calls for obtaining (REST) access token / (Websocket) connection key  |=====================
 # ====|  Includes common API call functions                                  |=====================
 
+from __future__ import annotations
+
 import asyncio
 import copy
 import json
