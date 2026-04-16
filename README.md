@@ -45,6 +45,17 @@ Copy `trading/config/kis_devlp.yaml.example` to `trading/config/kis_devlp.yaml` 
 pip install -r requirements.txt
 ```
 
+## Pub/Sub readiness check
+
+Run the readiness check from the repo root on the host/source tree:
+
+```bash
+python check_pubsub_readiness.py
+```
+
+- Set `GCP_PROJECT_ID`, `GCP_PUBSUB_SUBSCRIPTION_ID`, and `GCP_CREDENTIALS_PATH` first.
+- Current Docker packaging does not include `check_pubsub_readiness.py`.
+
 ## Run
 
 Dry-run:
