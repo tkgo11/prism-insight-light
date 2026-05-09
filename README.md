@@ -193,6 +193,17 @@ KIS 설정 방식은 두 가지를 지원합니다:
 2. **manual** — `kis_devlp.yaml` 예제를 직접 수정하는 고급 경로 (다중 계좌 권장)
 
 이미 설치한 디렉토리에서 `.env` 또는 `kis_devlp.yaml`을 수정했다면 같은 설치 스크립트를 다시 실행해 컨테이너 정의를 갱신할 수 있습니다.
+이미 설치한 전체 Docker 런타임(cron, 컨테이너, 이미지, 설치 디렉토리)을 제거하려면 다음처럼 실행하세요.
+
+```bash
+bash install_prism_docker.sh --install-dir /path/to/prism-insight-light --uninstall --non-interactive
+```
+
+cron 스케줄만 제거하고 설치 디렉토리와 Docker 런타임은 유지하려면:
+
+```bash
+bash install_prism_docker.sh --install-dir /path/to/prism-insight-light --uninstall-cron --non-interactive
+```
 
 ### Manual Docker fallback
 
