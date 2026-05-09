@@ -19,7 +19,7 @@ https://github.com/dragon1086/prism-insight
 ## What was removed
 
 - Analysis/orchestration/report generation
-- Telegram, Firebase, Redis, dashboards, mobile integrations
+- Legacy Telegram delivery pipeline, Firebase, Redis, dashboards, mobile integrations
 - Trigger screening and publisher flows
 - Non-trading docs/examples/tests
 
@@ -97,10 +97,37 @@ Behavior:
 - `EVENT` -> log and ack, no trade
 - malformed/unsupported payload -> log and ack
 
+## Telegram fetch helper
+
+This light repo now also includes a reusable Telegram fetch/parser helper in `trading.telegram_fetch`.
+
+- Default channel: `https://t.me/prism_insight_global_en`
+- Public preview source used for fetching: `https://t.me/s/<channel>`
+- Supported parsed post shapes:
+  - canonical JSON signal bodies
+  - labeled English text posts such as `New Buy`, `Sell`, and `Event`
+
+Example:
+
+```python
+from trading.telegram_fetch import fetch_signal_messages
+
+signals = fetch_signal_messages(pages=3)
+for item in signals:
+    print(item.signal.signal_type, item.signal.ticker, item.signal.price)
+```
+
+Current format note:
+
+- The canonical signal schema is still the JSON contract above.
+- Historical upstream Telegram delivery also used labeled text posts for buy/sell/event alerts.
+- Fetching uses Telegram's public preview pages and supports `?before=<post_id>` pagination.
+- In this environment, the public preview page for `@prism_insight_global_en` exposed channel metadata but not live post history, so live fetch results from the default channel may be empty until Telegram exposes preview posts to the requesting client/context. The text parser is therefore based on the documented signal schema plus historical upstream Telegram message templates.
+
 ## Focused verification
 
 ```bash
-pytest tests/test_signal_schema.py tests/test_dispatch.py tests/test_market_hours.py tests/test_off_hours_policy.py tests/test_subscriber_smoke.py tests/test_multi_account_domestic.py tests/test_multi_account_kis_auth.py tests/test_multi_account_us.py
+pytest tests/test_signal_schema.py tests/test_dispatch.py tests/test_market_hours.py tests/test_off_hours_policy.py tests/test_subscriber_smoke.py tests/test_multi_account_domestic.py tests/test_multi_account_kis_auth.py tests/test_multi_account_us.py tests/test_telegram_fetch.py
 ```
 
 ## Docker
