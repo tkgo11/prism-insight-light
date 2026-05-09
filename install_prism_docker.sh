@@ -292,7 +292,7 @@ ensure_repo_paths() {
 
 configure_env_file() {
     local should_replace="false"
-    local project_id subscription_id credentials_path
+    local project_id subscription_id credentials_path telegram_channel_url telegram_fetch_pages
 
     if [ ! -f "$ENV_FILE" ]; then
         cp "$PROJECT_DIR/.env.example" "$ENV_FILE"
@@ -335,6 +335,10 @@ configure_env_file() {
     upsert_env_value "$ENV_FILE" GCP_PROJECT_ID "$project_id"
     upsert_env_value "$ENV_FILE" GCP_PUBSUB_SUBSCRIPTION_ID "$subscription_id"
     upsert_env_value "$ENV_FILE" GCP_CREDENTIALS_PATH "$credentials_path"
+    telegram_channel_url="${TELEGRAM_SIGNAL_CHANNEL_URL:-$(read_env_value "$ENV_FILE" TELEGRAM_SIGNAL_CHANNEL_URL || true)}"
+    telegram_fetch_pages="${TELEGRAM_FETCH_PAGES:-$(read_env_value "$ENV_FILE" TELEGRAM_FETCH_PAGES || true)}"
+    upsert_env_value "$ENV_FILE" TELEGRAM_SIGNAL_CHANNEL_URL "${telegram_channel_url:-https://t.me/prism_insight_global_en}"
+    upsert_env_value "$ENV_FILE" TELEGRAM_FETCH_PAGES "${telegram_fetch_pages:-3}"
     log_success ".env 필수 값을 업데이트했습니다."
 }
 
