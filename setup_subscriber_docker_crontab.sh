@@ -29,6 +29,7 @@ DOCKER_BIN="${DOCKER_BIN:-docker}"
 CRONTAB_BIN="${CRONTAB_BIN:-crontab}"
 TIMEDATECTL_BIN="${TIMEDATECTL_BIN:-timedatectl}"
 SUDO_BIN="${SUDO_BIN:-sudo}"
+RM_BIN="${RM_BIN:-rm}"
 IMAGE_NAME="${IMAGE_NAME:-pubsub-trader}"
 CONTAINER_NAME="${CONTAINER_NAME:-prism-insight-subscriber}"
 ENV_FILE="${ENV_FILE:-$PROJECT_DIR/.env}"
@@ -288,6 +289,28 @@ container_running() {
 remove_container_if_exists() {
     if container_exists; then
         "$DOCKER_BIN" rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+    fi
+}
+
+remove_image_if_exists() {
+    if image_exists; then
+        "$DOCKER_BIN" rmi -f "$IMAGE_NAME" >/dev/null 2>&1 || true
+    fi
+}
+
+remove_default_generated_dir_if_exists() {
+    local dir_path="$1"
+    local default_path="$2"
+    local label="$3"
+
+    if [ "$dir_path" != "$default_path" ]; then
+        log_info "$label 디렉토리가 기본 경로가 아니어서 유지합니다: $dir_path"
+        return 0
+    fi
+
+    if [ -d "$dir_path" ]; then
+        "$RM_BIN" -rf "$dir_path"
+        log_success "$label 디렉토리를 제거했습니다: $dir_path"
     fi
 }
 
@@ -713,6 +736,15 @@ uninstall_crontab() {
     log_success "subscriber Docker 전용 crontab을 제거했습니다."
 }
 
+uninstall_all_generated_artifacts() {
+    uninstall_crontab
+    remove_container_if_exists
+    remove_image_if_exists
+    remove_default_generated_dir_if_exists "$LOG_DIR" "$PROJECT_DIR/logs" "로그"
+    remove_default_generated_dir_if_exists "$RUNTIME_DIR" "$PROJECT_DIR/runtime" "런타임"
+    log_success "subscriber Docker 런타임 관련 생성물을 제거했습니다."
+}
+
 show_crontab() {
     if ! "$CRONTAB_BIN" -l >/dev/null 2>&1; then
         log_warn "현재 crontab이 없습니다."
@@ -832,7 +864,8 @@ show_help() {
 옵션:
   -h, --help            도움말 표시
   -i, --install         Docker crontab 설치
-  -u, --uninstall       Docker crontab 제거
+  -u, --uninstall       Docker cron/container/image 및 기본 생성 디렉토리 제거
+  --uninstall-cron-only Docker crontab만 제거
   -s, --show            현재 설치된 관리 블록 표시
   -b, --backup          현재 crontab 백업
   --prepare-runtime     Docker 이미지/컨테이너 정의만 준비하고 cron은 건너뜀
@@ -859,6 +892,7 @@ show_help() {
   CRONTAB_BIN                crontab 실행 파일
   TIMEDATECTL_BIN            timedatectl 실행 파일
   SUDO_BIN                   sudo 실행 파일
+  RM_BIN                     rm 실행 파일
   IMAGE_NAME                 Docker 이미지 이름
   CONTAINER_NAME             Docker 컨테이너 이름
   ENV_FILE                   .env 파일 경로
@@ -899,6 +933,10 @@ main() {
                 ;;
             -u|--uninstall)
                 action="uninstall"
+                action_explicit=true
+                ;;
+            --uninstall-cron-only)
+                action="uninstall-cron-only"
                 action_explicit=true
                 ;;
             -s|--show)
@@ -1012,13 +1050,26 @@ main() {
             fi
             validate_environment
             if $interactive; then
-                read -r -p "subscriber Docker crontab을 제거할까요? (y/N): " confirm
+                read -r -p "subscriber Docker 생성물(cron/container/image/기본 디렉토리)을 제거할까요? (y/N): " confirm
                 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
                     log_info "취소되었습니다."
                     exit 0
                 fi
             fi
-            backup_crontab
+            uninstall_all_generated_artifacts
+            ;;
+        uninstall-cron-only)
+            if $interactive; then
+                interactive_common_settings
+            fi
+            validate_environment
+            if $interactive; then
+                read -r -p "subscriber Docker crontab만 제거할까요? (y/N): " confirm
+                if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+                    log_info "취소되었습니다."
+                    exit 0
+                fi
+            fi
             uninstall_crontab
             ;;
         show)

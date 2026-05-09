@@ -33,6 +33,7 @@ AUTO_BUILD_IMAGE="$DEFAULT_AUTO_BUILD_IMAGE"
 AUTO_SHUTDOWN="$DEFAULT_AUTO_SHUTDOWN"
 SHUTDOWN_COMMAND="$DEFAULT_SHUTDOWN_COMMAND"
 INSTALL_CRON=""
+INSTALL_ACTION="install"
 NON_INTERACTIVE=false
 KIS_SETUP_MODE="$DEFAULT_KIS_SETUP_MODE"
 WORK_DIR=""
@@ -283,6 +284,28 @@ ensure_project_checkout() {
     log_success "프로젝트를 설치했습니다: $PROJECT_DIR"
 }
 
+ensure_existing_project_checkout() {
+    if [ -n "$REPO_DIR" ]; then
+        if ! looks_like_repo "$REPO_DIR"; then
+            log_error "지정한 repo 경로가 PRISM-INSIGHT Docker 런타임 구조와 일치하지 않습니다: $REPO_DIR"
+            exit 1
+        fi
+        PROJECT_DIR="$REPO_DIR"
+        log_info "기존 체크아웃을 재사용합니다: $PROJECT_DIR"
+        return 0
+    fi
+
+    if [ -d "$INSTALL_DIR" ] && looks_like_repo "$INSTALL_DIR"; then
+        PROJECT_DIR="$INSTALL_DIR"
+        log_info "기존 설치 디렉토리를 사용합니다: $PROJECT_DIR"
+        return 0
+    fi
+
+    log_error "cron 제거 대상 프로젝트를 찾을 수 없습니다: ${REPO_DIR:-$INSTALL_DIR}"
+    log_error "--repo-dir 또는 기존 설치 디렉토리를 지정해주세요."
+    exit 1
+}
+
 ensure_repo_paths() {
     ENV_FILE="$PROJECT_DIR/.env"
     KIS_CONFIG_PATH="$PROJECT_DIR/trading/config/kis_devlp.yaml"
@@ -521,6 +544,12 @@ run_repo_setup() {
         install-cron-only)
             cmd+=(--install-cron-only)
             ;;
+        uninstall-cron)
+            cmd+=(--uninstall-cron-only)
+            ;;
+        uninstall)
+            cmd+=(--uninstall)
+            ;;
         *)
             log_error "지원하지 않는 repo setup action 입니다: $action"
             exit 1
@@ -543,6 +572,60 @@ run_repo_setup() {
         AUTO_SHUTDOWN="$AUTO_SHUTDOWN" \
         SHUTDOWN_COMMAND="$SHUTDOWN_COMMAND" \
         "${cmd[@]}"
+}
+
+remove_install_dir() {
+    local target="$PROJECT_DIR"
+
+    if [ -z "$target" ] || [ ! -d "$target" ]; then
+        return 0
+    fi
+
+    case "$target" in
+        "/"|"."|"$HOME")
+            log_error "안전하지 않은 제거 경로라 설치 디렉토리 삭제를 중단합니다: $target"
+            exit 1
+            ;;
+    esac
+
+    rm -rf "$target"
+    log_success "설치 디렉토리를 제거했습니다: $target"
+}
+
+print_cron_uninstall_summary() {
+    cat <<EOF
+
+cron 자동화 제거가 완료되었습니다.
+
+[대상 정보]
+- 프로젝트 경로: $PROJECT_DIR
+- Docker 컨테이너: $CONTAINER_NAME
+
+[현재 상태]
+- subscriber Docker cron 스케줄만 제거했습니다.
+- 컨테이너 정의와 프로젝트 파일은 유지됩니다.
+
+[필요 시 다시 설치]
+- cron 재설치: bash "$PROJECT_DIR/setup_subscriber_docker_crontab.sh" --install
+- 상태 확인: bash "$PROJECT_DIR/setup_subscriber_docker_crontab.sh" --status
+EOF
+}
+
+print_full_uninstall_summary() {
+    cat <<EOF
+
+전체 제거가 완료되었습니다.
+
+[제거 대상]
+- subscriber Docker cron 스케줄
+- Docker 컨테이너: $CONTAINER_NAME
+- Docker 이미지: $IMAGE_NAME
+- 설치 디렉토리: $PROJECT_DIR
+
+[유지되는 항목]
+- 프로젝트 밖의 외부 GCP 자격증명 파일
+- 기본 경로가 아닌 사용자 지정 로그/런타임 디렉토리
+EOF
 }
 
 print_final_summary() {
@@ -595,6 +678,8 @@ show_help() {
   --archive-url URL      다운로드할 tar.gz URL 오버라이드
   --with-cron            cron 설치를 강제로 활성화
   --without-cron         cron 설치를 건너뜀
+  --uninstall            설치 스크립트가 생성한 Docker/cron/설치 디렉토리 제거
+  --uninstall-cron       기존 subscriber Docker cron 스케줄 제거
   --guided-kis           guided KIS 설정 사용
   --manual-kis           manual KIS 설정 사용
   --non-interactive      환경 변수/기본값만 사용하여 비대화형 실행
@@ -639,6 +724,12 @@ main() {
             --without-cron)
                 INSTALL_CRON="false"
                 ;;
+            --uninstall-cron)
+                INSTALL_ACTION="uninstall-cron"
+                ;;
+            --uninstall)
+                INSTALL_ACTION="uninstall"
+                ;;
             --guided-kis)
                 KIS_SETUP_MODE="guided"
                 ;;
@@ -666,6 +757,39 @@ main() {
     echo -e "${BLUE}================================================${NC}"
 
     ensure_supported_host
+
+    if [ "$INSTALL_ACTION" = "uninstall" ]; then
+        INSTALL_CRON="false"
+
+        if [ -n "$REPO_DIR" ]; then
+            INSTALL_DIR="$REPO_DIR"
+        elif ! $NON_INTERACTIVE; then
+            INSTALL_DIR="$(prompt_with_default "기존 설치 디렉토리" "$INSTALL_DIR")"
+        fi
+
+        ensure_existing_project_checkout
+        ensure_repo_paths
+        run_repo_setup uninstall
+        remove_install_dir
+        print_full_uninstall_summary
+        exit 0
+    fi
+
+    if [ "$INSTALL_ACTION" = "uninstall-cron" ]; then
+        INSTALL_CRON="false"
+
+        if [ -n "$REPO_DIR" ]; then
+            INSTALL_DIR="$REPO_DIR"
+        elif ! $NON_INTERACTIVE; then
+            INSTALL_DIR="$(prompt_with_default "기존 설치 디렉토리" "$INSTALL_DIR")"
+        fi
+
+        ensure_existing_project_checkout
+        ensure_repo_paths
+        run_repo_setup uninstall-cron
+        print_cron_uninstall_summary
+        exit 0
+    fi
 
     if [ -n "$REPO_DIR" ]; then
         INSTALL_DIR="$REPO_DIR"

@@ -95,6 +95,9 @@ case "$cmd" in
   rm)
     rm -f "$container_file" "$running_file"
     ;;
+  rmi)
+    rm -f "$image_file"
+    ;;
   create)
     name=""
     while [[ $# -gt 0 ]]; do
@@ -372,6 +375,70 @@ def test_install_prism_docker_with_cron_smoke(installer_env):
     assert "timedatectl set-timezone Asia/Seoul" in log_text
     assert "crontab " in log_text
     assert "현재 시스템 타임존은 'UTC' 입니다." in result.stdout
+
+
+def test_install_prism_docker_uninstall_cron_smoke(installer_env):
+    installer_env["env"]["STUB_TIMEZONE"] = "Asia/Seoul"
+    install_result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--with-cron",
+    )
+    assert install_result.returncode == 0, install_result.stderr
+
+    uninstall_result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--install-dir",
+        (installer_env["tmp_path"] / "target-install").as_posix(),
+        "--uninstall-cron",
+    )
+
+    crontab_file = installer_env["state_dir"] / "crontab.txt"
+    log_text = (installer_env["state_dir"] / "commands.log").read_text(encoding="utf-8")
+
+    assert uninstall_result.returncode == 0, uninstall_result.stderr
+    assert not crontab_file.exists()
+    assert "crontab -r" in log_text
+    assert "cron 자동화 제거가 완료되었습니다." in uninstall_result.stdout
+
+
+def test_install_prism_docker_full_uninstall_removes_generated_artifacts(installer_env):
+    installer_env["env"]["STUB_TIMEZONE"] = "Asia/Seoul"
+    install_result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--with-cron",
+    )
+    assert install_result.returncode == 0, install_result.stderr
+
+    install_dir = installer_env["tmp_path"] / "target-install"
+    assert install_dir.exists()
+
+    uninstall_result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--install-dir",
+        install_dir.as_posix(),
+        "--uninstall",
+    )
+
+    state_dir = installer_env["state_dir"]
+    log_text = (state_dir / "commands.log").read_text(encoding="utf-8")
+
+    assert uninstall_result.returncode == 0, uninstall_result.stderr
+    assert not install_dir.exists()
+    assert not (state_dir / "crontab.txt").exists()
+    assert not (state_dir / "container").exists()
+    assert not (state_dir / "running").exists()
+    assert not (state_dir / "image").exists()
+    assert "docker rm -f prism-insight-subscriber" in log_text
+    assert "docker rmi -f pubsub-trader" in log_text
+    assert "전체 제거가 완료되었습니다." in uninstall_result.stdout
 
 
 def test_install_prism_docker_accepts_kst_without_timezone_change(installer_env):
