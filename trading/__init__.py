@@ -9,3 +9,16 @@ from .schema import (
     parse_signal_bytes,
     parse_signal_payload,
 )
+from .telegram_fetch import (
+    DEFAULT_TELEGRAM_CHANNEL_URL,
+    ParsedTelegramSignal,
+    TelegramChannelPost,
+    TelegramFetchError,
+    build_channel_preview_url,
+    extract_channel_posts,
+    fetch_channel_posts,
+    fetch_signal_messages,
+    normalize_channel_handle,
+    parse_signal_post,
+    parse_signal_text,
+)
