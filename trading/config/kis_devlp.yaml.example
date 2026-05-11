@@ -11,6 +11,17 @@ auto_trading: true
 # 기본 매매 환경 (demo: 모의투자, real: 실전투자)
 default_mode: demo
 
+# 신호 기반 전략 설정 (선택)
+# name:
+#   - "" : 기존 동작 유지 (전략 비활성화)
+#   - "full_balance_rotation" : 전체 잔고 회전 전략 사용
+# account_by_market:
+#   KR: 전략 전용 국내 계좌 이름
+#   US: 전략 전용 미국 계좌 이름
+signal_strategy:
+  name: ""
+  account_by_market: {}
+
 # 기본 상품 코드
 # 01: 종합계좌, 03: 국내선물옵션, 08: 해외선물옵션, 22: 개인연금, 29: 퇴직연금
 default_product_code: "01"
