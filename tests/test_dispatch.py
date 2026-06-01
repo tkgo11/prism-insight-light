@@ -2,7 +2,6 @@ import pytest
 
 from trading.dispatch import TradeDispatcher
 from trading.schema import parse_signal_payload
-from trading.strategies.full_balance_rotation import StrategyExecutionResult
 
 
 class DummyQueue:
@@ -123,53 +122,57 @@ async def test_dispatch_acknowledges_event_without_trader(monkeypatch):
 
     assert result.status == "acknowledged"
 
-
 @pytest.mark.asyncio
-async def test_strategy_buy_routes_to_strategy_path(monkeypatch, tmp_path):
-    class RaisingUSTrader:
+async def test_balance_split_buy_routes_with_fractional_buy_amount(monkeypatch):
+    results = {}
+
+    class FakeUSTrader:
         def __init__(self, mode):
-            raise AssertionError("strategy dispatch should not use legacy US trader path")
+            results["mode"] = mode
 
-    async def fake_execute(claimed_basket):
-        return StrategyExecutionResult(
-            success=True,
-            partial_success=False,
-            message=f"executed {sorted(claimed_basket.signals)}",
-            status="executed",
-            market=claimed_basket.market,
-            strategy_name=claimed_basket.strategy_name,
-            account_name=claimed_basket.account_name,
-            account_id="acct-1",
-            group_id=claimed_basket.group_id,
-            flush_id=claimed_basket.flush_id,
-            executed_tickers=list(sorted(claimed_basket.signals)),
-            skipped_tickers=[],
-            failed_tickers=[],
-            remaining_signals={},
-        )
+        def get_account_summary(self):
+            return {"available_amount": 800.0}
 
-    monkeypatch.setattr("trading.dispatch.USStockTrading", RaisingUSTrader)
+        async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
+            results["ticker"] = ticker
+            results["buy_amount"] = buy_amount
+            results["limit_price"] = limit_price
+            return {"success": True, "message": "split-buy"}
+
+    monkeypatch.setattr("trading.strategies.balance_split.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
 
     dispatcher = TradeDispatcher(
         trading_mode="demo",
-        strategy_basket_store=None,
-        strategy_state_store=None,
-        strategy_config={"name": "full_balance_rotation", "account_by_market": {"US": "us-rotation"}},
+        strategy_config={"name": "balance_split", "split_count": 2},
     )
-    dispatcher.strategy_basket_store.storage_path = tmp_path / "strategy_baskets.json"
-    dispatcher.strategy_state_store.storage_path = tmp_path / "strategy_state.json"
-    monkeypatch.setattr(dispatcher.full_balance_rotation, "execute", fake_execute)
-
-    signal = parse_signal_payload(
-        {
-            "type": "BUY",
-            "ticker": "AAPL",
-            "market": "US",
-            "price": 200,
-        }
-    )
+    signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200})
     result = await dispatcher.dispatch(signal)
 
     assert result.status == "executed"
-    assert dispatcher.strategy_basket_store.pending_count() == 0
+    assert results == {"mode": "demo", "ticker": "AAPL", "buy_amount": 400.0, "limit_price": 200.0}
+
+
+@pytest.mark.asyncio
+async def test_disabled_strategy_buy_uses_legacy_path(monkeypatch):
+    results = {}
+
+    class FakeUSTrader:
+        def __init__(self, mode):
+            results["mode"] = mode
+
+        async def async_buy_stock(self, ticker, limit_price=None):
+            results["ticker"] = ticker
+            results["limit_price"] = limit_price
+            return {"success": True, "message": "legacy-buy"}
+
+    monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+
+    dispatcher = TradeDispatcher(trading_mode="demo", strategy_config={"name": "", "split_count": 2})
+    signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200})
+    result = await dispatcher.dispatch(signal)
+
+    assert result.status == "executed"
+    assert results == {"mode": "demo", "ticker": "AAPL", "limit_price": 200.0}
+
