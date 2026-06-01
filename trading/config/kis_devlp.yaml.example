@@ -14,13 +14,12 @@ default_mode: demo
 # 신호 기반 전략 설정 (선택)
 # name:
 #   - "" : 기존 동작 유지 (전략 비활성화)
-#   - "full_balance_rotation" : 전체 잔고 회전 전략 사용
-# account_by_market:
-#   KR: 전략 전용 국내 계좌 이름
-#   US: 전략 전용 미국 계좌 이름
+#   - "balance_split" : 매 BUY 신호마다 현재 주문 가능 잔고의 1/split_count만 매수
+# split_count:
+#   2이면 현재 주문 가능 잔고의 1/2, 3이면 1/3, 4이면 1/4을 사용합니다.
 signal_strategy:
   name: ""
-  account_by_market: {}
+  split_count: 2
 
 # 기본 상품 코드
 # 01: 종합계좌, 03: 국내선물옵션, 08: 해외선물옵션, 22: 개인연금, 29: 퇴직연금
