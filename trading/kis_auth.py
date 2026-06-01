@@ -24,6 +24,8 @@ import hashlib
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
+from .buy_sizing import normalize_amount, normalize_percent
+
 import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
@@ -122,6 +124,8 @@ with open(config_file, encoding="UTF-8") as f:
 DEFAULT_PRODUCT_CODE = str(_cfg.get("default_product_code", "01"))
 DEFAULT_BUY_AMOUNT_KRW = int(_cfg.get("default_unit_amount", 0) or 0)
 DEFAULT_BUY_AMOUNT_USD = float(_cfg.get("default_unit_amount_usd", 0) or 0)
+DEFAULT_BUY_PERCENT_KRW = normalize_percent(_cfg.get("default_unit_asset_percent"))
+DEFAULT_BUY_PERCENT_USD = normalize_percent(_cfg.get("default_unit_asset_percent_usd"))
 MAX_CONFIGURED_ACCOUNTS = 10
 
 
@@ -180,12 +184,11 @@ def _to_bool(value: Any, default: bool = False) -> bool:
 
 
 def _normalize_buy_amount(value: Any) -> float | None:
-    if value is None or value == "":
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
+    return normalize_amount(value)
+
+
+def _normalize_buy_percent(value: Any) -> float | None:
+    return normalize_percent(value)
 
 
 def _build_normalized_account(
@@ -217,6 +220,16 @@ def _build_normalized_account(
         "primary": _to_bool(item.get("primary"), default=primary_default),
         "buy_amount_krw": _normalize_buy_amount(item.get("buy_amount_krw") or item.get("buy_amount")),
         "buy_amount_usd": _normalize_buy_amount(item.get("buy_amount_usd")),
+        "buy_percent_krw": _normalize_buy_percent(
+            item.get("buy_percent_krw")
+            if item.get("buy_percent_krw") is not None
+            else item.get("buy_asset_percent_krw", DEFAULT_BUY_PERCENT_KRW)
+        ),
+        "buy_percent_usd": _normalize_buy_percent(
+            item.get("buy_percent_usd")
+            if item.get("buy_percent_usd") is not None
+            else item.get("buy_asset_percent_usd", DEFAULT_BUY_PERCENT_USD)
+        ),
         # Per-account API credentials (optional; fall back to global my_app/my_sec if absent)
         "app_key": item.get("app_key") or item.get("appkey") or None,
         "app_secret": item.get("app_secret") or item.get("appsecret") or None,
@@ -254,6 +267,8 @@ def _build_legacy_accounts() -> list[dict[str, Any]]:
                     "primary": primary,
                     "buy_amount_krw": DEFAULT_BUY_AMOUNT_KRW,
                     "buy_amount_usd": DEFAULT_BUY_AMOUNT_USD,
+                    "buy_percent_krw": DEFAULT_BUY_PERCENT_KRW,
+                    "buy_percent_usd": DEFAULT_BUY_PERCENT_USD,
                 },
                 primary_default=primary,
             )

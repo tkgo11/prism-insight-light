@@ -31,6 +31,7 @@ TRADING_DIR = Path(__file__).parent
 PROJECT_ROOT = TRADING_DIR.parent
 
 from . import kis_auth as ka
+from .buy_sizing import build_buy_sizing, resolve_buy_amount
 
 # Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -184,6 +185,10 @@ class USStockTrading:
         self.product_code = self.account_config["product"]
         default_buy_amount = float(self.account_config.get("buy_amount_usd") or self.DEFAULT_BUY_AMOUNT)
         self.buy_amount = buy_amount if buy_amount is not None else default_buy_amount
+        self.buy_sizing = build_buy_sizing(
+            fixed_amount=self.buy_amount,
+            asset_percent=None if buy_amount is not None else self.account_config.get("buy_percent_usd"),
+        )
 
         # Authentication
         ka.auth(
@@ -296,6 +301,16 @@ class USStockTrading:
             logger.error(f"Error getting price: {str(e)}")
             return None
 
+    def _resolve_buy_amount(self, buy_amount: float | None = None) -> float:
+        if buy_amount is not None:
+            return float(buy_amount)
+        return resolve_buy_amount(
+            self.buy_sizing,
+            account_summary=self.get_account_summary() if self.buy_sizing.uses_asset_percent else None,
+            fallback_amount=float(self.buy_amount),
+            currency="USD",
+        )
+
     def calculate_buy_quantity(self, ticker: str, buy_amount: float = None,
                                exchange: str = None) -> int:
         """
@@ -309,7 +324,7 @@ class USStockTrading:
         Returns:
             Buyable quantity (0 if cannot buy)
         """
-        amount = buy_amount if buy_amount else self.buy_amount
+        amount = self._resolve_buy_amount(buy_amount)
 
         # Get current price
         price_info = self.get_current_price(ticker, exchange)
@@ -466,7 +481,7 @@ class USStockTrading:
         else:
             exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
 
-        amount = buy_amount if buy_amount else self.buy_amount
+        amount = self._resolve_buy_amount(buy_amount)
 
         # Calculate quantity based on limit price
         buy_quantity = math.floor(amount / limit_price)
@@ -777,7 +792,7 @@ class USStockTrading:
         else:
             exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
 
-        amount = buy_amount if buy_amount else self.buy_amount
+        amount = self._resolve_buy_amount(buy_amount)
 
         if not self.is_reserved_order_available():
             return self._reserved_window_closed(ticker, 'buy', limit_price)
@@ -1128,7 +1143,7 @@ class USStockTrading:
     async def _execute_buy_stock(self, ticker: str, buy_amount: float = None,
                                  exchange: str = None, limit_price: float = None) -> Dict[str, Any]:
         """Execute buy stock logic"""
-        amount = buy_amount if buy_amount else self.buy_amount
+        amount = self._resolve_buy_amount(buy_amount)
 
         result = {
             'success': False,

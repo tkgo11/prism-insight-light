@@ -143,3 +143,22 @@ def test_us_trader_uses_account_buy_amount_override(monkeypatch):
 def test_get_exchange_code_defaults():
     assert ust.get_exchange_code("AAPL") == "NASD"
     assert ust.get_exchange_code("IBM") == "NYSE"
+
+
+def test_us_percent_buy_amount_uses_total_assets_and_available_cap():
+    trader = ust.USStockTrading.__new__(ust.USStockTrading)
+    trader.buy_amount = 100.0
+    trader.buy_sizing = ust.build_buy_sizing(fixed_amount=100.0, asset_percent=10)
+    trader.get_account_summary = lambda: {"total_eval_amount": 5_000.0, "available_amount": 300.0}
+
+    assert trader._resolve_buy_amount() == 300.0
+
+
+def test_us_calculate_buy_quantity_uses_percent_resolved_amount():
+    trader = ust.USStockTrading.__new__(ust.USStockTrading)
+    trader.buy_amount = 100.0
+    trader.buy_sizing = ust.build_buy_sizing(fixed_amount=100.0, asset_percent=5)
+    trader.get_account_summary = lambda: {"total_eval_amount": 10_000.0, "available_amount": 9_000.0}
+    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 125.0}
+
+    assert trader.calculate_buy_quantity("AAPL") == 4

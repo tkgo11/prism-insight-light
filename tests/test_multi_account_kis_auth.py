@@ -23,6 +23,18 @@ def _patch_cfg(monkeypatch, cfg):
         float(cfg.get("default_unit_amount_usd", 0) or 0),
         raising=False,
     )
+    monkeypatch.setattr(
+        ka,
+        "DEFAULT_BUY_PERCENT_KRW",
+        ka.normalize_percent(cfg.get("default_unit_asset_percent")),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        ka,
+        "DEFAULT_BUY_PERCENT_USD",
+        ka.normalize_percent(cfg.get("default_unit_asset_percent_usd")),
+        raising=False,
+    )
 
 
 def _base_cfg():
@@ -71,6 +83,7 @@ def test_get_configured_accounts_normalizes_filters_and_preserves_overrides(monk
     assert us_demo_accounts[0]["account_key"] == "vps:33334444:01"
     assert us_demo_accounts[0]["primary"] is True
     assert us_demo_accounts[0]["buy_amount_usd"] == 123.45
+    assert us_demo_accounts[0]["buy_percent_usd"] is None
 
 
 def test_get_configured_accounts_does_not_cross_market_fallback(monkeypatch):
@@ -111,7 +124,40 @@ def test_get_configured_accounts_supports_legacy_fallback(monkeypatch):
     assert accounts[0]["primary"] is True
     assert accounts[0]["buy_amount_krw"] == 100000
     assert accounts[0]["buy_amount_usd"] == 250.0
+    assert accounts[0]["buy_percent_krw"] is None
+    assert accounts[0]["buy_percent_usd"] is None
     assert accounts[1]["account_key"] == "vps:12345678:01"
+
+
+def test_get_configured_accounts_preserves_percent_sizing(monkeypatch):
+    cfg = _base_cfg()
+    cfg.update({"default_unit_asset_percent": 1.5, "default_unit_asset_percent_usd": 2.5})
+    cfg["accounts"] = [
+        {
+            "name": "kr-demo",
+            "mode": "demo",
+            "account": "11112222",
+            "product": "01",
+            "market": "kr",
+            "buy_percent_krw": 3.0,
+        },
+        {
+            "name": "us-demo",
+            "mode": "demo",
+            "account": "33334444",
+            "product": "01",
+            "market": "us",
+        },
+    ]
+    _patch_cfg(monkeypatch, cfg)
+
+    kr_account = ka.get_configured_accounts(svr="demo", market="kr")[0]
+    us_account = ka.get_configured_accounts(svr="demo", market="us")[0]
+
+    assert kr_account["buy_percent_krw"] == 3.0
+    assert kr_account["buy_percent_usd"] == 2.5
+    assert us_account["buy_percent_krw"] == 1.5
+    assert us_account["buy_percent_usd"] == 2.5
 
 
 def test_resolve_account_prefers_primary_then_first(monkeypatch):
