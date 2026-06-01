@@ -141,3 +141,22 @@ def test_domestic_trader_uses_account_buy_amount_override(monkeypatch):
 
     assert trader.buy_amount == 54321
     assert trader.account_key == "vps:10101010:01"
+
+
+def test_domestic_percent_buy_amount_uses_total_assets_and_available_cap():
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.buy_amount = 10_000
+    trader.buy_sizing = dst.build_buy_sizing(fixed_amount=10_000, asset_percent=5)
+    trader.get_account_summary = lambda: {"total_eval_amount": 1_000_000, "available_amount": 40_000}
+
+    assert trader._resolve_buy_amount() == 40_000
+
+
+def test_domestic_calculate_buy_quantity_uses_percent_resolved_amount(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.buy_amount = 10_000
+    trader.buy_sizing = dst.build_buy_sizing(fixed_amount=10_000, asset_percent=2)
+    trader.get_account_summary = lambda: {"total_eval_amount": 1_000_000, "available_amount": 900_000}
+    trader.get_current_price = lambda stock_code: {"current_price": 8_000}
+
+    assert trader.calculate_buy_quantity("005930") == 2
