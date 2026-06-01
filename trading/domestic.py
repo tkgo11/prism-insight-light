@@ -26,6 +26,7 @@ from .kis_auth import (
     CredentialMismatchError,
     TokenRequestError
 )
+from .buy_sizing import build_buy_sizing, resolve_buy_amount
 
 # Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -86,6 +87,10 @@ class DomesticStockTrading:
         self.product_code = self.account_config["product"]
         default_buy_amount = int(self.account_config.get("buy_amount_krw") or self.DEFAULT_BUY_AMOUNT)
         self.buy_amount = buy_amount if buy_amount is not None else default_buy_amount
+        self.buy_sizing = build_buy_sizing(
+            fixed_amount=self.buy_amount,
+            asset_percent=None if buy_amount is not None else self.account_config.get("buy_percent_krw"),
+        )
 
         # Authentication with improved error handling
         try:
@@ -231,6 +236,16 @@ class DomesticStockTrading:
             logger.error(f"Error getting current price: {str(e)}")
             return None
 
+    def _resolve_buy_amount(self, buy_amount: int | float | None = None) -> float:
+        if buy_amount is not None:
+            return float(buy_amount)
+        return resolve_buy_amount(
+            self.buy_sizing,
+            account_summary=self.get_account_summary() if self.buy_sizing.uses_asset_percent else None,
+            fallback_amount=float(self.buy_amount),
+            currency="KRW",
+        )
+
     def calculate_buy_quantity(self, stock_code: str, buy_amount: int = None) -> int:
         """
         Calculate buyable quantity
@@ -242,7 +257,7 @@ class DomesticStockTrading:
         Returns:
             Buyable quantity (0 if cannot buy)
         """
-        amount = buy_amount if buy_amount else self.buy_amount
+        amount = self._resolve_buy_amount(buy_amount)
 
         # Get current price
         current_price_info = self.get_current_price(stock_code)
@@ -409,7 +424,7 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute buy order. (AUTO_TRADING=False)'
             }
 
-        amount = buy_amount if buy_amount else self.buy_amount
+        amount = self._resolve_buy_amount(buy_amount)
 
         # Calculate buyable quantity (based on limit price)
         buy_quantity = math.floor(amount / limit_price)
@@ -649,7 +664,7 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute buy order. (AUTO_TRADING=False)'
             }
 
-        amount = buy_amount if buy_amount else self.buy_amount
+        amount = self._resolve_buy_amount(buy_amount)
 
         # Set order type and unit price
         if limit_price and limit_price > 0:
@@ -1133,7 +1148,7 @@ class DomesticStockTrading:
 
     async def _execute_buy_stock(self, stock_code: str, buy_amount: int = None, limit_price: int = None) -> Dict[str, Any]:
         # Use class default if buy_amount is None
-        amount = buy_amount if buy_amount else self.buy_amount
+        amount = self._resolve_buy_amount(buy_amount)
 
         result = {
             'success': False,
