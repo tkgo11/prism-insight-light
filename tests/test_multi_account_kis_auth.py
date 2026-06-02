@@ -245,3 +245,113 @@ def test_get_configured_accounts_rejects_too_many_accounts(monkeypatch):
 
     with pytest.raises(ValueError, match="Too many accounts configured"):
         ka.get_configured_accounts()
+
+class _FakeResponse:
+    def __init__(self, status_code, payload):
+        self.status_code = status_code
+        self._payload = payload
+        self.text = payload if isinstance(payload, str) else __import__("json").dumps(payload, ensure_ascii=False)
+        self.headers = {}
+
+    def json(self):
+        if isinstance(self._payload, str):
+            return __import__("json").loads(self._payload)
+        return self._payload
+
+
+def test_url_fetch_retries_kis_rate_limit_then_succeeds(monkeypatch):
+    calls = []
+    sleeps = []
+
+    class Env:
+        my_url = "https://example.com"
+
+    monkeypatch.setattr(ka, "getTREnv", lambda: Env())
+    monkeypatch.setattr(ka, "_getBaseHeader", lambda: {})
+    monkeypatch.setattr(ka, "isPaperTrading", lambda: False)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 3)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_BASE_SECONDS", 0.25)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_MAX_SECONDS", 1.0)
+    monkeypatch.setattr(ka.time, "sleep", lambda seconds: sleeps.append(seconds))
+
+    def fake_post(url, headers, data):
+        calls.append((url, headers, data))
+        if len(calls) == 1:
+            return _FakeResponse(
+                500,
+                {
+                    "rt_cd": "1",
+                    "msg_cd": "EGW00201",
+                    "msg1": "원장에서 허용 가능한 초당 거래건수를 초과하였습니다.",
+                },
+            )
+        return _FakeResponse(200, {"rt_cd": "0", "msg_cd": "0", "msg1": "OK", "output": {}})
+
+    monkeypatch.setattr(ka.requests, "post", fake_post)
+
+    response = ka._url_fetch("/uapi/test", "TTTC0012U", "", {"PDNO": "085620"}, postFlag=True)
+
+    assert response.isOK()
+    assert len(calls) == 2
+    assert sleeps == [0.25]
+
+
+def test_url_fetch_stops_after_configured_rate_limit_retries(monkeypatch):
+    calls = []
+    sleeps = []
+
+    class Env:
+        my_url = "https://example.com"
+
+    monkeypatch.setattr(ka, "getTREnv", lambda: Env())
+    monkeypatch.setattr(ka, "_getBaseHeader", lambda: {})
+    monkeypatch.setattr(ka, "isPaperTrading", lambda: False)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 2)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_BASE_SECONDS", 0.5)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_MAX_SECONDS", 1.0)
+    monkeypatch.setattr(ka.time, "sleep", lambda seconds: sleeps.append(seconds))
+
+    def fake_get(url, headers, params):
+        calls.append((url, headers, params))
+        return _FakeResponse(
+            500,
+            {
+                "rt_cd": "1",
+                "msg_cd": "EGW00201",
+                "msg1": "원장에서 허용 가능한 초당 거래건수를 초과하였습니다.",
+            },
+        )
+
+    monkeypatch.setattr(ka.requests, "get", fake_get)
+
+    response = ka._url_fetch("/uapi/test", "FHKST01010100", "", {"fid_input_iscd": "085620"})
+
+    assert not response.isOK()
+    assert response.getErrorCode() == "EGW00201"
+    assert len(calls) == 2
+    assert sleeps == [0.5]
+
+
+def test_url_fetch_does_not_retry_non_rate_limit_errors(monkeypatch):
+    calls = []
+
+    class Env:
+        my_url = "https://example.com"
+
+    monkeypatch.setattr(ka, "getTREnv", lambda: Env())
+    monkeypatch.setattr(ka, "_getBaseHeader", lambda: {})
+    monkeypatch.setattr(ka, "isPaperTrading", lambda: False)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 3)
+    monkeypatch.setattr(ka.time, "sleep", lambda seconds: pytest.fail("unexpected retry sleep"))
+
+    def fake_get(url, headers, params):
+        calls.append((url, headers, params))
+        return _FakeResponse(500, {"rt_cd": "1", "msg_cd": "OTHER", "msg1": "other failure"})
+
+    monkeypatch.setattr(ka.requests, "get", fake_get)
+
+    response = ka._url_fetch("/uapi/test", "FHKST01010100", "", {})
+
+    assert not response.isOK()
+    assert response.getErrorCode() == "OTHER"
+    assert len(calls) == 1
