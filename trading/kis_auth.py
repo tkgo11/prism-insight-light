@@ -72,6 +72,13 @@ class TokenRequestError(KISAuthError):
         self.status_code = status_code
         self.response_text = response_text
 
+
+KIS_RATE_LIMIT_ERROR_CODE = "EGW00201"
+KIS_RATE_LIMIT_RETRY_ATTEMPTS = int(os.environ.get("KIS_RATE_LIMIT_RETRY_ATTEMPTS", "10"))
+KIS_RATE_LIMIT_RETRY_BASE_SECONDS = float(os.environ.get("KIS_RATE_LIMIT_RETRY_BASE_SECONDS", "1.0"))
+KIS_RATE_LIMIT_RETRY_MAX_SECONDS = float(os.environ.get("KIS_RATE_LIMIT_RETRY_MAX_SECONDS", "5.0"))
+
+
 clearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
 
 key_bytes = 32
@@ -1327,6 +1334,13 @@ class APIRespError(APIResp):
         self.error_text = error_text
         self._error_code = str(status_code)
         self._error_message = error_text
+        try:
+            payload = json.loads(error_text) if isinstance(error_text, str) else {}
+        except json.JSONDecodeError:
+            payload = {}
+        if isinstance(payload, dict):
+            self._error_code = str(payload.get("msg_cd") or payload.get("code") or status_code)
+            self._error_message = str(payload.get("msg1") or payload.get("message") or error_text)
 
     def isOK(self):
         return False
@@ -1367,6 +1381,26 @@ class APIRespError(APIResp):
             print(f"URL: {url}")
 
 
+def _is_kis_rate_limit_response(res) -> bool:
+    try:
+        return res.getErrorCode() == KIS_RATE_LIMIT_ERROR_CODE
+    except Exception:
+        return False
+
+
+def _kis_retry_delay_seconds(attempt_index: int) -> float:
+    base_seconds = max(0.0, KIS_RATE_LIMIT_RETRY_BASE_SECONDS)
+    max_seconds = max(base_seconds, KIS_RATE_LIMIT_RETRY_MAX_SECONDS)
+    return min(max_seconds, base_seconds * (2 ** max(0, attempt_index - 1)))
+
+
+def _request_once(url: str, headers: dict[str, Any], params: dict[str, Any], *, postFlag: bool):
+    if postFlag:
+        return requests.post(url, headers=headers, data=json.dumps(params))
+    return requests.get(url, headers=headers, params=params)
+
+
+
 ########### API call wrapping : Common API call
 
 
@@ -1398,20 +1432,34 @@ def _url_fetch(
         print(f"<header>\n{headers}")
         print(f"<body>\n{params}")
 
-    if postFlag:
-        # if (hashFlag): set_order_hash_key(headers, params)
-        res = requests.post(url, headers=headers, data=json.dumps(params))
-    else:
-        res = requests.get(url, headers=headers, params=params)
+    attempts = max(1, KIS_RATE_LIMIT_RETRY_ATTEMPTS)
+    for attempt in range(1, attempts + 1):
+        res = _request_once(url, headers, params, postFlag=postFlag)
 
-    if res.status_code == 200:
-        ar = APIResp(res)
-        if _DEBUG:
-            ar.printAll()
-        return ar
-    else:
-        print("Error Code : " + str(res.status_code) + " | " + res.text)
-        return APIRespError(res.status_code, res.text)
+        if res.status_code == 200:
+            ar = APIResp(res)
+            if _DEBUG:
+                ar.printAll()
+            return ar
+
+        error_response = APIRespError(res.status_code, res.text)
+        if not _is_kis_rate_limit_response(error_response) or attempt >= attempts:
+            print("Error Code : " + str(res.status_code) + " | " + res.text)
+            return error_response
+
+        delay_seconds = _kis_retry_delay_seconds(attempt)
+        logging.warning(
+            "KIS API rate limit %s from %s (TR %s); retrying attempt %s/%s after %.2fs",
+            KIS_RATE_LIMIT_ERROR_CODE,
+            api_url,
+            tr_id,
+            attempt + 1,
+            attempts,
+            delay_seconds,
+        )
+        time.sleep(delay_seconds)
+
+    return APIRespError(599, "KIS API retry loop exhausted unexpectedly")
 
 
 # auth()
