@@ -72,10 +72,11 @@ class TradeDispatcher:
                 )
                 return DispatchResult("queued", f"Queued for {queued_signal.execute_at}", signal.signal_type, signal.market)
             logger.warning(
-                "Rejected %s %s(%s): market closed in real mode",
+                "Rejected %s %s(%s) on %s market: market closed in real mode",
                 signal.signal_type,
                 signal.company_name,
                 signal.ticker,
+                signal.market,
             )
             return DispatchResult("rejected", "Market closed in real mode", signal.signal_type, signal.market)
 
