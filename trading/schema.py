@@ -11,6 +11,12 @@ SUPPORTED_SIGNAL_TYPES = {"BUY", "SELL", "EVENT"}
 SUPPORTED_MARKETS = {"KR", "US"}
 
 
+def infer_market(ticker: str) -> str:
+    """Infer market from ticker shape when upstream payload omits it."""
+
+    return "KR" if ticker.strip().isdigit() else "US"
+
+
 class SignalValidationError(ValueError):
     """Raised when an inbound trading signal is malformed."""
 
@@ -67,12 +73,13 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
     if signal_type not in SUPPORTED_SIGNAL_TYPES:
         raise SignalValidationError(f"Unsupported signal type '{payload.get('type')}'")
 
-    market = str(payload.get("market", "KR")).strip().upper() or "KR"
-    if market not in SUPPORTED_MARKETS:
-        raise SignalValidationError(f"Unsupported market '{payload.get('market')}'")
-
     ticker = str(payload.get("ticker", "")).strip().upper()
     company_name = str(payload.get("company_name", "")).strip()
+
+    market_value = payload.get("market")
+    market = str(market_value).strip().upper() if market_value not in (None, "") else infer_market(ticker)
+    if market not in SUPPORTED_MARKETS:
+        raise SignalValidationError(f"Unsupported market '{payload.get('market')}'")
 
     if signal_type in {"BUY", "SELL"} and not ticker:
         raise SignalValidationError("Trading signals require 'ticker'")
