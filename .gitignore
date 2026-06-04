@@ -6,3 +6,7 @@ __pycache__/
 logs/
 runtime/
 trading/config/kis_devlp.yaml
+
+prism-insight-*.json
+trading/config/.token_key
+trading/config/KIS_acct_*.token
