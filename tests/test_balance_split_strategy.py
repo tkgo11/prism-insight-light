@@ -21,12 +21,19 @@ class FakeUSTrader:
 
 
 class FakeKRTrader:
-    def __init__(self, *, available_amount=10000):
+    def __init__(self, *, available_amount=10000, deposit=None, total_cash=None):
         self.available_amount = available_amount
+        self.deposit = deposit
+        self.total_cash = total_cash
         self.buy_calls = []
 
     def get_account_summary(self):
-        return {"available_amount": self.available_amount}
+        summary = {"available_amount": self.available_amount}
+        if self.deposit is not None:
+            summary["deposit"] = self.deposit
+        if self.total_cash is not None:
+            summary["total_cash"] = self.total_cash
+        return summary
 
     async def async_buy_stock(self, stock_code, buy_amount=None, limit_price=None):
         self.buy_calls.append((stock_code, buy_amount, limit_price))
@@ -80,3 +87,18 @@ async def test_balance_split_fails_without_available_balance():
 
     assert result.status == "failed"
     assert trader.buy_calls == []
+
+
+@pytest.mark.asyncio
+async def test_kr_balance_split_falls_back_to_deposit_when_orderable_cash_is_zero():
+    trader = FakeKRTrader(available_amount=0, deposit=5795394, total_cash=5795394)
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=5))
+    signal = parse_signal_payload({"type": "BUY", "ticker": "031330", "market": "KR", "price": 18860})
+
+    result = await strategy._execute_kr(signal, trader=trader)
+
+    assert result.status == "executed"
+    assert result.available_amount == 5795394
+    assert result.buy_amount == 1159078.0
+    assert result.cash_source == "deposit"
+    assert trader.buy_calls == [("031330", 1159078, 18860)]
