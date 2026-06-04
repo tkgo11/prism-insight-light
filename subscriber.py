@@ -70,11 +70,12 @@ def _handle_message(message, dispatcher: TradeDispatcher, logger: logging.Logger
         signal = parse_signal_bytes(message.data)
         result = asyncio.run(dispatcher.dispatch(signal))
         active_logger.info(
-            "Handled %s %s(%s) -> %s",
+            "Handled %s %s(%s) -> %s: %s",
             signal.signal_type,
             signal.company_name,
             signal.ticker,
             result.status,
+            result.message,
         )
     except SignalValidationError as exc:
         active_logger.warning("Acknowledging invalid signal: %s", exc)
