@@ -1526,7 +1526,9 @@ class DomesticStockTrading:
                     logger.info(f"Account summary: Total eval {account_summary['total_eval_amount']:,.0f} KRW, "
                                 f"profit/loss {account_summary['total_profit_amount']:+,.0f} KRW "
                                 f"({account_summary['total_profit_rate']:+.2f}%), "
-                                f"total cash(incl D+2) {account_summary['total_cash']:,.0f} KRW")
+                                f"deposit {account_summary['deposit']:,.0f} KRW, "
+                                f"total cash(incl D+2) {account_summary['total_cash']:,.0f} KRW, "
+                                f"orderable cash {account_summary['available_amount']:,.0f} KRW")
 
                     return account_summary
 
