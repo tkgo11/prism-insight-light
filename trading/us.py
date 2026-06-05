@@ -20,6 +20,7 @@ import datetime
 import logging
 import math
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Dict, List, Any
 
@@ -91,6 +92,64 @@ def _safe_int(value, default: int = 0) -> int:
         return int(float(value))  # Handle "123.0" string case
     except (ValueError, TypeError):
         return default
+
+
+@dataclass(frozen=True)
+class AutoExchangeConfig:
+    """Opt-in KRW-to-USD auto-exchange settings for US stock buys."""
+
+    enabled: bool = False
+    buffer_percent: float = 2.0
+    max_krw: float | None = None
+    min_shortfall_usd: float = 1.0
+
+
+def _cfg_bool(value: Any, default: bool = False) -> bool:
+    if value is None or value == "":
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+    return default
+
+
+def _cfg_positive_float(value: Any, default: float | None = None) -> float | None:
+    if value is None or value == "":
+        return default
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return default
+    return parsed if parsed > 0 else default
+
+
+def build_auto_exchange_config(account_config: dict[str, Any] | None) -> AutoExchangeConfig:
+    account_config = account_config or {}
+    enabled = _cfg_bool(
+        account_config.get("auto_exchange_usd_on_buy"),
+        _cfg_bool(_cfg.get("auto_exchange_usd_on_buy"), False),
+    )
+    buffer_percent = _cfg_positive_float(
+        account_config.get("auto_exchange_buffer_percent"),
+        _cfg_positive_float(_cfg.get("auto_exchange_buffer_percent"), 2.0),
+    )
+    max_krw = _cfg_positive_float(
+        account_config.get("max_auto_exchange_krw"),
+        _cfg_positive_float(_cfg.get("max_auto_exchange_krw"), None),
+    )
+    min_shortfall_usd = _cfg_positive_float(
+        account_config.get("auto_exchange_min_shortfall_usd"),
+        _cfg_positive_float(_cfg.get("auto_exchange_min_shortfall_usd"), 1.0),
+    )
+    return AutoExchangeConfig(
+        enabled=enabled,
+        buffer_percent=float(buffer_percent if buffer_percent is not None else 2.0),
+        max_krw=max_krw,
+        min_shortfall_usd=float(min_shortfall_usd if min_shortfall_usd is not None else 1.0),
+    )
 
 # Exchange code mapping (for trading/portfolio APIs using OVRS_EXCG_CD)
 EXCHANGE_CODES = {
@@ -189,6 +248,7 @@ class USStockTrading:
             fixed_amount=self.buy_amount,
             asset_percent=None if buy_amount is not None else self.account_config.get("buy_percent_usd"),
         )
+        self.auto_exchange = build_auto_exchange_config(self.account_config)
 
         # Authentication
         ka.auth(
@@ -311,6 +371,108 @@ class USStockTrading:
             currency="USD",
         )
 
+    def get_overseas_buyable_amount(self, ticker: str, price: float, exchange: str = None) -> Dict[str, Any]:
+        """Return KIS overseas buyability fields, including after-exchange amount.
+
+        KIS exposes ``echm_af_ord_psbl_amt`` (amount orderable after exchange),
+        which is the safest available API surface for opt-in auto-exchange because
+        the actual currency conversion is performed by KIS as part of the overseas
+        buying-power calculation/order flow rather than by this bot placing a
+        separate, poorly documented FX order.
+        """
+        if exchange is None:
+            exchange = get_exchange_code(ticker)
+        else:
+            exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
+
+        api_url = "/uapi/overseas-stock/v1/trading/inquire-psamount"
+        tr_id = "TTTS3007R" if self.mode == "real" else "VTTS3007R"
+        params = {
+            "CANO": self.trenv.my_acct,
+            "ACNT_PRDT_CD": self.trenv.my_prod,
+            "OVRS_EXCG_CD": exchange,
+            "OVRS_ORD_UNPR": f"{price:.8f}".rstrip("0").rstrip("."),
+            "ITEM_CD": ticker.upper(),
+        }
+
+        res = self._request(api_url, tr_id, params)
+        if not res.isOK():
+            error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
+            logger.warning("[%s] Overseas buyable amount inquiry failed: %s", ticker, error_msg)
+            return {}
+
+        output = getattr(res.getBody(), "output", {})
+        if isinstance(output, list):
+            output = output[0] if output else {}
+        return output or {}
+
+    def _resolve_orderable_usd(self, ticker: str, requested_amount: float, price: float, exchange: str) -> tuple[float, Dict[str, Any]]:
+        """Resolve USD that may be submitted, optionally including KIS auto-exchange buying power."""
+        summary = self.get_account_summary() or {}
+        usd_cash = _safe_float(summary.get("available_amount"), _safe_float(summary.get("usd_cash")))
+        if usd_cash >= requested_amount:
+            return requested_amount, {"usd_cash": usd_cash, "auto_exchange_used": False}
+
+        info = {"usd_cash": usd_cash, "auto_exchange_used": False}
+        shortfall = requested_amount - usd_cash
+        if not self.auto_exchange.enabled:
+            if usd_cash > 0:
+                logger.info(
+                    "[%s] Capping buy amount %.2f USD to available USD cash %.2f; auto exchange is disabled",
+                    ticker,
+                    requested_amount,
+                    usd_cash,
+                )
+                return usd_cash, info
+            return requested_amount, info
+
+        if shortfall < self.auto_exchange.min_shortfall_usd:
+            return min(requested_amount, usd_cash), info
+
+        buyable = self.get_overseas_buyable_amount(ticker, price, exchange)
+        if not buyable:
+            return min(requested_amount, usd_cash) if usd_cash > 0 else requested_amount, info
+
+        current_orderable = _safe_float(buyable.get("ord_psbl_frcr_amt"))
+        after_exchange_orderable = _safe_float(
+            buyable.get("echm_af_ord_psbl_amt"),
+            _safe_float(buyable.get("ovrs_ord_psbl_amt")),
+        )
+        exchange_rate = _safe_float(buyable.get("exrt"), _safe_float(summary.get("exchange_rate")))
+        orderable_usd = max(usd_cash, current_orderable, after_exchange_orderable)
+
+        if self.auto_exchange.max_krw is not None and exchange_rate > 0:
+            max_exchange_usd = self.auto_exchange.max_krw / exchange_rate
+            orderable_usd = min(orderable_usd, usd_cash + max_exchange_usd)
+
+        if orderable_usd <= usd_cash:
+            return min(requested_amount, usd_cash) if usd_cash > 0 else requested_amount, info
+
+        resolved = min(requested_amount, orderable_usd)
+        info.update(
+            {
+                "auto_exchange_used": resolved > usd_cash,
+                "exchange_rate": exchange_rate,
+                "orderable_after_exchange_usd": after_exchange_orderable,
+            }
+        )
+        if resolved < requested_amount:
+            logger.info(
+                "[%s] Capping buy amount %.2f USD to KIS after-exchange buying power %.2f USD",
+                ticker,
+                requested_amount,
+                resolved,
+            )
+        elif resolved > usd_cash:
+            logger.info(
+                "[%s] Auto-exchange enabled: USD cash %.2f, KIS after-exchange buying power %.2f, requested %.2f",
+                ticker,
+                usd_cash,
+                after_exchange_orderable,
+                requested_amount,
+            )
+        return resolved, info
+
     def calculate_buy_quantity(self, ticker: str, buy_amount: float = None,
                                exchange: str = None) -> int:
         """
@@ -324,30 +486,44 @@ class USStockTrading:
         Returns:
             Buyable quantity (0 if cannot buy)
         """
+        amount, _ = self._calculate_buy_quantity_inputs(ticker, buy_amount, exchange)
+        return amount
+
+    def _calculate_buy_quantity_inputs(self, ticker: str, buy_amount: float = None,
+                                       exchange: str = None) -> tuple[int, Dict[str, Any]]:
         amount = self._resolve_buy_amount(buy_amount)
 
-        # Get current price
         price_info = self.get_current_price(ticker, exchange)
         if not price_info:
-            return 0
+            return 0, {"requested_amount": amount}
 
         current_price = price_info['current_price']
-
-        # Safety check for division by zero
         if current_price <= 0:
             logger.error(f"[{ticker}] Invalid current price: ${current_price}")
-            return 0
+            return 0, {"requested_amount": amount, "current_price": current_price}
 
-        # Calculate quantity (floor)
-        quantity = math.floor(amount / current_price)
+        resolved_amount, exchange_info = self._resolve_orderable_usd(
+            ticker,
+            amount,
+            current_price,
+            EXCHANGE_CODES.get(exchange.upper(), exchange) if exchange else get_exchange_code(ticker),
+        )
+
+        quantity = math.floor(resolved_amount / current_price)
 
         if quantity == 0:
-            logger.warning(f"[{ticker}] Price ${current_price:.2f} > Amount ${amount:.2f} - Cannot buy")
+            logger.warning(f"[{ticker}] Price ${current_price:.2f} > Amount ${resolved_amount:.2f} - Cannot buy")
         else:
             total = quantity * current_price
             logger.info(f"[{ticker}] Buyable: {quantity} shares x ${current_price:.2f} = ${total:.2f}")
 
-        return quantity
+        info = {
+            "requested_amount": amount,
+            "resolved_amount": resolved_amount,
+            "current_price": current_price,
+            **exchange_info,
+        }
+        return quantity, info
 
     def buy_market_price(self, ticker: str, buy_amount: float = None,
                          exchange: str = None) -> Dict[str, Any]:
@@ -382,8 +558,8 @@ class USStockTrading:
         else:
             exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
 
-        # Calculate buy quantity
-        buy_quantity = self.calculate_buy_quantity(ticker, buy_amount, exchange)
+        # Calculate buy quantity, including optional KIS after-exchange buying power
+        buy_quantity, buy_info = self._calculate_buy_quantity_inputs(ticker, buy_amount, exchange)
 
         if buy_quantity == 0:
             return {
@@ -428,6 +604,7 @@ class USStockTrading:
                     'order_no': order_no,
                     'ticker': ticker,
                     'quantity': buy_quantity,
+                    'auto_exchange_used': buy_info.get('auto_exchange_used', False),
                     'message': f'Market buy order completed ({buy_quantity} shares)'
                 }
             else:
@@ -439,6 +616,7 @@ class USStockTrading:
                     'order_no': None,
                     'ticker': ticker,
                     'quantity': buy_quantity,
+                    'auto_exchange_used': buy_info.get('auto_exchange_used', False),
                     'message': f'Buy order failed: {error_msg}'
                 }
 
@@ -482,6 +660,7 @@ class USStockTrading:
             exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
 
         amount = self._resolve_buy_amount(buy_amount)
+        amount, buy_info = self._resolve_orderable_usd(ticker, amount, limit_price, exchange)
 
         # Calculate quantity based on limit price
         buy_quantity = math.floor(amount / limit_price)
@@ -530,6 +709,7 @@ class USStockTrading:
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
+                    'auto_exchange_used': buy_info.get('auto_exchange_used', False),
                     'message': f'Limit buy order completed ({buy_quantity} shares x ${limit_price:.2f})'
                 }
             else:
@@ -542,6 +722,7 @@ class USStockTrading:
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
+                    'auto_exchange_used': buy_info.get('auto_exchange_used', False),
                     'message': f'Buy order failed: {error_msg}'
                 }
 

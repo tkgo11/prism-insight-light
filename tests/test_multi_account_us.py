@@ -162,3 +162,94 @@ def test_us_calculate_buy_quantity_uses_percent_resolved_amount():
     trader.get_current_price = lambda ticker, exchange=None: {"current_price": 125.0}
 
     assert trader.calculate_buy_quantity("AAPL") == 4
+
+
+class _FakeKISResponse:
+    def __init__(self, ok=True, output=None):
+        self.ok = ok
+        self.output = output or {}
+
+    def isOK(self):
+        return self.ok
+
+    def getBody(self):
+        return SimpleNamespace(output=self.output)
+
+    def getErrorCode(self):
+        return "ERR"
+
+    def getErrorMessage(self):
+        return "failed"
+
+
+def _bare_us_trader(*, auto_exchange=False, max_krw=None):
+    trader = ust.USStockTrading.__new__(ust.USStockTrading)
+    trader.mode = "demo"
+    trader.buy_amount = 100.0
+    trader.buy_sizing = ust.build_buy_sizing(fixed_amount=100.0, asset_percent=None)
+    trader.auto_exchange = ust.AutoExchangeConfig(enabled=auto_exchange, max_krw=max_krw)
+    trader.trenv = SimpleNamespace(my_acct="90909090", my_prod="01")
+    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 50.0}
+    return trader
+
+
+def test_us_buy_quantity_caps_to_usd_cash_when_auto_exchange_disabled():
+    trader = _bare_us_trader(auto_exchange=False)
+    trader.get_account_summary = lambda: {"available_amount": 40.0, "usd_cash": 40.0, "exchange_rate": 1300.0}
+    trader.get_overseas_buyable_amount = lambda *args, **kwargs: {"echm_af_ord_psbl_amt": "100.00"}
+
+    assert trader.calculate_buy_quantity("AAPL") == 0
+
+
+def test_us_buy_quantity_uses_kis_after_exchange_buying_power_when_enabled():
+    trader = _bare_us_trader(auto_exchange=True)
+    trader.get_account_summary = lambda: {"available_amount": 40.0, "usd_cash": 40.0, "exchange_rate": 1300.0}
+    trader.get_overseas_buyable_amount = lambda *args, **kwargs: {
+        "ord_psbl_frcr_amt": "40.00",
+        "echm_af_ord_psbl_amt": "100.00",
+        "exrt": "1300.00",
+    }
+
+    assert trader.calculate_buy_quantity("AAPL") == 2
+
+
+def test_us_after_exchange_buying_power_respects_max_auto_exchange_krw():
+    trader = _bare_us_trader(auto_exchange=True, max_krw=13_000.0)
+    trader.get_account_summary = lambda: {"available_amount": 40.0, "usd_cash": 40.0, "exchange_rate": 1300.0}
+    trader.get_overseas_buyable_amount = lambda *args, **kwargs: {
+        "ord_psbl_frcr_amt": "40.00",
+        "echm_af_ord_psbl_amt": "100.00",
+        "exrt": "1300.00",
+    }
+
+    assert trader.calculate_buy_quantity("AAPL") == 1
+
+
+def test_get_overseas_buyable_amount_calls_kis_inquire_psamount():
+    trader = _bare_us_trader(auto_exchange=True)
+    requests = []
+
+    def fake_request(api_url, tr_id, params, **kwargs):
+        requests.append((api_url, tr_id, params, kwargs))
+        return _FakeKISResponse(output={"echm_af_ord_psbl_amt": "123.45", "exrt": "1301.50"})
+
+    trader._request = fake_request
+
+    assert trader.get_overseas_buyable_amount("AAPL", 50.0, "NASD") == {
+        "echm_af_ord_psbl_amt": "123.45",
+        "exrt": "1301.50",
+    }
+    assert requests == [
+        (
+            "/uapi/overseas-stock/v1/trading/inquire-psamount",
+            "VTTS3007R",
+            {
+                "CANO": "90909090",
+                "ACNT_PRDT_CD": "01",
+                "OVRS_EXCG_CD": "NASD",
+                "OVRS_ORD_UNPR": "50",
+                "ITEM_CD": "AAPL",
+            },
+            {},
+        )
+    ]
