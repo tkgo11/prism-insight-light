@@ -96,6 +96,18 @@ Recommended first-run flow:
 4. run with `--dry-run`;
 5. only then configure real accounts if needed.
 
+
+### Optional USD auto-exchange for US buys
+
+US stock buy sizes are configured in USD. By default the bot only uses existing USD buying power. If you want KIS to use KRW-to-USD exchange buying power for US stock buys, enable it explicitly in `trading/config/kis_devlp.yaml`:
+
+```yaml
+auto_exchange_usd_on_buy: true
+max_auto_exchange_krw: 500000   # optional per-order KRW cap
+```
+
+The implementation uses the KIS overseas stock buyable-amount inquiry field `echm_af_ord_psbl_amt` (amount orderable after exchange) and then submits the normal US stock order. Test with `default_mode: demo` or a small real order before relying on it.
+
 ## Pub/Sub readiness check
 
 Run this from the repository root on the host/source tree:
