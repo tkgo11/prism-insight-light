@@ -28,6 +28,14 @@ default_unit_amount_usd: 100     # 미국 주식 1회 기본 매수 금액 (USD)
 default_unit_asset_percent: null      # 예: 2.5 => 전체 자산의 2.5%를 한국 주식 1회 매수 금액으로 사용
 default_unit_asset_percent_usd: null  # 예: 2.5 => 전체 자산의 2.5%를 미국 주식 1회 매수 금액으로 사용
 
+# 미국 주식 매수 시 USD 예수금이 부족하면 KIS의 해외주식 매수가능금액조회
+# (환전이후주문가능금액)를 사용해 원화->USD 자동환전 가능 범위까지 주문합니다.
+# 기본값은 안전을 위해 false입니다. 실전 사용 전 demo/소액으로 반드시 검증하세요.
+auto_exchange_usd_on_buy: false
+max_auto_exchange_krw: null          # 예: 500000 => 1회 자동환전 사용 한도(KRW). null이면 KIS 가능 금액까지 사용
+auto_exchange_min_shortfall_usd: 1.0 # USD 부족액이 이 값 이상일 때만 자동환전 가능 금액을 조회
+
+
 # 기본 상품 코드
 # 일반 주식 계좌는 보통 "01" 그대로 사용합니다.
 # 01: 종합계좌, 03: 국내선물옵션, 08: 해외선물옵션, 22: 개인연금, 29: 퇴직연금
@@ -99,6 +107,8 @@ accounts:
   #   buy_amount_usd: 200
   #   buy_percent_krw: 2.5   # 전체 자산의 2.5%를 한국 주식 1회 매수 금액으로 사용
   #   buy_percent_usd: 2.5   # 전체 자산의 2.5%를 미국 주식 1회 매수 금액으로 사용
+  #   auto_exchange_usd_on_buy: true  # 이 계좌에서만 미국 주식 매수 시 KIS 환전이후주문가능금액 사용
+  #   max_auto_exchange_krw: 500000    # 이 계좌의 1회 자동환전 사용 한도(KRW)
 
 # -----------------------------------------------------------------------------
 # 4. 선택 설정
