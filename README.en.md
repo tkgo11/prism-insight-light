@@ -287,6 +287,37 @@ bash setup_subscriber_docker_crontab.sh
 
 `setup_subscriber_docker_crontab.sh` creates the container once with the current settings, then uses `docker start` / `docker stop` on the market-hours schedule. If you change `.env`, rerun the script to regenerate the container definition.
 
+
+## Local WebUI (Milestone 1)
+
+The WebUI is a separate local operator console for readiness, signal validation, dry-run simulation, Telegram preview, bounded masked logs, and read-only off-hours queue visibility. Milestone 1 does **not** provide live trading buttons, queue mutation, broker login, token refresh, or subscriber lifecycle controls.
+
+Install the web dependencies with the normal requirements file, then start the UI explicitly:
+
+```bash
+pip install -r requirements.txt
+python -m webui
+```
+
+Defaults are intentionally local-only:
+
+```env
+WEBUI_HOST=127.0.0.1
+WEBUI_PORT=8765
+WEBUI_ALLOW_NON_LOOPBACK=false
+WEBUI_CSRF_TOKEN=local-webui
+```
+
+Open <http://127.0.0.1:8765>. If you later run it in Docker, bind ports as `127.0.0.1:8765:8765` unless a separate security review approves remote exposure.
+
+For API POSTs from scripts, include the local CSRF header:
+
+```bash
+curl -H 'Content-Type: application/json' -H 'X-WebUI-CSRF: local-webui' \
+  -d '{"payload":{"type":"BUY","ticker":"005930","company_name":"Samsung Electronics","market":"KR","price":70000}}' \
+  http://127.0.0.1:8765/dry-run/simulate
+```
+
 ## Verification
 
 Run the full test suite:

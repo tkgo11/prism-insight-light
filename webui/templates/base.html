@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}PRISM-INSIGHT Light WebUI{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>PRISM-INSIGHT Light WebUI</h1>
+    <p class="notice">Milestone 1: local, read-mostly, dry-run only. No live trading controls.</p>
+    <nav>
+      <a href="/">Dashboard</a>
+      <a href="/readiness">Readiness</a>
+      <a href="/signals">Signals</a>
+      <a href="/dry-run">Dry run</a>
+      <a href="/telegram">Telegram</a>
+      <a href="/logs">Logs</a>
+      <a href="/queue">Queue</a>
+    </nav>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Queue - PRISM WebUI{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>Off-hours queue (read-only)</h2>
+  <p>Count: {{ queue.count }}</p>
+  {% if queue.error %}<p class="error">{{ queue.error }}</p>{% endif %}
+  <table><thead><tr><th>Execute at</th><th>Action</th><th>Market</th><th>Ticker</th><th>Company</th></tr></thead><tbody>
+  {% for item in queue["items"] %}
+    <tr><td>{{ item.execute_at }}</td><td>{{ item.signal_type }}</td><td>{{ item.market }}</td><td>{{ item.ticker }}</td><td>{{ item.company_name }}</td></tr>
+  {% endfor %}
+  </tbody></table>
+</section>
+{% endblock %}
