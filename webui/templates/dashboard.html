@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - PRISM WebUI{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>Runtime summary</h2>
+  <dl>
+    <dt>Bind host</dt><dd>{{ settings.host }}</dd>
+    <dt>Port</dt><dd>{{ settings.port }}</dd>
+    <dt>Readiness</dt><dd class="status">{{ readiness.status }}</dd>
+    <dt>Message</dt><dd>{{ readiness.message }}</dd>
+    <dt>Queue count</dt><dd>{{ queue.count }}</dd>
+  </dl>
+</section>
+<section class="grid">
+  <a class="card" href="/signals"><h3>Validate signals</h3><p>Parse JSON/labeled signals safely.</p></a>
+  <a class="card" href="/dry-run"><h3>Dry-run simulator</h3><p>Simulate DispatchResult-like output with no broker calls.</p></a>
+  <a class="card" href="/readiness"><h3>Readiness/config</h3><p>Masked setup status.</p></a>
+  <a class="card" href="/logs"><h3>Logs</h3><p>Bounded, masked log tail.</p></a>
+</section>
+{% endblock %}

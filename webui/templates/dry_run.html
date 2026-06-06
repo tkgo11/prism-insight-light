@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Dry run - PRISM WebUI{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>Dry-run simulator</h2>
+  <p>POST JSON to <code>/dry-run/simulate</code>. This service is structurally isolated from live KIS clients and queues.</p>
+  <p class="notice">No live orders, queue execution, token refresh, or broker login can be triggered from Milestone 1.</p>
+</section>
+{% endblock %}

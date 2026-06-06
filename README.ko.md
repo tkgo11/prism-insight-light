@@ -273,6 +273,27 @@ bash setup_subscriber_docker_crontab.sh
 
 `setup_subscriber_docker_crontab.sh`는 설치 시 컨테이너를 현재 설정으로 한 번 생성하고, 이후에는 시장 시간에 맞춰 `docker start` / `docker stop`만 수행합니다. `.env`를 바꿨다면 스크립트를 다시 실행해 컨테이너 정의를 재생성하세요.
 
+
+## 로컬 WebUI (마일스톤 1)
+
+WebUI는 준비 상태, 신호 검증, 드라이런 시뮬레이션, Telegram 미리보기, 마스킹된 제한 로그, 오프아워 큐 읽기 전용 확인을 위한 별도 로컬 운영 콘솔입니다. 마일스톤 1에는 실거래 버튼, 큐 변경, 브로커 로그인, 토큰 갱신, subscriber 제어 기능이 없습니다.
+
+```bash
+pip install -r requirements.txt
+python -m webui
+```
+
+기본값은 로컬 전용입니다. 원격 노출은 별도 보안 검토 전까지 사용하지 마세요.
+
+```env
+WEBUI_HOST=127.0.0.1
+WEBUI_PORT=8765
+WEBUI_ALLOW_NON_LOOPBACK=false
+WEBUI_CSRF_TOKEN=local-webui
+```
+
+브라우저에서 <http://127.0.0.1:8765> 를 여세요. Docker에서 실행할 경우 별도 승인 전에는 `127.0.0.1:8765:8765` 형태로 바인딩하세요.
+
 ## 검증
 
 전체 테스트:
