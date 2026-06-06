@@ -1,0 +1,13 @@
+:root { color-scheme: light dark; font-family: "Segoe UI", Arial, sans-serif; }
+body { margin: 0; background: #101828; color: #e4e7ec; }
+header { padding: 1.25rem 2rem; background: #182230; border-bottom: 1px solid #344054; }
+h1 { margin: 0 0 .25rem; }
+.notice { color: #fdb022; }
+nav { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
+a { color: #84caff; } nav a { text-decoration: none; font-weight: 600; }
+main { padding: 2rem; }
+.card { display: block; background: #182230; border: 1px solid #344054; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; color: inherit; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+table { border-collapse: collapse; width: 100%; } th, td { border-bottom: 1px solid #344054; padding: .5rem; text-align: left; }
+pre { white-space: pre-wrap; background: #0b1220; border-radius: 8px; padding: 1rem; overflow-x: auto; }
+.status { font-weight: 700; color: #86efac; }.error { color: #fda29b; }

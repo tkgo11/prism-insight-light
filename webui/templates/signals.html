@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Signals - PRISM WebUI{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>Signal validation workbench</h2>
+  <p>POST JSON to <code>/signals/validate</code> with <code>{"payload": {...}}</code>. Validation uses the existing trading schema.</p>
+  <pre>{"payload":{"signal_type":"BUY","ticker":"005930","company_name":"Samsung Electronics","market":"KR"}}</pre>
+</section>
+{% endblock %}
