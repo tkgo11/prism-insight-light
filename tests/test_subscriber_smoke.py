@@ -1,4 +1,6 @@
 import logging
+import signal
+from concurrent.futures import TimeoutError
 
 import subscriber
 
@@ -93,7 +95,7 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
             stopped.append(True)
 
     class FakeFuture:
-        def result(self):
+        def result(self, timeout=None):
             raise KeyboardInterrupt
 
         def cancel(self):
@@ -137,3 +139,96 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
 def test_parse_args_web_ui_flag():
     args = subscriber.parse_args(["--web-ui"])
     assert args.web_ui is True
+
+
+def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
+    import sys
+    import types
+
+    cancelled = []
+    result_timeouts = []
+    restored_handlers = []
+    stopped = []
+    closed = []
+    registered = {}
+
+    class FakeDispatcher:
+        dry_run = True
+        trading_mode = "demo"
+
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    class FakeQueueWorker:
+        def __init__(self, dispatcher, poll_seconds):
+            self.dispatcher = dispatcher
+            self.poll_seconds = poll_seconds
+
+        def start(self):
+            pass
+
+        def stop(self):
+            stopped.append(True)
+
+    class FakeFuture:
+        def __init__(self):
+            self.calls = 0
+
+        def result(self, timeout=None):
+            result_timeouts.append(timeout)
+            self.calls += 1
+            if self.calls == 1:
+                registered[signal.SIGINT](signal.SIGINT, None)
+                raise TimeoutError
+            raise RuntimeError("cancelled")
+
+        def cancel(self):
+            cancelled.append(True)
+
+    class FakeSubscriberClient:
+        def __init__(self, credentials=None):
+            self.credentials = credentials
+
+        def subscription_path(self, project_id, subscription_id):
+            return f"projects/{project_id}/subscriptions/{subscription_id}"
+
+        def subscribe(self, subscription_path, callback):
+            return FakeFuture()
+
+        def close(self):
+            closed.append(True)
+
+    def fake_getsignal(signum):
+        return f"previous-{signum}"
+
+    def fake_signal(signum, handler):
+        if isinstance(handler, str):
+            restored_handlers.append((signum, handler))
+        else:
+            registered[signum] = handler
+
+    fake_pubsub = types.SimpleNamespace(SubscriberClient=FakeSubscriberClient)
+    monkeypatch.setitem(sys.modules, "google.cloud.pubsub_v1", fake_pubsub)
+    monkeypatch.setattr(subscriber, "TradeDispatcher", FakeDispatcher)
+    monkeypatch.setattr(subscriber, "QueueWorker", FakeQueueWorker)
+    monkeypatch.setattr(subscriber.signal, "getsignal", fake_getsignal)
+    monkeypatch.setattr(subscriber.signal, "signal", fake_signal)
+
+    subscriber.main([
+        "--project-id",
+        "project",
+        "--subscription-id",
+        "subscription",
+        "--log-file",
+        "",
+        "--dry-run",
+    ])
+
+    assert result_timeouts == [1, 10]
+    assert len(cancelled) >= 2
+    assert stopped == [True]
+    assert closed == [True]
+    assert restored_handlers == [
+        (signal.SIGINT, f"previous-{signal.SIGINT}"),
+        (signal.SIGTERM, f"previous-{signal.SIGTERM}"),
+    ]
