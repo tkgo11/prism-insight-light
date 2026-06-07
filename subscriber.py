@@ -101,7 +101,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--web-ui",
         action="store_true",
-        help="Start the local read-mostly WebUI instead of the Pub/Sub subscriber",
+        help="Start the local read-mostly WebUI alongside the Pub/Sub subscriber",
     )
     return parser.parse_args(argv)
 
@@ -113,19 +113,26 @@ def _run_web_ui() -> None:
     run_webui()
 
 
+def _start_web_ui_thread() -> threading.Thread:
+    thread = threading.Thread(target=_run_web_ui, name="web-ui", daemon=True)
+    thread.start()
+    return thread
+
+
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     _configure_logging(args.log_file)
-
-    if args.web_ui:
-        _run_web_ui()
-        return
 
     if not args.project_id or not args.subscription_id:
         raise SystemExit("GCP_PROJECT_ID and GCP_PUBSUB_SUBSCRIPTION_ID are required")
 
     if args.credentials_path:
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = args.credentials_path
+
+    web_ui_thread: threading.Thread | None = None
+    if args.web_ui:
+        web_ui_thread = _start_web_ui_thread()
+        LOGGER.info("WebUI thread started: %s", web_ui_thread.name)
 
     from google.cloud import pubsub_v1
 
