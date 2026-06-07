@@ -296,8 +296,10 @@ Install the web dependencies with the normal requirements file, then start the U
 
 ```bash
 pip install -r requirements.txt
-python -m webui
+python subscriber.py --web-ui
 ```
+
+The direct module entrypoint `python -m webui` remains available for advanced use.
 
 Defaults are intentionally local-only:
 

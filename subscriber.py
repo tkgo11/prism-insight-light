@@ -89,7 +89,7 @@ def build_callback(dispatcher: TradeDispatcher, logger: logging.Logger | None = 
     return lambda message: _handle_message(message, dispatcher, logger)
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Standalone GCP Pub/Sub trading subscriber")
     parser.add_argument("--project-id", default=os.environ.get("GCP_PROJECT_ID"))
     parser.add_argument("--subscription-id", default=os.environ.get("GCP_PUBSUB_SUBSCRIPTION_ID"))
@@ -98,12 +98,28 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--queue-path", default="runtime/off_hours_queue.json")
     parser.add_argument("--queue-poll-seconds", type=int, default=60)
-    return parser.parse_args()
+    parser.add_argument(
+        "--web-ui",
+        action="store_true",
+        help="Start the local read-mostly WebUI instead of the Pub/Sub subscriber",
+    )
+    return parser.parse_args(argv)
 
 
-def main() -> None:
-    args = parse_args()
+def _run_web_ui() -> None:
+    from webui.__main__ import main as run_webui
+
+    LOGGER.info("Starting local WebUI; live trading and queue mutation controls are not exposed")
+    run_webui()
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
     _configure_logging(args.log_file)
+
+    if args.web_ui:
+        _run_web_ui()
+        return
 
     if not args.project_id or not args.subscription_id:
         raise SystemExit("GCP_PROJECT_ID and GCP_PUBSUB_SUBSCRIPTION_ID are required")

@@ -47,3 +47,23 @@ def test_handle_message_logs_dispatch_message(caplog):
         subscriber._handle_message(message, dispatcher, logger=subscriber.LOGGER)
 
     assert "-> executed: ok-message" in caplog.text
+
+
+def test_web_ui_flag_launches_webui_without_pubsub_requirements(monkeypatch):
+    launched = []
+
+    def fake_run_web_ui():
+        launched.append(True)
+
+    monkeypatch.delenv("GCP_PROJECT_ID", raising=False)
+    monkeypatch.delenv("GCP_PUBSUB_SUBSCRIPTION_ID", raising=False)
+    monkeypatch.setattr(subscriber, "_run_web_ui", fake_run_web_ui)
+
+    subscriber.main(["--web-ui", "--log-file", ""])
+
+    assert launched == [True]
+
+
+def test_parse_args_web_ui_flag():
+    args = subscriber.parse_args(["--web-ui"])
+    assert args.web_ui is True
