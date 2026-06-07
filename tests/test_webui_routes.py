@@ -11,10 +11,10 @@ def client():
 
 def test_dashboard_and_pages_return_200():
     c = client()
-    for path in ["/", "/readiness", "/signals", "/dry-run", "/telegram", "/logs", "/queue"]:
+    for path in ["/", "/trading", "/readiness", "/signals", "/dry-run", "/telegram", "/logs", "/queue"]:
         response = c.get(path)
         assert response.status_code == 200
-        assert "No live trading controls" in response.text or path != "/"
+        assert "Trading Console" in response.text
 
 
 def test_validation_endpoint_requires_csrf_and_validates():
@@ -83,3 +83,27 @@ def test_telegram_api_uses_preview_service_monkeypatch(monkeypatch):
     response = c.get("/telegram/api")
     assert response.status_code == 200
     assert response.json()["error"] == "safe failure"
+
+
+
+def test_trading_accounts_and_guard_apis_are_safe():
+    c = client()
+    accounts = c.get("/trading/accounts/api")
+    assert accounts.status_code == 200
+    rendered = accounts.text
+    assert "12345678" not in rendered
+    assert accounts.json().keys() >= {"ok", "accounts", "count"}
+
+    guard = c.get("/trading/guard/api")
+    assert guard.status_code == 200
+    assert guard.json()["enabled"] is False
+
+
+def test_manual_order_requires_csrf_and_live_unlock():
+    c = client()
+    form = {"action": "BUY", "ticker": "AAPL", "price": "190.5", "market": "auto"}
+    assert c.post("/trading/order", data=form).status_code == 403
+    response = c.post("/trading/order", data=form | {"x_webui_csrf": "local-webui"})
+    assert response.status_code == 200
+    assert "Live trading is disabled" in response.text
+    assert "AAPL" in response.text

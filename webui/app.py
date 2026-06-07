@@ -64,13 +64,14 @@ def create_app(settings: WebUISettings | None = None) -> FastAPI:
     static_dir = Path(__file__).parent / "static"
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-    from .routes import dashboard, dry_run, logs, queue, readiness, signals, telegram
+    from .routes import dashboard, dry_run, logs, queue, readiness, signals, telegram, trading
 
     app.include_router(dashboard.router)
     app.include_router(readiness.router)
     app.include_router(signals.router)
     app.include_router(dry_run.router)
     app.include_router(telegram.router)
+    app.include_router(trading.router)
     app.include_router(logs.router)
     app.include_router(queue.router)
     return app

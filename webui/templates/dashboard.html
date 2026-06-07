@@ -1,20 +1,56 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - PRISM WebUI{% endblock %}
+{% block title %}Command Center - PRISM{% endblock %}
 {% block content %}
-<section class="card">
-  <h2>Runtime summary</h2>
-  <dl>
-    <dt>Bind host</dt><dd>{{ settings.host }}</dd>
-    <dt>Port</dt><dd>{{ settings.port }}</dd>
-    <dt>Readiness</dt><dd class="status">{{ readiness.status }}</dd>
-    <dt>Message</dt><dd>{{ readiness.message }}</dd>
-    <dt>Queue count</dt><dd>{{ queue.count }}</dd>
-  </dl>
+<section class="hero-panel">
+  <div>
+    <p class="eyebrow">Operations dashboard</p>
+    <h1>Remote trading, pending signals, and config in one focused console.</h1>
+    <p class="hero-copy">KR/US market detection uses ticker shape when market is omitted. Live broker calls stay locked unless you explicitly enable them on this local host.</p>
+  </div>
+  <div class="hero-actions">
+    <a class="btn primary" href="/trading">Open trading desk</a>
+    <a class="btn ghost" href="/signals">Validate signal</a>
+  </div>
 </section>
-<section class="grid">
-  <a class="card" href="/signals"><h3>Validate signals</h3><p>Parse JSON/labeled signals safely.</p></a>
-  <a class="card" href="/dry-run"><h3>Dry-run simulator</h3><p>Simulate DispatchResult-like output with no broker calls.</p></a>
-  <a class="card" href="/readiness"><h3>Readiness/config</h3><p>Masked setup status.</p></a>
-  <a class="card" href="/logs"><h3>Logs</h3><p>Bounded, masked log tail.</p></a>
+
+<section class="metric-grid" aria-label="Runtime metrics">
+  <article class="metric-card"><span>Readiness</span><strong>{{ readiness.status }}</strong><small>{{ readiness.message }}</small></article>
+  <article class="metric-card"><span>Pending signals</span><strong>{{ queue.count }}</strong><small>{{ queue.path_label }}</small></article>
+  <article class="metric-card"><span>Accounts</span><strong>{{ accounts.count }}</strong><small>{{ accounts.path_label }}{% if accounts.using_example %} example{% endif %}</small></article>
+  <article class="metric-card"><span>Live trade lock</span><strong>{{ "Open" if trade_guard.enabled else "Locked" }}</strong><small>{{ trade_guard.message }}</small></article>
+</section>
+
+<section class="two-column">
+  <article class="panel">
+    <div class="panel-head"><div><p class="eyebrow">Accounts</p><h2>Per-account routing</h2></div><a href="/trading" class="text-link">Manage</a></div>
+    <div class="account-list">
+      {% for account in accounts.accounts %}
+      <div class="account-row">
+        <div><strong>{{ account.name }}</strong><small>{{ account.account_masked }} · {{ account.market_label }} · {{ account.mode }}</small></div>
+        <span class="pill {{ 'success' if account.primary else '' }}">{{ 'Primary' if account.primary else 'Backup' }}</span>
+      </div>
+      {% else %}
+      <p class="empty">No accounts configured yet. Open Config to add accounts to trading/config/kis_devlp.yaml.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-head"><div><p class="eyebrow">Pending</p><h2>Queued signals</h2></div><a href="/queue" class="text-link">View all</a></div>
+    <div class="queue-mini">
+      {% for item in queue["items"][:5] %}
+      <div class="signal-row"><span class="pill">{{ item.signal_type }}</span><strong>{{ item.ticker }}</strong><small>{{ item.market }} · {{ item.execute_at }}</small></div>
+      {% else %}
+      <p class="empty">No pending off-hours signals.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="feature-grid">
+  <a class="feature-card" href="/trading"><h3>Remote BUY/SELL</h3><p>Manual order form with automatic KR/US detection, demo/real mode selector, and live-order arming.</p></a>
+  <a class="feature-card" href="/trading#config"><h3>Easy config editor</h3><p>Edit safe operational fields and signal split strategy without exposing secrets.</p></a>
+  <a class="feature-card" href="/signals"><h3>Signal validator</h3><p>Parse JSON or Telegram-style text and preview normalized market/action fields.</p></a>
+  <a class="feature-card" href="/logs"><h3>Masked logs</h3><p>Tail subscriber logs with account numbers and long secrets masked.</p></a>
 </section>
 {% endblock %}
