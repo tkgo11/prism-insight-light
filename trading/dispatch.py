@@ -42,12 +42,16 @@ class TradeDispatcher:
         trading_mode: str | None = None,
         queue: OffHoursOrderQueue | None = None,
         strategy_config: dict[str, Any] | None = None,
+        account_name: str | None = None,
+        account_index: int | None = None,
     ):
         self.dry_run = dry_run
         self.trading_mode = (trading_mode or get_trading_mode()).lower()
         self.queue = queue or OffHoursOrderQueue(queue_path)
         self.strategy_config = strategy_config if strategy_config is not None else self._load_strategy_config()
         self.balance_split_config = BalanceSplitStrategyConfig.from_mapping(self.strategy_config)
+        self.account_name = account_name
+        self.account_index = account_index
 
     async def dispatch(self, signal: SignalMessage, *, allow_queue: bool = True) -> DispatchResult:
         if signal.is_event:
@@ -106,17 +110,25 @@ class TradeDispatcher:
             return None
         return BalanceSplitStrategy(config=self.balance_split_config)
 
+    def _trader_kwargs(self) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {"mode": self.trading_mode}
+        if self.account_name:
+            kwargs["account_name"] = self.account_name
+        if self.account_index is not None:
+            kwargs["account_index"] = self.account_index
+        return kwargs
+
     async def _execute_legacy_trade(self, signal: SignalMessage) -> DispatchResult:
         limit_price = None if signal.price in (None, 0) else signal.price
 
         if signal.market == "US":
-            trader = USStockTrading(mode=self.trading_mode)
+            trader = USStockTrading(**self._trader_kwargs())
             if signal.signal_type == "BUY":
                 trade_result = await trader.async_buy_stock(ticker=signal.ticker, limit_price=limit_price)
             else:
                 trade_result = await trader.async_sell_stock(ticker=signal.ticker, limit_price=limit_price)
         else:
-            async with AsyncTradingContext(mode=self.trading_mode) as trader:
+            async with AsyncTradingContext(**self._trader_kwargs()) as trader:
                 if signal.signal_type == "BUY":
                     trade_result = await trader.async_buy_stock(stock_code=signal.ticker, limit_price=None if limit_price is None else int(limit_price))
                 else:

@@ -1,9 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Signals - PRISM WebUI{% endblock %}
+{% block title %}Signal Workbench - PRISM{% endblock %}
 {% block content %}
-<section class="card">
-  <h2>Signal validation workbench</h2>
-  <p>POST JSON to <code>/signals/validate</code> with <code>{"payload": {...}}</code>. Validation uses the existing trading schema.</p>
-  <pre>{"payload":{"signal_type":"BUY","ticker":"005930","company_name":"Samsung Electronics","market":"KR"}}</pre>
+<section class="page-head"><div><p class="eyebrow">Signal workbench</p><h1>Validate JSON or Telegram-style signals.</h1><p>POST to <code>/signals/validate</code> with CSRF header. The parser auto-detects KR vs US when market is missing.</p></div></section>
+<section class="panel code-panel">
+  <h2>Example payloads</h2>
+  <pre>{"payload":{"type":"BUY","ticker":"005930","company_name":"Samsung Electronics","price":70000}}
+{"payload":{"type":"SELL","ticker":"AAPL","company_name":"Apple","price":190.5}}</pre>
+  <p class="muted">Tip: numeric ticker means KR; alphabetic ticker means US.</p>
 </section>
 {% endblock %}

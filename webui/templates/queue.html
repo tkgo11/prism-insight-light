@@ -1,14 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Queue - PRISM WebUI{% endblock %}
+{% block title %}Pending Signals - PRISM{% endblock %}
 {% block content %}
-<section class="card">
-  <h2>Off-hours queue (read-only)</h2>
-  <p>Count: {{ queue.count }}</p>
+<section class="page-head"><div><p class="eyebrow">Pending signals</p><h1>Off-hours queue</h1><p>Signals queued by demo mode while KR/US markets are closed.</p></div><span class="lock-badge">{{ queue.count }} waiting</span></section>
+<section class="panel">
   {% if queue.error %}<p class="error">{{ queue.error }}</p>{% endif %}
-  <table><thead><tr><th>Execute at</th><th>Action</th><th>Market</th><th>Ticker</th><th>Company</th></tr></thead><tbody>
-  {% for item in queue["items"] %}
-    <tr><td>{{ item.execute_at }}</td><td>{{ item.signal_type }}</td><td>{{ item.market }}</td><td>{{ item.ticker }}</td><td>{{ item.company_name }}</td></tr>
-  {% endfor %}
-  </tbody></table>
+  <div class="table-wrap"><table><thead><tr><th>Execute at</th><th>Action</th><th>Market</th><th>Ticker</th><th>Company</th><th>Created</th></tr></thead><tbody>
+  {% for item in queue["items"] %}<tr><td>{{ item.execute_at }}</td><td><span class="pill">{{ item.signal_type }}</span></td><td>{{ item.market }}</td><td><strong>{{ item.ticker }}</strong></td><td>{{ item.company_name }}</td><td>{{ item.created_at }}</td></tr>{% else %}<tr><td colspan="6" class="empty">No pending signals.</td></tr>{% endfor %}
+  </tbody></table></div>
 </section>
 {% endblock %}
