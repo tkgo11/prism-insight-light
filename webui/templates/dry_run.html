@@ -1,9 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Dry run - PRISM WebUI{% endblock %}
+{% block title %}Dry Run - PRISM{% endblock %}
 {% block content %}
-<section class="card">
-  <h2>Dry-run simulator</h2>
-  <p>POST JSON to <code>/dry-run/simulate</code>. This service is structurally isolated from live KIS clients and queues.</p>
-  <p class="notice">No live orders, queue execution, token refresh, or broker login can be triggered from Milestone 1.</p>
-</section>
+<section class="page-head"><div><p class="eyebrow">Dry-run simulator</p><h1>Preview dispatch shape without broker calls.</h1><p>This service remains isolated from KIS clients, queue mutation, and token refresh.</p></div></section>
+<section class="panel code-panel"><h2>API</h2><pre>POST /dry-run/simulate
+Header: X-WebUI-CSRF: local-webui
+Body: {"payload":{"type":"BUY","ticker":"AAPL","company_name":"Apple","price":190.5}}</pre></section>
 {% endblock %}

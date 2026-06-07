@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Trading Desk - PRISM{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><p class="eyebrow">Trading desk</p><h1>Remote BUY/SELL with market auto-detection.</h1><p>Numeric tickers route to KR, alphabetic tickers route to US unless you override the market.</p></div>
+  <span class="lock-badge {{ 'open' if trade_guard.enabled else '' }}">{{ 'Live enabled' if trade_guard.enabled else 'Live locked' }}</span>
+</section>
+
+<section class="two-column wide-left">
+  <article class="panel">
+    <div class="panel-head"><div><p class="eyebrow">Order ticket</p><h2>Manual broker action</h2></div></div>
+    <p class="warning">{{ trade_guard.message }}</p>
+    <form method="post" action="/trading/order" class="form-grid">
+      <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
+      <label>Action<select name="action"><option>BUY</option><option>SELL</option></select></label>
+      <label>Ticker<input name="ticker" placeholder="005930 or AAPL" required></label>
+      <label>Price<input name="price" type="number" step="0.0001" min="0" placeholder="70000" required></label>
+      <label>Company<input name="company_name" placeholder="Optional display name"></label>
+      <label>Market<select name="market"><option value="auto">Auto-detect</option><option value="KR">KR</option><option value="US">US</option></select></label>
+      <label>Mode<select name="trading_mode"><option value="">Config default</option><option value="demo">Demo</option><option value="real">Real</option></select></label>
+      <label>Account<select name="account_name"><option value="">Primary for market</option>{% for account in accounts.accounts %}<option value="{{ account.name }}">{{ account.name }} · {{ account.market_label }} · {{ account.mode }}</option>{% endfor %}</select></label>
+      <label>Arming phrase<input name="arm_phrase" placeholder="{{ trade_guard.arm_phrase }}"></label>
+      <button class="btn danger span-2" type="submit">Submit guarded order</button>
+    </form>
+    {% if trade_result %}
+    <div class="result-box {{ 'ok' if trade_result.ok else 'error-box' }}">
+      <strong>{{ 'Order accepted' if trade_result.ok else 'Order not sent' }}</strong>
+      {% if trade_result.error %}<p>{{ trade_result.error }}</p>{% endif %}
+      {% if trade_result.signal %}<pre>{{ trade_result.signal }}</pre>{% endif %}
+      {% if trade_result.result %}<pre>{{ trade_result.result }}</pre>{% endif %}
+    </div>
+    {% endif %}
+  </article>
+
+  <aside class="panel">
+    <div class="panel-head"><div><p class="eyebrow">Accounts</p><h2>Configured routes</h2></div></div>
+    {% for account in accounts.accounts %}
+    <div class="account-card">
+      <div><strong>{{ account.name }}</strong><small>{{ account.account_masked }}</small></div>
+      <div class="tag-row"><span class="pill">{{ account.market_label }}</span><span class="pill">{{ account.mode }}</span>{% if account.primary %}<span class="pill success">Primary</span>{% endif %}</div>
+      <small>KRW {{ account.buy_amount_krw or 'default' }} · USD {{ account.buy_amount_usd or 'default' }} · FX {{ 'on' if account.auto_exchange_usd_on_buy else 'off' }}</small>
+    </div>
+    {% else %}<p class="empty">No accounts available.</p>{% endfor %}
+  </aside>
+</section>
+
+<section class="two-column" id="config">
+  <article class="panel">
+    <div class="panel-head"><div><p class="eyebrow">Configuration</p><h2>Safe config editor</h2></div><span class="pill">{{ config_model.path_label }}</span></div>
+    {% if config_result %}<p class="success-text">Saved to {{ config_result.path_label }}</p>{% endif %}
+    <form method="post" action="/trading/config" class="form-grid dense">
+      {% for field in config_model.fields %}
+      <label>{{ field.name }}<input name="{{ field.name }}" value="{{ field.value }}"></label>
+      {% endfor %}
+      <label>signal_strategy.name<select name="signal_strategy_name"><option value="" {% if not config_model.strategy.name %}selected{% endif %}>Disabled</option><option value="balance_split" {% if config_model.strategy.name == 'balance_split' %}selected{% endif %}>balance_split</option></select></label>
+      <label>signal_strategy.split_count<input name="signal_strategy_split_count" value="{{ config_model.strategy.split_count }}"></label>
+      <button class="btn primary span-2" type="submit">Save operational config</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <div class="panel-head"><div><p class="eyebrow">Pending signals</p><h2>Off-hours queue</h2></div><a class="text-link" href="/queue">Open</a></div>
+    {% for item in queue["items"][:8] %}
+    <div class="signal-row"><span class="pill">{{ item.signal_type }}</span><strong>{{ item.ticker }}</strong><small>{{ item.company_name }} · {{ item.market }} · {{ item.execute_at }}</small></div>
+    {% else %}<p class="empty">Queue is empty.</p>{% endfor %}
+  </article>
+</section>
+{% endblock %}

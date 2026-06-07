@@ -1,15 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Readiness - PRISM WebUI{% endblock %}
+{% block title %}Config - PRISM{% endblock %}
 {% block content %}
-<section class="card">
-  <h2>Readiness</h2>
-  <p class="status">{{ readiness.status }}</p>
-  <p>{{ readiness.message }}</p>
-  <h3>Configuration</h3>
-  <table><thead><tr><th>Name</th><th>Configured</th><th>Safe value</th></tr></thead><tbody>
-  {% for item in readiness.config["items"] %}
-    <tr><td>{{ item.name }}</td><td>{{ item.configured }}</td><td>{{ item.value }}</td></tr>
-  {% endfor %}
-  </tbody></table>
+<section class="page-head"><div><p class="eyebrow">Config & readiness</p><h1>Masked operational status</h1><p>Use Trading Desk for safe edits; this page shows environment readiness without exposing secrets.</p></div><a class="btn primary" href="/trading#config">Edit config</a></section>
+<section class="panel">
+  <div class="panel-head"><div><h2>Readiness</h2><p>{{ readiness.message }}</p></div><span class="pill {{ 'success' if readiness.status == 'ready' else '' }}">{{ readiness.status }}</span></div>
+  <div class="table-wrap"><table><thead><tr><th>Name</th><th>Configured</th><th>Safe value</th></tr></thead><tbody>
+  {% for item in readiness.config["items"] %}<tr><td>{{ item.name }}</td><td>{{ item.configured }}</td><td>{{ item.value }}</td></tr>{% endfor %}
+  </tbody></table></div>
 </section>
 {% endblock %}

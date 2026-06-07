@@ -1,10 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Logs - PRISM WebUI{% endblock %}
+{% block title %}Logs - PRISM{% endblock %}
 {% block content %}
-<section class="card">
-  <h2>Logs: {{ log.name }}</h2>
-  {% if log.error %}<p class="error">{{ log.error }}</p>{% endif %}
-  <pre>{% for line in log.lines %}{{ line }}
-{% endfor %}</pre>
-</section>
+<section class="page-head"><div><p class="eyebrow">Logs</p><h1>{{ log.name }} tail</h1><p>Bounded and masked for account numbers, tokens, and secrets.</p></div></section>
+<section class="panel code-panel">{% if log.error %}<p class="error">{{ log.error }}</p>{% endif %}<pre>{% for line in log.lines %}{{ line }}
+{% else %}No log lines available.{% endfor %}</pre></section>
 {% endblock %}
