@@ -7,7 +7,9 @@ import argparse
 import asyncio
 import logging
 import os
+import signal
 import threading
+from concurrent.futures import TimeoutError
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -157,13 +159,43 @@ def main(argv: list[str] | None = None) -> None:
         subscription_path,
         callback=lambda message: _handle_message(message, dispatcher),
     )
+    stop_event = threading.Event()
+
+    def request_stop(signum: int, _frame) -> None:  # noqa: ANN001 - signal frames are runtime-provided
+        LOGGER.info("Stopping subscriber after signal %s", signum)
+        stop_event.set()
+        streaming_pull_future.cancel()
+
+    previous_sigint = signal.getsignal(signal.SIGINT)
+    previous_sigterm = signal.getsignal(signal.SIGTERM)
+    signal.signal(signal.SIGINT, request_stop)
+    signal.signal(signal.SIGTERM, request_stop)
 
     try:
-        streaming_pull_future.result()
-    except KeyboardInterrupt:
-        LOGGER.info("Stopping subscriber")
-        streaming_pull_future.cancel()
+        while not stop_event.is_set():
+            try:
+                streaming_pull_future.result(timeout=1)
+                break
+            except TimeoutError:
+                continue
+            except KeyboardInterrupt:
+                request_stop(signal.SIGINT, None)
+            except Exception:
+                if stop_event.is_set():
+                    break
+                raise
     finally:
+        signal.signal(signal.SIGINT, previous_sigint)
+        signal.signal(signal.SIGTERM, previous_sigterm)
+        streaming_pull_future.cancel()
+        try:
+            streaming_pull_future.result(timeout=10)
+        except TimeoutError:
+            LOGGER.warning("Timed out waiting for Pub/Sub subscriber shutdown")
+        except KeyboardInterrupt:
+            LOGGER.debug("Pub/Sub subscriber shutdown interrupted after cancellation")
+        except Exception as exc:  # noqa: BLE001 - cancellation commonly raises library-specific futures errors
+            LOGGER.debug("Pub/Sub subscriber shutdown completed with %s", type(exc).__name__)
         queue_worker.stop()
         subscriber.close()
 
