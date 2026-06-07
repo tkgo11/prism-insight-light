@@ -290,9 +290,9 @@ bash setup_subscriber_docker_crontab.sh
 
 ## Local WebUI (Milestone 1)
 
-The WebUI is a separate local operator console for readiness, signal validation, dry-run simulation, Telegram preview, bounded masked logs, and read-only off-hours queue visibility. Milestone 1 does **not** provide live trading buttons, queue mutation, broker login, token refresh, or subscriber lifecycle controls.
+The WebUI is a separate local operator console that can run alongside the Pub/Sub subscriber for readiness, signal validation, dry-run simulation, Telegram preview, bounded masked logs, and read-only off-hours queue visibility. Milestone 1 does **not** provide live trading buttons, queue mutation, broker login, token refresh, or subscriber lifecycle controls.
 
-Install the web dependencies with the normal requirements file, then start the UI explicitly:
+Install the web dependencies with the normal requirements file, then start the subscriber and UI together explicitly:
 
 ```bash
 pip install -r requirements.txt

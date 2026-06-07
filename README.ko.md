@@ -276,7 +276,7 @@ bash setup_subscriber_docker_crontab.sh
 
 ## 로컬 WebUI (마일스톤 1)
 
-WebUI는 준비 상태, 신호 검증, 드라이런 시뮬레이션, Telegram 미리보기, 마스킹된 제한 로그, 오프아워 큐 읽기 전용 확인을 위한 별도 로컬 운영 콘솔입니다. 마일스톤 1에는 실거래 버튼, 큐 변경, 브로커 로그인, 토큰 갱신, subscriber 제어 기능이 없습니다.
+WebUI는 Pub/Sub subscriber와 함께 실행할 수 있는 별도 로컬 운영 콘솔이며 준비 상태, 신호 검증, 드라이런 시뮬레이션, Telegram 미리보기, 마스킹된 제한 로그, 오프아워 큐 읽기 전용 확인을 제공합니다. 마일스톤 1에는 실거래 버튼, 큐 변경, 브로커 로그인, 토큰 갱신, subscriber 제어 기능이 없습니다.
 
 ```bash
 pip install -r requirements.txt
