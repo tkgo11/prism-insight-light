@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Request
 
-from webui.routes.guards import require_csrf_token
+from webui.routes.guards import get_urlencoded_form, require_csrf_token
 from webui.services.account_service import get_config_editor_model, list_accounts, update_config_fields
 from webui.services.queue_service import summarize_queue
 from webui.services.trade_service import dispatch_manual_order, trading_guard_status
@@ -10,107 +10,65 @@ from webui.services.trade_service import dispatch_manual_order, trading_guard_st
 router = APIRouter(prefix="/trading")
 
 
+def _page_context(request: Request, *, trade_result=None, config_result=None) -> dict:
+    return {
+        "request": request,
+        "accounts": list_accounts(),
+        "queue": summarize_queue(),
+        "config_model": get_config_editor_model(),
+        "trade_guard": trading_guard_status(),
+        "trade_result": trade_result,
+        "config_result": config_result,
+        "csrf_token": "local-webui",
+    }
+
+
 @router.get("")
 def trading_page(request: Request):
     templates = request.app.state.templates
-    return templates.TemplateResponse(
-        request,
-        "trading.html",
-        {
-            "request": request,
-            "accounts": list_accounts(),
-            "queue": summarize_queue(),
-            "config_model": get_config_editor_model(),
-            "trade_guard": trading_guard_status(),
-            "trade_result": None,
-            "config_result": None,
-            "csrf_token": "local-webui",
-        },
-    )
+    return templates.TemplateResponse(request, "trading.html", _page_context(request))
 
 
 @router.post("/order", dependencies=[Depends(require_csrf_token)])
-def manual_order(
-    request: Request,
-    action: str = Form(...),
-    ticker: str = Form(...),
-    price: float = Form(...),
-    company_name: str = Form(""),
-    market: str = Form("auto"),
-    trading_mode: str = Form(""),
-    arm_phrase: str = Form(""),
-    account_name: str = Form(""),
-):
+async def manual_order(request: Request):
     templates = request.app.state.templates
+    form = await get_urlencoded_form(request)
     result = dispatch_manual_order(
-        action=action,
-        ticker=ticker,
-        price=price,
-        company_name=company_name,
-        market=market,
-        trading_mode=trading_mode or None,
-        arm_phrase=arm_phrase,
-        account_name=account_name,
+        action=form.get("action", ""),
+        ticker=form.get("ticker", ""),
+        price=float(form.get("price") or 0),
+        company_name=form.get("company_name", ""),
+        market=form.get("market", "auto"),
+        trading_mode=form.get("trading_mode") or None,
+        arm_phrase=form.get("arm_phrase", ""),
+        account_name=form.get("account_name", ""),
     )
-    return templates.TemplateResponse(
-        request,
-        "trading.html",
-        {
-            "request": request,
-            "accounts": list_accounts(),
-            "queue": summarize_queue(),
-            "config_model": get_config_editor_model(),
-            "trade_guard": trading_guard_status(),
-            "trade_result": result,
-            "config_result": None,
-            "csrf_token": "local-webui",
-        },
-    )
+    return templates.TemplateResponse(request, "trading.html", _page_context(request, trade_result=result))
 
 
 @router.post("/config", dependencies=[Depends(require_csrf_token)])
-def update_config(
-    request: Request,
-    x_webui_csrf: str = Form("local-webui"),
-    default_mode: str = Form(""),
-    auto_trading: str = Form(""),
-    default_unit_amount: str = Form(""),
-    default_unit_amount_usd: str = Form(""),
-    default_unit_asset_percent: str = Form(""),
-    default_unit_asset_percent_usd: str = Form(""),
-    auto_exchange_usd_on_buy: str = Form(""),
-    max_auto_exchange_krw: str = Form(""),
-    auto_exchange_min_shortfall_usd: str = Form(""),
-    signal_strategy_name: str = Form(""),
-    signal_strategy_split_count: str = Form("2"),
-):
+async def update_config(request: Request):
     templates = request.app.state.templates
+    form = await get_urlencoded_form(request)
     fields = {
-        "default_mode": default_mode,
-        "auto_trading": auto_trading,
-        "default_unit_amount": default_unit_amount,
-        "default_unit_amount_usd": default_unit_amount_usd,
-        "default_unit_asset_percent": default_unit_asset_percent,
-        "default_unit_asset_percent_usd": default_unit_asset_percent_usd,
-        "auto_exchange_usd_on_buy": auto_exchange_usd_on_buy,
-        "max_auto_exchange_krw": max_auto_exchange_krw,
-        "auto_exchange_min_shortfall_usd": auto_exchange_min_shortfall_usd,
+        "default_mode": form.get("default_mode", ""),
+        "auto_trading": form.get("auto_trading", ""),
+        "default_unit_amount": form.get("default_unit_amount", ""),
+        "default_unit_amount_usd": form.get("default_unit_amount_usd", ""),
+        "default_unit_asset_percent": form.get("default_unit_asset_percent", ""),
+        "default_unit_asset_percent_usd": form.get("default_unit_asset_percent_usd", ""),
+        "auto_exchange_usd_on_buy": form.get("auto_exchange_usd_on_buy", ""),
+        "max_auto_exchange_krw": form.get("max_auto_exchange_krw", ""),
+        "auto_exchange_min_shortfall_usd": form.get("auto_exchange_min_shortfall_usd", ""),
     }
-    result = update_config_fields(fields, {"name": signal_strategy_name, "split_count": signal_strategy_split_count})
-    return templates.TemplateResponse(
-        request,
-        "trading.html",
+    result = update_config_fields(
+        fields,
         {
-            "request": request,
-            "accounts": list_accounts(),
-            "queue": summarize_queue(),
-            "config_model": get_config_editor_model(),
-            "trade_guard": trading_guard_status(),
-            "trade_result": None,
-            "config_result": result,
-            "csrf_token": "local-webui",
+            "name": form.get("signal_strategy_name", ""),
+            "split_count": form.get("signal_strategy_split_count", "2"),
         },
     )
+    return templates.TemplateResponse(request, "trading.html", _page_context(request, config_result=result))
 
 
 @router.get("/accounts/api")
