@@ -1,5 +1,6 @@
 import threading
 import time
+from datetime import datetime
 from types import SimpleNamespace
 
 import pytest
@@ -160,3 +161,35 @@ def test_domestic_calculate_buy_quantity_uses_percent_resolved_amount(monkeypatc
     trader.get_current_price = lambda stock_code: {"current_price": 8_000}
 
     assert trader.calculate_buy_quantity("005930") == 2
+
+
+def test_smart_buy_routes_by_kst_not_server_local_time(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.auto_trading = True
+    calls = []
+
+    monkeypatch.setattr(dst, "_now_kst", lambda: dst.KST.localize(datetime(2026, 6, 8, 10, 0)))
+    trader.buy_market_price = lambda stock_code, buy_amount=None: calls.append(("market", stock_code, buy_amount)) or {"success": True}
+    trader.buy_closing_price = lambda stock_code, buy_amount=None: calls.append(("closing", stock_code, buy_amount)) or {"success": True}
+    trader.buy_reserved_order = lambda stock_code, buy_amount=None, limit_price=None: calls.append(("reserved", stock_code, buy_amount, limit_price)) or {"success": True}
+
+    result = trader.smart_buy("080220", buy_amount=100_000, limit_price=30_800)
+
+    assert result["success"] is True
+    assert calls == [("market", "080220", 100_000)]
+
+
+def test_smart_sell_routes_by_kst_not_server_local_time(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.auto_trading = True
+    calls = []
+
+    monkeypatch.setattr(dst, "_now_kst", lambda: dst.KST.localize(datetime(2026, 6, 8, 10, 0)))
+    trader.sell_all_market_price = lambda stock_code: calls.append(("market", stock_code)) or {"success": True}
+    trader.sell_all_closing_price = lambda stock_code: calls.append(("closing", stock_code)) or {"success": True}
+    trader.sell_all_reserved_order = lambda stock_code, limit_price=None: calls.append(("reserved", stock_code, limit_price)) or {"success": True}
+
+    result = trader.smart_sell_all("080220", limit_price=30_800)
+
+    assert result["success"] is True
+    assert calls == [("market", "080220")]
