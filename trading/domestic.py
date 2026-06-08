@@ -27,10 +27,20 @@ from .kis_auth import (
     TokenRequestError
 )
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
+from .market_hours import KST
 
 # Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
+def _now_kst() -> datetime.datetime:
+    """Return current Korea time for domestic-market routing.
+
+    Server local time may be UTC on VPS/Docker, while KIS domestic trading and
+    reserved-order windows are defined in KST.
+    """
+    return datetime.datetime.now(tz=KST)
 
 # Load configuration file
 CONFIG_FILE = TRADING_DIR / "config" / "kis_devlp.yaml"
@@ -526,7 +536,7 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute buy order. (AUTO_TRADING=False)'
             }
 
-        now = datetime.datetime.now()
+        now = _now_kst()
         current_time = now.time()
 
         # Branch by time period
@@ -882,7 +892,7 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute sell order. (AUTO_TRADING=False)'
             }
 
-        now = datetime.datetime.now()
+        now = _now_kst()
         current_time = now.time()
 
         # Branch by time period
