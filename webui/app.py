@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 @dataclass(frozen=True)
 class WebUISettings:
     host: str = "127.0.0.1"
-    port: int = 27485
+    port: int = 8765
     allow_non_loopback: bool = False
 
 
