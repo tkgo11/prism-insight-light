@@ -9,12 +9,14 @@ import logging
 import os
 import signal
 import threading
+import datetime
 from concurrent.futures import TimeoutError
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 from trading.dispatch import TradeDispatcher
+from trading.market_hours import KST
 from trading.schema import SignalValidationError, parse_signal_bytes
 
 
@@ -24,18 +26,32 @@ load_dotenv(ROOT / ".env")
 LOGGER = logging.getLogger("subscriber")
 
 
+class _KSTFormatter(logging.Formatter):
+    """Formatter that renders record times in Korea time, not server time."""
+
+    def formatTime(self, record: logging.LogRecord, datefmt: str | None = None) -> str:  # noqa: N802 - logging API
+        record_time = datetime.datetime.fromtimestamp(record.created, tz=KST)
+        if datefmt:
+            return record_time.strftime(datefmt)
+        return f"{record_time.strftime('%Y-%m-%d %H:%M:%S')},{int(record.msecs):03d}"
+
+
 def _configure_logging(log_file: str | None) -> None:
     handlers: list[logging.Handler] = [logging.StreamHandler()]
     if log_file:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
         handlers.append(logging.FileHandler(log_path, encoding="utf-8"))
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=handlers,
-        force=True,
-    )
+
+    formatter = _KSTFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    for handler in handlers:
+        handler.setFormatter(formatter)
+
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear()
+    root_logger.setLevel(logging.INFO)
+    for handler in handlers:
+        root_logger.addHandler(handler)
 
 
 class QueueWorker:
