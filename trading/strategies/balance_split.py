@@ -114,23 +114,43 @@ class BalanceSplitStrategy:
     def _available_amount(trader: _BuyTrader) -> tuple[float, str, dict[str, Any]]:
         summary = trader.get_account_summary() or {}
         available_amount = float(summary.get("available_amount", 0) or 0)
+        cash_balance = float(summary.get("cash_balance", summary.get("total_cash", 0)) or 0)
+
+        # For domestic accounts, cash_balance/total_cash is the cash portion of
+        # the account after excluding current stock holdings.  That is the
+        # intended balance_split base.  KIS can report ord_psbl_cash=0 outside
+        # regular hours, so use the cash balance in that case; when both values
+        # are positive, cap at the lower value so the strategy never overstates
+        # cash because of stale or more permissive broker fields.
+        if cash_balance > 0:
+            if available_amount > 0:
+                cash_amount = min(cash_balance, available_amount)
+                cash_source = "available_amount" if available_amount <= cash_balance else "cash_balance"
+            else:
+                cash_amount = cash_balance
+                cash_source = "cash_balance"
+            logger.info(
+                "Using %s %.2f as balance split cash base (cash_balance %.2f, available_amount %.2f)",
+                cash_source,
+                cash_amount,
+                cash_balance,
+                available_amount,
+            )
+            return cash_amount, cash_source, summary
+
         if available_amount > 0:
             return available_amount, "available_amount", summary
 
-        # KIS can report ord_psbl_cash=0 outside regular market hours while the
-        # cash/deposit balance is non-zero. Use cash as the sizing base so the
-        # broker gets the final say at order submission instead of failing before
-        # an order attempt with a misleading local no-balance error.
-        for key in ("deposit", "total_cash"):
-            cash_amount = float(summary.get(key, 0) or 0)
-            if cash_amount > 0:
-                logger.info(
-                    "Using %s %.2f as balance split cash base because available_amount is %.2f",
-                    key,
-                    cash_amount,
-                    available_amount,
-                )
-                return cash_amount, key, summary
+        # Last-resort compatibility fallback for account summaries that do not
+        # expose cash_balance/total_cash. Domestic KIS dnca_tot_amt (deposit) can
+        # remain stale after same-day buys, so it must not override cash_balance.
+        deposit = float(summary.get("deposit", 0) or 0)
+        if deposit > 0:
+            logger.info(
+                "Using deposit %.2f as balance split cash base because cash_balance and available_amount are zero",
+                deposit,
+            )
+            return deposit, "deposit", summary
 
         return 0.0, "available_amount", summary
 

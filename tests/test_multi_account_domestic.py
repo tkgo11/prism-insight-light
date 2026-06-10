@@ -193,3 +193,35 @@ def test_smart_sell_routes_by_kst_not_server_local_time(monkeypatch):
 
     assert result["success"] is True
     assert calls == [("market", "080220")]
+
+
+def test_smart_buy_routes_after_kst_close_to_reserved_order(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.auto_trading = True
+    calls = []
+
+    monkeypatch.setattr(dst, "_now_kst", lambda: dst.KST.localize(datetime(2026, 6, 8, 17, 23)))
+    trader.buy_market_price = lambda stock_code, buy_amount=None: calls.append(("market", stock_code, buy_amount)) or {"success": True}
+    trader.buy_closing_price = lambda stock_code, buy_amount=None: calls.append(("closing", stock_code, buy_amount)) or {"success": True}
+    trader.buy_reserved_order = lambda stock_code, buy_amount=None, limit_price=None: calls.append(("reserved", stock_code, buy_amount, limit_price)) or {"success": True}
+
+    result = trader.smart_buy("443060", buy_amount=100_000, limit_price=226_000)
+
+    assert result["success"] is True
+    assert calls == [("reserved", "443060", 100_000, 226_000)]
+
+
+def test_smart_sell_routes_after_kst_close_to_reserved_order(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.auto_trading = True
+    calls = []
+
+    monkeypatch.setattr(dst, "_now_kst", lambda: dst.KST.localize(datetime(2026, 6, 8, 17, 23)))
+    trader.sell_all_market_price = lambda stock_code: calls.append(("market", stock_code)) or {"success": True}
+    trader.sell_all_closing_price = lambda stock_code: calls.append(("closing", stock_code)) or {"success": True}
+    trader.sell_all_reserved_order = lambda stock_code, limit_price=None: calls.append(("reserved", stock_code, limit_price)) or {"success": True}
+
+    result = trader.smart_sell_all("443060", limit_price=226_000)
+
+    assert result["success"] is True
+    assert calls == [("reserved", "443060", 226_000)]
