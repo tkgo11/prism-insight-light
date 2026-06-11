@@ -32,7 +32,11 @@ from .market_hours import KST
 # Logging setup
 def _kst_log_time(*args: Any) -> time.struct_time:
     """Render default logging timestamps in KST regardless of server TZ."""
-    timestamp = args[0] if args else None
+    timestamp = None
+    for arg in reversed(args):
+        if isinstance(arg, (int, float)):
+            timestamp = arg
+            break
     if timestamp is None:
         timestamp = time.time()
     return datetime.datetime.fromtimestamp(timestamp, tz=KST).timetuple()
@@ -1540,7 +1544,9 @@ class DomesticStockTrading:
                         'deposit': dnca_tot_amt,  # Deposit (D+0, same-day withdrawal available)
                         'cash_balance': total_cash,  # Cash balance after excluding current stock holdings
                         'total_cash': total_cash,  # Backward-compatible alias (including D+2)
-                        'available_amount': float(output2.get('ord_psbl_cash', 0))
+                        'available_amount': float(output2.get('ord_psbl_cash', 0)),
+                        'account_key': self.account_key,
+                        'account_product': self.trenv.my_prod
                     }
 
                     logger.info(f"Account summary: Total eval {account_summary['total_eval_amount']:,.0f} KRW, "
