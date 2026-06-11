@@ -215,10 +215,13 @@ class BalanceSplitStrategy:
         except OSError as exc:
             logger.warning("Unable to save balance split reservation file %s: %s", self.reservation_path, exc)
 
-    def _fresh_reservations(self) -> list[dict[str, Any]]:
+    def _fresh_reservations(
+        self, reservations: list[dict[str, Any]] | None = None
+    ) -> list[dict[str, Any]]:
         cutoff = datetime.now(timezone.utc) - RESERVATION_TTL
         fresh: list[dict[str, Any]] = []
-        for reservation in self._load_reservations():
+        source_reservations = reservations if reservations is not None else self._load_reservations()
+        for reservation in source_reservations:
             try:
                 created_at = datetime.fromisoformat(str(reservation.get("created_at", "")))
             except ValueError:
@@ -235,34 +238,52 @@ class BalanceSplitStrategy:
         if market.upper() != "KR" or current_cash <= 0:
             return 0.0
 
-        reservations = self._fresh_reservations()
-        if len(reservations) != len(self._load_reservations()):
-            self._save_reservations(reservations)
+        loaded_reservations = self._load_reservations()
+        reservations = self._fresh_reservations(loaded_reservations)
+        reservations_changed = len(reservations) != len(loaded_reservations)
 
         reserved_amount = 0.0
         adjusted_cash = current_cash
+        retained_reservations: list[dict[str, Any]] = []
         for reservation in reservations:
             if str(reservation.get("market", "")).upper() != "KR":
+                retained_reservations.append(reservation)
                 continue
             if str(reservation.get("account_key", "default")) != account_key:
+                retained_reservations.append(reservation)
                 continue
             try:
                 before_cash = float(reservation.get("before_cash", 0) or 0)
                 amount = float(reservation.get("amount", 0) or 0)
             except (TypeError, ValueError):
+                retained_reservations.append(reservation)
                 continue
             if before_cash <= 0 or amount <= 0:
+                retained_reservations.append(reservation)
                 continue
 
-            # If the broker-reported cash has already fallen by this order, do
-            # not subtract it again.  If the report is only partially updated,
-            # subtract the still-unreflected remainder.
+            # Once the broker-reported cash drops, persist that observation so a
+            # later cash rebound (sell proceeds, deposits, or canceled orders)
+            # cannot make already-reflected buys look unreflected again.  Partial
+            # broker updates keep only the still-unreflected remainder.
             reflected_amount = max(0.0, before_cash - adjusted_cash)
             unreflected_amount = max(0.0, amount - reflected_amount)
             if unreflected_amount <= 0:
+                reservations_changed = True
                 continue
+            if reflected_amount > 0:
+                reservation = {
+                    **reservation,
+                    "before_cash": float(adjusted_cash),
+                    "amount": float(unreflected_amount),
+                }
+                reservations_changed = True
+            retained_reservations.append(reservation)
             reserved_amount += unreflected_amount
             adjusted_cash = max(0.0, adjusted_cash - unreflected_amount)
+
+        if reservations_changed:
+            self._save_reservations(retained_reservations)
 
         if reserved_amount > 0:
             logger.info(
