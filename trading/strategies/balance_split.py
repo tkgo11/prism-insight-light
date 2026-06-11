@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Protocol
 
 from ..domestic import AsyncTradingContext
@@ -13,6 +16,10 @@ from ..us import USStockTrading
 logger = logging.getLogger(__name__)
 
 BALANCE_SPLIT = "balance_split"
+RESERVATION_TTL = timedelta(minutes=30)
+RESERVATION_PATH = (
+    Path(__file__).resolve().parents[2] / "runtime" / "balance_split_reservations.json"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +62,7 @@ class BalanceSplitStrategy:
 
     def __init__(self, *, config: BalanceSplitStrategyConfig):
         self.config = config
+        self.reservation_path = RESERVATION_PATH
 
     async def execute(self, signal: SignalMessage, *, trading_mode: str) -> BalanceSplitExecution:
         if signal.signal_type != "BUY":
@@ -76,7 +84,7 @@ class BalanceSplitStrategy:
             return await self._execute_kr(signal, trader=trader)
 
     async def _execute_us(self, signal: SignalMessage, *, trader: _BuyTrader) -> BalanceSplitExecution:
-        available_amount, cash_source, _summary = self._available_amount(trader)
+        available_amount, cash_source, _summary = self._available_amount(trader, market="US")
         buy_amount = self._buy_amount(available_amount)
         if buy_amount <= 0:
             return self._no_balance(signal, available_amount, buy_amount, cash_source=cash_source)
@@ -89,7 +97,7 @@ class BalanceSplitStrategy:
         return self._from_trade_result(signal, result=result, available_amount=available_amount, buy_amount=buy_amount, cash_source=cash_source)
 
     async def _execute_kr(self, signal: SignalMessage, *, trader: _BuyTrader) -> BalanceSplitExecution:
-        available_amount, cash_source, _summary = self._available_amount(trader)
+        available_amount, cash_source, summary = self._available_amount(trader, market="KR")
         buy_amount = self._buy_amount(available_amount)
         if buy_amount <= 0:
             return self._no_balance(signal, available_amount, buy_amount, cash_source=cash_source)
@@ -99,40 +107,212 @@ class BalanceSplitStrategy:
             buy_amount=int(buy_amount),
             limit_price=None if signal.price in (None, 0) else int(signal.price),
         )
-        return self._from_trade_result(
+        execution = self._from_trade_result(
             signal,
             result=result,
             available_amount=available_amount,
             buy_amount=float(int(buy_amount)),
             cash_source=cash_source,
         )
+        if execution.status == "executed":
+            self._record_cash_reservation(
+                market=signal.market,
+                ticker=signal.ticker,
+                before_cash=available_amount,
+                amount=self._executed_amount(result),
+                account_key=self._reservation_account_key(summary),
+            )
+        return execution
 
     def _buy_amount(self, available_amount: float) -> float:
         return available_amount / self.config.split_count
 
-    @staticmethod
-    def _available_amount(trader: _BuyTrader) -> tuple[float, str, dict[str, Any]]:
+    def _available_amount(self, trader: _BuyTrader, *, market: str) -> tuple[float, str, dict[str, Any]]:
         summary = trader.get_account_summary() or {}
         available_amount = float(summary.get("available_amount", 0) or 0)
-        if available_amount > 0:
-            return available_amount, "available_amount", summary
+        cash_balance = float(summary.get("cash_balance", summary.get("total_cash", 0)) or 0)
+        account_key = self._reservation_account_key(summary)
 
-        # KIS can report ord_psbl_cash=0 outside regular market hours while the
-        # cash/deposit balance is non-zero. Use cash as the sizing base so the
-        # broker gets the final say at order submission instead of failing before
-        # an order attempt with a misleading local no-balance error.
-        for key in ("deposit", "total_cash"):
-            cash_amount = float(summary.get(key, 0) or 0)
-            if cash_amount > 0:
-                logger.info(
-                    "Using %s %.2f as balance split cash base because available_amount is %.2f",
-                    key,
-                    cash_amount,
-                    available_amount,
-                )
-                return cash_amount, key, summary
+        # For domestic accounts, cash_balance/total_cash is the cash portion of
+        # the account after excluding current stock holdings.  That is the
+        # intended balance_split base.  KIS can report ord_psbl_cash=0 outside
+        # regular hours, so use the cash balance in that case; when both values
+        # are positive, cap at the lower value so the strategy never overstates
+        # cash because of stale or more permissive broker fields.
+        if cash_balance > 0:
+            if available_amount > 0:
+                cash_amount = min(cash_balance, available_amount)
+                cash_source = "available_amount" if available_amount <= cash_balance else "cash_balance"
+            else:
+                cash_amount = cash_balance
+                cash_source = "cash_balance"
+            reserved_amount = self._pending_reserved_amount(
+                market=market, current_cash=cash_amount, account_key=account_key
+            )
+            adjusted_cash_amount = max(0.0, cash_amount - reserved_amount)
+            if reserved_amount > 0:
+                cash_source = f"{cash_source}-after-reservations"
+            logger.info(
+                "Using %s %.2f as balance split cash base (raw %.2f, reserved %.2f, cash_balance %.2f, available_amount %.2f)",
+                cash_source,
+                adjusted_cash_amount,
+                cash_amount,
+                reserved_amount,
+                cash_balance,
+                available_amount,
+            )
+            return adjusted_cash_amount, cash_source, summary
+
+        if available_amount > 0:
+            reserved_amount = self._pending_reserved_amount(
+                market=market, current_cash=available_amount, account_key=account_key
+            )
+            adjusted_available = max(0.0, available_amount - reserved_amount)
+            cash_source = "available_amount-after-reservations" if reserved_amount > 0 else "available_amount"
+            return adjusted_available, cash_source, summary
+
+        # Last-resort compatibility fallback for account summaries that do not
+        # expose cash_balance/total_cash. Domestic KIS dnca_tot_amt (deposit) can
+        # remain stale after same-day buys, so it must not override cash_balance.
+        deposit = float(summary.get("deposit", 0) or 0)
+        if deposit > 0:
+            logger.info(
+                "Using deposit %.2f as balance split cash base because cash_balance and available_amount are zero",
+                deposit,
+            )
+            reserved_amount = self._pending_reserved_amount(
+                market=market, current_cash=deposit, account_key=account_key
+            )
+            adjusted_deposit = max(0.0, deposit - reserved_amount)
+            cash_source = "deposit-after-reservations" if reserved_amount > 0 else "deposit"
+            return adjusted_deposit, cash_source, summary
 
         return 0.0, "available_amount", summary
+
+    def _load_reservations(self) -> list[dict[str, Any]]:
+        try:
+            payload = json.loads(self.reservation_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return []
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.warning(
+                "Ignoring unreadable balance split reservation file %s: %s",
+                self.reservation_path,
+                exc,
+            )
+            return []
+        if not isinstance(payload, list):
+            return []
+        return [item for item in payload if isinstance(item, dict)]
+
+    def _save_reservations(self, reservations: list[dict[str, Any]]) -> None:
+        try:
+            self.reservation_path.parent.mkdir(parents=True, exist_ok=True)
+            self.reservation_path.write_text(
+                json.dumps(reservations, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except OSError as exc:
+            logger.warning("Unable to save balance split reservation file %s: %s", self.reservation_path, exc)
+
+    def _fresh_reservations(self) -> list[dict[str, Any]]:
+        cutoff = datetime.now(timezone.utc) - RESERVATION_TTL
+        fresh: list[dict[str, Any]] = []
+        for reservation in self._load_reservations():
+            try:
+                created_at = datetime.fromisoformat(str(reservation.get("created_at", "")))
+            except ValueError:
+                continue
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+            if created_at >= cutoff:
+                fresh.append(reservation)
+        return fresh
+
+    def _pending_reserved_amount(
+        self, *, market: str, current_cash: float, account_key: str = "default"
+    ) -> float:
+        if market.upper() != "KR" or current_cash <= 0:
+            return 0.0
+
+        reservations = self._fresh_reservations()
+        if len(reservations) != len(self._load_reservations()):
+            self._save_reservations(reservations)
+
+        reserved_amount = 0.0
+        adjusted_cash = current_cash
+        for reservation in reservations:
+            if str(reservation.get("market", "")).upper() != "KR":
+                continue
+            if str(reservation.get("account_key", "default")) != account_key:
+                continue
+            try:
+                before_cash = float(reservation.get("before_cash", 0) or 0)
+                amount = float(reservation.get("amount", 0) or 0)
+            except (TypeError, ValueError):
+                continue
+            if before_cash <= 0 or amount <= 0:
+                continue
+
+            # If the broker-reported cash has already fallen by this order, do
+            # not subtract it again.  If the report is only partially updated,
+            # subtract the still-unreflected remainder.
+            reflected_amount = max(0.0, before_cash - adjusted_cash)
+            unreflected_amount = max(0.0, amount - reflected_amount)
+            if unreflected_amount <= 0:
+                continue
+            reserved_amount += unreflected_amount
+            adjusted_cash = max(0.0, adjusted_cash - unreflected_amount)
+
+        if reserved_amount > 0:
+            logger.info(
+                "Deducting %.2f KRW in recent balance_split KR buys from broker cash %.2f",
+                reserved_amount,
+                current_cash,
+            )
+        return reserved_amount
+
+    def _record_cash_reservation(
+        self,
+        *,
+        market: str,
+        ticker: str,
+        before_cash: float,
+        amount: float,
+        account_key: str = "default",
+    ) -> None:
+        if market.upper() != "KR" or before_cash <= 0 or amount <= 0:
+            return
+        reservations = self._fresh_reservations()
+        reservations.append(
+            {
+                "market": market.upper(),
+                "ticker": ticker,
+                "account_key": account_key,
+                "before_cash": float(before_cash),
+                "amount": float(amount),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+        self._save_reservations(reservations)
+        logger.info(
+            "Reserved %.2f KRW from balance_split cash base %.2f after executed KR buy %s",
+            amount,
+            before_cash,
+            ticker,
+        )
+
+    @staticmethod
+    def _reservation_account_key(summary: dict[str, Any]) -> str:
+        return str(summary.get("account_key") or summary.get("account_id") or "default")
+
+    @staticmethod
+    def _executed_amount(result: dict[str, Any]) -> float:
+        try:
+            total_amount = float(result.get("total_amount", 0) or 0)
+        except (TypeError, ValueError):
+            total_amount = 0.0
+        return total_amount
 
     def _no_balance(
         self,
