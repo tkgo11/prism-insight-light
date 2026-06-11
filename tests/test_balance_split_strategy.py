@@ -21,10 +21,11 @@ class FakeUSTrader:
 
 
 class FakeKRTrader:
-    def __init__(self, *, available_amount=10000, deposit=None, total_cash=None):
+    def __init__(self, *, available_amount=10000, deposit=None, total_cash=None, total_amount=0):
         self.available_amount = available_amount
         self.deposit = deposit
         self.total_cash = total_cash
+        self.total_amount = total_amount
         self.buy_calls = []
 
     def get_account_summary(self):
@@ -37,7 +38,7 @@ class FakeKRTrader:
 
     async def async_buy_stock(self, stock_code, buy_amount=None, limit_price=None):
         self.buy_calls.append((stock_code, buy_amount, limit_price))
-        return {"success": True, "message": "kr-buy"}
+        return {"success": True, "message": "kr-buy", "total_amount": self.total_amount}
 
 
 def test_balance_split_config_ignores_disabled_or_other_strategy():
@@ -132,3 +133,58 @@ async def test_balance_split_caps_orderable_cash_at_cash_balance_excluding_holdi
     assert result.buy_amount == 4000.0
     assert result.cash_source == "cash_balance"
     assert trader.buy_calls == [("005930", 4000, 80000)]
+
+
+@pytest.mark.asyncio
+async def test_kr_balance_split_deducts_recent_successful_buys_when_broker_cash_is_stale(tmp_path):
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
+    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+    signal = parse_signal_payload({"type": "BUY", "ticker": "012510", "market": "KR", "price": 119400})
+
+    first_trader = FakeKRTrader(
+        available_amount=0,
+        deposit=29680834,
+        total_cash=23871362,
+        total_amount=11052000,
+    )
+    first_result = await strategy._execute_kr(signal, trader=first_trader)
+
+    assert first_result.status == "executed"
+    assert first_result.available_amount == 23871362
+    assert first_result.buy_amount == 11935681.0
+
+    second_trader = FakeKRTrader(available_amount=0, deposit=29680834, total_cash=23871362, total_amount=0)
+    second_result = await strategy._execute_kr(signal, trader=second_trader)
+
+    assert second_result.status == "executed"
+    assert second_result.available_amount == 12819362
+    assert second_result.buy_amount == 6409681.0
+    assert second_result.cash_source == "cash_balance-after-reservations"
+    assert second_trader.buy_calls == [("012510", 6409681, 119400)]
+
+
+def test_pending_reservations_are_not_double_counted_after_cash_report_updates(tmp_path):
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
+    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+    strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=23871362, amount=11052000)
+
+    assert strategy._pending_reserved_amount(market="KR", current_cash=12819362) == 0
+    assert strategy._load_reservations() == []
+
+    # A later cash increase within the TTL must not resurrect the already
+    # reflected buy reservation.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=25000000) == 0
+
+
+def test_pending_reservations_only_keep_unreflected_remainder_after_partial_cash_update(tmp_path):
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
+    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+    strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=10000000, amount=5000000)
+
+    assert strategy._pending_reserved_amount(market="KR", current_cash=7000000) == 2000000
+    assert strategy._load_reservations()[0]["before_cash"] == 7000000
+    assert strategy._load_reservations()[0]["amount"] == 2000000
+
+    # Cash can increase for unrelated reasons while the remainder is still
+    # unreflected; only the 2M remainder should be reserved, not the old 5M.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=12000000) == 2000000
