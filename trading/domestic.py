@@ -30,6 +30,19 @@ from .buy_sizing import build_buy_sizing, resolve_buy_amount
 from .market_hours import KST
 
 # Logging setup
+def _kst_log_time(*args: Any) -> time.struct_time:
+    """Render default logging timestamps in KST regardless of server TZ."""
+    timestamp = None
+    for arg in reversed(args):
+        if isinstance(arg, (int, float)):
+            timestamp = arg
+            break
+    if timestamp is None:
+        timestamp = time.time()
+    return datetime.datetime.fromtimestamp(timestamp, tz=KST).timetuple()
+
+
+logging.Formatter.converter = _kst_log_time
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -1153,7 +1166,7 @@ class DomesticStockTrading:
                 'total_amount': 0,
                 'order_no': None,
                 'message': f'Buy request timeout ({timeout}s)',
-                'timestamp': datetime.datetime.now().isoformat()
+                'timestamp': _now_kst().isoformat()
             }
 
     async def _execute_buy_stock(self, stock_code: str, buy_amount: int = None, limit_price: int = None) -> Dict[str, Any]:
@@ -1168,7 +1181,7 @@ class DomesticStockTrading:
             'total_amount': 0,
             'order_no': None,
             'message': '',
-            'timestamp': datetime.datetime.now().isoformat()
+            'timestamp': _now_kst().isoformat()
         }
 
         # 3-level protection: per-stock lock + semaphore + global lock
@@ -1275,7 +1288,7 @@ class DomesticStockTrading:
                 'estimated_amount': 0,
                 'order_no': None,
                 'message': f'Sell request timeout ({timeout}s)',
-                'timestamp': datetime.datetime.now().isoformat()
+                'timestamp': _now_kst().isoformat()
             }
 
     async def _execute_sell_stock(self, stock_code: str, limit_price: int = None) -> Dict[str, Any]:
@@ -1288,7 +1301,7 @@ class DomesticStockTrading:
             'estimated_amount': 0,
             'order_no': None,
             'message': '',
-            'timestamp': datetime.datetime.now().isoformat()
+            'timestamp': _now_kst().isoformat()
         }
 
         # 3-level protection: per-stock lock + semaphore + global lock
@@ -1529,15 +1542,18 @@ class DomesticStockTrading:
                         'total_profit_amount': float(output2.get('evlu_pfls_smtl_amt', 0)),
                         'total_profit_rate': round(float(output2.get('evlu_pfls_smtl_amt', 0)) / pchs_amt * 100, 2),
                         'deposit': dnca_tot_amt,  # Deposit (D+0, same-day withdrawal available)
-                        'total_cash': total_cash,  # Total cash (including D+2)
-                        'available_amount': float(output2.get('ord_psbl_cash', 0))
+                        'cash_balance': total_cash,  # Cash balance after excluding current stock holdings
+                        'total_cash': total_cash,  # Backward-compatible alias (including D+2)
+                        'available_amount': float(output2.get('ord_psbl_cash', 0)),
+                        'account_key': self.account_key,
+                        'account_product': self.trenv.my_prod
                     }
 
                     logger.info(f"Account summary: Total eval {account_summary['total_eval_amount']:,.0f} KRW, "
                                 f"profit/loss {account_summary['total_profit_amount']:+,.0f} KRW "
                                 f"({account_summary['total_profit_rate']:+.2f}%), "
                                 f"deposit {account_summary['deposit']:,.0f} KRW, "
-                                f"total cash(incl D+2) {account_summary['total_cash']:,.0f} KRW, "
+                                f"cash balance(excl holdings) {account_summary['cash_balance']:,.0f} KRW, "
                                 f"orderable cash {account_summary['available_amount']:,.0f} KRW")
 
                     return account_summary
