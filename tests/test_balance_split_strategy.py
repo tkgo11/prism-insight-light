@@ -169,3 +169,22 @@ def test_pending_reservations_are_not_double_counted_after_cash_report_updates(t
     strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=23871362, amount=11052000)
 
     assert strategy._pending_reserved_amount(market="KR", current_cash=12819362) == 0
+    assert strategy._load_reservations() == []
+
+    # A later cash increase within the TTL must not resurrect the already
+    # reflected buy reservation.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=25000000) == 0
+
+
+def test_pending_reservations_only_keep_unreflected_remainder_after_partial_cash_update(tmp_path):
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
+    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+    strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=10000000, amount=5000000)
+
+    assert strategy._pending_reserved_amount(market="KR", current_cash=7000000) == 2000000
+    assert strategy._load_reservations()[0]["before_cash"] == 7000000
+    assert strategy._load_reservations()[0]["amount"] == 2000000
+
+    # Cash can increase for unrelated reasons while the remainder is still
+    # unreflected; only the 2M remainder should be reserved, not the old 5M.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=12000000) == 2000000
