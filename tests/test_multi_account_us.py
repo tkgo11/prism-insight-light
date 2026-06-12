@@ -253,3 +253,11 @@ def test_get_overseas_buyable_amount_calls_kis_inquire_psamount():
             {},
         )
     ]
+
+
+def test_us_buy_quantity_caps_to_kis_orderable_amount_even_when_cash_is_higher():
+    trader = _bare_us_trader(auto_exchange=False)
+    trader.get_account_summary = lambda: {"available_amount": 100.0, "usd_cash": 100.0, "exchange_rate": 1300.0}
+    trader.get_overseas_buyable_amount = lambda *args, **kwargs: {"ord_psbl_frcr_amt": "75.00"}
+
+    assert trader.calculate_buy_quantity("AAPL") == 1
