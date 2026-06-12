@@ -355,3 +355,47 @@ def test_url_fetch_does_not_retry_non_rate_limit_errors(monkeypatch):
     assert not response.isOK()
     assert response.getErrorCode() == "OTHER"
     assert len(calls) == 1
+
+
+def test_token_expiry_timestamp_is_interpreted_as_korean_local_time():
+    valid_date = ka.datetime.strptime("2026-06-12 09:51:28", "%Y-%m-%d %H:%M:%S")
+    now_utc = ka.datetime(2026, 6, 12, 1, 2, 3, tzinfo=ka.ZoneInfo("UTC"))
+
+    assert ka._is_token_expired(valid_date, now=now_utc)
+
+
+def test_url_fetch_refreshes_expired_token_once(monkeypatch):
+    calls = []
+    refreshes = []
+
+    class Env:
+        my_url = "https://example.com"
+
+    monkeypatch.setattr(ka, "getTREnv", lambda: Env())
+    monkeypatch.setattr(ka, "_getBaseHeader", lambda: {"authorization": f"Bearer token-{len(refreshes)}"})
+    monkeypatch.setattr(ka, "isPaperTrading", lambda: False)
+    monkeypatch.setattr(ka, "_refresh_after_expired_token_response", lambda: refreshes.append("refresh"))
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 3)
+
+    def fake_get(url, headers, params):
+        calls.append((url, dict(headers), params))
+        if len(calls) == 1:
+            return _FakeResponse(
+                500,
+                {
+                    "rt_cd": "1",
+                    "msg_cd": "EGW00123",
+                    "msg1": "기간이 만료된 token 입니다.",
+                },
+            )
+        return _FakeResponse(200, {"rt_cd": "0", "msg_cd": "0", "msg1": "OK", "output": {}})
+
+    monkeypatch.setattr(ka.requests, "get", fake_get)
+
+    response = ka._url_fetch("/uapi/test", "TTTC8434R", "", {"CANO": "12345678"})
+
+    assert response.isOK()
+    assert len(calls) == 2
+    assert refreshes == ["refresh"]
+    assert calls[0][1]["authorization"] == "Bearer token-0"
+    assert calls[1][1]["authorization"] == "Bearer token-1"
