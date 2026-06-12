@@ -286,7 +286,9 @@ class USStockTrading:
     def _request(self, api_url: str, tr_id: str, params: Dict[str, Any], **kwargs):
         with ka.get_trading_env_lock():
             self._activate_account()
-            return ka._url_fetch(api_url, tr_id, "", params, **kwargs)
+            response = ka._url_fetch(api_url, tr_id, "", params, **kwargs)
+            self.trenv = ka.getTREnv()
+            return response
 
     def get_current_price(self, ticker: str, exchange: str = None) -> Optional[Dict[str, Any]]:
         """
@@ -410,48 +412,59 @@ class USStockTrading:
         """Resolve USD that may be submitted, optionally including KIS auto-exchange buying power."""
         summary = self.get_account_summary() or {}
         usd_cash = _safe_float(summary.get("available_amount"), _safe_float(summary.get("usd_cash")))
-        if usd_cash >= requested_amount:
-            return requested_amount, {"usd_cash": usd_cash, "auto_exchange_used": False}
-
         info = {"usd_cash": usd_cash, "auto_exchange_used": False}
-        shortfall = requested_amount - usd_cash
-        if not self.auto_exchange.enabled:
-            if usd_cash > 0:
-                logger.info(
-                    "[%s] Capping buy amount %.2f USD to available USD cash %.2f; auto exchange is disabled",
-                    ticker,
-                    requested_amount,
-                    usd_cash,
-                )
-                return usd_cash, info
+        auto_exchange = getattr(self, "auto_exchange", AutoExchangeConfig(enabled=False))
+
+        buyable = self.get_overseas_buyable_amount(ticker, price, exchange) if hasattr(self, "trenv") else {}
+        current_orderable = _safe_float(buyable.get("ord_psbl_frcr_amt")) if buyable else 0.0
+        after_exchange_orderable = (
+            _safe_float(
+                buyable.get("echm_af_ord_psbl_amt"),
+                _safe_float(buyable.get("ovrs_ord_psbl_amt")),
+            )
+            if buyable
+            else 0.0
+        )
+
+        cash_orderable = usd_cash
+        if current_orderable > 0:
+            cash_orderable = min(cash_orderable, current_orderable) if cash_orderable > 0 else current_orderable
+
+        if cash_orderable >= requested_amount:
             return requested_amount, info
 
-        if shortfall < self.auto_exchange.min_shortfall_usd:
-            return min(requested_amount, usd_cash), info
+        if not auto_exchange.enabled:
+            if cash_orderable > 0:
+                logger.info(
+                    "[%s] Capping buy amount %.2f USD to KIS orderable USD %.2f; auto exchange is disabled",
+                    ticker,
+                    requested_amount,
+                    cash_orderable,
+                )
+                return cash_orderable, info
+            return requested_amount, info
 
-        buyable = self.get_overseas_buyable_amount(ticker, price, exchange)
+        shortfall = requested_amount - cash_orderable
+        if shortfall < auto_exchange.min_shortfall_usd:
+            return min(requested_amount, cash_orderable), info
+
         if not buyable:
-            return min(requested_amount, usd_cash) if usd_cash > 0 else requested_amount, info
+            return min(requested_amount, cash_orderable) if cash_orderable > 0 else requested_amount, info
 
-        current_orderable = _safe_float(buyable.get("ord_psbl_frcr_amt"))
-        after_exchange_orderable = _safe_float(
-            buyable.get("echm_af_ord_psbl_amt"),
-            _safe_float(buyable.get("ovrs_ord_psbl_amt")),
-        )
         exchange_rate = _safe_float(buyable.get("exrt"), _safe_float(summary.get("exchange_rate")))
-        orderable_usd = max(usd_cash, current_orderable, after_exchange_orderable)
+        orderable_usd = max(cash_orderable, after_exchange_orderable)
 
-        if self.auto_exchange.max_krw is not None and exchange_rate > 0:
-            max_exchange_usd = self.auto_exchange.max_krw / exchange_rate
-            orderable_usd = min(orderable_usd, usd_cash + max_exchange_usd)
+        if auto_exchange.max_krw is not None and exchange_rate > 0:
+            max_exchange_usd = auto_exchange.max_krw / exchange_rate
+            orderable_usd = min(orderable_usd, cash_orderable + max_exchange_usd)
 
-        if orderable_usd <= usd_cash:
-            return min(requested_amount, usd_cash) if usd_cash > 0 else requested_amount, info
+        if orderable_usd <= cash_orderable:
+            return min(requested_amount, cash_orderable) if cash_orderable > 0 else requested_amount, info
 
         resolved = min(requested_amount, orderable_usd)
         info.update(
             {
-                "auto_exchange_used": resolved > usd_cash,
+                "auto_exchange_used": resolved > cash_orderable,
                 "exchange_rate": exchange_rate,
                 "orderable_after_exchange_usd": after_exchange_orderable,
             }
@@ -463,11 +476,11 @@ class USStockTrading:
                 requested_amount,
                 resolved,
             )
-        elif resolved > usd_cash:
+        elif resolved > cash_orderable:
             logger.info(
                 "[%s] Auto-exchange enabled: USD cash %.2f, KIS after-exchange buying power %.2f, requested %.2f",
                 ticker,
-                usd_cash,
+                cash_orderable,
                 after_exchange_orderable,
                 requested_amount,
             )
@@ -1394,9 +1407,11 @@ class USStockTrading:
                         )
 
                         if buy_result['success']:
+                            result['quantity'] = int(buy_result.get('quantity') or buy_quantity)
+                            result['total_amount'] = result['quantity'] * effective_limit_price
                             result['success'] = True
                             result['order_no'] = buy_result['order_no']
-                            result['message'] = f"Buy completed: {buy_quantity} shares x ${current_price:.2f} = ${result['total_amount']:.2f}"
+                            result['message'] = f"Buy completed: {result['quantity']} shares x ${effective_limit_price:.2f} = ${result['total_amount']:.2f}"
                         else:
                             result['message'] = f"Buy failed: {buy_result['message']}"
 
@@ -1899,4 +1914,3 @@ class AsyncUSTradingContext:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
             logger.error(f"AsyncUSTradingContext error: {exc_type.__name__}: {exc_val}")
-

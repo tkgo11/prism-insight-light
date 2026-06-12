@@ -209,7 +209,9 @@ class DomesticStockTrading:
     def _request(self, api_url: str, tr_id: str, params: Dict[str, Any], **kwargs):
         with ka.get_trading_env_lock():
             self._activate_account()
-            return ka._url_fetch(api_url, tr_id, "", params, **kwargs)
+            response = ka._url_fetch(api_url, tr_id, "", params, **kwargs)
+            self.trenv = ka.getTREnv()
+            return response
 
     def get_current_price(self, stock_code: str) -> Optional[Dict[str, Any]]:
         """
@@ -1765,4 +1767,3 @@ class AsyncTradingContext:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
             logger.error(f"AsyncTradingContext error: {exc_type.__name__}: {exc_val}")
-

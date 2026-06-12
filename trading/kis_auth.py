@@ -18,6 +18,7 @@ from base64 import b64decode
 from collections import namedtuple
 from collections.abc import Callable
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from io import StringIO
 import stat
 import hashlib
@@ -74,6 +75,8 @@ class TokenRequestError(KISAuthError):
 
 
 KIS_RATE_LIMIT_ERROR_CODE = "EGW00201"
+KIS_EXPIRED_TOKEN_ERROR_CODE = "EGW00123"
+KIS_TOKEN_EXPIRY_TZ = ZoneInfo("Asia/Seoul")
 KIS_RATE_LIMIT_RETRY_ATTEMPTS = int(os.environ.get("KIS_RATE_LIMIT_RETRY_ATTEMPTS", "10"))
 KIS_RATE_LIMIT_RETRY_BASE_SECONDS = float(os.environ.get("KIS_RATE_LIMIT_RETRY_BASE_SECONDS", "1.0"))
 KIS_RATE_LIMIT_RETRY_MAX_SECONDS = float(os.environ.get("KIS_RATE_LIMIT_RETRY_MAX_SECONDS", "5.0"))
@@ -418,6 +421,7 @@ _autoReAuth = False
 _DEBUG = False
 _isPaper = False
 _smartSleep = 0.1
+_CURRENT_AUTH_CONTEXT: dict[str, Any] = {}
 
 # Define default header values
 _base_headers = {
@@ -551,8 +555,7 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
     try:
         if account_key:
             # Per-account mode: only look for the specific account's token file
-            acct_hash = hashlib.sha256(account_key.encode()).hexdigest()[:8]
-            acct_token_path = Path(config_root) / f"KIS_acct_{acct_hash}.token"
+            acct_token_path = _token_file_for_account(account_key)
             token_files = [acct_token_path] if acct_token_path.exists() else []
         else:
             # Global mode: find all token files (multiple patterns for compatibility)
@@ -653,9 +656,7 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
                     _safe_delete(token_file)
                     continue
 
-                now = datetime.now()
-
-                if valid_date > now:
+                if not _is_token_expired(valid_date):
                     logging.info(f"✅ Valid token found (expires: {valid_date})")
                     return token
                 else:
@@ -677,6 +678,25 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
     except Exception as e:
         logging.error(f"Error in read_token: {e}")
         return None
+
+
+def _is_token_expired(valid_date: datetime, *, now: datetime | None = None) -> bool:
+    """Return whether a KIS token expiry timestamp has passed.
+
+    KIS returns ``access_token_token_expired`` as a timezone-less timestamp in
+    Korean local time.  Treating that value as the server's local timezone (for
+    example UTC inside a container) can keep an already-expired token alive for
+    hours.  Naive expiry values are therefore interpreted as Asia/Seoul time.
+    """
+    if valid_date.tzinfo is None:
+        valid_date = valid_date.replace(tzinfo=KIS_TOKEN_EXPIRY_TZ)
+
+    if now is None:
+        now = datetime.now(KIS_TOKEN_EXPIRY_TZ)
+    elif now.tzinfo is None:
+        now = now.replace(tzinfo=KIS_TOKEN_EXPIRY_TZ)
+
+    return valid_date <= now.astimezone(KIS_TOKEN_EXPIRY_TZ)
 
 def _set_secure_file_permissions(file_path):
     """Set secure file permissions on all OS"""
@@ -909,6 +929,30 @@ def _safe_delete(file_path: Path, max_retries: int = 3) -> bool:
     return False
 
 
+def _token_file_for_account(account_key: str | None) -> Path | None:
+    if not account_key:
+        return None
+    acct_hash = hashlib.sha256(account_key.encode()).hexdigest()[:8]
+    return Path(config_root) / f"KIS_acct_{acct_hash}.token"
+
+
+def _discard_saved_token(account_key: str | None = None) -> None:
+    """Delete saved token files so the next auth call must request a new token."""
+    if account_key:
+        token_file = _token_file_for_account(account_key)
+        if token_file and token_file.exists():
+            logging.info("Deleting expired KIS token file for account %s: %s", account_key, token_file)
+            _safe_delete(token_file)
+        return
+
+    token_files = list(Path(config_root).glob("KIS*.token")) + list(Path(config_root).glob("KIS20*"))
+    if os.path.exists(token_tmp) and Path(token_tmp) not in token_files:
+        token_files.append(Path(token_tmp))
+    for token_file in token_files:
+        logging.info("Deleting expired KIS token file: %s", token_file)
+        _safe_delete(token_file)
+
+
 # ============== Atomic Write (Cross-platform) ==============
 def _atomic_write(file_path_str: str, data: bytes) -> bool:
     """
@@ -1019,7 +1063,7 @@ def changeTREnv(
 ):
     cfg = dict()
 
-    global _isPaper, _smartSleep
+    global _isPaper, _smartSleep, _CURRENT_AUTH_CONTEXT
     if svr == "prod":  # Live trading
         ak1 = "my_app"  # App key for live trading
         ak2 = "my_sec"  # App secret for live trading
@@ -1057,6 +1101,13 @@ def changeTREnv(
 
     # print(cfg)
     _setTRENV(cfg)
+    _CURRENT_AUTH_CONTEXT = {
+        "svr": svr,
+        "product": cfg["my_prod"],
+        "account_name": account_name,
+        "account_index": account_index,
+        "account_key": account.get("account_key") or account_key,
+    }
 
 
 def _getResultObject(json_data):
@@ -1388,6 +1439,27 @@ def _is_kis_rate_limit_response(res) -> bool:
         return False
 
 
+def _is_kis_expired_token_response(res) -> bool:
+    try:
+        return res.getErrorCode() == KIS_EXPIRED_TOKEN_ERROR_CODE
+    except Exception:
+        return False
+
+
+def _refresh_after_expired_token_response() -> None:
+    """Force token reissue after KIS reports EGW00123 for the active account."""
+    context = dict(_CURRENT_AUTH_CONTEXT)
+    account_key = context.get("account_key")
+    _discard_saved_token(account_key=account_key)
+    auth(
+        svr=context.get("svr", "prod"),
+        product=context.get("product", DEFAULT_PRODUCT_CODE),
+        account_name=context.get("account_name"),
+        account_index=context.get("account_index"),
+        account_key=account_key,
+    )
+
+
 def _kis_retry_delay_seconds(attempt_index: int) -> float:
     base_seconds = max(0.0, KIS_RATE_LIMIT_RETRY_BASE_SECONDS)
     max_seconds = max(base_seconds, KIS_RATE_LIMIT_RETRY_MAX_SECONDS)
@@ -1433,6 +1505,7 @@ def _url_fetch(
         print(f"<body>\n{params}")
 
     attempts = max(1, KIS_RATE_LIMIT_RETRY_ATTEMPTS)
+    expired_token_retry_used = False
     for attempt in range(1, attempts + 1):
         res = _request_once(url, headers, params, postFlag=postFlag)
 
@@ -1443,6 +1516,30 @@ def _url_fetch(
             return ar
 
         error_response = APIRespError(res.status_code, res.text)
+        if _is_kis_expired_token_response(error_response) and not expired_token_retry_used:
+            expired_token_retry_used = True
+            logging.warning(
+                "KIS API reported expired token %s from %s (TR %s); refreshing token and retrying once",
+                KIS_EXPIRED_TOKEN_ERROR_CODE,
+                api_url,
+                tr_id,
+            )
+            try:
+                _refresh_after_expired_token_response()
+            except Exception as refresh_error:
+                logging.error("Failed to refresh KIS token after %s: %s", KIS_EXPIRED_TOKEN_ERROR_CODE, refresh_error)
+                print("Error Code : " + str(res.status_code) + " | " + res.text)
+                return error_response
+
+            headers = _getBaseHeader()
+            headers["tr_id"] = tr_id
+            headers["custtype"] = "P"
+            headers["tr_cont"] = tr_cont
+            if appendHeaders is not None:
+                for x in appendHeaders.keys():
+                    headers[x] = appendHeaders.get(x)
+            continue
+
         if not _is_kis_rate_limit_response(error_response) or attempt >= attempts:
             print("Error Code : " + str(res.status_code) + " | " + res.text)
             return error_response
