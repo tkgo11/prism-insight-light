@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import yaml
+from trading import yaml_compat as yaml
 
 from trading.schema import infer_market
 from webui.services.masking import mask_secret_value

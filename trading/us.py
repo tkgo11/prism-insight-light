@@ -17,6 +17,8 @@ Key differences from Korean domestic trading:
 
 import asyncio
 import datetime
+import importlib
+import importlib.util
 import logging
 import math
 import time
@@ -24,8 +26,35 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Dict, List, Any
 
-import yaml
-import pytz
+from . import yaml_compat as yaml
+pytz_spec = importlib.util.find_spec("pytz")
+if pytz_spec is not None:
+    pytz = importlib.import_module("pytz")
+else:  # pragma: no cover - minimal test environment fallback
+    class _FixedTimezone(datetime.tzinfo):
+        def __init__(self, name, offset_hours):
+            self._name = name
+            self._offset = datetime.timedelta(hours=offset_hours)
+
+        def utcoffset(self, dt):
+            return self._offset
+
+        def dst(self, dt):
+            return datetime.timedelta(0)
+
+        def tzname(self, dt):
+            return self._name
+
+        def localize(self, dt):
+            return dt.replace(tzinfo=self)
+
+    class _PytzFallback:
+        @staticmethod
+        def timezone(name):
+            offsets = {"Asia/Seoul": 9, "US/Eastern": -5}
+            return _FixedTimezone(name, offsets.get(name, 0))
+
+    pytz = _PytzFallback()
 
 # Path to directory where current file is located
 TRADING_DIR = Path(__file__).parent
@@ -418,8 +447,15 @@ class USStockTrading:
         should_query_buyable = hasattr(self, "trenv") and (
             auto_exchange.enabled or requested_amount <= usd_cash
         )
-        buyable = self.get_overseas_buyable_amount(ticker, price, exchange) if should_query_buyable else {}
-        current_orderable = _safe_float(buyable.get("ord_psbl_frcr_amt")) if buyable else 0.0
+        buyable = {}
+        if should_query_buyable:
+            try:
+                buyable = self.get_overseas_buyable_amount(ticker, price, exchange)
+            except Exception as exc:
+                logger.warning("[%s] Overseas buyable amount inquiry raised; falling back to account cash: %s", ticker, exc)
+                buyable = {}
+        has_current_orderable = bool(buyable) and buyable.get("ord_psbl_frcr_amt") not in (None, "")
+        current_orderable = _safe_float(buyable.get("ord_psbl_frcr_amt")) if has_current_orderable else 0.0
         after_exchange_orderable = (
             _safe_float(
                 buyable.get("echm_af_ord_psbl_amt"),
@@ -430,14 +466,14 @@ class USStockTrading:
         )
 
         cash_orderable = usd_cash
-        if current_orderable > 0:
+        if has_current_orderable:
             cash_orderable = min(cash_orderable, current_orderable) if cash_orderable > 0 else current_orderable
 
         if cash_orderable >= requested_amount:
             return requested_amount, info
 
         if not auto_exchange.enabled:
-            if cash_orderable > 0:
+            if cash_orderable > 0 or has_current_orderable:
                 logger.info(
                     "[%s] Capping buy amount %.2f USD to KIS orderable USD %.2f; auto exchange is disabled",
                     ticker,
@@ -462,7 +498,9 @@ class USStockTrading:
             orderable_usd = min(orderable_usd, cash_orderable + max_exchange_usd)
 
         if orderable_usd <= cash_orderable:
-            return min(requested_amount, cash_orderable) if cash_orderable > 0 else requested_amount, info
+            if cash_orderable > 0 or has_current_orderable:
+                return min(requested_amount, cash_orderable), info
+            return requested_amount, info
 
         resolved = min(requested_amount, orderable_usd)
         info.update(
@@ -917,7 +955,6 @@ class USStockTrading:
         Returns:
             True if reserved order can be placed, False otherwise
         """
-        import pytz
         now_kst = datetime.datetime.now(KST)
         current_time = now_kst.time()
 
