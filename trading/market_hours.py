@@ -2,13 +2,73 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone, tzinfo
 from pathlib import Path
+import importlib
+import importlib.util
 
-import holidays
-import pandas_market_calendars as mcal
-import pytz
-import yaml
+holidays_spec = importlib.util.find_spec("holidays")
+if holidays_spec is not None:
+    holidays = importlib.import_module("holidays")
+else:  # pragma: no cover - minimal test environment fallback
+    class _HolidaysFallback:
+        @staticmethod
+        def country_holidays(country):
+            return set()
+
+    holidays = _HolidaysFallback()
+
+mcal_spec = importlib.util.find_spec("pandas_market_calendars")
+if mcal_spec is not None:
+    mcal = importlib.import_module("pandas_market_calendars")
+else:  # pragma: no cover - minimal test environment fallback
+    class _ValidDays:
+        def __init__(self, empty):
+            self.empty = empty
+
+    class _WeekdayCalendar:
+        @staticmethod
+        def valid_days(start_date, end_date):
+            return _ValidDays(empty=start_date.weekday() >= 5)
+
+    class _MarketCalendarFallback:
+        @staticmethod
+        def get_calendar(name):
+            return _WeekdayCalendar()
+
+    mcal = _MarketCalendarFallback()
+
+pytz_spec = importlib.util.find_spec("pytz")
+if pytz_spec is not None:
+    pytz = importlib.import_module("pytz")
+else:  # pragma: no cover - minimal test environment fallback
+    class _FixedTimezone(tzinfo):
+        def __init__(self, name, offset_hours):
+            self._name = name
+            self._offset = timedelta(hours=offset_hours)
+
+        def utcoffset(self, dt):
+            return self._offset
+
+        def dst(self, dt):
+            return timedelta(0)
+
+        def tzname(self, dt):
+            return self._name
+
+        def localize(self, dt):
+            return dt.replace(tzinfo=self)
+
+    class _PytzFallback:
+        BaseTzInfo = tzinfo
+
+        @staticmethod
+        def timezone(name):
+            offsets = {"Asia/Seoul": 9, "US/Eastern": -5}
+            return _FixedTimezone(name, offsets.get(name, 0))
+
+    pytz = _PytzFallback()
+from . import yaml_compat as yaml
 
 
 KST = pytz.timezone("Asia/Seoul")

@@ -355,3 +355,121 @@ def test_url_fetch_does_not_retry_non_rate_limit_errors(monkeypatch):
     assert not response.isOK()
     assert response.getErrorCode() == "OTHER"
     assert len(calls) == 1
+
+
+def test_token_expiry_timestamp_is_interpreted_as_korean_local_time():
+    valid_date = ka.datetime.strptime("2026-06-12 09:51:28", "%Y-%m-%d %H:%M:%S")
+    now_utc = ka.datetime(2026, 6, 12, 1, 2, 3, tzinfo=ka.ZoneInfo("UTC"))
+
+    assert ka._is_token_expired(valid_date, now=now_utc)
+
+
+def test_url_fetch_refreshes_expired_token_once(monkeypatch):
+    calls = []
+    refreshes = []
+
+    class Env:
+        my_url = "https://example.com"
+
+    monkeypatch.setattr(ka, "getTREnv", lambda: Env())
+    monkeypatch.setattr(ka, "_getBaseHeader", lambda: {"authorization": f"Bearer token-{len(refreshes)}"})
+    monkeypatch.setattr(ka, "isPaperTrading", lambda: False)
+    monkeypatch.setattr(ka, "_refresh_after_expired_token_response", lambda: refreshes.append("refresh"))
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 3)
+
+    def fake_get(url, headers, params):
+        calls.append((url, dict(headers), params))
+        if len(calls) == 1:
+            return _FakeResponse(
+                500,
+                {
+                    "rt_cd": "1",
+                    "msg_cd": "EGW00123",
+                    "msg1": "기간이 만료된 token 입니다.",
+                },
+            )
+        return _FakeResponse(200, {"rt_cd": "0", "msg_cd": "0", "msg1": "OK", "output": {}})
+
+    monkeypatch.setattr(ka.requests, "get", fake_get)
+
+    response = ka._url_fetch("/uapi/test", "TTTC8434R", "", {"CANO": "12345678"})
+
+    assert response.isOK()
+    assert len(calls) == 2
+    assert refreshes == ["refresh"]
+    assert calls[0][1]["authorization"] == "Bearer token-0"
+    assert calls[1][1]["authorization"] == "Bearer token-1"
+
+
+def test_url_fetch_expired_token_retry_works_with_single_rate_limit_attempt(monkeypatch):
+    calls = []
+    refreshes = []
+
+    class Env:
+        my_url = "https://example.com"
+
+    monkeypatch.setattr(ka, "getTREnv", lambda: Env())
+    monkeypatch.setattr(ka, "_getBaseHeader", lambda: {"authorization": f"Bearer token-{len(refreshes)}"})
+    monkeypatch.setattr(ka, "isPaperTrading", lambda: False)
+    monkeypatch.setattr(ka, "_refresh_after_expired_token_response", lambda: refreshes.append("refresh"))
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 1)
+
+    def fake_get(url, headers, params):
+        calls.append((url, dict(headers), params))
+        if len(calls) == 1:
+            return _FakeResponse(500, {"rt_cd": "1", "msg_cd": "EGW00123", "msg1": "expired"})
+        return _FakeResponse(200, {"rt_cd": "0", "msg_cd": "0", "msg1": "OK", "output": {}})
+
+    monkeypatch.setattr(ka.requests, "get", fake_get)
+
+    response = ka._url_fetch("/uapi/test", "TTTC8434R", "", {})
+
+    assert response.isOK()
+    assert refreshes == ["refresh"]
+    assert len(calls) == 2
+
+
+def test_refresh_after_expired_token_discards_global_token_for_legacy_auth(monkeypatch):
+    discarded = []
+    auth_calls = []
+    monkeypatch.setattr(
+        ka,
+        "_CURRENT_AUTH_CONTEXT",
+        {
+            "svr": "vps",
+            "product": "01",
+            "account_name": None,
+            "account_index": None,
+            "account_key": "vps:12345678:01",
+            "token_account_key": None,
+        },
+    )
+    monkeypatch.setattr(ka, "_discard_saved_token", lambda account_key=None: discarded.append(account_key))
+    monkeypatch.setattr(ka, "auth", lambda **kwargs: auth_calls.append(kwargs))
+
+    ka._refresh_after_expired_token_response()
+
+    assert discarded == [None]
+    assert auth_calls == [
+        {
+            "svr": "vps",
+            "product": "01",
+            "account_name": None,
+            "account_index": None,
+            "account_key": "vps:12345678:01",
+        }
+    ]
+
+
+def test_discard_saved_token_masks_account_key_in_logs(monkeypatch, tmp_path, caplog):
+    account_key = "vps:12345678:01"
+    token_file = tmp_path / "KIS_acct_test.token"
+    token_file.write_text("token", encoding="utf-8")
+    monkeypatch.setattr(ka, "_token_file_for_account", lambda value: token_file)
+
+    with caplog.at_level("INFO"):
+        ka._discard_saved_token(account_key=account_key)
+
+    assert "12345678" not in caplog.text
+    assert "vps:12****78:01" in caplog.text
+    assert not token_file.exists()
