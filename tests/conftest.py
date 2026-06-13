@@ -52,3 +52,23 @@ if not CONFIG_FILE.exists():
 
 if _CREATED_TEST_CONFIG:
     atexit.register(lambda: CONFIG_FILE.unlink(missing_ok=True))
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "asyncio: run async tests without requiring pytest-asyncio")
+
+
+def pytest_pyfunc_call(pyfuncitem):
+    if "asyncio" not in pyfuncitem.keywords:
+        return None
+
+    import asyncio
+    import inspect
+
+    testfunction = pyfuncitem.obj
+    if not inspect.iscoroutinefunction(testfunction):
+        return None
+
+    fixture_args = {name: pyfuncitem.funcargs[name] for name in pyfuncitem._fixtureinfo.argnames}
+    asyncio.run(testfunction(**fixture_args))
+    return True

@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 from typing import Optional, Dict, List, Any
 
-import yaml
+from . import yaml_compat as yaml
 
 # Path to directory where current file is located
 TRADING_DIR = Path(__file__).parent

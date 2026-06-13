@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import yaml
+from . import yaml_compat as yaml
 
 from .domestic import AsyncTradingContext
 from .market_hours import get_trading_mode, is_market_open
