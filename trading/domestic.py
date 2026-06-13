@@ -210,7 +210,10 @@ class DomesticStockTrading:
         with ka.get_trading_env_lock():
             self._activate_account()
             response = ka._url_fetch(api_url, tr_id, "", params, **kwargs)
-            self.trenv = ka.getTREnv()
+            try:
+                self.trenv = ka.getTREnv()
+            except RuntimeError:
+                logger.debug("KIS trading environment unavailable after request; keeping existing trader environment")
             return response
 
     def get_current_price(self, stock_code: str) -> Optional[Dict[str, Any]]:
