@@ -273,3 +273,23 @@ def test_us_buy_quantity_skips_kis_buyable_when_cash_insufficient_and_auto_excha
     trader.get_overseas_buyable_amount = fail_buyable
 
     assert trader.calculate_buy_quantity("AAPL") == 0
+
+
+def test_us_buy_quantity_treats_zero_kis_orderable_as_cap():
+    trader = _bare_us_trader(auto_exchange=False)
+    trader.get_account_summary = lambda: {"available_amount": 100.0, "usd_cash": 100.0, "exchange_rate": 1300.0}
+    trader.get_overseas_buyable_amount = lambda *args, **kwargs: {"ord_psbl_frcr_amt": "0"}
+
+    assert trader.calculate_buy_quantity("AAPL") == 0
+
+
+def test_us_buy_quantity_falls_back_when_buyable_probe_raises():
+    trader = _bare_us_trader(auto_exchange=False)
+    trader.get_account_summary = lambda: {"available_amount": 100.0, "usd_cash": 100.0, "exchange_rate": 1300.0}
+
+    def raise_probe(*args, **kwargs):
+        raise TimeoutError("probe timed out")
+
+    trader.get_overseas_buyable_amount = raise_probe
+
+    assert trader.calculate_buy_quantity("AAPL") == 2
