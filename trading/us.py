@@ -415,7 +415,10 @@ class USStockTrading:
         info = {"usd_cash": usd_cash, "auto_exchange_used": False}
         auto_exchange = getattr(self, "auto_exchange", AutoExchangeConfig(enabled=False))
 
-        buyable = self.get_overseas_buyable_amount(ticker, price, exchange) if hasattr(self, "trenv") else {}
+        should_query_buyable = hasattr(self, "trenv") and (
+            auto_exchange.enabled or requested_amount <= usd_cash
+        )
+        buyable = self.get_overseas_buyable_amount(ticker, price, exchange) if should_query_buyable else {}
         current_orderable = _safe_float(buyable.get("ord_psbl_frcr_amt")) if buyable else 0.0
         after_exchange_orderable = (
             _safe_float(
