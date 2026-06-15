@@ -65,7 +65,7 @@ class TradeDispatcher:
         strategy = self._resolve_buy_strategy(signal)
 
         if not is_market_open(signal.market):
-            if self.trading_mode == "demo":
+            if self.trading_mode == "demo" and allow_queue:
                 queued_signal = self.queue.enqueue(signal)
                 logger.info(
                     "Queued %s %s(%s) for %s",
@@ -75,6 +75,15 @@ class TradeDispatcher:
                     queued_signal.execute_at,
                 )
                 return DispatchResult("queued", f"Queued for {queued_signal.execute_at}", signal.signal_type, signal.market)
+            if self.trading_mode == "demo":
+                logger.warning(
+                    "Rejected queued %s %s(%s) on %s market: market is still closed",
+                    signal.signal_type,
+                    signal.company_name,
+                    signal.ticker,
+                    signal.market,
+                )
+                return DispatchResult("rejected", "Market closed; queued order was not re-queued", signal.signal_type, signal.market)
             logger.warning(
                 "Rejected %s %s(%s) on %s market: market closed in real mode",
                 signal.signal_type,

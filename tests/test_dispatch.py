@@ -98,6 +98,20 @@ async def test_demo_off_hours_enqueues(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_demo_queued_order_does_not_requeue_when_market_still_closed(monkeypatch):
+    queue = DummyQueue()
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+
+    dispatcher = TradeDispatcher(trading_mode="demo", queue=queue)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+    result = await dispatcher.dispatch(signal, allow_queue=False)
+
+    assert result.status == "rejected"
+    assert result.message == "Market closed; queued order was not re-queued"
+    assert queue.enqueued == []
+
+
+@pytest.mark.asyncio
 async def test_real_off_hours_rejects(monkeypatch):
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
 
@@ -175,4 +189,3 @@ async def test_disabled_strategy_buy_uses_legacy_path(monkeypatch):
 
     assert result.status == "executed"
     assert results == {"mode": "demo", "ticker": "AAPL", "limit_price": 200.0}
-
