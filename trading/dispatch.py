@@ -14,7 +14,22 @@ from .domestic import AsyncTradingContext
 from .market_hours import get_trading_mode, is_market_open
 from .off_hours_queue import OffHoursOrderQueue
 from .schema import SignalMessage, parse_signal_payload
-from .strategies import BalanceSplitStrategy, BalanceSplitStrategyConfig
+from .strategies import (
+    BalanceSplitStrategy,
+    BalanceSplitStrategyConfig,
+    CooldownStrategy,
+    CooldownStrategyConfig,
+    EventRiskOffStrategy,
+    EventRiskOffStrategyConfig,
+    LimitBufferStrategy,
+    LimitBufferStrategyConfig,
+    ProfitLadderStrategy,
+    ProfitLadderStrategyConfig,
+    RiskBracketStrategy,
+    RiskBracketStrategyConfig,
+    ScoreWeightedStrategy,
+    ScoreWeightedStrategyConfig,
+)
 from .us import USStockTrading
 
 
@@ -50,11 +65,21 @@ class TradeDispatcher:
         self.queue = queue or OffHoursOrderQueue(queue_path)
         self.strategy_config = strategy_config if strategy_config is not None else self._load_strategy_config()
         self.balance_split_config = BalanceSplitStrategyConfig.from_mapping(self.strategy_config)
+        self.score_weighted_config = ScoreWeightedStrategyConfig.from_mapping(self.strategy_config)
+        self.risk_bracket_config = RiskBracketStrategyConfig.from_mapping(self.strategy_config)
+        self.profit_ladder_config = ProfitLadderStrategyConfig.from_mapping(self.strategy_config)
+        self.limit_buffer_config = LimitBufferStrategyConfig.from_mapping(self.strategy_config)
+        self.cooldown_config = CooldownStrategyConfig.from_mapping(self.strategy_config)
+        self.event_risk_off_config = EventRiskOffStrategyConfig.from_mapping(self.strategy_config)
         self.account_name = account_name
         self.account_index = account_index
 
     async def dispatch(self, signal: SignalMessage, *, allow_queue: bool = True) -> DispatchResult:
+        event_strategy = self._resolve_event_strategy(signal)
         if signal.is_event:
+            if event_strategy is not None:
+                strategy_result = await event_strategy.execute(signal, trading_mode=self.trading_mode)
+                return DispatchResult(strategy_result.status, strategy_result.message, signal.signal_type, signal.market)
             logger.info("Ignoring EVENT signal for %s(%s)", signal.company_name, signal.ticker)
             return DispatchResult("acknowledged", "Event signal acknowledged", signal.signal_type, signal.market)
 
@@ -62,7 +87,7 @@ class TradeDispatcher:
             logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
             return DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
 
-        strategy = self._resolve_buy_strategy(signal)
+        strategy = self._resolve_strategy(signal)
 
         if not is_market_open(signal.market):
             if self.trading_mode == "demo" and allow_queue:
@@ -115,10 +140,32 @@ class TradeDispatcher:
             payload = yaml.safe_load(fh) or {}
         return payload.get("signal_strategy") or {}
 
+    def _resolve_event_strategy(self, signal: SignalMessage) -> EventRiskOffStrategy | None:
+        if signal.is_event and self.event_risk_off_config is not None:
+            return EventRiskOffStrategy(config=self.event_risk_off_config)
+        return None
+
+    def _resolve_strategy(self, signal: SignalMessage):
+        if self.event_risk_off_config is not None:
+            return EventRiskOffStrategy(config=self.event_risk_off_config)
+        if self.cooldown_config is not None:
+            return CooldownStrategy(config=self.cooldown_config)
+        if self.limit_buffer_config is not None and signal.is_trade:
+            return LimitBufferStrategy(config=self.limit_buffer_config)
+        if signal.signal_type == "BUY":
+            if self.balance_split_config is not None:
+                return BalanceSplitStrategy(config=self.balance_split_config)
+            if self.score_weighted_config is not None:
+                return ScoreWeightedStrategy(config=self.score_weighted_config)
+            if self.risk_bracket_config is not None:
+                return RiskBracketStrategy(config=self.risk_bracket_config)
+        if signal.signal_type == "SELL" and self.profit_ladder_config is not None:
+            return ProfitLadderStrategy(config=self.profit_ladder_config)
+        return None
+
     def _resolve_buy_strategy(self, signal: SignalMessage) -> BalanceSplitStrategy | None:
-        if signal.signal_type != "BUY" or self.balance_split_config is None:
-            return None
-        return BalanceSplitStrategy(config=self.balance_split_config)
+        strategy = self._resolve_strategy(signal)
+        return strategy if isinstance(strategy, BalanceSplitStrategy) else None
 
     def _trader_kwargs(self) -> dict[str, Any]:
         kwargs: dict[str, Any] = {"mode": self.trading_mode}
