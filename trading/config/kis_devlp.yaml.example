@@ -117,9 +117,56 @@ accounts:
 # 신호 기반 전략 설정
 # - name: ""              기존 동작 유지 (전략 비활성화)
 # - name: "balance_split" BUY 신호마다 현재 주문 가능 잔고의 1/split_count만 매수
+# - name: "score_weighted" buy_score 구간별 비중으로 매수 금액 조정
+# - name: "risk_bracket" stop_loss/target_price 기반 리스크 예산 매수
+# - name: "profit_ladder" profit_rate/sell_reason 기반 단계적 SELL
+# - name: "limit_buffer" BUY/SELL 지정가에 완충 비율 적용
+# - name: "cooldown" 같은 종목/신호의 반복 주문 방지
+# - name: "event_risk_off" EVENT 신호로 임시 risk-off 상태 기록
 signal_strategy:
   name: ""
   split_count: 2
+  # score_weighted
+  base_amount_krw: 50000
+  base_amount_usd: 100
+  min_score: 60
+  score_bands:
+    60: 0.25
+    75: 0.5
+    90: 1.0
+  # risk_bracket
+  risk_amount_krw: 10000
+  risk_amount_usd: 25
+  max_position_amount_krw: 100000
+  max_position_amount_usd: 500
+  require_stop_loss: true
+  require_target_price: false
+  # profit_ladder
+  profit_bands:
+    5: 0.25
+    10: 0.5
+    20: 1.0
+  stop_loss_sell_percent: 1.0
+  default_sell_percent: 1.0
+  full_exit_reasons:
+    - stop_loss
+    - risk_off
+    - manual_exit
+  # limit_buffer
+  buy_buffer_percent: 0.1
+  sell_buffer_percent: 0.1
+  us_price_decimals: 2
+  kr_tick_rounding: 1
+  # cooldown
+  window_minutes: 60
+  apply_to_signal_types:
+    - BUY
+  scope: "market_ticker"
+  # event_risk_off
+  risk_off_event_types:
+    - RISK_OFF
+  risk_off_window_minutes: 1440
+  buy_size_multiplier: 0.0
 
 # User-Agent
 # 보통 기본값 그대로 사용해도 됩니다.
