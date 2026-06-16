@@ -77,13 +77,13 @@ class TradeDispatcher:
                 return DispatchResult("queued", f"Queued for {queued_signal.execute_at}", signal.signal_type, signal.market)
             if self.trading_mode == "demo":
                 logger.warning(
-                    "Rejected queued %s %s(%s) on %s market: market is still closed",
+                    "Deferred queued %s %s(%s) on %s market: market is still closed",
                     signal.signal_type,
                     signal.company_name,
                     signal.ticker,
                     signal.market,
                 )
-                return DispatchResult("rejected", "Market closed; queued order was not re-queued", signal.signal_type, signal.market)
+                return DispatchResult("deferred", "Market still closed; queued order retained for retry", signal.signal_type, signal.market)
             logger.warning(
                 "Rejected %s %s(%s) on %s market: market closed in real mode",
                 signal.signal_type,
@@ -104,8 +104,9 @@ class TradeDispatcher:
         return await self.dispatch(signal, allow_queue=False)
 
     def drain_due_orders(self) -> int:
-        def _executor(payload: dict) -> None:
-            asyncio.run(self.execute_queued_signal(payload))
+        def _executor(payload: dict) -> bool:
+            result = asyncio.run(self.execute_queued_signal(payload))
+            return result.status != "deferred"
 
         return self.queue.drain_due(_executor)
 

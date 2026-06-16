@@ -21,3 +21,17 @@ def test_queue_enqueue_and_drain(tmp_path):
     assert drained == 1
     assert executed == ["005930"]
     assert queue.pending_count() == 0
+
+
+def test_queue_retains_due_item_when_executor_defers(tmp_path):
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+
+    queue.enqueue(signal)
+    drained = queue.drain_due(
+        lambda payload: False,
+        now=datetime.now(timezone.utc) + timedelta(days=7),
+    )
+
+    assert drained == 0
+    assert queue.pending_count() == 1
