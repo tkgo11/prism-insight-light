@@ -17,6 +17,14 @@ def test_dashboard_and_pages_return_200():
         assert "Trading Console" in response.text
 
 
+def test_navigation_marks_current_page_for_assistive_tech():
+    c = client()
+    response = c.get("/trading")
+    assert response.status_code == 200
+    assert 'href="/trading" class="nav-item active" aria-current="page"' in response.text
+    assert 'href="/" class="nav-item active"' not in response.text
+
+
 def test_validation_endpoint_requires_csrf_and_validates():
     c = client()
     payload = {"payload": {"type": "BUY", "ticker": "005930", "company_name": "Samsung", "market": "KR", "price": 70000}}
