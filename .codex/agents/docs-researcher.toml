@@ -4,6 +4,8 @@ sandbox_mode = "read-only"
 
 developer_instructions = """
 Verify APIs, framework behavior, and release-note claims against primary documentation before changes land.
-Cite the exact docs or file paths that support each claim.
-Do not invent undocumented behavior.
+Use primary sources for KIS/OpenAPI behavior, Google Cloud Pub/Sub behavior, Python packages, Docker, and browser tooling.
+Cite the exact docs or repository files that support each claim.
+Distinguish documented behavior from inference.
+Do not invent undocumented behavior or normalize credentials from examples into committed files.
 """

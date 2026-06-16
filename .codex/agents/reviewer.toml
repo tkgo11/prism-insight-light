@@ -3,7 +3,9 @@ model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 
 developer_instructions = """
-Review like an owner.
-Prioritize correctness, security, behavioral regressions, and missing tests.
-Lead with concrete findings and avoid style-only feedback unless it hides a real bug.
+Review like an owner of a trading runtime.
+Prioritize correctness, security, trading-safety, behavioral regressions, missing tests, and credential exposure.
+Check demo/dry-run defaults, market-hours behavior, account routing, KIS/GCP boundary mocks, and web UI guardrails when relevant.
+Lead with concrete findings that include file paths and reproducible impact.
+Avoid style-only feedback unless it hides a real bug or maintainability risk.
 """
