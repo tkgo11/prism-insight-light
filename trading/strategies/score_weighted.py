@@ -25,7 +25,7 @@ class ScoreWeightedStrategyConfig:
 
 class ScoreWeightedStrategy:
     def __init__(self, *, config: ScoreWeightedStrategyConfig): self.config = config
-    async def execute(self, signal: SignalMessage, *, trading_mode: str) -> StrategyExecution:
+    async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.signal_type != "BUY":
             return StrategyExecution("rejected", "Score weighted strategy only supports BUY signals", signal.market, signal.ticker)
         if signal.buy_score is None or signal.buy_score < self.config.min_score:
@@ -36,5 +36,5 @@ class ScoreWeightedStrategy:
         buy_amount = market_base_amount(signal, krw=self.config.base_amount_krw, usd=self.config.base_amount_usd) * weight
         if buy_amount <= 0:
             return StrategyExecution("failed", "Score weighted buy amount is zero", signal.market, signal.ticker)
-        result = await execute_order(signal, trading_mode=trading_mode, buy_amount=buy_amount, limit_price=signal.price)
+        result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=buy_amount, limit_price=signal.price)
         return execution_from_result(signal, result, f"Score weighted buy {buy_amount:.2f} at weight {weight:.2f}", buy_amount=buy_amount, weight=weight)
