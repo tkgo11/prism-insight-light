@@ -116,6 +116,7 @@ The strategy checks the entry price and stop-loss price, then decides how many s
 - It needs an entry `price`.
 - It usually needs `stop_loss` too.
 - It calculates the gap between the buy price and the stop-loss price.
+- If `require_stop_loss` is `false` and the signal omits `stop_loss`, the strategy sizes the trade as if the stop loss were `0`, which can make the calculated position very small or reject the trade.
 - It uses your risk budget to decide the buy amount.
 - It can save bracket information like entry price, stop loss, and target price.
 
@@ -125,7 +126,7 @@ The strategy checks the entry price and stop-loss price, then decides how many s
 - `risk_amount_usd`: how many U.S. dollars you are willing to risk.
 - `max_position_amount_krw`: biggest Korean-stock position allowed by this strategy.
 - `max_position_amount_usd`: biggest U.S.-stock position allowed by this strategy.
-- `require_stop_loss`: whether the signal must include `stop_loss`.
+- `require_stop_loss`: whether the signal must include `stop_loss`; even when this is `false`, include a meaningful `stop_loss` if you want normal stop-loss-based sizing.
 - `require_target_price`: whether the signal must include `target_price`.
 
 ### When it is useful
@@ -150,7 +151,8 @@ At the top stair, you may sell all.
 - It only handles **SELL** signals.
 - It reads `profit_rate` from the signal when available.
 - It chooses a sell fraction from `profit_bands`.
-- It can sell everything for important exit reasons like stop loss or risk off.
+- It can sell everything for important exit reasons like stop loss or risk off when no profit band overrides that amount.
+- If a SELL signal has both a `full_exit_reasons` reason and `profit_rate`, the matching `profit_bands` value decides the final sell fraction.
 
 ### Main settings
 
@@ -159,7 +161,7 @@ At the top stair, you may sell all.
   - Example: `20: 1.0` means sell 100% when profit is at least 20%.
 - `stop_loss_sell_percent`: how much to sell when the reason is `stop_loss`.
 - `default_sell_percent`: how much to sell if no special band or reason applies.
-- `full_exit_reasons`: reasons that should sell the whole position.
+- `full_exit_reasons`: reasons that start as a whole-position sell; if `profit_rate` is also present, the profit ladder can replace this with a partial sell fraction from `profit_bands`.
 
 ### When it is useful
 
@@ -184,13 +186,14 @@ That tiny change is the buffer.
 - For BUY, it can raise the limit price by a small percent.
 - For SELL, it can lower the limit price by a small percent.
 - It rounds prices for U.S. and Korean markets.
+- For Korean stocks, tick rounding happens after the buffer is added or subtracted, so a small buffer can round back to the original price when `kr_tick_rounding` is larger than the buffered price change.
 
 ### Main settings
 
 - `buy_buffer_percent`: how much to raise the BUY limit price.
 - `sell_buffer_percent`: how much to lower the SELL limit price.
 - `us_price_decimals`: how many decimal places to keep for U.S. prices.
-- `kr_tick_rounding`: how to round Korean stock prices by tick size.
+- `kr_tick_rounding`: how to round Korean stock prices by tick size; choose a buffer large enough to survive this rounding if you need the limit price to move.
 
 ### When it is useful
 
@@ -250,7 +253,8 @@ Until the note is old, kids cannot run there, or they must be extra careful.
 - `risk_off_window_minutes`: how long the danger note stays active.
 - `buy_size_multiplier`: how much to multiply BUY size while risk-off is active.
   - `0.0` means block the BUY.
-  - `0.5` means use half size.
+  - `0.5` means use half of the explicit `buy_amount` in the signal.
+  - If the BUY signal does not include `raw.buy_amount`, the multiplier cannot shrink the broker/config default order size; it passes no custom buy amount.
 
 ### When it is useful
 
