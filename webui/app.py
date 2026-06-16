@@ -6,6 +6,7 @@ import ipaddress
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -46,11 +47,29 @@ def validate_bind_host(host: str, *, allow_non_loopback: bool = False) -> None:
         return
     if allow_non_loopback:
         return
-    raise ValueError("WebUI refuses non-loopback host unless WEBUI_ALLOW_NON_LOOPBACK=true")
+    raise ValueError(
+        "WebUI refuses non-loopback host unless WEBUI_ALLOW_NON_LOOPBACK=true"
+    )
+
+
+def safety_chip_status(
+    settings: WebUISettings, trade_guard: dict[str, Any] | None = None
+) -> dict[str, str]:
+    """Return the sidebar safety label from actual bind and live-trading state."""
+
+    guard_enabled = bool((trade_guard or {}).get("enabled"))
+    loopback_only = is_loopback_host(settings.host) and not settings.allow_non_loopback
+    if guard_enabled:
+        return {"state": "warning", "label": "Live trading armed"}
+    if not loopback_only:
+        return {"state": "warning", "label": "Network access allowed"}
+    return {"state": "success", "label": "Local guarded session"}
 
 
 def create_templates() -> Jinja2Templates:
-    return Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+    templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+    templates.env.globals["safety_chip_status"] = safety_chip_status
+    return templates
 
 
 def create_app(settings: WebUISettings | None = None) -> FastAPI:
@@ -64,7 +83,16 @@ def create_app(settings: WebUISettings | None = None) -> FastAPI:
     static_dir = Path(__file__).parent / "static"
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-    from .routes import dashboard, dry_run, logs, queue, readiness, signals, telegram, trading
+    from .routes import (
+        dashboard,
+        dry_run,
+        logs,
+        queue,
+        readiness,
+        signals,
+        telegram,
+        trading,
+    )
 
     app.include_router(dashboard.router)
     app.include_router(readiness.router)
@@ -75,4 +103,3 @@ def create_app(settings: WebUISettings | None = None) -> FastAPI:
     app.include_router(logs.router)
     app.include_router(queue.router)
     return app
-
