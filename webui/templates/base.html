@@ -9,15 +9,16 @@
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   {% set active_path = request.url.path if request is defined else "/" %}
+  {% set safety_chip = safety_chip_status(request.app.state.settings, trade_guard if trade_guard is defined else none) %}
   <div class="shell">
     <aside class="sidebar" aria-label="Primary navigation">
       <a class="brand" href="/" aria-label="PRISM dashboard">
         <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 3.1 5.8 3.2L12 11.5 6.2 8.3 12 5.1Zm-6 5.9 5 2.8v5.4l-5-2.8V11Zm7 8.2v-5.4l5-2.8v5.4l-5 2.8Z"/></svg></span>
         <span><strong>PRISM</strong><small>Trading Console</small></span>
       </a>
-      <div class="sidebar-status" aria-label="Runtime safety status">
+      <div class="sidebar-status {{ safety_chip.state }}" aria-label="Runtime safety status">
         <span class="status-dot" aria-hidden="true"></span>
-        <span>Local guarded session</span>
+        <span>{{ safety_chip.label }}</span>
       </div>
       <nav class="nav-links">
         <a href="/" class="nav-item {{ 'active' if active_path == '/' else '' }}" {% if active_path == '/' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24"><path d="M4 13h7V4H4v9Zm0 7h7v-5H4v5Zm9 0h7v-9h-7v9Zm0-16v5h7V4h-7Z"/></svg><span>Command</span></a>
