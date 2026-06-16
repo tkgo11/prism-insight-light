@@ -64,7 +64,7 @@ class BalanceSplitStrategy:
         self.config = config
         self.reservation_path = RESERVATION_PATH
 
-    async def execute(self, signal: SignalMessage, *, trading_mode: str) -> BalanceSplitExecution:
+    async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> BalanceSplitExecution:
         if signal.signal_type != "BUY":
             return BalanceSplitExecution(
                 status="rejected",
@@ -77,10 +77,10 @@ class BalanceSplitStrategy:
             )
 
         if signal.market == "US":
-            trader = USStockTrading(mode=trading_mode)
+            trader = USStockTrading(mode=trading_mode, **(trader_kwargs or {}))
             return await self._execute_us(signal, trader=trader)
 
-        async with AsyncTradingContext(mode=trading_mode) as trader:
+        async with AsyncTradingContext(mode=trading_mode, **(trader_kwargs or {})) as trader:
             return await self._execute_kr(signal, trader=trader)
 
     async def _execute_us(self, signal: SignalMessage, *, trader: _BuyTrader) -> BalanceSplitExecution:

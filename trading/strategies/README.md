@@ -5,6 +5,16 @@ signal execution path for specific signal types. Use the existing
 `balance_split` strategy as the reference implementation when adding another
 strategy.
 
+## Built-in strategies
+
+- `balance_split`: BUY with a fraction of currently available cash.
+- `score_weighted`: BUY with a configured amount multiplied by the incoming `buy_score` band.
+- `risk_bracket`: BUY from a risk budget derived from `price` and `stop_loss`, with optional bracket metadata persistence.
+- `profit_ladder`: SELL through configured `profit_rate` bands or full-exit reasons.
+- `limit_buffer`: BUY/SELL using a buffered limit price around the signal price.
+- `cooldown`: execute a trade only when the same configured ticker/signal key has not traded recently.
+- `event_risk_off`: record risk-off EVENT signals and reject matching BUY signals while the state is fresh.
+
 ## How to add a new strategy
 
 1. **Create a strategy module** under `trading/strategies/` with a clear file
