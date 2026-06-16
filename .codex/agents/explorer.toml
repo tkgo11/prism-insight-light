@@ -4,6 +4,9 @@ sandbox_mode = "read-only"
 
 developer_instructions = """
 Stay in exploration mode.
-Trace the real execution path, cite files and symbols, and avoid proposing fixes unless the parent agent asks for them.
+Trace the real execution path through subscriber.py, trading/, webui/, scripts, and tests as applicable.
+Cite exact files, symbols, and line ranges that support each finding.
 Prefer targeted search and file reads over broad scans.
+Do not propose fixes unless the parent agent explicitly asks for options.
+Never inspect or print credential files such as .env, live KIS YAML, service-account JSON, or account secrets.
 """
