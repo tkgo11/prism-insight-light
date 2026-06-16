@@ -1,3 +1,4 @@
+import datetime
 import logging
 import signal
 from concurrent.futures import TimeoutError
@@ -6,8 +7,10 @@ import subscriber
 
 
 class FakeMessage:
-    def __init__(self, data: bytes):
+    def __init__(self, data: bytes, message_id: str = "msg-1"):
         self.data = data
+        self.message_id = message_id
+        self.delivery_attempt = 2
         self.acked = False
 
     def ack(self):
@@ -48,7 +51,11 @@ def test_handle_message_logs_dispatch_message(caplog):
     with caplog.at_level(logging.INFO, logger="subscriber"):
         subscriber._handle_message(message, dispatcher, logger=subscriber.LOGGER)
 
+    assert "message_id=msg-1" in caplog.text
+    assert "delivery_attempt=2" in caplog.text
+    assert "Dispatching BUY" in caplog.text
     assert "-> executed: ok-message" in caplog.text
+    assert "Acknowledged Pub/Sub message" in caplog.text
 
 
 def test_web_ui_flag_still_requires_pubsub_settings(monkeypatch):
@@ -139,6 +146,41 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
 def test_parse_args_web_ui_flag():
     args = subscriber.parse_args(["--web-ui"])
     assert args.web_ui is True
+
+
+def test_parse_args_log_level_from_cli():
+    args = subscriber.parse_args(["--log-level", "DEBUG"])
+    assert args.log_level == "DEBUG"
+
+
+def test_configure_logging_rejects_unknown_level():
+    try:
+        subscriber._configure_logging(None, level="NOPE")
+    except ValueError as exc:
+        assert "Unknown log level" in str(exc)
+    else:  # pragma: no cover - defensive assertion
+        raise AssertionError("unknown log level should be rejected")
+
+
+def test_kst_daily_file_handler_rolls_over_on_kst_date(tmp_path):
+    log_path = tmp_path / "subscriber.log"
+    handler = subscriber._KSTDailyFileHandler(log_path)
+    handler.current_date = datetime.date(2026, 6, 16)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+
+    first_record = logging.LogRecord("test", logging.INFO, __file__, 1, "first", (), None)
+    first_record.created = subscriber.KST.localize(datetime.datetime(2026, 6, 16, 23, 59)).timestamp()
+    second_record = logging.LogRecord("test", logging.INFO, __file__, 1, "second", (), None)
+    second_record.created = subscriber.KST.localize(datetime.datetime(2026, 6, 17, 0, 0)).timestamp()
+
+    try:
+        handler.emit(first_record)
+        handler.emit(second_record)
+    finally:
+        handler.close()
+
+    assert (tmp_path / "subscriber.log.2026-06-16").read_text(encoding="utf-8").strip() == "first"
+    assert log_path.read_text(encoding="utf-8").strip() == "second"
 
 
 def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
