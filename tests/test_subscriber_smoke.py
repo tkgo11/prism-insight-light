@@ -169,9 +169,9 @@ def test_kst_daily_file_handler_rolls_over_on_kst_date(tmp_path):
     handler.setFormatter(logging.Formatter("%(message)s"))
 
     first_record = logging.LogRecord("test", logging.INFO, __file__, 1, "first", (), None)
-    first_record.created = datetime.datetime(2026, 6, 16, 23, 59, tzinfo=subscriber.KST).timestamp()
+    first_record.created = subscriber.KST.localize(datetime.datetime(2026, 6, 16, 23, 59)).timestamp()
     second_record = logging.LogRecord("test", logging.INFO, __file__, 1, "second", (), None)
-    second_record.created = datetime.datetime(2026, 6, 17, 0, 0, tzinfo=subscriber.KST).timestamp()
+    second_record.created = subscriber.KST.localize(datetime.datetime(2026, 6, 17, 0, 0)).timestamp()
 
     try:
         handler.emit(first_record)
