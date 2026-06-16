@@ -13,11 +13,11 @@ from trading.strategies.event_risk_off import EventRiskOffStrategy, EventRiskOff
 
 class FakeUSTrader:
     calls = []
-    def __init__(self, mode): self.mode = mode
+    def __init__(self, mode, account_name=None, account_index=None): self.mode = mode; self.account_name = account_name; self.account_index = account_index
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
         self.calls.append(("buy", ticker, buy_amount, limit_price)); return {"success": True, "message": "buy-ok"}
-    async def async_sell_stock(self, ticker, limit_price=None):
-        self.calls.append(("sell", ticker, None, limit_price)); return {"success": True, "message": "sell-ok"}
+    async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
+        self.calls.append(("sell", ticker, sell_fraction, limit_price)); return {"success": True, "message": "sell-ok"}
 
 
 @pytest.fixture(autouse=True)

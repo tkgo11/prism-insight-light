@@ -1,5 +1,6 @@
 """Per-ticker cooldown guard strategy."""
 from __future__ import annotations
+import fcntl
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -24,14 +25,19 @@ class CooldownStrategy:
     def _key(self, signal: SignalMessage) -> str:
         if self.config.scope == "ticker": return signal.ticker
         return f"{signal.market}:{signal.ticker}:{signal.signal_type}"
-    async def execute(self, signal: SignalMessage, *, trading_mode: str) -> StrategyExecution:
+    async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.signal_type not in self.config.apply_to_signal_types:
-            result = await execute_order(signal, trading_mode=trading_mode, limit_price=signal.price)
+            result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, limit_price=signal.price)
             return execution_from_result(signal, result, "Cooldown pass-through")
-        key = self._key(signal); items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.window_minutes))
-        if any(item.get("key") == key for item in items): return StrategyExecution("rejected", f"Cooldown active for {key}", signal.market, signal.ticker)
-        result = await execute_order(signal, trading_mode=trading_mode, limit_price=signal.price)
-        execution = execution_from_result(signal, result, "Cooldown guarded execution")
-        if execution.status == "executed":
-            items.append({"key": key, "market": signal.market, "ticker": signal.ticker, "signal_type": signal.signal_type, "created_at": datetime.now(timezone.utc).isoformat()}); save_json(self.config.runtime_path, items)
-        return execution
+        key = self._key(signal)
+        lock_path = self.config.runtime_path.with_suffix(self.config.runtime_path.suffix + ".lock")
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        with lock_path.open("w", encoding="utf-8") as lock_file:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.window_minutes))
+            if any(item.get("key") == key for item in items): return StrategyExecution("rejected", f"Cooldown active for {key}", signal.market, signal.ticker)
+            result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, limit_price=signal.price)
+            execution = execution_from_result(signal, result, "Cooldown guarded execution")
+            if execution.status == "executed":
+                items.append({"key": key, "market": signal.market, "ticker": signal.ticker, "signal_type": signal.signal_type, "created_at": datetime.now(timezone.utc).isoformat()}); save_json(self.config.runtime_path, items)
+            return execution

@@ -26,9 +26,9 @@ class LimitBufferStrategy:
             tick = self.config.kr_tick_rounding
             return float(round(price / tick) * tick)
         return round(price, self.config.us_price_decimals)
-    async def execute(self, signal: SignalMessage, *, trading_mode: str) -> StrategyExecution:
+    async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.signal_type not in {"BUY", "SELL"}: return StrategyExecution("rejected", "Limit buffer only supports trade signals", signal.market, signal.ticker)
         try: limit_price = self._price(signal)
         except ValueError as exc: return StrategyExecution("rejected", str(exc), signal.market, signal.ticker)
-        result = await execute_order(signal, trading_mode=trading_mode, limit_price=limit_price)
+        result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, limit_price=limit_price)
         return execution_from_result(signal, result, f"Limit buffer {signal.signal_type} at {limit_price}", limit_price=limit_price)

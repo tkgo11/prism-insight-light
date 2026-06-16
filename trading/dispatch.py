@@ -75,17 +75,17 @@ class TradeDispatcher:
         self.account_index = account_index
 
     async def dispatch(self, signal: SignalMessage, *, allow_queue: bool = True) -> DispatchResult:
-        event_strategy = self._resolve_event_strategy(signal)
-        if signal.is_event:
-            if event_strategy is not None:
-                strategy_result = await event_strategy.execute(signal, trading_mode=self.trading_mode)
-                return DispatchResult(strategy_result.status, strategy_result.message, signal.signal_type, signal.market)
-            logger.info("Ignoring EVENT signal for %s(%s)", signal.company_name, signal.ticker)
-            return DispatchResult("acknowledged", "Event signal acknowledged", signal.signal_type, signal.market)
-
         if self.dry_run:
             logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
             return DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
+
+        event_strategy = self._resolve_event_strategy(signal)
+        if signal.is_event:
+            if event_strategy is not None:
+                strategy_result = await event_strategy.execute(signal, trading_mode=self.trading_mode, trader_kwargs=self._strategy_trader_kwargs())
+                return DispatchResult(strategy_result.status, strategy_result.message, signal.signal_type, signal.market)
+            logger.info("Ignoring EVENT signal for %s(%s)", signal.company_name, signal.ticker)
+            return DispatchResult("acknowledged", "Event signal acknowledged", signal.signal_type, signal.market)
 
         strategy = self._resolve_strategy(signal)
 
@@ -119,7 +119,7 @@ class TradeDispatcher:
             return DispatchResult("rejected", "Market closed in real mode", signal.signal_type, signal.market)
 
         if strategy is not None:
-            strategy_result = await strategy.execute(signal, trading_mode=self.trading_mode)
+            strategy_result = await strategy.execute(signal, trading_mode=self.trading_mode, trader_kwargs=self._strategy_trader_kwargs())
             return DispatchResult(strategy_result.status, strategy_result.message, signal.signal_type, signal.market)
 
         return await self._execute_legacy_trade(signal)
@@ -167,13 +167,16 @@ class TradeDispatcher:
         strategy = self._resolve_strategy(signal)
         return strategy if isinstance(strategy, BalanceSplitStrategy) else None
 
-    def _trader_kwargs(self) -> dict[str, Any]:
-        kwargs: dict[str, Any] = {"mode": self.trading_mode}
+    def _strategy_trader_kwargs(self) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {}
         if self.account_name:
             kwargs["account_name"] = self.account_name
         if self.account_index is not None:
             kwargs["account_index"] = self.account_index
         return kwargs
+
+    def _trader_kwargs(self) -> dict[str, Any]:
+        return {"mode": self.trading_mode, **self._strategy_trader_kwargs()}
 
     async def _execute_legacy_trade(self, signal: SignalMessage) -> DispatchResult:
         limit_price = None if signal.price in (None, 0) else signal.price

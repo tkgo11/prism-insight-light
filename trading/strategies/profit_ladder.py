@@ -20,7 +20,7 @@ class ProfitLadderStrategyConfig:
 
 class ProfitLadderStrategy:
     def __init__(self, *, config: ProfitLadderStrategyConfig): self.config = config
-    async def execute(self, signal: SignalMessage, *, trading_mode: str) -> StrategyExecution:
+    async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.signal_type != "SELL": return StrategyExecution("rejected", "Profit ladder strategy only supports SELL signals", signal.market, signal.ticker)
         reason = signal.sell_reason.strip().lower()
         sell_fraction = 1.0 if reason in self.config.full_exit_reasons else self.config.default_sell_percent
@@ -29,5 +29,5 @@ class ProfitLadderStrategy:
             for profit, fraction in sorted(self.config.profit_bands.items()):
                 if signal.profit_rate >= profit: sell_fraction = fraction
         if sell_fraction <= 0: return StrategyExecution("rejected", "Profit ladder sell fraction is zero", signal.market, signal.ticker)
-        result = await execute_order(signal, trading_mode=trading_mode, limit_price=signal.price)
+        result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, limit_price=signal.price, sell_fraction=sell_fraction)
         return execution_from_result(signal, result, f"Profit ladder sell fraction {sell_fraction:.2f}", sell_fraction=sell_fraction)
