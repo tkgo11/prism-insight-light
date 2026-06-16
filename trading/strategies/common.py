@@ -57,24 +57,40 @@ def available_cash(trader: StrategyTrader) -> float:
     return float(summary.get("available_amount", summary.get("cash_balance", summary.get("total_cash", 0))) or 0)
 
 
-async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount: float | None = None, limit_price: float | None = None) -> dict[str, Any]:
+async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount: float | None = None, limit_price: float | None = None, sell_fraction: float | None = None, trader_kwargs: dict[str, Any] | None = None) -> dict[str, Any]:
+    kwargs = {"mode": trading_mode, **(trader_kwargs or {})}
     if signal.market == "US":
-        trader = USStockTrading(mode=trading_mode)
+        trader = USStockTrading(**kwargs)
         if signal.signal_type == "BUY":
             return await trader.async_buy_stock(ticker=signal.ticker, buy_amount=buy_amount, limit_price=limit_price)
-        return await trader.async_sell_stock(ticker=signal.ticker, limit_price=limit_price)
+        
+        try:
+            return await trader.async_sell_stock(ticker=signal.ticker, limit_price=limit_price, sell_fraction=sell_fraction)
+        except TypeError:
+            if sell_fraction is not None and sell_fraction < 1:
+                return {"success": False, "ticker": signal.ticker, "quantity": 0, "message": "Partial sell fraction is not supported by this trader"}
+            return await trader.async_sell_stock(ticker=signal.ticker, limit_price=limit_price)
 
-    async with AsyncTradingContext(mode=trading_mode) as trader:
+    async with AsyncTradingContext(**kwargs) as trader:
         if signal.signal_type == "BUY":
             return await trader.async_buy_stock(
                 stock_code=signal.ticker,
                 buy_amount=None if buy_amount is None else int(buy_amount),
                 limit_price=None if limit_price is None else int(limit_price),
             )
-        return await trader.async_sell_stock(
-            stock_code=signal.ticker,
-            limit_price=None if limit_price is None else int(limit_price),
-        )
+        try:
+            return await trader.async_sell_stock(
+                stock_code=signal.ticker,
+                limit_price=None if limit_price is None else int(limit_price),
+                sell_fraction=sell_fraction,
+            )
+        except TypeError:
+            if sell_fraction is not None and sell_fraction < 1:
+                return {"success": False, "stock_code": signal.ticker, "quantity": 0, "message": "Partial sell fraction is not supported by this trader"}
+            return await trader.async_sell_stock(
+                stock_code=signal.ticker,
+                limit_price=None if limit_price is None else int(limit_price),
+            )
 
 
 def execution_from_result(signal: SignalMessage, result: dict[str, Any], message_prefix: str, **details: Any) -> StrategyExecution:

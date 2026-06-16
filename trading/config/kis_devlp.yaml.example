@@ -148,7 +148,10 @@ signal_strategy:
     20: 1.0
   stop_loss_sell_percent: 1.0
   default_sell_percent: 1.0
-  full_exit_reasons: ["stop_loss", "risk_off", "manual_exit"]
+  full_exit_reasons:
+    - stop_loss
+    - risk_off
+    - manual_exit
   # limit_buffer
   buy_buffer_percent: 0.1
   sell_buffer_percent: 0.1
@@ -156,10 +159,12 @@ signal_strategy:
   kr_tick_rounding: 1
   # cooldown
   window_minutes: 60
-  apply_to_signal_types: ["BUY"]
+  apply_to_signal_types:
+    - BUY
   scope: "market_ticker"
   # event_risk_off
-  risk_off_event_types: ["RISK_OFF"]
+  risk_off_event_types:
+    - RISK_OFF
   risk_off_window_minutes: 1440
   buy_size_multiplier: 0.0
 

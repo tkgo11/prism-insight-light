@@ -20,16 +20,20 @@ class EventRiskOffStrategyConfig:
 
 class EventRiskOffStrategy:
     def __init__(self, *, config: EventRiskOffStrategyConfig): self.config = config
-    async def execute(self, signal: SignalMessage, *, trading_mode: str) -> StrategyExecution:
+    async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.is_event:
             if signal.event_type.strip().upper() in self.config.risk_off_event_types:
                 items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.risk_off_window_minutes))
                 items.append({"market": signal.market, "ticker": signal.ticker, "event_type": signal.event_type.upper(), "created_at": datetime.now(timezone.utc).isoformat()}); save_json(self.config.runtime_path, items)
                 return StrategyExecution("acknowledged", "Risk-off event recorded", signal.market, signal.ticker)
             return StrategyExecution("acknowledged", "Event signal acknowledged", signal.market, signal.ticker)
+        buy_amount = None
         if signal.signal_type == "BUY":
             items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.risk_off_window_minutes))
             active = any(item.get("ticker") in ("", signal.ticker) and item.get("market") in ("", signal.market) for item in items)
             if active and self.config.buy_size_multiplier <= 0: return StrategyExecution("rejected", "Risk-off state blocks BUY signals", signal.market, signal.ticker)
-        result = await execute_order(signal, trading_mode=trading_mode, limit_price=signal.price)
-        return execution_from_result(signal, result, "Event risk-off guarded execution")
+            if active:
+                configured_amount = signal.raw.get("buy_amount")
+                buy_amount = None if configured_amount in (None, "") else float(configured_amount) * self.config.buy_size_multiplier
+        result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=buy_amount, limit_price=signal.price)
+        return execution_from_result(signal, result, "Event risk-off guarded execution", buy_size_multiplier=self.config.buy_size_multiplier if buy_amount is not None else None)
