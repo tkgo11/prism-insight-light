@@ -1,261 +1,102 @@
-# Instincts generated from https://github.com/tkgo11/prism-insight-light
-# Generated: 2026-06-10T09:25:58.242Z
-# Version: 2.0
+# Instincts generated and refined for https://github.com/tkgo11/prism-insight-light
+# Updated: 2026-06-16T00:00:00.000Z
+# Version: 2.1
 # NOTE: This file supplements (does not replace) any existing curated instincts.
-# High-confidence manually curated instincts should be preserved alongside these.
 
 ---
-id: prism-insight-light-commit-length
-trigger: "when writing a commit message"
-confidence: 0.6
-domain: git
-source: repo-analysis
-source_repo: https://github.com/tkgo11/prism-insight-light
----
-
-# Prism Insight Light Commit Length
-
-## Action
-
-Keep commit messages concise (~41 characters)
-
-## Evidence
-
-- Average commit message length: 41 chars
-- Based on 1 commits
-
----
-id: prism-insight-light-naming-files
-trigger: "when creating a new file"
-confidence: 0.8
-domain: code-style
-source: repo-analysis
-source_repo: https://github.com/tkgo11/prism-insight-light
----
-
-# Prism Insight Light Naming Files
-
-## Action
-
-Use snake_case naming convention
-
-## Evidence
-
-- Analyzed file naming patterns in repository
-- Dominant pattern: snake_case
-
----
-id: prism-insight-light-import-relative
-trigger: "when importing modules"
-confidence: 0.75
-domain: code-style
-source: repo-analysis
-source_repo: https://github.com/tkgo11/prism-insight-light
----
-
-# Prism Insight Light Import Relative
-
-## Action
-
-Use relative imports for project files
-
-## Evidence
-
-- Import analysis shows relative import pattern
-- Example: import { x } from '../lib/x'
-
----
-id: prism-insight-light-export-style
-trigger: "when exporting from a module"
-confidence: 0.7
-domain: code-style
-source: repo-analysis
-source_repo: https://github.com/tkgo11/prism-insight-light
----
-
-# Prism Insight Light Export Style
-
-## Action
-
-Prefer named exports
-
-## Evidence
-
-- Export pattern analysis
-- Dominant style: named
-
----
-id: prism-insight-light-test-separate
-trigger: "when writing tests"
-confidence: 0.8
-domain: testing
-source: repo-analysis
-source_repo: https://github.com/tkgo11/prism-insight-light
----
-
-# Prism Insight Light Test Separate
-
-## Action
-
-Place tests in the tests/ or __tests__/ directory, mirroring src structure
-
-## Evidence
-
-- Separate test directory pattern detected
-- Tests live in dedicated test folders
-
----
-id: prism-insight-light-instinct-file-naming
-trigger: "When creating a new Python file"
+id: prism-insight-light-runtime-scope
+trigger: "when planning a feature or refactor"
 confidence: 0.9
-domain: code-style
+domain: architecture
 source: repo-analysis
-source_repo: tkgo11/prism-insight-light
+source_repo: https://github.com/tkgo11/prism-insight-light
 ---
 
-# Prism Insight Light Instinct File Naming
+# Keep Runtime Scope Lightweight
 
 ## Action
 
-Name the file using snake_case
+Preserve the fork's focus on Pub/Sub signal ingestion, KIS order routing, market-hours checks, off-hours queueing, Docker helpers, and the lightweight web UI. Do not reintroduce removed analysis, reporting, Firebase, Redis, mobile, or broad orchestration scope.
 
 ## Evidence
 
-- Pattern in namingConventions.files
+- README describes the fork as a lightweight trading execution runtime.
+- Repository layout centers on `subscriber.py`, `trading/`, `webui/`, Docker helpers, and tests.
 
 ---
-id: prism-insight-light-instinct-function-naming
-trigger: "When defining a new function"
-confidence: 0.9
-domain: code-style
+id: prism-insight-light-trading-safety
+trigger: "when changing trading, sizing, auth, dispatch, or queue behavior"
+confidence: 0.95
+domain: safety
 source: repo-analysis
-source_repo: tkgo11/prism-insight-light
+source_repo: https://github.com/tkgo11/prism-insight-light
 ---
 
-# Prism Insight Light Instinct Function Naming
+# Prefer Safe Trading Defaults
 
 ## Action
 
-Name the function using camelCase
+Default examples and validation to `demo` mode, `--dry-run`, fixtures, and mocked KIS/GCP boundaries before any real account path.
 
 ## Evidence
 
-- Pattern in namingConventions.functions
+- README first-run flow recommends `default_mode: demo` and `--dry-run`.
+- Tests cover dispatch, sizing, market-hours, off-hours policy, schema, and web UI safety behavior.
 
 ---
-id: prism-insight-light-instinct-class-naming
-trigger: "When defining a new class"
-confidence: 0.9
-domain: code-style
+id: prism-insight-light-credential-hygiene
+trigger: "when editing configuration, documentation, installers, auth, or examples"
+confidence: 0.95
+domain: security
 source: repo-analysis
-source_repo: tkgo11/prism-insight-light
+source_repo: https://github.com/tkgo11/prism-insight-light
 ---
 
-# Prism Insight Light Instinct Class Naming
+# Protect Credentials
 
 ## Action
 
-Name the class using PascalCase
+Never commit real KIS keys, account numbers, GCP service-account JSON, `.env`, or live `trading/config/kis_devlp.yaml` content. Use placeholders and example files only.
 
 ## Evidence
 
-- Pattern in namingConventions.classes
+- README and `.env.example` use placeholders.
+- KIS live config is represented by `trading/config/kis_devlp.yaml.example`.
 
 ---
-id: prism-insight-light-instinct-constant-naming
-trigger: "When defining a constant"
-confidence: 0.9
+id: prism-insight-light-python-style
+trigger: "when creating or modifying Python modules"
+confidence: 0.85
 domain: code-style
 source: repo-analysis
-source_repo: tkgo11/prism-insight-light
+source_repo: https://github.com/tkgo11/prism-insight-light
 ---
 
-# Prism Insight Light Instinct Constant Naming
+# Match Python Style
 
 ## Action
 
-Name the constant using SCREAMING_SNAKE_CASE
+Use `snake_case` file names, `PascalCase` classes, `SCREAMING_SNAKE_CASE` constants, explicit imports, and dependency-light modules. Follow surrounding function naming style and never wrap imports in try/except blocks.
 
 ## Evidence
 
-- Pattern in namingConventions.constants
+- Existing modules under `trading/`, `webui/`, and `tests/` follow Python naming conventions.
 
 ---
-id: prism-insight-light-instinct-import-style
-trigger: "When importing modules within the package"
-confidence: 0.8
-domain: code-style
-source: repo-analysis
-source_repo: tkgo11/prism-insight-light
----
-
-# Prism Insight Light Instinct Import Style
-
-## Action
-
-Use relative imports
-
-## Evidence
-
-- Pattern in importStyle
-
----
-id: prism-insight-light-instinct-export-style
-trigger: "When exporting functions or classes"
-confidence: 0.8
-domain: code-style
-source: repo-analysis
-source_repo: tkgo11/prism-insight-light
----
-
-# Prism Insight Light Instinct Export Style
-
-## Action
-
-Use named exports
-
-## Evidence
-
-- Pattern in exportStyle
-
----
-id: prism-insight-light-instinct-test-location
-trigger: "When adding or updating tests"
+id: prism-insight-light-test-mirroring
+trigger: "when adding or changing behavior"
 confidence: 0.9
 domain: testing
 source: repo-analysis
-source_repo: tkgo11/prism-insight-light
+source_repo: https://github.com/tkgo11/prism-insight-light
 ---
 
-# Prism Insight Light Instinct Test Location
+# Mirror Behavior in Tests
 
 ## Action
 
-Place test files in the separate 'tests' folder
+Add or update tests under `tests/` that mirror affected runtime behavior. Use targeted pytest commands first, then the full suite when feasible.
 
 ## Evidence
 
-- Pattern in folderStructure.testLocation
-- Common folder: tests
-
----
-id: prism-insight-light-instinct-commit-format
-trigger: "When writing a git commit message"
-confidence: 0.8
-domain: git
-source: repo-analysis
-source_repo: tkgo11/prism-insight-light
----
-
-# Prism Insight Light Instinct Commit Format
-
-## Action
-
-Write a short, freeform message without prefixes, averaging around 40 characters
-
-## Evidence
-
-- Pattern in commits.type
-- Example: 'Use cash balance for balance split sizing'
-- commits.averageLength
-
+- The repository has dedicated tests for buy sizing, dispatch, market hours, multi-account behavior, readiness, schema, subscriber smoke, Telegram fetch, and web UI services/routes.
