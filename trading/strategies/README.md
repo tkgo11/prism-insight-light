@@ -44,7 +44,9 @@ strategy.
 8. **Document the user-facing config** in
    `trading/config/kis_devlp.yaml.example`, including the strategy name and each
    supported option.
-9. **Add tests** that cover config parsing, disabled or mismatched strategy
+9. **Update the user strategy guide** in `trading/STRATEGIES.md`. Every new
+   strategy must be added there so users can understand it without reading code.
+10. **Add tests** that cover config parsing, disabled or mismatched strategy
    names, successful execution, rejection paths, and dispatcher routing.
 
 Strategies should be opt-in and should preserve the legacy execution path when
