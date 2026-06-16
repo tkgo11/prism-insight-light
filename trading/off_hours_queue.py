@@ -50,7 +50,7 @@ class OffHoursOrderQueue:
         self._save(items)
         return queued_signal
 
-    def drain_due(self, executor: Callable[[dict], None], *, now: datetime | None = None) -> int:
+    def drain_due(self, executor: Callable[[dict], bool | None], *, now: datetime | None = None) -> int:
         current = now or datetime.now(timezone.utc)
         due: list[QueuedSignal] = []
         pending: list[QueuedSignal] = []
@@ -61,11 +61,15 @@ class OffHoursOrderQueue:
             else:
                 pending.append(item)
 
+        processed = 0
         for item in due:
-            executor(item.signal)
+            if executor(item.signal) is False:
+                pending.append(item)
+                continue
+            processed += 1
 
         self._save(pending)
-        return len(due)
+        return processed
 
     def pending_count(self) -> int:
         return len(self._load())

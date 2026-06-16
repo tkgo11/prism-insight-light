@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
 from trading.dispatch import TradeDispatcher
@@ -98,6 +100,34 @@ async def test_demo_off_hours_enqueues(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_demo_queued_order_does_not_requeue_when_market_still_closed(monkeypatch):
+    queue = DummyQueue()
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+
+    dispatcher = TradeDispatcher(trading_mode="demo", queue=queue)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+    result = await dispatcher.dispatch(signal, allow_queue=False)
+
+    assert result.status == "deferred"
+    assert result.message == "Market still closed; queued order retained for retry"
+    assert queue.enqueued == []
+
+
+def test_due_demo_order_remains_queued_when_market_still_closed(monkeypatch, tmp_path):
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+    monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda market: datetime.now(timezone.utc) - timedelta(minutes=1))
+
+    dispatcher = TradeDispatcher(trading_mode="demo", queue_path=tmp_path / "queue.json")
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+    dispatcher.queue.enqueue(signal)
+
+    drained = dispatcher.drain_due_orders()
+
+    assert drained == 0
+    assert dispatcher.queue.pending_count() == 1
+
+
+@pytest.mark.asyncio
 async def test_real_off_hours_rejects(monkeypatch):
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
 
@@ -175,4 +205,3 @@ async def test_disabled_strategy_buy_uses_legacy_path(monkeypatch):
 
     assert result.status == "executed"
     assert results == {"mode": "demo", "ticker": "AAPL", "limit_price": 200.0}
-
