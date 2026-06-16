@@ -14,10 +14,10 @@
 </section>
 
 <section class="metric-grid" aria-label="Runtime metrics">
-  <article class="metric-card"><span>Readiness</span><strong>{{ readiness.status }}</strong><small>{{ readiness.message }}</small></article>
-  <article class="metric-card"><span>Pending signals</span><strong>{{ queue.count }}</strong><small>{{ queue.path_label }}</small></article>
-  <article class="metric-card"><span>Accounts</span><strong>{{ accounts.count }}</strong><small>{{ accounts.path_label }}{% if accounts.using_example %} example{% endif %}</small></article>
-  <article class="metric-card"><span>Live trade lock</span><strong>{{ "Open" if trade_guard.enabled else "Locked" }}</strong><small>{{ trade_guard.message }}</small></article>
+  <article class="metric-card"><div class="metric-top"><span>Readiness</span><span class="metric-icon success">✓</span></div><strong>{{ readiness.status }}</strong><small>{{ readiness.message }}</small></article>
+  <article class="metric-card"><div class="metric-top"><span>Pending signals</span><span class="metric-icon">↗</span></div><strong>{{ queue.count }}</strong><small>{{ queue.path_label }}</small></article>
+  <article class="metric-card"><div class="metric-top"><span>Accounts</span><span class="metric-icon">◎</span></div><strong>{{ accounts.count }}</strong><small>{{ accounts.path_label }}{% if accounts.using_example %} example{% endif %}</small></article>
+  <article class="metric-card"><div class="metric-top"><span>Live trade lock</span><span class="metric-icon {{ 'success' if trade_guard.enabled else 'warning' }}">{{ "!" if not trade_guard.enabled else "✓" }}</span></div><strong>{{ "Open" if trade_guard.enabled else "Locked" }}</strong><small>{{ trade_guard.message }}</small></article>
 </section>
 
 <section class="two-column">
