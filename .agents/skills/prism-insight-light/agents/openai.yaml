@@ -1,6 +1,9 @@
 interface:
   display_name: "Prism Insight Light"
-  short_description: "Repo-specific patterns and workflows for prism-insight-light"
-  default_prompt: "Use the prism-insight-light repo skill to follow existing architecture, testing, and workflow conventions."
+  short_description: "Safe, repo-specific guidance for the prism-insight-light trading runtime."
+  default_prompt: "Use the prism-insight-light repo skill to keep changes lightweight, tested, credential-safe, and aligned with the existing trading runtime architecture."
 policy:
   allow_implicit_invocation: true
+  safety_notes:
+    - "Default to demo and dry-run examples for trading workflows."
+    - "Do not store real credentials, account numbers, or service-account JSON in the repository."

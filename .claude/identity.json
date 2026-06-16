@@ -1,5 +1,5 @@
 {
-  "version": "2.0",
+  "version": "2.1",
   "technicalLevel": "technical",
   "preferredStyle": {
     "verbosity": "detailed",
@@ -7,8 +7,19 @@
     "explanations": true
   },
   "domains": [
-    "python"
+    "python",
+    "automated-trading",
+    "gcp-pubsub",
+    "docker",
+    "web-ui"
   ],
   "suggestedBy": "ecc-tools-repo-analysis",
-  "createdAt": "2026-06-10T09:25:58.242Z"
+  "createdAt": "2026-06-10T09:25:58.242Z",
+  "operatingPrinciples": [
+    "Keep the fork focused on lightweight trading execution runtime scope.",
+    "Default examples and validation to demo mode and dry-run behavior.",
+    "Protect credentials and account identifiers from committed files.",
+    "Prefer tested, dependency-light changes with mocked external services."
+  ],
+  "updatedAt": "2026-06-16T00:00:00.000Z"
 }
