@@ -7,24 +7,31 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  {% set active_path = request.url.path if request is defined else "/" %}
+  {% set safety_chip = safety_chip_status(request.app.state.settings, trade_guard if trade_guard is defined else none) %}
   <div class="shell">
     <aside class="sidebar" aria-label="Primary navigation">
       <a class="brand" href="/" aria-label="PRISM dashboard">
         <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 3.1 5.8 3.2L12 11.5 6.2 8.3 12 5.1Zm-6 5.9 5 2.8v5.4l-5-2.8V11Zm7 8.2v-5.4l5-2.8v5.4l-5 2.8Z"/></svg></span>
         <span><strong>PRISM</strong><small>Trading Console</small></span>
       </a>
+      <div class="sidebar-status {{ safety_chip.state }}" aria-label="Runtime safety status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>{{ safety_chip.label }}</span>
+      </div>
       <nav class="nav-links">
-        <a href="/" class="nav-item"><svg viewBox="0 0 24 24"><path d="M4 13h7V4H4v9Zm0 7h7v-5H4v5Zm9 0h7v-9h-7v9Zm0-16v5h7V4h-7Z"/></svg>Command</a>
-        <a href="/trading" class="nav-item"><svg viewBox="0 0 24 24"><path d="M5 12h3l2-5 4 10 2-5h3v2h-2l-3 7-4-10-1 3H5v-2Z"/></svg>Trade</a>
-        <a href="/queue" class="nav-item"><svg viewBox="0 0 24 24"><path d="M7 3h10v2H7V3Zm-2 4h14v2H5V7Zm-2 4h18v10H3V11Zm2 2v6h14v-6H5Z"/></svg>Pending</a>
-        <a href="/signals" class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5Zm0 12L4 11v5l8 5 8-5v-5l-8 4Z"/></svg>Signals</a>
-        <a href="/readiness" class="nav-item"><svg viewBox="0 0 24 24"><path d="m9 16.2-3.5-3.5L4 14.2 9 19 20 8l-1.5-1.5L9 16.2Z"/></svg>Config</a>
-        <a href="/logs" class="nav-item"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4Zm2 4h12V6H6v2Zm0 5h12v-2H6v2Zm0 5h8v-2H6v2Z"/></svg>Logs</a>
-        <a href="/telegram" class="nav-item"><svg viewBox="0 0 24 24"><path d="M21 4 3 11l7 2 2 7 9-16Zm-5.8 5.4-4.4 4.1-.7 2.5-.9-3.4 6-3.2Z"/></svg>Telegram</a>
+        <a href="/" class="nav-item {{ 'active' if active_path == '/' else '' }}" {% if active_path == '/' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24"><path d="M4 13h7V4H4v9Zm0 7h7v-5H4v5Zm9 0h7v-9h-7v9Zm0-16v5h7V4h-7Z"/></svg><span>Command</span></a>
+        <a href="/trading" class="nav-item {{ 'active' if active_path.startswith('/trading') else '' }}" {% if active_path.startswith('/trading') %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24"><path d="M5 12h3l2-5 4 10 2-5h3v2h-2l-3 7-4-10-1 3H5v-2Z"/></svg><span>Trade</span></a>
+        <a href="/queue" class="nav-item {{ 'active' if active_path.startswith('/queue') else '' }}" {% if active_path.startswith('/queue') %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24"><path d="M7 3h10v2H7V3Zm-2 4h14v2H5V7Zm-2 4h18v10H3V11Zm2 2v6h14v-6H5Z"/></svg><span>Pending</span></a>
+        <a href="/signals" class="nav-item {{ 'active' if active_path.startswith('/signals') else '' }}" {% if active_path.startswith('/signals') %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5Zm0 12L4 11v5l8 5 8-5v-5l-8 4Z"/></svg><span>Signals</span></a>
+        <a href="/readiness" class="nav-item {{ 'active' if active_path.startswith('/readiness') else '' }}" {% if active_path.startswith('/readiness') %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24"><path d="m9 16.2-3.5-3.5L4 14.2 9 19 20 8l-1.5-1.5L9 16.2Z"/></svg><span>Config</span></a>
+        <a href="/logs" class="nav-item {{ 'active' if active_path.startswith('/logs') else '' }}" {% if active_path.startswith('/logs') %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4Zm2 4h12V6H6v2Zm0 5h12v-2H6v2Zm0 5h8v-2H6v2Z"/></svg><span>Logs</span></a>
+        <a href="/telegram" class="nav-item {{ 'active' if active_path.startswith('/telegram') else '' }}" {% if active_path.startswith('/telegram') %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24"><path d="M21 4 3 11l7 2 2 7 9-16Zm-5.8 5.4-4.4 4.1-.7 2.5-.9-3.4 6-3.2Z"/></svg><span>Telegram</span></a>
       </nav>
       <div class="side-note"><strong>Local-first</strong><span>Broker actions require env unlock + CSRF + typed arming phrase.</span></div>
     </aside>
-    <main class="content">
+    <main class="content" id="main-content" tabindex="-1">
       {% block content %}{% endblock %}
     </main>
   </div>

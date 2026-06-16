@@ -11,15 +11,70 @@ def client():
 
 def test_dashboard_and_pages_return_200():
     c = client()
-    for path in ["/", "/trading", "/readiness", "/signals", "/dry-run", "/telegram", "/logs", "/queue"]:
+    for path in [
+        "/",
+        "/trading",
+        "/readiness",
+        "/signals",
+        "/dry-run",
+        "/telegram",
+        "/logs",
+        "/queue",
+    ]:
         response = c.get(path)
         assert response.status_code == 200
         assert "Trading Console" in response.text
 
 
+def test_navigation_marks_current_page_for_assistive_tech():
+    c = client()
+    response = c.get("/trading")
+    assert response.status_code == 200
+    assert (
+        'href="/trading" class="nav-item active" aria-current="page"' in response.text
+    )
+    assert 'href="/" class="nav-item active"' not in response.text
+
+
+def test_dashboard_readiness_icon_reflects_missing_status(monkeypatch):
+    monkeypatch.delenv("GCP_PROJECT_ID", raising=False)
+    monkeypatch.delenv("GCP_PUBSUB_SUBSCRIPTION_ID", raising=False)
+    c = client()
+    response = c.get("/")
+    assert response.status_code == 200
+    assert (
+        '<span class="metric-icon warning">!</span></div><strong>missing</strong>'
+        in response.text
+    )
+
+
+def test_sidebar_safety_chip_reflects_non_loopback_and_live_trading(monkeypatch):
+    monkeypatch.delenv("WEBUI_ENABLE_LIVE_TRADING", raising=False)
+    c = TestClient(create_app(WebUISettings(host="0.0.0.0", allow_non_loopback=True)))
+    response = c.get("/")
+    assert response.status_code == 200
+    assert "Network access allowed" in response.text
+    assert "Local guarded session" not in response.text
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    c = client()
+    response = c.get("/")
+    assert response.status_code == 200
+    assert "Live trading armed" in response.text
+    assert "Local guarded session" not in response.text
+
+
 def test_validation_endpoint_requires_csrf_and_validates():
     c = client()
-    payload = {"payload": {"type": "BUY", "ticker": "005930", "company_name": "Samsung", "market": "KR", "price": 70000}}
+    payload = {
+        "payload": {
+            "type": "BUY",
+            "ticker": "005930",
+            "company_name": "Samsung",
+            "market": "KR",
+            "price": 70000,
+        }
+    }
     assert c.post("/signals/validate", json=payload).status_code == 403
     response = c.post("/signals/validate", json=payload, headers=CSRF)
     assert response.status_code == 200
@@ -30,7 +85,15 @@ def test_validation_endpoint_requires_csrf_and_validates():
 
 def test_dry_run_endpoint_requires_csrf_and_never_live():
     c = client()
-    payload = {"payload": {"type": "SELL", "ticker": "AAPL", "company_name": "Apple", "market": "US", "price": 190.5}}
+    payload = {
+        "payload": {
+            "type": "SELL",
+            "ticker": "AAPL",
+            "company_name": "Apple",
+            "market": "US",
+            "price": 190.5,
+        }
+    }
     assert c.post("/dry-run/simulate", json=payload).status_code == 403
     response = c.post("/dry-run/simulate", json=payload, headers=CSRF)
     assert response.status_code == 200
@@ -76,14 +139,18 @@ def test_telegram_api_uses_preview_service_monkeypatch(monkeypatch):
     from webui.services import telegram_service
 
     def fake_preview(channel=None, *, pages=1, max_posts=20):
-        return {"ok": False, "channel": channel or "default", "items": [], "error": "safe failure"}
+        return {
+            "ok": False,
+            "channel": channel or "default",
+            "items": [],
+            "error": "safe failure",
+        }
 
     monkeypatch.setattr(telegram_service, "preview_telegram", fake_preview)
     c = client()
     response = c.get("/telegram/api")
     assert response.status_code == 200
     assert response.json()["error"] == "safe failure"
-
 
 
 def test_trading_accounts_and_guard_apis_are_safe():
