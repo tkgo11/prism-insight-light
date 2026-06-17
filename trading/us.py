@@ -473,6 +473,30 @@ class USStockTrading:
             cash_orderable = min(cash_orderable, current_orderable) if cash_orderable > 0 else current_orderable
 
         if cash_orderable >= requested_amount:
+            if auto_exchange.enabled and requested_amount < price and after_exchange_orderable > cash_orderable:
+                exchange_rate = _safe_float(buyable.get("exrt"), _safe_float(summary.get("exchange_rate")))
+                orderable_usd = after_exchange_orderable
+                if auto_exchange.max_krw is not None and exchange_rate > 0:
+                    max_exchange_usd = auto_exchange.max_krw / exchange_rate
+                    orderable_usd = min(orderable_usd, cash_orderable + max_exchange_usd)
+                resolved = min(max(requested_amount, price), orderable_usd)
+                if resolved > requested_amount:
+                    info.update(
+                        {
+                            "auto_exchange_used": resolved > cash_orderable,
+                            "exchange_rate": exchange_rate,
+                            "orderable_after_exchange_usd": after_exchange_orderable,
+                        }
+                    )
+                    logger.info(
+                        "[%s] Auto-exchange enabled: USD cash %.2f covers requested %.2f but not one share at %.2f; using %.2f",
+                        ticker,
+                        cash_orderable,
+                        requested_amount,
+                        price,
+                        resolved,
+                    )
+                    return resolved, info
             return requested_amount, info
 
         if not auto_exchange.enabled:
@@ -1426,14 +1450,28 @@ class USStockTrading:
 
                         result['current_price'] = price_info['current_price']
 
-                        # Calculate buy quantity
+                        # Calculate buy quantity using the same KIS orderable amount
+                        # resolver as the synchronous buy path. This keeps
+                        # async balance_split buys from rejecting small USD cash
+                        # balances before opt-in auto exchange can be considered.
                         current_price = price_info['current_price']
-                        buy_quantity = math.floor(amount / current_price)
+                        resolved_amount, buy_info = await asyncio.to_thread(
+                            self._resolve_orderable_usd,
+                            ticker,
+                            amount,
+                            current_price,
+                            EXCHANGE_CODES.get(exchange.upper(), exchange) if exchange else get_exchange_code(ticker),
+                        )
+                        buy_quantity = math.floor(resolved_amount / current_price)
 
                         if buy_quantity == 0:
-                            result['message'] = f'Buy quantity is 0 (amount: ${amount:.2f})'
+                            result['message'] = f'Buy quantity is 0 (amount: ${resolved_amount:.2f})'
+                            result.update(buy_info)
+                            result['resolved_amount'] = resolved_amount
                             return result
 
+                        result.update(buy_info)
+                        result['resolved_amount'] = resolved_amount
                         result['quantity'] = buy_quantity
                         result['total_amount'] = buy_quantity * current_price
 
@@ -1446,7 +1484,7 @@ class USStockTrading:
                         logger.info(f"[Async Buy] {ticker} limit_price: ${effective_limit_price:.2f} (provided: {limit_price})")
 
                         buy_result = await asyncio.to_thread(
-                            self.smart_buy, ticker, amount, exchange, effective_limit_price
+                            self.smart_buy, ticker, resolved_amount, exchange, effective_limit_price
                         )
 
                         if buy_result['success']:
