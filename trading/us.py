@@ -473,7 +473,14 @@ class USStockTrading:
             cash_orderable = min(cash_orderable, current_orderable) if cash_orderable > 0 else current_orderable
 
         if cash_orderable >= requested_amount:
-            if auto_exchange.enabled and requested_amount < price and after_exchange_orderable > cash_orderable:
+            one_share_shortfall = price - cash_orderable
+            if (
+                auto_exchange.enabled
+                and requested_amount < price
+                and cash_orderable < price
+                and one_share_shortfall >= auto_exchange.min_shortfall_usd
+                and after_exchange_orderable > cash_orderable
+            ):
                 exchange_rate = _safe_float(buyable.get("exrt"), _safe_float(summary.get("exchange_rate")))
                 orderable_usd = after_exchange_orderable
                 if auto_exchange.max_krw is not None and exchange_rate > 0:
@@ -1058,6 +1065,8 @@ class USStockTrading:
         if not self.is_reserved_order_available():
             return self._reserved_window_closed(ticker, 'buy', limit_price)
 
+        amount, buy_info = self._resolve_orderable_usd(ticker, amount, limit_price, exchange)
+
         # Calculate quantity based on limit price
         buy_quantity = math.floor(amount / limit_price)
 
@@ -1106,6 +1115,8 @@ class USStockTrading:
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
                     'order_type': 'reserved_limit',
+                    'resolved_amount': amount,
+                    'auto_exchange_used': buy_info.get('auto_exchange_used', False),
                     'message': f'Reserved buy order completed ({buy_quantity} shares x ${limit_price:.2f})'
                 }
             else:
