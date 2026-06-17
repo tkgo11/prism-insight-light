@@ -185,14 +185,56 @@ def test_smart_sell_routes_by_kst_not_server_local_time(monkeypatch):
     calls = []
 
     monkeypatch.setattr(dst, "_now_kst", lambda: dst.KST.localize(datetime(2026, 6, 8, 10, 0)))
-    trader.sell_all_market_price = lambda stock_code: calls.append(("market", stock_code)) or {"success": True}
-    trader.sell_all_closing_price = lambda stock_code: calls.append(("closing", stock_code)) or {"success": True}
-    trader.sell_all_reserved_order = lambda stock_code, limit_price=None: calls.append(("reserved", stock_code, limit_price)) or {"success": True}
+    trader.sell_all_market_price = lambda stock_code, holding_quantity=None: calls.append(("market", stock_code)) or {"success": True}
+    trader.sell_all_closing_price = lambda stock_code, holding_quantity=None: calls.append(("closing", stock_code)) or {"success": True}
+    trader.sell_all_reserved_order = lambda stock_code, limit_price=None, holding_quantity=None: calls.append(("reserved", stock_code, limit_price)) or {"success": True}
 
     result = trader.smart_sell_all("080220", limit_price=30_800)
 
     assert result["success"] is True
     assert calls == [("market", "080220")]
+
+
+@pytest.mark.asyncio
+async def test_async_sell_reuses_verified_holding_quantity(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader._stock_locks = {}
+    trader._semaphore = dst.asyncio.Semaphore(1)
+    trader._global_lock = dst.asyncio.Lock()
+    trader.get_portfolio = lambda: [
+        {
+            "stock_code": "005930",
+            "quantity": 18,
+            "avg_price": 50000,
+            "profit_amount": 1000,
+            "profit_rate": 1.2,
+        }
+    ]
+    trader.get_current_price = lambda stock_code: {"current_price": 70000}
+
+    def fail_if_rechecked(stock_code):
+        raise AssertionError("holding quantity should not be rechecked after portfolio verification")
+
+    calls = []
+
+    def fake_smart_sell_all(stock_code, limit_price=None, holding_quantity=None):
+        calls.append((stock_code, limit_price, holding_quantity))
+        return {
+            "success": True,
+            "order_no": "12345",
+            "stock_code": stock_code,
+            "quantity": holding_quantity,
+            "message": "sold",
+        }
+
+    trader.get_holding_quantity = fail_if_rechecked
+    trader.smart_sell_all = fake_smart_sell_all
+
+    result = await trader._execute_sell_stock("005930", limit_price=70000)
+
+    assert result["success"] is True
+    assert result["quantity"] == 18
+    assert calls == [("005930", 70000, 18)]
 
 
 def test_smart_buy_routes_after_kst_close_to_reserved_order(monkeypatch):
@@ -217,9 +259,9 @@ def test_smart_sell_routes_after_kst_close_to_reserved_order(monkeypatch):
     calls = []
 
     monkeypatch.setattr(dst, "_now_kst", lambda: dst.KST.localize(datetime(2026, 6, 8, 17, 23)))
-    trader.sell_all_market_price = lambda stock_code: calls.append(("market", stock_code)) or {"success": True}
-    trader.sell_all_closing_price = lambda stock_code: calls.append(("closing", stock_code)) or {"success": True}
-    trader.sell_all_reserved_order = lambda stock_code, limit_price=None: calls.append(("reserved", stock_code, limit_price)) or {"success": True}
+    trader.sell_all_market_price = lambda stock_code, holding_quantity=None: calls.append(("market", stock_code)) or {"success": True}
+    trader.sell_all_closing_price = lambda stock_code, holding_quantity=None: calls.append(("closing", stock_code)) or {"success": True}
+    trader.sell_all_reserved_order = lambda stock_code, limit_price=None, holding_quantity=None: calls.append(("reserved", stock_code, limit_price)) or {"success": True}
 
     result = trader.smart_sell_all("443060", limit_price=226_000)
 
