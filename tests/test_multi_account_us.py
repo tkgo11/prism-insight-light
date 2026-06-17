@@ -296,6 +296,63 @@ def test_us_buy_quantity_falls_back_when_buyable_probe_raises():
     assert trader.calculate_buy_quantity("AAPL") == 2
 
 
+def test_us_buy_quantity_does_not_upsize_when_cash_covers_one_share():
+    trader = _bare_us_trader(auto_exchange=True)
+    trader.buy_amount = 20.0
+    trader.buy_sizing = ust.build_buy_sizing(fixed_amount=20.0, asset_percent=None)
+    trader.get_account_summary = lambda: {"available_amount": 100.0, "usd_cash": 100.0, "exchange_rate": 1300.0}
+    trader.get_overseas_buyable_amount = lambda *args, **kwargs: {
+        "ord_psbl_frcr_amt": "100.00",
+        "echm_af_ord_psbl_amt": "150.00",
+        "exrt": "1300.00",
+    }
+
+    assert trader.calculate_buy_quantity("AAPL") == 0
+
+
+def test_us_buy_quantity_honors_min_shortfall_before_one_share_auto_exchange():
+    trader = _bare_us_trader(auto_exchange=True)
+    trader.buy_amount = 49.50
+    trader.buy_sizing = ust.build_buy_sizing(fixed_amount=49.50, asset_percent=None)
+    trader.get_account_summary = lambda: {"available_amount": 49.50, "usd_cash": 49.50, "exchange_rate": 1300.0}
+    trader.get_overseas_buyable_amount = lambda *args, **kwargs: {
+        "ord_psbl_frcr_amt": "49.50",
+        "echm_af_ord_psbl_amt": "100.00",
+        "exrt": "1300.00",
+    }
+
+    assert trader.calculate_buy_quantity("AAPL") == 0
+
+
+def test_us_reserved_buy_uses_resolved_auto_exchange_amount():
+    trader = _bare_us_trader(auto_exchange=True)
+    trader.auto_trading = True
+    trader.buy_amount = 20.0
+    trader.buy_sizing = ust.build_buy_sizing(fixed_amount=20.0, asset_percent=None)
+    trader.is_reserved_order_available = lambda: True
+    trader.get_account_summary = lambda: {"available_amount": 20.0, "usd_cash": 20.0, "exchange_rate": 1300.0}
+    trader.get_overseas_buyable_amount = lambda *args, **kwargs: {
+        "ord_psbl_frcr_amt": "20.00",
+        "echm_af_ord_psbl_amt": "100.00",
+        "exrt": "1300.00",
+    }
+    requests = []
+
+    def fake_request(api_url, tr_id, params, **kwargs):
+        requests.append((api_url, tr_id, params, kwargs))
+        return _FakeKISResponse(output={"ODNO": "reserved-1"})
+
+    trader._request = fake_request
+
+    result = trader.buy_reserved_order("AAPL", 50.0, buy_amount=20.0, exchange="NASD")
+
+    assert result["success"] is True
+    assert result["quantity"] == 1
+    assert result["resolved_amount"] == 50.0
+    assert result["auto_exchange_used"] is True
+    assert requests[0][2]["FT_ORD_QTY"] == "1"
+
+
 @pytest.mark.asyncio
 async def test_async_buy_uses_auto_exchange_before_zero_quantity_rejection():
     trader = _bare_us_trader(auto_exchange=True)
