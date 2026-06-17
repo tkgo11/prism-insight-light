@@ -788,7 +788,7 @@ class DomesticStockTrading:
                 'message': f"Error during reserved buy order: {str(e)}"
             }
 
-    def sell_all_market_price(self, stock_code: str) -> Dict[str, Any]:
+    def sell_all_market_price(self, stock_code: str, holding_quantity: Optional[int] = None) -> Dict[str, Any]:
         """
         Sell all at market price (liquidate entire holding)
 
@@ -814,8 +814,12 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute sell order. (AUTO_TRADING=False)'
             }
 
-        # Check holding quantity
-        buy_quantity = self.get_holding_quantity(stock_code)
+        # Check holding quantity.  Async sell already confirms the holding from
+        # the portfolio response; reuse that known quantity to avoid making a
+        # second balance inquiry immediately before order placement, which can
+        # hit KIS ledger rate limits (EGW00215) and incorrectly look like a
+        # zero-position account.
+        buy_quantity = holding_quantity if holding_quantity is not None else self.get_holding_quantity(stock_code)
 
         if buy_quantity == 0:
             return {
@@ -885,7 +889,7 @@ class DomesticStockTrading:
                 'message': f'Error during sell order: {str(e)}'
             }
 
-    def smart_sell_all(self, stock_code: str, limit_price: int = None) -> Dict[str, Any]:
+    def smart_sell_all(self, stock_code: str, limit_price: int = None, holding_quantity: Optional[int] = None) -> Dict[str, Any]:
         """
         Automatically sell all using the optimal method based on time (excluding after-hours single price trading due to high unfilled probability)
 
@@ -917,12 +921,12 @@ class DomesticStockTrading:
         if datetime.time(9, 0) <= current_time <= datetime.time(15, 30):
             # Regular trading hours - market sell
             logger.info(f"[{stock_code}] Regular trading hours - executing market sell")
-            return self.sell_all_market_price(stock_code)
+            return self.sell_all_market_price(stock_code, holding_quantity=holding_quantity)
 
         elif datetime.time(15, 40) <= current_time <= datetime.time(16, 0):
             # After-hours closing price trading
             logger.info(f"[{stock_code}] After-hours closing price time - executing closing price sell")
-            return self.sell_all_closing_price(stock_code)
+            return self.sell_all_closing_price(stock_code, holding_quantity=holding_quantity)
 
         else:
             # Reserved order (limit or market price)
@@ -930,9 +934,9 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] Outside trading hours - executing reserved order (limit: {limit_price:,} KRW)")
             else:
                 logger.info(f"[{stock_code}] Outside trading hours - executing reserved order (market)")
-            return self.sell_all_reserved_order(stock_code, limit_price=limit_price)
+            return self.sell_all_reserved_order(stock_code, limit_price=limit_price, holding_quantity=holding_quantity)
 
-    def sell_all_closing_price(self, stock_code: str) -> Dict[str, Any]:
+    def sell_all_closing_price(self, stock_code: str, holding_quantity: Optional[int] = None) -> Dict[str, Any]:
         """
         Sell all at after-hours closing price (15:40~16:00)
         Sell at closing price of the day
@@ -946,8 +950,8 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute sell order. (AUTO_TRADING=False)'
             }
 
-        # Check holding quantity
-        buy_quantity = self.get_holding_quantity(stock_code)
+        # Check holding quantity (or reuse async sell's verified portfolio quantity).
+        buy_quantity = holding_quantity if holding_quantity is not None else self.get_holding_quantity(stock_code)
 
         if buy_quantity == 0:
             return {
@@ -1013,7 +1017,7 @@ class DomesticStockTrading:
                 'message': f'Error during sell: {str(e)}'
             }
 
-    def sell_all_reserved_order(self, stock_code: str, end_date: str = None, limit_price: int = None) -> Dict[str, Any]:
+    def sell_all_reserved_order(self, stock_code: str, end_date: str = None, limit_price: int = None, holding_quantity: Optional[int] = None) -> Dict[str, Any]:
         """
         Sell all with reserved order (auto-execute on next trading day)
         Reserved order available: 15:40~next business day 07:30 (excluding 23:40~00:10)
@@ -1036,8 +1040,8 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute sell order. (AUTO_TRADING=False)'
             }
 
-        # Check holding quantity
-        buy_quantity = self.get_holding_quantity(stock_code)
+        # Check holding quantity (or reuse async sell's verified portfolio quantity).
+        buy_quantity = holding_quantity if holding_quantity is not None else self.get_holding_quantity(stock_code)
         if buy_quantity == 0:
             return {
                 'success': False,
@@ -1350,15 +1354,12 @@ class DomesticStockTrading:
                             result['current_price'] = current_price_info['current_price']
                             logger.info(f"[Async Sell API] {stock_code} current price: {current_price_info['current_price']:,} KRW")
 
-                        # Defensive logic 2: Check holding quantity once more before selling
-                        holding_quantity = await asyncio.to_thread(
-                            self.get_holding_quantity, stock_code
-                        )
-
-                        if holding_quantity <= 0:
-                            result['message'] = f'{stock_code} holding quantity is 0 at final check'
-                            logger.warning(f"[Async Sell API] {stock_code} holding quantity 0 at final check")
-                            return result
+                        # Reuse the quantity from the portfolio verification above.
+                        # A second immediate balance inquiry can exceed the KIS
+                        # ledger rate limit and return an empty portfolio, causing
+                        # a false "holding quantity is 0" failure even though the
+                        # stock was just confirmed in the account.
+                        holding_quantity = target_stock['quantity']
 
                         # Execute sell all
                         # Use current_price as limit_price fallback for reserved orders (outside market hours)
@@ -1370,7 +1371,7 @@ class DomesticStockTrading:
                         else:
                             logger.info(f"[Async Sell API] {stock_code} executing sell all (holding: {holding_quantity} shares, market)")
                         all_sell_result = await asyncio.to_thread(
-                            self.smart_sell_all, stock_code, effective_limit_price
+                            self.smart_sell_all, stock_code, effective_limit_price, holding_quantity
                         )
 
                         if all_sell_result['success']:
