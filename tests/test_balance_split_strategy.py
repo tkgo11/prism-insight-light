@@ -136,6 +136,36 @@ async def test_balance_split_caps_orderable_cash_at_cash_balance_excluding_holdi
 
 
 @pytest.mark.asyncio
+async def test_kr_balance_split_caps_final_buy_amount_by_orderable_cash():
+    trader = FakeKRTrader(available_amount=3000, deposit=30000, total_cash=12000)
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=3))
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 80000})
+
+    result = await strategy._execute_kr(signal, trader=trader)
+
+    assert result.status == "executed"
+    assert result.available_amount == 12000
+    assert result.buy_amount == 3000.0
+    assert result.cash_source == "cash_balance-capped-by-available_amount"
+    assert trader.buy_calls == [("005930", 3000, 80000)]
+
+
+@pytest.mark.asyncio
+async def test_kr_balance_split_uses_cash_balance_base_when_orderable_cash_exceeds_target():
+    trader = FakeKRTrader(available_amount=3000, deposit=30000, total_cash=12000)
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=4))
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 80000})
+
+    result = await strategy._execute_kr(signal, trader=trader)
+
+    assert result.status == "executed"
+    assert result.available_amount == 12000
+    assert result.buy_amount == 3000.0
+    assert result.cash_source == "cash_balance"
+    assert trader.buy_calls == [("005930", 3000, 80000)]
+
+
+@pytest.mark.asyncio
 async def test_kr_balance_split_deducts_recent_successful_buys_when_broker_cash_is_stale(tmp_path):
     strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
     strategy.reservation_path = tmp_path / "balance_split_reservations.json"
