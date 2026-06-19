@@ -99,6 +99,11 @@ class BalanceSplitStrategy:
     async def _execute_kr(self, signal: SignalMessage, *, trader: _BuyTrader) -> BalanceSplitExecution:
         available_amount, cash_source, summary = self._available_amount(trader, market="KR")
         buy_amount = self._buy_amount(available_amount)
+        buy_amount, cash_source = self._cap_buy_amount_for_orderability(
+            buy_amount=buy_amount,
+            cash_source=cash_source,
+            summary=summary,
+        )
         if buy_amount <= 0:
             return self._no_balance(signal, available_amount, buy_amount, cash_source=cash_source)
 
@@ -135,17 +140,13 @@ class BalanceSplitStrategy:
 
         # For domestic accounts, cash_balance/total_cash is the cash portion of
         # the account after excluding current stock holdings.  That is the
-        # intended balance_split base.  KIS can report ord_psbl_cash=0 outside
-        # regular hours, so use the cash balance in that case; when both values
-        # are positive, cap at the lower value so the strategy never overstates
-        # cash because of stale or more permissive broker fields.
+        # intended balance_split sizing base.  KIS can report ord_psbl_cash=0
+        # outside regular hours, so keep orderability separate from strategy
+        # sizing and cap the final order amount later only when a positive
+        # orderable cash value is available.
         if cash_balance > 0:
-            if available_amount > 0:
-                cash_amount = min(cash_balance, available_amount)
-                cash_source = "available_amount" if available_amount <= cash_balance else "cash_balance"
-            else:
-                cash_amount = cash_balance
-                cash_source = "cash_balance"
+            cash_amount = cash_balance
+            cash_source = "cash_balance"
             reserved_amount = self._pending_reserved_amount(
                 market=market, current_cash=cash_amount, account_key=account_key
             )
@@ -188,6 +189,29 @@ class BalanceSplitStrategy:
             return adjusted_deposit, cash_source, summary
 
         return 0.0, "available_amount", summary
+
+    @staticmethod
+    def _cap_buy_amount_for_orderability(
+        *,
+        buy_amount: float,
+        cash_source: str,
+        summary: dict[str, Any],
+    ) -> tuple[float, str]:
+        """Cap the final order by positive broker-reported orderable cash.
+
+        The balance split sizing base can legitimately include settlement-aware
+        cash fields such as domestic D+2 receivables.  A positive
+        available_amount, however, is still useful as a safety cap for the
+        actual order submitted to the broker.  A zero value is intentionally not
+        used as a hard cap because KIS can return zero outside regular hours.
+        """
+        try:
+            orderable_cash = float(summary.get("available_amount", 0) or 0)
+        except (TypeError, ValueError):
+            orderable_cash = 0.0
+        if orderable_cash <= 0 or buy_amount <= orderable_cash:
+            return buy_amount, cash_source
+        return orderable_cash, f"{cash_source}-capped-by-available_amount"
 
     def _load_reservations(self) -> list[dict[str, Any]]:
         try:
