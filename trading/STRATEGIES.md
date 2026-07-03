@@ -54,12 +54,13 @@ When a SELL signal arrives with `stop_loss: 180`, the bot sends the sell order w
 
 - It only handles **SELL** signals.
 - It prefers `stop_loss` over `price` for the sell limit price.
+- For US stop-loss SELL signals where `price` has already moved below `stop_loss`, it uses the lower signal `price` so the KIS limit order is marketable instead of waiting for a recovery.
 - If `stop_loss` is missing and `fallback_to_signal_price` is `true`, it uses the signal `price` instead.
 - If neither usable price exists, it rejects the strategy execution instead of sending an unpriced sell.
 
 ### Main setting
 
-- `fallback_to_signal_price`: whether to use `price` when `stop_loss` is missing.
+- `fallback_to_signal_price`: whether to use `price` when `stop_loss` is missing, or when a US SELL arrives after `price` has already crossed below `stop_loss`.
   - Default: `true`.
 
 ### When it is useful
