@@ -29,6 +29,8 @@ from .strategies import (
     RiskBracketStrategyConfig,
     ScoreWeightedStrategy,
     ScoreWeightedStrategyConfig,
+    StopLossSellStrategy,
+    StopLossSellStrategyConfig,
 )
 from .us import USStockTrading
 
@@ -71,6 +73,7 @@ class TradeDispatcher:
         self.limit_buffer_config = LimitBufferStrategyConfig.from_mapping(self.strategy_config)
         self.cooldown_config = CooldownStrategyConfig.from_mapping(self.strategy_config)
         self.event_risk_off_config = EventRiskOffStrategyConfig.from_mapping(self.strategy_config)
+        self.stop_loss_sell_config = StopLossSellStrategyConfig.from_mapping(self.strategy_config)
         self.account_name = account_name
         self.account_index = account_index
 
@@ -159,8 +162,11 @@ class TradeDispatcher:
                 return ScoreWeightedStrategy(config=self.score_weighted_config)
             if self.risk_bracket_config is not None:
                 return RiskBracketStrategy(config=self.risk_bracket_config)
-        if signal.signal_type == "SELL" and self.profit_ladder_config is not None:
-            return ProfitLadderStrategy(config=self.profit_ladder_config)
+        if signal.signal_type == "SELL":
+            if self.stop_loss_sell_config is not None:
+                return StopLossSellStrategy(config=self.stop_loss_sell_config)
+            if self.profit_ladder_config is not None:
+                return ProfitLadderStrategy(config=self.profit_ladder_config)
         return None
 
     def _resolve_buy_strategy(self, signal: SignalMessage) -> BalanceSplitStrategy | None:
