@@ -205,3 +205,52 @@ async def test_disabled_strategy_buy_uses_legacy_path(monkeypatch):
 
     assert result.status == "executed"
     assert results == {"mode": "demo", "ticker": "AAPL", "limit_price": 200.0}
+
+
+@pytest.mark.asyncio
+async def test_stop_loss_sell_strategy_uses_stop_loss_limit(monkeypatch):
+    results = {}
+
+    class FakeUSTrader:
+        def __init__(self, mode):
+            results["mode"] = mode
+
+        async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
+            results["ticker"] = ticker
+            results["limit_price"] = limit_price
+            results["sell_fraction"] = sell_fraction
+            return {"success": True, "message": "stop-loss-sell"}
+
+    monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+
+    dispatcher = TradeDispatcher(trading_mode="demo", strategy_config={"name": "stop_loss_sell"})
+    signal = parse_signal_payload({"type": "SELL", "ticker": "AAPL", "market": "US", "price": 200, "stop_loss": 180})
+    result = await dispatcher.dispatch(signal)
+
+    assert result.status == "executed"
+    assert results == {"mode": "demo", "ticker": "AAPL", "limit_price": 180.0, "sell_fraction": None}
+
+
+@pytest.mark.asyncio
+async def test_stop_loss_sell_strategy_falls_back_to_signal_price(monkeypatch):
+    results = {}
+
+    class FakeUSTrader:
+        def __init__(self, mode):
+            results["mode"] = mode
+
+        async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
+            results["ticker"] = ticker
+            results["limit_price"] = limit_price
+            return {"success": True, "message": "fallback-sell"}
+
+    monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+
+    dispatcher = TradeDispatcher(trading_mode="demo", strategy_config={"name": "stop_loss_sell"})
+    signal = parse_signal_payload({"type": "SELL", "ticker": "AAPL", "market": "US", "price": 200})
+    result = await dispatcher.dispatch(signal)
+
+    assert result.status == "executed"
+    assert results == {"mode": "demo", "ticker": "AAPL", "limit_price": 200.0}
