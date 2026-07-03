@@ -108,8 +108,12 @@ def _configure_logging(log_file: str | None, *, level: str = "INFO") -> None:
         root_logger.addHandler(handler)
 
 
-def _configure_raw_pubsub_logging(log_file: str | None, *, level: str = "INFO") -> logging.Logger | None:
-    """Configure the optional isolated logger for unparsed Pub/Sub payloads."""
+def _configure_raw_pubsub_logging(log_file: str | None) -> logging.Logger | None:
+    """Configure the optional isolated logger for unparsed Pub/Sub payloads.
+
+    Raw payload capture is an explicit debugging opt-in, so keep this
+    isolated logger at INFO regardless of the main subscriber log level.
+    """
     if not log_file:
         RAW_PUBSUB_LOGGER.handlers.clear()
         RAW_PUBSUB_LOGGER.propagate = False
@@ -119,9 +123,10 @@ def _configure_raw_pubsub_logging(log_file: str | None, *, level: str = "INFO") 
     log_path.parent.mkdir(parents=True, exist_ok=True)
     handler = _KSTDailyFileHandler(log_path, encoding="utf-8")
     handler.setFormatter(_KSTFormatter("%(asctime)s - %(message)s"))
+    handler.setLevel(logging.INFO)
 
     RAW_PUBSUB_LOGGER.handlers.clear()
-    RAW_PUBSUB_LOGGER.setLevel(_parse_log_level(level))
+    RAW_PUBSUB_LOGGER.setLevel(logging.INFO)
     RAW_PUBSUB_LOGGER.propagate = False
     RAW_PUBSUB_LOGGER.addHandler(handler)
     return RAW_PUBSUB_LOGGER
@@ -280,7 +285,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     try:
         _configure_logging(args.log_file, level=args.log_level)
-        raw_pubsub_logger = _configure_raw_pubsub_logging(args.raw_pubsub_log_file, level=args.log_level)
+        raw_pubsub_logger = _configure_raw_pubsub_logging(args.raw_pubsub_log_file)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
 
