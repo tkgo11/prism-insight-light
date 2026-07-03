@@ -11,6 +11,7 @@ strategy.
 - `score_weighted`: BUY with a configured amount multiplied by the incoming `buy_score` band.
 - `risk_bracket`: BUY from a risk budget derived from `price` and `stop_loss`, with optional bracket metadata persistence.
 - `profit_ladder`: SELL through configured `profit_rate` bands or full-exit reasons.
+- `stop_loss_sell`: SELL at the incoming `stop_loss` price by default, with optional fallback to `price`.
 - `limit_buffer`: BUY/SELL using a buffered limit price around the signal price.
 - `cooldown`: execute a trade only when the same configured ticker/signal key has not traded recently.
 - `event_risk_off`: record risk-off EVENT signals and reject matching BUY signals while the state is fresh.
