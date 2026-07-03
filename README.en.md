@@ -135,6 +135,18 @@ python subscriber.py
 
 Before live mode, verify your KIS accounts, App Key/Secret values, Pub/Sub subscription, and service-account permissions.
 
+### Optional raw Pub/Sub payload log
+
+The normal subscriber log records message metadata, validation, dispatch, and acknowledgement events. To keep unparsed Pub/Sub payloads in a separate file for debugging, opt in with either the CLI flag or environment variable:
+
+```bash
+python subscriber.py --raw-pubsub-log-file logs/raw_pubsub.log
+# or
+RAW_PUBSUB_LOG_FILE=logs/raw_pubsub.log python subscriber.py
+```
+
+Raw Pub/Sub logging is disabled by default because payloads may contain sensitive signal metadata. When enabled, each raw payload is written to the separate KST-rotated log file as one JSON object containing the Pub/Sub context, byte count, and UTF-8 decoded payload.
+
 ## Signal message contract
 
 Inbound Pub/Sub messages may use these fields.
