@@ -41,7 +41,7 @@ class StopLossSellStrategy:
 
         limit_price = signal.stop_loss
         price_source = "stop_loss"
-        if limit_price in (None, 0) and self.config.fallback_to_signal_price:
+        if self._should_use_signal_price(signal, limit_price):
             limit_price = signal.price
             price_source = "price"
 
@@ -61,3 +61,10 @@ class StopLossSellStrategy:
             limit_price=float(limit_price),
             price_source=price_source,
         )
+
+    def _should_use_signal_price(self, signal, stop_loss: float | None) -> bool:
+        if not self.config.fallback_to_signal_price or signal.price in (None, 0):
+            return False
+        if stop_loss in (None, 0):
+            return True
+        return signal.market == "US" and float(signal.price) < float(stop_loss)
