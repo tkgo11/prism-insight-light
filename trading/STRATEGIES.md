@@ -20,6 +20,7 @@ If `name` is empty, the bot uses the normal old behavior.
 | `score_weighted` | Buy more when the signal score is stronger. | BUY |
 | `risk_bracket` | Decide the buy size by how much money you are willing to risk. | BUY |
 | `profit_ladder` | Sell in steps as profit gets bigger, like climbing a ladder. | SELL |
+| `stop_loss_sell` | Sell at the stop-loss price sent by Pub/Sub. | SELL |
 | `limit_buffer` | Move the limit price a little to help the order price. | BUY and SELL |
 | `cooldown` | Wait before trading the same thing again. | Usually BUY |
 | `event_risk_off` | Remember danger events and block or shrink buys for a while. | EVENT and BUY |
@@ -30,12 +31,41 @@ In `trading/config/kis_devlp.yaml`, set:
 
 ```yaml
 signal_strategy:
-  name: "balance_split"
+  name: "stop_loss_sell"
 ```
 
-Replace `balance_split` with the strategy you want.
+The example config defaults to `stop_loss_sell` so SELL signals use their Pub/Sub `stop_loss` as the limit price. Replace `stop_loss_sell` with another strategy when you want different behavior.
 Each strategy also has its own settings under `signal_strategy`.
 The example config file shows the available setting names, but this guide explains what they mean.
+
+
+## `stop_loss_sell`
+
+### In one sentence
+
+`stop_loss_sell` sells at the stop-loss price included in the incoming Pub/Sub signal.
+
+### Kid-friendly example
+
+You tell the bot, "If this stock falls to 180, sell it there."
+When a SELL signal arrives with `stop_loss: 180`, the bot sends the sell order with 180 as the limit price.
+
+### What it does
+
+- It only handles **SELL** signals.
+- It prefers `stop_loss` over `price` for the sell limit price.
+- For US stop-loss SELL signals where `price` has already moved below `stop_loss`, it uses the lower signal `price` so the KIS limit order is marketable instead of waiting for a recovery.
+- If `stop_loss` is missing and `fallback_to_signal_price` is `true`, it uses the signal `price` instead.
+- If neither usable price exists, it rejects the strategy execution instead of sending an unpriced sell.
+
+### Main setting
+
+- `fallback_to_signal_price`: whether to use `price` when `stop_loss` is missing, or when a US SELL arrives after `price` has already crossed below `stop_loss`.
+  - Default: `true`.
+
+### When it is useful
+
+Use this when Pub/Sub already calculates a stop-loss price and you want the bot's default SELL behavior to honor that stop-loss.
 
 ## `balance_split`
 
