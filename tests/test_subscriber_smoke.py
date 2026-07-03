@@ -58,6 +58,31 @@ def test_handle_message_logs_dispatch_message(caplog):
     assert "Acknowledged Pub/Sub message" in caplog.text
 
 
+def test_handle_message_optionally_logs_raw_pubsub_payload(tmp_path):
+    dispatcher = FakeDispatcher()
+    message = FakeMessage(b'{"type":"BUY","ticker":"005930","market":"KR","price":82000}')
+    raw_log = tmp_path / "raw_pubsub.log"
+    raw_logger = subscriber._configure_raw_pubsub_logging(str(raw_log))
+
+    try:
+        subscriber._handle_message(message, dispatcher, raw_logger=raw_logger)
+    finally:
+        subscriber._configure_raw_pubsub_logging(None)
+
+    text = raw_log.read_text(encoding="utf-8")
+    assert '"bytes": 60' in text
+    assert '"context": "message_id=msg-1 delivery_attempt=2"' in text
+    assert '"payload":' in text
+    assert '005930' in text
+
+
+def test_parse_args_raw_pubsub_log_file_from_env(monkeypatch):
+    monkeypatch.setenv("RAW_PUBSUB_LOG_FILE", "logs/raw_pubsub.log")
+
+    args = subscriber.parse_args([])
+
+    assert args.raw_pubsub_log_file == "logs/raw_pubsub.log"
+
 def test_web_ui_flag_still_requires_pubsub_settings(monkeypatch):
     launched = []
 
