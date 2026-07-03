@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import datetime
+import json
 import logging
 import logging.handlers
 import os
@@ -25,6 +26,7 @@ ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
 
 LOGGER = logging.getLogger("subscriber")
+RAW_PUBSUB_LOGGER = logging.getLogger("subscriber.raw_pubsub")
 
 
 class _KSTFormatter(logging.Formatter):
@@ -106,6 +108,30 @@ def _configure_logging(log_file: str | None, *, level: str = "INFO") -> None:
         root_logger.addHandler(handler)
 
 
+def _configure_raw_pubsub_logging(log_file: str | None) -> logging.Logger | None:
+    """Configure the optional isolated logger for unparsed Pub/Sub payloads.
+
+    Raw payload capture is an explicit debugging opt-in, so keep this
+    isolated logger at INFO regardless of the main subscriber log level.
+    """
+    if not log_file:
+        RAW_PUBSUB_LOGGER.handlers.clear()
+        RAW_PUBSUB_LOGGER.propagate = False
+        return None
+
+    log_path = Path(log_file)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    handler = _KSTDailyFileHandler(log_path, encoding="utf-8")
+    handler.setFormatter(_KSTFormatter("%(asctime)s - %(message)s"))
+    handler.setLevel(logging.INFO)
+
+    RAW_PUBSUB_LOGGER.handlers.clear()
+    RAW_PUBSUB_LOGGER.setLevel(logging.INFO)
+    RAW_PUBSUB_LOGGER.propagate = False
+    RAW_PUBSUB_LOGGER.addHandler(handler)
+    return RAW_PUBSUB_LOGGER
+
+
 class QueueWorker:
     def __init__(self, dispatcher: TradeDispatcher, poll_seconds: int):
         self.dispatcher = dispatcher
@@ -149,9 +175,33 @@ def _message_context(message) -> str:
     return " ".join(parts) if parts else "message_id=unknown"
 
 
-def _handle_message(message, dispatcher: TradeDispatcher, logger: logging.Logger | None = None) -> None:
+def _log_raw_pubsub_message(message, context: str, raw_logger: logging.Logger | None) -> None:
+    if raw_logger is None:
+        return
+    raw_data = message.data or b""
+    raw_logger.info(
+        "%s",
+        json.dumps(
+            {
+                "context": context,
+                "bytes": len(raw_data),
+                "payload": raw_data.decode("utf-8", errors="replace"),
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+    )
+
+
+def _handle_message(
+    message,
+    dispatcher: TradeDispatcher,
+    logger: logging.Logger | None = None,
+    raw_logger: logging.Logger | None = None,
+) -> None:
     active_logger = logger or LOGGER
     context = _message_context(message)
+    _log_raw_pubsub_message(message, context, raw_logger)
     active_logger.info("Received Pub/Sub message (%s, bytes=%s)", context, len(message.data or b""))
     try:
         signal = parse_signal_bytes(message.data)
@@ -183,8 +233,12 @@ def _handle_message(message, dispatcher: TradeDispatcher, logger: logging.Logger
         active_logger.info("Acknowledged Pub/Sub message (%s)", context)
 
 
-def build_callback(dispatcher: TradeDispatcher, logger: logging.Logger | None = None):
-    return lambda message: _handle_message(message, dispatcher, logger)
+def build_callback(
+    dispatcher: TradeDispatcher,
+    logger: logging.Logger | None = None,
+    raw_logger: logging.Logger | None = None,
+):
+    return lambda message: _handle_message(message, dispatcher, logger, raw_logger)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -193,6 +247,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--subscription-id", default=os.environ.get("GCP_PUBSUB_SUBSCRIPTION_ID"))
     parser.add_argument("--credentials-path", default=os.environ.get("GCP_CREDENTIALS_PATH"))
     parser.add_argument("--log-file", default="logs/subscriber.log")
+    parser.add_argument(
+        "--raw-pubsub-log-file",
+        default=os.environ.get("RAW_PUBSUB_LOG_FILE"),
+        help="Optional separate file for raw Pub/Sub payload logs (disabled by default)",
+    )
     parser.add_argument(
         "--log-level",
         default=os.environ.get("LOG_LEVEL", "INFO"),
@@ -226,6 +285,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     try:
         _configure_logging(args.log_file, level=args.log_level)
+        raw_pubsub_logger = _configure_raw_pubsub_logging(args.raw_pubsub_log_file)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
 
@@ -258,17 +318,18 @@ def main(argv: list[str] | None = None) -> None:
     subscriber = pubsub_v1.SubscriberClient(credentials=credentials) if credentials else pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(args.project_id, args.subscription_id)
     LOGGER.info(
-        "Listening on %s (dry_run=%s, mode=%s, queue_path=%s, queue_poll_seconds=%s)",
+        "Listening on %s (dry_run=%s, mode=%s, queue_path=%s, queue_poll_seconds=%s, raw_pubsub_log=%s)",
         subscription_path,
         args.dry_run,
         dispatcher.trading_mode,
         args.queue_path,
         args.queue_poll_seconds,
+        args.raw_pubsub_log_file or "disabled",
     )
 
     streaming_pull_future = subscriber.subscribe(
         subscription_path,
-        callback=lambda message: _handle_message(message, dispatcher),
+        callback=lambda message: _handle_message(message, dispatcher, raw_logger=raw_pubsub_logger),
     )
     stop_event = threading.Event()
 
