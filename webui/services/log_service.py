@@ -10,6 +10,7 @@ from .masking import mask_text
 
 _ALLOWED_LOGS = {
     "subscriber": Path("logs") / "subscriber.log",
+    "raw_pubsub": Path("logs") / "raw_pubsub.log",
     "runtime": Path("runtime") / "subscriber.log",
 }
 
