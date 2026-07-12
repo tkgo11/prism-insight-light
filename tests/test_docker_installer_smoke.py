@@ -93,9 +93,11 @@ case "$cmd" in
     fi
     ;;
   rm)
+    [[ "${STUB_DOCKER_FAIL_RM:-false}" != "true" ]] || exit 42
     rm -f "$container_file" "$running_file"
     ;;
   rmi)
+    [[ "${STUB_DOCKER_FAIL_RMI:-false}" != "true" ]] || exit 43
     rm -f "$image_file"
     ;;
   create)
@@ -354,6 +356,8 @@ def test_install_prism_docker_cron_declined_smoke(installer_env):
     assert "crontab" not in log_text
     assert "아카이브 URL: file://" in result.stdout
     assert "cron 설치 여부: false" in result.stdout
+    assert env_file.stat().st_mode & 0o777 == 0o600
+    assert kis_file.stat().st_mode & 0o777 == 0o600
 
 
 def test_install_prism_docker_with_cron_smoke(installer_env):
@@ -439,6 +443,53 @@ def test_install_prism_docker_full_uninstall_removes_generated_artifacts(install
     assert "docker rm -f prism-insight-subscriber" in log_text
     assert "docker rmi -f pubsub-trader" in log_text
     assert "전체 제거가 완료되었습니다." in uninstall_result.stdout
+
+
+def test_full_uninstall_preserves_explicit_repo_dir(installer_env):
+    result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--without-cron",
+    )
+    assert result.returncode == 0, result.stderr
+    install_dir = installer_env["tmp_path"] / "target-install"
+
+    uninstall = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--repo-dir",
+        install_dir.as_posix(),
+        "--uninstall",
+    )
+
+    assert uninstall.returncode == 0, uninstall.stderr
+    assert install_dir.exists()
+    assert "기존 체크아웃은 유지합니다" in uninstall.stdout
+
+
+def test_full_uninstall_stops_when_docker_removal_fails(installer_env):
+    result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--without-cron",
+    )
+    assert result.returncode == 0, result.stderr
+    install_dir = installer_env["tmp_path"] / "target-install"
+    failing_env = installer_env["env"].copy()
+    failing_env["STUB_DOCKER_FAIL_RM"] = "true"
+
+    uninstall = run_installer(
+        installer_env["tmp_path"],
+        failing_env,
+        "--non-interactive",
+        "--uninstall",
+    )
+
+    assert uninstall.returncode != 0
+    assert install_dir.exists()
 
 
 def test_install_prism_docker_accepts_kst_without_timezone_change(installer_env):
@@ -551,6 +602,31 @@ def test_setup_subscriber_docker_cron_start_respects_explicit_action(installer_e
     assert start_result.returncode == 0, start_result.stderr
     assert "subscriber Docker Crontab 메뉴" not in start_result.stdout
     assert "docker start prism-insight-subscriber" in log_text
+
+
+def test_docker_cron_refuses_malformed_managed_markers(installer_env):
+    result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--without-cron",
+    )
+    assert result.returncode == 0, result.stderr
+    project_dir = installer_env["tmp_path"] / "target-install"
+    crontab_file = installer_env["state_dir"] / "crontab.txt"
+    malformed = (
+        "17 * * * * unrelated-job\n"
+        "# BEGIN PRISM-INSIGHT SUBSCRIBER DOCKER CRON\n"
+        "18 * * * * must-not-be-lost\n"
+    )
+    crontab_file.write_text(malformed, encoding="utf-8")
+    env = installer_env["env"].copy()
+    env["PROJECT_DIR"] = project_dir.as_posix()
+
+    uninstall = run_setup_script(project_dir, env, "--uninstall", "--non-interactive")
+
+    assert uninstall.returncode != 0
+    assert crontab_file.read_text(encoding="utf-8") == malformed
 
 
 def test_setup_subscriber_docker_prepare_runtime_resolves_relative_credentials_path(installer_env):
