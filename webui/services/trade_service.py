@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import os
 from dataclasses import asdict
 from typing import Any
@@ -33,7 +32,7 @@ def trading_guard_status() -> dict[str, Any]:
     }
 
 
-def dispatch_manual_order(
+async def dispatch_manual_order(
     *,
     action: str,
     ticker: str,
@@ -44,14 +43,18 @@ def dispatch_manual_order(
     arm_phrase: str = "",
     account_name: str = "",
 ) -> dict[str, Any]:
-    signal_payload = build_manual_signal(
-        action=action,
-        ticker=ticker,
-        price=price,
-        company_name=company_name,
-        market=market,
-    )
-    signal = parse_signal_payload(signal_payload)
+    signal = None
+    try:
+        signal_payload = build_manual_signal(
+            action=action,
+            ticker=ticker,
+            price=price,
+            company_name=company_name,
+            market=market,
+        )
+        signal = parse_signal_payload(signal_payload)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(str(exc)) from exc
     if not live_trading_enabled():
         return {
             "ok": False,
@@ -71,7 +74,7 @@ def dispatch_manual_order(
 
     try:
         dispatcher = TradeDispatcher(dry_run=False, trading_mode=trading_mode or None, strategy_config={"name": ""}, account_name=account_name or None)
-        result = asyncio.run(dispatcher.dispatch(signal))
+        result = await dispatcher.dispatch(signal)
         return {
             "ok": result.status in {"executed", "queued", "acknowledged"},
             "blocked": False,

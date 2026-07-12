@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+import math
+
+from fastapi import APIRouter, Depends, Request, status
 
 from webui.routes.guards import get_urlencoded_form, require_csrf_token
 from webui.services.account_service import get_config_editor_model, list_accounts, update_config_fields
@@ -19,7 +21,7 @@ def _page_context(request: Request, *, trade_result=None, config_result=None) ->
         "trade_guard": trading_guard_status(),
         "trade_result": trade_result,
         "config_result": config_result,
-        "csrf_token": "local-webui",
+        "csrf_token": request.app.state.settings.csrf_token,
     }
 
 
@@ -33,17 +35,36 @@ def trading_page(request: Request):
 async def manual_order(request: Request):
     templates = request.app.state.templates
     form = await get_urlencoded_form(request)
-    result = dispatch_manual_order(
-        action=form.get("action", ""),
-        ticker=form.get("ticker", ""),
-        price=float(form.get("price") or 0),
-        company_name=form.get("company_name", ""),
-        market=form.get("market", "auto"),
-        trading_mode=form.get("trading_mode") or None,
-        arm_phrase=form.get("arm_phrase", ""),
-        account_name=form.get("account_name", ""),
+    try:
+        price = float(form.get("price") or "")
+        if not math.isfinite(price) or price <= 0:
+            raise ValueError("price must be a finite positive number")
+        result = await dispatch_manual_order(
+            action=form.get("action", ""),
+            ticker=form.get("ticker", ""),
+            price=price,
+            company_name=form.get("company_name", ""),
+            market=form.get("market", "auto"),
+            trading_mode=form.get("trading_mode") or None,
+            arm_phrase=form.get("arm_phrase", ""),
+            account_name=form.get("account_name", ""),
+        )
+        response_status = status.HTTP_200_OK
+    except (TypeError, ValueError) as exc:
+        result = {
+            "ok": False,
+            "blocked": True,
+            "signal": None,
+            "result": None,
+            "error": f"Invalid order: {exc}",
+        }
+        response_status = status.HTTP_400_BAD_REQUEST
+    return templates.TemplateResponse(
+        request,
+        "trading.html",
+        _page_context(request, trade_result=result),
+        status_code=response_status,
     )
-    return templates.TemplateResponse(request, "trading.html", _page_context(request, trade_result=result))
 
 
 @router.post("/config", dependencies=[Depends(require_csrf_token)])
@@ -61,14 +82,24 @@ async def update_config(request: Request):
         "max_auto_exchange_krw": form.get("max_auto_exchange_krw", ""),
         "auto_exchange_min_shortfall_usd": form.get("auto_exchange_min_shortfall_usd", ""),
     }
-    result = update_config_fields(
-        fields,
-        {
-            "name": form.get("signal_strategy_name", ""),
-            "split_count": form.get("signal_strategy_split_count", "2"),
-        },
+    try:
+        result = update_config_fields(
+            fields,
+            {
+                "name": form.get("signal_strategy_name", ""),
+                "split_count": form.get("signal_strategy_split_count", "2"),
+            },
+        )
+        response_status = status.HTTP_200_OK
+    except (TypeError, ValueError) as exc:
+        result = {"ok": False, "path_label": None, "error": f"Invalid configuration: {exc}"}
+        response_status = status.HTTP_400_BAD_REQUEST
+    return templates.TemplateResponse(
+        request,
+        "trading.html",
+        _page_context(request, config_result=result),
+        status_code=response_status,
     )
-    return templates.TemplateResponse(request, "trading.html", _page_context(request, config_result=result))
 
 
 @router.get("/accounts/api")

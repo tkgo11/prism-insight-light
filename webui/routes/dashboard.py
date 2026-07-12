@@ -29,6 +29,6 @@ def dashboard(request: Request):
             "accounts": accounts,
             "config_model": get_config_editor_model(),
             "trade_guard": trading_guard_status(),
-            "csrf_token": "local-webui",
+            "csrf_token": request.app.state.settings.csrf_token,
         },
     )
