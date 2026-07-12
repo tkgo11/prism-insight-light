@@ -283,7 +283,7 @@ bash setup_subscriber_docker_crontab.sh
 
 WebUI는 Pub/Sub subscriber와 함께 실행할 수 있는 로컬 운영 콘솔이며 준비 상태, 신호 검증, 드라이런 시뮬레이션, Telegram 미리보기, 마스킹된 제한 로그, 오프아워 큐 읽기 전용 확인, 보호된 수동 BUY/SELL, 일부 운영 설정 편집을 제공합니다. 큐 변경, 브로커 로그인, 토큰 갱신, subscriber 제어 기능은 제공하지 않습니다.
 
-수동 브로커 주문은 기본적으로 잠겨 있습니다. 루프백 전용 바인딩, `WEBUI_ENABLE_LIVE_TRADING=true`, 화면에 표시된 주문별 확인 문구, 유효한 CSRF 토큰이 모두 필요합니다. 신뢰할 수 있는 로컬 장비에서만 사용하고, 비루프백 바인딩 허용을 인증 수단으로 간주하지 마세요.
+수동 브로커 주문은 기본적으로 잠겨 있습니다. 안전한 배포는 기본 루프백 전용 바인딩을 사용하며, 각 주문에는 `WEBUI_ENABLE_LIVE_TRADING=true`, 화면에 표시된 확인 문구, 유효한 CSRF 토큰도 필요합니다. 신뢰할 수 있는 로컬 장비에서만 사용하세요. 명시적으로 허용한 비루프백 바인딩은 인증 수단이 아니며 실거래에는 권장하지 않습니다.
 
 ```bash
 pip install -r requirements.txt

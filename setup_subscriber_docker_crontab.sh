@@ -282,34 +282,62 @@ validate_environment() {
 }
 
 image_exists() {
+    if ! "$DOCKER_BIN" ps -a >/dev/null; then
+        log_error "Docker daemon 상태를 확인할 수 없습니다."
+        return 2
+    fi
     "$DOCKER_BIN" image inspect "$IMAGE_NAME" >/dev/null 2>&1
 }
 
 container_exists() {
-    [ -n "$("$DOCKER_BIN" ps -a --filter "name=^/${CONTAINER_NAME}$" --format '{{.Names}}')" ]
+    local output
+    if ! output="$("$DOCKER_BIN" ps -a --filter "name=^/${CONTAINER_NAME}$" --format '{{.Names}}')"; then
+        log_error "Docker 컨테이너 목록을 확인할 수 없습니다."
+        return 2
+    fi
+    [ -n "$output" ]
 }
 
 container_running() {
-    [ -n "$("$DOCKER_BIN" ps --filter "name=^/${CONTAINER_NAME}$" --format '{{.Names}}')" ]
+    local output
+    if ! output="$("$DOCKER_BIN" ps --filter "name=^/${CONTAINER_NAME}$" --format '{{.Names}}')"; then
+        log_error "실행 중인 Docker 컨테이너를 확인할 수 없습니다."
+        return 2
+    fi
+    [ -n "$output" ]
 }
 
 remove_container_if_exists() {
+    local status=0
     if container_exists; then
         "$DOCKER_BIN" rm -f "$CONTAINER_NAME" >/dev/null
         if container_exists; then
             log_error "Docker 컨테이너 제거를 확인하지 못했습니다: $CONTAINER_NAME"
             return 1
+        else
+            status=$?
+            [ "$status" -eq 1 ] || return "$status"
         fi
+    else
+        status=$?
+        [ "$status" -eq 1 ] || return "$status"
     fi
 }
 
 remove_image_if_exists() {
+    local status=0
     if image_exists; then
         "$DOCKER_BIN" rmi -f "$IMAGE_NAME" >/dev/null
         if image_exists; then
             log_error "Docker 이미지 제거를 확인하지 못했습니다: $IMAGE_NAME"
             return 1
+        else
+            status=$?
+            [ "$status" -eq 1 ] || return "$status"
         fi
+    else
+        status=$?
+        [ "$status" -eq 1 ] || return "$status"
     fi
 }
 
@@ -538,9 +566,15 @@ stop_container() {
     local market="$1"
     local status
 
-    if ! container_running; then
-        log_info "중지할 subscriber 컨테이너가 없습니다."
-        return 0
+    if container_running; then
+        :
+    else
+        status=$?
+        if [ "$status" -eq 1 ]; then
+            log_info "중지할 subscriber 컨테이너가 없습니다."
+            return 0
+        fi
+        return "$status"
     fi
 
     if market_open_now "$market" >/dev/null 2>&1; then
@@ -768,11 +802,11 @@ uninstall_crontab() {
 }
 
 uninstall_all_generated_artifacts() {
-    uninstall_crontab
-    remove_container_if_exists
-    remove_image_if_exists
-    remove_default_generated_dir_if_exists "$LOG_DIR" "$PROJECT_DIR/logs" "로그"
-    remove_default_generated_dir_if_exists "$RUNTIME_DIR" "$PROJECT_DIR/runtime" "런타임"
+    uninstall_crontab || return $?
+    remove_container_if_exists || return $?
+    remove_image_if_exists || return $?
+    remove_default_generated_dir_if_exists "$LOG_DIR" "$PROJECT_DIR/logs" "로그" || return $?
+    remove_default_generated_dir_if_exists "$RUNTIME_DIR" "$PROJECT_DIR/runtime" "런타임" || return $?
     log_success "subscriber Docker 런타임 관련 생성물을 제거했습니다."
 }
 
