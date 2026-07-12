@@ -78,6 +78,7 @@ running_file="$STUB_STATE_DIR/running"
 case "$cmd" in
   image)
     if [[ "${1:-}" == "inspect" ]]; then
+      [[ "${STUB_DOCKER_FAIL_INSPECT:-false}" != "true" ]] || exit 44
       [[ -f "$image_file" ]]
       exit $?
     fi
@@ -86,11 +87,13 @@ case "$cmd" in
     touch "$image_file"
     ;;
   ps)
+    [[ "${STUB_DOCKER_FAIL_PS:-false}" != "true" ]] || exit 45
     if [[ "${1:-}" == "-a" ]]; then
       [[ -f "$container_file" ]] && cat "$container_file"
     else
       [[ -f "$running_file" ]] && cat "$running_file"
     fi
+    exit 0
     ;;
   rm)
     [[ "${STUB_DOCKER_FAIL_RM:-false}" != "true" ]] || exit 42
@@ -480,6 +483,30 @@ def test_full_uninstall_stops_when_docker_removal_fails(installer_env):
     install_dir = installer_env["tmp_path"] / "target-install"
     failing_env = installer_env["env"].copy()
     failing_env["STUB_DOCKER_FAIL_RM"] = "true"
+
+    uninstall = run_installer(
+        installer_env["tmp_path"],
+        failing_env,
+        "--non-interactive",
+        "--uninstall",
+    )
+
+    assert uninstall.returncode != 0
+    assert install_dir.exists()
+
+
+@pytest.mark.parametrize("failure_flag", ["STUB_DOCKER_FAIL_PS", "STUB_DOCKER_FAIL_INSPECT"])
+def test_full_uninstall_stops_when_docker_probe_fails(installer_env, failure_flag):
+    result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--without-cron",
+    )
+    assert result.returncode == 0, result.stderr
+    install_dir = installer_env["tmp_path"] / "target-install"
+    failing_env = installer_env["env"].copy()
+    failing_env[failure_flag] = "true"
 
     uninstall = run_installer(
         installer_env["tmp_path"],

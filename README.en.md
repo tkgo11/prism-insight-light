@@ -309,7 +309,7 @@ bash setup_subscriber_docker_crontab.sh
 
 The WebUI is a local operator console for readiness, signal validation, dry-run simulation, Telegram preview, bounded masked logs, read-only queue visibility, guarded manual BUY/SELL orders, and selected operational config fields. It does not provide queue mutation, broker login, token refresh, or subscriber lifecycle controls.
 
-Manual broker orders are locked by default. They require a loopback-only bind, `WEBUI_ENABLE_LIVE_TRADING=true`, the exact per-order arming phrase shown in the UI, and a valid CSRF token. Keep this console on a trusted local machine; do not treat the opt-in non-loopback bind as authentication.
+Manual broker orders are locked by default. The safe deployment uses the default loopback-only bind; each order also requires `WEBUI_ENABLE_LIVE_TRADING=true`, the exact arming phrase shown in the UI, and a valid CSRF token. Keep this console on a trusted local machine; an explicitly enabled non-loopback bind is not authentication and is not recommended for live trading.
 
 Install the web dependencies with the normal requirements file, then start the subscriber and UI together explicitly:
 
