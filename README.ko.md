@@ -72,11 +72,12 @@ KIS_RATE_LIMIT_RETRY_BASE_SECONDS=1.0
 KIS_RATE_LIMIT_RETRY_MAX_SECONDS=5.0
 ```
 
-필수 Pub/Sub 값은 다음 세 가지입니다.
+필수 Pub/Sub 식별자는 다음 두 가지입니다.
 
 - `GCP_PROJECT_ID`
 - `GCP_PUBSUB_SUBSCRIPTION_ID`
-- `GCP_CREDENTIALS_PATH`
+
+호스트에 유효한 Google Application Default Credentials(ADC)가 이미 있다면 `GCP_CREDENTIALS_PATH`는 선택 사항입니다. 단, 원클릭 Docker 설치기는 자격증명을 컨테이너에 마운트하기 위해 명시적인 서비스 계정 파일을 요구합니다.
 
 ### 3. KIS 설정
 
@@ -102,7 +103,7 @@ cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 python check_pubsub_readiness.py
 ```
 
-실행 전에 `GCP_PROJECT_ID`, `GCP_PUBSUB_SUBSCRIPTION_ID`, `GCP_CREDENTIALS_PATH`를 설정해야 합니다.
+실행 전에 `GCP_PROJECT_ID`, `GCP_PUBSUB_SUBSCRIPTION_ID`를 설정하세요. 호스트에 유효한 ADC가 없다면 `GCP_CREDENTIALS_PATH`도 설정해야 합니다.
 현재 Docker 이미지에는 `check_pubsub_readiness.py`가 포함되지 않으므로 호스트의 소스 트리에서 실행하세요.
 
 ## 실행 방법
@@ -262,7 +263,11 @@ bash install_prism_docker.sh --install-dir /path/to/prism-insight-light --uninst
 
 ```bash
 docker build -t pubsub-trader .
-docker run --rm --env-file .env -v /absolute/path/to/kis_devlp.yaml:/app/trading/config/kis_devlp.yaml pubsub-trader
+docker run --rm --env-file .env \
+  -e GCP_CREDENTIALS_PATH=/app/runtime/gcp-credentials.json \
+  -v /absolute/path/to/service-account.json:/app/runtime/gcp-credentials.json:ro \
+  -v /absolute/path/to/kis_devlp.yaml:/app/trading/config/kis_devlp.yaml:ro \
+  pubsub-trader
 ```
 
 시장 시간에만 컨테이너를 자동으로 시작/중지하려면 다음 스크립트를 사용할 수 있습니다.
@@ -274,9 +279,11 @@ bash setup_subscriber_docker_crontab.sh
 `setup_subscriber_docker_crontab.sh`는 설치 시 컨테이너를 현재 설정으로 한 번 생성하고, 이후에는 시장 시간에 맞춰 `docker start` / `docker stop`만 수행합니다. `.env`를 바꿨다면 스크립트를 다시 실행해 컨테이너 정의를 재생성하세요.
 
 
-## 로컬 WebUI (마일스톤 1)
+## 로컬 WebUI
 
-WebUI는 Pub/Sub subscriber와 함께 실행할 수 있는 별도 로컬 운영 콘솔이며 준비 상태, 신호 검증, 드라이런 시뮬레이션, Telegram 미리보기, 마스킹된 제한 로그, 오프아워 큐 읽기 전용 확인을 제공합니다. 마일스톤 1에는 실거래 버튼, 큐 변경, 브로커 로그인, 토큰 갱신, subscriber 제어 기능이 없습니다.
+WebUI는 Pub/Sub subscriber와 함께 실행할 수 있는 로컬 운영 콘솔이며 준비 상태, 신호 검증, 드라이런 시뮬레이션, Telegram 미리보기, 마스킹된 제한 로그, 오프아워 큐 읽기 전용 확인, 보호된 수동 BUY/SELL, 일부 운영 설정 편집을 제공합니다. 큐 변경, 브로커 로그인, 토큰 갱신, subscriber 제어 기능은 제공하지 않습니다.
+
+수동 브로커 주문은 기본적으로 잠겨 있습니다. 루프백 전용 바인딩, `WEBUI_ENABLE_LIVE_TRADING=true`, 화면에 표시된 주문별 확인 문구, 유효한 CSRF 토큰이 모두 필요합니다. 신뢰할 수 있는 로컬 장비에서만 사용하고, 비루프백 바인딩 허용을 인증 수단으로 간주하지 마세요.
 
 ```bash
 pip install -r requirements.txt
@@ -291,7 +298,9 @@ python subscriber.py --web-ui
 WEBUI_HOST=127.0.0.1
 WEBUI_PORT=8765
 WEBUI_ALLOW_NON_LOOPBACK=false
-WEBUI_CSRF_TOKEN=local-webui
+WEBUI_ENABLE_LIVE_TRADING=false
+# 비워 두면 프로세스 시작 때 새 토큰을 생성합니다.
+WEBUI_CSRF_TOKEN=
 ```
 
 브라우저에서 <http://127.0.0.1:8765> 를 여세요. Docker에서 실행할 경우 별도 승인 전에는 `127.0.0.1:8765:8765` 형태로 바인딩하세요.
