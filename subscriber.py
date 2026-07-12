@@ -263,7 +263,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--web-ui",
         action="store_true",
-        help="Start the local read-mostly WebUI alongside the Pub/Sub subscriber",
+        help="Start the local guarded operator WebUI alongside the Pub/Sub subscriber",
     )
     return parser.parse_args(argv)
 
@@ -271,7 +271,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def _run_web_ui() -> None:
     from webui.__main__ import main as run_webui
 
-    LOGGER.info("Starting local WebUI; live trading and queue mutation controls are not exposed")
+    LOGGER.info("Starting local guarded WebUI; live orders remain locked unless explicitly armed")
     run_webui()
 
 
