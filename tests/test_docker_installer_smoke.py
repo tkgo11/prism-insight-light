@@ -604,6 +604,45 @@ def test_setup_subscriber_docker_cron_start_respects_explicit_action(installer_e
     assert "docker start prism-insight-subscriber" in log_text
 
 
+def test_setup_subscriber_docker_cron_stop_preserves_closed_status(installer_env):
+    result = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--without-cron",
+    )
+    assert result.returncode == 0, result.stderr
+    project_dir = installer_env["tmp_path"] / "target-install"
+    env = installer_env["env"].copy()
+    env.update(
+        {
+            "PROJECT_DIR": project_dir.as_posix(),
+            "ENV_FILE": (project_dir / ".env").as_posix(),
+            "KIS_CONFIG_HOST_PATH": (
+                project_dir / "trading" / "config" / "kis_devlp.yaml"
+            ).as_posix(),
+            "LOG_DIR": (project_dir / "logs").as_posix(),
+            "RUNTIME_DIR": (project_dir / "runtime").as_posix(),
+            "CREDENTIALS_HOST_PATH": env["GCP_CREDENTIALS_PATH"],
+            "STUB_MARKET_OPEN_US": "true",
+        }
+    )
+    started = run_setup_script(
+        project_dir, env, "--cron-start", "US", "--non-interactive"
+    )
+    assert started.returncode == 0, started.stderr
+    assert (installer_env["state_dir"] / "running").exists()
+
+    env["STUB_MARKET_OPEN_US"] = "false"
+    stopped = run_setup_script(
+        project_dir, env, "--cron-stop", "US", "--non-interactive"
+    )
+
+    assert stopped.returncode == 0, stopped.stderr
+    assert not (installer_env["state_dir"] / "running").exists()
+    assert "subscriber 컨테이너를 중지했습니다" in stopped.stdout
+
+
 def test_docker_cron_refuses_malformed_managed_markers(installer_env):
     result = run_installer(
         installer_env["tmp_path"],

@@ -258,7 +258,7 @@ class USStockTrading:
         """
         from .modes import normalize_trading_mode
 
-        self.mode = normalize_trading_mode(mode or self.DEFAULT_MODE)
+        self.mode = normalize_trading_mode(self.DEFAULT_MODE if mode is None else mode)
         self.env = "vps" if self.mode == "demo" else "prod"
         self.auto_trading = auto_trading if auto_trading is not None else self.AUTO_TRADING
         self.account_index = account_index
