@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import ipaddress
 import os
-from dataclasses import dataclass
+import secrets
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,7 @@ class WebUISettings:
     host: str = "127.0.0.1"
     port: int = 8765
     allow_non_loopback: bool = False
+    csrf_token: str = field(default_factory=lambda: secrets.token_urlsafe(32))
 
 
 def _to_bool(value: str | None) -> bool:
@@ -30,6 +32,8 @@ def load_settings(env: dict[str, str] | None = None) -> WebUISettings:
         host=source.get("WEBUI_HOST") or "127.0.0.1",
         port=int(source.get("WEBUI_PORT") or "8765"),
         allow_non_loopback=_to_bool(source.get("WEBUI_ALLOW_NON_LOOPBACK")),
+        csrf_token=(source.get("WEBUI_CSRF_TOKEN") or "").strip()
+        or secrets.token_urlsafe(32),
     )
 
 

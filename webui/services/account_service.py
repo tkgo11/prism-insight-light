@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import math
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +43,27 @@ def load_config() -> dict[str, Any]:
 
 def save_config(data: dict[str, Any]) -> Path:
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CONFIG_PATH.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False, indent=2), encoding="utf-8")
+    rendered = yaml.safe_dump(data, allow_unicode=True, sort_keys=False, indent=2)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=CONFIG_PATH.parent,
+            prefix=f".{CONFIG_PATH.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temporary_path = Path(handle.name)
+            os.chmod(temporary_path, 0o600)
+            handle.write(rendered)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_path, CONFIG_PATH)
+        os.chmod(CONFIG_PATH, 0o600)
+    finally:
+        if temporary_path is not None and temporary_path.exists():
+            temporary_path.unlink()
     return CONFIG_PATH
 
 
@@ -125,24 +148,53 @@ def _coerce_value(name: str, raw: str) -> Any:
     if text == "":
         return None
     if expected is bool:
-        return text.lower() in {"1", "true", "yes", "y", "on"}
+        normalized = text.lower()
+        if normalized in {"1", "true", "yes", "y", "on"}:
+            return True
+        if normalized in {"0", "false", "no", "n", "off"}:
+            return False
+        raise ValueError(f"{name} must be a boolean")
     if expected is int:
-        return int(float(text))
+        value = int(text)
+        if value < 0:
+            raise ValueError(f"{name} must not be negative")
+        return value
     if expected is float:
-        return float(text)
+        value = float(text)
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(f"{name} must be a finite non-negative number")
+        if "percent" in name and value > 100:
+            raise ValueError(f"{name} must be between 0 and 100")
+        return value
+    if name == "default_mode":
+        normalized = text.lower()
+        if normalized not in {"demo", "real"}:
+            raise ValueError("default_mode must be demo or real")
+        return normalized
     return text
 
 
 def update_config_fields(fields: dict[str, str], strategy: dict[str, str] | None = None) -> dict[str, Any]:
     data = load_config()
+    updates: dict[str, Any] = {}
     for name, raw_value in fields.items():
         if name in EDITABLE_TOP_LEVEL_FIELDS:
-            data[name] = _coerce_value(name, raw_value)
+            updates[name] = _coerce_value(name, raw_value)
+    next_strategy: dict[str, Any] | None = None
     if strategy is not None:
         current = data.get("signal_strategy") if isinstance(data.get("signal_strategy"), dict) else {}
-        current["name"] = str(strategy.get("name") or "").strip()
-        current["split_count"] = int(float(strategy.get("split_count") or 2))
-        data["signal_strategy"] = current
+        next_strategy = dict(current)
+        name = str(strategy.get("name") or "").strip()
+        if name not in {"", "balance_split"}:
+            raise ValueError("unsupported signal strategy")
+        split_count = int(str(strategy.get("split_count") or "2"))
+        if split_count <= 0:
+            raise ValueError("signal_strategy.split_count must be positive")
+        next_strategy["name"] = name
+        next_strategy["split_count"] = split_count
+    data.update(updates)
+    if next_strategy is not None:
+        data["signal_strategy"] = next_strategy
     path = save_config(data)
     return {"ok": True, "path_label": path.name, "config": get_config_editor_model(), "error": None}
 
