@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import os
 import time
 from pathlib import Path
@@ -31,11 +32,20 @@ class FileLock:
                 self._acquire(handle)
                 self._handle = handle
                 return self
-            except (BlockingIOError, OSError):
+            except OSError as exc:
+                if not self._is_contention_error(exc):
+                    handle.close()
+                    raise
                 if deadline is not None and time.monotonic() >= deadline:
                     handle.close()
                     raise TimeoutError(f"timed out acquiring file lock: {self.path}")
                 time.sleep(0.05)
+
+    @staticmethod
+    def _is_contention_error(exc: OSError) -> bool:
+        if isinstance(exc, BlockingIOError):
+            return True
+        return exc.errno in {errno.EACCES, errno.EAGAIN, errno.EDEADLK}
 
     @staticmethod
     def _acquire(handle: IO[bytes]) -> None:

@@ -113,6 +113,28 @@ def test_file_lock_serializes_threads(tmp_path):
     assert second_entered.is_set()
 
 
+def test_file_lock_surfaces_non_contention_os_error(monkeypatch, tmp_path):
+    def fail_lock(handle):
+        raise OSError(95, "operation not supported")
+
+    monkeypatch.setattr(FileLock, "_acquire", staticmethod(fail_lock))
+
+    with pytest.raises(OSError, match="operation not supported"):
+        with FileLock(tmp_path / "unsupported.lock"):
+            pass
+
+
+def test_us_trader_rejects_explicit_empty_mode_before_account_lookup(monkeypatch):
+    monkeypatch.setattr(USStockTrading, "DEFAULT_MODE", "real")
+    monkeypatch.setattr(
+        "trading.us.ka.resolve_account",
+        lambda **kwargs: pytest.fail("account lookup must not run for an invalid mode"),
+    )
+
+    with pytest.raises(ValueError, match="trading mode"):
+        USStockTrading(mode="")
+
+
 @pytest.mark.asyncio
 async def test_domestic_partial_sell_uses_verified_fraction(monkeypatch):
     trader = object.__new__(DomesticStockTrading)
