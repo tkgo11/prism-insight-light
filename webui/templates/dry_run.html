@@ -3,6 +3,6 @@
 {% block content %}
 <section class="page-head"><div><p class="eyebrow">Dry-run simulator</p><h1>Preview dispatch shape without broker calls.</h1><p>This service remains isolated from KIS clients, queue mutation, and token refresh.</p></div></section>
 <section class="panel code-panel"><h2>API</h2><pre>POST /dry-run/simulate
-Header: X-WebUI-CSRF: local-webui
+Header: X-WebUI-CSRF: {{ csrf_token }}
 Body: {"payload":{"type":"BUY","ticker":"AAPL","company_name":"Apple","price":190.5}}</pre></section>
 {% endblock %}

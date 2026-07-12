@@ -195,6 +195,16 @@ def test_configured_csrf_token_is_rendered_in_both_trading_forms():
     assert "local-webui" not in response.text
 
 
+def test_configured_csrf_token_is_rendered_in_dry_run_api_example():
+    token = "configured-dry-run-token-with-entropy"
+    c = TestClient(create_app(WebUISettings(csrf_token=token)))
+
+    response = c.get("/dry-run")
+
+    assert response.status_code == 200
+    assert f"X-WebUI-CSRF: {token}" in response.text
+
+
 def test_live_manual_order_awaits_dispatcher(monkeypatch):
     from trading.dispatch import DispatchResult
     from webui.services import trade_service

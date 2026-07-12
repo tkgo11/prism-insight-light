@@ -18,7 +18,11 @@ class DryRunRequest(BaseModel):
 @router.get("")
 def dry_run_page(request: Request):
     templates = request.app.state.templates
-    return templates.TemplateResponse(request, "dry_run.html", {"request": request})
+    return templates.TemplateResponse(
+        request,
+        "dry_run.html",
+        {"request": request, "csrf_token": request.app.state.settings.csrf_token},
+    )
 
 
 @router.post("/simulate", dependencies=[Depends(require_csrf_token)])
