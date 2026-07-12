@@ -12,6 +12,7 @@ from . import yaml_compat as yaml
 
 from .domestic import AsyncTradingContext
 from .market_hours import get_trading_mode, is_market_open
+from .modes import normalize_trading_mode
 from .off_hours_queue import OffHoursOrderQueue
 from .schema import SignalMessage, parse_signal_payload
 from .strategies import (
@@ -63,7 +64,8 @@ class TradeDispatcher:
         account_index: int | None = None,
     ):
         self.dry_run = dry_run
-        self.trading_mode = (trading_mode or get_trading_mode()).lower()
+        selected_mode = get_trading_mode() if trading_mode is None else trading_mode
+        self.trading_mode = normalize_trading_mode(selected_mode)
         self.queue = queue or OffHoursOrderQueue(queue_path)
         self.strategy_config = strategy_config if strategy_config is not None else self._load_strategy_config()
         self.balance_split_config = BalanceSplitStrategyConfig.from_mapping(self.strategy_config)

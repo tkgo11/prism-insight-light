@@ -93,8 +93,10 @@ class DomesticStockTrading:
         Raises:
             RuntimeError: Authentication failed with detailed error message
         """
-        self.mode = mode
-        self.env = "vps" if mode == "demo" else "prod"
+        from .modes import normalize_trading_mode
+
+        self.mode = normalize_trading_mode(mode)
+        self.env = "vps" if self.mode == "demo" else "prod"
         self.auto_trading = auto_trading
         self.account_index = account_index
         self.account_config = ka.resolve_account(
@@ -1575,12 +1577,14 @@ class MultiAccountDomesticStockTrading:
     """Fan out trading orders to all configured domestic accounts for the current mode."""
 
     def __init__(self, mode: str, buy_amount: int = None, auto_trading: bool = DomesticStockTrading.AUTO_TRADING, product_code: str = "01"):
-        self.mode = mode
+        from .modes import normalize_trading_mode
+
+        self.mode = normalize_trading_mode(mode)
         self.buy_amount = buy_amount
         self.auto_trading = auto_trading
         self.product_code = str(product_code)
 
-        svr = "vps" if mode == "demo" else "prod"
+        svr = "vps" if self.mode == "demo" else "prod"
         self.account_configs = ka.get_configured_accounts(svr=svr, product=self.product_code, market="kr")
         self._traders: dict[str, DomesticStockTrading] = {}
         self.primary_account = None

@@ -256,7 +256,9 @@ class USStockTrading:
             buy_amount: Buy amount per stock in USD (default: from config)
             auto_trading: Whether to execute auto trading
         """
-        self.mode = mode if mode else self.DEFAULT_MODE
+        from .modes import normalize_trading_mode
+
+        self.mode = normalize_trading_mode(mode or self.DEFAULT_MODE)
         self.env = "vps" if self.mode == "demo" else "prod"
         self.auto_trading = auto_trading if auto_trading is not None else self.AUTO_TRADING
         self.account_index = account_index
@@ -1806,12 +1808,14 @@ class MultiAccountUSStockTrading:
     """Fan out trading orders to all configured US accounts for the current mode."""
 
     def __init__(self, mode: str, buy_amount: float = None, auto_trading: bool = USStockTrading.AUTO_TRADING, product_code: str = "01"):
-        self.mode = mode
+        from .modes import normalize_trading_mode
+
+        self.mode = normalize_trading_mode(mode)
         self.buy_amount = buy_amount
         self.auto_trading = auto_trading
         self.product_code = str(product_code)
 
-        svr = "vps" if mode == "demo" else "prod"
+        svr = "vps" if self.mode == "demo" else "prod"
         self.account_configs = ka.get_configured_accounts(svr=svr, product=self.product_code, market="us")
         self._traders: dict[str, USStockTrading] = {}
         self.primary_account = None
