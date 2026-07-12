@@ -74,11 +74,12 @@ KIS_RATE_LIMIT_RETRY_BASE_SECONDS=1.0
 KIS_RATE_LIMIT_RETRY_MAX_SECONDS=5.0
 ```
 
-The required Pub/Sub values are:
+The required Pub/Sub identifiers are:
 
 - `GCP_PROJECT_ID`
 - `GCP_PUBSUB_SUBSCRIPTION_ID`
-- `GCP_CREDENTIALS_PATH`
+
+`GCP_CREDENTIALS_PATH` is optional when the host already has valid Google Application Default Credentials (ADC). The one-click Docker installer still asks for an explicit service-account file so it can mount that credential into the container.
 
 ### 3. Configure KIS
 
@@ -116,7 +117,7 @@ Run this from the repository root on the host/source tree:
 python check_pubsub_readiness.py
 ```
 
-Set `GCP_PROJECT_ID`, `GCP_PUBSUB_SUBSCRIPTION_ID`, and `GCP_CREDENTIALS_PATH` first.
+Set `GCP_PROJECT_ID` and `GCP_PUBSUB_SUBSCRIPTION_ID` first. Also set `GCP_CREDENTIALS_PATH` unless the host already has valid ADC.
 The current Docker package does not include `check_pubsub_readiness.py`, so run it from the host checkout.
 
 ## Running the subscriber
@@ -288,7 +289,11 @@ bash install_prism_docker.sh --install-dir /path/to/prism-insight-light --uninst
 
 ```bash
 docker build -t pubsub-trader .
-docker run --rm --env-file .env -v /absolute/path/to/kis_devlp.yaml:/app/trading/config/kis_devlp.yaml pubsub-trader
+docker run --rm --env-file .env \
+  -e GCP_CREDENTIALS_PATH=/app/runtime/gcp-credentials.json \
+  -v /absolute/path/to/service-account.json:/app/runtime/gcp-credentials.json:ro \
+  -v /absolute/path/to/kis_devlp.yaml:/app/trading/config/kis_devlp.yaml:ro \
+  pubsub-trader
 ```
 
 To run the container automatically only during market hours:
@@ -300,9 +305,11 @@ bash setup_subscriber_docker_crontab.sh
 `setup_subscriber_docker_crontab.sh` creates the container once with the current settings, then uses `docker start` / `docker stop` on the market-hours schedule. If you change `.env`, rerun the script to regenerate the container definition.
 
 
-## Local WebUI (Milestone 1)
+## Local WebUI
 
-The WebUI is a separate local operator console that can run alongside the Pub/Sub subscriber for readiness, signal validation, dry-run simulation, Telegram preview, bounded masked logs, and read-only off-hours queue visibility. Milestone 1 does **not** provide live trading buttons, queue mutation, broker login, token refresh, or subscriber lifecycle controls.
+The WebUI is a local operator console for readiness, signal validation, dry-run simulation, Telegram preview, bounded masked logs, read-only queue visibility, guarded manual BUY/SELL orders, and selected operational config fields. It does not provide queue mutation, broker login, token refresh, or subscriber lifecycle controls.
+
+Manual broker orders are locked by default. They require a loopback-only bind, `WEBUI_ENABLE_LIVE_TRADING=true`, the exact per-order arming phrase shown in the UI, and a valid CSRF token. Keep this console on a trusted local machine; do not treat the opt-in non-loopback bind as authentication.
 
 Install the web dependencies with the normal requirements file, then start the subscriber and UI together explicitly:
 
@@ -319,15 +326,17 @@ Defaults are intentionally local-only:
 WEBUI_HOST=127.0.0.1
 WEBUI_PORT=8765
 WEBUI_ALLOW_NON_LOOPBACK=false
-WEBUI_CSRF_TOKEN=local-webui
+WEBUI_ENABLE_LIVE_TRADING=false
+# Blank generates a new token at process startup.
+WEBUI_CSRF_TOKEN=
 ```
 
 Open <http://127.0.0.1:8765>. If you later run it in Docker, bind ports as `127.0.0.1:8765:8765` unless a separate security review approves remote exposure.
 
-For API POSTs from scripts, include the local CSRF header:
+For API POSTs from scripts, configure a long random `WEBUI_CSRF_TOKEN` and include the same value in the header:
 
 ```bash
-curl -H 'Content-Type: application/json' -H 'X-WebUI-CSRF: local-webui' \
+curl -H 'Content-Type: application/json' -H 'X-WebUI-CSRF: replace-with-long-random-token' \
   -d '{"payload":{"type":"BUY","ticker":"005930","company_name":"Samsung Electronics","market":"KR","price":70000}}' \
   http://127.0.0.1:8765/dry-run/simulate
 ```
