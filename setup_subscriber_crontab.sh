@@ -62,6 +62,17 @@ log_success() {
     echo -e "${GREEN}✓${NC} $1"
 }
 
+shell_quote() {
+    local value="$1"
+    local quoted
+    if [[ "$value" == *$'\n'* || "$value" == *$'\r'* ]]; then
+        log_error "cron 값에는 줄바꿈 문자를 사용할 수 없습니다."
+        return 1
+    fi
+    printf -v quoted '%q' "$value"
+    printf '%s' "${quoted//%/\\%}"
+}
+
 normalize_bool() {
     case "${1,,}" in
         1|true|yes|y|on|enable|enabled)
@@ -204,12 +215,15 @@ PY
 
 market_open_label() {
     local market="$1"
+    local status
     if market_open_now "$market" >/dev/null 2>&1; then
         echo "yes"
         return 0
+    else
+        status=$?
     fi
 
-    case $? in
+    case "$status" in
         1) echo "no" ;;
         *) echo "unknown" ;;
     esac
@@ -252,9 +266,9 @@ maybe_shutdown_system() {
     if market_open_now "$market" >/dev/null 2>&1; then
         log_info "$market 시장이 아직 열려 있어 시스템 종료를 건너뜁니다."
         return 0
+    else
+        market_status=$?
     fi
-
-    market_status=$?
     if [ "$market_status" -ne 1 ]; then
         log_error "$market 시장 상태 확인 실패로 시스템 종료를 건너뜁니다."
         return 1
@@ -263,9 +277,9 @@ maybe_shutdown_system() {
     if any_market_open_now >/dev/null 2>&1; then
         log_info "다른 시장이 열려 있어 시스템 종료를 건너뜁니다."
         return 0
+    else
+        market_status=$?
     fi
-
-    market_status=$?
     if [ "$market_status" -ne 1 ]; then
         log_error "전체 시장 상태 확인 실패로 시스템 종료를 건너뜁니다."
         return 1
@@ -337,9 +351,9 @@ stop_subscriber() {
     if market_open_now "$market" >/dev/null 2>&1; then
         log_info "$market 시장이 아직 열려 있어 subscriber.py 중지를 건너뜁니다."
         return 0
+    else
+        market_status=$?
     fi
-
-    market_status=$?
     if [ "$market_status" -ne 1 ]; then
         log_error "$market 시장 상태 확인에 실패했습니다. 안전을 위해 subscriber.py 중지를 보류합니다."
         return 1
@@ -413,8 +427,10 @@ EOF
 }
 
 generate_managed_block() {
-    local shutdown_command_quoted
-    shutdown_command_quoted="$(printf '%q' "$SHUTDOWN_COMMAND")"
+    local shutdown_command_quoted project_dir_quoted script_path_quoted
+    shutdown_command_quoted="$(shell_quote "$SHUTDOWN_COMMAND")"
+    project_dir_quoted="$(shell_quote "$PROJECT_DIR")"
+    script_path_quoted="$(shell_quote "$SCRIPT_PATH")"
 
     cat <<EOF
 $BEGIN_MARKER
@@ -423,18 +439,18 @@ $BEGIN_MARKER
 # NOTE: subscriber.py loads .env at runtime, including optional Telegram fetch settings.
 SHELL=/bin/bash
 PATH=$(generate_path)
-PYTHONPATH=$PROJECT_DIR
-AUTO_SHUTDOWN=$AUTO_SHUTDOWN
+PYTHONPATH=$project_dir_quoted
+AUTO_SHUTDOWN=$(shell_quote "$AUTO_SHUTDOWN")
 
 # KR market session
-0 9 * * 1-5 cd "$PROJECT_DIR" && SHUTDOWN_COMMAND=$shutdown_command_quoted bash "$SCRIPT_PATH" --cron-start KR
-31 15 * * 1-5 cd "$PROJECT_DIR" && SHUTDOWN_COMMAND=$shutdown_command_quoted bash "$SCRIPT_PATH" --cron-stop KR
+0 9 * * 1-5 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start KR
+31 15 * * 1-5 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop KR
 
 # US market session
-30 22 * * 1-5 cd "$PROJECT_DIR" && SHUTDOWN_COMMAND=$shutdown_command_quoted bash "$SCRIPT_PATH" --cron-start US
-30 23 * * 1-5 cd "$PROJECT_DIR" && SHUTDOWN_COMMAND=$shutdown_command_quoted bash "$SCRIPT_PATH" --cron-start US
-1 5 * * 2-6 cd "$PROJECT_DIR" && SHUTDOWN_COMMAND=$shutdown_command_quoted bash "$SCRIPT_PATH" --cron-stop US
-1 6 * * 2-6 cd "$PROJECT_DIR" && SHUTDOWN_COMMAND=$shutdown_command_quoted bash "$SCRIPT_PATH" --cron-stop US
+30 22 * * 1-5 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US
+30 23 * * 1-5 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US
+1 5 * * 2-6 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US
+1 6 * * 2-6 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US
 $END_MARKER
 EOF
 }
@@ -444,9 +460,13 @@ strip_managed_block() {
     local output_file="$2"
 
     awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
-        $0 == begin { skip = 1; next }
-        $0 == end { skip = 0; next }
-        !skip { print }
+        $0 == begin { begins++; if (skip || begins > 1) invalid = 1; skip = 1; next }
+        $0 == end { ends++; if (!skip || ends > 1) invalid = 1; skip = 0; next }
+        !skip { kept[++count] = $0 }
+        END {
+            if (skip || begins != ends || begins > 1 || ends > 1 || invalid) exit 2
+            for (i = 1; i <= count; i++) print kept[i]
+        }
     ' "$input_file" > "$output_file"
 }
 
@@ -454,7 +474,7 @@ backup_crontab() {
     local backup_file="$PROJECT_DIR/crontab_subscriber_backup_$(date +%Y%m%d_%H%M%S).txt"
 
     if crontab -l >/dev/null 2>&1; then
-        crontab -l > "$backup_file"
+        (umask 077; crontab -l > "$backup_file")
         log_success "현재 crontab을 백업했습니다: $backup_file"
     else
         log_info "기존 crontab이 없어 백업을 생략합니다."
@@ -473,7 +493,11 @@ install_crontab() {
         : > "$temp_current"
     fi
 
-    strip_managed_block "$temp_current" "$temp_clean"
+    if ! strip_managed_block "$temp_current" "$temp_clean"; then
+        rm -f "$temp_current" "$temp_clean"
+        log_error "관리 마커가 손상되어 기존 crontab을 변경하지 않습니다."
+        return 1
+    fi
 
     {
         cat "$temp_clean"
@@ -499,7 +523,11 @@ uninstall_crontab() {
     fi
 
     crontab -l > "$temp_current"
-    strip_managed_block "$temp_current" "$temp_clean"
+    if ! strip_managed_block "$temp_current" "$temp_clean"; then
+        rm -f "$temp_current" "$temp_clean"
+        log_error "관리 마커가 손상되어 기존 crontab을 변경하지 않습니다."
+        return 1
+    fi
 
     if [ -s "$temp_clean" ]; then
         crontab "$temp_clean"

@@ -121,6 +121,19 @@ prompt_yes_no() {
     printf '%s' "$(normalize_bool "$response")"
 }
 
+prompt_secret() {
+    local prompt="$1"
+    local default_value="${2:-}"
+    local response=""
+    if $NON_INTERACTIVE; then
+        printf '%s' "$default_value"
+        return 0
+    fi
+    read -r -s -p "$prompt [hidden; Enter keeps existing value]: " response
+    printf '\n' >&2
+    printf '%s' "${response:-$default_value}"
+}
+
 looks_like_repo() {
     local candidate="$1"
     [ -f "$candidate/Dockerfile" ] && \
@@ -372,10 +385,10 @@ write_guided_kis_config() {
 
     kis_default_mode="${KIS_DEFAULT_MODE:-demo}"
     kis_default_mode="$(prompt_with_default "기본 매매 모드 (demo/real)" "$kis_default_mode")"
-    kis_my_app="$(prompt_with_default "실전 App Key" "${KIS_MY_APP:-}")"
-    kis_my_sec="$(prompt_with_default "실전 App Secret" "${KIS_MY_SEC:-}")"
-    kis_paper_app="$(prompt_with_default "모의투자 App Key" "${KIS_PAPER_APP:-}")"
-    kis_paper_sec="$(prompt_with_default "모의투자 App Secret" "${KIS_PAPER_SEC:-}")"
+    kis_my_app="$(prompt_secret "실전 App Key" "${KIS_MY_APP:-}")"
+    kis_my_sec="$(prompt_secret "실전 App Secret" "${KIS_MY_SEC:-}")"
+    kis_paper_app="$(prompt_secret "모의투자 App Key" "${KIS_PAPER_APP:-}")"
+    kis_paper_sec="$(prompt_secret "모의투자 App Secret" "${KIS_PAPER_SEC:-}")"
     kis_my_htsid="$(prompt_with_default "HTS 로그인 ID" "${KIS_MY_HTSID:-}")"
     kis_account_name="$(prompt_with_default "기본 계좌 이름" "${KIS_ACCOUNT_NAME:-메인계좌}")"
     kis_account_mode="$(prompt_with_default "기본 계좌 모드 (demo/real)" "${KIS_ACCOUNT_MODE:-$kis_default_mode}")"
@@ -612,6 +625,10 @@ EOF
 }
 
 print_full_uninstall_summary() {
+    local project_line="- 설치 디렉토리: $PROJECT_DIR"
+    if [ -n "$REPO_DIR" ]; then
+        project_line="- 기존 체크아웃 유지: $PROJECT_DIR"
+    fi
     cat <<EOF
 
 전체 제거가 완료되었습니다.
@@ -620,7 +637,7 @@ print_full_uninstall_summary() {
 - subscriber Docker cron 스케줄
 - Docker 컨테이너: $CONTAINER_NAME
 - Docker 이미지: $IMAGE_NAME
-- 설치 디렉토리: $PROJECT_DIR
+$project_line
 
 [유지되는 항목]
 - 프로젝트 밖의 외부 GCP 자격증명 파일
@@ -770,7 +787,11 @@ main() {
         ensure_existing_project_checkout
         ensure_repo_paths
         run_repo_setup uninstall
-        remove_install_dir
+        if [ -n "$REPO_DIR" ]; then
+            log_info "명시적으로 지정한 기존 체크아웃은 유지합니다: $PROJECT_DIR"
+        else
+            remove_install_dir
+        fi
         print_full_uninstall_summary
         exit 0
     fi
@@ -801,6 +822,7 @@ main() {
     ensure_repo_paths
     configure_env_file
     configure_kis_config
+    chmod 600 "$ENV_FILE" "$KIS_CONFIG_PATH"
     configure_runtime_settings
 
     if ! command_exists "$DOCKER_BIN"; then
