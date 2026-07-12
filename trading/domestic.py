@@ -1263,7 +1263,8 @@ class DomesticStockTrading:
 
         return result
 
-    async def async_sell_stock(self, stock_code: str, timeout: float = 30.0, limit_price: Optional[int] = None) -> Dict[str, Any]:
+    async def async_sell_stock(self, stock_code: str, timeout: float = 30.0, limit_price: Optional[int] = None,
+                               sell_fraction: Optional[float] = None) -> Dict[str, Any]:
         """
         Async sell API (with timeout)
         Sell all holding quantity at market price
@@ -1287,7 +1288,7 @@ class DomesticStockTrading:
         """
         try:
             return await asyncio.wait_for(
-                self._execute_sell_stock(stock_code, limit_price),
+                self._execute_sell_stock(stock_code, limit_price, sell_fraction),
                 timeout=timeout
             )
         except asyncio.TimeoutError:
@@ -1302,7 +1303,8 @@ class DomesticStockTrading:
                 'timestamp': _now_kst().isoformat()
             }
 
-    async def _execute_sell_stock(self, stock_code: str, limit_price: int = None) -> Dict[str, Any]:
+    async def _execute_sell_stock(self, stock_code: str, limit_price: int = None,
+                                  sell_fraction: Optional[float] = None) -> Dict[str, Any]:
         """Actual sell execution logic (includes portfolio verification defensive logic)"""
         result = {
             'success': False,
@@ -1362,6 +1364,14 @@ class DomesticStockTrading:
                         # a false "holding quantity is 0" failure even though the
                         # stock was just confirmed in the account.
                         holding_quantity = target_stock['quantity']
+                        if sell_fraction is not None:
+                            if not 0 < sell_fraction <= 1:
+                                result['message'] = 'sell_fraction must be greater than 0 and at most 1'
+                                return result
+                            holding_quantity = math.floor(holding_quantity * sell_fraction)
+                            if holding_quantity <= 0:
+                                result['message'] = 'Partial sell quantity rounds down to 0 shares'
+                                return result
 
                         # Execute sell all
                         # Use current_price as limit_price fallback for reserved orders (outside market hours)
@@ -1629,16 +1639,21 @@ class MultiAccountDomesticStockTrading:
 
         return self._aggregate_results(stock_code, results, action="buy")
 
-    async def async_sell_stock(self, stock_code: str, timeout: float = 30.0, limit_price: Optional[int] = None) -> Dict[str, Any]:
+    async def async_sell_stock(self, stock_code: str, timeout: float = 30.0, limit_price: Optional[int] = None,
+                               sell_fraction: Optional[float] = None) -> Dict[str, Any]:
         if not self.account_configs:
             return self._aggregate_results(stock_code, [], action="sell")
         results = []
         for account in self.account_configs:
             trader = self._get_trader(account)
+            sell_kwargs = {}
+            if sell_fraction is not None:
+                sell_kwargs["sell_fraction"] = sell_fraction
             result = await trader.async_sell_stock(
                 stock_code=stock_code,
                 timeout=timeout,
                 limit_price=limit_price,
+                **sell_kwargs,
             )
             result["account_name"] = account["name"]
             result["account_key"] = account["account_key"]

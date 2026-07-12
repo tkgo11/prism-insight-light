@@ -10,6 +10,8 @@ from trading.strategies.score_weighted import ScoreWeightedStrategy, ScoreWeight
 from trading.strategies.cooldown import CooldownStrategy, CooldownStrategyConfig
 from trading.strategies.event_risk_off import EventRiskOffStrategy, EventRiskOffStrategyConfig
 from trading.file_lock import FileLock
+from trading.domestic import DomesticStockTrading
+from trading.us import USStockTrading
 
 
 class FakeUSTrader:
@@ -109,6 +111,77 @@ def test_file_lock_serializes_threads(tmp_path):
     first_thread.join(timeout=2)
     second_thread.join(timeout=2)
     assert second_entered.is_set()
+
+
+@pytest.mark.asyncio
+async def test_domestic_partial_sell_uses_verified_fraction(monkeypatch):
+    trader = object.__new__(DomesticStockTrading)
+    trader._stock_locks = {}
+    trader._semaphore = __import__("asyncio").Semaphore(1)
+    trader._global_lock = __import__("asyncio").Lock()
+    monkeypatch.setattr(
+        trader,
+        "get_portfolio",
+        lambda: [
+            {
+                "stock_code": "005930",
+                "quantity": 7,
+                "avg_price": 70000,
+                "profit_amount": 1000,
+                "profit_rate": 2,
+            }
+        ],
+    )
+    monkeypatch.setattr(trader, "get_current_price", lambda ticker: {"current_price": 80000})
+    captured = {}
+
+    def sell(ticker, limit_price, holding_quantity):
+        captured.update(ticker=ticker, quantity=holding_quantity)
+        return {"success": True, "quantity": holding_quantity, "order_no": "1"}
+
+    monkeypatch.setattr(trader, "smart_sell_all", sell)
+    result = await trader.async_sell_stock("005930", sell_fraction=0.5)
+
+    assert result["success"] is True
+    assert captured == {"ticker": "005930", "quantity": 3}
+
+
+@pytest.mark.asyncio
+async def test_us_partial_sell_reuses_verified_exchange_and_quantity(monkeypatch):
+    trader = object.__new__(USStockTrading)
+    trader._stock_locks = {}
+    trader._semaphore = __import__("asyncio").Semaphore(1)
+    trader._global_lock = __import__("asyncio").Lock()
+    monkeypatch.setattr(
+        trader,
+        "get_portfolio",
+        lambda: [
+            {
+                "ticker": "IBM",
+                "exchange": "NYSE",
+                "quantity": 5,
+                "avg_price": 100,
+                "profit_amount": 10,
+                "profit_rate": 2,
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        trader,
+        "get_current_price",
+        lambda ticker, exchange: {"current_price": 110},
+    )
+    captured = {}
+
+    def sell(ticker, exchange, limit_price, use_moo, holding_quantity):
+        captured.update(exchange=exchange, quantity=holding_quantity)
+        return {"success": True, "quantity": holding_quantity, "order_no": "1"}
+
+    monkeypatch.setattr(trader, "smart_sell_all", sell)
+    result = await trader.async_sell_stock("IBM", sell_fraction=0.5)
+
+    assert result["success"] is True
+    assert captured == {"exchange": "NYSE", "quantity": 2}
 
 
 @pytest.mark.asyncio

@@ -846,7 +846,8 @@ class USStockTrading:
         return 0
 
     def sell_all_market_price(self, ticker: str, exchange: str = None,
-                              limit_price: float = None) -> Dict[str, Any]:
+                              limit_price: float = None,
+                              holding_quantity: Optional[int] = None) -> Dict[str, Any]:
         """
         Sell all holdings at current market price (limit order at current price).
 
@@ -879,7 +880,7 @@ class USStockTrading:
             exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
 
         # Check holding quantity
-        quantity = self.get_holding_quantity(ticker)
+        quantity = holding_quantity if holding_quantity is not None else self.get_holding_quantity(ticker)
 
         if quantity == 0:
             return {
@@ -1146,7 +1147,8 @@ class USStockTrading:
             }
 
     def sell_reserved_order(self, ticker: str, limit_price: float = None,
-                            use_moo: bool = False, exchange: str = None) -> Dict[str, Any]:
+                            use_moo: bool = False, exchange: str = None,
+                            holding_quantity: Optional[int] = None) -> Dict[str, Any]:
         """
         Reserved order sell for US stock (executed at next market open)
         Reserved sell order - automatically executed at next market open
@@ -1189,7 +1191,7 @@ class USStockTrading:
             return self._reserved_window_closed(ticker, 'sell', limit_price or 0)
 
         # Check holding quantity
-        quantity = self.get_holding_quantity(ticker)
+        quantity = holding_quantity if holding_quantity is not None else self.get_holding_quantity(ticker)
 
         if quantity == 0:
             return {
@@ -1327,7 +1329,8 @@ class USStockTrading:
                 }
 
     def smart_sell_all(self, ticker: str, exchange: str = None,
-                       limit_price: float = None, use_moo: bool = False) -> Dict[str, Any]:
+                       limit_price: float = None, use_moo: bool = False,
+                       holding_quantity: Optional[int] = None) -> Dict[str, Any]:
         """
         Smart sell - automatically choose best method based on market hours
 
@@ -1356,15 +1359,32 @@ class USStockTrading:
 
         if self.is_market_open():
             logger.info(f"[{ticker}] Market is open - executing market sell")
-            return self.sell_all_market_price(ticker, exchange, limit_price=limit_price)
+            return self.sell_all_market_price(
+                ticker,
+                exchange,
+                limit_price=limit_price,
+                holding_quantity=holding_quantity,
+            )
         else:
             # Market is closed - use reserved order
             if limit_price and limit_price > 0:
                 logger.info(f"[{ticker}] Market is closed - placing reserved sell order (limit: ${limit_price:.2f})")
-                return self.sell_reserved_order(ticker, limit_price, use_moo=False, exchange=exchange)
+                return self.sell_reserved_order(
+                    ticker,
+                    limit_price,
+                    use_moo=False,
+                    exchange=exchange,
+                    holding_quantity=holding_quantity,
+                )
             elif use_moo:
                 logger.info(f"[{ticker}] Market is closed - placing reserved MOO sell order")
-                return self.sell_reserved_order(ticker, limit_price=None, use_moo=True, exchange=exchange)
+                return self.sell_reserved_order(
+                    ticker,
+                    limit_price=None,
+                    use_moo=True,
+                    exchange=exchange,
+                    holding_quantity=holding_quantity,
+                )
             else:
                 logger.warning(f"[{ticker}] Market is closed and no limit_price/use_moo provided")
                 return {
@@ -1519,7 +1539,8 @@ class USStockTrading:
 
     async def async_sell_stock(self, ticker: str, exchange: str = None,
                                timeout: float = 30.0, limit_price: Optional[float] = None,
-                               use_moo: bool = False) -> Dict[str, Any]:
+                               use_moo: bool = False,
+                               sell_fraction: Optional[float] = None) -> Dict[str, Any]:
         """
         Async sell API with timeout
 
@@ -1535,7 +1556,7 @@ class USStockTrading:
         """
         try:
             return await asyncio.wait_for(
-                self._execute_sell_stock(ticker, exchange, limit_price, use_moo),
+                self._execute_sell_stock(ticker, exchange, limit_price, use_moo, sell_fraction),
                 timeout=timeout
             )
         except asyncio.TimeoutError:
@@ -1551,7 +1572,8 @@ class USStockTrading:
             }
 
     async def _execute_sell_stock(self, ticker: str, exchange: str = None,
-                                  limit_price: float = None, use_moo: bool = False) -> Dict[str, Any]:
+                                  limit_price: float = None, use_moo: bool = False,
+                                  sell_fraction: Optional[float] = None) -> Dict[str, Any]:
         """Execute sell stock logic with portfolio verification"""
         result = {
             'success': False,
@@ -1589,11 +1611,23 @@ class USStockTrading:
                             result['message'] = f'{ticker} quantity is 0'
                             return result
 
+                        holding_quantity = target_stock['quantity']
+                        if sell_fraction is not None:
+                            if not 0 < sell_fraction <= 1:
+                                result['message'] = 'sell_fraction must be greater than 0 and at most 1'
+                                return result
+                            holding_quantity = math.floor(holding_quantity * sell_fraction)
+                            if holding_quantity <= 0:
+                                result['message'] = 'Partial sell quantity rounds down to 0 shares'
+                                return result
+
+                        resolved_exchange = exchange or target_stock.get('exchange')
+
                         logger.info(f"[Async Sell] {ticker} holdings verified: {target_stock['quantity']} shares")
 
                         # Get current price for estimate
                         price_info = await asyncio.to_thread(
-                            self.get_current_price, ticker, exchange
+                            self.get_current_price, ticker, resolved_exchange
                         )
 
                         current_price = 0.0
@@ -1615,7 +1649,12 @@ class USStockTrading:
 
                         # Execute sell
                         sell_result = await asyncio.to_thread(
-                            self.smart_sell_all, ticker, exchange, effective_limit_price if effective_limit_price > 0 else None, effective_use_moo
+                            self.smart_sell_all,
+                            ticker,
+                            resolved_exchange,
+                            effective_limit_price if effective_limit_price > 0 else None,
+                            effective_use_moo,
+                            holding_quantity,
                         )
 
                         if sell_result['success']:
@@ -1864,18 +1903,23 @@ class MultiAccountUSStockTrading:
 
     async def async_sell_stock(self, ticker: str, exchange: str = None,
                                timeout: float = 30.0, limit_price: Optional[float] = None,
-                               use_moo: bool = False) -> Dict[str, Any]:
+                               use_moo: bool = False,
+                               sell_fraction: Optional[float] = None) -> Dict[str, Any]:
         if not self.account_configs:
             return self._aggregate_results(ticker, [], action="sell")
         results = []
         for account in self.account_configs:
             trader = self._get_trader(account)
+            sell_kwargs = {}
+            if sell_fraction is not None:
+                sell_kwargs["sell_fraction"] = sell_fraction
             result = await trader.async_sell_stock(
                 ticker=ticker,
                 exchange=exchange,
                 timeout=timeout,
                 limit_price=limit_price,
                 use_moo=use_moo,
+                **sell_kwargs,
             )
             result["account_name"] = account["name"]
             result["account_key"] = account["account_key"]
