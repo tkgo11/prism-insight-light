@@ -6,3 +6,9 @@ runtime
 tests
 .env
 trading/config/kis_devlp.yaml
+trading/config/KIS*
+trading/config/.token*
+trading/config/.tmp_token_*
+crontab_subscriber_backup_*.txt
+crontab_subscriber_docker_backup_*.txt
+prism-insight-*.json

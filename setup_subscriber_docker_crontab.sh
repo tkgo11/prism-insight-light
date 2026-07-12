@@ -74,7 +74,14 @@ normalize_bool() {
 }
 
 shell_quote() {
-    printf '%q' "$1"
+    local value="$1"
+    local quoted
+    if [[ "$value" == *$'\n'* || "$value" == *$'\r'* ]]; then
+        log_error "cron 값에는 줄바꿈 문자를 사용할 수 없습니다."
+        return 1
+    fi
+    printf -v quoted '%q' "$value"
+    printf '%s' "${quoted//%/\\%}"
 }
 
 sanitize_input() {
@@ -288,13 +295,21 @@ container_running() {
 
 remove_container_if_exists() {
     if container_exists; then
-        "$DOCKER_BIN" rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+        "$DOCKER_BIN" rm -f "$CONTAINER_NAME" >/dev/null
+        if container_exists; then
+            log_error "Docker 컨테이너 제거를 확인하지 못했습니다: $CONTAINER_NAME"
+            return 1
+        fi
     fi
 }
 
 remove_image_if_exists() {
     if image_exists; then
-        "$DOCKER_BIN" rmi -f "$IMAGE_NAME" >/dev/null 2>&1 || true
+        "$DOCKER_BIN" rmi -f "$IMAGE_NAME" >/dev/null
+        if image_exists; then
+            log_error "Docker 이미지 제거를 확인하지 못했습니다: $IMAGE_NAME"
+            return 1
+        fi
     fi
 }
 
@@ -413,9 +428,9 @@ maybe_shutdown_system() {
     if market_open_now "$market" >/dev/null 2>&1; then
         log_info "$market 시장이 아직 열려 있어 시스템 종료를 건너뜁니다."
         return 0
+    else
+        status=$?
     fi
-
-    status=$?
     if [ "$status" -ne 1 ]; then
         log_error "$market 시장 상태 확인 실패로 시스템 종료를 건너뜁니다."
         return 1
@@ -424,9 +439,9 @@ maybe_shutdown_system() {
     if any_market_open_now >/dev/null 2>&1; then
         log_info "다른 시장이 열려 있어 시스템 종료를 건너뜁니다."
         return 0
+    else
+        status=$?
     fi
-
-    status=$?
     if [ "$status" -ne 1 ]; then
         log_error "전체 시장 상태 확인 실패로 시스템 종료를 건너뜁니다."
         return 1
@@ -531,15 +546,19 @@ stop_container() {
     if market_open_now "$market" >/dev/null 2>&1; then
         log_info "$market 시장이 아직 열려 있어 컨테이너 중지를 건너뜁니다."
         return 0
+    else
+        status=$?
     fi
-
-    status=$?
     if [ "$status" -ne 1 ]; then
         log_error "$market 시장 상태 확인에 실패했습니다. 안전을 위해 컨테이너 중지를 보류합니다."
         return 1
     fi
 
-    "$DOCKER_BIN" stop "$CONTAINER_NAME" >/dev/null 2>&1 || true
+    "$DOCKER_BIN" stop "$CONTAINER_NAME" >/dev/null
+    if container_running; then
+        log_error "subscriber 컨테이너 중지를 확인하지 못했습니다: $CONTAINER_NAME"
+        return 1
+    fi
     log_success "subscriber 컨테이너를 중지했습니다. container=$CONTAINER_NAME"
 }
 
@@ -652,14 +671,14 @@ SHELL=/bin/bash
 PATH=$(generate_path)
 
 # KR market session
-0 9 * * 1-5 cd "$PROJECT_DIR" && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-start KR
-31 15 * * 1-5 cd "$PROJECT_DIR" && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-stop KR
+0 9 * * 1-5 cd $project_dir_q && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-start KR
+31 15 * * 1-5 cd $project_dir_q && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-stop KR
 
 # US market session
-30 22 * * 1-5 cd "$PROJECT_DIR" && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-start US
-30 23 * * 1-5 cd "$PROJECT_DIR" && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-start US
-1 5 * * 2-6 cd "$PROJECT_DIR" && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-stop US
-1 6 * * 2-6 cd "$PROJECT_DIR" && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-stop US
+30 22 * * 1-5 cd $project_dir_q && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-start US
+30 23 * * 1-5 cd $project_dir_q && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-start US
+1 5 * * 2-6 cd $project_dir_q && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-stop US
+1 6 * * 2-6 cd $project_dir_q && PROJECT_DIR=$project_dir_q DOCKER_BIN=$docker_bin_q IMAGE_NAME=$image_name_q CONTAINER_NAME=$container_name_q ENV_FILE=$env_file_q LOG_DIR=$log_dir_q RUNTIME_DIR=$runtime_dir_q KIS_CONFIG_HOST_PATH=$kis_host_q KIS_CONFIG_CONTAINER_PATH=$kis_container_q CREDENTIALS_HOST_PATH=$cred_host_q CREDENTIALS_CONTAINER_PATH=$cred_container_q AUTO_BUILD_IMAGE=$auto_build_q AUTO_SHUTDOWN=$auto_shutdown_q SHUTDOWN_COMMAND=$shutdown_cmd_q bash $script_path_q --cron-stop US
 $END_MARKER
 EOF
 }
@@ -669,9 +688,13 @@ strip_managed_block() {
     local output_file="$2"
 
     awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
-        $0 == begin { skip = 1; next }
-        $0 == end { skip = 0; next }
-        !skip { print }
+        $0 == begin { begins++; if (skip || begins > 1) invalid = 1; skip = 1; next }
+        $0 == end { ends++; if (!skip || ends > 1) invalid = 1; skip = 0; next }
+        !skip { kept[++count] = $0 }
+        END {
+            if (skip || begins != ends || begins > 1 || ends > 1 || invalid) exit 2
+            for (i = 1; i <= count; i++) print kept[i]
+        }
     ' "$input_file" > "$output_file"
 }
 
@@ -679,7 +702,7 @@ backup_crontab() {
     local backup_file="$PROJECT_DIR/crontab_subscriber_docker_backup_$(date +%Y%m%d_%H%M%S).txt"
 
     if "$CRONTAB_BIN" -l >/dev/null 2>&1; then
-        "$CRONTAB_BIN" -l > "$backup_file"
+        (umask 077; "$CRONTAB_BIN" -l > "$backup_file")
         log_success "현재 crontab을 백업했습니다: $backup_file"
     else
         log_info "기존 crontab이 없어 백업을 생략합니다."
@@ -698,7 +721,11 @@ install_crontab() {
         : > "$temp_current"
     fi
 
-    strip_managed_block "$temp_current" "$temp_clean"
+    if ! strip_managed_block "$temp_current" "$temp_clean"; then
+        rm -f "$temp_current" "$temp_clean"
+        log_error "관리 마커가 손상되어 기존 crontab을 변경하지 않습니다."
+        return 1
+    fi
 
     {
         cat "$temp_clean"
@@ -724,7 +751,11 @@ uninstall_crontab() {
     fi
 
     "$CRONTAB_BIN" -l > "$temp_current"
-    strip_managed_block "$temp_current" "$temp_clean"
+    if ! strip_managed_block "$temp_current" "$temp_clean"; then
+        rm -f "$temp_current" "$temp_clean"
+        log_error "관리 마커가 손상되어 기존 crontab을 변경하지 않습니다."
+        return 1
+    fi
 
     if [ -s "$temp_clean" ]; then
         "$CRONTAB_BIN" "$temp_clean"
