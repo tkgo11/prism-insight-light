@@ -1,10 +1,10 @@
 """Per-ticker cooldown guard strategy."""
 from __future__ import annotations
-import fcntl
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from ..file_lock import FileLock
 from ..schema import SignalMessage
 from .common import RUNTIME_DIR, StrategyExecution, execute_order, execution_from_result, fresh_items, load_json_list, save_json, strategy_name
 
@@ -32,8 +32,7 @@ class CooldownStrategy:
         key = self._key(signal)
         lock_path = self.config.runtime_path.with_suffix(self.config.runtime_path.suffix + ".lock")
         lock_path.parent.mkdir(parents=True, exist_ok=True)
-        with lock_path.open("w", encoding="utf-8") as lock_file:
-            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        with FileLock(lock_path):
             items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.window_minutes))
             if any(item.get("key") == key for item in items): return StrategyExecution("rejected", f"Cooldown active for {key}", signal.market, signal.ticker)
             result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, limit_price=signal.price)

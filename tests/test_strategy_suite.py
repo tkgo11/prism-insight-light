@@ -9,6 +9,7 @@ from trading.strategies.risk_bracket import RiskBracketStrategy, RiskBracketStra
 from trading.strategies.score_weighted import ScoreWeightedStrategy, ScoreWeightedStrategyConfig
 from trading.strategies.cooldown import CooldownStrategy, CooldownStrategyConfig
 from trading.strategies.event_risk_off import EventRiskOffStrategy, EventRiskOffStrategyConfig
+from trading.file_lock import FileLock
 
 
 class FakeUSTrader:
@@ -80,6 +81,34 @@ async def test_cooldown_blocks_duplicate_execution(tmp_path):
     assert first.status == "executed"
     assert second.status == "rejected"
     assert len(FakeUSTrader.calls) == 1
+
+
+def test_file_lock_serializes_threads(tmp_path):
+    lock_path = tmp_path / "shared.lock"
+    first_entered = __import__("threading").Event()
+    release_first = __import__("threading").Event()
+    second_entered = __import__("threading").Event()
+
+    def first():
+        with FileLock(lock_path):
+            first_entered.set()
+            assert release_first.wait(timeout=2)
+
+    def second():
+        assert first_entered.wait(timeout=2)
+        with FileLock(lock_path):
+            second_entered.set()
+
+    threading = __import__("threading")
+    first_thread = threading.Thread(target=first)
+    second_thread = threading.Thread(target=second)
+    first_thread.start()
+    second_thread.start()
+    assert not second_entered.wait(timeout=0.1)
+    release_first.set()
+    first_thread.join(timeout=2)
+    second_thread.join(timeout=2)
+    assert second_entered.is_set()
 
 
 @pytest.mark.asyncio

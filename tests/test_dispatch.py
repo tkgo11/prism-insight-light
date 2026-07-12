@@ -18,6 +18,12 @@ class DummyQueue:
         return 0
 
 
+@pytest.mark.parametrize("mode", ["", "demoo", "production", "unexpected"])
+def test_dispatch_rejects_unknown_trading_mode(mode):
+    with pytest.raises(ValueError, match="trading mode"):
+        TradeDispatcher(trading_mode=mode)
+
+
 @pytest.mark.asyncio
 async def test_dispatch_kr_buy(monkeypatch):
     results = {}
