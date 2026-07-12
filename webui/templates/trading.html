@@ -14,7 +14,7 @@
       <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
       <label>Action<select name="action"><option>BUY</option><option>SELL</option></select></label>
       <label>Ticker<input name="ticker" placeholder="005930 or AAPL" required></label>
-      <label>Price<input name="price" type="number" step="0.0001" min="0" placeholder="70000" required></label>
+      <label>Price<input name="price" type="number" step="0.0001" min="0.0001" placeholder="70000" required></label>
       <label>Company<input name="company_name" placeholder="Optional display name"></label>
       <label>Market<select name="market"><option value="auto">Auto-detect</option><option value="KR">KR</option><option value="US">US</option></select></label>
       <label>Mode<select name="trading_mode"><option value="">Config default</option><option value="demo">Demo</option><option value="real">Real</option></select></label>
@@ -47,8 +47,10 @@
 <section class="two-column" id="config">
   <article class="panel">
     <div class="panel-head"><div><p class="eyebrow">Configuration</p><h2>Safe config editor</h2></div><span class="pill">{{ config_model.path_label }}</span></div>
-    {% if config_result %}<p class="success-text">Saved to {{ config_result.path_label }}</p>{% endif %}
+    {% if config_result and config_result.ok %}<p class="success-text">Saved to {{ config_result.path_label }}</p>{% endif %}
+    {% if config_result and config_result.error %}<p class="warning">{{ config_result.error }}</p>{% endif %}
     <form method="post" action="/trading/config" class="form-grid dense">
+      <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
       {% for field in config_model.fields %}
       <label>{{ field.name }}<input name="{{ field.name }}" value="{{ field.value }}"></label>
       {% endfor %}

@@ -6,7 +6,7 @@ CSRF = {"X-WebUI-CSRF": "local-webui"}
 
 
 def client():
-    return TestClient(create_app(WebUISettings()))
+    return TestClient(create_app(WebUISettings(csrf_token="local-webui")))
 
 
 def test_dashboard_and_pages_return_200():
@@ -50,7 +50,15 @@ def test_dashboard_readiness_icon_reflects_missing_status(monkeypatch):
 
 def test_sidebar_safety_chip_reflects_non_loopback_and_live_trading(monkeypatch):
     monkeypatch.delenv("WEBUI_ENABLE_LIVE_TRADING", raising=False)
-    c = TestClient(create_app(WebUISettings(host="0.0.0.0", allow_non_loopback=True)))
+    c = TestClient(
+        create_app(
+            WebUISettings(
+                host="0.0.0.0",
+                allow_non_loopback=True,
+                csrf_token="local-webui",
+            )
+        )
+    )
     response = c.get("/")
     assert response.status_code == 200
     assert "Network access allowed" in response.text
@@ -174,3 +182,119 @@ def test_manual_order_requires_csrf_and_live_unlock():
     assert response.status_code == 200
     assert "Live trading is disabled" in response.text
     assert "AAPL" in response.text
+
+
+def test_configured_csrf_token_is_rendered_in_both_trading_forms():
+    token = "configured-token-with-sufficient-entropy"
+    c = TestClient(create_app(WebUISettings(csrf_token=token)))
+
+    response = c.get("/trading")
+
+    assert response.status_code == 200
+    assert response.text.count(f'name="x_webui_csrf" value="{token}"') == 2
+    assert "local-webui" not in response.text
+
+
+def test_live_manual_order_awaits_dispatcher(monkeypatch):
+    from trading.dispatch import DispatchResult
+    from webui.services import trade_service
+
+    reached = False
+
+    class FakeDispatcher:
+        def __init__(self, **kwargs):
+            assert kwargs["dry_run"] is False
+
+        async def dispatch(self, signal):
+            nonlocal reached
+            reached = True
+            return DispatchResult(
+                status="executed",
+                message="done",
+                signal_type=signal.signal_type,
+                market=signal.market,
+            )
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    monkeypatch.setattr(trade_service, "TradeDispatcher", FakeDispatcher)
+    c = client()
+    response = c.post(
+        "/trading/order",
+        data={
+            "x_webui_csrf": "local-webui",
+            "action": "BUY",
+            "ticker": "AAPL",
+            "price": "190.5",
+            "market": "auto",
+            "arm_phrase": trade_service.ARM_PHRASE,
+        },
+    )
+
+    assert response.status_code == 200
+    assert reached is True
+    assert "Order accepted" in response.text
+
+
+def test_manual_order_rejects_malformed_or_nonpositive_price(monkeypatch):
+    from webui.services import trade_service
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    c = client()
+    base = {
+        "x_webui_csrf": "local-webui",
+        "action": "BUY",
+        "ticker": "AAPL",
+        "market": "auto",
+        "arm_phrase": trade_service.ARM_PHRASE,
+    }
+
+    for price in ("not-a-number", "0", "-1", "nan", "inf"):
+        response = c.post("/trading/order", data=base | {"price": price})
+        assert response.status_code == 400
+        assert "Invalid order" in response.text
+
+
+def test_malformed_urlencoded_body_returns_400():
+    c = client()
+    response = c.post(
+        "/trading/order",
+        content=b"x_webui_csrf=local-webui&ticker=%FF",
+        headers={"content-type": "application/x-www-form-urlencoded"},
+    )
+    assert response.status_code == 400
+
+
+def test_config_update_is_transactional_and_secret_permissions(monkeypatch, tmp_path):
+    from webui.services import account_service
+
+    config_path = tmp_path / "kis_devlp.yaml"
+    config_path.write_text("default_mode: demo\ndefault_unit_amount: 1000\n", encoding="utf-8")
+    monkeypatch.setattr(account_service, "CONFIG_PATH", config_path)
+    monkeypatch.setattr(account_service, "EXAMPLE_CONFIG_PATH", tmp_path / "missing.yaml")
+    before = config_path.read_text(encoding="utf-8")
+
+    c = client()
+    response = c.post(
+        "/trading/config",
+        data={
+            "x_webui_csrf": "local-webui",
+            "default_mode": "demo",
+            "default_unit_amount": "12.5",
+            "signal_strategy_split_count": "2",
+        },
+    )
+
+    assert response.status_code == 400
+    assert config_path.read_text(encoding="utf-8") == before
+
+    response = c.post(
+        "/trading/config",
+        data={
+            "x_webui_csrf": "local-webui",
+            "default_mode": "demo",
+            "default_unit_amount": "2000",
+            "signal_strategy_split_count": "3",
+        },
+    )
+    assert response.status_code == 200
+    assert config_path.stat().st_mode & 0o777 == 0o600
