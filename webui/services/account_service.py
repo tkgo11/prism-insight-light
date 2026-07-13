@@ -9,12 +9,12 @@ from pathlib import Path
 from typing import Any
 
 from trading import yaml_compat as yaml
-
+from trading.config_paths import EXAMPLE_CONFIG_PATH, writable_kis_config_path
 from trading.schema import infer_market
+from trading.strategy_names import SUPPORTED_STRATEGY_NAMES, WEBUI_EDITABLE_STRATEGY_NAMES
 from webui.services.masking import mask_secret_value
 
-CONFIG_PATH = Path("trading") / "config" / "kis_devlp.yaml"
-EXAMPLE_CONFIG_PATH = Path("trading") / "config" / "kis_devlp.yaml.example"
+CONFIG_PATH = writable_kis_config_path()
 SECRET_FIELDS = {"app_key", "app_secret", "my_app", "my_sec", "paper_app", "paper_sec", "my_token"}
 EDITABLE_TOP_LEVEL_FIELDS: dict[str, type] = {
     "default_mode": str,
@@ -29,6 +29,13 @@ EDITABLE_TOP_LEVEL_FIELDS: dict[str, type] = {
 }
 
 
+def config_writable() -> bool:
+    if os.environ.get("WEBUI_CONFIG_READ_ONLY", "").strip().lower() in {"1", "true", "yes", "on"}:
+        return False
+    target = CONFIG_PATH if CONFIG_PATH.exists() else CONFIG_PATH.parent
+    return os.access(target, os.W_OK)
+
+
 def active_config_path() -> Path:
     return CONFIG_PATH if CONFIG_PATH.exists() else EXAMPLE_CONFIG_PATH
 
@@ -37,11 +44,27 @@ def load_config() -> dict[str, Any]:
     path = active_config_path()
     if not path.exists():
         return {}
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    return data if isinstance(data, dict) else {}
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except OSError as exc:
+        raise ValueError("Unable to read the KIS configuration") from exc
+    except Exception as exc:  # noqa: BLE001 - normalize parser-specific errors
+        raise ValueError("Unable to parse the KIS configuration") from exc
+    if not isinstance(data, dict):
+        raise ValueError("KIS configuration must contain a YAML mapping")
+    return data
+
+
+def _load_config_for_view() -> tuple[dict[str, Any], str | None]:
+    try:
+        return load_config(), None
+    except ValueError:
+        return {}, "Configuration could not be loaded. Repair the YAML before saving changes."
 
 
 def save_config(data: dict[str, Any]) -> Path:
+    if not config_writable():
+        raise PermissionError("KIS configuration is read-only in this deployment")
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     rendered = yaml.safe_dump(data, allow_unicode=True, sort_keys=False, indent=2)
     temporary_path: Path | None = None
@@ -81,7 +104,7 @@ def _safe_scalar(value: Any) -> Any:
 
 
 def list_accounts() -> dict[str, Any]:
-    data = load_config()
+    data, config_error = _load_config_for_view()
     accounts = data.get("accounts") if isinstance(data.get("accounts"), list) else []
     safe_accounts: list[dict[str, Any]] = []
     for index, account in enumerate(accounts):
@@ -110,34 +133,42 @@ def list_accounts() -> dict[str, Any]:
             }
         )
     return {
-        "ok": True,
-        "path": str(active_config_path()),
+        "ok": config_error is None,
         "path_label": active_config_path().name,
         "using_example": active_config_path() == EXAMPLE_CONFIG_PATH,
+        "writable": config_writable(),
         "default_mode": str(data.get("default_mode") or "demo"),
         "auto_trading": bool(data.get("auto_trading")),
         "accounts": safe_accounts,
         "count": len(safe_accounts),
-        "error": None,
+        "error": config_error,
     }
 
 
 def get_config_editor_model() -> dict[str, Any]:
-    data = load_config()
+    data, config_error = _load_config_for_view()
     safe_fields = []
     for name, expected_type in EDITABLE_TOP_LEVEL_FIELDS.items():
         value = data.get(name)
         safe_fields.append({"name": name, "value": "" if value is None else str(value), "type": expected_type.__name__})
     strategy = data.get("signal_strategy") if isinstance(data.get("signal_strategy"), dict) else {}
+    current_strategy_name = str(strategy.get("name") or "")
+    strategy_names = list(WEBUI_EDITABLE_STRATEGY_NAMES)
+    if current_strategy_name and current_strategy_name not in strategy_names:
+        strategy_names.append(current_strategy_name)
     return {
-        "ok": True,
+        "ok": config_error is None,
+        "error": config_error,
         "path_label": active_config_path().name,
         "using_example": active_config_path() == EXAMPLE_CONFIG_PATH,
+        "writable": config_writable(),
         "fields": safe_fields,
         "strategy": {
-            "name": str(strategy.get("name") or ""),
+            "name": current_strategy_name,
             "split_count": str(strategy.get("split_count") or "2"),
         },
+        "strategy_names": strategy_names,
+        "editable_strategy_names": WEBUI_EDITABLE_STRATEGY_NAMES,
         "accounts": list_accounts()["accounts"],
     }
 
@@ -185,8 +216,9 @@ def update_config_fields(fields: dict[str, str], strategy: dict[str, str] | None
         current = data.get("signal_strategy") if isinstance(data.get("signal_strategy"), dict) else {}
         next_strategy = dict(current)
         name = str(strategy.get("name") or "").strip()
-        if name not in {"", "balance_split"}:
-            raise ValueError("unsupported signal strategy")
+        current_name = str(current.get("name") or "")
+        if name not in {"", current_name, *WEBUI_EDITABLE_STRATEGY_NAMES}:
+            raise ValueError("this strategy cannot be configured safely in the WebUI")
         split_count = int(str(strategy.get("split_count") or "2"))
         if split_count <= 0:
             raise ValueError("signal_strategy.split_count must be positive")

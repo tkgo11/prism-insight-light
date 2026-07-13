@@ -10,9 +10,13 @@ router = APIRouter(prefix="/queue")
 @router.get("")
 def queue_page(request: Request):
     templates = request.app.state.templates
-    return templates.TemplateResponse(request, "queue.html", {"request": request, "queue": summarize_queue()})
+    return templates.TemplateResponse(
+        request,
+        "queue.html",
+        {"request": request, "queue": summarize_queue(request.app.state.settings.queue_path)},
+    )
 
 
 @router.get("/api")
-def queue_api():
-    return summarize_queue()
+def queue_api(request: Request):
+    return summarize_queue(request.app.state.settings.queue_path)
