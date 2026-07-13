@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from ..schema import SignalMessage
-from .common import RUNTIME_DIR, StrategyExecution, execute_order, execution_from_result, fresh_items, load_json_list, save_json, strategy_name
+from .common import RUNTIME_DIR, StrategyExecution, execute_order, execution_from_result, fraction_value, fresh_items, integer_value, load_json_list, strategy_name, update_json_list
 
 EVENT_RISK_OFF = "event_risk_off"
 @dataclass(frozen=True, slots=True)
@@ -14,17 +14,20 @@ class EventRiskOffStrategyConfig:
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "EventRiskOffStrategyConfig | None":
         if not payload or strategy_name(payload) != EVENT_RISK_OFF: return None
-        window = int(payload.get("risk_off_window_minutes", 1440) or 1440)
-        if window < 1: raise ValueError("signal_strategy.risk_off_window_minutes must be 1 or greater")
-        return cls(tuple(str(v).strip().upper() for v in payload.get("risk_off_event_types", ["RISK_OFF"])), window, float(payload.get("buy_size_multiplier", 0.0)), Path(payload.get("runtime_path") or (RUNTIME_DIR / "event_risk_off.json")))
+        window = integer_value(payload, "risk_off_window_minutes", 1440, minimum=1)
+        return cls(tuple(str(v).strip().upper() for v in payload.get("risk_off_event_types", ["RISK_OFF"])), window, fraction_value(payload, "buy_size_multiplier", 0.0), Path(payload.get("runtime_path") or (RUNTIME_DIR / "event_risk_off.json")))
 
 class EventRiskOffStrategy:
     def __init__(self, *, config: EventRiskOffStrategyConfig): self.config = config
     async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.is_event:
             if signal.event_type.strip().upper() in self.config.risk_off_event_types:
-                items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.risk_off_window_minutes))
-                items.append({"market": signal.market, "ticker": signal.ticker, "event_type": signal.event_type.upper(), "created_at": datetime.now(timezone.utc).isoformat()}); save_json(self.config.runtime_path, items)
+                item = {"market": signal.market, "ticker": signal.ticker, "event_type": signal.event_type.upper(), "created_at": datetime.now(timezone.utc).isoformat()}
+                window = timedelta(minutes=self.config.risk_off_window_minutes)
+                update_json_list(
+                    self.config.runtime_path,
+                    lambda items: [*fresh_items(items, window=window), item],
+                )
                 return StrategyExecution("acknowledged", "Risk-off event recorded", signal.market, signal.ticker)
             return StrategyExecution("acknowledged", "Event signal acknowledged", signal.market, signal.ticker)
         buy_amount = None

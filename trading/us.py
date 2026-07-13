@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any
 
 from . import yaml_compat as yaml
+from .config_paths import active_kis_config_path
 pytz_spec = importlib.util.find_spec("pytz")
 if pytz_spec is not None:
     pytz = importlib.import_module("pytz")
@@ -68,9 +69,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Load configuration file (use same config as domestic)
-CONFIG_FILE = TRADING_DIR / "config" / "kis_devlp.yaml"
-if not CONFIG_FILE.exists():
-    CONFIG_FILE = TRADING_DIR / "config" / "kis_devlp.yaml.example"
+CONFIG_FILE = active_kis_config_path()
 with open(CONFIG_FILE, encoding="UTF-8") as f:
     _cfg = yaml.safe_load(f)
 
@@ -399,7 +398,10 @@ class USStockTrading:
 
     def _resolve_buy_amount(self, buy_amount: float | None = None) -> float:
         if buy_amount is not None:
-            return float(buy_amount)
+            amount = float(buy_amount)
+            if not math.isfinite(amount) or amount <= 0:
+                raise ValueError("buy_amount must be a finite positive number")
+            return amount
         return resolve_buy_amount(
             self.buy_sizing,
             account_summary=self.get_account_summary() if self.buy_sizing.uses_asset_percent else None,
@@ -651,7 +653,7 @@ class USStockTrading:
         # Calculate buy quantity, including optional KIS after-exchange buying power
         buy_quantity, buy_info = self._calculate_buy_quantity_inputs(ticker, buy_amount, exchange)
 
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -755,7 +757,7 @@ class USStockTrading:
         # Calculate quantity based on limit price
         buy_quantity = math.floor(amount / limit_price)
 
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -1073,7 +1075,7 @@ class USStockTrading:
         # Calculate quantity based on limit price
         buy_quantity = math.floor(amount / limit_price)
 
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -1417,22 +1419,9 @@ class USStockTrading:
         Returns:
             Order result dict
         """
-        try:
-            return await asyncio.wait_for(
-                self._execute_buy_stock(ticker, buy_amount, exchange, limit_price),
-                timeout=timeout
-            )
-        except asyncio.TimeoutError:
-            return {
-                'success': False,
-                'ticker': ticker,
-                'current_price': 0,
-                'quantity': 0,
-                'total_amount': 0,
-                'order_no': None,
-                'message': f'Buy request timeout ({timeout}s)',
-                'timestamp': datetime.datetime.now().isoformat()
-            }
+        # Await bounded transport completion so no broker thread remains active
+        # after this method returns with an ambiguous timeout result.
+        return await self._execute_buy_stock(ticker, buy_amount, exchange, limit_price)
 
     async def _execute_buy_stock(self, ticker: str, buy_amount: float = None,
                                  exchange: str = None, limit_price: float = None) -> Dict[str, Any]:
@@ -1497,7 +1486,7 @@ class USStockTrading:
                         )
                         buy_quantity = math.floor(resolved_amount / current_price)
 
-                        if buy_quantity == 0:
+                        if buy_quantity <= 0:
                             result['message'] = f'Buy quantity is 0 (amount: ${resolved_amount:.2f})'
                             result.update(buy_info)
                             result['resolved_amount'] = resolved_amount
@@ -1554,22 +1543,9 @@ class USStockTrading:
         Returns:
             Order result dict
         """
-        try:
-            return await asyncio.wait_for(
-                self._execute_sell_stock(ticker, exchange, limit_price, use_moo, sell_fraction),
-                timeout=timeout
-            )
-        except asyncio.TimeoutError:
-            return {
-                'success': False,
-                'ticker': ticker,
-                'current_price': 0,
-                'quantity': 0,
-                'estimated_amount': 0,
-                'order_no': None,
-                'message': f'Sell request timeout ({timeout}s)',
-                'timestamp': datetime.datetime.now().isoformat()
-            }
+        return await self._execute_sell_stock(
+            ticker, exchange, limit_price, use_moo, sell_fraction
+        )
 
     async def _execute_sell_stock(self, ticker: str, exchange: str = None,
                                   limit_price: float = None, use_moo: bool = False,
@@ -1773,7 +1749,7 @@ class USStockTrading:
 
         Returns:
             {
-                'total_eval_amount': Total stock evaluation in USD,
+                'total_eval_amount': Total USD assets (stock evaluation + USD cash),
                 'total_profit_amount': Total P/L in USD,
                 'total_profit_rate': Total P/L rate (%),
                 'available_amount': Available USD for trading,
@@ -1815,7 +1791,8 @@ class USStockTrading:
 
                 # Calculate from portfolio for stock totals
                 portfolio = self.get_portfolio()
-                total_eval = sum(s['eval_amount'] for s in portfolio)
+                stock_eval = sum(s['eval_amount'] for s in portfolio)
+                total_eval = stock_eval + usd_cash
                 total_profit = sum(s['profit_amount'] for s in portfolio)
                 total_cost = sum(s['avg_price'] * s['quantity'] for s in portfolio)
 
@@ -1826,9 +1803,11 @@ class USStockTrading:
                     'available_amount': usd_cash,  # USD cash available for trading
                     'usd_cash': usd_cash,
                     'exchange_rate': exchange_rate,
+                    'account_key': self.account_key,
+                    'account_product': self.trenv.my_prod,
                 }
 
-                logger.info(f"Account Summary: Stock Eval ${summary['total_eval_amount']:.2f}, "
+                logger.info(f"Account Summary: Total Assets ${summary['total_eval_amount']:.2f}, "
                            f"P/L ${summary['total_profit_amount']:+.2f} "
                            f"({summary['total_profit_rate']:+.2f}%), "
                            f"USD Cash ${summary['usd_cash']:.2f}")

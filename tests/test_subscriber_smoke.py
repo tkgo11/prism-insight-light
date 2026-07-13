@@ -3,6 +3,8 @@ import logging
 import signal
 from concurrent.futures import TimeoutError
 
+import pytest
+
 import subscriber
 
 
@@ -12,9 +14,15 @@ class FakeMessage:
         self.message_id = message_id
         self.delivery_attempt = 2
         self.acked = False
+        self.ack_count = 0
+        self.nacked = False
 
     def ack(self):
         self.acked = True
+        self.ack_count += 1
+
+    def nack(self):
+        self.nacked = True
 
 
 class FakeDispatcher:
@@ -32,6 +40,7 @@ def test_handle_message_acknowledges_valid_signal():
     subscriber._handle_message(message, dispatcher)
 
     assert message.acked is True
+    assert message.ack_count == 1
     assert dispatcher.signals[0].ticker == "005930"
 
 
@@ -107,7 +116,7 @@ def test_web_ui_flag_still_requires_pubsub_settings(monkeypatch):
 
     monkeypatch.delenv("GCP_PROJECT_ID", raising=False)
     monkeypatch.delenv("GCP_PUBSUB_SUBSCRIPTION_ID", raising=False)
-    monkeypatch.setattr(subscriber, "_start_web_ui_thread", lambda: launched.append(True))
+    monkeypatch.setattr(subscriber, "_start_web_ui_thread", lambda **kwargs: launched.append(kwargs))
 
     try:
         subscriber.main(["--web-ui", "--log-file", ""])
@@ -126,6 +135,7 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
     launched = []
     stopped = []
     closed = []
+    shutdown_order = []
 
     class FakeDispatcher:
         dry_run = True
@@ -135,19 +145,33 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
             self.kwargs = kwargs
 
     class FakeQueueWorker:
-        def __init__(self, dispatcher, poll_seconds):
+        def __init__(self, dispatcher, poll_seconds, work_tracker):
             self.dispatcher = dispatcher
             self.poll_seconds = poll_seconds
 
         def start(self):
             pass
 
+        def request_stop(self):
+            pass
+
         def stop(self):
             stopped.append(True)
 
     class FakeFuture:
+        def __init__(self):
+            self.result_calls = 0
+
         def result(self, timeout=None):
-            raise KeyboardInterrupt
+            self.result_calls += 1
+            if self.result_calls == 1:
+                raise KeyboardInterrupt
+            if self.result_calls == 2:
+                assert timeout == 10
+                shutdown_order.append("bounded-timeout")
+                raise TimeoutError
+            assert timeout is None
+            shutdown_order.append("streaming-complete")
 
         def cancel(self):
             pass
@@ -159,17 +183,28 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
         def subscription_path(self, project_id, subscription_id):
             return f"projects/{project_id}/subscriptions/{subscription_id}"
 
-        def subscribe(self, subscription_path, callback):
+        def subscribe(self, subscription_path, callback, *, await_callbacks_on_shutdown):
+            assert await_callbacks_on_shutdown is True
             return FakeFuture()
 
         def close(self):
+            shutdown_order.append("client-close")
             closed.append(True)
 
     fake_pubsub = types.SimpleNamespace(SubscriberClient=FakeSubscriberClient)
     monkeypatch.setitem(sys.modules, "google.cloud.pubsub_v1", fake_pubsub)
     monkeypatch.setattr(subscriber, "TradeDispatcher", FakeDispatcher)
     monkeypatch.setattr(subscriber, "QueueWorker", FakeQueueWorker)
-    monkeypatch.setattr(subscriber, "_start_web_ui_thread", lambda: launched.append(True) or types.SimpleNamespace(name="web-ui"))
+    monkeypatch.setattr(
+        subscriber,
+        "_start_web_ui_thread",
+        lambda **kwargs: launched.append(kwargs)
+        or types.SimpleNamespace(
+            name="web-ui",
+            join=lambda timeout=None: None,
+            is_alive=lambda: False,
+        ),
+    )
 
     subscriber.main([
         "--web-ui",
@@ -182,14 +217,84 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
         "--dry-run",
     ])
 
-    assert launched == [True]
+    assert len(launched) == 1
+    assert launched[0]["force_dry_run"] is True
+    assert launched[0]["queue_path"] == __import__("pathlib").Path("runtime/off_hours_queue.json")
+    assert isinstance(launched[0]["work_tracker"], subscriber.ActiveWorkTracker)
+    assert hasattr(launched[0]["shutdown_event"], "set")
+    assert launched[0]["shutdown_event"].is_set()
     assert stopped == [True]
     assert closed == [True]
+    assert shutdown_order == ["bounded-timeout", "streaming-complete", "client-close"]
 
 
 def test_parse_args_web_ui_flag():
     args = subscriber.parse_args(["--web-ui"])
     assert args.web_ui is True
+
+
+def test_parse_args_rejects_nonpositive_queue_poll_interval():
+    with pytest.raises(SystemExit):
+        subscriber.parse_args(["--queue-poll-seconds", "0"])
+
+
+def test_active_work_tracker_waits_for_callback_completion():
+    import threading
+
+    tracker = subscriber.ActiveWorkTracker()
+    entered = threading.Event()
+    release = threading.Event()
+
+    def callback(_message):
+        entered.set()
+        release.wait(timeout=2)
+
+    thread = threading.Thread(target=tracker.wrap(callback), args=(object(),))
+    thread.start()
+    assert entered.wait(timeout=1)
+    assert tracker.active_count == 1
+    assert tracker.wait_for_idle(0.01) is False
+    release.set()
+    assert tracker.wait_for_idle(1) is True
+    thread.join(timeout=1)
+
+    tracker.close()
+    assert tracker.begin() is False
+
+
+def test_closed_work_tracker_releases_late_pubsub_message_without_dispatch():
+    tracker = subscriber.ActiveWorkTracker()
+    tracker.close()
+    message = FakeMessage(b"{}")
+
+    callback = tracker.wrap(
+        lambda _message: (_ for _ in ()).throw(AssertionError("must not dispatch")),
+        on_rejected=subscriber._nack_message_during_shutdown,
+    )
+    callback(message)
+
+    assert message.nacked is True
+    assert message.acked is False
+
+
+def test_embedded_webui_start_failure_is_reported(monkeypatch):
+    def fail_start(**kwargs):
+        kwargs["startup_errors"].append("bind failed")
+        kwargs["startup_event"].set()
+
+    monkeypatch.setattr(subscriber, "_run_web_ui", fail_start)
+    with pytest.raises(RuntimeError, match="bind failed"):
+        subscriber._start_web_ui_thread(
+            force_dry_run=True,
+            queue_path=__import__("pathlib").Path("runtime/queue.json"),
+            work_tracker=subscriber.ActiveWorkTracker(),
+            shutdown_event=__import__("threading").Event(),
+        )
+
+
+def test_invalid_shutdown_drain_value_uses_safe_default(monkeypatch):
+    monkeypatch.setenv("SUBSCRIBER_SHUTDOWN_DRAIN_SECONDS", "nan")
+    assert subscriber._positive_seconds_from_env("SUBSCRIBER_SHUTDOWN_DRAIN_SECONDS", 180.0) == 180.0
 
 
 def test_parse_args_log_level_from_cli():
@@ -236,6 +341,7 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
     restored_handlers = []
     stopped = []
     closed = []
+    shutdown_order = []
     registered = {}
 
     class FakeDispatcher:
@@ -246,11 +352,14 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
             self.kwargs = kwargs
 
     class FakeQueueWorker:
-        def __init__(self, dispatcher, poll_seconds):
+        def __init__(self, dispatcher, poll_seconds, work_tracker):
             self.dispatcher = dispatcher
             self.poll_seconds = poll_seconds
 
         def start(self):
+            pass
+
+        def request_stop(self):
             pass
 
         def stop(self):
@@ -266,7 +375,10 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
             if self.calls == 1:
                 registered[signal.SIGINT](signal.SIGINT, None)
                 raise TimeoutError
-            raise RuntimeError("cancelled")
+            if self.calls == 2:
+                shutdown_order.append("bounded-timeout")
+                raise TimeoutError
+            shutdown_order.append("streaming-complete")
 
         def cancel(self):
             cancelled.append(True)
@@ -278,10 +390,12 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
         def subscription_path(self, project_id, subscription_id):
             return f"projects/{project_id}/subscriptions/{subscription_id}"
 
-        def subscribe(self, subscription_path, callback):
+        def subscribe(self, subscription_path, callback, *, await_callbacks_on_shutdown):
+            assert await_callbacks_on_shutdown is True
             return FakeFuture()
 
         def close(self):
+            shutdown_order.append("client-close")
             closed.append(True)
 
     def fake_getsignal(signum):
@@ -310,7 +424,8 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
         "--dry-run",
     ])
 
-    assert result_timeouts == [1, 10]
+    assert result_timeouts == [1, 10, None]
+    assert shutdown_order == ["bounded-timeout", "streaming-complete", "client-close"]
     assert len(cancelled) >= 2
     assert stopped == [True]
     assert closed == [True]
