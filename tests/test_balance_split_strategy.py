@@ -9,6 +9,16 @@ from trading.schema import parse_signal_payload
 from trading.strategies.balance_split import BalanceSplitStrategy, BalanceSplitStrategyConfig
 
 
+@pytest.fixture(autouse=True)
+def isolate_default_reservation_path(tmp_path, monkeypatch):
+    """Keep successful order reservations from leaking between test cases."""
+
+    monkeypatch.setattr(
+        "trading.strategies.balance_split.RESERVATION_PATH",
+        tmp_path / "default_balance_split_reservations.json",
+    )
+
+
 class FakeUSTrader:
     def __init__(self, *, available_amount=900.0, success=True):
         self.available_amount = available_amount
