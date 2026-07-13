@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 
+from webui.routes.guards import require_csrf_token
 from webui.services.readiness_service import get_config_status, get_readiness_summary
 
 router = APIRouter(prefix="/readiness")
@@ -18,8 +19,13 @@ def readiness_page(request: Request):
 
 
 @router.get("/api")
-def readiness_api(live: bool = False):
-    return get_readiness_summary(run_live_check=live)
+def readiness_api():
+    return get_readiness_summary(run_live_check=False)
+
+
+@router.post("/probe", dependencies=[Depends(require_csrf_token)])
+def readiness_probe():
+    return get_readiness_summary(run_live_check=True)
 
 
 @router.get("/config/api")

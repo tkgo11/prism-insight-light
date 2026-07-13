@@ -13,12 +13,13 @@ router = APIRouter(prefix="/trading")
 
 
 def _page_context(request: Request, *, trade_result=None, config_result=None) -> dict:
+    settings = request.app.state.settings
     return {
         "request": request,
         "accounts": list_accounts(),
-        "queue": summarize_queue(),
+        "queue": summarize_queue(settings.queue_path),
         "config_model": get_config_editor_model(),
-        "trade_guard": trading_guard_status(),
+        "trade_guard": trading_guard_status(force_dry_run=settings.force_dry_run),
         "trade_result": trade_result,
         "config_result": config_result,
         "csrf_token": request.app.state.settings.csrf_token,
@@ -48,6 +49,9 @@ async def manual_order(request: Request):
             trading_mode=form.get("trading_mode") or None,
             arm_phrase=form.get("arm_phrase", ""),
             account_name=form.get("account_name", ""),
+            force_dry_run=request.app.state.settings.force_dry_run,
+            queue_path=request.app.state.settings.queue_path,
+            work_tracker=request.app.state.work_tracker,
         )
         response_status = status.HTTP_200_OK
     except (TypeError, ValueError) as exc:
@@ -91,7 +95,7 @@ async def update_config(request: Request):
             },
         )
         response_status = status.HTTP_200_OK
-    except (TypeError, ValueError) as exc:
+    except (OSError, TypeError, ValueError) as exc:
         result = {"ok": False, "path_label": None, "error": f"Invalid configuration: {exc}"}
         response_status = status.HTTP_400_BAD_REQUEST
     return templates.TemplateResponse(
@@ -108,5 +112,5 @@ def accounts_api():
 
 
 @router.get("/guard/api")
-def guard_api():
-    return trading_guard_status()
+def guard_api(request: Request):
+    return trading_guard_status(force_dry_run=request.app.state.settings.force_dry_run)
