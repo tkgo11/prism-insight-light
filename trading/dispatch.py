@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from . import yaml_compat as yaml
+from .config_paths import active_kis_config_path
 
 from .domestic import AsyncTradingContext
 from .market_hours import get_trading_mode, is_market_open
@@ -37,10 +38,7 @@ from .us import USStockTrading
 
 
 logger = logging.getLogger(__name__)
-TRADING_DIR = Path(__file__).parent
-CONFIG_FILE = TRADING_DIR / "config" / "kis_devlp.yaml"
-if not CONFIG_FILE.exists():
-    CONFIG_FILE = TRADING_DIR / "config" / "kis_devlp.yaml.example"
+CONFIG_FILE = active_kis_config_path()
 
 
 @dataclass(slots=True)

@@ -8,6 +8,7 @@ import asyncio
 import copy
 import json
 import logging
+import math
 import os
 import shutil
 import tempfile
@@ -28,6 +29,7 @@ from pathlib import Path
 from typing import Any, Optional, Tuple
 
 from .buy_sizing import normalize_amount, normalize_percent
+from .config_paths import active_kis_config_path
 
 pd_spec = importlib.util.find_spec("pandas")
 if pd_spec is not None:
@@ -126,21 +128,19 @@ fernet_spec = importlib.util.find_spec("cryptography.fernet") if cryptography_sp
 if fernet_spec is not None:
     Fernet = importlib.import_module("cryptography.fernet").Fernet
 else:  # pragma: no cover - minimal test environment fallback
-    import base64
-
     class Fernet:
         @staticmethod
         def generate_key():
-            return base64.urlsafe_b64encode(b"prism-insight-light-fallback-key-32")
+            raise RuntimeError("cryptography is required for encrypted KIS token storage")
 
         def __init__(self, key):
-            self.key = key
+            raise RuntimeError("cryptography is required for encrypted KIS token storage")
 
         def encrypt(self, data: bytes) -> bytes:
-            return base64.urlsafe_b64encode(data)
+            raise RuntimeError("cryptography is required for encrypted KIS token storage")
 
         def decrypt(self, token: bytes) -> bytes:
-            return base64.urlsafe_b64decode(token)
+            raise RuntimeError("cryptography is required for encrypted KIS token storage")
 
 class SecurityError(Exception):
     """Security-related errors"""
@@ -174,9 +174,45 @@ class TokenRequestError(KISAuthError):
 KIS_RATE_LIMIT_ERROR_CODE = "EGW00201"
 KIS_EXPIRED_TOKEN_ERROR_CODE = "EGW00123"
 KIS_TOKEN_EXPIRY_TZ = ZoneInfo("Asia/Seoul")
-KIS_RATE_LIMIT_RETRY_ATTEMPTS = int(os.environ.get("KIS_RATE_LIMIT_RETRY_ATTEMPTS", "10"))
-KIS_RATE_LIMIT_RETRY_BASE_SECONDS = float(os.environ.get("KIS_RATE_LIMIT_RETRY_BASE_SECONDS", "1.0"))
-KIS_RATE_LIMIT_RETRY_MAX_SECONDS = float(os.environ.get("KIS_RATE_LIMIT_RETRY_MAX_SECONDS", "5.0"))
+
+
+def _nonnegative_int_env(name: str, default: int) -> int:
+    raw_value = os.environ.get(name, str(default))
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must be a non-negative integer") from exc
+    if value < 0:
+        raise ValueError(f"{name} must be a non-negative integer")
+    return value
+
+
+def _finite_float_env(name: str, default: float, *, positive: bool) -> float:
+    raw_value = os.environ.get(name, str(default))
+    try:
+        value = float(raw_value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must be a finite number") from exc
+    if not math.isfinite(value) or (value <= 0 if positive else value < 0):
+        qualifier = "positive" if positive else "non-negative"
+        raise ValueError(f"{name} must be a finite {qualifier} number")
+    return value
+
+
+KIS_RATE_LIMIT_RETRY_ATTEMPTS = _nonnegative_int_env("KIS_RATE_LIMIT_RETRY_ATTEMPTS", 10)
+KIS_RATE_LIMIT_RETRY_BASE_SECONDS = _finite_float_env(
+    "KIS_RATE_LIMIT_RETRY_BASE_SECONDS", 1.0, positive=False
+)
+KIS_RATE_LIMIT_RETRY_MAX_SECONDS = _finite_float_env(
+    "KIS_RATE_LIMIT_RETRY_MAX_SECONDS", 5.0, positive=False
+)
+KIS_HTTP_CONNECT_TIMEOUT_SECONDS = _finite_float_env(
+    "KIS_HTTP_CONNECT_TIMEOUT_SECONDS", 5.0, positive=True
+)
+KIS_HTTP_READ_TIMEOUT_SECONDS = _finite_float_env(
+    "KIS_HTTP_READ_TIMEOUT_SECONDS", 30.0, positive=True
+)
+KIS_HTTP_TIMEOUT = (KIS_HTTP_CONNECT_TIMEOUT_SECONDS, KIS_HTTP_READ_TIMEOUT_SECONDS)
 
 
 clearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
@@ -221,9 +257,7 @@ token_tmp = get_token_filename()
 
 # Store and manage app key, app secret, token, account number, etc., set to your own path and filename.
 # pip install PyYAML (package installation)
-config_file = os.path.join(config_root, "kis_devlp.yaml")
-if not os.path.exists(config_file):
-    config_file = os.path.join(config_root, "kis_devlp.yaml.example")
+config_file = str(active_kis_config_path())
 with open(config_file, encoding="UTF-8") as f:
     _cfg = yaml.safe_load(f)
 
@@ -991,7 +1025,12 @@ def _request_token_with_retry(url: str, params: dict, headers: dict) -> dict:
     - Raises TokenRequestError on failure
     """
     try:
-        res = requests.post(url, data=json.dumps(params), headers=headers, timeout=30)
+        res = requests.post(
+            url,
+            data=json.dumps(params),
+            headers=headers,
+            timeout=KIS_HTTP_TIMEOUT,
+        )
     except requests.RequestException as e:
         logging.warning(f"Token request network error (will retry): {e}")
         raise
@@ -1401,7 +1440,7 @@ def getTREnv():
 def set_order_hash_key(h, p):
     url = f"{getTREnv().my_url}/uapi/hashkey"  # hashkey issuance API URL
 
-    res = requests.post(url, data=json.dumps(p), headers=h)
+    res = requests.post(url, data=json.dumps(p), headers=h, timeout=KIS_HTTP_TIMEOUT)
     rescode = res.status_code
     if rescode == 200:
         h["hashkey"] = _getResultObject(res.json()).HASH
@@ -1579,8 +1618,13 @@ def _kis_retry_delay_seconds(attempt_index: int) -> float:
 
 def _request_once(url: str, headers: dict[str, Any], params: dict[str, Any], *, postFlag: bool):
     if postFlag:
-        return requests.post(url, headers=headers, data=json.dumps(params))
-    return requests.get(url, headers=headers, params=params)
+        return requests.post(
+            url,
+            headers=headers,
+            data=json.dumps(params),
+            timeout=KIS_HTTP_TIMEOUT,
+        )
+    return requests.get(url, headers=headers, params=params, timeout=KIS_HTTP_TIMEOUT)
 
 
 
@@ -1703,7 +1747,12 @@ def auth_ws(svr="prod", product=DEFAULT_PRODUCT_CODE, account_name=None, account
     p["secretkey"] = _cfg[ak2]
 
     url = f"{_cfg[svr]}/oauth2/Approval"
-    res = requests.post(url, data=json.dumps(p), headers=_getBaseHeader())  # Token issuance
+    res = requests.post(
+        url,
+        data=json.dumps(p),
+        headers=_getBaseHeader(),
+        timeout=KIS_HTTP_TIMEOUT,
+    )  # Token issuance
     rescode = res.status_code
     if rescode == 200:  # Token issued successfully
         approval_key = _getResultObject(res.json()).approval_key

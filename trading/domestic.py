@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any
 
 from . import yaml_compat as yaml
+from .config_paths import active_kis_config_path
 
 # Path to directory where current file is located
 TRADING_DIR = Path(__file__).parent
@@ -56,9 +57,7 @@ def _now_kst() -> datetime.datetime:
     return datetime.datetime.now(tz=KST)
 
 # Load configuration file
-CONFIG_FILE = TRADING_DIR / "config" / "kis_devlp.yaml"
-if not CONFIG_FILE.exists():
-    CONFIG_FILE = TRADING_DIR / "config" / "kis_devlp.yaml.example"
+CONFIG_FILE = active_kis_config_path()
 with open(CONFIG_FILE, encoding="UTF-8") as f:
     _cfg = yaml.safe_load(f)
 
@@ -268,7 +267,10 @@ class DomesticStockTrading:
 
     def _resolve_buy_amount(self, buy_amount: int | float | None = None) -> float:
         if buy_amount is not None:
-            return float(buy_amount)
+            amount = float(buy_amount)
+            if not math.isfinite(amount) or amount <= 0:
+                raise ValueError("buy_amount must be a finite positive number")
+            return amount
         return resolve_buy_amount(
             self.buy_sizing,
             account_summary=self.get_account_summary() if self.buy_sizing.uses_asset_percent else None,
@@ -338,7 +340,7 @@ class DomesticStockTrading:
         # Calculate buyable quantity
         buy_quantity = self.calculate_buy_quantity(stock_code, buy_amount)
 
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -459,7 +461,7 @@ class DomesticStockTrading:
         # Calculate buyable quantity (based on limit price)
         buy_quantity = math.floor(amount / limit_price)
 
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -603,7 +605,7 @@ class DomesticStockTrading:
         # Calculate buyable quantity
         buy_quantity = self.calculate_buy_quantity(stock_code, buy_amount)
 
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -709,7 +711,7 @@ class DomesticStockTrading:
             # For market price, calculate quantity based on current price
             buy_quantity = self.calculate_buy_quantity(stock_code, amount)
 
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -823,7 +825,7 @@ class DomesticStockTrading:
         # zero-position account.
         buy_quantity = holding_quantity if holding_quantity is not None else self.get_holding_quantity(stock_code)
 
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -955,7 +957,7 @@ class DomesticStockTrading:
         # Check holding quantity (or reuse async sell's verified portfolio quantity).
         buy_quantity = holding_quantity if holding_quantity is not None else self.get_holding_quantity(stock_code)
 
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -1044,7 +1046,7 @@ class DomesticStockTrading:
 
         # Check holding quantity (or reuse async sell's verified portfolio quantity).
         buy_quantity = holding_quantity if holding_quantity is not None else self.get_holding_quantity(stock_code)
-        if buy_quantity == 0:
+        if buy_quantity <= 0:
             return {
                 'success': False,
                 'order_no': None,
@@ -1163,22 +1165,10 @@ class DomesticStockTrading:
                 'timestamp': Execution time
             }
         """
-        try:
-            return await asyncio.wait_for(
-                self._execute_buy_stock(stock_code, buy_amount, limit_price),
-                timeout=timeout
-            )
-        except asyncio.TimeoutError:
-            return {
-                'success': False,
-                'stock_code': stock_code,
-                'current_price': 0,
-                'quantity': 0,
-                'total_amount': 0,
-                'order_no': None,
-                'message': f'Buy request timeout ({timeout}s)',
-                'timestamp': _now_kst().isoformat()
-            }
+        # Keep awaiting the worker until the bounded HTTP transport returns.
+        # Cancelling an outer coroutine cannot stop an in-flight broker thread
+        # and can otherwise make the order outcome ambiguous.
+        return await self._execute_buy_stock(stock_code, buy_amount, limit_price)
 
     async def _execute_buy_stock(self, stock_code: str, buy_amount: int = None, limit_price: int = None) -> Dict[str, Any]:
         # Use class default if buy_amount is None
@@ -1222,7 +1212,7 @@ class DomesticStockTrading:
                         current_price = current_price_info['current_price']
                         buy_quantity = math.floor(amount / current_price)
 
-                        if buy_quantity == 0:
+                        if buy_quantity <= 0:
                             result['message'] = f'Buyable quantity is 0 (buy amount: {amount:,} KRW)'
                             logger.warning(f"[Async Buy API] {stock_code} buyable quantity 0")
                             return result
@@ -1286,22 +1276,7 @@ class DomesticStockTrading:
                 'timestamp': Execution time
             }
         """
-        try:
-            return await asyncio.wait_for(
-                self._execute_sell_stock(stock_code, limit_price, sell_fraction),
-                timeout=timeout
-            )
-        except asyncio.TimeoutError:
-            return {
-                'success': False,
-                'stock_code': stock_code,
-                'current_price': 0,
-                'quantity': 0,
-                'estimated_amount': 0,
-                'order_no': None,
-                'message': f'Sell request timeout ({timeout}s)',
-                'timestamp': _now_kst().isoformat()
-            }
+        return await self._execute_sell_stock(stock_code, limit_price, sell_fraction)
 
     async def _execute_sell_stock(self, stock_code: str, limit_price: int = None,
                                   sell_fraction: Optional[float] = None) -> Dict[str, Any]:

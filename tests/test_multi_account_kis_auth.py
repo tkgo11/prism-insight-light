@@ -274,7 +274,7 @@ def test_url_fetch_retries_kis_rate_limit_then_succeeds(monkeypatch):
     monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_MAX_SECONDS", 1.0)
     monkeypatch.setattr(ka.time, "sleep", lambda seconds: sleeps.append(seconds))
 
-    def fake_post(url, headers, data):
+    def fake_post(url, headers, data, **kwargs):
         calls.append((url, headers, data))
         if len(calls) == 1:
             return _FakeResponse(
@@ -311,7 +311,7 @@ def test_url_fetch_stops_after_configured_rate_limit_retries(monkeypatch):
     monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_MAX_SECONDS", 1.0)
     monkeypatch.setattr(ka.time, "sleep", lambda seconds: sleeps.append(seconds))
 
-    def fake_get(url, headers, params):
+    def fake_get(url, headers, params, **kwargs):
         calls.append((url, headers, params))
         return _FakeResponse(
             500,
@@ -344,7 +344,7 @@ def test_url_fetch_does_not_retry_non_rate_limit_errors(monkeypatch):
     monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 3)
     monkeypatch.setattr(ka.time, "sleep", lambda seconds: pytest.fail("unexpected retry sleep"))
 
-    def fake_get(url, headers, params):
+    def fake_get(url, headers, params, **kwargs):
         calls.append((url, headers, params))
         return _FakeResponse(500, {"rt_cd": "1", "msg_cd": "OTHER", "msg1": "other failure"})
 
@@ -377,7 +377,7 @@ def test_url_fetch_refreshes_expired_token_once(monkeypatch):
     monkeypatch.setattr(ka, "_refresh_after_expired_token_response", lambda: refreshes.append("refresh"))
     monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 3)
 
-    def fake_get(url, headers, params):
+    def fake_get(url, headers, params, **kwargs):
         calls.append((url, dict(headers), params))
         if len(calls) == 1:
             return _FakeResponse(
@@ -414,7 +414,7 @@ def test_url_fetch_expired_token_retry_works_with_single_rate_limit_attempt(monk
     monkeypatch.setattr(ka, "_refresh_after_expired_token_response", lambda: refreshes.append("refresh"))
     monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 1)
 
-    def fake_get(url, headers, params):
+    def fake_get(url, headers, params, **kwargs):
         calls.append((url, dict(headers), params))
         if len(calls) == 1:
             return _FakeResponse(500, {"rt_cd": "1", "msg_cd": "EGW00123", "msg1": "expired"})
@@ -473,3 +473,32 @@ def test_discard_saved_token_masks_account_key_in_logs(monkeypatch, tmp_path, ca
     assert "12345678" not in caplog.text
     assert "vps:12****78:01" in caplog.text
     assert not token_file.exists()
+
+
+def test_request_once_applies_bounded_connect_and_read_timeouts(monkeypatch):
+    captured = {}
+
+    class Response:
+        status_code = 200
+
+    def fake_get(url, **kwargs):
+        captured.update(kwargs)
+        return Response()
+
+    monkeypatch.setattr(ka.requests, "get", fake_get)
+    ka._request_once("https://example.com", {}, {}, postFlag=False)
+
+    assert captured["timeout"] == ka.KIS_HTTP_TIMEOUT
+
+
+@pytest.mark.parametrize("value", ["nan", "inf", "-1"])
+def test_timeout_environment_parser_rejects_unsafe_values(monkeypatch, value):
+    monkeypatch.setenv("TEST_KIS_TIMEOUT", value)
+    with pytest.raises(ValueError):
+        ka._finite_float_env("TEST_KIS_TIMEOUT", 5.0, positive=True)
+
+
+def test_retry_attempt_parser_rejects_negative_values(monkeypatch):
+    monkeypatch.setenv("TEST_KIS_ATTEMPTS", "-1")
+    with pytest.raises(ValueError):
+        ka._nonnegative_int_env("TEST_KIS_ATTEMPTS", 10)
