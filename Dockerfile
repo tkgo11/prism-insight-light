@@ -13,7 +13,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY subscriber.py .
+COPY pubsub_readiness.py check_pubsub_readiness.py ./
 COPY trading ./trading
+COPY webui ./webui
 COPY .env.example ./
 
 STOPSIGNAL SIGINT

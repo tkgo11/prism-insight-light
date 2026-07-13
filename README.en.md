@@ -118,7 +118,14 @@ python check_pubsub_readiness.py
 ```
 
 Set `GCP_PROJECT_ID` and `GCP_PUBSUB_SUBSCRIPTION_ID` first. Also set `GCP_CREDENTIALS_PATH` unless the host already has valid ADC.
-The current Docker package does not include `check_pubsub_readiness.py`, so run it from the host checkout.
+The Docker image also includes the checker. Override its default subscriber command and mount the configured service-account file, for example:
+
+```bash
+docker run --rm --env-file .env \
+  -e GCP_CREDENTIALS_PATH=/app/runtime/gcp-credentials.json \
+  -v /absolute/path/to/service-account.json:/app/runtime/gcp-credentials.json:ro \
+  pubsub-trader python check_pubsub_readiness.py
+```
 
 ## Running the subscriber
 
@@ -210,10 +217,12 @@ Notes:
 
 ### Linux one-click installer
 
-On a Linux host, download and run the installer with one command:
+On a Linux host, download, inspect, and run the installer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tkgo11/prism-insight-light/main/install_prism_docker.sh | bash
+curl -fsSLO https://raw.githubusercontent.com/tkgo11/prism-insight-light/main/install_prism_docker.sh
+less install_prism_docker.sh
+bash install_prism_docker.sh
 ```
 
 By default, the installer downloads the current `main` branch archive.
@@ -291,6 +300,7 @@ bash install_prism_docker.sh --install-dir /path/to/prism-insight-light --uninst
 docker build -t pubsub-trader .
 docker run --rm --env-file .env \
   -e GCP_CREDENTIALS_PATH=/app/runtime/gcp-credentials.json \
+  -e PRISM_KIS_CONFIG_PATH=/app/trading/config/kis_devlp.yaml \
   -v /absolute/path/to/service-account.json:/app/runtime/gcp-credentials.json:ro \
   -v /absolute/path/to/kis_devlp.yaml:/app/trading/config/kis_devlp.yaml:ro \
   pubsub-trader
@@ -302,7 +312,7 @@ To run the container automatically only during market hours:
 bash setup_subscriber_docker_crontab.sh
 ```
 
-`setup_subscriber_docker_crontab.sh` creates the container once with the current settings, then uses `docker start` / `docker stop` on the market-hours schedule. If you change `.env`, rerun the script to regenerate the container definition.
+`setup_subscriber_docker_crontab.sh` creates the container once with the current settings, then uses `docker start` / `docker stop --time -1` on the market-hours schedule so in-flight orders are never force-killed. If you change `.env`, rerun the script to regenerate the container definition.
 
 
 ## Local WebUI
@@ -326,7 +336,11 @@ Defaults are intentionally local-only:
 WEBUI_HOST=127.0.0.1
 WEBUI_PORT=8765
 WEBUI_ALLOW_NON_LOOPBACK=false
+WEBUI_ALLOWED_HOSTS=
 WEBUI_ENABLE_LIVE_TRADING=false
+# Embedded WebUI instances inherit subscriber --dry-run and --queue-path.
+WEBUI_FORCE_DRY_RUN=false
+WEBUI_QUEUE_PATH=runtime/off_hours_queue.json
 # Blank generates a new token at process startup.
 WEBUI_CSRF_TOKEN=
 ```
@@ -346,6 +360,7 @@ curl -H 'Content-Type: application/json' -H 'X-WebUI-CSRF: replace-with-long-ran
 Run the full test suite:
 
 ```bash
+python -m pip install -r requirements-dev.txt
 pytest
 ```
 
