@@ -55,8 +55,8 @@ def test_ipv6_loopback_host_is_accepted_by_trusted_authority_middleware():
 
     response = TestClient(
         create_app(WebUISettings(host="::1")),
-        base_url="http://[::1]",
-    ).get("/")
+        base_url="http://testserver",
+    ).get("/", headers={"host": "[::1]"})
 
     assert response.status_code == 200
 
