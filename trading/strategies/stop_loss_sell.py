@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .common import StrategyExecution, execute_order, execution_from_result, strategy_name
+from .common import StrategyExecution, boolean_value, execute_order, execution_from_result, strategy_name
 
 STOP_LOSS_SELL = "stop_loss_sell"
 
@@ -20,7 +20,7 @@ class StopLossSellStrategyConfig:
     def from_mapping(cls, payload: dict[str, Any] | None) -> "StopLossSellStrategyConfig | None":
         if not payload or strategy_name(payload) != STOP_LOSS_SELL:
             return None
-        return cls(fallback_to_signal_price=bool(payload.get("fallback_to_signal_price", True)))
+        return cls(fallback_to_signal_price=boolean_value(payload, "fallback_to_signal_price", True))
 
 
 class StopLossSellStrategy:

@@ -4,9 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
-from ..file_lock import FileLock
 from ..schema import SignalMessage
-from .common import RUNTIME_DIR, StrategyExecution, execute_order, execution_from_result, fresh_items, load_json_list, save_json, strategy_name
+from .common import RUNTIME_DIR, StrategyExecution, acquire_file_lock, execute_order, execution_from_result, fresh_items, integer_value, load_json_list, save_json, strategy_name
 
 COOLDOWN = "cooldown"
 @dataclass(frozen=True, slots=True)
@@ -15,8 +14,7 @@ class CooldownStrategyConfig:
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "CooldownStrategyConfig | None":
         if not payload or strategy_name(payload) != COOLDOWN: return None
-        window = int(payload.get("window_minutes", 60) or 60)
-        if window < 1: raise ValueError("signal_strategy.window_minutes must be 1 or greater")
+        window = integer_value(payload, "window_minutes", 60, minimum=1)
         types = tuple(str(v).strip().upper() for v in payload.get("apply_to_signal_types", ["BUY"]))
         return cls(window, types, str(payload.get("scope", "market_ticker")), Path(payload.get("runtime_path") or (RUNTIME_DIR / "cooldown_executions.json")))
 
@@ -32,7 +30,8 @@ class CooldownStrategy:
         key = self._key(signal)
         lock_path = self.config.runtime_path.with_suffix(self.config.runtime_path.suffix + ".lock")
         lock_path.parent.mkdir(parents=True, exist_ok=True)
-        with FileLock(lock_path):
+        lock = await acquire_file_lock(lock_path)
+        try:
             items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.window_minutes))
             if any(item.get("key") == key for item in items): return StrategyExecution("rejected", f"Cooldown active for {key}", signal.market, signal.ticker)
             result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, limit_price=signal.price)
@@ -40,3 +39,5 @@ class CooldownStrategy:
             if execution.status == "executed":
                 items.append({"key": key, "market": signal.market, "ticker": signal.ticker, "signal_type": signal.signal_type, "created_at": datetime.now(timezone.utc).isoformat()}); save_json(self.config.runtime_path, items)
             return execution
+        finally:
+            lock.__exit__(None, None, None)

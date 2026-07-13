@@ -8,6 +8,7 @@ from .profit_ladder import PROFIT_LADDER, ProfitLadderStrategy, ProfitLadderStra
 from .risk_bracket import RISK_BRACKET, RiskBracketStrategy, RiskBracketStrategyConfig
 from .score_weighted import SCORE_WEIGHTED, ScoreWeightedStrategy, ScoreWeightedStrategyConfig
 from .stop_loss_sell import STOP_LOSS_SELL, StopLossSellStrategy, StopLossSellStrategyConfig
+from ..strategy_names import SUPPORTED_STRATEGY_NAMES
 
 __all__ = [
     "BALANCE_SPLIT",
@@ -32,6 +33,7 @@ __all__ = [
     "ScoreWeightedStrategy",
     "ScoreWeightedStrategyConfig",
     "STOP_LOSS_SELL",
+    "SUPPORTED_STRATEGY_NAMES",
     "StopLossSellStrategy",
     "StopLossSellStrategyConfig",
 ]

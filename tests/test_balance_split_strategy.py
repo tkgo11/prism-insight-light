@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 
 from trading.schema import parse_signal_payload
@@ -52,9 +55,10 @@ def test_balance_split_config_requires_positive_split_count():
 
 
 @pytest.mark.asyncio
-async def test_us_balance_split_buys_one_fraction_of_available_balance():
+async def test_us_balance_split_buys_one_fraction_of_available_balance(tmp_path):
     trader = FakeUSTrader(available_amount=900.0)
     strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=3))
+    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
     signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200})
 
     result = await strategy._execute_us(signal, trader=trader)
@@ -218,3 +222,112 @@ def test_pending_reservations_only_keep_unreflected_remainder_after_partial_cash
     # Cash can increase for unrelated reasons while the remainder is still
     # unreflected; only the 2M remainder should be reserved, not the old 5M.
     assert strategy._pending_reserved_amount(market="KR", current_cash=12000000) == 2000000
+
+
+def test_concurrent_reservation_records_do_not_lose_updates(tmp_path):
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
+    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+
+    def record(index):
+        strategy._record_cash_reservation(
+            market="KR",
+            ticker=f"{index:06d}",
+            before_cash=1_000_000,
+            amount=1_000,
+            account_key=f"account-{index}",
+        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(record, range(32)))
+
+    reservations = json.loads(strategy.reservation_path.read_text(encoding="utf-8"))
+    assert len(reservations) == 32
+    assert {item["ticker"] for item in reservations} == {f"{index:06d}" for index in range(32)}
+
+
+@pytest.mark.asyncio
+async def test_concurrent_kr_buys_serialize_cash_sizing(tmp_path):
+    import asyncio
+
+    active = 0
+    max_active = 0
+    submitted_amounts = []
+
+    class SlowTrader(FakeKRTrader):
+        async def async_buy_stock(self, stock_code, buy_amount=None, limit_price=None):
+            nonlocal active, max_active
+            active += 1
+            max_active = max(max_active, active)
+            submitted_amounts.append(buy_amount)
+            await asyncio.sleep(0.05)
+            active -= 1
+            return {"success": True, "message": "ok", "total_amount": buy_amount}
+
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
+    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "005930", "market": "KR", "price": 100}
+    )
+    trader = SlowTrader(available_amount=0, total_cash=10_000_000)
+
+    results = await asyncio.gather(
+        *(strategy._execute_kr(signal, trader=trader) for _ in range(3))
+    )
+
+    assert all(result.status == "executed" for result in results)
+    assert submitted_amounts == [5_000_000, 2_500_000, 1_250_000]
+    assert sum(submitted_amounts) < 10_000_000
+    assert max_active == 1
+
+
+@pytest.mark.asyncio
+async def test_concurrent_us_buys_reserve_stale_cash(tmp_path):
+    import asyncio
+
+    submitted_amounts = []
+
+    class SlowUSTrader(FakeUSTrader):
+        async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
+            submitted_amounts.append(buy_amount)
+            await asyncio.sleep(0.03)
+            return {"success": True, "message": "ok", "estimated_amount": buy_amount}
+
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=3))
+    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100}
+    )
+    trader = SlowUSTrader(available_amount=900)
+
+    results = await asyncio.gather(
+        *(strategy._execute_us(signal, trader=trader) for _ in range(3))
+    )
+
+    assert all(result.status == "executed" for result in results)
+    assert submitted_amounts == pytest.approx([300.0, 200.0, 133.3333333333])
+    assert sum(submitted_amounts) < 900
+
+
+def test_us_reservations_are_isolated_by_account(tmp_path):
+    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=3))
+    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+    strategy._record_cash_reservation(
+        market="US",
+        ticker="AAPL",
+        before_cash=900,
+        amount=300,
+        account_key="account-a",
+    )
+
+    assert (
+        strategy._pending_reserved_amount(
+            market="US", current_cash=900, account_key="account-a"
+        )
+        == 300
+    )
+    assert (
+        strategy._pending_reserved_amount(
+            market="US", current_cash=900, account_key="account-b"
+        )
+        == 0
+    )
