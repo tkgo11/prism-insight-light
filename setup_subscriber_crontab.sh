@@ -139,6 +139,14 @@ validate_environment() {
     mkdir -p "$(dirname "$PID_FILE")"
 }
 
+validate_crontab_recovery_environment() {
+    AUTO_SHUTDOWN="$(normalize_bool "$AUTO_SHUTDOWN")"
+    if ! command -v crontab >/dev/null 2>&1; then
+        log_error "crontab 실행 파일을 찾을 수 없습니다."
+        return 1
+    fi
+}
+
 current_timezone() {
     if command -v timedatectl >/dev/null 2>&1; then
         timedatectl show -p Timezone --value 2>/dev/null && return 0
@@ -261,6 +269,12 @@ maybe_shutdown_system() {
     if process_running; then
         log_info "subscriber.py 가 아직 실행 중이라 시스템 종료를 건너뜁니다."
         return 0
+    else
+        market_status=$?
+        if [ "$market_status" -ne 1 ]; then
+            log_error "subscriber.py 프로세스 확인 실패로 시스템 종료를 건너뜁니다."
+            return 1
+        fi
     fi
 
     if market_open_now "$market" >/dev/null 2>&1; then
@@ -294,15 +308,44 @@ process_running() {
 
     local pid
     pid="$(cat "$PID_FILE" 2>/dev/null || true)"
-    [ -n "$pid" ] || return 1
+    case "$pid" in
+        ''|*[!0-9]*) return 1 ;;
+    esac
+    [ "$pid" -gt 1 ] || return 1
+
+    if ! kill -0 "$pid" 2>/dev/null; then
+        return 1
+    fi
+    if [ ! -r "/proc/$pid/cmdline" ]; then
+        if kill -0 "$pid" 2>/dev/null; then
+            log_error "PID 프로세스의 명령을 검증할 수 없어 작업을 중단합니다: pid=$pid"
+            return 2
+        fi
+        return 1
+    fi
+    local command_line
+    command_line="$(tr '\0' ' ' < "/proc/$pid/cmdline")"
+    case "$command_line" in
+        *"$PROJECT_DIR/subscriber.py"*) ;;
+        *)
+            log_error "PID 파일이 다른 프로세스를 가리켜 작업을 중단합니다: pid=$pid"
+            return 2
+            ;;
+    esac
 
     kill -0 "$pid" 2>/dev/null
 }
 
 cleanup_stale_pid() {
-    if [ -f "$PID_FILE" ] && ! process_running; then
+    local status
+    [ -f "$PID_FILE" ] || return 0
+    process_running && return 0
+    status=$?
+    if [ "$status" -eq 1 ]; then
         rm -f "$PID_FILE"
+        return 0
     fi
+    return "$status"
 }
 
 start_subscriber() {
@@ -333,7 +376,7 @@ start_subscriber() {
         --log-file "$LOG_DIR/subscriber.log" \
         >> "$LOG_DIR/subscriber_runtime.log" 2>&1 < /dev/null &
 
-    echo $! > "$PID_FILE"
+    (umask 077; echo $! > "$PID_FILE")
     log_success "subscriber.py 를 시작했습니다. market=$market pid=$(cat "$PID_FILE")"
 }
 
@@ -364,18 +407,36 @@ stop_subscriber() {
 
     kill "$pid" 2>/dev/null || true
 
-    for _ in 1 2 3 4 5; do
-        if ! kill -0 "$pid" 2>/dev/null; then
+    for _ in $(seq 1 210); do
+        if process_running; then
+            sleep 1
+            continue
+        else
+            market_status=$?
+        fi
+        if [ "$market_status" -eq 1 ]; then
             rm -f "$PID_FILE"
             log_success "subscriber.py 를 중지했습니다. pid=$pid"
             return 0
         fi
-        sleep 1
+        log_error "PID가 다른 프로세스에 재사용되어 강제 종료를 거부합니다: pid=$pid"
+        return 1
     done
 
-    kill -9 "$pid" 2>/dev/null || true
-    rm -f "$PID_FILE"
-    log_warn "subscriber.py 가 정상 종료되지 않아 강제 종료했습니다. pid=$pid"
+    if process_running; then
+        :
+    else
+        market_status=$?
+        if [ "$market_status" -eq 1 ]; then
+            rm -f "$PID_FILE"
+            log_success "subscriber.py 를 중지했습니다. pid=$pid"
+            return 0
+        fi
+        log_error "PID가 다른 프로세스에 재사용되어 강제 종료를 거부합니다: pid=$pid"
+        return 1
+    fi
+    log_error "subscriber.py 가 아직 안전 종료 중입니다. 진행 중인 주문을 강제 종료하지 않습니다: pid=$pid"
+    return 1
 }
 
 show_status() {
@@ -428,9 +489,14 @@ EOF
 
 generate_managed_block() {
     local shutdown_command_quoted project_dir_quoted script_path_quoted
+    local python_path_quoted log_dir_quoted pid_file_quoted auto_shutdown_quoted
     shutdown_command_quoted="$(shell_quote "$SHUTDOWN_COMMAND")"
     project_dir_quoted="$(shell_quote "$PROJECT_DIR")"
     script_path_quoted="$(shell_quote "$SCRIPT_PATH")"
+    python_path_quoted="$(shell_quote "$PYTHON_PATH")"
+    log_dir_quoted="$(shell_quote "$LOG_DIR")"
+    pid_file_quoted="$(shell_quote "$PID_FILE")"
+    auto_shutdown_quoted="$(shell_quote "$AUTO_SHUTDOWN")"
 
     cat <<EOF
 $BEGIN_MARKER
@@ -440,17 +506,17 @@ $BEGIN_MARKER
 SHELL=/bin/bash
 PATH=$(generate_path)
 PYTHONPATH=$project_dir_quoted
-AUTO_SHUTDOWN=$(shell_quote "$AUTO_SHUTDOWN")
+AUTO_SHUTDOWN=$auto_shutdown_quoted
 
 # KR market session
-0 9 * * 1-5 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start KR
-31 15 * * 1-5 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop KR
+0 9 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start KR
+31 15 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop KR
 
 # US market session
-30 22 * * 1-5 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US
-30 23 * * 1-5 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US
-1 5 * * 2-6 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US
-1 6 * * 2-6 cd $project_dir_quoted && SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US
+30 22 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US
+30 23 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US
+1 5 * * 2-6 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US
+1 6 * * 2-6 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US
 $END_MARKER
 EOF
 }
@@ -755,7 +821,7 @@ main() {
             if $interactive; then
                 interactive_common_settings
             fi
-            validate_environment
+            validate_crontab_recovery_environment
             if $interactive; then
                 read -r -p "subscriber 전용 crontab을 제거할까요? (y/N): " confirm
                 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -814,4 +880,6 @@ main() {
     esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi
