@@ -104,7 +104,14 @@ python check_pubsub_readiness.py
 ```
 
 실행 전에 `GCP_PROJECT_ID`, `GCP_PUBSUB_SUBSCRIPTION_ID`를 설정하세요. 호스트에 유효한 ADC가 없다면 `GCP_CREDENTIALS_PATH`도 설정해야 합니다.
-현재 Docker 이미지에는 `check_pubsub_readiness.py`가 포함되지 않으므로 호스트의 소스 트리에서 실행하세요.
+Docker 이미지에도 점검 스크립트가 포함됩니다. 기본 subscriber 명령을 덮어쓰고 설정한 서비스 계정 파일을 마운트해 실행할 수 있습니다.
+
+```bash
+docker run --rm --env-file .env \
+  -e GCP_CREDENTIALS_PATH=/app/runtime/gcp-credentials.json \
+  -v /absolute/path/to/service-account.json:/app/runtime/gcp-credentials.json:ro \
+  pubsub-trader python check_pubsub_readiness.py
+```
 
 ## 실행 방법
 
@@ -184,10 +191,12 @@ for item in signals:
 
 ### Linux 원클릭 설치
 
-Linux 호스트에서는 아래 명령으로 설치 스크립트를 내려받아 실행할 수 있습니다.
+Linux 호스트에서는 아래 명령으로 설치 스크립트를 내려받아 확인한 뒤 실행할 수 있습니다.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tkgo11/prism-insight-light/main/install_prism_docker.sh | bash
+curl -fsSLO https://raw.githubusercontent.com/tkgo11/prism-insight-light/main/install_prism_docker.sh
+less install_prism_docker.sh
+bash install_prism_docker.sh
 ```
 
 설치 스크립트는 기본적으로 현재 `main` 브랜치 기준 아카이브를 내려받습니다.
@@ -265,6 +274,7 @@ bash install_prism_docker.sh --install-dir /path/to/prism-insight-light --uninst
 docker build -t pubsub-trader .
 docker run --rm --env-file .env \
   -e GCP_CREDENTIALS_PATH=/app/runtime/gcp-credentials.json \
+  -e PRISM_KIS_CONFIG_PATH=/app/trading/config/kis_devlp.yaml \
   -v /absolute/path/to/service-account.json:/app/runtime/gcp-credentials.json:ro \
   -v /absolute/path/to/kis_devlp.yaml:/app/trading/config/kis_devlp.yaml:ro \
   pubsub-trader
@@ -276,7 +286,7 @@ docker run --rm --env-file .env \
 bash setup_subscriber_docker_crontab.sh
 ```
 
-`setup_subscriber_docker_crontab.sh`는 설치 시 컨테이너를 현재 설정으로 한 번 생성하고, 이후에는 시장 시간에 맞춰 `docker start` / `docker stop`만 수행합니다. `.env`를 바꿨다면 스크립트를 다시 실행해 컨테이너 정의를 재생성하세요.
+`setup_subscriber_docker_crontab.sh`는 설치 시 컨테이너를 현재 설정으로 한 번 생성하고, 이후에는 시장 시간에 맞춰 `docker start` / `docker stop --time -1`을 수행해 진행 중 주문을 강제 종료하지 않습니다. `.env`를 바꿨다면 스크립트를 다시 실행해 컨테이너 정의를 재생성하세요.
 
 
 ## 로컬 WebUI
@@ -298,7 +308,11 @@ python subscriber.py --web-ui
 WEBUI_HOST=127.0.0.1
 WEBUI_PORT=8765
 WEBUI_ALLOW_NON_LOOPBACK=false
+WEBUI_ALLOWED_HOSTS=
 WEBUI_ENABLE_LIVE_TRADING=false
+# 내장 WebUI는 subscriber의 --dry-run 및 --queue-path 설정을 이어받습니다.
+WEBUI_FORCE_DRY_RUN=false
+WEBUI_QUEUE_PATH=runtime/off_hours_queue.json
 # 비워 두면 프로세스 시작 때 새 토큰을 생성합니다.
 WEBUI_CSRF_TOKEN=
 ```
@@ -310,6 +324,7 @@ WEBUI_CSRF_TOKEN=
 전체 테스트:
 
 ```bash
+python -m pip install -r requirements-dev.txt
 pytest
 ```
 

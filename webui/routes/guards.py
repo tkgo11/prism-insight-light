@@ -7,6 +7,9 @@ from urllib.parse import parse_qs
 
 from fastapi import Header, HTTPException, Request, status
 
+MAX_FORM_BODY_BYTES = 64 * 1024
+MAX_FORM_FIELDS = 64
+
 
 def parse_urlencoded_body(raw_body: bytes) -> dict[str, str]:
     """Parse simple browser form posts without requiring python-multipart."""
@@ -16,6 +19,7 @@ def parse_urlencoded_body(raw_body: bytes) -> dict[str, str]:
             keep_blank_values=True,
             encoding="utf-8",
             errors="strict",
+            max_num_fields=MAX_FORM_FIELDS,
         )
     except (UnicodeDecodeError, ValueError) as exc:
         raise HTTPException(
@@ -31,7 +35,13 @@ async def get_urlencoded_form(request: Request) -> dict[str, str]:
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="Expected an application/x-www-form-urlencoded body",
         )
-    return parse_urlencoded_body(await request.body())
+    raw_body = await request.body()
+    if len(raw_body) > MAX_FORM_BODY_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Form body is too large",
+        )
+    return parse_urlencoded_body(raw_body)
 
 
 async def require_csrf_token(request: Request, x_webui_csrf: str | None = Header(default=None)) -> None:

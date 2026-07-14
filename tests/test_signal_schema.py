@@ -60,3 +60,53 @@ def test_unknown_market_rejected():
 def test_invalid_bytes_rejected():
     with pytest.raises(SignalValidationError, match="valid JSON"):
         parse_signal_bytes(b"{invalid")
+
+
+@pytest.mark.parametrize("value", [0, -1, float("nan"), float("inf"), float("-inf")])
+def test_trade_price_must_be_finite_and_positive(value):
+    with pytest.raises(SignalValidationError, match="price"):
+        parse_signal_payload(
+            {"type": "BUY", "ticker": "AAPL", "market": "US", "price": value}
+        )
+
+
+@pytest.mark.parametrize("field", ["target_price", "stop_loss", "buy_price"])
+@pytest.mark.parametrize("value", [0, -1, float("nan"), float("inf")])
+def test_optional_prices_must_be_finite_and_positive(field, value):
+    with pytest.raises(SignalValidationError, match=field):
+        parse_signal_payload(
+            {
+                "type": "BUY",
+                "ticker": "AAPL",
+                "market": "US",
+                "price": 100,
+                field: value,
+            }
+        )
+
+
+def test_buy_score_rejects_fractional_values_instead_of_truncating():
+    with pytest.raises(SignalValidationError, match="buy_score"):
+        parse_signal_payload(
+            {
+                "type": "BUY",
+                "ticker": "AAPL",
+                "market": "US",
+                "price": 100,
+                "buy_score": 8.5,
+            }
+        )
+
+
+@pytest.mark.parametrize("value", [0, -1, float("nan"), float("inf")])
+def test_optional_buy_amount_must_be_finite_and_positive(value):
+    with pytest.raises(SignalValidationError, match="buy_amount"):
+        parse_signal_payload(
+            {
+                "type": "BUY",
+                "ticker": "AAPL",
+                "market": "US",
+                "price": 100,
+                "buy_amount": value,
+            }
+        )

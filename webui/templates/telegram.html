@@ -2,5 +2,6 @@
 {% block title %}Telegram Preview - PRISM{% endblock %}
 {% block content %}
 <section class="page-head"><div><p class="eyebrow">Telegram</p><h1>Read-only signal discovery</h1><p>Fetch a bounded preview from the configured Telegram signal channel. Candidates are never dispatched from this page.</p></div></section>
-<section class="panel code-panel"><h2>API</h2><pre>GET /telegram/api?pages=1&max_posts=20</pre><p class="muted">Parsed candidates can be copied into the Signal Workbench or Trading Desk.</p></section>
+<section class="panel code-panel"><h2>API</h2><pre>POST /telegram/api?pages=1&amp;max_posts=20
+X-WebUI-CSRF: {{ request.app.state.settings.csrf_token }}</pre><p class="muted">Fetching requires CSRF confirmation. Parsed candidates can be copied into the Signal Workbench or Trading Desk.</p></section>
 {% endblock %}

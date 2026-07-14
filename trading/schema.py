@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -25,14 +26,28 @@ def _as_float(value: Any, *, field_name: str) -> float | None:
     if value in (None, ""):
         return None
     try:
-        return float(value)
+        number = float(value)
     except (TypeError, ValueError) as exc:
         raise SignalValidationError(f"Invalid numeric value for '{field_name}'") from exc
+    if not math.isfinite(number):
+        raise SignalValidationError(f"Invalid numeric value for '{field_name}'")
+    return number
 
 
 def _as_int(value: Any, *, field_name: str) -> int | None:
     number = _as_float(value, field_name=field_name)
-    return None if number is None else int(number)
+    if number is None:
+        return None
+    if not number.is_integer():
+        raise SignalValidationError(f"Invalid integer value for '{field_name}'")
+    return int(number)
+
+
+def _as_positive_float(value: Any, *, field_name: str) -> float | None:
+    number = _as_float(value, field_name=field_name)
+    if number is not None and number <= 0:
+        raise SignalValidationError(f"'{field_name}' must be greater than 0")
+    return number
 
 
 @dataclass(slots=True)
@@ -87,6 +102,10 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
     price = _as_float(payload.get("price"), field_name="price")
     if signal_type in {"BUY", "SELL"} and price is None:
         raise SignalValidationError("Trading signals require 'price'")
+    if signal_type in {"BUY", "SELL"} and price is not None and price <= 0:
+        raise SignalValidationError("'price' must be greater than 0")
+    if payload.get("buy_amount") not in (None, ""):
+        _as_positive_float(payload.get("buy_amount"), field_name="buy_amount")
 
     return SignalMessage(
         signal_type=signal_type,
@@ -94,13 +113,13 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
         company_name=company_name or ticker,
         market=market,
         price=price,
-        target_price=_as_float(payload.get("target_price"), field_name="target_price"),
-        stop_loss=_as_float(payload.get("stop_loss"), field_name="stop_loss"),
+        target_price=_as_positive_float(payload.get("target_price"), field_name="target_price"),
+        stop_loss=_as_positive_float(payload.get("stop_loss"), field_name="stop_loss"),
         buy_score=_as_int(payload.get("buy_score"), field_name="buy_score"),
         rationale=str(payload.get("rationale", "")).strip(),
         profit_rate=_as_float(payload.get("profit_rate"), field_name="profit_rate"),
         sell_reason=str(payload.get("sell_reason", "")).strip(),
-        buy_price=_as_float(payload.get("buy_price"), field_name="buy_price"),
+        buy_price=_as_positive_float(payload.get("buy_price"), field_name="buy_price"),
         event_type=str(payload.get("event_type", "")).strip(),
         event_source=str(payload.get("source", "")).strip(),
         event_description=str(payload.get("event_description", "")).strip(),

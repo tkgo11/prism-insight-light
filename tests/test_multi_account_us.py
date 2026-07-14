@@ -384,3 +384,32 @@ async def test_async_buy_uses_auto_exchange_before_zero_quantity_rejection():
     assert result["resolved_amount"] == 50.0
     assert result["auto_exchange_used"] is True
     assert smart_buy_calls == [("AAPL", 50.0, "NASD", 50.0)]
+
+
+def test_us_account_total_assets_include_usd_cash():
+    trader = object.__new__(ust.USStockTrading)
+    trader.account_key = "vps:12345678:01"
+    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+
+    class Response:
+        @staticmethod
+        def isOK():
+            return True
+
+        @staticmethod
+        def getBody():
+            return SimpleNamespace(
+                output2=[{"crcy_cd": "USD", "frcr_dncl_amt_2": "250.50", "frst_bltn_exrt": "1300"}],
+                output3={},
+            )
+
+    trader._request = lambda *args, **kwargs: Response()
+    trader.get_portfolio = lambda: [
+        {"eval_amount": 1_000.0, "profit_amount": 100.0, "avg_price": 90.0, "quantity": 10}
+    ]
+
+    summary = trader.get_account_summary()
+
+    assert summary["total_eval_amount"] == 1_250.50
+    assert summary["available_amount"] == 250.50
+    assert summary["account_key"] == "vps:12345678:01"

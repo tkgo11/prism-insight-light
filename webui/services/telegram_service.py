@@ -12,9 +12,16 @@ def preview_telegram(channel: str | None = None, *, pages: int = 1, max_posts: i
         from trading.telegram_fetch import DEFAULT_TELEGRAM_CHANNEL_URL, fetch_channel_posts, parse_signal_post
 
         selected_channel = channel or DEFAULT_TELEGRAM_CHANNEL_URL
-        posts = fetch_channel_posts(selected_channel, pages=max(1, min(pages, 5)), timeout=timeout)
+        bounded_pages = max(1, min(int(pages), 5))
+        bounded_posts = max(1, min(int(max_posts), 100))
+        posts = fetch_channel_posts(
+            selected_channel,
+            limit=bounded_posts,
+            pages=bounded_pages,
+            timeout=timeout,
+        )
         items: list[dict[str, Any]] = []
-        for post in posts[:max_posts]:
+        for post in posts[:bounded_posts]:
             parsed = parse_signal_post(post)
             items.append(
                 {

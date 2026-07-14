@@ -25,10 +25,13 @@ _PRIVATE_KEY_RE = re.compile(
 )
 _BEARER_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]{8,}")
 _JSON_SECRET_RE = re.compile(
-    r'(?i)("(?:private_key|private_key_id|client_secret|token|access_token|refresh_token|app_secret|my_sec)"\s*:\s*")([^"]+)(")'
+    r'(?i)("(?:private_key|private_key_id|client_secret|token|access_token|refresh_token|app_key|app_secret|my_app|my_sec|password|credential)"\s*:\s*")([^"]+)(")'
 )
 _ENV_SECRET_RE = re.compile(
     r"(?im)^([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE|CREDENTIAL|KEY)[A-Z0-9_]*\s*=\s*)(.+)$"
+)
+_YAML_SECRET_RE = re.compile(
+    r"(?im)^(\s*(?:[A-Za-z0-9_-]*(?:secret|token|password|credential|private|key)[A-Za-z0-9_-]*|my_app|my_sec|account|cano)\s*:\s*)(.+)$"
 )
 _LONG_TOKEN_RE = re.compile(r"\b[A-Za-z0-9_\-]{24,}\b")
 _ACCOUNT_RE = re.compile(r"\b\d{8}(?:-?\d{2})?\b")
@@ -96,6 +99,7 @@ def mask_text(text: object, extra_values: Mapping[str, str] | None = None) -> st
     masked = _PRIVATE_KEY_RE.sub("[MASKED_PRIVATE_KEY]", masked)
     masked = _BEARER_RE.sub("Bearer [MASKED_TOKEN]", masked)
     masked = _JSON_SECRET_RE.sub(lambda m: f"{m.group(1)}[MASKED]{m.group(3)}", masked)
+    masked = _YAML_SECRET_RE.sub(lambda m: f"{m.group(1)}[MASKED]", masked)
     masked = _ENV_SECRET_RE.sub(lambda m: f"{m.group(1)}[MASKED]", masked)
 
     if extra_values:

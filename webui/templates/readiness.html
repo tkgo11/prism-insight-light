@@ -8,4 +8,6 @@
   {% for item in readiness.config["items"] %}<tr><td>{{ item.name }}</td><td>{{ item.configured }}</td><td>{{ item.value }}</td></tr>{% endfor %}
   </tbody></table></div>
 </section>
+<section class="panel code-panel"><h2>Live probe API</h2><pre>POST /readiness/probe
+X-WebUI-CSRF: {{ request.app.state.settings.csrf_token }}</pre><p class="muted">The live Pub/Sub permission check is explicit because it contacts Google Cloud.</p></section>
 {% endblock %}

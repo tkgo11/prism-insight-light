@@ -1,19 +1,17 @@
-import atexit
+import os
 import sys
+import tempfile
 import textwrap
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-CONFIG_DIR = PROJECT_ROOT / "trading" / "config"
-CONFIG_FILE = CONFIG_DIR / "kis_devlp.yaml"
-_CREATED_TEST_CONFIG = False
-
-if not CONFIG_FILE.exists():
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    CONFIG_FILE.write_text(
-        textwrap.dedent(
+_TEST_CONFIG_DIR = tempfile.TemporaryDirectory(prefix="prism-insight-light-tests-")
+CONFIG_FILE = Path(_TEST_CONFIG_DIR.name) / "kis_devlp.yaml"
+os.environ["PRISM_KIS_CONFIG_PATH"] = str(CONFIG_FILE)
+CONFIG_FILE.write_text(
+    textwrap.dedent(
             """
             my_agent: test-agent
             default_mode: demo
@@ -44,14 +42,10 @@ if not CONFIG_FILE.exists():
                 market: us
                 primary: true
             """
-        ).strip()
-        + "\n",
-        encoding="utf-8",
-    )
-    _CREATED_TEST_CONFIG = True
-
-if _CREATED_TEST_CONFIG:
-    atexit.register(lambda: CONFIG_FILE.unlink(missing_ok=True))
+    ).strip()
+    + "\n",
+    encoding="utf-8",
+)
 
 
 def pytest_configure(config):
