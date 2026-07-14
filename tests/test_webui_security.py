@@ -39,3 +39,18 @@ def test_allowlisted_env_status_does_not_return_raw_sensitive_path_or_token():
     assert "safe-subscription" in rendered
     assert "C:/secrets" not in rendered
     assert "service-account.json" in rendered
+
+
+def test_mask_text_removes_structured_app_keys_and_passwords():
+    body = '{"app_key":"fake-app-key-value-1234567890","password":"fake-password-value-1234567890"}'
+    masked = mask_text(body)
+    assert "fake-app-key-value-1234567890" not in masked
+    assert "fake-password-value-1234567890" not in masked
+
+
+def test_mask_text_removes_yaml_secret_values():
+    body = "app_secret: abc$123\npassword: hunter2\nmy_app: short\n"
+    masked = mask_text(body)
+    assert "abc$123" not in masked
+    assert "hunter2" not in masked
+    assert "short" not in masked

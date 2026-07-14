@@ -1,9 +1,10 @@
 """Score-weighted BUY strategy."""
 from __future__ import annotations
+import math
 from dataclasses import dataclass
 from typing import Any
 from ..schema import SignalMessage
-from .common import StrategyExecution, execute_order, execution_from_result, market_base_amount, positive_number, strategy_name
+from .common import StrategyExecution, execute_order, execution_from_result, integer_value, market_base_amount, positive_number, strategy_name
 
 SCORE_WEIGHTED = "score_weighted"
 
@@ -18,10 +19,15 @@ class ScoreWeightedStrategyConfig:
         if not payload or strategy_name(payload) != SCORE_WEIGHTED:
             return None
         bands = payload.get("score_bands") or {60: 0.25, 75: 0.5, 90: 1.0}
-        parsed = {int(k): float(v) for k, v in dict(bands).items()}
-        if not parsed or any(v < 0 for v in parsed.values()):
+        parsed: dict[int, float] = {}
+        for raw_score, raw_weight in dict(bands).items():
+            score = float(raw_score)
+            if not math.isfinite(score) or not score.is_integer():
+                raise ValueError("signal_strategy.score_bands keys must be integers")
+            parsed[int(score)] = float(raw_weight)
+        if not parsed or any(not math.isfinite(v) or v < 0 for v in parsed.values()):
             raise ValueError("signal_strategy.score_bands must contain non-negative weights")
-        return cls(positive_number(payload, "base_amount_krw"), positive_number(payload, "base_amount_usd"), int(payload.get("min_score", 0) or 0), parsed)
+        return cls(positive_number(payload, "base_amount_krw"), positive_number(payload, "base_amount_usd"), integer_value(payload, "min_score", 0), parsed)
 
 class ScoreWeightedStrategy:
     def __init__(self, *, config: ScoreWeightedStrategyConfig): self.config = config

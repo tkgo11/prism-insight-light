@@ -424,6 +424,9 @@ def test_install_prism_docker_full_uninstall_removes_generated_artifacts(install
 
     install_dir = installer_env["tmp_path"] / "target-install"
     assert install_dir.exists()
+    (installer_env["state_dir"] / "running").write_text(
+        "prism-insight-subscriber", encoding="utf-8"
+    )
 
     uninstall_result = run_installer(
         installer_env["tmp_path"],
@@ -443,9 +446,77 @@ def test_install_prism_docker_full_uninstall_removes_generated_artifacts(install
     assert not (state_dir / "container").exists()
     assert not (state_dir / "running").exists()
     assert not (state_dir / "image").exists()
-    assert "docker rm -f prism-insight-subscriber" in log_text
+    assert "docker stop --time -1 prism-insight-subscriber" in log_text
+    assert "docker rm prism-insight-subscriber" in log_text
     assert "docker rmi -f pubsub-trader" in log_text
     assert "전체 제거가 완료되었습니다." in uninstall_result.stdout
+
+
+def test_uninstall_cron_recovers_when_checkout_is_incomplete(installer_env):
+    installed = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--with-cron",
+    )
+    assert installed.returncode == 0, installed.stderr
+    install_dir = installer_env["tmp_path"] / "target-install"
+    (install_dir / "setup_subscriber_docker_crontab.sh").unlink()
+
+    recovered = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--uninstall-cron",
+    )
+
+    assert recovered.returncode == 0, recovered.stderr
+    assert install_dir.exists()
+    assert not (installer_env["state_dir"] / "crontab.txt").exists()
+    assert "제한된 복구 제거" in recovered.stdout
+
+
+def test_full_uninstall_recovers_when_checkout_is_incomplete(installer_env):
+    installed = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--with-cron",
+    )
+    assert installed.returncode == 0, installed.stderr
+    install_dir = installer_env["tmp_path"] / "target-install"
+    (install_dir / "setup_subscriber_docker_crontab.sh").unlink()
+
+    recovered = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--uninstall",
+    )
+
+    assert recovered.returncode == 0, recovered.stderr
+    assert not install_dir.exists()
+    assert not (installer_env["state_dir"] / "crontab.txt").exists()
+    assert not (installer_env["state_dir"] / "container").exists()
+    assert not (installer_env["state_dir"] / "image").exists()
+
+
+def test_recovery_uninstall_preserves_unrelated_directory(installer_env):
+    install_dir = installer_env["tmp_path"] / "target-install"
+    install_dir.mkdir()
+    (install_dir / "Dockerfile").write_text("FROM scratch\n", encoding="utf-8")
+
+    recovered = run_installer(
+        installer_env["tmp_path"],
+        installer_env["env"],
+        "--non-interactive",
+        "--uninstall",
+    )
+
+    assert recovered.returncode == 0, recovered.stderr
+    assert install_dir.exists()
+    assert (install_dir / "Dockerfile").exists()
+    assert "프로젝트 흔적을 확인할 수 없어 디렉터리는 보존합니다" in recovered.stdout
 
 
 def test_full_uninstall_preserves_explicit_repo_dir(installer_env):

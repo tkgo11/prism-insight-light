@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import os
 import sys
 import types
 from dataclasses import dataclass
@@ -319,3 +320,21 @@ def test_returns_hard_failure_when_subscription_resource_is_missing(monkeypatch)
     assert result.status == "failure"
     assert result.exit_code == 1
     assert "subscription not found" in result.message
+
+
+def test_explicit_credentials_probe_does_not_mutate_process_environment(monkeypatch, tmp_path):
+    credentials_file = tmp_path / "service-account.json"
+    credentials_file.write_text("{}", encoding="utf-8")
+    module = _import_pubsub_readiness(monkeypatch)
+    FakeClient.permissions = [CONSUME_PERMISSION]
+    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/keep/original.json")
+
+    result = _call_check(
+        module,
+        project_id="demo-project",
+        subscription_id="demo-sub",
+        credentials_path=str(credentials_file),
+    )
+
+    assert result.status == "ready"
+    assert os.environ["GOOGLE_APPLICATION_CREDENTIALS"] == "/keep/original.json"

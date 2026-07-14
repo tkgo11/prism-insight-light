@@ -15,7 +15,8 @@ router = APIRouter()
 def dashboard(request: Request):
     templates = request.app.state.templates
     readiness = get_readiness_summary(run_live_check=False)
-    queue = summarize_queue()
+    settings = request.app.state.settings
+    queue = summarize_queue(settings.queue_path)
     accounts = list_accounts()
     return templates.TemplateResponse(
         request,
@@ -28,7 +29,7 @@ def dashboard(request: Request):
             "settings": request.app.state.settings,
             "accounts": accounts,
             "config_model": get_config_editor_model(),
-            "trade_guard": trading_guard_status(),
+            "trade_guard": trading_guard_status(force_dry_run=settings.force_dry_run),
             "csrf_token": request.app.state.settings.csrf_token,
         },
     )

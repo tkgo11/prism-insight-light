@@ -9,24 +9,106 @@ import datetime
 import json
 import logging
 import logging.handlers
+import math
 import os
 import signal
 import threading
+import time
 from concurrent.futures import TimeoutError
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from trading.dispatch import TradeDispatcher
-from trading.market_hours import KST
-from trading.schema import SignalValidationError, parse_signal_bytes
-
-
 ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
 
+from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must load first
+from trading.market_hours import KST  # noqa: E402 - config env must load first
+from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E402
+
 LOGGER = logging.getLogger("subscriber")
+
+
+def _positive_poll_seconds(value: str) -> int:
+    seconds = int(value)
+    if seconds <= 0:
+        raise argparse.ArgumentTypeError("queue poll seconds must be greater than zero")
+    return seconds
+
+
+def _positive_seconds_from_env(name: str, default: float) -> float:
+    raw_value = os.environ.get(name)
+    if raw_value in (None, ""):
+        return default
+    try:
+        seconds = float(raw_value)
+    except (TypeError, ValueError):
+        LOGGER.warning("Ignoring invalid %s=%r; using %s seconds", name, raw_value, default)
+        return default
+    if not math.isfinite(seconds) or seconds <= 0:
+        LOGGER.warning("Ignoring invalid %s=%r; using %s seconds", name, raw_value, default)
+        return default
+    return seconds
+
+
 RAW_PUBSUB_LOGGER = logging.getLogger("subscriber.raw_pubsub")
+
+
+class ActiveWorkTracker:
+    """Track broker work so shutdown does not abandon an accepted order."""
+
+    def __init__(self) -> None:
+        self._condition = threading.Condition()
+        self._active = 0
+        self._closing = False
+
+    @property
+    def active_count(self) -> int:
+        with self._condition:
+            return self._active
+
+    def begin(self) -> bool:
+        with self._condition:
+            if self._closing:
+                return False
+            self._active += 1
+            return True
+
+    def end(self) -> None:
+        with self._condition:
+            self._active -= 1
+            self._condition.notify_all()
+
+    def close(self) -> None:
+        with self._condition:
+            self._closing = True
+            self._condition.notify_all()
+
+    def wrap(self, callback, *, on_rejected=None):
+        def tracked_callback(message):
+            if not self.begin():
+                if on_rejected is not None:
+                    on_rejected(message)
+                return None
+            try:
+                return callback(message)
+            finally:
+                self.end()
+
+        return tracked_callback
+
+    def wait_for_idle(self, timeout: float | None) -> bool:
+        deadline = None if timeout is None else time.monotonic() + timeout
+        with self._condition:
+            while self._active:
+                if deadline is None:
+                    self._condition.wait()
+                    continue
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    return False
+                self._condition.wait(timeout=remaining)
+        return True
 
 
 class _KSTFormatter(logging.Formatter):
@@ -133,10 +215,12 @@ def _configure_raw_pubsub_logging(log_file: str | None) -> logging.Logger | None
 
 
 class QueueWorker:
-    def __init__(self, dispatcher: TradeDispatcher, poll_seconds: int):
+    def __init__(self, dispatcher: TradeDispatcher, poll_seconds: int, work_tracker: ActiveWorkTracker):
         self.dispatcher = dispatcher
         self.poll_seconds = poll_seconds
+        self.work_tracker = work_tracker
         self._stop_event = threading.Event()
+        self._activity_lock = threading.Lock()
         self._thread: threading.Thread | None = None
 
     def start(self) -> None:
@@ -150,20 +234,34 @@ class QueueWorker:
         self._thread.start()
         LOGGER.info("Queue worker started (poll_seconds=%s)", self.poll_seconds)
 
+    def request_stop(self) -> None:
+        with self._activity_lock:
+            self._stop_event.set()
+
     def stop(self) -> None:
-        self._stop_event.set()
+        self.request_stop()
         if self._thread:
-            self._thread.join(timeout=2)
-            LOGGER.info("Queue worker stopped")
+            self._thread.join(timeout=5)
+            if self._thread.is_alive():
+                LOGGER.warning("Queue worker thread did not exit after active work drained")
+            else:
+                LOGGER.info("Queue worker stopped")
 
     def _run(self) -> None:
         while not self._stop_event.wait(self.poll_seconds):
+            with self._activity_lock:
+                if self._stop_event.is_set():
+                    return
+                if not self.work_tracker.begin():
+                    return
             try:
                 drained = self.dispatcher.drain_due_orders()
                 if drained:
                     LOGGER.info("Executed %s queued orders", drained)
             except Exception as exc:  # noqa: BLE001 - keep the queue worker alive
                 LOGGER.exception("Queue worker error: %s", exc)
+            finally:
+                self.work_tracker.end()
 
 
 def _message_context(message) -> str:
@@ -241,6 +339,19 @@ def build_callback(
     return lambda message: _handle_message(message, dispatcher, logger, raw_logger)
 
 
+def _nack_message_during_shutdown(message) -> None:
+    """Release a late callback for redelivery without starting broker work."""
+
+    nack = getattr(message, "nack", None)
+    if callable(nack):
+        nack()
+    else:
+        modify_ack_deadline = getattr(message, "modify_ack_deadline", None)
+        if callable(modify_ack_deadline):
+            modify_ack_deadline(0)
+    LOGGER.info("Released Pub/Sub message received after shutdown admission closed")
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Standalone GCP Pub/Sub trading subscriber")
     parser.add_argument("--project-id", default=os.environ.get("GCP_PROJECT_ID"))
@@ -259,7 +370,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--queue-path", default="runtime/off_hours_queue.json")
-    parser.add_argument("--queue-poll-seconds", type=int, default=60)
+    parser.add_argument("--queue-poll-seconds", type=_positive_poll_seconds, default=60)
     parser.add_argument(
         "--web-ui",
         action="store_true",
@@ -268,16 +379,67 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _run_web_ui() -> None:
+def _run_web_ui(
+    *,
+    force_dry_run: bool,
+    queue_path: Path,
+    work_tracker: ActiveWorkTracker,
+    shutdown_event: threading.Event,
+    startup_event: threading.Event,
+    startup_errors: list[str],
+) -> None:
     from webui.__main__ import main as run_webui
 
     LOGGER.info("Starting local guarded WebUI; live orders remain locked unless explicitly armed")
-    run_webui()
+    try:
+        run_webui(
+            force_dry_run=force_dry_run,
+            queue_path=queue_path,
+            work_tracker=work_tracker,
+            shutdown_event=shutdown_event,
+            startup_event=startup_event,
+            startup_errors=startup_errors,
+        )
+    except BaseException as exc:
+        if not startup_event.is_set():
+            startup_errors.append(str(exc) or type(exc).__name__)
+            startup_event.set()
+        raise
+    finally:
+        if not startup_event.is_set():
+            startup_errors.append("WebUI stopped before startup completed")
+            startup_event.set()
 
 
-def _start_web_ui_thread() -> threading.Thread:
-    thread = threading.Thread(target=_run_web_ui, name="web-ui", daemon=True)
+def _start_web_ui_thread(
+    *,
+    force_dry_run: bool,
+    queue_path: Path,
+    work_tracker: ActiveWorkTracker,
+    shutdown_event: threading.Event,
+) -> threading.Thread:
+    startup_event = threading.Event()
+    startup_errors: list[str] = []
+    thread = threading.Thread(
+        target=_run_web_ui,
+        kwargs={
+            "force_dry_run": force_dry_run,
+            "queue_path": queue_path,
+            "work_tracker": work_tracker,
+            "shutdown_event": shutdown_event,
+            "startup_event": startup_event,
+            "startup_errors": startup_errors,
+        },
+        name="web-ui",
+        daemon=True,
+    )
     thread.start()
+    if not startup_event.wait(timeout=10):
+        shutdown_event.set()
+        raise RuntimeError("WebUI did not become ready within 10 seconds")
+    if startup_errors:
+        thread.join(timeout=2)
+        raise RuntimeError(f"WebUI failed to start: {startup_errors[0]}")
     return thread
 
 
@@ -295,10 +457,9 @@ def main(argv: list[str] | None = None) -> None:
     if args.credentials_path:
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = args.credentials_path
 
+    work_tracker = ActiveWorkTracker()
     web_ui_thread: threading.Thread | None = None
-    if args.web_ui:
-        web_ui_thread = _start_web_ui_thread()
-        LOGGER.info("WebUI thread started: %s", web_ui_thread.name)
+    web_ui_stop_event = threading.Event() if args.web_ui else None
 
     from google.cloud import pubsub_v1
 
@@ -306,8 +467,7 @@ def main(argv: list[str] | None = None) -> None:
         dry_run=args.dry_run,
         queue_path=Path(args.queue_path),
     )
-    queue_worker = QueueWorker(dispatcher, args.queue_poll_seconds)
-    queue_worker.start()
+    queue_worker = QueueWorker(dispatcher, args.queue_poll_seconds, work_tracker)
 
     credentials = None
     if args.credentials_path:
@@ -327,10 +487,19 @@ def main(argv: list[str] | None = None) -> None:
         args.raw_pubsub_log_file or "disabled",
     )
 
-    streaming_pull_future = subscriber.subscribe(
-        subscription_path,
-        callback=lambda message: _handle_message(message, dispatcher, raw_logger=raw_pubsub_logger),
+    callback = work_tracker.wrap(
+        lambda message: _handle_message(message, dispatcher, raw_logger=raw_pubsub_logger),
+        on_rejected=_nack_message_during_shutdown,
     )
+    try:
+        streaming_pull_future = subscriber.subscribe(
+            subscription_path,
+            callback=callback,
+            await_callbacks_on_shutdown=True,
+        )
+    except BaseException:
+        subscriber.close()
+        raise
     stop_event = threading.Event()
 
     def request_stop(signum: int, _frame) -> None:  # noqa: ANN001 - signal frames are runtime-provided
@@ -344,6 +513,16 @@ def main(argv: list[str] | None = None) -> None:
     signal.signal(signal.SIGTERM, request_stop)
 
     try:
+        queue_worker.start()
+        if args.web_ui:
+            assert web_ui_stop_event is not None
+            web_ui_thread = _start_web_ui_thread(
+                force_dry_run=args.dry_run,
+                queue_path=Path(args.queue_path),
+                work_tracker=work_tracker,
+                shutdown_event=web_ui_stop_event,
+            )
+            LOGGER.info("WebUI thread started: %s", web_ui_thread.name)
         while not stop_event.is_set():
             try:
                 streaming_pull_future.result(timeout=1)
@@ -360,6 +539,10 @@ def main(argv: list[str] | None = None) -> None:
         signal.signal(signal.SIGINT, previous_sigint)
         signal.signal(signal.SIGTERM, previous_sigterm)
         streaming_pull_future.cancel()
+        queue_worker.request_stop()
+        work_tracker.close()
+        if web_ui_stop_event is not None:
+            web_ui_stop_event.set()
         try:
             streaming_pull_future.result(timeout=10)
         except TimeoutError:
@@ -368,8 +551,35 @@ def main(argv: list[str] | None = None) -> None:
             LOGGER.debug("Pub/Sub subscriber shutdown interrupted after cancellation")
         except Exception as exc:  # noqa: BLE001 - cancellation commonly raises library-specific futures errors
             LOGGER.debug("Pub/Sub subscriber shutdown completed with %s", type(exc).__name__)
+        drain_seconds = _positive_seconds_from_env("SUBSCRIBER_SHUTDOWN_DRAIN_SECONDS", 180.0)
+        if work_tracker.active_count:
+            LOGGER.info(
+                "Waiting up to %s seconds for %s active broker operation(s)",
+                drain_seconds,
+                work_tracker.active_count,
+            )
+        if not work_tracker.wait_for_idle(drain_seconds):
+            LOGGER.error(
+                "Graceful shutdown deadline reached with %s broker operation(s) active; waiting for completion unless the service supervisor intervenes",
+                work_tracker.active_count,
+            )
+            work_tracker.wait_for_idle(None)
         queue_worker.stop()
+        try:
+            # ``await_callbacks_on_shutdown`` keeps Pub/Sub's ack dispatcher alive
+            # until every admitted callback has returned.  The bounded wait above
+            # is diagnostic only; this final wait preserves the broker ack before
+            # the client and its helper threads are closed.
+            streaming_pull_future.result()
+        except KeyboardInterrupt:
+            LOGGER.debug("Pub/Sub subscriber final shutdown wait was interrupted")
+        except Exception as exc:  # noqa: BLE001 - cancellation raises a library-specific exception
+            LOGGER.debug("Pub/Sub subscriber final shutdown completed with %s", type(exc).__name__)
         subscriber.close()
+        if web_ui_thread is not None:
+            web_ui_thread.join(timeout=10)
+            if web_ui_thread.is_alive():
+                LOGGER.warning("WebUI thread did not exit after broker work drained")
         LOGGER.info("Subscriber shutdown complete")
 
 
