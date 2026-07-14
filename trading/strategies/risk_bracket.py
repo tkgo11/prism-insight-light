@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 from ..schema import SignalMessage
-from .common import RUNTIME_DIR, StrategyExecution, execute_order, execution_from_result, market_base_amount, positive_number, save_json, strategy_name, load_json_list
+from .common import RUNTIME_DIR, StrategyExecution, append_json_item, boolean_value, execute_order, execution_from_result, market_base_amount, positive_number, strategy_name
 
 RISK_BRACKET = "risk_bracket"
 
@@ -14,7 +14,7 @@ class RiskBracketStrategyConfig:
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "RiskBracketStrategyConfig | None":
         if not payload or strategy_name(payload) != RISK_BRACKET: return None
-        return cls(positive_number(payload,"risk_amount_krw"), positive_number(payload,"risk_amount_usd"), positive_number(payload,"max_position_amount_krw"), positive_number(payload,"max_position_amount_usd"), bool(payload.get("require_stop_loss", True)), bool(payload.get("require_target_price", False)))
+        return cls(positive_number(payload,"risk_amount_krw"), positive_number(payload,"risk_amount_usd"), positive_number(payload,"max_position_amount_krw"), positive_number(payload,"max_position_amount_usd"), boolean_value(payload, "require_stop_loss", True), boolean_value(payload, "require_target_price", False))
 
 class RiskBracketStrategy:
     metadata_path = RUNTIME_DIR / "risk_brackets.json"
@@ -35,5 +35,5 @@ class RiskBracketStrategy:
         result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=buy_amount, limit_price=signal.price)
         execution = execution_from_result(signal, result, f"Risk bracket buy {buy_amount:.2f} with risk {risk_budget:.2f}", buy_amount=buy_amount, risk_budget=risk_budget)
         if execution.status == "executed":
-            items = load_json_list(self.metadata_path); items.append({"market": signal.market, "ticker": signal.ticker, "entry_price": signal.price, "stop_loss": signal.stop_loss, "target_price": signal.target_price, "risk_budget": risk_budget, "created_at": datetime.now(timezone.utc).isoformat()}); save_json(self.metadata_path, items)
+            append_json_item(self.metadata_path, {"market": signal.market, "ticker": signal.ticker, "entry_price": signal.price, "stop_loss": signal.stop_loss, "target_price": signal.target_price, "risk_budget": risk_budget, "created_at": datetime.now(timezone.utc).isoformat()})
         return execution

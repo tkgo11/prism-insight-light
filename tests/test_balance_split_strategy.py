@@ -1,9 +1,26 @@
 from __future__ import annotations
 
+import json
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 
 from trading.schema import parse_signal_payload
 from trading.strategies.balance_split import BalanceSplitStrategy, BalanceSplitStrategyConfig
+
+
+@pytest.fixture
+def balance_split_strategy(tmp_path):
+    """Create a balance-split strategy with per-test reservation state."""
+
+    def factory(*, split_count: int) -> BalanceSplitStrategy:
+        strategy = BalanceSplitStrategy(
+            config=BalanceSplitStrategyConfig(split_count=split_count)
+        )
+        strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+        return strategy
+
+    return factory
 
 
 class FakeUSTrader:
@@ -52,9 +69,9 @@ def test_balance_split_config_requires_positive_split_count():
 
 
 @pytest.mark.asyncio
-async def test_us_balance_split_buys_one_fraction_of_available_balance():
+async def test_us_balance_split_buys_one_fraction_of_available_balance(balance_split_strategy):
     trader = FakeUSTrader(available_amount=900.0)
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=3))
+    strategy = balance_split_strategy(split_count=3)
     signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200})
 
     result = await strategy._execute_us(signal, trader=trader)
@@ -66,9 +83,9 @@ async def test_us_balance_split_buys_one_fraction_of_available_balance():
 
 
 @pytest.mark.asyncio
-async def test_kr_balance_split_uses_integer_fraction_amount():
+async def test_kr_balance_split_uses_integer_fraction_amount(balance_split_strategy):
     trader = FakeKRTrader(available_amount=10001)
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=4))
+    strategy = balance_split_strategy(split_count=4)
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
 
     result = await strategy._execute_kr(signal, trader=trader)
@@ -79,9 +96,9 @@ async def test_kr_balance_split_uses_integer_fraction_amount():
 
 
 @pytest.mark.asyncio
-async def test_balance_split_fails_without_available_balance():
+async def test_balance_split_fails_without_available_balance(balance_split_strategy):
     trader = FakeUSTrader(available_amount=0.0)
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
+    strategy = balance_split_strategy(split_count=2)
     signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200})
 
     result = await strategy._execute_us(signal, trader=trader)
@@ -91,9 +108,9 @@ async def test_balance_split_fails_without_available_balance():
 
 
 @pytest.mark.asyncio
-async def test_kr_balance_split_falls_back_to_total_cash_when_orderable_cash_is_zero():
+async def test_kr_balance_split_falls_back_to_total_cash_when_orderable_cash_is_zero(balance_split_strategy):
     trader = FakeKRTrader(available_amount=0, deposit=5795394, total_cash=5795394)
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=5))
+    strategy = balance_split_strategy(split_count=5)
     signal = parse_signal_payload({"type": "BUY", "ticker": "031330", "market": "KR", "price": 18860})
 
     result = await strategy._execute_kr(signal, trader=trader)
@@ -106,9 +123,9 @@ async def test_kr_balance_split_falls_back_to_total_cash_when_orderable_cash_is_
 
 
 @pytest.mark.asyncio
-async def test_kr_balance_split_uses_cash_balance_when_deposit_is_stale():
+async def test_kr_balance_split_uses_cash_balance_when_deposit_is_stale(balance_split_strategy):
     trader = FakeKRTrader(available_amount=0, deposit=29680834, total_cash=14824684)
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
+    strategy = balance_split_strategy(split_count=2)
     signal = parse_signal_payload({"type": "BUY", "ticker": "443060", "market": "KR", "price": 226000})
 
     result = await strategy._execute_kr(signal, trader=trader)
@@ -121,9 +138,9 @@ async def test_kr_balance_split_uses_cash_balance_when_deposit_is_stale():
 
 
 @pytest.mark.asyncio
-async def test_balance_split_caps_orderable_cash_at_cash_balance_excluding_holdings():
+async def test_balance_split_caps_orderable_cash_at_cash_balance_excluding_holdings(balance_split_strategy):
     trader = FakeKRTrader(available_amount=20000, deposit=30000, total_cash=12000)
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=3))
+    strategy = balance_split_strategy(split_count=3)
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 80000})
 
     result = await strategy._execute_kr(signal, trader=trader)
@@ -136,9 +153,9 @@ async def test_balance_split_caps_orderable_cash_at_cash_balance_excluding_holdi
 
 
 @pytest.mark.asyncio
-async def test_kr_balance_split_caps_final_buy_amount_by_orderable_cash():
+async def test_kr_balance_split_caps_final_buy_amount_by_orderable_cash(balance_split_strategy):
     trader = FakeKRTrader(available_amount=3000, deposit=30000, total_cash=12000)
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=3))
+    strategy = balance_split_strategy(split_count=3)
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 80000})
 
     result = await strategy._execute_kr(signal, trader=trader)
@@ -151,9 +168,9 @@ async def test_kr_balance_split_caps_final_buy_amount_by_orderable_cash():
 
 
 @pytest.mark.asyncio
-async def test_kr_balance_split_uses_cash_balance_base_when_orderable_cash_exceeds_target():
+async def test_kr_balance_split_uses_cash_balance_base_when_orderable_cash_exceeds_target(balance_split_strategy):
     trader = FakeKRTrader(available_amount=3000, deposit=30000, total_cash=12000)
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=4))
+    strategy = balance_split_strategy(split_count=4)
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 80000})
 
     result = await strategy._execute_kr(signal, trader=trader)
@@ -166,9 +183,8 @@ async def test_kr_balance_split_uses_cash_balance_base_when_orderable_cash_excee
 
 
 @pytest.mark.asyncio
-async def test_kr_balance_split_deducts_recent_successful_buys_when_broker_cash_is_stale(tmp_path):
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
-    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+async def test_kr_balance_split_deducts_recent_successful_buys_when_broker_cash_is_stale(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
     signal = parse_signal_payload({"type": "BUY", "ticker": "012510", "market": "KR", "price": 119400})
 
     first_trader = FakeKRTrader(
@@ -193,9 +209,8 @@ async def test_kr_balance_split_deducts_recent_successful_buys_when_broker_cash_
     assert second_trader.buy_calls == [("012510", 6409681, 119400)]
 
 
-def test_pending_reservations_are_not_double_counted_after_cash_report_updates(tmp_path):
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
-    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+def test_pending_reservations_are_not_double_counted_after_cash_report_updates(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
     strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=23871362, amount=11052000)
 
     assert strategy._pending_reserved_amount(market="KR", current_cash=12819362) == 0
@@ -206,9 +221,8 @@ def test_pending_reservations_are_not_double_counted_after_cash_report_updates(t
     assert strategy._pending_reserved_amount(market="KR", current_cash=25000000) == 0
 
 
-def test_pending_reservations_only_keep_unreflected_remainder_after_partial_cash_update(tmp_path):
-    strategy = BalanceSplitStrategy(config=BalanceSplitStrategyConfig(split_count=2))
-    strategy.reservation_path = tmp_path / "balance_split_reservations.json"
+def test_pending_reservations_only_keep_unreflected_remainder_after_partial_cash_update(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
     strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=10000000, amount=5000000)
 
     assert strategy._pending_reserved_amount(market="KR", current_cash=7000000) == 2000000
@@ -218,3 +232,108 @@ def test_pending_reservations_only_keep_unreflected_remainder_after_partial_cash
     # Cash can increase for unrelated reasons while the remainder is still
     # unreflected; only the 2M remainder should be reserved, not the old 5M.
     assert strategy._pending_reserved_amount(market="KR", current_cash=12000000) == 2000000
+
+
+def test_concurrent_reservation_records_do_not_lose_updates(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
+
+    def record(index):
+        strategy._record_cash_reservation(
+            market="KR",
+            ticker=f"{index:06d}",
+            before_cash=1_000_000,
+            amount=1_000,
+            account_key=f"account-{index}",
+        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(record, range(32)))
+
+    reservations = json.loads(strategy.reservation_path.read_text(encoding="utf-8"))
+    assert len(reservations) == 32
+    assert {item["ticker"] for item in reservations} == {f"{index:06d}" for index in range(32)}
+
+
+@pytest.mark.asyncio
+async def test_concurrent_kr_buys_serialize_cash_sizing(balance_split_strategy):
+    import asyncio
+
+    active = 0
+    max_active = 0
+    submitted_amounts = []
+
+    class SlowTrader(FakeKRTrader):
+        async def async_buy_stock(self, stock_code, buy_amount=None, limit_price=None):
+            nonlocal active, max_active
+            active += 1
+            max_active = max(max_active, active)
+            submitted_amounts.append(buy_amount)
+            await asyncio.sleep(0.05)
+            active -= 1
+            return {"success": True, "message": "ok", "total_amount": buy_amount}
+
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "005930", "market": "KR", "price": 100}
+    )
+    trader = SlowTrader(available_amount=0, total_cash=10_000_000)
+
+    results = await asyncio.gather(
+        *(strategy._execute_kr(signal, trader=trader) for _ in range(3))
+    )
+
+    assert all(result.status == "executed" for result in results)
+    assert submitted_amounts == [5_000_000, 2_500_000, 1_250_000]
+    assert sum(submitted_amounts) < 10_000_000
+    assert max_active == 1
+
+
+@pytest.mark.asyncio
+async def test_concurrent_us_buys_reserve_stale_cash(balance_split_strategy):
+    import asyncio
+
+    submitted_amounts = []
+
+    class SlowUSTrader(FakeUSTrader):
+        async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
+            submitted_amounts.append(buy_amount)
+            await asyncio.sleep(0.03)
+            return {"success": True, "message": "ok", "estimated_amount": buy_amount}
+
+    strategy = balance_split_strategy(split_count=3)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100}
+    )
+    trader = SlowUSTrader(available_amount=900)
+
+    results = await asyncio.gather(
+        *(strategy._execute_us(signal, trader=trader) for _ in range(3))
+    )
+
+    assert all(result.status == "executed" for result in results)
+    assert submitted_amounts == pytest.approx([300.0, 200.0, 133.3333333333])
+    assert sum(submitted_amounts) < 900
+
+
+def test_us_reservations_are_isolated_by_account(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=3)
+    strategy._record_cash_reservation(
+        market="US",
+        ticker="AAPL",
+        before_cash=900,
+        amount=300,
+        account_key="account-a",
+    )
+
+    assert (
+        strategy._pending_reserved_amount(
+            market="US", current_cash=900, account_key="account-a"
+        )
+        == 300
+    )
+    assert (
+        strategy._pending_reserved_amount(
+            market="US", current_cash=900, account_key="account-b"
+        )
+        == 0
+    )

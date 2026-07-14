@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta, timezone, tzinfo
-from pathlib import Path
 import importlib
 import importlib.util
+from pathlib import Path
+
+from .config_paths import active_kis_config_path
 
 holidays_spec = importlib.util.find_spec("holidays")
 if holidays_spec is not None:
@@ -14,7 +16,9 @@ else:  # pragma: no cover - minimal test environment fallback
     class _HolidaysFallback:
         @staticmethod
         def country_holidays(country):
-            return set()
+            raise RuntimeError(
+                "The 'holidays' dependency is required for fail-closed KR market-hours checks"
+            )
 
     holidays = _HolidaysFallback()
 
@@ -22,19 +26,12 @@ mcal_spec = importlib.util.find_spec("pandas_market_calendars")
 if mcal_spec is not None:
     mcal = importlib.import_module("pandas_market_calendars")
 else:  # pragma: no cover - minimal test environment fallback
-    class _ValidDays:
-        def __init__(self, empty):
-            self.empty = empty
-
-    class _WeekdayCalendar:
-        @staticmethod
-        def valid_days(start_date, end_date):
-            return _ValidDays(empty=start_date.weekday() >= 5)
-
     class _MarketCalendarFallback:
         @staticmethod
         def get_calendar(name):
-            return _WeekdayCalendar()
+            raise RuntimeError(
+                "The 'pandas-market-calendars' dependency is required for fail-closed US market-hours checks"
+            )
 
     mcal = _MarketCalendarFallback()
 
@@ -75,17 +72,11 @@ KST = pytz.timezone("Asia/Seoul")
 US_EASTERN = pytz.timezone("US/Eastern")
 KR_MARKET_OPEN = time(9, 0)
 KR_NEXT_OPEN = time(9, 5)
-US_MARKET_OPEN = time(9, 30)
 US_NEXT_OPEN = time(9, 35)
-US_MARKET_CLOSE = time(16, 0)
 
 
 def _config_path() -> Path:
-    trading_dir = Path(__file__).parent
-    candidate = trading_dir / "config" / "kis_devlp.yaml"
-    if candidate.exists():
-        return candidate
-    return trading_dir / "config" / "kis_devlp.yaml.example"
+    return active_kis_config_path()
 
 
 def get_trading_mode() -> str:
@@ -118,8 +109,7 @@ def _next_kr_trading_day(day: date) -> date:
 
 def _is_us_trading_day(day: date) -> bool:
     calendar = mcal.get_calendar("NYSE")
-    valid_days = calendar.valid_days(start_date=day, end_date=day)
-    return not valid_days.empty
+    return not calendar.schedule(start_date=day, end_date=day).empty
 
 
 def _next_us_trading_day(day: date) -> date:
@@ -140,10 +130,14 @@ def is_market_open(market: str, *, now: datetime | None = None) -> bool:
 
     if market == "US":
         current = _coerce_now(now, US_EASTERN)
-        if not _is_us_trading_day(current.date()):
+        calendar = mcal.get_calendar("NYSE")
+        schedule = calendar.schedule(start_date=current.date(), end_date=current.date())
+        if schedule.empty:
             return False
-        current_time = current.time()
-        return US_MARKET_OPEN <= current_time <= US_MARKET_CLOSE
+        market_open = schedule.iloc[0]["market_open"].to_pydatetime()
+        market_close = schedule.iloc[0]["market_close"].to_pydatetime()
+        current_utc = current.astimezone(timezone.utc)
+        return market_open <= current_utc < market_close
 
     raise ValueError(f"Unsupported market '{market}'")
 

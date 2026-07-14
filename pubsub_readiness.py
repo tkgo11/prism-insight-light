@@ -149,7 +149,6 @@ def _load_credentials(credentials_path: Path, service_account) -> tuple[object |
     except Exception as exc:  # noqa: BLE001 - keep errors concise and non-secret
         return None, _hard_failure(f"unable to load credentials file ({type(exc).__name__})")
 
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(credentials_path)
     return credentials, None
 
 

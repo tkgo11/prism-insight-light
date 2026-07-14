@@ -4,7 +4,7 @@ import pytest
 
 from trading.schema import parse_signal_payload
 from trading.strategies.limit_buffer import LimitBufferStrategy, LimitBufferStrategyConfig
-from trading.strategies.profit_ladder import ProfitLadderStrategyConfig
+from trading.strategies.profit_ladder import ProfitLadderStrategy, ProfitLadderStrategyConfig
 from trading.strategies.risk_bracket import RiskBracketStrategy, RiskBracketStrategyConfig
 from trading.strategies.score_weighted import ScoreWeightedStrategy, ScoreWeightedStrategyConfig
 from trading.strategies.cooldown import CooldownStrategy, CooldownStrategyConfig
@@ -12,6 +12,7 @@ from trading.strategies.event_risk_off import EventRiskOffStrategy, EventRiskOff
 from trading.file_lock import FileLock
 from trading.domestic import DomesticStockTrading
 from trading.us import USStockTrading
+from trading.strategies.common import execute_order
 
 
 class FakeUSTrader:
@@ -45,6 +46,91 @@ def test_profit_ladder_config_parses_bands_and_reasons():
 
     assert config.profit_bands == {5.0: .25}
     assert config.full_exit_reasons == ("manual_exit",)
+
+
+@pytest.mark.parametrize("value", [-0.1, 1.1, float("nan"), float("inf")])
+def test_profit_ladder_rejects_invalid_fractions(value):
+    with pytest.raises(ValueError, match="between 0 and 1"):
+        ProfitLadderStrategyConfig.from_mapping(
+            {"name": "profit_ladder", "profit_bands": {"5": value}}
+        )
+
+
+@pytest.mark.asyncio
+async def test_profit_ladder_full_exit_reason_overrides_profit_band():
+    config = ProfitLadderStrategyConfig.from_mapping(
+        {
+            "name": "profit_ladder",
+            "profit_bands": {"5": 0.25},
+            "full_exit_reasons": ["manual_exit"],
+        }
+    )
+    signal = parse_signal_payload(
+        {
+            "type": "SELL",
+            "ticker": "AAPL",
+            "market": "US",
+            "price": 100,
+            "profit_rate": 20,
+            "sell_reason": "manual_exit",
+        }
+    )
+
+    result = await ProfitLadderStrategy(config=config).execute(signal, trading_mode="demo")
+
+    assert result.status == "executed"
+    assert FakeUSTrader.calls == [("sell", "AAPL", 1.0, 100.0)]
+
+
+@pytest.mark.asyncio
+async def test_sell_type_error_after_submission_is_never_retried(monkeypatch):
+    calls = []
+
+    class RaisingTrader:
+        def __init__(self, **kwargs):
+            pass
+
+        async def async_sell_stock(self, **kwargs):
+            calls.append(kwargs)
+            raise TypeError("internal response parsing failed after submission")
+
+    monkeypatch.setattr("trading.strategies.common.USStockTrading", RaisingTrader)
+    signal = parse_signal_payload(
+        {"type": "SELL", "ticker": "AAPL", "market": "US", "price": 100}
+    )
+
+    with pytest.raises(TypeError, match="after submission"):
+        await execute_order(
+            signal,
+            trading_mode="demo",
+            limit_price=100,
+            sell_fraction=1.0,
+        )
+
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("raw", ["maybe", 2, -1])
+def test_risk_bracket_rejects_ambiguous_boolean_values(raw):
+    with pytest.raises(ValueError, match="boolean"):
+        RiskBracketStrategyConfig.from_mapping(
+            {"name": "risk_bracket", "require_stop_loss": raw}
+        )
+
+
+def test_risk_bracket_parses_false_string_as_false():
+    config = RiskBracketStrategyConfig.from_mapping(
+        {"name": "risk_bracket", "require_stop_loss": "false"}
+    )
+    assert config.require_stop_loss is False
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -0.1])
+def test_score_weighted_rejects_non_finite_or_negative_weights(value):
+    with pytest.raises(ValueError, match="non-negative"):
+        ScoreWeightedStrategyConfig.from_mapping(
+            {"name": "score_weighted", "score_bands": {60: value}}
+        )
 
 
 @pytest.mark.asyncio
@@ -83,6 +169,39 @@ async def test_cooldown_blocks_duplicate_execution(tmp_path):
     assert first.status == "executed"
     assert second.status == "rejected"
     assert len(FakeUSTrader.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_cooldown_serializes_concurrent_duplicate_execution(monkeypatch, tmp_path):
+    import asyncio
+
+    active = 0
+    max_active = 0
+
+    async def delayed_execute(*args, **kwargs):
+        nonlocal active, max_active
+        active += 1
+        max_active = max(max_active, active)
+        await asyncio.sleep(0.05)
+        active -= 1
+        return {"success": True, "message": "ok"}
+
+    monkeypatch.setattr("trading.strategies.cooldown.execute_order", delayed_execute)
+    config = CooldownStrategyConfig.from_mapping(
+        {"name": "cooldown", "runtime_path": str(tmp_path / "cooldown.json")}
+    )
+    strategy = CooldownStrategy(config=config)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100}
+    )
+
+    first, second = await asyncio.gather(
+        strategy.execute(signal, trading_mode="demo"),
+        strategy.execute(signal, trading_mode="demo"),
+    )
+
+    assert sorted([first.status, second.status]) == ["executed", "rejected"]
+    assert max_active == 1
 
 
 def test_file_lock_serializes_threads(tmp_path):

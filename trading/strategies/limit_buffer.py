@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 from ..schema import SignalMessage
-from .common import StrategyExecution, execute_order, execution_from_result, positive_number, strategy_name
+from .common import StrategyExecution, execute_order, execution_from_result, integer_value, positive_number, strategy_name
 
 LIMIT_BUFFER = "limit_buffer"
 @dataclass(frozen=True, slots=True)
@@ -12,9 +12,9 @@ class LimitBufferStrategyConfig:
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "LimitBufferStrategyConfig | None":
         if not payload or strategy_name(payload) != LIMIT_BUFFER: return None
-        tick = int(payload.get("kr_tick_rounding", 1) or 1)
-        if tick < 1: raise ValueError("signal_strategy.kr_tick_rounding must be 1 or greater")
-        return cls(positive_number(payload,"buy_buffer_percent"), positive_number(payload,"sell_buffer_percent"), int(payload.get("us_price_decimals",2) or 2), tick)
+        tick = integer_value(payload, "kr_tick_rounding", 1, minimum=1)
+        decimals = integer_value(payload, "us_price_decimals", 2, minimum=0, maximum=8)
+        return cls(positive_number(payload,"buy_buffer_percent"), positive_number(payload,"sell_buffer_percent"), decimals, tick)
 
 class LimitBufferStrategy:
     def __init__(self, *, config: LimitBufferStrategyConfig): self.config = config

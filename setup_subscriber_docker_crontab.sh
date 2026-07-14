@@ -281,6 +281,21 @@ validate_environment() {
     mkdir -p "$RUNTIME_DIR"
 }
 
+validate_recovery_environment() {
+    local require_docker="${1:-false}"
+    AUTO_BUILD_IMAGE="$(normalize_bool "$AUTO_BUILD_IMAGE")"
+    AUTO_SHUTDOWN="$(normalize_bool "$AUTO_SHUTDOWN")"
+    ENV_FILE="$(resolve_project_path "$ENV_FILE")"
+    KIS_CONFIG_HOST_PATH="$(resolve_project_path "$KIS_CONFIG_HOST_PATH")"
+    LOG_DIR="$(resolve_project_path "$LOG_DIR")"
+    RUNTIME_DIR="$(resolve_project_path "$RUNTIME_DIR")"
+
+    if [ "$require_docker" = "true" ] && ! command -v "$DOCKER_BIN" >/dev/null 2>&1; then
+        log_error "Docker 실행 파일을 찾을 수 없습니다: $DOCKER_BIN"
+        return 1
+    fi
+}
+
 image_exists() {
     if ! "$DOCKER_BIN" ps -a >/dev/null; then
         log_error "Docker daemon 상태를 확인할 수 없습니다."
@@ -310,7 +325,13 @@ container_running() {
 remove_container_if_exists() {
     local status=0
     if container_exists; then
-        "$DOCKER_BIN" rm -f "$CONTAINER_NAME" >/dev/null
+        if container_running; then
+            "$DOCKER_BIN" stop --time -1 "$CONTAINER_NAME" >/dev/null
+        else
+            status=$?
+            [ "$status" -eq 1 ] || return "$status"
+        fi
+        "$DOCKER_BIN" rm "$CONTAINER_NAME" >/dev/null
         if container_exists; then
             log_error "Docker 컨테이너 제거를 확인하지 못했습니다: $CONTAINER_NAME"
             return 1
@@ -484,8 +505,11 @@ docker_create_command() {
         "$DOCKER_BIN" create
         --name "$CONTAINER_NAME"
         --restart no
+        --stop-timeout -1
         --env-file "$ENV_FILE"
         -e TZ=Asia/Seoul
+        -e "PRISM_KIS_CONFIG_PATH=$KIS_CONFIG_CONTAINER_PATH"
+        -e WEBUI_CONFIG_READ_ONLY=true
         -v "$LOG_DIR:/app/logs"
         -v "$RUNTIME_DIR:/app/runtime"
         -v "$KIS_CONFIG_HOST_PATH:$KIS_CONFIG_CONTAINER_PATH:ro"
@@ -588,7 +612,9 @@ stop_container() {
         return 1
     fi
 
-    "$DOCKER_BIN" stop "$CONTAINER_NAME" >/dev/null
+    # A negative timeout asks Docker to wait indefinitely instead of sending
+    # SIGKILL while an accepted broker order may still be completing.
+    "$DOCKER_BIN" stop --time -1 "$CONTAINER_NAME" >/dev/null
     if container_running; then
         log_error "subscriber 컨테이너 중지를 확인하지 못했습니다: $CONTAINER_NAME"
         return 1
@@ -662,7 +688,7 @@ subscriber Docker 런타임 준비가 완료되었습니다.
 
 [수동 실행 명령]
 - 시작: $DOCKER_BIN start "$CONTAINER_NAME"
-- 중지: $DOCKER_BIN stop "$CONTAINER_NAME"
+- 중지: $DOCKER_BIN stop --time -1 "$CONTAINER_NAME"
 - 상태: bash "$SCRIPT_PATH" --status
 
 [cron 자동화가 필요할 때]
@@ -777,6 +803,12 @@ uninstall_crontab() {
     local temp_clean
     temp_current="$(mktemp)"
     temp_clean="$(mktemp)"
+
+    if ! command -v "$CRONTAB_BIN" >/dev/null 2>&1; then
+        log_warn "crontab 실행 파일이 없어 cron 제거를 건너뜁니다: $CRONTAB_BIN"
+        rm -f "$temp_current" "$temp_clean"
+        return 0
+    fi
 
     if ! "$CRONTAB_BIN" -l >/dev/null 2>&1; then
         log_info "제거할 crontab이 없습니다."
@@ -1113,7 +1145,7 @@ main() {
             if $interactive; then
                 interactive_common_settings
             fi
-            validate_environment
+            validate_recovery_environment true
             if $interactive; then
                 read -r -p "subscriber Docker 생성물(cron/container/image/기본 디렉토리)을 제거할까요? (y/N): " confirm
                 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -1127,7 +1159,7 @@ main() {
             if $interactive; then
                 interactive_common_settings
             fi
-            validate_environment
+            validate_recovery_environment false
             if $interactive; then
                 read -r -p "subscriber Docker crontab만 제거할까요? (y/N): " confirm
                 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -1141,14 +1173,14 @@ main() {
             if $interactive; then
                 interactive_common_settings
             fi
-            validate_environment
+            validate_recovery_environment false
             show_crontab
             ;;
         backup)
             if $interactive; then
                 interactive_common_settings
             fi
-            validate_environment
+            validate_recovery_environment false
             backup_crontab
             ;;
         summary)
