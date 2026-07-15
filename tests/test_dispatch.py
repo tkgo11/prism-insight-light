@@ -115,7 +115,7 @@ async def test_demo_queued_order_does_not_requeue_when_market_still_closed(monke
     result = await dispatcher.dispatch(signal, allow_queue=False)
 
     assert result.status == "deferred"
-    assert result.message == "Market still closed; queued order retained for retry"
+    assert result.message == "Market and supported off-hours order windows are closed; queued order retained for retry"
     assert queue.enqueued == []
 
 
@@ -134,14 +134,43 @@ def test_due_demo_order_remains_queued_when_market_still_closed(monkeypatch, tmp
 
 
 @pytest.mark.asyncio
-async def test_real_off_hours_rejects(monkeypatch):
+async def test_real_off_hours_without_broker_window_enqueues(monkeypatch):
+    queue = DummyQueue()
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+    monkeypatch.setattr("trading.dispatch.is_off_hours_order_available", lambda market: False)
+
+    dispatcher = TradeDispatcher(trading_mode="real", queue=queue)
+    signal = parse_signal_payload({"type": "SELL", "ticker": "AAPL", "market": "US", "price": 200})
+    result = await dispatcher.dispatch(signal)
+
+    assert result.status == "queued"
+    assert result.message == "Queued for 2030-01-01T00:00:00+00:00"
+    assert queue.enqueued == [signal]
+
+
+@pytest.mark.asyncio
+async def test_real_off_hours_uses_supported_reserved_order_window(monkeypatch):
+    results = {}
+
+    class FakeUSTrader:
+        def __init__(self, mode):
+            results["mode"] = mode
+
+        async def async_sell_stock(self, ticker, limit_price=None):
+            results["ticker"] = ticker
+            results["limit_price"] = limit_price
+            return {"success": True, "message": "reserved-us-sell"}
+
+    monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+    monkeypatch.setattr("trading.dispatch.is_off_hours_order_available", lambda market: True)
 
     dispatcher = TradeDispatcher(trading_mode="real")
     signal = parse_signal_payload({"type": "SELL", "ticker": "AAPL", "market": "US", "price": 200})
     result = await dispatcher.dispatch(signal)
 
-    assert result.status == "rejected"
+    assert result.status == "executed"
+    assert results == {"mode": "real", "ticker": "AAPL", "limit_price": 200.0}
 
 
 @pytest.mark.asyncio
@@ -157,6 +186,7 @@ async def test_dispatch_acknowledges_event_without_trader(monkeypatch):
     result = await dispatcher.dispatch(signal)
 
     assert result.status == "acknowledged"
+
 
 @pytest.mark.asyncio
 async def test_balance_split_buy_routes_with_fractional_buy_amount(monkeypatch):

@@ -12,7 +12,7 @@ from . import yaml_compat as yaml
 from .config_paths import active_kis_config_path
 
 from .domestic import AsyncTradingContext
-from .market_hours import get_trading_mode, is_market_open
+from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
 from .modes import normalize_trading_mode
 from .off_hours_queue import OffHoursOrderQueue
 from .schema import SignalMessage, parse_signal_payload
@@ -91,35 +91,51 @@ class TradeDispatcher:
             return DispatchResult("acknowledged", "Event signal acknowledged", signal.signal_type, signal.market)
 
         strategy = self._resolve_strategy(signal)
+        market_open = is_market_open(signal.market)
 
-        if not is_market_open(signal.market):
-            if self.trading_mode == "demo" and allow_queue:
+        if not market_open:
+            # Demo mode always queues until the regular session so simulated orders
+            # stay deterministic.  Real mode may submit a KIS-supported closing or
+            # reserved order immediately; otherwise it must queue rather than lose
+            # the acknowledged Pub/Sub signal.
+            can_submit_off_hours = (
+                self.trading_mode == "real"
+                and is_off_hours_order_available(signal.market)
+            )
+
+            if can_submit_off_hours:
+                logger.info(
+                    "Submitting real-mode off-hours %s %s(%s) on %s via broker-supported order window",
+                    signal.signal_type,
+                    signal.company_name,
+                    signal.ticker,
+                    signal.market,
+                )
+            elif allow_queue:
                 queued_signal = self.queue.enqueue(signal)
                 logger.info(
-                    "Queued %s %s(%s) for %s",
+                    "Queued %s-mode %s %s(%s) for %s",
+                    self.trading_mode,
                     signal.signal_type,
                     signal.company_name,
                     signal.ticker,
                     queued_signal.execute_at,
                 )
                 return DispatchResult("queued", f"Queued for {queued_signal.execute_at}", signal.signal_type, signal.market)
-            if self.trading_mode == "demo":
+            else:
                 logger.warning(
-                    "Deferred queued %s %s(%s) on %s market: market is still closed",
+                    "Deferred queued %s %s(%s) on %s market: no executable order window",
                     signal.signal_type,
                     signal.company_name,
                     signal.ticker,
                     signal.market,
                 )
-                return DispatchResult("deferred", "Market still closed; queued order retained for retry", signal.signal_type, signal.market)
-            logger.warning(
-                "Rejected %s %s(%s) on %s market: market closed in real mode",
-                signal.signal_type,
-                signal.company_name,
-                signal.ticker,
-                signal.market,
-            )
-            return DispatchResult("rejected", "Market closed in real mode", signal.signal_type, signal.market)
+                return DispatchResult(
+                    "deferred",
+                    "Market and supported off-hours order windows are closed; queued order retained for retry",
+                    signal.signal_type,
+                    signal.market,
+                )
 
         if strategy is not None:
             strategy_result = await strategy.execute(signal, trading_mode=self.trading_mode, trader_kwargs=self._strategy_trader_kwargs())
