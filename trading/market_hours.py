@@ -74,6 +74,21 @@ KR_MARKET_OPEN = time(9, 0)
 KR_NEXT_OPEN = time(9, 5)
 US_NEXT_OPEN = time(9, 35)
 
+# Broker-supported order windows while the regular market is closed.
+# KR supports after-hours closing-price orders followed by reserved orders.
+KR_CLOSING_ORDER_START = time(15, 40)
+KR_CLOSING_ORDER_END = time(16, 0)
+KR_RESERVED_EVENING_START = time(16, 0)
+KR_RESERVED_EVENING_END = time(23, 40)
+KR_RESERVED_MORNING_START = time(0, 10)
+KR_RESERVED_MORNING_END = time(7, 30)
+
+# KIS overseas reserved-order window is defined in Korea time.
+US_RESERVED_ORDER_START = time(10, 0)
+US_RESERVED_ORDER_END = time(23, 20)
+US_RESERVED_MAINTENANCE_START = time(16, 30)
+US_RESERVED_MAINTENANCE_END = time(16, 45)
+
 
 def _config_path() -> Path:
     return active_kis_config_path()
@@ -138,6 +153,34 @@ def is_market_open(market: str, *, now: datetime | None = None) -> bool:
         market_close = schedule.iloc[0]["market_close"].to_pydatetime()
         current_utc = current.astimezone(timezone.utc)
         return market_open <= current_utc < market_close
+
+    raise ValueError(f"Unsupported market '{market}'")
+
+
+def is_off_hours_order_available(market: str, *, now: datetime | None = None) -> bool:
+    """Return whether KIS accepts a non-regular-session order right now.
+
+    This is intentionally separate from :func:`is_market_open`.  In real mode,
+    the dispatcher may submit an after-hours or reserved order when this returns
+    true.  When it returns false, the signal must be durably queued instead of
+    being acknowledged and discarded.
+    """
+
+    market = market.upper()
+    current = _coerce_now(now, KST)
+    current_time = current.time()
+
+    if market == "KR":
+        return (
+            KR_CLOSING_ORDER_START <= current_time <= KR_CLOSING_ORDER_END
+            or KR_RESERVED_EVENING_START < current_time <= KR_RESERVED_EVENING_END
+            or KR_RESERVED_MORNING_START <= current_time <= KR_RESERVED_MORNING_END
+        )
+
+    if market == "US":
+        if US_RESERVED_MAINTENANCE_START <= current_time <= US_RESERVED_MAINTENANCE_END:
+            return False
+        return US_RESERVED_ORDER_START <= current_time <= US_RESERVED_ORDER_END
 
     raise ValueError(f"Unsupported market '{market}'")
 
