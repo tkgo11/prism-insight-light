@@ -141,7 +141,7 @@ class _KSTDailyFileHandler(logging.handlers.BaseRotatingHandler):
     def shouldRollover(self, record: logging.LogRecord) -> bool:  # noqa: N802 - logging API
         return self._date_from_timestamp(record.created) > self.current_date
 
-    def doRollover(self, new_date: datetime.date | None = None) -> None:  # noqa: N802 - logging API
+    def doRollover(self, new_date: datetime.date | None = None) -> None:
         if self.stream:
             self.stream.close()
             self.stream = None
@@ -227,12 +227,13 @@ class QueueWorker:
         if self.dispatcher.dry_run:
             LOGGER.info("Queue worker disabled in dry-run mode")
             return
-        if self.dispatcher.trading_mode != "demo":
-            LOGGER.info("Queue worker disabled outside demo mode (mode=%s)", self.dispatcher.trading_mode)
-            return
         self._thread = threading.Thread(target=self._run, name="off-hours-queue", daemon=True)
         self._thread.start()
-        LOGGER.info("Queue worker started (poll_seconds=%s)", self.poll_seconds)
+        LOGGER.info(
+            "Queue worker started (mode=%s, poll_seconds=%s)",
+            self.dispatcher.trading_mode,
+            self.poll_seconds,
+        )
 
     def request_stop(self) -> None:
         with self._activity_lock:
