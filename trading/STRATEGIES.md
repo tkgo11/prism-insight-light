@@ -17,9 +17,12 @@ If `name` is empty, the bot uses the normal old behavior.
 | Strategy name | Easy idea | Works with |
 | --- | --- | --- |
 | `balance_split` | Split the cash into equal pieces and buy with one piece. | BUY |
+| `balanced_risk` | Combine score/risk-based entries with protective staged exits. | BUY and SELL |
 | `score_weighted` | Buy more when the signal score is stronger. | BUY |
+| `score_risk` | Require a good score and reward/risk ratio, then size by stop-loss risk. | BUY |
 | `risk_bracket` | Decide the buy size by how much money you are willing to risk. | BUY |
 | `profit_ladder` | Sell in steps as profit gets bigger, like climbing a ladder. | SELL |
+| `protective_exit` | Exit urgent risks fully and take ordinary profits in steps. | SELL |
 | `stop_loss_sell` | Sell at the stop-loss price sent by Pub/Sub. | SELL |
 | `limit_buffer` | Move the limit price a little to help the order price. | BUY and SELL |
 | `cooldown` | Wait before trading the same thing again. | Usually BUY |
@@ -31,12 +34,95 @@ In `trading/config/kis_devlp.yaml`, set:
 
 ```yaml
 signal_strategy:
-  name: "stop_loss_sell"
+  name: "balanced_risk"
 ```
 
-The example config defaults to `stop_loss_sell` so SELL signals use their Pub/Sub `stop_loss` as the limit price. Replace `stop_loss_sell` with another strategy when you want different behavior.
+The example config defaults to `balanced_risk`. It is the recommended general-purpose setting because it applies one coherent risk policy to both BUY and SELL signals. It is intentionally conservative: a BUY needs `buy_score`, `stop_loss`, and `target_price`, while urgent exit reasons sell the whole position.
 Each strategy also has its own settings under `signal_strategy`.
 The example config file shows the available setting names, but this guide explains what they mean.
+
+## `balanced_risk` (recommended)
+
+### In one sentence
+
+`balanced_risk` uses `score_risk` for BUY signals and `protective_exit` for SELL signals.
+
+### What it does
+
+- Rejects BUY signals below `min_score`.
+- Requires a stop loss below the entry price.
+- Requires a target above the entry price by default.
+- Rejects BUY signals below `min_reward_risk`.
+- Multiplies the configured loss budget by the matching `score_bands` weight.
+- Caps the resulting position with `max_position_amount_krw` or `max_position_amount_usd`.
+- Fully exits `stop_loss`, `risk_off`, and `manual_exit` SELL reasons by default.
+- Uses `profit_bands` for staged profit taking on ordinary SELL signals.
+
+### Recommended defaults
+
+```yaml
+signal_strategy:
+  name: "balanced_risk"
+  min_score: 60
+  score_bands:
+    60: 0.25
+    75: 0.5
+    90: 1.0
+  risk_amount_krw: 10000
+  risk_amount_usd: 25
+  max_position_amount_krw: 500000
+  max_position_amount_usd: 500
+  require_target_price: true
+  min_reward_risk: 1.5
+  profit_bands:
+    5: 0.25
+    10: 0.5
+    20: 1.0
+  full_exit_reasons:
+    - stop_loss
+    - risk_off
+    - manual_exit
+  use_stop_loss_price: true
+```
+
+These are safe example amounts, not account-specific investment advice. Test them in `demo` mode and adjust the currency budgets and position caps to the account size before enabling real orders.
+
+## `score_risk`
+
+### In one sentence
+
+`score_risk` combines signal quality, reward/risk, and stop-loss distance to choose a BUY size.
+
+### Main settings
+
+- `risk_amount_krw` / `risk_amount_usd`: maximum configured loss budget before score weighting.
+- `max_position_amount_krw` / `max_position_amount_usd`: position notional caps.
+- `min_score`: lowest accepted `buy_score`.
+- `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
+- `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`.
+- `require_target_price`: reject BUY signals without `target_price`.
+
+### When it is useful
+
+Use it when BUY signals reliably contain `buy_score`, `stop_loss`, and `target_price`, but SELL signals should keep the legacy path.
+
+## `protective_exit`
+
+### In one sentence
+
+`protective_exit` combines stop-loss execution and staged profit taking.
+
+### Main settings
+
+- `full_exit_reasons`: reasons that immediately sell the full position.
+- `stop_loss_sell_percent`: stop-loss fraction when `stop_loss` is not listed as a full-exit reason.
+- `profit_bands`: profit thresholds and fractions for ordinary exits.
+- `default_sell_percent`: fallback fraction when no band or urgent reason matches.
+- `use_stop_loss_price`: prefer the lower of `price` and `stop_loss` for a triggered stop-loss SELL.
+
+### When it is useful
+
+Use it when BUY signals should keep the legacy path but all SELL signals should share one protective exit policy.
 
 
 ## `stop_loss_sell`
