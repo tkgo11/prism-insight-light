@@ -117,24 +117,28 @@ accounts:
 # 신호 기반 전략 설정
 # 자세한 전략 설명은 trading/STRATEGIES.md 파일을 읽어보세요.
 # - name: "" 기존 동작 유지 (전략 비활성화)
-# - name: "stop_loss_sell", "balance_split", "score_weighted", "risk_bracket",
-#         "profit_ladder", "limit_buffer", "cooldown", "event_risk_off" 중 하나를 선택할 수 있습니다.
+# - name: "balanced_risk"가 BUY/SELL 위험 관리를 함께 적용하는 권장 기본값입니다.
+# - 그 밖에 "stop_loss_sell", "balance_split", "score_weighted", "score_risk",
+#   "risk_bracket", "profit_ladder", "protective_exit", "limit_buffer",
+#   "cooldown", "event_risk_off" 중 하나를 선택할 수 있습니다.
 signal_strategy:
-  name: "stop_loss_sell"
+  name: "balanced_risk"
   split_count: 2
   base_amount_krw: 50000
   base_amount_usd: 100
   min_score: 60
+  # balanced_risk/score_risk: 점수에 따라 허용 손실 예산을 25%/50%/100%로 조절
   score_bands:
     60: 0.25
     75: 0.5
     90: 1.0
   risk_amount_krw: 10000
   risk_amount_usd: 25
-  max_position_amount_krw: 100000
+  max_position_amount_krw: 500000
   max_position_amount_usd: 500
   require_stop_loss: true
-  require_target_price: false
+  require_target_price: true
+  min_reward_risk: 1.5
   profit_bands:
     5: 0.25
     10: 0.5
@@ -142,6 +146,7 @@ signal_strategy:
   stop_loss_sell_percent: 1.0
   default_sell_percent: 1.0
   fallback_to_signal_price: true
+  use_stop_loss_price: true
   full_exit_reasons:
     - stop_loss
     - risk_off
