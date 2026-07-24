@@ -23,17 +23,18 @@ auto_trading: true
 # - 전체 자산 비율: default_unit_asset_percent(_usd)에 0~100 사이 값을 넣으면
 #   보유 중인 주식 평가액까지 포함한 전체 자산(total_eval_amount)의 해당 %를
 #   1회 기본 매수 금액으로 계산합니다. 주문 가능 현금보다 크면 현금 한도로 제한합니다.
-default_unit_amount: 10000       # 한국 주식 1회 기본 매수 금액 (KRW), 비율 미설정/조회 실패 시 fallback
-default_unit_amount_usd: 100     # 미국 주식 1회 기본 매수 금액 (USD), 비율 미설정/조회 실패 시 fallback
-default_unit_asset_percent: null      # 예: 2.5 => 전체 자산의 2.5%를 한국 주식 1회 매수 금액으로 사용
-default_unit_asset_percent_usd: null  # 예: 2.5 => 전체 자산의 2.5%를 미국 주식 1회 매수 금액으로 사용
+default_unit_amount: 1000000     # 한국 주식 1회 기본 매수 금액 (KRW), 자산 조회 실패 시 fallback
+default_unit_amount_usd: 2000    # 미국 주식 1회 기본 매수 금액 (USD), 자산 조회 실패 시 fallback
+default_unit_asset_percent: 100       # 주문 가능 현금 한도까지 사용
+default_unit_asset_percent_usd: 100   # 주문 가능 USD/자동환전 한도까지 사용
 
 # 미국 주식 매수 시 USD 예수금이 부족하면 KIS의 해외주식 매수가능금액조회
 # (환전이후주문가능금액)를 사용해 원화->USD 자동환전 가능 범위까지 주문합니다.
-# 기본값은 안전을 위해 false입니다. 실전 사용 전 demo/소액으로 반드시 검증하세요.
-auto_exchange_usd_on_buy: false
+# 공격형 기본값은 true이며, 가능한 주문 금액을 확보하기 위해 자동환전을 사용합니다.
+auto_exchange_usd_on_buy: true
+auto_exchange_buffer_percent: 5.0
 max_auto_exchange_krw: null          # 예: 500000 => 1회 자동환전 사용 한도(KRW). null이면 KIS 가능 금액까지 사용
-auto_exchange_min_shortfall_usd: 1.0 # USD 부족액이 이 값 이상일 때만 자동환전 가능 금액을 조회
+auto_exchange_min_shortfall_usd: 0.0 # 부족액이 있으면 항상 자동환전 가능 금액을 조회
 
 
 # 기본 상품 코드
@@ -123,26 +124,21 @@ accounts:
 #   "cooldown", "event_risk_off" 중 하나를 선택할 수 있습니다.
 signal_strategy:
   name: "balanced_risk"
-  split_count: 2
-  base_amount_krw: 50000
-  base_amount_usd: 100
-  min_score: 60
-  # balanced_risk/score_risk: 점수에 따라 허용 손실 예산을 25%/50%/100%로 조절
+  split_count: 1
+  base_amount_krw: 1000000
+  base_amount_usd: 2000
+  min_score: 0
+  # 점수 유무나 점수값과 관계없이 최대 가중치로 실행
   score_bands:
-    60: 0.25
-    75: 0.5
-    90: 1.0
-  risk_amount_krw: 10000
-  risk_amount_usd: 25
-  max_position_amount_krw: 500000
-  max_position_amount_usd: 500
-  require_stop_loss: true
-  require_target_price: true
-  min_reward_risk: 1.5
-  profit_bands:
-    5: 0.25
-    10: 0.5
-    20: 1.0
+    0: 1.0
+  risk_amount_krw: 1000000
+  risk_amount_usd: 2000
+  max_position_amount_krw: 0
+  max_position_amount_usd: 0
+  require_stop_loss: false
+  require_target_price: false
+  min_reward_risk: 0
+  profit_bands: {}
   stop_loss_sell_percent: 1.0
   default_sell_percent: 1.0
   fallback_to_signal_price: true
@@ -151,18 +147,16 @@ signal_strategy:
     - stop_loss
     - risk_off
     - manual_exit
-  buy_buffer_percent: 0.1
-  sell_buffer_percent: 0.1
+  buy_buffer_percent: 5.0
+  sell_buffer_percent: 5.0
   us_price_decimals: 2
   kr_tick_rounding: 1
-  window_minutes: 60
-  apply_to_signal_types:
-    - BUY
+  window_minutes: 1
+  apply_to_signal_types: []
   scope: "market_ticker"
-  risk_off_event_types:
-    - RISK_OFF
-  risk_off_window_minutes: 1440
-  buy_size_multiplier: 0.0
+  risk_off_event_types: []
+  risk_off_window_minutes: 1
+  buy_size_multiplier: 1.0
 
 # User-Agent
 # 보통 기본값 그대로 사용해도 됩니다.

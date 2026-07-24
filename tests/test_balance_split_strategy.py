@@ -68,6 +68,12 @@ def test_balance_split_config_requires_positive_split_count():
         BalanceSplitStrategyConfig.from_mapping({"name": "balance_split", "split_count": 0})
 
 
+def test_balance_split_defaults_to_all_available_cash():
+    config = BalanceSplitStrategyConfig.from_mapping({"name": "balance_split"})
+
+    assert config.split_count == 1
+
+
 @pytest.mark.asyncio
 async def test_us_balance_split_buys_one_fraction_of_available_balance(balance_split_strategy):
     trader = FakeUSTrader(available_amount=900.0)

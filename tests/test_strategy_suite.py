@@ -41,11 +41,49 @@ async def test_score_weighted_buys_from_score_band():
     assert FakeUSTrader.calls == [("buy", "AAPL", 100.0, 10.0)]
 
 
+@pytest.mark.asyncio
+async def test_score_weighted_defaults_execute_without_score_or_base_amount():
+    config = ScoreWeightedStrategyConfig.from_mapping({"name": "score_weighted"})
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 10}
+    )
+
+    result = await ScoreWeightedStrategy(config=config).execute(
+        signal, trading_mode="demo"
+    )
+
+    assert result.status == "executed"
+    assert config.score_bands == {0: 1.0}
+    assert FakeUSTrader.calls == [("buy", "AAPL", None, 10.0)]
+
+
 def test_profit_ladder_config_parses_bands_and_reasons():
     config = ProfitLadderStrategyConfig.from_mapping({"name": "profit_ladder", "profit_bands": {"5": .25}, "full_exit_reasons": ["manual_exit"]})
 
     assert config.profit_bands == {5.0: .25}
     assert config.full_exit_reasons == ("manual_exit",)
+
+
+@pytest.mark.asyncio
+async def test_profit_ladder_defaults_sell_everything():
+    config = ProfitLadderStrategyConfig.from_mapping({"name": "profit_ladder"})
+    signal = parse_signal_payload(
+        {
+            "type": "SELL",
+            "ticker": "AAPL",
+            "market": "US",
+            "price": 100,
+            "profit_rate": 1,
+        }
+    )
+
+    result = await ProfitLadderStrategy(config=config).execute(
+        signal, trading_mode="demo"
+    )
+
+    assert config.profit_bands == {}
+    assert result.status == "executed"
+    assert FakeUSTrader.calls == [("sell", "AAPL", 1.0, 100.0)]
 
 
 @pytest.mark.parametrize("value", [-0.1, 1.1, float("nan"), float("inf")])
@@ -144,8 +182,15 @@ async def test_limit_buffer_adjusts_sell_price():
     assert FakeUSTrader.calls == [("sell", "AAPL", None, 99.0)]
 
 
+def test_limit_buffer_defaults_to_five_percent():
+    config = LimitBufferStrategyConfig.from_mapping({"name": "limit_buffer"})
+
+    assert config.buy_buffer_percent == 5.0
+    assert config.sell_buffer_percent == 5.0
+
+
 @pytest.mark.asyncio
-async def test_risk_bracket_rejects_stop_above_entry(tmp_path):
+async def test_risk_bracket_falls_back_when_stop_is_not_usable(tmp_path):
     config = RiskBracketStrategyConfig.from_mapping({"name": "risk_bracket", "risk_amount_usd": 25})
     strategy = RiskBracketStrategy(config=config)
     strategy.metadata_path = tmp_path / "risk.json"
@@ -153,13 +198,13 @@ async def test_risk_bracket_rejects_stop_above_entry(tmp_path):
 
     result = await strategy.execute(signal, trading_mode="demo")
 
-    assert result.status == "rejected"
-    assert FakeUSTrader.calls == []
+    assert result.status == "executed"
+    assert FakeUSTrader.calls == [("buy", "AAPL", None, 100.0)]
 
 
 @pytest.mark.asyncio
 async def test_cooldown_blocks_duplicate_execution(tmp_path):
-    config = CooldownStrategyConfig.from_mapping({"name": "cooldown", "runtime_path": str(tmp_path / "cooldown.json")})
+    config = CooldownStrategyConfig.from_mapping({"name": "cooldown", "apply_to_signal_types": ["BUY"], "runtime_path": str(tmp_path / "cooldown.json")})
     strategy = CooldownStrategy(config=config)
     signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100})
 
@@ -169,6 +214,23 @@ async def test_cooldown_blocks_duplicate_execution(tmp_path):
     assert first.status == "executed"
     assert second.status == "rejected"
     assert len(FakeUSTrader.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_cooldown_defaults_pass_duplicate_signals_through():
+    config = CooldownStrategyConfig.from_mapping({"name": "cooldown"})
+    strategy = CooldownStrategy(config=config)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100}
+    )
+
+    first = await strategy.execute(signal, trading_mode="demo")
+    second = await strategy.execute(signal, trading_mode="demo")
+
+    assert config.apply_to_signal_types == ()
+    assert first.status == "executed"
+    assert second.status == "executed"
+    assert len(FakeUSTrader.calls) == 2
 
 
 @pytest.mark.asyncio
@@ -188,7 +250,7 @@ async def test_cooldown_serializes_concurrent_duplicate_execution(monkeypatch, t
 
     monkeypatch.setattr("trading.strategies.cooldown.execute_order", delayed_execute)
     config = CooldownStrategyConfig.from_mapping(
-        {"name": "cooldown", "runtime_path": str(tmp_path / "cooldown.json")}
+        {"name": "cooldown", "apply_to_signal_types": ["BUY"], "runtime_path": str(tmp_path / "cooldown.json")}
     )
     strategy = CooldownStrategy(config=config)
     signal = parse_signal_payload(
@@ -327,7 +389,14 @@ async def test_us_partial_sell_reuses_verified_exchange_and_quantity(monkeypatch
 
 @pytest.mark.asyncio
 async def test_event_risk_off_records_event_and_blocks_buy(tmp_path):
-    config = EventRiskOffStrategyConfig.from_mapping({"name": "event_risk_off", "runtime_path": str(tmp_path / "risk_off.json")})
+    config = EventRiskOffStrategyConfig.from_mapping(
+        {
+            "name": "event_risk_off",
+            "risk_off_event_types": ["RISK_OFF"],
+            "buy_size_multiplier": 0.0,
+            "runtime_path": str(tmp_path / "risk_off.json"),
+        }
+    )
     strategy = EventRiskOffStrategy(config=config)
     event = parse_signal_payload({"type": "EVENT", "ticker": "AAPL", "market": "US", "event_type": "RISK_OFF", "price": 0})
     buy = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100})
@@ -338,3 +407,34 @@ async def test_event_risk_off_records_event_and_blocks_buy(tmp_path):
     assert event_result.status == "acknowledged"
     assert buy_result.status == "rejected"
     assert FakeUSTrader.calls == []
+
+
+@pytest.mark.asyncio
+async def test_event_risk_off_defaults_never_block_or_shrink_buy(tmp_path):
+    config = EventRiskOffStrategyConfig.from_mapping(
+        {
+            "name": "event_risk_off",
+            "runtime_path": str(tmp_path / "risk_off.json"),
+        }
+    )
+    strategy = EventRiskOffStrategy(config=config)
+    event = parse_signal_payload(
+        {
+            "type": "EVENT",
+            "ticker": "AAPL",
+            "market": "US",
+            "event_type": "RISK_OFF",
+        }
+    )
+    buy = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100}
+    )
+
+    event_result = await strategy.execute(event, trading_mode="demo")
+    buy_result = await strategy.execute(buy, trading_mode="demo")
+
+    assert config.risk_off_event_types == ()
+    assert config.buy_size_multiplier == 1.0
+    assert event_result.status == "acknowledged"
+    assert buy_result.status == "executed"
+    assert FakeUSTrader.calls == [("buy", "AAPL", None, 100.0)]

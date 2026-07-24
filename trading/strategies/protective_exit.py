@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from ..schema import SignalMessage
@@ -23,7 +23,7 @@ PROTECTIVE_EXIT = "protective_exit"
 class ProtectiveExitStrategyConfig:
     """Configuration for protective full exits and staged profit taking."""
 
-    profit_bands: dict[float, float]
+    profit_bands: dict[float, float] = field(default_factory=dict)
     stop_loss_sell_percent: float = 1.0
     default_sell_percent: float = 1.0
     full_exit_reasons: tuple[str, ...] = ()
@@ -38,7 +38,7 @@ class ProtectiveExitStrategyConfig:
         bands = {
             float(raw_profit): float(raw_fraction)
             for raw_profit, raw_fraction in dict(
-                payload.get("profit_bands") or {5: 0.25, 10: 0.5, 20: 1.0}
+                payload.get("profit_bands", {})
             ).items()
         }
         if any(not math.isfinite(profit) for profit in bands):
