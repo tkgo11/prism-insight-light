@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+from trading import yaml_compat as yaml
 from trading.dispatch import TradeDispatcher
 from trading.schema import parse_signal_payload
 from trading.strategies.balanced_risk import (
@@ -224,3 +227,69 @@ def test_balanced_risk_builds_both_strategy_legs():
     assert isinstance(config.buy, ScoreRiskStrategyConfig)
     assert isinstance(config.sell, ProtectiveExitStrategyConfig)
     assert isinstance(BalancedRiskStrategy(config=config), BalancedRiskStrategy)
+
+
+@pytest.mark.asyncio
+async def test_aggressive_balanced_defaults_execute_minimal_valid_signals(monkeypatch):
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo",
+        strategy_config={"name": "balanced_risk"},
+    )
+    buy = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100}
+    )
+    sell = parse_signal_payload(
+        {"type": "SELL", "ticker": "AAPL", "market": "US", "price": 101}
+    )
+
+    buy_result = await dispatcher.dispatch(buy)
+    sell_result = await dispatcher.dispatch(sell)
+
+    assert buy_result.status == "executed"
+    assert sell_result.status == "executed"
+    assert FakeUSTrader.calls == [
+        ("buy", "AAPL", None, 100.0),
+        ("sell", "AAPL", 1.0, 101.0),
+    ]
+
+
+def test_aggressive_balanced_defaults_disable_all_entry_filters():
+    config = BalancedRiskStrategyConfig.from_mapping({"name": "balanced_risk"})
+
+    assert config.buy.min_score == 0
+    assert config.buy.score_bands == {0: 1.0}
+    assert config.buy.min_reward_risk == 0
+    assert config.buy.require_stop_loss is False
+    assert config.buy.require_target_price is False
+    assert config.buy.max_position_amount_krw == 0
+    assert config.buy.max_position_amount_usd == 0
+    assert config.sell.profit_bands == {}
+    assert config.sell.default_sell_percent == 1.0
+
+
+def test_example_config_uses_aggressive_execution_defaults():
+    payload = yaml.safe_load(
+        Path("trading/config/kis_devlp.yaml.example").read_text(encoding="utf-8")
+    )
+    strategy = payload["signal_strategy"]
+
+    assert payload["default_unit_amount"] == 1_000_000
+    assert payload["default_unit_amount_usd"] == 2_000
+    assert payload["default_unit_asset_percent"] == 100
+    assert payload["default_unit_asset_percent_usd"] == 100
+    assert payload["auto_exchange_usd_on_buy"] is True
+    assert payload["auto_exchange_min_shortfall_usd"] == 0
+    assert strategy["name"] == "balanced_risk"
+    assert strategy["split_count"] == 1
+    assert strategy["min_score"] == 0
+    assert strategy["score_bands"] == {0: 1.0}
+    assert strategy["require_stop_loss"] is False
+    assert strategy["require_target_price"] is False
+    assert strategy["min_reward_risk"] == 0
+    assert strategy["max_position_amount_krw"] == 0
+    assert strategy["max_position_amount_usd"] == 0
+    assert strategy["profit_bands"] == {}
+    assert strategy["apply_to_signal_types"] == []
+    assert strategy["risk_off_event_types"] == []
+    assert strategy["buy_size_multiplier"] == 1.0

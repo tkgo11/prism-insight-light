@@ -30,7 +30,7 @@ RESERVATION_PATH = (
 class BalanceSplitStrategyConfig:
     """Configuration for buying with a fraction of currently available cash."""
 
-    split_count: int
+    split_count: int = 1
 
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "BalanceSplitStrategyConfig | None":
@@ -39,7 +39,7 @@ class BalanceSplitStrategyConfig:
         name = str(payload.get("name", "")).strip()
         if name != BALANCE_SPLIT:
             return None
-        split_count = integer_value(payload, "split_count", 0, minimum=1)
+        split_count = integer_value(payload, "split_count", 1, minimum=1)
         return cls(split_count=split_count)
 
 

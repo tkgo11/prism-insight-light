@@ -18,7 +18,7 @@ class ScoreWeightedStrategyConfig:
     def from_mapping(cls, payload: dict[str, Any] | None) -> "ScoreWeightedStrategyConfig | None":
         if not payload or strategy_name(payload) != SCORE_WEIGHTED:
             return None
-        bands = payload.get("score_bands") or {60: 0.25, 75: 0.5, 90: 1.0}
+        bands = payload.get("score_bands") or {0: 1.0}
         parsed: dict[int, float] = {}
         for raw_score, raw_weight in dict(bands).items():
             score = float(raw_score)
@@ -34,13 +34,14 @@ class ScoreWeightedStrategy:
     async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.signal_type != "BUY":
             return StrategyExecution("rejected", "Score weighted strategy only supports BUY signals", signal.market, signal.ticker)
-        if signal.buy_score is None or signal.buy_score < self.config.min_score:
+        if signal.buy_score is not None and signal.buy_score < self.config.min_score:
             return StrategyExecution("rejected", "BUY score is missing or below the configured threshold", signal.market, signal.ticker)
-        weight = 0.0
-        for score, band_weight in sorted((self.config.score_bands or {}).items()):
-            if signal.buy_score >= score: weight = band_weight
-        buy_amount = market_base_amount(signal, krw=self.config.base_amount_krw, usd=self.config.base_amount_usd) * weight
-        if buy_amount <= 0:
-            return StrategyExecution("failed", "Score weighted buy amount is zero", signal.market, signal.ticker)
+        bands = self.config.score_bands or {0: 1.0}
+        weight = 1.0 if signal.buy_score is None else min(bands.values())
+        for score, band_weight in sorted(bands.items()):
+            if signal.buy_score is not None and signal.buy_score >= score: weight = band_weight
+        base_amount = market_base_amount(signal, krw=self.config.base_amount_krw, usd=self.config.base_amount_usd)
+        buy_amount = base_amount * weight if base_amount > 0 else None
         result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=buy_amount, limit_price=signal.price)
-        return execution_from_result(signal, result, f"Score weighted buy {buy_amount:.2f} at weight {weight:.2f}", buy_amount=buy_amount, weight=weight)
+        amount_label = f"{buy_amount:.2f}" if buy_amount is not None else "broker default"
+        return execution_from_result(signal, result, f"Score weighted buy {amount_label} at weight {weight:.2f}", buy_amount=buy_amount, weight=weight)

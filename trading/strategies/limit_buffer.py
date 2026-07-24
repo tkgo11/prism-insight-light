@@ -8,13 +8,13 @@ from .common import StrategyExecution, execute_order, execution_from_result, int
 LIMIT_BUFFER = "limit_buffer"
 @dataclass(frozen=True, slots=True)
 class LimitBufferStrategyConfig:
-    buy_buffer_percent: float = 0.0; sell_buffer_percent: float = 0.0; us_price_decimals: int = 2; kr_tick_rounding: int = 1
+    buy_buffer_percent: float = 5.0; sell_buffer_percent: float = 5.0; us_price_decimals: int = 2; kr_tick_rounding: int = 1
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "LimitBufferStrategyConfig | None":
         if not payload or strategy_name(payload) != LIMIT_BUFFER: return None
         tick = integer_value(payload, "kr_tick_rounding", 1, minimum=1)
         decimals = integer_value(payload, "us_price_decimals", 2, minimum=0, maximum=8)
-        return cls(positive_number(payload,"buy_buffer_percent"), positive_number(payload,"sell_buffer_percent"), decimals, tick)
+        return cls(positive_number(payload,"buy_buffer_percent", 5.0), positive_number(payload,"sell_buffer_percent", 5.0), decimals, tick)
 
 class LimitBufferStrategy:
     def __init__(self, *, config: LimitBufferStrategyConfig): self.config = config
