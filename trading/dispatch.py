@@ -19,6 +19,8 @@ from .schema import SignalMessage, parse_signal_payload
 from .strategies import (
     BalanceSplitStrategy,
     BalanceSplitStrategyConfig,
+    BalancedRiskStrategy,
+    BalancedRiskStrategyConfig,
     CooldownStrategy,
     CooldownStrategyConfig,
     EventRiskOffStrategy,
@@ -27,8 +29,12 @@ from .strategies import (
     LimitBufferStrategyConfig,
     ProfitLadderStrategy,
     ProfitLadderStrategyConfig,
+    ProtectiveExitStrategy,
+    ProtectiveExitStrategyConfig,
     RiskBracketStrategy,
     RiskBracketStrategyConfig,
+    ScoreRiskStrategy,
+    ScoreRiskStrategyConfig,
     ScoreWeightedStrategy,
     ScoreWeightedStrategyConfig,
     StopLossSellStrategy,
@@ -67,9 +73,12 @@ class TradeDispatcher:
         self.queue = queue or OffHoursOrderQueue(queue_path)
         self.strategy_config = strategy_config if strategy_config is not None else self._load_strategy_config()
         self.balance_split_config = BalanceSplitStrategyConfig.from_mapping(self.strategy_config)
+        self.balanced_risk_config = BalancedRiskStrategyConfig.from_mapping(self.strategy_config)
         self.score_weighted_config = ScoreWeightedStrategyConfig.from_mapping(self.strategy_config)
+        self.score_risk_config = ScoreRiskStrategyConfig.from_mapping(self.strategy_config)
         self.risk_bracket_config = RiskBracketStrategyConfig.from_mapping(self.strategy_config)
         self.profit_ladder_config = ProfitLadderStrategyConfig.from_mapping(self.strategy_config)
+        self.protective_exit_config = ProtectiveExitStrategyConfig.from_mapping(self.strategy_config)
         self.limit_buffer_config = LimitBufferStrategyConfig.from_mapping(self.strategy_config)
         self.cooldown_config = CooldownStrategyConfig.from_mapping(self.strategy_config)
         self.event_risk_off_config = EventRiskOffStrategyConfig.from_mapping(self.strategy_config)
@@ -165,6 +174,8 @@ class TradeDispatcher:
         return None
 
     def _resolve_strategy(self, signal: SignalMessage):
+        if self.balanced_risk_config is not None and signal.is_trade:
+            return BalancedRiskStrategy(config=self.balanced_risk_config)
         if self.event_risk_off_config is not None:
             return EventRiskOffStrategy(config=self.event_risk_off_config)
         if self.cooldown_config is not None:
@@ -178,11 +189,15 @@ class TradeDispatcher:
                 return ScoreWeightedStrategy(config=self.score_weighted_config)
             if self.risk_bracket_config is not None:
                 return RiskBracketStrategy(config=self.risk_bracket_config)
+            if self.score_risk_config is not None:
+                return ScoreRiskStrategy(config=self.score_risk_config)
         if signal.signal_type == "SELL":
             if self.stop_loss_sell_config is not None:
                 return StopLossSellStrategy(config=self.stop_loss_sell_config)
             if self.profit_ladder_config is not None:
                 return ProfitLadderStrategy(config=self.profit_ladder_config)
+            if self.protective_exit_config is not None:
+                return ProtectiveExitStrategy(config=self.protective_exit_config)
         return None
 
     def _resolve_buy_strategy(self, signal: SignalMessage) -> BalanceSplitStrategy | None:
