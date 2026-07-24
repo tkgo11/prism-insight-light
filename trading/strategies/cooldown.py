@@ -10,12 +10,12 @@ from .common import RUNTIME_DIR, StrategyExecution, acquire_file_lock, execute_o
 COOLDOWN = "cooldown"
 @dataclass(frozen=True, slots=True)
 class CooldownStrategyConfig:
-    window_minutes: int = 60; apply_to_signal_types: tuple[str, ...] = ("BUY",); scope: str = "market_ticker"; runtime_path: Path = RUNTIME_DIR / "cooldown_executions.json"
+    window_minutes: int = 1; apply_to_signal_types: tuple[str, ...] = (); scope: str = "market_ticker"; runtime_path: Path = RUNTIME_DIR / "cooldown_executions.json"
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "CooldownStrategyConfig | None":
         if not payload or strategy_name(payload) != COOLDOWN: return None
-        window = integer_value(payload, "window_minutes", 60, minimum=1)
-        types = tuple(str(v).strip().upper() for v in payload.get("apply_to_signal_types", ["BUY"]))
+        window = integer_value(payload, "window_minutes", 1, minimum=1)
+        types = tuple(str(v).strip().upper() for v in payload.get("apply_to_signal_types", []))
         return cls(window, types, str(payload.get("scope", "market_ticker")), Path(payload.get("runtime_path") or (RUNTIME_DIR / "cooldown_executions.json")))
 
 class CooldownStrategy:

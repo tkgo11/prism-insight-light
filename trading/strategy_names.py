@@ -2,11 +2,14 @@
 
 SUPPORTED_STRATEGY_NAMES = (
     "balance_split",
+    "balanced_risk",
     "cooldown",
     "event_risk_off",
     "limit_buffer",
     "profit_ladder",
+    "protective_exit",
     "risk_bracket",
+    "score_risk",
     "score_weighted",
     "stop_loss_sell",
 )

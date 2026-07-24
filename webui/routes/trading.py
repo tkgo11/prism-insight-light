@@ -91,7 +91,7 @@ async def update_config(request: Request):
             fields,
             {
                 "name": form.get("signal_strategy_name", ""),
-                "split_count": form.get("signal_strategy_split_count", "2"),
+                "split_count": form.get("signal_strategy_split_count", "1"),
             },
         )
         response_status = status.HTTP_200_OK

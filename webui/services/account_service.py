@@ -128,7 +128,7 @@ def list_accounts() -> dict[str, Any]:
                 "buy_amount_usd": _safe_scalar(account.get("buy_amount_usd")),
                 "buy_percent_krw": _safe_scalar(account.get("buy_percent_krw")),
                 "buy_percent_usd": _safe_scalar(account.get("buy_percent_usd")),
-                "auto_exchange_usd_on_buy": bool(account.get("auto_exchange_usd_on_buy", data.get("auto_exchange_usd_on_buy", False))),
+                "auto_exchange_usd_on_buy": bool(account.get("auto_exchange_usd_on_buy", data.get("auto_exchange_usd_on_buy", True))),
                 "has_account_key": bool(account.get("app_key") or account.get("app_secret")),
             }
         )
@@ -165,7 +165,7 @@ def get_config_editor_model() -> dict[str, Any]:
         "fields": safe_fields,
         "strategy": {
             "name": current_strategy_name,
-            "split_count": str(strategy.get("split_count") or "2"),
+            "split_count": str(strategy.get("split_count") or "1"),
         },
         "strategy_names": strategy_names,
         "editable_strategy_names": WEBUI_EDITABLE_STRATEGY_NAMES,
@@ -219,7 +219,7 @@ def update_config_fields(fields: dict[str, str], strategy: dict[str, str] | None
         current_name = str(current.get("name") or "")
         if name not in {"", current_name, *WEBUI_EDITABLE_STRATEGY_NAMES}:
             raise ValueError("this strategy cannot be configured safely in the WebUI")
-        split_count = int(str(strategy.get("split_count") or "2"))
+        split_count = int(str(strategy.get("split_count") or "1"))
         if split_count <= 0:
             raise ValueError("signal_strategy.split_count must be positive")
         next_strategy["name"] = name

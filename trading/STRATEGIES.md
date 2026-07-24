@@ -11,19 +11,26 @@ A signal can say things like:
 
 Only one strategy is selected by `signal_strategy.name` in `trading/config/kis_devlp.yaml`.
 If `name` is empty, the bot uses the normal old behavior.
+The maintained example uses aggressive pass-through defaults: every valid BUY
+or SELL signal reaches an order attempt without score, reward/risk, cooldown,
+or risk-off filtering. Broker rejection is still possible when the account has
+no cash/position or the order itself is invalid.
 
 ## Quick list
 
 | Strategy name | Easy idea | Works with |
 | --- | --- | --- |
 | `balance_split` | Split the cash into equal pieces and buy with one piece. | BUY |
-| `score_weighted` | Buy more when the signal score is stronger. | BUY |
+| `balanced_risk` | Execute every trade signal, using risk data when available. | BUY and SELL |
+| `score_weighted` | Weight BUY size by score without dropping scoreless signals. | BUY |
+| `score_risk` | Size from stop-loss risk when possible, otherwise use the broker default. | BUY |
 | `risk_bracket` | Decide the buy size by how much money you are willing to risk. | BUY |
 | `profit_ladder` | Sell in steps as profit gets bigger, like climbing a ladder. | SELL |
+| `protective_exit` | Exit urgent risks fully and take ordinary profits in steps. | SELL |
 | `stop_loss_sell` | Sell at the stop-loss price sent by Pub/Sub. | SELL |
 | `limit_buffer` | Move the limit price a little to help the order price. | BUY and SELL |
-| `cooldown` | Wait before trading the same thing again. | Usually BUY |
-| `event_risk_off` | Remember danger events and block or shrink buys for a while. | EVENT and BUY |
+| `cooldown` | Optional duplicate guard; pass everything through by default. | BUY and SELL |
+| `event_risk_off` | Optional event guard; never blocks or shrinks by default. | EVENT and BUY |
 
 ## How to choose a strategy
 
@@ -31,12 +38,97 @@ In `trading/config/kis_devlp.yaml`, set:
 
 ```yaml
 signal_strategy:
-  name: "stop_loss_sell"
+  name: "balanced_risk"
 ```
 
-The example config defaults to `stop_loss_sell` so SELL signals use their Pub/Sub `stop_loss` as the limit price. Replace `stop_loss_sell` with another strategy when you want different behavior.
+The example config defaults to `balanced_risk`. Its defaults are intentionally
+aggressive: score and reward/risk thresholds are disabled, missing optional
+risk fields fall back to the broker's configured buy size, position caps are
+disabled, and every SELL signal exits the full position.
 Each strategy also has its own settings under `signal_strategy`.
 The example config file shows the available setting names, but this guide explains what they mean.
+
+## `balanced_risk` (recommended)
+
+### In one sentence
+
+`balanced_risk` uses `score_risk` for BUY signals and `protective_exit` for SELL signals.
+
+### What it does
+
+- Sends every valid BUY and SELL signal to the broker.
+- Uses full score weight even when `buy_score` is missing.
+- Uses stop-loss risk sizing when a usable stop is present.
+- Falls back to the broker/config buy size when risk sizing cannot produce one share.
+- Does not require `stop_loss` or `target_price`.
+- Does not impose a position cap.
+- Sells the full position for every SELL reason by default.
+
+### Recommended defaults
+
+```yaml
+signal_strategy:
+  name: "balanced_risk"
+  min_score: 0
+  score_bands:
+    0: 1.0
+  risk_amount_krw: 1000000
+  risk_amount_usd: 2000
+  max_position_amount_krw: 0
+  max_position_amount_usd: 0
+  require_stop_loss: false
+  require_target_price: false
+  min_reward_risk: 0
+  profit_bands: {}
+  default_sell_percent: 1.0
+  full_exit_reasons:
+    - stop_loss
+    - risk_off
+    - manual_exit
+  use_stop_loss_price: true
+```
+
+These defaults are deliberately aggressive. The example remains in `demo`
+mode so the operator still chooses when to connect the same policy to a real
+account.
+
+## `score_risk`
+
+### In one sentence
+
+`score_risk` uses signal risk data when available and otherwise still places the BUY.
+
+### Main settings
+
+- `risk_amount_krw` / `risk_amount_usd`: maximum configured loss budget before score weighting.
+- `max_position_amount_krw` / `max_position_amount_usd`: position notional caps.
+- `min_score`: lowest accepted `buy_score`; default `0`.
+- `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
+- `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter.
+- `require_stop_loss` / `require_target_price`: both default to `false`.
+- A missing/invalid stop, zero risk budget, or sub-share calculation falls back to the broker/config default size instead of skipping.
+
+### When it is useful
+
+Use it when BUY signals sometimes contain useful risk fields but every valid BUY still needs an order attempt.
+
+## `protective_exit`
+
+### In one sentence
+
+`protective_exit` sends every SELL signal and sells 100% by default.
+
+### Main settings
+
+- `full_exit_reasons`: reasons that immediately sell the full position.
+- `stop_loss_sell_percent`: stop-loss fraction when `stop_loss` is not listed as a full-exit reason.
+- `profit_bands`: optional profit thresholds; empty by default.
+- `default_sell_percent`: fallback fraction when no band or urgent reason matches.
+- `use_stop_loss_price`: prefer the lower of `price` and `stop_loss` for a triggered stop-loss SELL.
+
+### When it is useful
+
+Use it when BUY signals should keep the legacy path but all SELL signals should share one protective exit policy.
 
 
 ## `stop_loss_sell`
@@ -75,9 +167,8 @@ Use this when Pub/Sub already calculates a stop-loss price and you want the bot'
 
 ### Kid-friendly example
 
-You have 10 cookies and 2 friends.
-If `split_count` is `2`, you only give away half of the cookies now.
-The other half stays for later.
+You have 10 cookies. With the default `split_count: 1`, the strategy uses the
+whole available cash balance for the signal.
 
 ### What it does
 
@@ -89,6 +180,7 @@ The other half stays for later.
 ### Main setting
 
 - `split_count`: how many equal pieces to split your available cash into.
+  - Default: `1`, meaning all available cash.
   - Example: `2` means use about half the cash.
   - Example: `4` means use about one quarter of the cash.
 
@@ -113,8 +205,9 @@ Better score, bigger buy.
 
 - It only handles **BUY** signals.
 - It reads `buy_score` from the signal.
-- If the score is too low, it does not buy.
-- If the score is high enough, it multiplies the base buy amount by a weight.
+- A missing score receives full weight.
+- Scores below the first configured band use that band's weight instead of being skipped.
+- With the default `0: 1.0` band, every score uses the full base amount.
 
 ### Main settings
 
@@ -146,7 +239,7 @@ The strategy checks the entry price and stop-loss price, then decides how many s
 - It needs an entry `price`.
 - It usually needs `stop_loss` too.
 - It calculates the gap between the buy price and the stop-loss price.
-- If `require_stop_loss` is `false` and the signal omits `stop_loss`, the strategy sizes the trade as if the stop loss were `0`, which can make the calculated position very small or reject the trade.
+- If risk sizing is unavailable or produces no whole share, it falls back to the broker/config default buy size.
 - It uses your risk budget to decide the buy amount.
 - It can save bracket information like entry price, stop loss, and target price.
 
@@ -180,7 +273,7 @@ At the top stair, you may sell all.
 
 - It only handles **SELL** signals.
 - It reads `profit_rate` from the signal when available.
-- It chooses a sell fraction from `profit_bands`.
+- It chooses a sell fraction from `profit_bands` when configured.
 - It can sell everything for important exit reasons like stop loss or risk off when no profit band overrides that amount.
 - If a SELL signal has both a `full_exit_reasons` reason and `profit_rate`, the matching `profit_bands` value decides the final sell fraction.
 
@@ -196,6 +289,7 @@ At the top stair, you may sell all.
 ### When it is useful
 
 Use this when you want to take profit step by step instead of selling everything at once.
+The default `profit_bands: {}` and `default_sell_percent: 1.0` sell everything.
 
 ## `limit_buffer`
 
@@ -222,6 +316,7 @@ That tiny change is the buffer.
 
 - `buy_buffer_percent`: how much to raise the BUY limit price.
 - `sell_buffer_percent`: how much to lower the SELL limit price.
+  - Both default to `5.0` for aggressive fill probability.
 - `us_price_decimals`: how many decimal places to keep for U.S. prices.
 - `kr_tick_rounding`: how to round Korean stock prices by tick size; choose a buffer large enough to survive this rounding if you need the limit price to move.
 
@@ -233,7 +328,7 @@ Use this when you want limit orders but also want a small cushion so they are mo
 
 ### In one sentence
 
-`cooldown` stops the bot from trading the same thing again too soon.
+`cooldown` can stop duplicate trades, but its default is full pass-through.
 
 ### Kid-friendly example
 
@@ -242,7 +337,7 @@ That waiting time is the cooldown.
 
 ### What it does
 
-- It usually protects **BUY** signals, but it can be configured for other signal types.
+- `apply_to_signal_types` is empty by default, so every signal passes.
 - It checks whether the same key traded recently.
 - If the key is still cooling down, it rejects the trade.
 - If enough time has passed, it lets the trade happen and records it.
@@ -257,13 +352,13 @@ That waiting time is the cooldown.
 
 ### When it is useful
 
-Use this to avoid repeated orders caused by duplicate signals or noisy alerts.
+Add signal types explicitly only when duplicate suppression is desired.
 
 ## `event_risk_off`
 
 ### In one sentence
 
-`event_risk_off` remembers danger events and blocks or shrinks BUY orders while the danger is fresh.
+`event_risk_off` can react to danger events, but its default never blocks or shrinks BUY orders.
 
 ### Kid-friendly example
 
@@ -273,9 +368,8 @@ Until the note is old, kids cannot run there, or they must be extra careful.
 ### What it does
 
 - It handles **EVENT** signals and **BUY** signals.
-- When it sees a risk-off event, it records it.
-- Later BUY signals for matching market/ticker can be blocked.
-- If configured, BUY signals can be made smaller instead of fully blocked.
+- `risk_off_event_types` is empty by default, so no blocking state is recorded.
+- `buy_size_multiplier` defaults to `1.0`, preserving the full BUY size.
 
 ### Main settings
 

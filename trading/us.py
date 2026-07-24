@@ -124,12 +124,12 @@ def _safe_int(value, default: int = 0) -> int:
 
 @dataclass(frozen=True)
 class AutoExchangeConfig:
-    """Opt-in KRW-to-USD auto-exchange settings for US stock buys."""
+    """KRW-to-USD auto-exchange settings for US stock buys."""
 
-    enabled: bool = False
-    buffer_percent: float = 2.0
+    enabled: bool = True
+    buffer_percent: float = 5.0
     max_krw: float | None = None
-    min_shortfall_usd: float = 1.0
+    min_shortfall_usd: float = 0.0
 
 
 def _cfg_bool(value: Any, default: bool = False) -> bool:
@@ -154,29 +154,39 @@ def _cfg_positive_float(value: Any, default: float | None = None) -> float | Non
     return parsed if parsed > 0 else default
 
 
+def _cfg_nonnegative_float(value: Any, default: float = 0.0) -> float:
+    if value is None or value == "":
+        return default
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return default
+    return parsed if parsed >= 0 else default
+
+
 def build_auto_exchange_config(account_config: dict[str, Any] | None) -> AutoExchangeConfig:
     account_config = account_config or {}
     enabled = _cfg_bool(
         account_config.get("auto_exchange_usd_on_buy"),
-        _cfg_bool(_cfg.get("auto_exchange_usd_on_buy"), False),
+        _cfg_bool(_cfg.get("auto_exchange_usd_on_buy"), True),
     )
     buffer_percent = _cfg_positive_float(
         account_config.get("auto_exchange_buffer_percent"),
-        _cfg_positive_float(_cfg.get("auto_exchange_buffer_percent"), 2.0),
+        _cfg_positive_float(_cfg.get("auto_exchange_buffer_percent"), 5.0),
     )
     max_krw = _cfg_positive_float(
         account_config.get("max_auto_exchange_krw"),
         _cfg_positive_float(_cfg.get("max_auto_exchange_krw"), None),
     )
-    min_shortfall_usd = _cfg_positive_float(
+    min_shortfall_usd = _cfg_nonnegative_float(
         account_config.get("auto_exchange_min_shortfall_usd"),
-        _cfg_positive_float(_cfg.get("auto_exchange_min_shortfall_usd"), 1.0),
+        _cfg_nonnegative_float(_cfg.get("auto_exchange_min_shortfall_usd"), 0.0),
     )
     return AutoExchangeConfig(
         enabled=enabled,
-        buffer_percent=float(buffer_percent if buffer_percent is not None else 2.0),
+        buffer_percent=float(buffer_percent if buffer_percent is not None else 5.0),
         max_krw=max_krw,
-        min_shortfall_usd=float(min_shortfall_usd if min_shortfall_usd is not None else 1.0),
+        min_shortfall_usd=float(min_shortfall_usd),
     )
 
 # Exchange code mapping (for trading/portfolio APIs using OVRS_EXCG_CD)
@@ -232,7 +242,7 @@ class USStockTrading:
     """US Stock Trading class using KIS Overseas Stock API"""
 
     # Default buy amount per stock (in USD)
-    DEFAULT_BUY_AMOUNT = _cfg.get("default_unit_amount_usd", 100)  # $100 default
+    DEFAULT_BUY_AMOUNT = _cfg.get("default_unit_amount_usd", 2000)
     # Auto trading enabled flag
     AUTO_TRADING = _cfg.get("auto_trading", True)
     # Default trading environment
@@ -449,7 +459,7 @@ class USStockTrading:
         summary = self.get_account_summary() or {}
         usd_cash = _safe_float(summary.get("available_amount"), _safe_float(summary.get("usd_cash")))
         info = {"usd_cash": usd_cash, "auto_exchange_used": False}
-        auto_exchange = getattr(self, "auto_exchange", AutoExchangeConfig(enabled=False))
+        auto_exchange = getattr(self, "auto_exchange", AutoExchangeConfig())
 
         should_query_buyable = hasattr(self, "trenv") and (
             auto_exchange.enabled or requested_amount <= usd_cash
@@ -1998,7 +2008,7 @@ class MultiAccountUSTradingContext:
 class AsyncUSTradingContext:
     """Async trading context manager for safe resource management"""
 
-    DEFAULT_BUY_AMOUNT = _cfg.get("default_unit_amount_usd", 100)
+    DEFAULT_BUY_AMOUNT = _cfg.get("default_unit_amount_usd", 2000)
     AUTO_TRADING = _cfg.get("auto_trading", True)
     DEFAULT_MODE = _cfg.get("default_mode", "demo")
 
