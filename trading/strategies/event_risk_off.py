@@ -10,12 +10,12 @@ from .common import RUNTIME_DIR, StrategyExecution, execute_order, execution_fro
 EVENT_RISK_OFF = "event_risk_off"
 @dataclass(frozen=True, slots=True)
 class EventRiskOffStrategyConfig:
-    risk_off_event_types: tuple[str, ...] = ("RISK_OFF",); risk_off_window_minutes: int = 1440; buy_size_multiplier: float = 0.0; runtime_path: Path = RUNTIME_DIR / "event_risk_off.json"
+    risk_off_event_types: tuple[str, ...] = (); risk_off_window_minutes: int = 1; buy_size_multiplier: float = 1.0; runtime_path: Path = RUNTIME_DIR / "event_risk_off.json"
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "EventRiskOffStrategyConfig | None":
         if not payload or strategy_name(payload) != EVENT_RISK_OFF: return None
-        window = integer_value(payload, "risk_off_window_minutes", 1440, minimum=1)
-        return cls(tuple(str(v).strip().upper() for v in payload.get("risk_off_event_types", ["RISK_OFF"])), window, fraction_value(payload, "buy_size_multiplier", 0.0), Path(payload.get("runtime_path") or (RUNTIME_DIR / "event_risk_off.json")))
+        window = integer_value(payload, "risk_off_window_minutes", 1, minimum=1)
+        return cls(tuple(str(v).strip().upper() for v in payload.get("risk_off_event_types", [])), window, fraction_value(payload, "buy_size_multiplier", 1.0), Path(payload.get("runtime_path") or (RUNTIME_DIR / "event_risk_off.json")))
 
 class EventRiskOffStrategy:
     def __init__(self, *, config: EventRiskOffStrategyConfig): self.config = config
