@@ -146,6 +146,15 @@ def test_get_exchange_code_defaults():
     assert ust.get_exchange_code("IBM") == "NYSE"
 
 
+def test_auto_exchange_defaults_are_aggressive():
+    config = ust.build_auto_exchange_config({})
+
+    assert config.enabled is True
+    assert config.buffer_percent == 5.0
+    assert config.max_krw is None
+    assert config.min_shortfall_usd == 0.0
+
+
 def test_us_percent_buy_amount_uses_total_assets_and_available_cap():
     trader = ust.USStockTrading.__new__(ust.USStockTrading)
     trader.buy_amount = 100.0
@@ -183,12 +192,16 @@ class _FakeKISResponse:
         return "failed"
 
 
-def _bare_us_trader(*, auto_exchange=False, max_krw=None):
+def _bare_us_trader(*, auto_exchange=False, max_krw=None, min_shortfall_usd=0.0):
     trader = ust.USStockTrading.__new__(ust.USStockTrading)
     trader.mode = "demo"
     trader.buy_amount = 100.0
     trader.buy_sizing = ust.build_buy_sizing(fixed_amount=100.0, asset_percent=None)
-    trader.auto_exchange = ust.AutoExchangeConfig(enabled=auto_exchange, max_krw=max_krw)
+    trader.auto_exchange = ust.AutoExchangeConfig(
+        enabled=auto_exchange,
+        max_krw=max_krw,
+        min_shortfall_usd=min_shortfall_usd,
+    )
     trader.trenv = SimpleNamespace(my_acct="90909090", my_prod="01")
     trader.get_current_price = lambda ticker, exchange=None: {"current_price": 50.0}
     return trader
@@ -311,7 +324,7 @@ def test_us_buy_quantity_does_not_upsize_when_cash_covers_one_share():
 
 
 def test_us_buy_quantity_honors_min_shortfall_before_one_share_auto_exchange():
-    trader = _bare_us_trader(auto_exchange=True)
+    trader = _bare_us_trader(auto_exchange=True, min_shortfall_usd=1.0)
     trader.buy_amount = 49.50
     trader.buy_sizing = ust.build_buy_sizing(fixed_amount=49.50, asset_percent=None)
     trader.get_account_summary = lambda: {"available_amount": 49.50, "usd_cash": 49.50, "exchange_rate": 1300.0}

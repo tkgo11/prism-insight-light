@@ -263,10 +263,10 @@ with open(config_file, encoding="UTF-8") as f:
 
 
 DEFAULT_PRODUCT_CODE = str(_cfg.get("default_product_code", "01"))
-DEFAULT_BUY_AMOUNT_KRW = int(_cfg.get("default_unit_amount", 0) or 0)
-DEFAULT_BUY_AMOUNT_USD = float(_cfg.get("default_unit_amount_usd", 0) or 0)
-DEFAULT_BUY_PERCENT_KRW = normalize_percent(_cfg.get("default_unit_asset_percent"))
-DEFAULT_BUY_PERCENT_USD = normalize_percent(_cfg.get("default_unit_asset_percent_usd"))
+DEFAULT_BUY_AMOUNT_KRW = int(_cfg.get("default_unit_amount", 1_000_000) or 1_000_000)
+DEFAULT_BUY_AMOUNT_USD = float(_cfg.get("default_unit_amount_usd", 2_000) or 2_000)
+DEFAULT_BUY_PERCENT_KRW = normalize_percent(_cfg.get("default_unit_asset_percent", 100))
+DEFAULT_BUY_PERCENT_USD = normalize_percent(_cfg.get("default_unit_asset_percent_usd", 100))
 MAX_CONFIGURED_ACCOUNTS = 10
 
 

@@ -7,17 +7,17 @@ strategy.
 
 ## Built-in strategies
 
-- `balance_split`: BUY with a fraction of currently available cash.
-- `balanced_risk`: recommended combined strategy using score/risk BUY sizing and protective staged SELL exits.
-- `score_weighted`: BUY with a configured amount multiplied by the incoming `buy_score` band.
-- `score_risk`: BUY only when score and reward/risk gates pass, then size from the stop-loss risk budget.
+- `balance_split`: BUY with available cash (all of it by default).
+- `balanced_risk`: recommended aggressive BUY/SELL strategy that never filters valid trade signals by default.
+- `score_weighted`: BUY with score weighting; missing/low scores still execute.
+- `score_risk`: use stop-loss risk sizing when available, otherwise use the broker default BUY size.
 - `risk_bracket`: BUY from a risk budget derived from `price` and `stop_loss`, with optional bracket metadata persistence.
-- `profit_ladder`: SELL through configured `profit_rate` bands or full-exit reasons.
-- `protective_exit`: SELL urgent risk reasons fully and ordinary profits in configured stages.
+- `profit_ladder`: SELL fully by default, with optional configured profit bands.
+- `protective_exit`: SELL fully by default, with optional staged exits.
 - `stop_loss_sell`: SELL at the incoming `stop_loss` price by default, using `price` when configured as a fallback or when a triggered US stop-loss sell needs a marketable limit.
 - `limit_buffer`: BUY/SELL using a buffered limit price around the signal price.
-- `cooldown`: execute a trade only when the same configured ticker/signal key has not traded recently.
-- `event_risk_off`: record risk-off EVENT signals and reject matching BUY signals while the state is fresh.
+- `cooldown`: optional duplicate guard with no protected signal types by default.
+- `event_risk_off`: optional event guard with no risk-off events and a 1.0 BUY multiplier by default.
 
 ## How to add a new strategy
 

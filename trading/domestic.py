@@ -66,11 +66,11 @@ class DomesticStockTrading:
     """Domestic stock trading class"""
 
     # Default buy amount per stock
-    DEFAULT_BUY_AMOUNT = _cfg["default_unit_amount"]
+    DEFAULT_BUY_AMOUNT = _cfg.get("default_unit_amount", 1_000_000)
     # Auto trading enabled flag
-    AUTO_TRADING = _cfg["auto_trading"]
+    AUTO_TRADING = _cfg.get("auto_trading", True)
     # Default trading environment
-    DEFAULT_MODE = _cfg["default_mode"]
+    DEFAULT_MODE = _cfg.get("default_mode", "demo")
 
     def __init__(
         self,
@@ -1728,11 +1728,11 @@ class MultiAccountTradingContext:
 class AsyncTradingContext:
     """Async trading context manager (safe resource management)"""
     # Default buy amount unit
-    DEFAULT_BUY_AMOUNT = _cfg["default_unit_amount"]
+    DEFAULT_BUY_AMOUNT = _cfg.get("default_unit_amount", 1_000_000)
     # Auto trading operation status
-    AUTO_TRADING = _cfg["auto_trading"]
+    AUTO_TRADING = _cfg.get("auto_trading", True)
     # Default trading environment
-    DEFAULT_MODE = _cfg["default_mode"]
+    DEFAULT_MODE = _cfg.get("default_mode", "demo")
 
     def __init__(
         self,

@@ -22,7 +22,7 @@ SCORE_RISK = "score_risk"
 
 
 def _score_bands(payload: dict[str, Any]) -> dict[int, float]:
-    raw_bands = payload.get("score_bands") or {60: 0.25, 75: 0.5, 90: 1.0}
+    raw_bands = payload.get("score_bands") or {0: 1.0}
     parsed: dict[int, float] = {}
     for raw_score, raw_weight in dict(raw_bands).items():
         score = float(raw_score)
@@ -54,10 +54,11 @@ class ScoreRiskStrategyConfig:
     risk_amount_usd: float = 0.0
     max_position_amount_krw: float = 0.0
     max_position_amount_usd: float = 0.0
-    min_score: int = 60
+    min_score: int = 0
     score_bands: dict[int, float] | None = None
-    min_reward_risk: float = 1.5
-    require_target_price: bool = True
+    min_reward_risk: float = 0.0
+    require_stop_loss: bool = False
+    require_target_price: bool = False
 
     @classmethod
     def from_mapping(
@@ -75,12 +76,15 @@ class ScoreRiskStrategyConfig:
                 payload, "max_position_amount_usd"
             ),
             min_score=integer_value(
-                payload, "min_score", 60, minimum=0, maximum=100
+                payload, "min_score", 0, minimum=0, maximum=100
             ),
             score_bands=_score_bands(payload),
-            min_reward_risk=positive_number(payload, "min_reward_risk", 1.5),
+            min_reward_risk=positive_number(payload, "min_reward_risk", 0.0),
+            require_stop_loss=boolean_value(
+                payload, "require_stop_loss", False
+            ),
             require_target_price=boolean_value(
-                payload, "require_target_price", True
+                payload, "require_target_price", False
             ),
         )
 
@@ -105,15 +109,7 @@ class ScoreRiskStrategy:
             )
 
         entry_price = float(signal.price)
-        per_unit_risk = entry_price - float(signal.stop_loss)
         score_weight = self._score_weight(signal.buy_score)
-        if score_weight <= 0:
-            return StrategyExecution(
-                "rejected",
-                "BUY score does not match a positive score band",
-                signal.market,
-                signal.ticker,
-            )
 
         base_risk = market_base_amount(
             signal,
@@ -121,12 +117,16 @@ class ScoreRiskStrategy:
             usd=self.config.risk_amount_usd,
         )
         risk_budget = base_risk * score_weight
-        if risk_budget <= 0:
-            return StrategyExecution(
-                "failed", "Score-risk budget is zero", signal.market, signal.ticker
-            )
-
-        units = int(risk_budget / per_unit_risk)
+        per_unit_risk = (
+            entry_price - float(signal.stop_loss)
+            if signal.stop_loss is not None
+            else 0.0
+        )
+        units = (
+            int(risk_budget / per_unit_risk)
+            if risk_budget > 0 and per_unit_risk > 0
+            else 0
+        )
         max_position = market_base_amount(
             signal,
             krw=self.config.max_position_amount_krw,
@@ -134,15 +134,8 @@ class ScoreRiskStrategy:
         )
         if max_position > 0:
             units = min(units, int(max_position / entry_price))
-        if units <= 0:
-            return StrategyExecution(
-                "rejected",
-                "Risk budget or position cap is too small for one share",
-                signal.market,
-                signal.ticker,
-            )
 
-        buy_amount = units * entry_price
+        buy_amount = units * entry_price if units > 0 else None
         result = await execute_order(
             signal,
             trading_mode=trading_mode,
@@ -151,10 +144,11 @@ class ScoreRiskStrategy:
             limit_price=entry_price,
         )
         reward_risk = self._reward_risk(signal)
+        amount_label = f"{buy_amount:.2f}" if buy_amount is not None else "broker default"
         return execution_from_result(
             signal,
             result,
-            f"Score-risk buy {buy_amount:.2f} at weight {score_weight:.2f}",
+            f"Score-risk buy {amount_label} at weight {score_weight:.2f}",
             buy_amount=buy_amount,
             units=units,
             risk_budget=risk_budget,
@@ -167,26 +161,38 @@ class ScoreRiskStrategy:
             return "Score-risk strategy only supports BUY signals"
         if signal.price in (None, 0):
             return "Score-risk strategy requires an entry price"
-        if signal.stop_loss is None:
+        if self.config.require_stop_loss and signal.stop_loss is None:
             return "Score-risk strategy requires stop_loss"
-        if float(signal.stop_loss) >= float(signal.price):
+        if (
+            self.config.require_stop_loss
+            and signal.stop_loss is not None
+            and float(signal.stop_loss) >= float(signal.price)
+        ):
             return "stop_loss must be below entry price"
-        if signal.buy_score is None or signal.buy_score < self.config.min_score:
+        if signal.buy_score is not None and signal.buy_score < self.config.min_score:
             return "BUY score is missing or below the configured threshold"
         if signal.target_price is None:
             if self.config.require_target_price:
                 return "Score-risk strategy requires target_price"
             return None
-        if float(signal.target_price) <= float(signal.price):
+        if (
+            self.config.require_target_price
+            and float(signal.target_price) <= float(signal.price)
+        ):
             return "target_price must be above entry price"
-        if self._reward_risk(signal) < self.config.min_reward_risk:
+        reward_risk = self._reward_risk(signal)
+        if (
+            self.config.min_reward_risk > 0
+            and (reward_risk is None or reward_risk < self.config.min_reward_risk)
+        ):
             return "Signal reward/risk ratio is below the configured threshold"
         return None
 
     def _score_weight(self, score: int | None) -> float:
-        weight = 0.0
+        weight = 1.0
         if score is None:
             return weight
+        weight = min((self.config.score_bands or {0: 1.0}).values())
         for threshold, band_weight in sorted((self.config.score_bands or {}).items()):
             if score >= threshold:
                 weight = band_weight
@@ -194,7 +200,11 @@ class ScoreRiskStrategy:
 
     @staticmethod
     def _reward_risk(signal: SignalMessage) -> float | None:
-        if signal.target_price is None:
+        if (
+            signal.target_price is None
+            or signal.stop_loss is None
+            or float(signal.stop_loss) >= float(signal.price)
+        ):
             return None
         risk = float(signal.price) - float(signal.stop_loss)
         reward = float(signal.target_price) - float(signal.price)
