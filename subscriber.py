@@ -146,7 +146,10 @@ class _KSTDailyFileHandler(logging.handlers.BaseRotatingHandler):
             self.stream.close()
             self.stream = None
 
-        rotated_name = f"{self.baseFilename}.{self.current_date.isoformat()}"
+        log_path = Path(self.baseFilename)
+        rotated_name = str(
+            log_path.with_name(f"{log_path.stem}_{self.current_date.isoformat()}{log_path.suffix}")
+        )
         if os.path.exists(self.baseFilename):
             if os.path.exists(rotated_name):
                 os.remove(rotated_name)
