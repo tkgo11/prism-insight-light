@@ -328,7 +328,7 @@ def test_kst_daily_file_handler_rolls_over_on_kst_date(tmp_path):
     finally:
         handler.close()
 
-    assert (tmp_path / "subscriber.log.2026-06-16").read_text(encoding="utf-8").strip() == "first"
+    assert (tmp_path / "subscriber_2026-06-16.log").read_text(encoding="utf-8").strip() == "first"
     assert log_path.read_text(encoding="utf-8").strip() == "second"
 
 
