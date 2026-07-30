@@ -135,6 +135,25 @@ class ScoreRiskStrategy:
         if max_position > 0:
             units = min(units, int(max_position / entry_price))
 
+        constrained_sizing = (
+            score_weight <= 0
+            or max_position > 0
+            or (base_risk > 0 and per_unit_risk > 0)
+        )
+        if constrained_sizing and units <= 0:
+            return StrategyExecution(
+                "rejected",
+                "Score-risk constraints do not allow one whole share",
+                signal.market,
+                signal.ticker,
+                {
+                    "units": 0,
+                    "risk_budget": risk_budget,
+                    "score_weight": score_weight,
+                    "max_position": max_position,
+                },
+            )
+
         buy_amount = units * entry_price if units > 0 else None
         result = await execute_order(
             signal,
