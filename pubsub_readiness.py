@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import os
+import math
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -12,6 +14,7 @@ ENV_PROJECT_ID = "GCP_PROJECT_ID"
 ENV_SUBSCRIPTION_ID = "GCP_PUBSUB_SUBSCRIPTION_ID"
 ENV_CREDENTIALS_PATH = "GCP_CREDENTIALS_PATH"
 CONSUME_PERMISSION = "pubsub.subscriptions.consume"
+DEFAULT_RPC_TIMEOUT_SECONDS = 10.0
 
 EXIT_READY = 0
 EXIT_FAILURE = 1
@@ -152,13 +155,23 @@ def _load_credentials(credentials_path: Path, service_account) -> tuple[object |
     return credentials, None
 
 
-def _check_subscription_metadata(subscriber, subscription_path: str, google_exceptions) -> _MetadataDiagnostic:
+def _check_subscription_metadata(
+    subscriber,
+    subscription_path: str,
+    google_exceptions,
+    *,
+    timeout_seconds: float,
+) -> _MetadataDiagnostic:
     get_subscription = getattr(subscriber, "get_subscription", None)
     if not callable(get_subscription):
         return _MetadataDiagnostic("unavailable", "supplemental metadata probe unavailable")
 
     try:
-        get_subscription(request={"subscription": subscription_path})
+        get_subscription(
+            request={"subscription": subscription_path},
+            timeout=timeout_seconds,
+            retry=None,
+        )
     except google_exceptions.NotFound:
         return _MetadataDiagnostic("missing", "supplemental metadata probe: subscription not found")
     except google_exceptions.PermissionDenied:
@@ -175,12 +188,20 @@ def check_pubsub_readiness(
     project_id: str | None = None,
     subscription_id: str | None = None,
     credentials_path: str | None = None,
+    rpc_timeout_seconds: float = DEFAULT_RPC_TIMEOUT_SECONDS,
 ) -> ReadinessResult:
     """Check whether Pub/Sub consume access is ready for the subscription."""
 
     resolved_project_id = _resolve_setting(project_id, ENV_PROJECT_ID)
     resolved_subscription_id = _resolve_setting(subscription_id, ENV_SUBSCRIPTION_ID)
     resolved_credentials_path = _resolve_setting(credentials_path, ENV_CREDENTIALS_PATH)
+    if (
+        not isinstance(rpc_timeout_seconds, (int, float))
+        or not math.isfinite(float(rpc_timeout_seconds))
+        or float(rpc_timeout_seconds) <= 0
+    ):
+        return _hard_failure("rpc_timeout_seconds must be a finite positive number")
+    timeout_seconds = float(rpc_timeout_seconds)
 
     missing = []
     if not resolved_project_id:
@@ -220,13 +241,16 @@ def check_pubsub_readiness(
         return _hard_failure(f"unable to build subscription path ({type(exc).__name__})")
 
     diagnostics: list[str] = []
+    deadline = time.monotonic() + timeout_seconds
     try:
         try:
             response = subscriber.test_iam_permissions(
                 request={
                     "resource": subscription_path,
                     "permissions": [CONSUME_PERMISSION],
-                }
+                },
+                timeout=timeout_seconds,
+                retry=None,
             )
         except google_exceptions.PermissionDenied:
             primary_status = "denied"
@@ -246,7 +270,19 @@ def check_pubsub_readiness(
                 primary_status = "denied"
                 primary_reason = None
 
-        metadata = _check_subscription_metadata(subscriber, subscription_path, google_exceptions)
+        remaining = deadline - time.monotonic()
+        metadata = (
+            _check_subscription_metadata(
+                subscriber,
+                subscription_path,
+                google_exceptions,
+                timeout_seconds=remaining,
+            )
+            if remaining > 0
+            else _MetadataDiagnostic(
+                "unavailable", "supplemental metadata probe skipped (deadline exhausted)"
+            )
+        )
     finally:
         _close_quietly(subscriber)
 

@@ -65,7 +65,9 @@ def safe_path_label(path_value: str | None) -> str:
 
 
 def config_item(name: str, value: object | None) -> dict[str, object]:
-    configured = value not in (None, "")
+    configured = value is not None and (
+        not isinstance(value, str) or bool(value.strip())
+    )
     item: dict[str, object] = {"name": name, "configured": configured}
     if not configured:
         item["value"] = "missing"

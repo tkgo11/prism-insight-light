@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from webui.app import WebUISettings, create_app, load_settings, validate_bind_host
+from webui.routes.guards import OneTimeNonceStore
 
 
 def test_default_settings_are_loopback():
@@ -48,6 +49,16 @@ def test_load_settings_parses_operational_safety_values(tmp_path):
 def test_create_app_debug_disabled():
     app = create_app(WebUISettings())
     assert app.debug is False
+
+
+def test_order_nonce_is_single_use_and_expires():
+    store = OneTimeNonceStore(ttl_seconds=10)
+    consumed = store.issue(now=100)
+    expired = store.issue(now=100)
+
+    assert store.consume(consumed, now=101) is True
+    assert store.consume(consumed, now=101) is False
+    assert store.consume(expired, now=111) is False
 
 
 def test_ipv6_loopback_host_is_accepted_by_trusted_authority_middleware():

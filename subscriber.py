@@ -36,6 +36,15 @@ def _positive_poll_seconds(value: str) -> int:
     return seconds
 
 
+def _positive_message_count(value: str) -> int:
+    count = int(value)
+    if count <= 0:
+        raise argparse.ArgumentTypeError(
+            "max in-flight messages must be greater than zero"
+        )
+    return count
+
+
 def _positive_seconds_from_env(name: str, default: float) -> float:
     raw_value = os.environ.get(name)
     if raw_value in (None, ""):
@@ -126,6 +135,8 @@ class _KSTDailyFileHandler(logging.handlers.BaseRotatingHandler):
 
     def __init__(self, filename: Path, *, encoding: str = "utf-8"):
         super().__init__(filename, mode="a", encoding=encoding, delay=False)
+        if os.name != "nt":
+            os.chmod(self.baseFilename, 0o600)
         self.current_date = self._initial_log_date()
 
     @staticmethod
@@ -154,10 +165,14 @@ class _KSTDailyFileHandler(logging.handlers.BaseRotatingHandler):
             if os.path.exists(rotated_name):
                 os.remove(rotated_name)
             self.rotate(self.baseFilename, rotated_name)
+            if os.name != "nt":
+                os.chmod(rotated_name, 0o600)
 
         self.current_date = new_date or datetime.datetime.now(tz=KST).date()
         if not self.delay:
             self.stream = self._open()
+            if os.name != "nt":
+                os.chmod(self.baseFilename, 0o600)
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
@@ -180,6 +195,8 @@ def _configure_logging(log_file: str | None, *, level: str = "INFO") -> None:
     if log_file:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
+        if os.name != "nt":
+            os.chmod(log_path.parent, 0o700)
         handlers.append(_KSTDailyFileHandler(log_path, encoding="utf-8"))
 
     formatter = _KSTFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -206,6 +223,8 @@ def _configure_raw_pubsub_logging(log_file: str | None) -> logging.Logger | None
 
     log_path = Path(log_file)
     log_path.parent.mkdir(parents=True, exist_ok=True)
+    if os.name != "nt":
+        os.chmod(log_path.parent, 0o700)
     handler = _KSTDailyFileHandler(log_path, encoding="utf-8")
     handler.setFormatter(_KSTFormatter("%(asctime)s - %(message)s"))
     handler.setLevel(logging.INFO)
@@ -376,6 +395,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--queue-path", default="runtime/off_hours_queue.json")
     parser.add_argument("--queue-poll-seconds", type=_positive_poll_seconds, default=60)
     parser.add_argument(
+        "--max-in-flight-messages",
+        type=_positive_message_count,
+        default=os.environ.get("PUBSUB_MAX_IN_FLIGHT_MESSAGES", "1"),
+        help="Maximum received but unprocessed Pub/Sub messages (default: 1)",
+    )
+    parser.add_argument(
         "--web-ui",
         action="store_true",
         help="Start the local guarded operator WebUI alongside the Pub/Sub subscriber",
@@ -499,6 +524,9 @@ def main(argv: list[str] | None = None) -> None:
         streaming_pull_future = subscriber.subscribe(
             subscription_path,
             callback=callback,
+            flow_control=pubsub_v1.types.FlowControl(
+                max_messages=args.max_in_flight_messages
+            ),
             await_callbacks_on_shutdown=True,
         )
     except BaseException:

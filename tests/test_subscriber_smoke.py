@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import signal
 from concurrent.futures import TimeoutError
 
@@ -183,7 +184,8 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
         def subscription_path(self, project_id, subscription_id):
             return f"projects/{project_id}/subscriptions/{subscription_id}"
 
-        def subscribe(self, subscription_path, callback, *, await_callbacks_on_shutdown):
+        def subscribe(self, subscription_path, callback, *, flow_control, await_callbacks_on_shutdown):
+            assert flow_control.max_messages == 1
             assert await_callbacks_on_shutdown is True
             return FakeFuture()
 
@@ -191,7 +193,12 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
             shutdown_order.append("client-close")
             closed.append(True)
 
-    fake_pubsub = types.SimpleNamespace(SubscriberClient=FakeSubscriberClient)
+    fake_pubsub = types.SimpleNamespace(
+        SubscriberClient=FakeSubscriberClient,
+        types=types.SimpleNamespace(
+            FlowControl=lambda **kwargs: types.SimpleNamespace(**kwargs)
+        ),
+    )
     monkeypatch.setitem(sys.modules, "google.cloud.pubsub_v1", fake_pubsub)
     monkeypatch.setattr(subscriber, "TradeDispatcher", FakeDispatcher)
     monkeypatch.setattr(subscriber, "QueueWorker", FakeQueueWorker)
@@ -330,6 +337,9 @@ def test_kst_daily_file_handler_rolls_over_on_kst_date(tmp_path):
 
     assert (tmp_path / "subscriber_2026-06-16.log").read_text(encoding="utf-8").strip() == "first"
     assert log_path.read_text(encoding="utf-8").strip() == "second"
+    if os.name != "nt":
+        assert (tmp_path / "subscriber_2026-06-16.log").stat().st_mode & 0o777 == 0o600
+        assert log_path.stat().st_mode & 0o777 == 0o600
 
 
 def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
@@ -390,7 +400,8 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
         def subscription_path(self, project_id, subscription_id):
             return f"projects/{project_id}/subscriptions/{subscription_id}"
 
-        def subscribe(self, subscription_path, callback, *, await_callbacks_on_shutdown):
+        def subscribe(self, subscription_path, callback, *, flow_control, await_callbacks_on_shutdown):
+            assert flow_control.max_messages == 1
             assert await_callbacks_on_shutdown is True
             return FakeFuture()
 
@@ -407,7 +418,12 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
         else:
             registered[signum] = handler
 
-    fake_pubsub = types.SimpleNamespace(SubscriberClient=FakeSubscriberClient)
+    fake_pubsub = types.SimpleNamespace(
+        SubscriberClient=FakeSubscriberClient,
+        types=types.SimpleNamespace(
+            FlowControl=lambda **kwargs: types.SimpleNamespace(**kwargs)
+        ),
+    )
     monkeypatch.setitem(sys.modules, "google.cloud.pubsub_v1", fake_pubsub)
     monkeypatch.setattr(subscriber, "TradeDispatcher", FakeDispatcher)
     monkeypatch.setattr(subscriber, "QueueWorker", FakeQueueWorker)

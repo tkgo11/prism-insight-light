@@ -3,12 +3,56 @@
 from __future__ import annotations
 
 import secrets
+import threading
+import time
 from urllib.parse import parse_qs
 
 from fastapi import Header, HTTPException, Request, status
 
 MAX_FORM_BODY_BYTES = 64 * 1024
 MAX_FORM_FIELDS = 64
+ORDER_NONCE_TTL_SECONDS = 10 * 60
+MAX_ORDER_NONCES = 256
+
+
+class OneTimeNonceStore:
+    """Issue and atomically consume short-lived manual-order nonces."""
+
+    def __init__(
+        self,
+        *,
+        ttl_seconds: float = ORDER_NONCE_TTL_SECONDS,
+        max_entries: int = MAX_ORDER_NONCES,
+    ):
+        self.ttl_seconds = ttl_seconds
+        self.max_entries = max_entries
+        self._entries: dict[str, float] = {}
+        self._lock = threading.Lock()
+
+    def issue(self, *, now: float | None = None) -> str:
+        current = time.monotonic() if now is None else now
+        nonce = secrets.token_urlsafe(32)
+        with self._lock:
+            self._prune(current)
+            while len(self._entries) >= self.max_entries:
+                oldest = min(self._entries, key=self._entries.get)
+                self._entries.pop(oldest, None)
+            self._entries[nonce] = current + self.ttl_seconds
+        return nonce
+
+    def consume(self, nonce: str, *, now: float | None = None) -> bool:
+        current = time.monotonic() if now is None else now
+        with self._lock:
+            self._prune(current)
+            expires_at = self._entries.pop(nonce, None)
+            return expires_at is not None and expires_at > current
+
+    def _prune(self, now: float) -> None:
+        expired = [
+            nonce for nonce, expires_at in self._entries.items() if expires_at <= now
+        ]
+        for nonce in expired:
+            self._entries.pop(nonce, None)
 
 
 def parse_urlencoded_body(raw_body: bytes) -> dict[str, str]:
@@ -55,4 +99,14 @@ async def require_csrf_token(request: Request, x_webui_csrf: str | None = Header
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Missing or invalid WebUI CSRF token",
+        )
+
+
+async def require_local_mutation(request: Request) -> None:
+    """Keep all broker/config mutations on a loopback-bound WebUI."""
+
+    if request.app.state.network_read_only:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Non-loopback WebUI access is diagnostic and read-only",
         )

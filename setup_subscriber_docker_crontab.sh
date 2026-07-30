@@ -14,6 +14,7 @@
 # =============================================================================
 
 set -euo pipefail
+umask 077
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -404,18 +405,14 @@ market_open_now() {
     ensure_image_ready >/dev/null 2>&1 || return 2
 
     "$DOCKER_BIN" run --rm -i --entrypoint python "$IMAGE_NAME" - "$market" <<'PY'
-import importlib.util
 import sys
-from pathlib import Path
 
 try:
-    module_path = Path("/app/trading/market_hours.py")
-    spec = importlib.util.spec_from_file_location("prism_market_hours", module_path)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
+    sys.path.insert(0, "/app")
+    from trading.market_hours import is_market_open
+
     market = sys.argv[1]
-    sys.exit(0 if module.is_market_open(market) else 1)
+    sys.exit(0 if is_market_open(market) else 1)
 except Exception as exc:  # noqa: BLE001
     print(f"market-hours check failed: {exc}", file=sys.stderr)
     sys.exit(2)
@@ -501,7 +498,8 @@ maybe_shutdown_system() {
 }
 
 docker_create_command() {
-    local cmd=(
+    local -n output_command="$1"
+    output_command=(
         "$DOCKER_BIN" create
         --name "$CONTAINER_NAME"
         --restart no
@@ -516,14 +514,13 @@ docker_create_command() {
     )
 
     if [ -n "$CREDENTIALS_HOST_PATH" ]; then
-        cmd+=(
+        output_command+=(
             -e "GCP_CREDENTIALS_PATH=$CREDENTIALS_CONTAINER_PATH"
             -v "$CREDENTIALS_HOST_PATH:$CREDENTIALS_CONTAINER_PATH:ro"
         )
     fi
 
-    cmd+=("$IMAGE_NAME")
-    printf '%s\0' "${cmd[@]}"
+    output_command+=("$IMAGE_NAME")
 }
 
 create_container_definition() {
@@ -532,7 +529,7 @@ create_container_definition() {
     ensure_image_ready
     remove_container_if_exists
 
-    mapfile -d '' -t cmd < <(docker_create_command)
+    docker_create_command cmd
     "${cmd[@]}" >/dev/null
     log_success "subscriber 컨테이너 정의를 생성했습니다. container=$CONTAINER_NAME"
 }
