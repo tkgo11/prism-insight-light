@@ -14,7 +14,7 @@ from .config_paths import active_kis_config_path
 from .domestic import AsyncTradingContext
 from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
 from .modes import normalize_trading_mode
-from .off_hours_queue import OffHoursOrderQueue
+from .off_hours_queue import OffHoursOrderQueue, QueueExecutionResult
 from .schema import SignalMessage, parse_signal_payload
 from .strategies import (
     BalanceSplitStrategy,
@@ -157,9 +157,19 @@ class TradeDispatcher:
         return await self.dispatch(signal, allow_queue=False)
 
     def drain_due_orders(self) -> int:
-        def _executor(payload: dict) -> bool:
+        def _executor(payload: dict) -> QueueExecutionResult:
             result = asyncio.run(self.execute_queued_signal(payload))
-            return result.status != "deferred"
+            if result.status == "deferred":
+                return QueueExecutionResult("deferred", result.message)
+            if result.status == "failed":
+                logger.error(
+                    "Quarantining failed queued %s order on %s: %s",
+                    result.signal_type,
+                    result.market,
+                    result.message,
+                )
+                return QueueExecutionResult("failed", result.message)
+            return QueueExecutionResult("processed", result.message)
 
         return self.queue.drain_due(_executor)
 
@@ -199,10 +209,6 @@ class TradeDispatcher:
             if self.protective_exit_config is not None:
                 return ProtectiveExitStrategy(config=self.protective_exit_config)
         return None
-
-    def _resolve_buy_strategy(self, signal: SignalMessage) -> BalanceSplitStrategy | None:
-        strategy = self._resolve_strategy(signal)
-        return strategy if isinstance(strategy, BalanceSplitStrategy) else None
 
     def _strategy_trader_kwargs(self) -> dict[str, Any]:
         kwargs: dict[str, Any] = {}

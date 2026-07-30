@@ -1487,14 +1487,21 @@ class USStockTrading:
                         # async balance_split buys from rejecting small USD cash
                         # balances before opt-in auto exchange can be considered.
                         current_price = price_info['current_price']
+                        effective_limit_price = (
+                            limit_price
+                            if limit_price and limit_price > 0
+                            else current_price
+                        )
                         resolved_amount, buy_info = await asyncio.to_thread(
                             self._resolve_orderable_usd,
                             ticker,
                             amount,
-                            current_price,
+                            effective_limit_price,
                             EXCHANGE_CODES.get(exchange.upper(), exchange) if exchange else get_exchange_code(ticker),
                         )
-                        buy_quantity = math.floor(resolved_amount / current_price)
+                        buy_quantity = math.floor(
+                            resolved_amount / effective_limit_price
+                        )
 
                         if buy_quantity <= 0:
                             result['message'] = f'Buy quantity is 0 (amount: ${resolved_amount:.2f})'
@@ -1505,14 +1512,13 @@ class USStockTrading:
                         result.update(buy_info)
                         result['resolved_amount'] = resolved_amount
                         result['quantity'] = buy_quantity
-                        result['total_amount'] = buy_quantity * current_price
+                        result['total_amount'] = buy_quantity * effective_limit_price
 
                         # Execute buy
                         await asyncio.sleep(0.5)
 
                         # Use current_price as limit_price if not provided or invalid
                         # This is important for reserved orders when market is closed
-                        effective_limit_price = limit_price if (limit_price and limit_price > 0) else current_price
                         logger.info(f"[Async Buy] {ticker} limit_price: ${effective_limit_price:.2f} (provided: {limit_price})")
 
                         buy_result = await asyncio.to_thread(

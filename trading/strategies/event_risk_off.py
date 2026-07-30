@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from ..schema import SignalMessage
-from .common import RUNTIME_DIR, StrategyExecution, execute_order, execution_from_result, fraction_value, fresh_items, integer_value, load_json_list, strategy_name, update_json_list
+from .common import RUNTIME_DIR, StrategyExecution, execute_order, execution_from_result, fraction_value, fresh_items, integer_value, load_json_list, strategy_name, string_list, update_json_list
 
 EVENT_RISK_OFF = "event_risk_off"
 @dataclass(frozen=True, slots=True)
@@ -15,7 +15,18 @@ class EventRiskOffStrategyConfig:
     def from_mapping(cls, payload: dict[str, Any] | None) -> "EventRiskOffStrategyConfig | None":
         if not payload or strategy_name(payload) != EVENT_RISK_OFF: return None
         window = integer_value(payload, "risk_off_window_minutes", 1, minimum=1)
-        return cls(tuple(str(v).strip().upper() for v in payload.get("risk_off_event_types", [])), window, fraction_value(payload, "buy_size_multiplier", 1.0), Path(payload.get("runtime_path") or (RUNTIME_DIR / "event_risk_off.json")))
+        return cls(
+            tuple(
+                value.upper()
+                for value in string_list(payload, "risk_off_event_types", [])
+            ),
+            window,
+            fraction_value(payload, "buy_size_multiplier", 1.0),
+            Path(
+                payload.get("runtime_path")
+                or (RUNTIME_DIR / "event_risk_off.json")
+            ),
+        )
 
 class EventRiskOffStrategy:
     def __init__(self, *, config: EventRiskOffStrategyConfig): self.config = config

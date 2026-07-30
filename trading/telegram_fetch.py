@@ -283,7 +283,7 @@ def _apply_labeled_field(payload: dict[str, Any], label: str, value: str) -> Non
         payload["stop_loss"] = _parse_number(value)
     elif label == "buy score":
         score = _parse_number(value)
-        payload["buy_score"] = None if score is None else int(score)
+        payload["buy_score"] = score
     elif label == "rationale":
         payload["rationale"] = value
     elif label == "profit rate":
