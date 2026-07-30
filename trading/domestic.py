@@ -795,12 +795,19 @@ class DomesticStockTrading:
                 'message': f"Error during reserved buy order: {str(e)}"
             }
 
-    def sell_all_market_price(self, stock_code: str, holding_quantity: Optional[int] = None) -> Dict[str, Any]:
+    def sell_all_market_price(
+        self,
+        stock_code: str,
+        holding_quantity: Optional[int] = None,
+        limit_price: Optional[int] = None,
+    ) -> Dict[str, Any]:
         """
-        Sell all at market price (liquidate entire holding)
+        Sell all at market price, or at the supplied regular-session limit.
 
         Args:
             stock_code: Stock code
+            holding_quantity: Known holding quantity, if already verified
+            limit_price: Positive regular-session limit price, or None for market
 
         Returns:
             {
@@ -846,13 +853,14 @@ class DomesticStockTrading:
         else:
             tr_id = "VTTC0011U"  # Demo sell
 
+        use_limit = limit_price is not None and limit_price > 0
         params = {
             "CANO": self.trenv.my_acct,
             "ACNT_PRDT_CD": self.trenv.my_prod,
             "PDNO": stock_code,
-            "ORD_DVSN": "01",  # 01: Market price
+            "ORD_DVSN": "00" if use_limit else "01",
             "ORD_QTY": str(buy_quantity),
-            "ORD_UNPR": "0",  # 0 for market price
+            "ORD_UNPR": str(int(limit_price)) if use_limit else "0",
             "EXCG_ID_DVSN_CD": "KRX",
             "SLL_TYPE": "01",  # 01: Regular sell
             "CNDT_PRIC": ""
@@ -865,14 +873,16 @@ class DomesticStockTrading:
                 output = res.getBody().output
                 order_no = output.get('odno', '')
 
-                logger.info(f"[{stock_code}] Market sell all order successful: {buy_quantity} shares, order no: {order_no}")
+                order_kind = "Limit" if use_limit else "Market"
+                logger.info(f"[{stock_code}] {order_kind} sell all order successful: {buy_quantity} shares, order no: {order_no}")
 
                 return {
                     'success': True,
                     'order_no': order_no,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
-                    'message': f'Market sell all order completed ({buy_quantity} shares)'
+                    'limit_price': int(limit_price) if use_limit else None,
+                    'message': f'{order_kind} sell all order completed ({buy_quantity} shares)'
                 }
             else:
                 error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
@@ -900,13 +910,13 @@ class DomesticStockTrading:
         """
         Automatically sell all using the optimal method based on time (excluding after-hours single price trading due to high unfilled probability)
 
-        - 09:00~15:30: Market price sell
+        - 09:00~15:30: Limit sell when provided, otherwise market sell
         - 15:40~16:00: After-hours closing price trading
         - Other times: Reserved order (next day limit price if limit_price provided)
 
         Args:
             stock_code: Stock code
-            limit_price: Limit price for reserved order (market order if None)
+            limit_price: Limit price for regular/reserved order (market order if None)
 
         Returns:
             Sell result
@@ -926,9 +936,18 @@ class DomesticStockTrading:
 
         # Branch by time period
         if datetime.time(9, 0) <= current_time <= datetime.time(15, 30):
-            # Regular trading hours - market sell
-            logger.info(f"[{stock_code}] Regular trading hours - executing market sell")
-            return self.sell_all_market_price(stock_code, holding_quantity=holding_quantity)
+            if limit_price and limit_price > 0:
+                logger.info(
+                    f"[{stock_code}] Regular trading hours - executing limit sell "
+                    f"@ {limit_price:,} KRW"
+                )
+            else:
+                logger.info(f"[{stock_code}] Regular trading hours - executing market sell")
+            return self.sell_all_market_price(
+                stock_code,
+                holding_quantity=holding_quantity,
+                limit_price=limit_price,
+            )
 
         elif datetime.time(15, 40) <= current_time <= datetime.time(16, 0):
             # After-hours closing price trading
@@ -1154,7 +1173,7 @@ class DomesticStockTrading:
             stock_code: Stock code (6 digits)
             buy_amount: Buy amount (default: amount set during initialization)
             timeout: Timeout in seconds
-            limit_price: Limit price for reserved order (market order if None)
+            limit_price: Limit price for regular/reserved order (market order if None)
 
         Returns:
             {
@@ -1357,10 +1376,15 @@ class DomesticStockTrading:
                                 result['message'] = 'Partial sell quantity rounds down to 0 shares'
                                 return result
 
-                        # Execute sell all
-                        # Use current_price as limit_price fallback for reserved orders (outside market hours)
-                        # CRITICAL: Convert to int - KIS API requires integer strings, not float strings
-                        effective_limit_price = int(limit_price) if (limit_price and limit_price > 0) else (int(result['current_price']) if result['current_price'] > 0 else None)
+                        # Preserve the caller's order intent. Current price is used
+                        # only for reporting; silently turning it into a limit
+                        # price could leave a regular-session market sell unfilled.
+                        # KIS requires integer price strings for explicit limits.
+                        effective_limit_price = (
+                            int(limit_price)
+                            if limit_price and limit_price > 0
+                            else None
+                        )
 
                         if effective_limit_price:
                             logger.info(f"[Async Sell API] {stock_code} executing sell all (holding: {holding_quantity} shares, limit: {effective_limit_price:,} KRW)")

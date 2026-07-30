@@ -11,10 +11,10 @@ A signal can say things like:
 
 Only one strategy is selected by `signal_strategy.name` in `trading/config/kis_devlp.yaml`.
 If `name` is empty, the bot uses the normal old behavior.
-The maintained example uses aggressive pass-through defaults: every valid BUY
-or SELL signal reaches an order attempt without score, reward/risk, cooldown,
-or risk-off filtering. Broker rejection is still possible when the account has
-no cash/position or the order itself is invalid.
+The maintained example uses aggressive pass-through defaults: BUY and SELL
+signals are not filtered by score, reward/risk, cooldown, or risk-off rules.
+Enabled sizing constraints still fail closed, and the broker can reject an
+order when the account has no cash/position or the order itself is invalid.
 
 ## Quick list
 
@@ -106,8 +106,12 @@ account.
 - `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
 - `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter.
 - `require_stop_loss` / `require_target_price`: both default to `false`.
-- A missing/invalid stop or absent risk budget falls back to the broker/config default size.
-- A configured risk or maximum-position constraint that permits less than one whole share rejects the BUY.
+- A risk budget constrains size only when the signal supplies a usable stop
+  below the entry price. If the stop is absent or unusable and is not required,
+  a risk budget by itself falls back to the broker/config default size.
+- A maximum-position cap and a zero score weight remain fail-closed. If either
+  applies and the combined constrained size is zero—including a maximum cap
+  combined with a missing usable stop—the BUY is rejected.
 
 ### When it is useful
 
