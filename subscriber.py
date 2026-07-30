@@ -24,6 +24,7 @@ load_dotenv(ROOT / ".env")
 
 from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must load first
 from trading.market_hours import KST  # noqa: E402 - config env must load first
+from trading.off_hours_queue import QueueCapacityError  # noqa: E402
 from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E402
 
 LOGGER = logging.getLogger("subscriber")
@@ -183,6 +184,19 @@ class _KSTDailyFileHandler(logging.handlers.BaseRotatingHandler):
             self.handleError(record)
 
 
+def _ensure_log_directory(path: Path) -> None:
+    """Create a private leaf directory without changing an existing parent."""
+
+    try:
+        path.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        if not path.is_dir():
+            raise
+        return
+    if os.name != "nt":
+        os.chmod(path, 0o700)
+
+
 def _parse_log_level(level: str) -> int:
     resolved = logging.getLevelName(level.upper())
     if not isinstance(resolved, int):
@@ -194,9 +208,7 @@ def _configure_logging(log_file: str | None, *, level: str = "INFO") -> None:
     handlers: list[logging.Handler] = [logging.StreamHandler()]
     if log_file:
         log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        if os.name != "nt":
-            os.chmod(log_path.parent, 0o700)
+        _ensure_log_directory(log_path.parent)
         handlers.append(_KSTDailyFileHandler(log_path, encoding="utf-8"))
 
     formatter = _KSTFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -222,9 +234,7 @@ def _configure_raw_pubsub_logging(log_file: str | None) -> logging.Logger | None
         return None
 
     log_path = Path(log_file)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    if os.name != "nt":
-        os.chmod(log_path.parent, 0o700)
+    _ensure_log_directory(log_path.parent)
     handler = _KSTDailyFileHandler(log_path, encoding="utf-8")
     handler.setFormatter(_KSTFormatter("%(asctime)s - %(message)s"))
     handler.setLevel(logging.INFO)
@@ -324,6 +334,7 @@ def _handle_message(
     context = _message_context(message)
     _log_raw_pubsub_message(message, context, raw_logger)
     active_logger.info("Received Pub/Sub message (%s, bytes=%s)", context, len(message.data or b""))
+    acknowledge = True
     try:
         signal = parse_signal_bytes(message.data)
         active_logger.info(
@@ -347,11 +358,24 @@ def _handle_message(
         )
     except SignalValidationError as exc:
         active_logger.warning("Acknowledging invalid signal (%s): %s", context, exc)
+    except QueueCapacityError as exc:
+        acknowledge = False
+        active_logger.error(
+            "Releasing message for redelivery because the durable queue is full "
+            "(%s): %s",
+            context,
+            exc,
+        )
     except Exception as exc:  # noqa: BLE001 - safe ack avoids duplicate trading
         active_logger.exception("Acknowledging processing failure (%s): %s", context, exc)
     finally:
-        message.ack()
-        active_logger.info("Acknowledged Pub/Sub message (%s)", context)
+        if acknowledge:
+            message.ack()
+            active_logger.info("Acknowledged Pub/Sub message (%s)", context)
+        else:
+            _release_message_for_redelivery(
+                message, reason="durable off-hours queue capacity is exhausted"
+            )
 
 
 def build_callback(
@@ -362,9 +386,7 @@ def build_callback(
     return lambda message: _handle_message(message, dispatcher, logger, raw_logger)
 
 
-def _nack_message_during_shutdown(message) -> None:
-    """Release a late callback for redelivery without starting broker work."""
-
+def _release_message_for_redelivery(message, *, reason: str) -> None:
     nack = getattr(message, "nack", None)
     if callable(nack):
         nack()
@@ -372,7 +394,15 @@ def _nack_message_during_shutdown(message) -> None:
         modify_ack_deadline = getattr(message, "modify_ack_deadline", None)
         if callable(modify_ack_deadline):
             modify_ack_deadline(0)
-    LOGGER.info("Released Pub/Sub message received after shutdown admission closed")
+    LOGGER.info("Released Pub/Sub message for redelivery: %s", reason)
+
+
+def _nack_message_during_shutdown(message) -> None:
+    """Release a late callback for redelivery without starting broker work."""
+
+    _release_message_for_redelivery(
+        message, reason="shutdown admission is closed"
+    )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

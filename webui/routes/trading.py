@@ -49,7 +49,11 @@ def _page_context(request: Request, *, trade_result=None, config_result=None) ->
         "trade_result": trade_result,
         "config_result": config_result,
         "csrf_token": request.app.state.settings.csrf_token,
-        "order_nonce": request.app.state.order_nonces.issue(),
+        "order_nonce": (
+            None
+            if request.app.state.network_read_only
+            else request.app.state.order_nonces.issue()
+        ),
     }
 
 
@@ -143,13 +147,19 @@ async def update_config(request: Request):
         "auto_exchange_min_shortfall_usd",
     )
     fields = {name: form[name] for name in editable_fields if name in form}
+    strategy_form_fields = {
+        "signal_strategy_name": "name",
+        "signal_strategy_split_count": "split_count",
+    }
+    strategy = {
+        target: form[source]
+        for source, target in strategy_form_fields.items()
+        if source in form
+    }
     try:
         result = update_config_fields(
             fields,
-            {
-                "name": form.get("signal_strategy_name", ""),
-                "split_count": form.get("signal_strategy_split_count", "1"),
-            },
+            strategy or None,
         )
         response_status = status.HTTP_200_OK
     except (OSError, TypeError, ValueError) as exc:

@@ -56,10 +56,10 @@ The example config file shows the available setting names, but this guide explai
 
 ### What it does
 
-- Sends every valid BUY and SELL signal to the broker.
+- Sends every otherwise valid BUY and SELL signal to the broker.
 - Uses full score weight even when `buy_score` is missing.
 - Uses stop-loss risk sizing when a usable stop is present.
-- Falls back to the broker/config buy size when risk sizing cannot produce one share.
+- Falls back to the broker/config buy size when risk sizing is unavailable; an enabled constraint that permits less than one whole share rejects the BUY.
 - Does not require `stop_loss` or `target_price`.
 - Does not impose a position cap.
 - Sells the full position for every SELL reason by default.
@@ -96,7 +96,7 @@ account.
 
 ### In one sentence
 
-`score_risk` uses signal risk data when available and otherwise still places the BUY.
+`score_risk` uses signal risk data when available and otherwise still places the BUY. It never bypasses an enabled constraint by substituting an unconstrained broker default.
 
 ### Main settings
 
@@ -106,11 +106,12 @@ account.
 - `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
 - `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter.
 - `require_stop_loss` / `require_target_price`: both default to `false`.
-- A missing/invalid stop, zero risk budget, or sub-share calculation falls back to the broker/config default size instead of skipping.
+- A missing/invalid stop or absent risk budget falls back to the broker/config default size.
+- A configured risk or maximum-position constraint that permits less than one whole share rejects the BUY.
 
 ### When it is useful
 
-Use it when BUY signals sometimes contain useful risk fields but every valid BUY still needs an order attempt.
+Use it when BUY signals sometimes contain useful risk fields and configured constraints must fail closed.
 
 ## `protective_exit`
 

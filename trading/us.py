@@ -291,14 +291,12 @@ class USStockTrading:
         self.auto_exchange = build_auto_exchange_config(self.account_config)
 
         # Authentication
-        ka.auth(
-            svr=self.env,
-            product=self.product_code,
-            account_key=self.account_key,
-        )
-
         try:
-            self.trenv = ka.getTREnv()
+            self.trenv = ka.authenticate_and_get_env(
+                svr=self.env,
+                product=self.product_code,
+                account_key=self.account_key,
+            )
         except RuntimeError as e:
             print("❌ KIS API authentication failed!")
             print(f"Mode: {self.mode}, Error: {e}")

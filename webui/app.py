@@ -161,6 +161,10 @@ def is_loopback_host(host: str) -> bool:
         return False
 
 
+def _is_safe_mutable_host_pattern(host: str) -> bool:
+    return host.lower() == "localhost" or is_loopback_host(host)
+
+
 def validate_bind_host(host: str, *, allow_non_loopback: bool = False) -> None:
     if is_loopback_host(host):
         return
@@ -197,6 +201,12 @@ def create_app(settings: WebUISettings | None = None, *, work_tracker=None) -> F
     if not is_loopback_host(selected.host) and not selected.allowed_hosts:
         raise ValueError(
             "Non-loopback WebUI binding requires an explicit WEBUI_ALLOWED_HOSTS allowlist"
+        )
+    if is_loopback_host(selected.host) and any(
+        not _is_safe_mutable_host_pattern(host) for host in selected.allowed_hosts
+    ):
+        raise ValueError(
+            "Mutable loopback WebUI allows only loopback WEBUI_ALLOWED_HOSTS values"
         )
 
     allowed_hosts = selected.allowed_hosts

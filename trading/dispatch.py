@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -45,6 +47,19 @@ from .us import USStockTrading
 
 logger = logging.getLogger(__name__)
 CONFIG_FILE = active_kis_config_path()
+_BROKER_EXECUTION_LOCK = threading.Lock()
+
+
+@asynccontextmanager
+async def _serialized_broker_workflow():
+    """Serialize in-process Pub/Sub, queue, and WebUI broker workflows."""
+
+    while not _BROKER_EXECUTION_LOCK.acquire(blocking=False):
+        await asyncio.sleep(0.01)
+    try:
+        yield
+    finally:
+        _BROKER_EXECUTION_LOCK.release()
 
 
 @dataclass(slots=True)
@@ -91,6 +106,12 @@ class TradeDispatcher:
             logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
             return DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
 
+        async with _serialized_broker_workflow():
+            return await self._dispatch_serialized(signal, allow_queue=allow_queue)
+
+    async def _dispatch_serialized(
+        self, signal: SignalMessage, *, allow_queue: bool
+    ) -> DispatchResult:
         event_strategy = self._resolve_event_strategy(signal)
         if signal.is_event:
             if event_strategy is not None:

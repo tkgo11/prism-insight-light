@@ -12,7 +12,7 @@
     <p class="warning">{{ trade_guard.message }}</p>
     <form method="post" action="/trading/order" class="form-grid">
       <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
-      <input type="hidden" name="order_nonce" value="{{ order_nonce }}">
+      {% if order_nonce %}<input type="hidden" name="order_nonce" value="{{ order_nonce }}">{% endif %}
       <label>Action<select name="action"><option>BUY</option><option value="SELL">SELL ALL</option></select></label>
       <label>Ticker<input name="ticker" placeholder="005930 or AAPL" required></label>
       <label>Price<input name="price" type="number" step="0.0001" min="0.0001" placeholder="70000" required></label>

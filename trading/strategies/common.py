@@ -73,7 +73,14 @@ def string_list(
     values = payload.get(key, default)
     if not isinstance(values, (list, tuple)):
         raise ValueError(f"signal_strategy.{key} must be a list")
-    return tuple(str(value).strip() for value in values)
+    if any(not isinstance(value, str) or not value.strip() for value in values):
+        raise ValueError(
+            f"signal_strategy.{key} entries must be non-empty strings"
+        )
+    normalized = tuple(value.strip() for value in values)
+    if len(set(normalized)) != len(normalized):
+        raise ValueError(f"signal_strategy.{key} entries must be unique")
+    return normalized
 
 
 def fraction_value(payload: dict[str, Any], key: str, default: float) -> float:

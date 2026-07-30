@@ -219,11 +219,21 @@ def update_config_fields(fields: dict[str, str], strategy: dict[str, str] | None
     if strategy is not None:
         current = data.get("signal_strategy") if isinstance(data.get("signal_strategy"), dict) else {}
         next_strategy = dict(current)
-        name = str(strategy.get("name") or "").strip()
         current_name = str(current.get("name") or "")
+        name = (
+            str(strategy.get("name") or "").strip()
+            if "name" in strategy
+            else current_name
+        )
         if name not in {"", current_name, *WEBUI_EDITABLE_STRATEGY_NAMES}:
             raise ValueError("this strategy cannot be configured safely in the WebUI")
-        split_count = int(str(strategy.get("split_count") or "1"))
+        split_count = int(
+            str(
+                strategy.get("split_count")
+                if "split_count" in strategy
+                else current.get("split_count", 1)
+            )
+        )
         if split_count <= 0:
             raise ValueError("signal_strategy.split_count must be positive")
         next_strategy["name"] = name
