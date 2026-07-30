@@ -102,6 +102,54 @@ async def test_score_risk_rejects_weak_reward_risk_without_order():
     assert FakeUSTrader.calls == []
 
 
+@pytest.mark.asyncio
+async def test_score_risk_rejects_cap_below_one_share_without_default_order():
+    strategy = ScoreRiskStrategy(
+        config=score_risk_config(max_position_amount_usd=50)
+    )
+    signal = parse_signal_payload(
+        {
+            "type": "BUY",
+            "ticker": "AAPL",
+            "market": "US",
+            "price": 100,
+            "stop_loss": 90,
+            "target_price": 120,
+            "buy_score": 90,
+        }
+    )
+
+    result = await strategy.execute(signal, trading_mode="demo")
+
+    assert result.status == "rejected"
+    assert "one whole share" in result.message
+    assert result.details["units"] == 0
+    assert FakeUSTrader.calls == []
+
+
+@pytest.mark.asyncio
+async def test_score_risk_zero_weight_does_not_fall_back_to_default_order():
+    strategy = ScoreRiskStrategy(
+        config=score_risk_config(score_bands={0: 0.0}, min_score=0)
+    )
+    signal = parse_signal_payload(
+        {
+            "type": "BUY",
+            "ticker": "AAPL",
+            "market": "US",
+            "price": 100,
+            "stop_loss": 90,
+            "target_price": 120,
+            "buy_score": 90,
+        }
+    )
+
+    result = await strategy.execute(signal, trading_mode="demo")
+
+    assert result.status == "rejected"
+    assert FakeUSTrader.calls == []
+
+
 @pytest.mark.parametrize("weight", [-0.1, 1.1, float("nan"), float("inf")])
 def test_score_risk_rejects_invalid_score_weights(weight):
     with pytest.raises(ValueError, match="between 0 and 1"):

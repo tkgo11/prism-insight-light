@@ -67,6 +67,15 @@ def boolean_value(payload: dict[str, Any], key: str, default: bool) -> bool:
     raise ValueError(f"signal_strategy.{key} must be a boolean")
 
 
+def string_list(
+    payload: dict[str, Any], key: str, default: list[str] | tuple[str, ...]
+) -> tuple[str, ...]:
+    values = payload.get(key, default)
+    if not isinstance(values, (list, tuple)):
+        raise ValueError(f"signal_strategy.{key} must be a list")
+    return tuple(str(value).strip() for value in values)
+
+
 def fraction_value(payload: dict[str, Any], key: str, default: float) -> float:
     value = number(payload, key, default)
     if not math.isfinite(value) or value < 0 or value > 1:

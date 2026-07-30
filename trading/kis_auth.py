@@ -503,6 +503,10 @@ def resolve_account(
         matched = [account for account in accounts if account["account_key"] == account_key]
         if not matched:
             raise ValueError(f"Account key '{account_key}' not found for mode '{requested_svr}'")
+        if len(matched) > 1:
+            raise ValueError(
+                f"Account key '{account_key}' is ambiguous for mode '{requested_svr}'"
+            )
         if requested_product and matched[0]["product"] != requested_product:
             raise ValueError(
                 f"Account '{account_key}' does not support product '{requested_product or DEFAULT_PRODUCT_CODE}'"
@@ -518,6 +522,11 @@ def resolve_account(
         if not matched:
             raise ValueError(
                 f"Account '{account_name}' does not support product '{requested_product or DEFAULT_PRODUCT_CODE}'"
+            )
+        if len(matched) > 1:
+            raise ValueError(
+                f"Account name '{account_name}' is ambiguous for mode '{requested_svr}'; "
+                "use unique account names"
             )
         return matched[0]
 

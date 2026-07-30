@@ -564,6 +564,12 @@ class DomesticStockTrading:
         # Branch by time period
         if datetime.time(9, 0) <= current_time <= datetime.time(15, 30):
             # Regular trading hours
+            if limit_price and limit_price > 0:
+                logger.info(
+                    f"[{stock_code}] Regular trading hours - executing limit buy "
+                    f"@ {limit_price:,} KRW"
+                )
+                return self.buy_limit_price(stock_code, int(limit_price), buy_amount)
             logger.info(f"[{stock_code}] Regular trading hours - executing market buy")
             return self.buy_market_price(stock_code, buy_amount)
 
@@ -1208,9 +1214,15 @@ class DomesticStockTrading:
 
                         result['current_price'] = current_price_info['current_price']
 
-                        # Step 2: Calculate buyable quantity (use amount)
+                        # Step 2: Calculate buyable quantity using the submitted price.
                         current_price = current_price_info['current_price']
-                        buy_quantity = math.floor(amount / current_price)
+                        requested_limit_price = (
+                            int(limit_price)
+                            if limit_price and limit_price > 0
+                            else None
+                        )
+                        effective_price = requested_limit_price or int(current_price)
+                        buy_quantity = math.floor(amount / effective_price)
 
                         if buy_quantity <= 0:
                             result['message'] = f'Buyable quantity is 0 (buy amount: {amount:,} KRW)'
@@ -1218,27 +1230,27 @@ class DomesticStockTrading:
                             return result
 
                         result['quantity'] = buy_quantity
-                        result['total_amount'] = buy_quantity * current_price_info['current_price']
+                        result['total_amount'] = buy_quantity * effective_price
 
                         # Step 3: Execute buy (use amount, limit price if provided)
-                        # Use current_price as limit_price fallback for reserved orders (outside market hours)
-                        # CRITICAL: Convert to int - KIS API requires integer strings, not float strings ("30800" not "30800.0")
-                        effective_limit_price = int(limit_price) if (limit_price and limit_price > 0) else int(current_price)
-
                         # Prevent rate limit
                         await asyncio.sleep(0.5)
-                        if limit_price:
-                            logger.info(f"[Async Buy API] {stock_code} executing reserved buy order: {buy_quantity} shares x {effective_limit_price:,} KRW (limit)")
+                        if requested_limit_price:
+                            logger.info(f"[Async Buy API] {stock_code} executing limit buy order: {buy_quantity} shares x {effective_price:,} KRW")
                         else:
-                            logger.info(f"[Async Buy API] {stock_code} executing with effective limit price: {buy_quantity} shares x {effective_limit_price:,} KRW")
+                            logger.info(f"[Async Buy API] {stock_code} executing market/reserved-market buy for an estimated {buy_quantity} shares")
                         buy_result = await asyncio.to_thread(
-                            self.smart_buy, stock_code, amount, effective_limit_price
+                            self.smart_buy, stock_code, amount, requested_limit_price
                         )
 
                         if buy_result['success']:
+                            result['quantity'] = int(
+                                buy_result.get('quantity') or buy_quantity
+                            )
+                            result['total_amount'] = result['quantity'] * effective_price
                             result['success'] = True
                             result['order_no'] = buy_result['order_no']
-                            result['message'] = f"Buy completed: {buy_quantity} shares x {current_price_info['current_price']:,} KRW = {result['total_amount']:,} KRW"
+                            result['message'] = f"Buy submitted: {result['quantity']} shares x {effective_price:,} KRW = {result['total_amount']:,} KRW"
                             logger.info(f"[Async Buy API] {stock_code} buy successful")
                         else:
                             result['message'] = f"Buy failed: {buy_result['message']}"

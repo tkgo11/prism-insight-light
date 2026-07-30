@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from trading.dispatch import TradeDispatcher
+from trading.dispatch import DispatchResult, TradeDispatcher
 from trading.schema import parse_signal_payload
 
 
@@ -133,6 +133,35 @@ def test_due_demo_order_remains_queued_when_market_still_closed(monkeypatch, tmp
     assert dispatcher.queue.pending_count() == 1
 
 
+def test_due_failed_order_is_quarantined_without_automatic_retry(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "trading.off_hours_queue.next_market_open",
+        lambda market: datetime.now(timezone.utc) - timedelta(minutes=1),
+    )
+    dispatcher = TradeDispatcher(trading_mode="demo", queue_path=tmp_path / "queue.json")
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000}
+    )
+    dispatcher.queue.enqueue(signal)
+    executions = 0
+
+    async def fail_execution(payload):
+        nonlocal executions
+        executions += 1
+        return DispatchResult("failed", "broker rejected order", "BUY", "KR")
+
+    monkeypatch.setattr(dispatcher, "execute_queued_signal", fail_execution)
+
+    assert dispatcher.drain_due_orders() == 0
+    assert dispatcher.queue.pending_count() == 0
+    assert dispatcher.queue.failed_count() == 1
+    assert dispatcher.drain_due_orders() == 0
+    assert executions == 1
+    quarantined = dispatcher.queue._load()[0]
+    assert quarantined.status == "failed"
+    assert quarantined.failure_message == "broker rejected order"
+
+
 @pytest.mark.asyncio
 async def test_real_off_hours_without_broker_window_enqueues(monkeypatch):
     queue = DummyQueue()
@@ -189,7 +218,7 @@ async def test_dispatch_acknowledges_event_without_trader(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_balance_split_buy_routes_with_fractional_buy_amount(monkeypatch):
+async def test_balance_split_buy_routes_with_fractional_buy_amount(monkeypatch, tmp_path):
     results = {}
 
     class FakeUSTrader:
@@ -206,6 +235,10 @@ async def test_balance_split_buy_routes_with_fractional_buy_amount(monkeypatch):
             return {"success": True, "message": "split-buy"}
 
     monkeypatch.setattr("trading.strategies.balance_split.USStockTrading", FakeUSTrader)
+    monkeypatch.setattr(
+        "trading.strategies.balance_split.RESERVATION_PATH",
+        tmp_path / "balance_split_reservations.json",
+    )
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
 
     dispatcher = TradeDispatcher(

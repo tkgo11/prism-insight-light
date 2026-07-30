@@ -222,6 +222,35 @@ def test_resolve_account_supports_account_key(monkeypatch):
     assert resolved["account"] == "22220000"
 
 
+def test_resolve_account_rejects_ambiguous_account_name(monkeypatch):
+    cfg = _base_cfg()
+    cfg["accounts"] = [
+        {
+            "name": "duplicate",
+            "mode": "demo",
+            "account": "11110000",
+            "product": "01",
+            "market": "us",
+        },
+        {
+            "name": "duplicate",
+            "mode": "demo",
+            "account": "22220000",
+            "product": "01",
+            "market": "us",
+        },
+    ]
+    _patch_cfg(monkeypatch, cfg)
+
+    with pytest.raises(ValueError, match="ambiguous.*unique account names"):
+        ka.resolve_account(
+            svr="vps",
+            product="01",
+            account_name="duplicate",
+            market="us",
+        )
+
+
 def test_get_configured_accounts_rejects_unknown_mode(monkeypatch):
     _patch_cfg(monkeypatch, _base_cfg())
 

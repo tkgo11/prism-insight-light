@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import os
 import threading
 
 from trading.off_hours_queue import OffHoursOrderQueue
@@ -12,6 +13,9 @@ def test_queue_enqueue_and_drain(tmp_path):
     queued = queue.enqueue(signal)
     assert queue.pending_count() == 1
     assert queued.signal["ticker"] == "005930"
+    if os.name != "nt":
+        assert queue.storage_path.stat().st_mode & 0o777 == 0o600
+        assert queue.storage_path.parent.stat().st_mode & 0o777 == 0o700
 
     executed = []
     drained = queue.drain_due(
@@ -36,6 +40,21 @@ def test_queue_retains_due_item_when_executor_defers(tmp_path):
 
     assert drained == 0
     assert queue.pending_count() == 1
+
+
+def test_queue_loader_rejects_oversized_storage(monkeypatch, tmp_path):
+    from trading import off_hours_queue
+
+    monkeypatch.setattr(off_hours_queue, "MAX_QUEUE_BYTES", 16)
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    queue.storage_path.write_bytes(b"[" + b" " * 16 + b"]")
+
+    try:
+        queue.pending_count()
+    except ValueError as exc:
+        assert "safety limit" in str(exc)
+    else:  # pragma: no cover - defensive assertion
+        raise AssertionError("oversized queue should be rejected")
 
 
 def test_queue_commits_each_success_before_later_executor_failure(tmp_path):
