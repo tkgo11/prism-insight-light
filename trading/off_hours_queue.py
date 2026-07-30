@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from dataclasses import asdict, dataclass, replace
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Iterable
@@ -16,6 +16,18 @@ from .schema import SignalMessage
 
 MAX_QUEUE_BYTES = 16 * 1024 * 1024
 FAILURE_METADATA_RESERVE_BYTES = 512
+
+
+def _safe_failure_message(message: object) -> str:
+    """Bound failure metadata by encoded bytes and avoid JSON escape expansion."""
+    safe_characters = []
+    for character in str(message):
+        if character.isprintable() and character not in {'"', "\\"}:
+            safe_characters.append(character)
+        else:
+            safe_characters.append("?")
+    encoded = "".join(safe_characters).encode("utf-8")[:256]
+    return encoded.decode("utf-8", errors="ignore")
 
 
 class QueueCapacityError(RuntimeError):
@@ -84,7 +96,20 @@ class OffHoursOrderQueue:
         *,
         reserve_failure_metadata: bool = False,
     ) -> None:
-        payload = [asdict(item) for item in items]
+        payload = []
+        for item in items:
+            record = {
+                "signal": item.signal,
+                "execute_at": item.execute_at,
+                "created_at": item.created_at,
+            }
+            if item.status != "pending":
+                record["status"] = item.status
+            if item.failure_message:
+                record["failure_message"] = item.failure_message
+            if item.failed_at is not None:
+                record["failed_at"] = item.failed_at
+            payload.append(record)
         rendered = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
         pending_reserve = 0
         if reserve_failure_metadata:
@@ -168,7 +193,7 @@ class OffHoursOrderQueue:
                             current_items[item_index] = replace(
                                 item,
                                 status="failed",
-                                failure_message=outcome.message[:256],
+                                failure_message=_safe_failure_message(outcome.message),
                                 failed_at=current.isoformat(),
                             )
                             self._save(current_items)
