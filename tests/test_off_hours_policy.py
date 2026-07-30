@@ -129,13 +129,19 @@ def test_near_capacity_queue_can_persist_failure_quarantine(monkeypatch, tmp_pat
     )
 
     queue.drain_due(
-        lambda payload: (_ for _ in ()).throw(RuntimeError("x" * 2048)),
+        lambda payload: (_ for _ in ()).throw(
+            RuntimeError(("\x00" + "가" + "🙂" + '"' + "\\") * 256)
+        ),
         now=datetime.now(timezone.utc) + timedelta(days=7),
     )
 
     assert queue.pending_count() == 0
     assert queue.failed_count() == 1
-    assert len(queue._load()[0].failure_message) <= 256
+    failure_message = queue._load()[0].failure_message
+    assert len(failure_message.encode("utf-8")) <= 256
+    assert all(character.isprintable() for character in failure_message)
+    assert '"' not in failure_message
+    assert "\\" not in failure_message
 
 
 def test_queue_makes_only_a_new_leaf_directory_private(tmp_path):
