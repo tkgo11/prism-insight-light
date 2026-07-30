@@ -6,7 +6,7 @@ PRISM-INSIGHT Light is a lightweight fork of the original **PRISM-INSIGHT** proj
 GCP Pub/Sub -> signal validation -> Korea Investment & Securities (KIS) Korean/US stock orders
 ```
 
-> Automated trading can lose money. Start with `demo` mode and `--dry-run` before using real accounts.
+> Automated trading can lose money. Start with `demo` mode and `--dry-run` before using real accounts. The example configuration intentionally uses aggressive 100% sizing and automatic USD exchange; review [the strategy guide](trading/STRATEGIES.md) and set explicit limits before live trading.
 
 ## Respect the original creator
 
@@ -64,6 +64,13 @@ pip install -r requirements.txt
 Copy `.env.example` to `.env`, then fill in the values.
 
 ```bash
+cp .env.example .env
+chmod 600 .env
+```
+
+Then configure:
+
+```bash
 GCP_PROJECT_ID=your-project-id
 GCP_PUBSUB_SUBSCRIPTION_ID=your-subscription-id
 GCP_CREDENTIALS_PATH=/absolute/path/to/service-account.json
@@ -87,6 +94,7 @@ Copy the example KIS config to the live config path.
 
 ```bash
 cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
+chmod 600 trading/config/kis_devlp.yaml
 ```
 
 Recommended first-run flow:
@@ -98,9 +106,9 @@ Recommended first-run flow:
 5. only then configure real accounts if needed.
 
 
-### Optional USD auto-exchange for US buys
+### USD auto-exchange for US buys
 
-US stock buy sizes are configured in USD. By default the bot only uses existing USD buying power. If you want KIS to use KRW-to-USD exchange buying power for US stock buys, enable it explicitly in `trading/config/kis_devlp.yaml`:
+US stock buy sizes are configured in USD. The aggressive example configuration enables KIS KRW-to-USD exchange buying power by default. Disable `auto_exchange_usd_on_buy` or set a finite `max_auto_exchange_krw` before live trading if that exposure is not intended:
 
 ```yaml
 auto_exchange_usd_on_buy: true
@@ -182,7 +190,8 @@ Behavior:
 - `BUY` / `SELL`
   - market open: execute;
   - market closed + demo mode: queue until the next market open;
-  - market closed + real mode: reject and ack.
+  - market closed + real mode: submit only during a broker-supported off-hours window; otherwise queue without dropping the acknowledged signal;
+  - failed queued attempts are quarantined for operator review instead of being retried blindly.
 - `EVENT`: log and ack, with no trade.
 - malformed or unsupported payload: log and ack.
 
@@ -319,7 +328,9 @@ bash setup_subscriber_docker_crontab.sh
 
 The WebUI is a local operator console for readiness, signal validation, dry-run simulation, Telegram preview, bounded masked logs, read-only queue visibility, guarded manual BUY/SELL orders, and selected operational config fields. It does not provide queue mutation, broker login, token refresh, or subscriber lifecycle controls.
 
-Manual broker orders are locked by default. The safe deployment uses the default loopback-only bind; each order also requires `WEBUI_ENABLE_LIVE_TRADING=true`, the exact arming phrase shown in the UI, and a valid CSRF token. Keep this console on a trusted local machine; an explicitly enabled non-loopback bind is not authentication and is not recommended for live trading.
+Manual broker orders are locked by default. The safe deployment uses the default loopback-only bind; each live order also requires `WEBUI_ENABLE_LIVE_TRADING=true`, the exact arming phrase shown in the UI, a valid CSRF token, and a one-time order ticket. Reusing a submitted ticket is rejected to prevent browser refreshes or retries from duplicating an order.
+
+An explicitly enabled non-loopback bind is diagnostic and read-only: broker orders and configuration changes are rejected because host allowlisting is not authentication. Keep mutable trading controls on a trusted local machine.
 
 Install the web dependencies with the normal requirements file, then start the subscriber and UI together explicitly:
 

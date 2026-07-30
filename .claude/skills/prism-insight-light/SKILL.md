@@ -16,7 +16,7 @@ Repository-specific guidance for agents working on `prism-insight-light`, a Pyth
 | `subscriber.py` | Pub/Sub subscriber entrypoint and signal dispatch loop. |
 | `trading/` | Core trading runtime: auth, market-hours logic, schema validation, sizing, domestic/US orders, queueing, Telegram fetch. |
 | `trading/config/kis_devlp.yaml.example` | Safe example KIS configuration; keep live config out of git. |
-| `webui/` | Lightweight Flask-style web UI, routes, services, templates, and static assets. |
+| `webui/` | Lightweight FastAPI web UI, routes, services, templates, and static assets. |
 | `tests/` | Regression tests for trading runtime, Docker helpers, readiness checks, and web UI behavior. |
 | `check_pubsub_readiness.py`, `pubsub_readiness.py` | Pub/Sub/GCP readiness checks. |
 | `install_prism_docker.sh`, `setup_subscriber*_crontab.sh` | Docker and cron helper scripts. |
