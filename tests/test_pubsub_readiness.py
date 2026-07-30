@@ -60,15 +60,17 @@ class FakeClient:
     def subscription_path(self, project_id: str, subscription_id: str) -> str:
         return f"projects/{project_id}/subscriptions/{subscription_id}"
 
-    def test_iam_permissions(self, request: dict):
+    def test_iam_permissions(self, request: dict, **kwargs):
         type(self).permission_requests.append(dict(request))
+        type(self).permission_requests[-1]["_rpc_kwargs"] = kwargs
         if self.permission_error is not None:
             raise self.permission_error
         return FakePermissionsResponse(list(self.permissions or []))
 
-    def get_subscription(self, request=None, subscription=None):
+    def get_subscription(self, request=None, subscription=None, **kwargs):
         payload = request or {"subscription": subscription}
         type(self).metadata_requests.append(dict(payload))
+        type(self).metadata_requests[-1]["_rpc_kwargs"] = kwargs
         if self.metadata_error is not None:
             raise self.metadata_error
         return {"name": payload["subscription"]}
@@ -186,6 +188,26 @@ def test_returns_ready_when_consume_permission_is_confirmed(monkeypatch):
     assert "READY:" in result.message
     assert CONSUME_PERMISSION in FakeClient.permission_requests[0]["permissions"]
     assert FakeClient.permission_requests[0]["resource"] == "projects/demo-project/subscriptions/demo-sub"
+    assert FakeClient.permission_requests[0]["_rpc_kwargs"] == {
+        "timeout": 10.0,
+        "retry": None,
+    }
+    assert FakeClient.metadata_requests[0]["_rpc_kwargs"]["retry"] is None
+    assert 0 < FakeClient.metadata_requests[0]["_rpc_kwargs"]["timeout"] <= 10.0
+
+
+def test_rejects_invalid_rpc_timeout(monkeypatch):
+    module = _import_pubsub_readiness(monkeypatch)
+
+    result = _call_check(
+        module,
+        project_id="demo-project",
+        subscription_id="demo-sub",
+        rpc_timeout_seconds=float("nan"),
+    )
+
+    assert result.status == "failure"
+    assert "finite positive" in result.message
 
 
 def test_returns_denied_when_consume_permission_is_missing(monkeypatch):

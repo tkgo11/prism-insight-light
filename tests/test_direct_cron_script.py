@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -76,3 +77,72 @@ printf '%s %s %s' "$running_status" "$cleanup_status" "$([ -e "$PID_FILE" ] && e
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.rstrip().endswith("1 0 absent")
+
+
+def test_direct_cron_market_probe_imports_trading_as_package():
+    probe = f"""
+source {SCRIPT!s}
+PROJECT_DIR={ROOT!s}
+PYTHON_PATH={sys.executable!s}
+printf '%s' "$(market_open_label KR)"
+"""
+
+    result = subprocess.run(
+        ["bash", "-c", probe],
+        cwd=ROOT,
+        env=os.environ.copy(),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout in {"yes", "no"}
+    assert "attempted relative import" not in result.stderr
+
+
+def test_direct_cron_explicit_action_never_enters_interactive_menu():
+    probe = f"""
+source {SCRIPT!s}
+interactive_action_menu() {{ printf 'interactive-menu-called'; return 99; }}
+validate_environment() {{ :; }}
+start_subscriber() {{ printf 'start:%s' "$1"; }}
+main --cron-start KR
+"""
+
+    result = subprocess.run(
+        ["bash", "-c", probe],
+        cwd=ROOT,
+        env=os.environ.copy(),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "start:KR"
+
+
+def test_direct_cron_generated_jobs_are_non_interactive():
+    probe = f"""
+source {SCRIPT!s}
+generate_managed_block
+"""
+
+    result = subprocess.run(
+        ["bash", "-c", probe],
+        cwd=ROOT,
+        env=os.environ.copy(),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    cron_jobs = [
+        line
+        for line in result.stdout.splitlines()
+        if "--cron-start" in line or "--cron-stop" in line
+    ]
+    assert len(cron_jobs) == 6
+    assert all(line.endswith("--non-interactive") for line in cron_jobs)
