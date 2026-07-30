@@ -210,6 +210,24 @@ def test_rejects_invalid_rpc_timeout(monkeypatch):
     assert "finite positive" in result.message
 
 
+def test_metadata_probe_is_skipped_when_primary_consumes_deadline(monkeypatch):
+    module = _import_pubsub_readiness(monkeypatch)
+    FakeClient.permissions = [CONSUME_PERMISSION]
+    moments = iter((100.0, 111.0))
+    monkeypatch.setattr(module.time, "monotonic", lambda: next(moments))
+
+    result = _call_check(
+        module,
+        project_id="demo-project",
+        subscription_id="demo-sub",
+        rpc_timeout_seconds=10.0,
+    )
+
+    assert result.status == "ready"
+    assert FakeClient.metadata_requests == []
+    assert any("deadline exhausted" in item for item in result.diagnostics)
+
+
 def test_returns_denied_when_consume_permission_is_missing(monkeypatch):
     module = _import_pubsub_readiness(monkeypatch)
     FakeClient.permissions = []

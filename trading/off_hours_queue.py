@@ -15,6 +15,11 @@ from .market_hours import next_market_open
 from .schema import SignalMessage
 
 MAX_QUEUE_BYTES = 16 * 1024 * 1024
+FAILURE_METADATA_RESERVE_BYTES = 512
+
+
+class QueueCapacityError(RuntimeError):
+    """The durable queue cannot admit more data without losing readability."""
 
 
 @dataclass(slots=True)
@@ -48,9 +53,14 @@ class QueueExecutionResult:
 class OffHoursOrderQueue:
     def __init__(self, storage_path: Path | None = None):
         self.storage_path = storage_path or Path("runtime") / "off_hours_queue.json"
-        self.storage_path.parent.mkdir(parents=True, exist_ok=True)
-        if os.name != "nt":
-            os.chmod(self.storage_path.parent, 0o700)
+        try:
+            self.storage_path.parent.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            if not self.storage_path.parent.is_dir():
+                raise
+        else:
+            if os.name != "nt":
+                os.chmod(self.storage_path.parent, 0o700)
         self.lock_path = self.storage_path.with_suffix(self.storage_path.suffix + ".lock")
         self.drain_lock_path = self.storage_path.with_suffix(self.storage_path.suffix + ".drain.lock")
 
@@ -68,8 +78,25 @@ class OffHoursOrderQueue:
             raise ValueError("Off-hours queue must contain a JSON list")
         return [QueuedSignal(**item) for item in data]
 
-    def _save(self, items: Iterable[QueuedSignal]) -> None:
+    def _save(
+        self,
+        items: Iterable[QueuedSignal],
+        *,
+        reserve_failure_metadata: bool = False,
+    ) -> None:
         payload = [asdict(item) for item in items]
+        rendered = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
+        pending_reserve = 0
+        if reserve_failure_metadata:
+            pending_reserve = (
+                sum(item.get("status", "pending") == "pending" for item in payload)
+                * FAILURE_METADATA_RESERVE_BYTES
+            )
+        if len(rendered) + pending_reserve > MAX_QUEUE_BYTES:
+            raise QueueCapacityError(
+                "Off-hours queue would exceed the safety limit after reserving "
+                "failure-quarantine metadata"
+            )
         temporary_path: Path | None = None
         try:
             with tempfile.NamedTemporaryFile(
@@ -83,7 +110,7 @@ class OffHoursOrderQueue:
                 temporary_path = Path(handle.name)
                 if os.name != "nt":
                     os.chmod(temporary_path, 0o600)
-                json.dump(payload, handle, ensure_ascii=False, indent=2)
+                handle.write(rendered.decode("utf-8"))
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary_path, self.storage_path)
@@ -98,7 +125,7 @@ class OffHoursOrderQueue:
         with FileLock(self.lock_path):
             items = self._load()
             items.append(queued_signal)
-            self._save(items)
+            self._save(items, reserve_failure_metadata=True)
         return queued_signal
 
     def drain_due(
@@ -119,7 +146,13 @@ class OffHoursOrderQueue:
 
             processed = 0
             for item in due:
-                outcome = executor(item.signal)
+                try:
+                    outcome = executor(item.signal)
+                except Exception as exc:  # noqa: BLE001 - isolate poison queue items
+                    outcome = QueueExecutionResult(
+                        "failed",
+                        f"{type(exc).__name__}: {str(exc)[:1024]}",
+                    )
                 if outcome is False:
                     continue
                 if isinstance(outcome, QueueExecutionResult):
@@ -135,7 +168,7 @@ class OffHoursOrderQueue:
                             current_items[item_index] = replace(
                                 item,
                                 status="failed",
-                                failure_message=outcome.message,
+                                failure_message=outcome.message[:256],
                                 failed_at=current.isoformat(),
                             )
                             self._save(current_items)

@@ -30,6 +30,17 @@ def test_non_loopback_app_requires_explicit_host_allowlist():
         create_app(WebUISettings(host="0.0.0.0", allow_non_loopback=True))
 
 
+@pytest.mark.parametrize("allowed_host", ["*", "*.example.com", "console.example"])
+def test_mutable_loopback_app_rejects_non_loopback_host_patterns(allowed_host):
+    with pytest.raises(ValueError, match="only loopback"):
+        create_app(
+            WebUISettings(
+                host="127.0.0.1",
+                allowed_hosts=(allowed_host,),
+            )
+        )
+
+
 def test_load_settings_parses_operational_safety_values(tmp_path):
     settings = load_settings(
         {

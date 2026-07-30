@@ -1181,6 +1181,14 @@ def get_trading_env_lock():
     return _TRENV_LOCK
 
 
+def authenticate_and_get_env(**kwargs):
+    """Atomically authenticate and capture the matching shared KIS environment."""
+
+    with _TRENV_LOCK:
+        auth(**kwargs)
+        return getTREnv()
+
+
 # Get: App key, App secret, Account number (8 digits), Account product code (2 digits), Token, Domain
 def _setTRENV(cfg):
     nt1 = namedtuple(
