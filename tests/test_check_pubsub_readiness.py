@@ -28,6 +28,7 @@ def _make_pubsub_module(result: FakeResult):
     module.ENV_PROJECT_ID = "GCP_PROJECT_ID"
     module.ENV_SUBSCRIPTION_ID = "GCP_PUBSUB_SUBSCRIPTION_ID"
     module.ENV_CREDENTIALS_PATH = "GCP_CREDENTIALS_PATH"
+    module.DEFAULT_RPC_TIMEOUT_SECONDS = 10.0
 
     def runner(**kwargs: Any):
         return result

@@ -9,6 +9,7 @@ import sys
 from typing import Sequence
 
 from pubsub_readiness import (
+    DEFAULT_RPC_TIMEOUT_SECONDS,
     ENV_CREDENTIALS_PATH,
     ENV_PROJECT_ID,
     ENV_SUBSCRIPTION_ID,
@@ -21,6 +22,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--project-id", default=os.environ.get(ENV_PROJECT_ID))
     parser.add_argument("--subscription-id", default=os.environ.get(ENV_SUBSCRIPTION_ID))
     parser.add_argument("--credentials-path", default=os.environ.get(ENV_CREDENTIALS_PATH))
+    parser.add_argument(
+        "--rpc-timeout-seconds",
+        type=float,
+        default=DEFAULT_RPC_TIMEOUT_SECONDS,
+    )
     return parser
 
 
@@ -30,6 +36,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         project_id=args.project_id,
         subscription_id=args.subscription_id,
         credentials_path=args.credentials_path,
+        rpc_timeout_seconds=args.rpc_timeout_seconds,
     )
 
     stream = sys.stdout if result.exit_code == 0 else sys.stderr

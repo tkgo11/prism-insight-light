@@ -24,3 +24,18 @@ def test_readiness_summary_static_does_not_run_live_check(monkeypatch):
     monkeypatch.setattr(pubsub_readiness, "check_pubsub_readiness", fail_live)
     result = get_readiness_summary(run_live_check=False)
     assert "live Pub/Sub check not requested" in result["message"]
+
+
+def test_config_status_treats_whitespace_required_values_as_missing():
+    status = get_config_status(
+        {
+            "GCP_PROJECT_ID": " ",
+            "GCP_PUBSUB_SUBSCRIPTION_ID": "\t",
+        }
+    )
+
+    assert status["status"] == "missing"
+    assert status["missing_required"] == [
+        "GCP_PROJECT_ID",
+        "GCP_PUBSUB_SUBSCRIPTION_ID",
+    ]
