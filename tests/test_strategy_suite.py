@@ -28,6 +28,27 @@ def test_strategy_list_fields_reject_strings(config_type, name, field):
         config_type.from_mapping({"name": name, field: "BUY"})
 
 
+@pytest.mark.parametrize(
+    ("config_type", "name", "field", "value"),
+    [
+        (CooldownStrategyConfig, "cooldown", "apply_to_signal_types", [None]),
+        (EventRiskOffStrategyConfig, "event_risk_off", "risk_off_event_types", [""]),
+        (ProfitLadderStrategyConfig, "profit_ladder", "full_exit_reasons", [{}]),
+        (
+            ProfitLadderStrategyConfig,
+            "profit_ladder",
+            "full_exit_reasons",
+            ["risk_off", "risk_off"],
+        ),
+    ],
+)
+def test_strategy_list_fields_reject_invalid_entries(
+    config_type, name, field, value
+):
+    with pytest.raises(ValueError):
+        config_type.from_mapping({"name": name, field: value})
+
+
 class FakeUSTrader:
     calls = []
     def __init__(self, mode, account_name=None, account_index=None): self.mode = mode; self.account_name = account_name; self.account_index = account_index

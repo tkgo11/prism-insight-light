@@ -2,11 +2,12 @@ from datetime import datetime, timedelta, timezone
 import os
 import threading
 
-from trading.off_hours_queue import OffHoursOrderQueue
+from trading.off_hours_queue import OffHoursOrderQueue, QueueCapacityError
 from trading.schema import parse_signal_payload
 
 
 def test_queue_enqueue_and_drain(tmp_path):
+    parent_mode = tmp_path.stat().st_mode & 0o777
     queue = OffHoursOrderQueue(tmp_path / "queue.json")
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
 
@@ -15,7 +16,7 @@ def test_queue_enqueue_and_drain(tmp_path):
     assert queued.signal["ticker"] == "005930"
     if os.name != "nt":
         assert queue.storage_path.stat().st_mode & 0o777 == 0o600
-        assert queue.storage_path.parent.stat().st_mode & 0o777 == 0o700
+        assert queue.storage_path.parent.stat().st_mode & 0o777 == parent_mode
 
     executed = []
     drained = queue.drain_due(
@@ -57,6 +58,93 @@ def test_queue_loader_rejects_oversized_storage(monkeypatch, tmp_path):
         raise AssertionError("oversized queue should be rejected")
 
 
+def test_queue_rejects_over_capacity_save_without_corrupting_existing_work(
+    monkeypatch, tmp_path
+):
+    from trading import off_hours_queue
+
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    first = parse_signal_payload(
+        {"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000}
+    )
+    second = parse_signal_payload(
+        {"type": "BUY", "ticker": "000660", "market": "KR", "price": 170000}
+    )
+    queue.enqueue(first)
+    original = queue.storage_path.read_bytes()
+    monkeypatch.setattr(off_hours_queue, "MAX_QUEUE_BYTES", len(original) + 10)
+
+    try:
+        queue.enqueue(second)
+    except QueueCapacityError:
+        pass
+    else:  # pragma: no cover - defensive assertion
+        raise AssertionError("over-capacity enqueue should fail")
+
+    assert queue.storage_path.read_bytes() == original
+    assert queue.pending_count() == 1
+
+
+def test_queue_quarantines_executor_exception_and_continues(tmp_path):
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    for ticker in ("005930", "000660"):
+        queue.enqueue(
+            parse_signal_payload(
+                {"type": "BUY", "ticker": ticker, "market": "KR", "price": 82000}
+            )
+        )
+    calls = []
+
+    def execute(payload):
+        calls.append(payload["ticker"])
+        if payload["ticker"] == "005930":
+            raise RuntimeError("poison item")
+        return True
+
+    drained = queue.drain_due(
+        execute,
+        now=datetime.now(timezone.utc) + timedelta(days=7),
+    )
+
+    assert drained == 1
+    assert calls == ["005930", "000660"]
+    assert queue.pending_count() == 0
+    assert queue.failed_count() == 1
+
+
+def test_near_capacity_queue_can_persist_failure_quarantine(monkeypatch, tmp_path):
+    from trading import off_hours_queue
+
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    queue.enqueue(
+        parse_signal_payload(
+            {"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000}
+        )
+    )
+    admitted_size = queue.storage_path.stat().st_size
+    monkeypatch.setattr(
+        off_hours_queue,
+        "MAX_QUEUE_BYTES",
+        admitted_size + off_hours_queue.FAILURE_METADATA_RESERVE_BYTES,
+    )
+
+    queue.drain_due(
+        lambda payload: (_ for _ in ()).throw(RuntimeError("x" * 2048)),
+        now=datetime.now(timezone.utc) + timedelta(days=7),
+    )
+
+    assert queue.pending_count() == 0
+    assert queue.failed_count() == 1
+    assert len(queue._load()[0].failure_message) <= 256
+
+
+def test_queue_makes_only_a_new_leaf_directory_private(tmp_path):
+    queue = OffHoursOrderQueue(tmp_path / "private-runtime" / "queue.json")
+
+    if os.name != "nt":
+        assert queue.storage_path.parent.stat().st_mode & 0o777 == 0o700
+
+
 def test_queue_commits_each_success_before_later_executor_failure(tmp_path):
     queue = OffHoursOrderQueue(tmp_path / "queue.json")
     for ticker in ("005930", "000660"):
@@ -71,15 +159,14 @@ def test_queue_commits_each_success_before_later_executor_failure(tmp_path):
             raise RuntimeError("simulated broker failure")
         return True
 
-    try:
-        queue.drain_due(
-            execute,
-            now=datetime.now(timezone.utc) + timedelta(days=7),
-        )
-    except RuntimeError:
-        pass
+    drained = queue.drain_due(
+        execute,
+        now=datetime.now(timezone.utc) + timedelta(days=7),
+    )
 
-    assert queue.pending_count() == 1
+    assert drained == 1
+    assert queue.pending_count() == 0
+    assert queue.failed_count() == 1
     assert queue._load()[0].signal["ticker"] == "000660"
 
 

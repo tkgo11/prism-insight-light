@@ -118,7 +118,7 @@ class DomesticStockTrading:
 
         # Authentication with improved error handling
         try:
-            ka.auth(
+            self.trenv = ka.authenticate_and_get_env(
                 svr=self.env,
                 product=self.product_code,
                 account_key=self.account_key,
@@ -180,9 +180,6 @@ class DomesticStockTrading:
             logger.error("=" * 60)
             raise RuntimeError(f"{self.mode} mode authentication failed: {e}") from e
 
-        # Get trading environment
-        try:
-            self.trenv = ka.getTREnv()
         except RuntimeError as e:
             logger.error("❌ KIS API environment not initialized!")
             logger.error(f"Mode: {self.mode}, Error: {e}")
@@ -536,14 +533,14 @@ class DomesticStockTrading:
         """
         Automatically buy using the optimal method based on time (excluding after-hours single price trading due to high unfilled probability)
 
-        - 09:00~15:30: Market price buy
+        - 09:00~15:30: Limit buy when provided, otherwise market buy
         - 15:40~16:00: After-hours closing price trading
         - Other times: Reserved order (next day limit price if limit_price provided)
 
         Args:
             stock_code: Stock code
             buy_amount: Buy amount (default: amount set during initialization)
-            limit_price: Limit price for reserved order (market order if None)
+            limit_price: Limit price for regular/reserved order (market order if None)
 
         Returns:
             Buy result

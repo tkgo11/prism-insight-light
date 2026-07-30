@@ -7,6 +7,7 @@ from concurrent.futures import TimeoutError
 import pytest
 
 import subscriber
+from trading.off_hours_queue import QueueCapacityError
 
 
 class FakeMessage:
@@ -84,6 +85,21 @@ def test_handle_message_optionally_logs_raw_pubsub_payload(tmp_path):
     assert '"context": "message_id=msg-1 delivery_attempt=2"' in text
     assert '"payload":' in text
     assert '005930' in text
+
+
+def test_handle_message_nacks_safe_queue_capacity_failure():
+    class FullQueueDispatcher:
+        async def dispatch(self, signal):
+            raise QueueCapacityError("queue full")
+
+    message = FakeMessage(
+        b'{"type":"BUY","ticker":"AAPL","market":"US","price":100}'
+    )
+
+    subscriber._handle_message(message, FullQueueDispatcher())
+
+    assert message.nacked is True
+    assert message.ack_count == 0
 
 
 def test_parse_args_raw_pubsub_log_file_from_env(monkeypatch):
@@ -316,6 +332,20 @@ def test_configure_logging_rejects_unknown_level():
         assert "Unknown log level" in str(exc)
     else:  # pragma: no cover - defensive assertion
         raise AssertionError("unknown log level should be rejected")
+
+
+def test_logging_does_not_change_existing_parent_permissions(tmp_path):
+    if os.name == "nt":
+        return
+    tmp_path.chmod(0o755)
+
+    subscriber._configure_logging(str(tmp_path / "subscriber.log"))
+    try:
+        assert tmp_path.stat().st_mode & 0o777 == 0o755
+        assert (tmp_path / "subscriber.log").stat().st_mode & 0o777 == 0o600
+    finally:
+        for handler in logging.getLogger().handlers:
+            handler.close()
 
 
 def test_kst_daily_file_handler_rolls_over_on_kst_date(tmp_path):
