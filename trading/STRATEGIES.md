@@ -274,8 +274,8 @@ At the top stair, you may sell all.
 - It only handles **SELL** signals.
 - It reads `profit_rate` from the signal when available.
 - It chooses a sell fraction from `profit_bands` when configured.
-- It can sell everything for important exit reasons like stop loss or risk off when no profit band overrides that amount.
-- If a SELL signal has both a `full_exit_reasons` reason and `profit_rate`, the matching `profit_bands` value decides the final sell fraction.
+- It sells everything for configured full-exit reasons such as risk off.
+- Stop-loss and configured full-exit reasons take precedence over profit bands.
 
 ### Main settings
 
@@ -284,7 +284,7 @@ At the top stair, you may sell all.
   - Example: `20: 1.0` means sell 100% when profit is at least 20%.
 - `stop_loss_sell_percent`: how much to sell when the reason is `stop_loss`.
 - `default_sell_percent`: how much to sell if no special band or reason applies.
-- `full_exit_reasons`: reasons that start as a whole-position sell; if `profit_rate` is also present, the profit ladder can replace this with a partial sell fraction from `profit_bands`.
+- `full_exit_reasons`: reasons that always sell the whole position, even when `profit_rate` also matches a partial profit band.
 
 ### When it is useful
 

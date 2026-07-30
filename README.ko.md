@@ -6,7 +6,7 @@ PRISM-INSIGHT Light는 원본 **PRISM-INSIGHT** 프로젝트에서 매매 실행
 GCP Pub/Sub -> 신호 검증 -> 한국투자증권(KIS) 한국/미국 주식 주문
 ```
 
-> 투자 및 자동매매에는 손실 위험이 있습니다. 먼저 모의투자(`demo`)와 `--dry-run`으로 충분히 확인한 뒤 사용하세요.
+> 투자 및 자동매매에는 손실 위험이 있습니다. 먼저 모의투자(`demo`)와 `--dry-run`으로 충분히 확인한 뒤 사용하세요. 예시 설정은 100% 비중과 USD 자동환전을 사용하는 공격형 기본값이므로, 실거래 전 [전략 가이드](trading/STRATEGIES.md)를 확인하고 한도를 명시하세요.
 
 ## 원 제작자 존중
 
@@ -62,6 +62,13 @@ pip install -r requirements.txt
 `.env.example`을 `.env`로 복사한 뒤 값을 채웁니다.
 
 ```bash
+cp .env.example .env
+chmod 600 .env
+```
+
+그다음 값을 설정합니다.
+
+```bash
 GCP_PROJECT_ID=your-project-id
 GCP_PUBSUB_SUBSCRIPTION_ID=your-subscription-id
 GCP_CREDENTIALS_PATH=/absolute/path/to/service-account.json
@@ -85,6 +92,7 @@ KIS_RATE_LIMIT_RETRY_MAX_SECONDS=5.0
 
 ```bash
 cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
+chmod 600 trading/config/kis_devlp.yaml
 ```
 
 처음에는 안전하게 아래 흐름을 권장합니다.
@@ -94,6 +102,10 @@ cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 3. `auto_trading` 값과 계좌 설정 확인
 4. `--dry-run`으로 실행 확인
 5. 충분히 검증한 뒤 실전 계좌 설정
+
+### 미국 주식 매수 USD 자동환전
+
+미국 주식 매수 금액은 USD 기준입니다. 공격형 예시 설정은 KIS의 원화→USD 환전 이후 주문 가능 금액을 기본적으로 사용합니다. 이 노출을 원하지 않으면 실거래 전에 `auto_exchange_usd_on_buy: false`로 바꾸거나 `max_auto_exchange_krw`에 유한한 1회 한도를 설정하세요.
 
 ## Pub/Sub 설정 점검
 
@@ -129,6 +141,18 @@ python subscriber.py
 
 실제 실행 전에는 KIS 계좌, App Key/Secret, Pub/Sub 구독, 서비스 계정 권한을 모두 확인하세요.
 
+### 선택: 원본 Pub/Sub 페이로드 로그
+
+원본 신호 메타데이터에는 민감한 내용이 들어갈 수 있으므로 기본값은 비활성화입니다. 디버깅이 꼭 필요할 때만 별도 KST 일별 로그를 명시적으로 켜세요.
+
+```bash
+python subscriber.py --raw-pubsub-log-file logs/raw_pubsub.log
+# 또는
+RAW_PUBSUB_LOG_FILE=logs/raw_pubsub.log python subscriber.py
+```
+
+subscriber는 생성·회전되는 로그를 Unix 계열에서 소유자 전용 `0600`으로 보정합니다.
+
 ## 신호 메시지 형식
 
 Pub/Sub 메시지는 아래 필드를 사용할 수 있습니다.
@@ -156,7 +180,8 @@ Pub/Sub 메시지는 아래 필드를 사용할 수 있습니다.
 - `BUY` / `SELL`
   - 장중: 주문 실행
   - 장외 + 모의투자: 다음 장 시작까지 대기열에 저장
-  - 장외 + 실전투자: 거부 후 ack 처리
+  - 장외 + 실전투자: 브로커가 지원하는 장외 주문 시간에만 즉시 제출하고, 그 외에는 ack된 신호를 버리지 않고 대기열에 저장
+  - 대기열 주문 실패: 자동 재시도하지 않고 운영자 확인용 실패 상태로 격리
 - `EVENT`: 로그 기록 후 ack 처리, 주문 없음
 - 잘못된 메시지 또는 지원하지 않는 메시지: 로그 기록 후 ack 처리
 
@@ -293,7 +318,9 @@ bash setup_subscriber_docker_crontab.sh
 
 WebUI는 Pub/Sub subscriber와 함께 실행할 수 있는 로컬 운영 콘솔이며 준비 상태, 신호 검증, 드라이런 시뮬레이션, Telegram 미리보기, 마스킹된 제한 로그, 오프아워 큐 읽기 전용 확인, 보호된 수동 BUY/SELL, 일부 운영 설정 편집을 제공합니다. 큐 변경, 브로커 로그인, 토큰 갱신, subscriber 제어 기능은 제공하지 않습니다.
 
-수동 브로커 주문은 기본적으로 잠겨 있습니다. 안전한 배포는 기본 루프백 전용 바인딩을 사용하며, 각 주문에는 `WEBUI_ENABLE_LIVE_TRADING=true`, 화면에 표시된 확인 문구, 유효한 CSRF 토큰도 필요합니다. 신뢰할 수 있는 로컬 장비에서만 사용하세요. 명시적으로 허용한 비루프백 바인딩은 인증 수단이 아니며 실거래에는 권장하지 않습니다.
+수동 브로커 주문은 기본적으로 잠겨 있습니다. 안전한 배포는 기본 루프백 전용 바인딩을 사용하며, 각 실주문에는 `WEBUI_ENABLE_LIVE_TRADING=true`, 화면에 표시된 확인 문구, 유효한 CSRF 토큰, 일회용 주문 티켓이 필요합니다. 이미 제출한 티켓의 재사용은 브라우저 새로고침이나 재시도로 주문이 중복되지 않도록 거부됩니다.
+
+명시적으로 허용한 비루프백 바인딩은 진단용 읽기 전용입니다. 호스트 허용 목록은 인증이 아니므로 브로커 주문과 설정 변경이 거부됩니다. 변경 가능한 매매 제어는 신뢰할 수 있는 로컬 장비에 두세요.
 
 ```bash
 pip install -r requirements.txt
