@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -14,7 +16,7 @@ from .config_paths import active_kis_config_path
 from .domestic import AsyncTradingContext
 from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
 from .modes import normalize_trading_mode
-from .off_hours_queue import OffHoursOrderQueue
+from .off_hours_queue import OffHoursOrderQueue, QueueExecutionResult
 from .schema import SignalMessage, parse_signal_payload
 from .strategies import (
     BalanceSplitStrategy,
@@ -45,6 +47,19 @@ from .us import USStockTrading
 
 logger = logging.getLogger(__name__)
 CONFIG_FILE = active_kis_config_path()
+_BROKER_EXECUTION_LOCK = threading.Lock()
+
+
+@asynccontextmanager
+async def _serialized_broker_workflow():
+    """Serialize in-process Pub/Sub, queue, and WebUI broker workflows."""
+
+    while not _BROKER_EXECUTION_LOCK.acquire(blocking=False):
+        await asyncio.sleep(0.01)
+    try:
+        yield
+    finally:
+        _BROKER_EXECUTION_LOCK.release()
 
 
 @dataclass(slots=True)
@@ -91,6 +106,12 @@ class TradeDispatcher:
             logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
             return DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
 
+        async with _serialized_broker_workflow():
+            return await self._dispatch_serialized(signal, allow_queue=allow_queue)
+
+    async def _dispatch_serialized(
+        self, signal: SignalMessage, *, allow_queue: bool
+    ) -> DispatchResult:
         event_strategy = self._resolve_event_strategy(signal)
         if signal.is_event:
             if event_strategy is not None:
@@ -157,9 +178,19 @@ class TradeDispatcher:
         return await self.dispatch(signal, allow_queue=False)
 
     def drain_due_orders(self) -> int:
-        def _executor(payload: dict) -> bool:
+        def _executor(payload: dict) -> QueueExecutionResult:
             result = asyncio.run(self.execute_queued_signal(payload))
-            return result.status != "deferred"
+            if result.status == "deferred":
+                return QueueExecutionResult("deferred", result.message)
+            if result.status == "failed":
+                logger.error(
+                    "Quarantining failed queued %s order on %s: %s",
+                    result.signal_type,
+                    result.market,
+                    result.message,
+                )
+                return QueueExecutionResult("failed", result.message)
+            return QueueExecutionResult("processed", result.message)
 
         return self.queue.drain_due(_executor)
 
@@ -199,10 +230,6 @@ class TradeDispatcher:
             if self.protective_exit_config is not None:
                 return ProtectiveExitStrategy(config=self.protective_exit_config)
         return None
-
-    def _resolve_buy_strategy(self, signal: SignalMessage) -> BalanceSplitStrategy | None:
-        strategy = self._resolve_strategy(signal)
-        return strategy if isinstance(strategy, BalanceSplitStrategy) else None
 
     def _strategy_trader_kwargs(self) -> dict[str, Any]:
         kwargs: dict[str, Any] = {}

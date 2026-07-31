@@ -24,6 +24,7 @@ load_dotenv(ROOT / ".env")
 
 from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must load first
 from trading.market_hours import KST  # noqa: E402 - config env must load first
+from trading.off_hours_queue import QueueCapacityError  # noqa: E402
 from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E402
 
 LOGGER = logging.getLogger("subscriber")
@@ -34,6 +35,15 @@ def _positive_poll_seconds(value: str) -> int:
     if seconds <= 0:
         raise argparse.ArgumentTypeError("queue poll seconds must be greater than zero")
     return seconds
+
+
+def _positive_message_count(value: str) -> int:
+    count = int(value)
+    if count <= 0:
+        raise argparse.ArgumentTypeError(
+            "max in-flight messages must be greater than zero"
+        )
+    return count
 
 
 def _positive_seconds_from_env(name: str, default: float) -> float:
@@ -126,6 +136,8 @@ class _KSTDailyFileHandler(logging.handlers.BaseRotatingHandler):
 
     def __init__(self, filename: Path, *, encoding: str = "utf-8"):
         super().__init__(filename, mode="a", encoding=encoding, delay=False)
+        if os.name != "nt":
+            os.chmod(self.baseFilename, 0o600)
         self.current_date = self._initial_log_date()
 
     @staticmethod
@@ -154,10 +166,14 @@ class _KSTDailyFileHandler(logging.handlers.BaseRotatingHandler):
             if os.path.exists(rotated_name):
                 os.remove(rotated_name)
             self.rotate(self.baseFilename, rotated_name)
+            if os.name != "nt":
+                os.chmod(rotated_name, 0o600)
 
         self.current_date = new_date or datetime.datetime.now(tz=KST).date()
         if not self.delay:
             self.stream = self._open()
+            if os.name != "nt":
+                os.chmod(self.baseFilename, 0o600)
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
@@ -166,6 +182,19 @@ class _KSTDailyFileHandler(logging.handlers.BaseRotatingHandler):
             logging.FileHandler.emit(self, record)
         except Exception:
             self.handleError(record)
+
+
+def _ensure_log_directory(path: Path) -> None:
+    """Create a private leaf directory without changing an existing parent."""
+
+    try:
+        path.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        if not path.is_dir():
+            raise
+        return
+    if os.name != "nt":
+        os.chmod(path, 0o700)
 
 
 def _parse_log_level(level: str) -> int:
@@ -179,7 +208,7 @@ def _configure_logging(log_file: str | None, *, level: str = "INFO") -> None:
     handlers: list[logging.Handler] = [logging.StreamHandler()]
     if log_file:
         log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
+        _ensure_log_directory(log_path.parent)
         handlers.append(_KSTDailyFileHandler(log_path, encoding="utf-8"))
 
     formatter = _KSTFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -205,7 +234,7 @@ def _configure_raw_pubsub_logging(log_file: str | None) -> logging.Logger | None
         return None
 
     log_path = Path(log_file)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
+    _ensure_log_directory(log_path.parent)
     handler = _KSTDailyFileHandler(log_path, encoding="utf-8")
     handler.setFormatter(_KSTFormatter("%(asctime)s - %(message)s"))
     handler.setLevel(logging.INFO)
@@ -305,6 +334,7 @@ def _handle_message(
     context = _message_context(message)
     _log_raw_pubsub_message(message, context, raw_logger)
     active_logger.info("Received Pub/Sub message (%s, bytes=%s)", context, len(message.data or b""))
+    acknowledge = True
     try:
         signal = parse_signal_bytes(message.data)
         active_logger.info(
@@ -328,11 +358,24 @@ def _handle_message(
         )
     except SignalValidationError as exc:
         active_logger.warning("Acknowledging invalid signal (%s): %s", context, exc)
+    except QueueCapacityError as exc:
+        acknowledge = False
+        active_logger.error(
+            "Releasing message for redelivery because the durable queue is full "
+            "(%s): %s",
+            context,
+            exc,
+        )
     except Exception as exc:  # noqa: BLE001 - safe ack avoids duplicate trading
         active_logger.exception("Acknowledging processing failure (%s): %s", context, exc)
     finally:
-        message.ack()
-        active_logger.info("Acknowledged Pub/Sub message (%s)", context)
+        if acknowledge:
+            message.ack()
+            active_logger.info("Acknowledged Pub/Sub message (%s)", context)
+        else:
+            _release_message_for_redelivery(
+                message, reason="durable off-hours queue capacity is exhausted"
+            )
 
 
 def build_callback(
@@ -343,9 +386,7 @@ def build_callback(
     return lambda message: _handle_message(message, dispatcher, logger, raw_logger)
 
 
-def _nack_message_during_shutdown(message) -> None:
-    """Release a late callback for redelivery without starting broker work."""
-
+def _release_message_for_redelivery(message, *, reason: str) -> None:
     nack = getattr(message, "nack", None)
     if callable(nack):
         nack()
@@ -353,7 +394,15 @@ def _nack_message_during_shutdown(message) -> None:
         modify_ack_deadline = getattr(message, "modify_ack_deadline", None)
         if callable(modify_ack_deadline):
             modify_ack_deadline(0)
-    LOGGER.info("Released Pub/Sub message received after shutdown admission closed")
+    LOGGER.info("Released Pub/Sub message for redelivery: %s", reason)
+
+
+def _nack_message_during_shutdown(message) -> None:
+    """Release a late callback for redelivery without starting broker work."""
+
+    _release_message_for_redelivery(
+        message, reason="shutdown admission is closed"
+    )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -375,6 +424,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--queue-path", default="runtime/off_hours_queue.json")
     parser.add_argument("--queue-poll-seconds", type=_positive_poll_seconds, default=60)
+    parser.add_argument(
+        "--max-in-flight-messages",
+        type=_positive_message_count,
+        default=os.environ.get("PUBSUB_MAX_IN_FLIGHT_MESSAGES", "1"),
+        help="Maximum received but unprocessed Pub/Sub messages (default: 1)",
+    )
     parser.add_argument(
         "--web-ui",
         action="store_true",
@@ -499,6 +554,9 @@ def main(argv: list[str] | None = None) -> None:
         streaming_pull_future = subscriber.subscribe(
             subscription_path,
             callback=callback,
+            flow_control=pubsub_v1.types.FlowControl(
+                max_messages=args.max_in_flight_messages
+            ),
             await_callbacks_on_shutdown=True,
         )
     except BaseException:

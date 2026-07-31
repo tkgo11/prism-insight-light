@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from ..schema import SignalMessage
-from .common import RUNTIME_DIR, StrategyExecution, acquire_file_lock, execute_order, execution_from_result, fresh_items, integer_value, load_json_list, save_json, strategy_name
+from .common import RUNTIME_DIR, StrategyExecution, acquire_file_lock, execute_order, execution_from_result, fresh_items, integer_value, load_json_list, save_json, strategy_name, string_list
 
 COOLDOWN = "cooldown"
 @dataclass(frozen=True, slots=True)
@@ -15,7 +15,10 @@ class CooldownStrategyConfig:
     def from_mapping(cls, payload: dict[str, Any] | None) -> "CooldownStrategyConfig | None":
         if not payload or strategy_name(payload) != COOLDOWN: return None
         window = integer_value(payload, "window_minutes", 1, minimum=1)
-        types = tuple(str(v).strip().upper() for v in payload.get("apply_to_signal_types", []))
+        types = tuple(
+            value.upper()
+            for value in string_list(payload, "apply_to_signal_types", [])
+        )
         return cls(window, types, str(payload.get("scope", "market_ticker")), Path(payload.get("runtime_path") or (RUNTIME_DIR / "cooldown_executions.json")))
 
 class CooldownStrategy:

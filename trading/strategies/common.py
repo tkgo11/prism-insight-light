@@ -67,6 +67,22 @@ def boolean_value(payload: dict[str, Any], key: str, default: bool) -> bool:
     raise ValueError(f"signal_strategy.{key} must be a boolean")
 
 
+def string_list(
+    payload: dict[str, Any], key: str, default: list[str] | tuple[str, ...]
+) -> tuple[str, ...]:
+    values = payload.get(key, default)
+    if not isinstance(values, (list, tuple)):
+        raise ValueError(f"signal_strategy.{key} must be a list")
+    if any(not isinstance(value, str) or not value.strip() for value in values):
+        raise ValueError(
+            f"signal_strategy.{key} entries must be non-empty strings"
+        )
+    normalized = tuple(value.strip() for value in values)
+    if len(set(normalized)) != len(normalized):
+        raise ValueError(f"signal_strategy.{key} entries must be unique")
+    return normalized
+
+
 def fraction_value(payload: dict[str, Any], key: str, default: float) -> float:
     value = number(payload, key, default)
     if not math.isfinite(value) or value < 0 or value > 1:

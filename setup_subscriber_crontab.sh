@@ -14,6 +14,7 @@
 # =============================================================================
 
 set -euo pipefail
+umask 077
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -201,20 +202,17 @@ ensure_kst_timezone() {
 market_open_now() {
     local market="$1"
     PROJECT_DIR="$PROJECT_DIR" "$PYTHON_PATH" - "$market" <<'PY'
-import importlib.util
 import os
 import sys
 from pathlib import Path
 
 try:
     project_dir = Path(os.environ["PROJECT_DIR"])
-    module_path = project_dir / "trading" / "market_hours.py"
-    spec = importlib.util.spec_from_file_location("prism_market_hours", module_path)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
+    sys.path.insert(0, str(project_dir))
+    from trading.market_hours import is_market_open
+
     market = sys.argv[1]
-    sys.exit(0 if module.is_market_open(market) else 1)
+    sys.exit(0 if is_market_open(market) else 1)
 except Exception as exc:  # noqa: BLE001
     print(f"market-hours check failed: {exc}", file=sys.stderr)
     sys.exit(2)
@@ -509,14 +507,14 @@ PYTHONPATH=$project_dir_quoted
 AUTO_SHUTDOWN=$auto_shutdown_quoted
 
 # KR market session
-0 9 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start KR
-31 15 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop KR
+0 9 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start KR --non-interactive
+31 15 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop KR --non-interactive
 
 # US market session
-30 22 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US
-30 23 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US
-1 5 * * 2-6 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US
-1 6 * * 2-6 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US
+30 22 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US --non-interactive
+30 23 * * 1-5 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-start US --non-interactive
+1 5 * * 2-6 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US --non-interactive
+1 6 * * 2-6 cd $project_dir_quoted && PROJECT_DIR=$project_dir_quoted PYTHON_PATH=$python_path_quoted LOG_DIR=$log_dir_quoted PID_FILE=$pid_file_quoted AUTO_SHUTDOWN=$auto_shutdown_quoted SHUTDOWN_COMMAND=$shutdown_command_quoted bash $script_path_quoted --cron-stop US --non-interactive
 $END_MARKER
 EOF
 }
@@ -778,11 +776,13 @@ main() {
                 ;;
             --cron-start)
                 action="cron-start"
+                action_explicit=true
                 shift
                 cron_market="${1:-}"
                 ;;
             --cron-stop)
                 action="cron-stop"
+                action_explicit=true
                 shift
                 cron_market="${1:-}"
                 ;;

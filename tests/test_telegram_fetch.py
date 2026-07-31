@@ -89,6 +89,16 @@ Rationale: AI chip demand recovery"""
     }
 
 
+def test_parse_signal_text_preserves_fractional_buy_score_for_validation():
+    payload = parse_signal_text(
+        """📈 New Buy: Example(AAPL)
+Buy Price: 100 USD
+Buy Score: 8.5"""
+    )
+
+    assert payload["buy_score"] == 8.5
+
+
 def test_parse_signal_text_supports_labeled_sell_messages():
     payload = parse_signal_text(
         """📉 Sell: Apple(AAPL)

@@ -28,8 +28,11 @@ def _make_pubsub_module(result: FakeResult):
     module.ENV_PROJECT_ID = "GCP_PROJECT_ID"
     module.ENV_SUBSCRIPTION_ID = "GCP_PUBSUB_SUBSCRIPTION_ID"
     module.ENV_CREDENTIALS_PATH = "GCP_CREDENTIALS_PATH"
+    module.DEFAULT_RPC_TIMEOUT_SECONDS = 10.0
+    module.captured_kwargs = {}
 
     def runner(**kwargs: Any):
+        module.captured_kwargs.update(kwargs)
         return result
 
     module.check_pubsub_readiness = runner
@@ -73,6 +76,32 @@ def test_cli_returns_zero_and_prints_ready_message(monkeypatch, capsys):
     assert "READY:" in captured.out
     assert "metadata unavailable" in captured.out
     assert captured.err == ""
+
+
+def test_cli_forwards_rpc_timeout(monkeypatch):
+    module = _import_cli(
+        monkeypatch,
+        result=FakeResult(
+            status="ready",
+            exit_code=0,
+            message="READY",
+        ),
+    )
+
+    assert _call_main(
+        module,
+        [
+            "--project-id",
+            "demo",
+            "--subscription-id",
+            "sub",
+            "--rpc-timeout-seconds",
+            "2.5",
+        ],
+    ) == 0
+
+    readiness = sys.modules["pubsub_readiness"]
+    assert readiness.captured_kwargs["rpc_timeout_seconds"] == 2.5
 
 
 def test_cli_returns_denied_exit_code_and_prints_not_ready_message(monkeypatch, capsys):

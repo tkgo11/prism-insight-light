@@ -170,13 +170,14 @@ def test_smart_buy_routes_by_kst_not_server_local_time(monkeypatch):
 
     monkeypatch.setattr(dst, "_now_kst", lambda: dst.KST.localize(datetime(2026, 6, 8, 10, 0)))
     trader.buy_market_price = lambda stock_code, buy_amount=None: calls.append(("market", stock_code, buy_amount)) or {"success": True}
+    trader.buy_limit_price = lambda stock_code, limit_price, buy_amount=None: calls.append(("limit", stock_code, limit_price, buy_amount)) or {"success": True}
     trader.buy_closing_price = lambda stock_code, buy_amount=None: calls.append(("closing", stock_code, buy_amount)) or {"success": True}
     trader.buy_reserved_order = lambda stock_code, buy_amount=None, limit_price=None: calls.append(("reserved", stock_code, buy_amount, limit_price)) or {"success": True}
 
     result = trader.smart_buy("080220", buy_amount=100_000, limit_price=30_800)
 
     assert result["success"] is True
-    assert calls == [("market", "080220", 100_000)]
+    assert calls == [("limit", "080220", 30_800, 100_000)]
 
 
 def test_smart_sell_routes_by_kst_not_server_local_time(monkeypatch):
@@ -185,14 +186,97 @@ def test_smart_sell_routes_by_kst_not_server_local_time(monkeypatch):
     calls = []
 
     monkeypatch.setattr(dst, "_now_kst", lambda: dst.KST.localize(datetime(2026, 6, 8, 10, 0)))
-    trader.sell_all_market_price = lambda stock_code, holding_quantity=None: calls.append(("market", stock_code)) or {"success": True}
+    trader.sell_all_market_price = lambda stock_code, holding_quantity=None, limit_price=None: calls.append(("limit" if limit_price else "market", stock_code, limit_price)) or {"success": True}
     trader.sell_all_closing_price = lambda stock_code, holding_quantity=None: calls.append(("closing", stock_code)) or {"success": True}
     trader.sell_all_reserved_order = lambda stock_code, limit_price=None, holding_quantity=None: calls.append(("reserved", stock_code, limit_price)) or {"success": True}
 
     result = trader.smart_sell_all("080220", limit_price=30_800)
 
     assert result["success"] is True
-    assert calls == [("market", "080220")]
+    assert calls == [("limit", "080220", 30_800)]
+
+
+@pytest.mark.parametrize(
+    ("limit_price", "expected_division", "expected_price"),
+    [
+        (70_000, "00", "70000"),
+        (None, "01", "0"),
+    ],
+)
+def test_regular_session_sell_submits_requested_order_parameters(
+    limit_price, expected_division, expected_price
+):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.auto_trading = True
+    trader.mode = "demo"
+    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+    captured = {}
+
+    class Response:
+        @staticmethod
+        def isOK():
+            return True
+
+        @staticmethod
+        def getBody():
+            return SimpleNamespace(output={"odno": "limit-sell-1"})
+
+    def request(api_url, tr_id, params, **kwargs):
+        captured.update(
+            api_url=api_url,
+            tr_id=tr_id,
+            params=params,
+            kwargs=kwargs,
+        )
+        return Response()
+
+    trader._request = request
+    result = trader.sell_all_market_price(
+        "005930",
+        holding_quantity=3,
+        limit_price=limit_price,
+    )
+
+    assert result["success"] is True
+    assert captured["tr_id"] == "VTTC0011U"
+    assert captured["params"]["ORD_DVSN"] == expected_division
+    assert captured["params"]["ORD_UNPR"] == expected_price
+    assert captured["params"]["ORD_QTY"] == "3"
+
+
+@pytest.mark.asyncio
+async def test_async_buy_uses_lower_limit_for_affordability(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader._stock_locks = {}
+    trader._semaphore = dst.asyncio.Semaphore(1)
+    trader._global_lock = dst.asyncio.Lock()
+    trader._resolve_buy_amount = lambda buy_amount=None: 100
+    trader.get_current_price = lambda stock_code: {"current_price": 110}
+    calls = []
+    trader.smart_buy = (
+        lambda stock_code, buy_amount=None, limit_price=None: calls.append(
+            (stock_code, buy_amount, limit_price)
+        )
+        or {
+            "success": True,
+            "order_no": "limit-1",
+            "quantity": 1,
+            "message": "ok",
+        }
+    )
+
+    async def no_sleep(_seconds):
+        return None
+
+    monkeypatch.setattr(dst.asyncio, "sleep", no_sleep)
+    result = await trader._execute_buy_stock(
+        "005930", buy_amount=100, limit_price=90
+    )
+
+    assert result["success"] is True
+    assert result["quantity"] == 1
+    assert result["total_amount"] == 90
+    assert calls == [("005930", 100, 90)]
 
 
 @pytest.mark.asyncio
@@ -237,6 +321,43 @@ async def test_async_sell_reuses_verified_holding_quantity(monkeypatch):
     assert calls == [("005930", 70000, 18)]
 
 
+@pytest.mark.asyncio
+async def test_async_sell_without_limit_preserves_market_order_intent(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader._stock_locks = {}
+    trader._semaphore = dst.asyncio.Semaphore(1)
+    trader._global_lock = dst.asyncio.Lock()
+    trader.get_portfolio = lambda: [
+        {
+            "stock_code": "005930",
+            "quantity": 18,
+            "avg_price": 50000,
+            "profit_amount": 1000,
+            "profit_rate": 1.2,
+        }
+    ]
+    trader.get_current_price = lambda stock_code: {"current_price": 70000}
+    calls = []
+
+    def fake_smart_sell_all(stock_code, limit_price=None, holding_quantity=None):
+        calls.append((stock_code, limit_price, holding_quantity))
+        return {
+            "success": True,
+            "order_no": "12345",
+            "stock_code": stock_code,
+            "quantity": holding_quantity,
+            "message": "sold",
+        }
+
+    trader.smart_sell_all = fake_smart_sell_all
+
+    result = await trader._execute_sell_stock("005930")
+
+    assert result["success"] is True
+    assert result["quantity"] == 18
+    assert calls == [("005930", None, 18)]
+
+
 def test_smart_buy_routes_after_kst_close_to_reserved_order(monkeypatch):
     trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
     trader.auto_trading = True
@@ -259,7 +380,7 @@ def test_smart_sell_routes_after_kst_close_to_reserved_order(monkeypatch):
     calls = []
 
     monkeypatch.setattr(dst, "_now_kst", lambda: dst.KST.localize(datetime(2026, 6, 8, 17, 23)))
-    trader.sell_all_market_price = lambda stock_code, holding_quantity=None: calls.append(("market", stock_code)) or {"success": True}
+    trader.sell_all_market_price = lambda stock_code, holding_quantity=None, limit_price=None: calls.append(("market", stock_code, limit_price)) or {"success": True}
     trader.sell_all_closing_price = lambda stock_code, holding_quantity=None: calls.append(("closing", stock_code)) or {"success": True}
     trader.sell_all_reserved_order = lambda stock_code, limit_price=None, holding_quantity=None: calls.append(("reserved", stock_code, limit_price)) or {"success": True}
 

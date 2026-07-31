@@ -15,6 +15,40 @@ from trading.us import USStockTrading
 from trading.strategies.common import execute_order
 
 
+@pytest.mark.parametrize(
+    ("config_type", "name", "field"),
+    [
+        (CooldownStrategyConfig, "cooldown", "apply_to_signal_types"),
+        (EventRiskOffStrategyConfig, "event_risk_off", "risk_off_event_types"),
+        (ProfitLadderStrategyConfig, "profit_ladder", "full_exit_reasons"),
+    ],
+)
+def test_strategy_list_fields_reject_strings(config_type, name, field):
+    with pytest.raises(ValueError, match="must be a list"):
+        config_type.from_mapping({"name": name, field: "BUY"})
+
+
+@pytest.mark.parametrize(
+    ("config_type", "name", "field", "value"),
+    [
+        (CooldownStrategyConfig, "cooldown", "apply_to_signal_types", [None]),
+        (EventRiskOffStrategyConfig, "event_risk_off", "risk_off_event_types", [""]),
+        (ProfitLadderStrategyConfig, "profit_ladder", "full_exit_reasons", [{}]),
+        (
+            ProfitLadderStrategyConfig,
+            "profit_ladder",
+            "full_exit_reasons",
+            ["risk_off", "risk_off"],
+        ),
+    ],
+)
+def test_strategy_list_fields_reject_invalid_entries(
+    config_type, name, field, value
+):
+    with pytest.raises(ValueError):
+        config_type.from_mapping({"name": name, field: value})
+
+
 class FakeUSTrader:
     calls = []
     def __init__(self, mode, account_name=None, account_index=None): self.mode = mode; self.account_name = account_name; self.account_index = account_index
@@ -187,6 +221,35 @@ def test_limit_buffer_defaults_to_five_percent():
 
     assert config.buy_buffer_percent == 5.0
     assert config.sell_buffer_percent == 5.0
+
+
+@pytest.mark.parametrize("value", [100, 101, float("inf")])
+def test_limit_buffer_rejects_invalid_sell_buffer(value):
+    with pytest.raises(ValueError):
+        LimitBufferStrategyConfig.from_mapping(
+            {"name": "limit_buffer", "sell_buffer_percent": value}
+        )
+
+
+def test_limit_buffer_uses_conservative_kr_tick_rounding():
+    config = LimitBufferStrategyConfig.from_mapping(
+        {
+            "name": "limit_buffer",
+            "buy_buffer_percent": 0,
+            "sell_buffer_percent": 0,
+            "kr_tick_rounding": 10,
+        }
+    )
+    strategy = LimitBufferStrategy(config=config)
+    buy = parse_signal_payload(
+        {"type": "BUY", "ticker": "005930", "market": "KR", "price": 101}
+    )
+    sell = parse_signal_payload(
+        {"type": "SELL", "ticker": "005930", "market": "KR", "price": 101}
+    )
+
+    assert strategy._price(buy) == 110
+    assert strategy._price(sell) == 100
 
 
 @pytest.mark.asyncio
