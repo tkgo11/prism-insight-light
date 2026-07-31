@@ -1,3 +1,6 @@
+import threading
+import time
+
 import pytest
 
 from trading import kis_auth as ka
@@ -220,6 +223,64 @@ def test_resolve_account_supports_account_key(monkeypatch):
 
     assert resolved["name"] == "acct-b"
     assert resolved["account"] == "22220000"
+
+
+def test_resolve_account_rejects_ambiguous_account_name(monkeypatch):
+    cfg = _base_cfg()
+    cfg["accounts"] = [
+        {
+            "name": "duplicate",
+            "mode": "demo",
+            "account": "11110000",
+            "product": "01",
+            "market": "us",
+        },
+        {
+            "name": "duplicate",
+            "mode": "demo",
+            "account": "22220000",
+            "product": "01",
+            "market": "us",
+        },
+    ]
+    _patch_cfg(monkeypatch, cfg)
+
+    with pytest.raises(ValueError, match="ambiguous.*unique account names"):
+        ka.resolve_account(
+            svr="vps",
+            product="01",
+            account_name="duplicate",
+            market="us",
+        )
+
+
+def test_authenticate_and_get_env_captures_each_account_atomically(monkeypatch):
+    current_account = {"value": None}
+    captured = {}
+
+    def fake_auth(*, account_key, **kwargs):
+        current_account["value"] = account_key
+        time.sleep(0.02)
+
+    monkeypatch.setattr(ka, "auth", fake_auth)
+    monkeypatch.setattr(ka, "getTREnv", lambda: current_account["value"])
+
+    def worker(account_key):
+        captured[account_key] = ka.authenticate_and_get_env(account_key=account_key)
+
+    threads = [
+        threading.Thread(target=worker, args=(account_key,))
+        for account_key in ("account-a", "account-b")
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=1)
+
+    assert captured == {
+        "account-a": "account-a",
+        "account-b": "account-b",
+    }
 
 
 def test_get_configured_accounts_rejects_unknown_mode(monkeypatch):

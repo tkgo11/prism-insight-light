@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -32,7 +33,7 @@ def normalize_amount(value: Any) -> float | None:
         amount = float(value)
     except (TypeError, ValueError):
         return None
-    return amount if amount > 0 else None
+    return amount if math.isfinite(amount) and amount > 0 else None
 
 
 def normalize_percent(value: Any) -> float | None:
@@ -42,7 +43,7 @@ def normalize_percent(value: Any) -> float | None:
         percent = float(value)
     except (TypeError, ValueError):
         return None
-    if percent <= 0 or percent > 100:
+    if not math.isfinite(percent) or percent <= 0 or percent > 100:
         raise ValueError("buy percent must be greater than 0 and less than or equal to 100")
     return percent
 

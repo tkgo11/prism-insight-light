@@ -1,4 +1,11 @@
-from trading.buy_sizing import build_buy_sizing, resolve_buy_amount
+import pytest
+
+from trading.buy_sizing import (
+    build_buy_sizing,
+    normalize_amount,
+    normalize_percent,
+    resolve_buy_amount,
+)
 
 
 def test_percent_buy_amount_uses_total_assets_including_holdings():
@@ -31,3 +38,14 @@ def test_fixed_buy_amount_remains_default_when_percent_unset():
     sizing = build_buy_sizing(fixed_amount=12345, asset_percent=None)
 
     assert resolve_buy_amount(sizing, account_summary=None, fallback_amount=999, currency="KRW") == 12345
+
+
+@pytest.mark.parametrize("value", ["inf", "-inf", "nan"])
+def test_non_finite_fixed_amount_is_not_accepted(value):
+    assert normalize_amount(value) is None
+
+
+@pytest.mark.parametrize("value", ["inf", "-inf", "nan"])
+def test_non_finite_percent_is_rejected(value):
+    with pytest.raises(ValueError, match="buy percent"):
+        normalize_percent(value)

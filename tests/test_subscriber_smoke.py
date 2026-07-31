@@ -1,11 +1,13 @@
 import datetime
 import logging
+import os
 import signal
 from concurrent.futures import TimeoutError
 
 import pytest
 
 import subscriber
+from trading.off_hours_queue import QueueCapacityError
 
 
 class FakeMessage:
@@ -83,6 +85,21 @@ def test_handle_message_optionally_logs_raw_pubsub_payload(tmp_path):
     assert '"context": "message_id=msg-1 delivery_attempt=2"' in text
     assert '"payload":' in text
     assert '005930' in text
+
+
+def test_handle_message_nacks_safe_queue_capacity_failure():
+    class FullQueueDispatcher:
+        async def dispatch(self, signal):
+            raise QueueCapacityError("queue full")
+
+    message = FakeMessage(
+        b'{"type":"BUY","ticker":"AAPL","market":"US","price":100}'
+    )
+
+    subscriber._handle_message(message, FullQueueDispatcher())
+
+    assert message.nacked is True
+    assert message.ack_count == 0
 
 
 def test_parse_args_raw_pubsub_log_file_from_env(monkeypatch):
@@ -183,7 +200,8 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
         def subscription_path(self, project_id, subscription_id):
             return f"projects/{project_id}/subscriptions/{subscription_id}"
 
-        def subscribe(self, subscription_path, callback, *, await_callbacks_on_shutdown):
+        def subscribe(self, subscription_path, callback, *, flow_control, await_callbacks_on_shutdown):
+            assert flow_control.max_messages == 1
             assert await_callbacks_on_shutdown is True
             return FakeFuture()
 
@@ -191,7 +209,12 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
             shutdown_order.append("client-close")
             closed.append(True)
 
-    fake_pubsub = types.SimpleNamespace(SubscriberClient=FakeSubscriberClient)
+    fake_pubsub = types.SimpleNamespace(
+        SubscriberClient=FakeSubscriberClient,
+        types=types.SimpleNamespace(
+            FlowControl=lambda **kwargs: types.SimpleNamespace(**kwargs)
+        ),
+    )
     monkeypatch.setitem(sys.modules, "google.cloud.pubsub_v1", fake_pubsub)
     monkeypatch.setattr(subscriber, "TradeDispatcher", FakeDispatcher)
     monkeypatch.setattr(subscriber, "QueueWorker", FakeQueueWorker)
@@ -311,6 +334,20 @@ def test_configure_logging_rejects_unknown_level():
         raise AssertionError("unknown log level should be rejected")
 
 
+def test_logging_does_not_change_existing_parent_permissions(tmp_path):
+    if os.name == "nt":
+        return
+    tmp_path.chmod(0o755)
+
+    subscriber._configure_logging(str(tmp_path / "subscriber.log"))
+    try:
+        assert tmp_path.stat().st_mode & 0o777 == 0o755
+        assert (tmp_path / "subscriber.log").stat().st_mode & 0o777 == 0o600
+    finally:
+        for handler in logging.getLogger().handlers:
+            handler.close()
+
+
 def test_kst_daily_file_handler_rolls_over_on_kst_date(tmp_path):
     log_path = tmp_path / "subscriber.log"
     handler = subscriber._KSTDailyFileHandler(log_path)
@@ -330,6 +367,9 @@ def test_kst_daily_file_handler_rolls_over_on_kst_date(tmp_path):
 
     assert (tmp_path / "subscriber_2026-06-16.log").read_text(encoding="utf-8").strip() == "first"
     assert log_path.read_text(encoding="utf-8").strip() == "second"
+    if os.name != "nt":
+        assert (tmp_path / "subscriber_2026-06-16.log").stat().st_mode & 0o777 == 0o600
+        assert log_path.stat().st_mode & 0o777 == 0o600
 
 
 def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
@@ -390,7 +430,8 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
         def subscription_path(self, project_id, subscription_id):
             return f"projects/{project_id}/subscriptions/{subscription_id}"
 
-        def subscribe(self, subscription_path, callback, *, await_callbacks_on_shutdown):
+        def subscribe(self, subscription_path, callback, *, flow_control, await_callbacks_on_shutdown):
+            assert flow_control.max_messages == 1
             assert await_callbacks_on_shutdown is True
             return FakeFuture()
 
@@ -407,7 +448,12 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
         else:
             registered[signum] = handler
 
-    fake_pubsub = types.SimpleNamespace(SubscriberClient=FakeSubscriberClient)
+    fake_pubsub = types.SimpleNamespace(
+        SubscriberClient=FakeSubscriberClient,
+        types=types.SimpleNamespace(
+            FlowControl=lambda **kwargs: types.SimpleNamespace(**kwargs)
+        ),
+    )
     monkeypatch.setitem(sys.modules, "google.cloud.pubsub_v1", fake_pubsub)
     monkeypatch.setattr(subscriber, "TradeDispatcher", FakeDispatcher)
     monkeypatch.setattr(subscriber, "QueueWorker", FakeQueueWorker)

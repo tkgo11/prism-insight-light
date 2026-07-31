@@ -818,3 +818,4 @@ def test_setup_subscriber_docker_status_uses_interactive_python_market_check(ins
     assert "KR open         : no" in status_result.stdout
     assert "US open         : yes" in status_result.stdout
     assert "docker run --rm -i --entrypoint python" in log_text
+    assert "from trading.market_hours import is_market_open" in log_text

@@ -11,10 +11,10 @@ A signal can say things like:
 
 Only one strategy is selected by `signal_strategy.name` in `trading/config/kis_devlp.yaml`.
 If `name` is empty, the bot uses the normal old behavior.
-The maintained example uses aggressive pass-through defaults: every valid BUY
-or SELL signal reaches an order attempt without score, reward/risk, cooldown,
-or risk-off filtering. Broker rejection is still possible when the account has
-no cash/position or the order itself is invalid.
+The maintained example uses aggressive pass-through defaults: BUY and SELL
+signals are not filtered by score, reward/risk, cooldown, or risk-off rules.
+Enabled sizing constraints still fail closed, and the broker can reject an
+order when the account has no cash/position or the order itself is invalid.
 
 ## Quick list
 
@@ -56,10 +56,10 @@ The example config file shows the available setting names, but this guide explai
 
 ### What it does
 
-- Sends every valid BUY and SELL signal to the broker.
+- Sends every otherwise valid BUY and SELL signal to the broker.
 - Uses full score weight even when `buy_score` is missing.
 - Uses stop-loss risk sizing when a usable stop is present.
-- Falls back to the broker/config buy size when risk sizing cannot produce one share.
+- Falls back to the broker/config buy size when risk sizing is unavailable; an enabled constraint that permits less than one whole share rejects the BUY.
 - Does not require `stop_loss` or `target_price`.
 - Does not impose a position cap.
 - Sells the full position for every SELL reason by default.
@@ -96,7 +96,7 @@ account.
 
 ### In one sentence
 
-`score_risk` uses signal risk data when available and otherwise still places the BUY.
+`score_risk` uses signal risk data when available and otherwise still places the BUY. It never bypasses an enabled constraint by substituting an unconstrained broker default.
 
 ### Main settings
 
@@ -106,11 +106,16 @@ account.
 - `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
 - `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter.
 - `require_stop_loss` / `require_target_price`: both default to `false`.
-- A missing/invalid stop, zero risk budget, or sub-share calculation falls back to the broker/config default size instead of skipping.
+- A risk budget constrains size only when the signal supplies a usable stop
+  below the entry price. If the stop is absent or unusable and is not required,
+  a risk budget by itself falls back to the broker/config default size.
+- A maximum-position cap and a zero score weight remain fail-closed. If either
+  applies and the combined constrained size is zero—including a maximum cap
+  combined with a missing usable stop—the BUY is rejected.
 
 ### When it is useful
 
-Use it when BUY signals sometimes contain useful risk fields but every valid BUY still needs an order attempt.
+Use it when BUY signals sometimes contain useful risk fields and configured constraints must fail closed.
 
 ## `protective_exit`
 
@@ -274,8 +279,8 @@ At the top stair, you may sell all.
 - It only handles **SELL** signals.
 - It reads `profit_rate` from the signal when available.
 - It chooses a sell fraction from `profit_bands` when configured.
-- It can sell everything for important exit reasons like stop loss or risk off when no profit band overrides that amount.
-- If a SELL signal has both a `full_exit_reasons` reason and `profit_rate`, the matching `profit_bands` value decides the final sell fraction.
+- It sells everything for configured full-exit reasons such as risk off.
+- Stop-loss and configured full-exit reasons take precedence over profit bands.
 
 ### Main settings
 
@@ -284,7 +289,7 @@ At the top stair, you may sell all.
   - Example: `20: 1.0` means sell 100% when profit is at least 20%.
 - `stop_loss_sell_percent`: how much to sell when the reason is `stop_loss`.
 - `default_sell_percent`: how much to sell if no special band or reason applies.
-- `full_exit_reasons`: reasons that start as a whole-position sell; if `profit_rate` is also present, the profit ladder can replace this with a partial sell fraction from `profit_bands`.
+- `full_exit_reasons`: reasons that always sell the whole position, even when `profit_rate` also matches a partial profit band.
 
 ### When it is useful
 

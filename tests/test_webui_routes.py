@@ -1,3 +1,7 @@
+import re
+import threading
+from concurrent.futures import ThreadPoolExecutor
+
 from fastapi.testclient import TestClient
 
 from webui.app import WebUISettings, create_app
@@ -10,6 +14,13 @@ def client():
         create_app(WebUISettings(csrf_token="local-webui")),
         base_url="http://127.0.0.1",
     )
+
+
+def issue_order_nonce(test_client: TestClient) -> str:
+    response = test_client.get("/trading")
+    match = re.search(r'name="order_nonce" value="([^"]+)"', response.text)
+    assert match is not None
+    return match.group(1)
 
 
 def test_dashboard_and_pages_return_200():
@@ -118,7 +129,7 @@ def test_sidebar_safety_chip_reflects_non_loopback_and_live_trading(monkeypatch)
     )
     response = c.get("/")
     assert response.status_code == 200
-    assert "Network access allowed" in response.text
+    assert "Network read-only" in response.text
     assert "Local guarded session" not in response.text
 
     monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
@@ -295,6 +306,7 @@ def test_live_manual_order_awaits_dispatcher(monkeypatch):
         "/trading/order",
         data={
             "x_webui_csrf": "local-webui",
+            "order_nonce": issue_order_nonce(c),
             "action": "BUY",
             "ticker": "AAPL",
             "price": "190.5",
@@ -306,6 +318,132 @@ def test_live_manual_order_awaits_dispatcher(monkeypatch):
     assert response.status_code == 200
     assert reached is True
     assert "Order accepted" in response.text
+
+
+def test_live_manual_order_nonce_blocks_replay(monkeypatch):
+    from trading.dispatch import DispatchResult
+    from webui.services import trade_service
+
+    calls = 0
+
+    class FakeDispatcher:
+        def __init__(self, **kwargs):
+            pass
+
+        async def dispatch(self, signal):
+            nonlocal calls
+            calls += 1
+            return DispatchResult("executed", "done", signal.signal_type, signal.market)
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    monkeypatch.setattr(trade_service, "TradeDispatcher", FakeDispatcher)
+    c = client()
+    form = {
+        "x_webui_csrf": "local-webui",
+        "order_nonce": issue_order_nonce(c),
+        "action": "BUY",
+        "ticker": "AAPL",
+        "price": "190.5",
+        "market": "US",
+        "arm_phrase": trade_service.ARM_PHRASE,
+    }
+
+    first = c.post("/trading/order", data=form)
+    replay = c.post("/trading/order", data=form)
+
+    assert first.status_code == 200
+    assert replay.status_code == 409
+    assert "already submitted" in replay.text
+    assert calls == 1
+
+
+def test_live_manual_order_nonce_is_atomic_under_concurrent_submit(monkeypatch):
+    from trading.dispatch import DispatchResult
+    from webui.services import trade_service
+
+    calls = 0
+    calls_lock = threading.Lock()
+
+    class FakeDispatcher:
+        def __init__(self, **kwargs):
+            pass
+
+        async def dispatch(self, signal):
+            nonlocal calls
+            with calls_lock:
+                calls += 1
+            return DispatchResult("executed", "done", signal.signal_type, signal.market)
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    monkeypatch.setattr(trade_service, "TradeDispatcher", FakeDispatcher)
+    app = create_app(WebUISettings(csrf_token="local-webui"))
+    first_client = TestClient(app, base_url="http://127.0.0.1")
+    second_client = TestClient(app, base_url="http://127.0.0.1")
+    form = {
+        "x_webui_csrf": "local-webui",
+        "order_nonce": issue_order_nonce(first_client),
+        "action": "BUY",
+        "ticker": "AAPL",
+        "price": "190.5",
+        "market": "US",
+        "arm_phrase": trade_service.ARM_PHRASE,
+    }
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        responses = list(
+            executor.map(
+                lambda test_client: test_client.post("/trading/order", data=form),
+                (first_client, second_client),
+            )
+        )
+
+    assert sorted(response.status_code for response in responses) == [200, 409]
+    assert calls == 1
+
+
+def test_non_loopback_webui_blocks_order_and_config_mutations(monkeypatch):
+    from webui.services import trade_service
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    c = TestClient(
+        create_app(
+            WebUISettings(
+                host="0.0.0.0",
+                allow_non_loopback=True,
+                allowed_hosts=("testserver",),
+                csrf_token="local-webui",
+            )
+        )
+    )
+    page = c.get("/trading")
+    assert "diagnostic and read-only" in page.text
+    assert "Network read-only" in page.text
+    assert '<fieldset class="contents" disabled>' in page.text
+    assert 'name="order_nonce"' not in page.text
+    assert c.get("/trading/guard/api").json()["enabled"] is False
+
+    order = c.post(
+        "/trading/order",
+        data={
+            "x_webui_csrf": "local-webui",
+            "action": "BUY",
+            "ticker": "AAPL",
+            "price": "190.5",
+            "market": "US",
+            "arm_phrase": trade_service.ARM_PHRASE,
+        },
+    )
+    config = c.post(
+        "/trading/config",
+        data={
+            "x_webui_csrf": "local-webui",
+            "default_mode": "real",
+            "signal_strategy_split_count": "2",
+        },
+    )
+
+    assert order.status_code == 403
+    assert config.status_code == 403
 
 
 def test_embedded_manual_order_is_included_in_shutdown_tracking(monkeypatch):
@@ -343,6 +481,7 @@ def test_embedded_manual_order_is_included_in_shutdown_tracking(monkeypatch):
         "/trading/order",
         data={
             "x_webui_csrf": "local-webui",
+            "order_nonce": issue_order_nonce(c),
             "action": "BUY",
             "ticker": "AAPL",
             "price": "190.5",
@@ -375,6 +514,7 @@ def test_manual_order_is_rejected_after_shutdown_admission_closes(monkeypatch):
         "/trading/order",
         data={
             "x_webui_csrf": "local-webui",
+            "order_nonce": issue_order_nonce(c),
             "action": "BUY",
             "ticker": "AAPL",
             "price": "190.5",
@@ -473,10 +613,20 @@ def test_sell_all_requires_distinct_explicit_phrase(monkeypatch):
     }
 
     blocked = c.post(
-        "/trading/order", data=base | {"arm_phrase": trade_service.ARM_PHRASE}
+        "/trading/order",
+        data=base
+        | {
+            "order_nonce": issue_order_nonce(c),
+            "arm_phrase": trade_service.ARM_PHRASE,
+        },
     )
     accepted = c.post(
-        "/trading/order", data=base | {"arm_phrase": trade_service.SELL_ALL_PHRASE}
+        "/trading/order",
+        data=base
+        | {
+            "order_nonce": issue_order_nonce(c),
+            "arm_phrase": trade_service.SELL_ALL_PHRASE,
+        },
     )
 
     assert "SELL ALL POSITION" in blocked.text
@@ -501,10 +651,12 @@ def test_dispatch_result_message_is_masked(monkeypatch):
     monkeypatch.setenv("KIS_APP_SECRET", secret)
     monkeypatch.setattr(trade_service, "TradeDispatcher", FakeDispatcher)
 
-    response = client().post(
+    c = client()
+    response = c.post(
         "/trading/order",
         data={
             "x_webui_csrf": "local-webui",
+            "order_nonce": issue_order_nonce(c),
             "action": "BUY",
             "ticker": "AAPL",
             "price": "190.5",
@@ -584,6 +736,74 @@ def test_config_update_is_transactional_and_secret_permissions(monkeypatch, tmp_
     )
     assert response.status_code == 200
     assert config_path.stat().st_mode & 0o777 == 0o600
+
+
+def test_config_update_rejects_blank_mode_and_preserves_omitted_fields(
+    monkeypatch, tmp_path
+):
+    from webui.services import account_service
+
+    config_path = tmp_path / "kis_devlp.yaml"
+    config_path.write_text(
+        "default_mode: demo\nauto_trading: true\ndefault_unit_amount: 1000\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(account_service, "CONFIG_PATH", config_path)
+    monkeypatch.setattr(account_service, "EXAMPLE_CONFIG_PATH", tmp_path / "missing.yaml")
+    c = client()
+
+    blank = c.post(
+        "/trading/config",
+        data={
+            "x_webui_csrf": "local-webui",
+            "default_mode": "",
+            "signal_strategy_split_count": "2",
+        },
+    )
+    assert blank.status_code == 400
+    assert "default_mode is required" in blank.text
+
+    partial = account_service.update_config_fields(
+        {"default_unit_amount": "2000"},
+        None,
+    )
+    assert partial["ok"] is True
+    saved = account_service.load_config()
+    assert saved["default_mode"] == "demo"
+    assert saved["auto_trading"] is True
+    assert saved["default_unit_amount"] == 2000
+
+
+def test_partial_config_route_preserves_strategy(monkeypatch, tmp_path):
+    from webui.services import account_service
+
+    config_path = tmp_path / "kis_devlp.yaml"
+    config_path.write_text(
+        "default_mode: demo\n"
+        "default_unit_amount: 1000\n"
+        "signal_strategy:\n"
+        "  name: balanced_risk\n"
+        "  split_count: 3\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(account_service, "CONFIG_PATH", config_path)
+    monkeypatch.setattr(account_service, "EXAMPLE_CONFIG_PATH", tmp_path / "missing.yaml")
+
+    response = client().post(
+        "/trading/config",
+        data={
+            "x_webui_csrf": "local-webui",
+            "default_unit_amount": "2000",
+        },
+    )
+
+    assert response.status_code == 200
+    saved = account_service.load_config()
+    assert saved["default_unit_amount"] == 2000
+    assert saved["signal_strategy"] == {
+        "name": "balanced_risk",
+        "split_count": 3,
+    }
 
 
 def test_read_only_deployment_disables_and_rejects_config_editor(monkeypatch, tmp_path):

@@ -161,6 +161,10 @@ def is_loopback_host(host: str) -> bool:
         return False
 
 
+def _is_safe_mutable_host_pattern(host: str) -> bool:
+    return host.lower() == "localhost" or is_loopback_host(host)
+
+
 def validate_bind_host(host: str, *, allow_non_loopback: bool = False) -> None:
     if is_loopback_host(host):
         return
@@ -177,11 +181,11 @@ def safety_chip_status(
     """Return the sidebar safety label from actual bind and live-trading state."""
 
     guard_enabled = _to_bool(os.environ.get("WEBUI_ENABLE_LIVE_TRADING")) and not settings.force_dry_run
-    loopback_only = is_loopback_host(settings.host) and not settings.allow_non_loopback
+    loopback_only = is_loopback_host(settings.host)
+    if not loopback_only:
+        return {"state": "warning", "label": "Network read-only"}
     if guard_enabled:
         return {"state": "warning", "label": "Live trading armed"}
-    if not loopback_only:
-        return {"state": "warning", "label": "Network access allowed"}
     return {"state": "success", "label": "Local guarded session"}
 
 
@@ -198,6 +202,12 @@ def create_app(settings: WebUISettings | None = None, *, work_tracker=None) -> F
         raise ValueError(
             "Non-loopback WebUI binding requires an explicit WEBUI_ALLOWED_HOSTS allowlist"
         )
+    if is_loopback_host(selected.host) and any(
+        not _is_safe_mutable_host_pattern(host) for host in selected.allowed_hosts
+    ):
+        raise ValueError(
+            "Mutable loopback WebUI allows only loopback WEBUI_ALLOWED_HOSTS values"
+        )
 
     allowed_hosts = selected.allowed_hosts
     if is_loopback_host(selected.host) and not allowed_hosts:
@@ -211,6 +221,10 @@ def create_app(settings: WebUISettings | None = None, *, work_tracker=None) -> F
     app.state.settings = selected
     app.state.templates = create_templates()
     app.state.work_tracker = work_tracker
+    app.state.network_read_only = not is_loopback_host(selected.host)
+    from .routes.guards import OneTimeNonceStore
+
+    app.state.order_nonces = OneTimeNonceStore()
 
     static_dir = Path(__file__).parent / "static"
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")

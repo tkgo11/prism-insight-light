@@ -210,16 +210,30 @@ def update_config_fields(fields: dict[str, str], strategy: dict[str, str] | None
     updates: dict[str, Any] = {}
     for name, raw_value in fields.items():
         if name in EDITABLE_TOP_LEVEL_FIELDS:
+            if str(raw_value).strip() == "":
+                if name == "default_mode":
+                    raise ValueError("default_mode is required")
+                continue
             updates[name] = _coerce_value(name, raw_value)
     next_strategy: dict[str, Any] | None = None
     if strategy is not None:
         current = data.get("signal_strategy") if isinstance(data.get("signal_strategy"), dict) else {}
         next_strategy = dict(current)
-        name = str(strategy.get("name") or "").strip()
         current_name = str(current.get("name") or "")
+        name = (
+            str(strategy.get("name") or "").strip()
+            if "name" in strategy
+            else current_name
+        )
         if name not in {"", current_name, *WEBUI_EDITABLE_STRATEGY_NAMES}:
             raise ValueError("this strategy cannot be configured safely in the WebUI")
-        split_count = int(str(strategy.get("split_count") or "1"))
+        split_count = int(
+            str(
+                strategy.get("split_count")
+                if "split_count" in strategy
+                else current.get("split_count", 1)
+            )
+        )
         if split_count <= 0:
             raise ValueError("signal_strategy.split_count must be positive")
         next_strategy["name"] = name
@@ -227,6 +241,9 @@ def update_config_fields(fields: dict[str, str], strategy: dict[str, str] | None
     data.update(updates)
     if next_strategy is not None:
         data["signal_strategy"] = next_strategy
+    mode = str(data.get("default_mode") or "").strip().lower()
+    if mode not in {"demo", "real"}:
+        raise ValueError("resulting default_mode must be demo or real")
     path = save_config(data)
     return {"ok": True, "path_label": path.name, "config": get_config_editor_model(), "error": None}
 

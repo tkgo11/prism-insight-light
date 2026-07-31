@@ -399,6 +399,48 @@ async def test_async_buy_uses_auto_exchange_before_zero_quantity_rejection():
     assert smart_buy_calls == [("AAPL", 50.0, "NASD", 50.0)]
 
 
+@pytest.mark.asyncio
+async def test_async_buy_uses_lower_limit_for_affordability(monkeypatch):
+    trader = _bare_us_trader(auto_exchange=False)
+    trader._stock_locks = {}
+    trader._semaphore = asyncio.Semaphore(1)
+    trader._global_lock = asyncio.Lock()
+    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 110.0}
+    observed_prices = []
+
+    def resolve_orderable(ticker, amount, price, exchange):
+        observed_prices.append(price)
+        return 100.0, {"usd_cash": 100.0, "auto_exchange_used": False}
+
+    trader._resolve_orderable_usd = resolve_orderable
+    calls = []
+    trader.smart_buy = (
+        lambda ticker, buy_amount, exchange=None, limit_price=None: calls.append(
+            (ticker, buy_amount, exchange, limit_price)
+        )
+        or {
+            "success": True,
+            "order_no": "limit-1",
+            "quantity": 1,
+            "message": "ok",
+        }
+    )
+
+    async def no_sleep(_seconds):
+        return None
+
+    monkeypatch.setattr(ust.asyncio, "sleep", no_sleep)
+    result = await trader._execute_buy_stock(
+        "AAPL", buy_amount=100.0, exchange="NASD", limit_price=90.0
+    )
+
+    assert result["success"] is True
+    assert result["quantity"] == 1
+    assert result["total_amount"] == 90.0
+    assert observed_prices == [90.0]
+    assert calls == [("AAPL", 100.0, "NASD", 90.0)]
+
+
 def test_us_account_total_assets_include_usd_cash():
     trader = object.__new__(ust.USStockTrading)
     trader.account_key = "vps:12345678:01"
