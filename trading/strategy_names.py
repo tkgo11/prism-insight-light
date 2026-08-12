@@ -3,6 +3,7 @@
 SUPPORTED_STRATEGY_NAMES = (
     "balance_split",
     "balanced_risk",
+    "bracket_exit",
     "cooldown",
     "event_risk_off",
     "limit_buffer",
@@ -11,6 +12,7 @@ SUPPORTED_STRATEGY_NAMES = (
     "risk_bracket",
     "score_risk",
     "score_weighted",
+    "signal_trailing_stop",
     "stop_loss_sell",
 )
 

@@ -25,6 +25,8 @@ order when the account has no cash/position or the order itself is invalid.
 | `score_weighted` | Weight BUY size by score without dropping scoreless signals. | BUY |
 | `score_risk` | Size from stop-loss risk when possible, otherwise use the broker default. | BUY |
 | `risk_bracket` | Decide the buy size by how much money you are willing to risk. | BUY |
+| `bracket_exit` | Sell only when an incoming signal reaches its target or stop-loss bracket. | SELL |
+| `signal_trailing_stop` | Track signal prices and sell after a configured drawdown from the highest tracked price. | BUY and SELL |
 | `profit_ladder` | Sell in steps as profit gets bigger, like climbing a ladder. | SELL |
 | `protective_exit` | Exit urgent risks fully and take ordinary profits in steps. | SELL |
 | `stop_loss_sell` | Sell at the stop-loss price sent by Pub/Sub. | SELL |
@@ -260,6 +262,79 @@ The strategy checks the entry price and stop-loss price, then decides how many s
 ### When it is useful
 
 Use this when you care more about "how much can I lose if I am wrong?" than "how much should I spend?"
+
+## `bracket_exit`
+
+### In one sentence
+
+`bracket_exit` releases a SELL order only when the incoming signal price has reached its own `target_price` or `stop_loss`.
+
+### What it does
+
+- It only handles **SELL** signals.
+- A price at or below `stop_loss` uses `stop_loss_sell_percent`.
+- A price at or above `target_price` uses `target_sell_percent`.
+- A `sell_reason` listed in `full_exit_reasons` always exits the full position.
+- A signal still inside both brackets is rejected, unless `fallback_sell_percent` is set above `0`.
+- It uses no quote feed, indicator, or external market-data lookup; it evaluates only the values carried by each incoming signal.
+
+### Main settings
+
+- `target_sell_percent`: fraction to sell when `price >= target_price`; default `0.5`.
+- `stop_loss_sell_percent`: fraction to sell when `price <= stop_loss`; default `1.0`.
+- `fallback_sell_percent`: optional fraction to sell when neither bracket is hit; default `0.0`, which rejects the signal.
+- `full_exit_reasons`: optional `sell_reason` values that always sell the full position. The default list is `risk_off` and `manual_exit`.
+- `use_bracket_limit_price`: when true, target exits use `target_price` and stop-loss exits use the lower of `price` and `stop_loss` as the submitted limit price.
+
+### Example
+
+```yaml
+signal_strategy:
+  name: "bracket_exit"
+  target_sell_percent: 0.50
+  stop_loss_sell_percent: 1.0
+  fallback_sell_percent: 0.0
+```
+
+### When it is useful
+
+Use it when the signal producer already supplies price, target, and stop-loss values and should decide when an exit is eligible.
+
+## `signal_trailing_stop`
+
+### In one sentence
+
+`signal_trailing_stop` records the highest observed BUY or SELL signal price for each market/ticker pair, then releases a SELL only after the incoming price falls to the configured trailing-stop level.
+
+### What it does
+
+- It handles **BUY** and **SELL** signals.
+- A successful BUY stores its signal price as the initial high-water mark.
+- Later BUY or SELL signals can raise that high-water mark, but never lower it.
+- A SELL signal is rejected until `price <= high_price × (1 - trail_percent / 100)`.
+- A fully executed trailing-stop SELL removes the stored high-water mark. Partial sells retain it for later signals.
+- Its state is stored locally in `runtime/signal_trailing_stops.json`; it does not fetch prices, calculate indicators, or change broker behavior.
+
+### Main settings
+
+- `trail_percent`: drawdown percentage from the highest tracked signal price that releases a SELL; default `8.0` and must be greater than `0` and less than `100`.
+- `sell_fraction`: position fraction to sell after the trailing stop is crossed; default `1.0`.
+- `require_tracked_entry`: require a successful BUY signal recorded by this strategy before considering a SELL; default `true`.
+- `runtime_path`: optional local path for the high-water-mark state file.
+
+### Example
+
+```yaml
+signal_strategy:
+  name: "signal_trailing_stop"
+  trail_percent: 8.0
+  sell_fraction: 1.0
+  require_tracked_entry: true
+```
+
+### When it is useful
+
+Use it when signals arrive frequently enough to update a local high-water mark and you want the signal stream itself, rather than a price-data integration, to decide when a trailing exit becomes eligible.
 
 ## `profit_ladder`
 
