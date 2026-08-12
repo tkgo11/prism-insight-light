@@ -18,6 +18,13 @@ default_mode: demo
 # - true : 실제 주문 실행
 auto_trading: true
 
+# 자동 신호를 여러 적격 계좌에 각각 실행할지 여부
+# - false: 기존 동작과 동일하게 시장별 primary 계좌 1개에만 실행
+# - true : 같은 모드·시장에 맞고 enabled: true인 모든 계좌에 독립 실행
+#          각 계좌의 잔고, 위험 제한, 매수 금액/비율, 자격 증명을 사용합니다.
+multi_account_trading:
+  enabled: false
+
 # 종목별 기본 매수 크기
 # - 금액 고정: 아래 금액 값을 사용합니다.
 # - 전체 자산 비율: default_unit_asset_percent(_usd)에 0~100 사이 값을 넣으면
@@ -74,6 +81,7 @@ paper_sec: ""   # 모의투자 App Secret
 #
 # 필드 빠른 설명:
 #   name    : 로그에 보일 계좌 이름
+#   enabled : false면 자동 다계정 실행에서 제외됨 (생략하면 true)
 #   mode    : real 또는 demo
 #   market  : kr(국내), us(미국), all(국내+미국)
 #   account : 계좌번호 앞 8자리
@@ -83,6 +91,7 @@ paper_sec: ""   # 모의투자 App Secret
 # 단일 계좌 예시입니다. 필요 없거나 쓰지 않는 예시는 지우거나 주석 처리하세요.
 accounts:
   - name: "모의-메인"
+    enabled: true
     mode: "demo"
     market: "all"
     account: "12345678"

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import tempfile
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import Any, Callable, Iterable
 
 from .file_lock import FileLock
 from .market_hours import next_market_open
@@ -16,6 +17,7 @@ from .schema import SignalMessage
 
 MAX_QUEUE_BYTES = 16 * 1024 * 1024
 FAILURE_METADATA_RESERVE_BYTES = 512
+QUEUE_CONTEXT_KEY = "__prism_queue_context"
 
 
 def _safe_failure_message(message: object) -> str:
@@ -30,6 +32,20 @@ def _safe_failure_message(message: object) -> str:
     return encoded.decode("utf-8", errors="ignore")
 
 
+def _queue_identity(signal: dict[str, Any], execution_context: dict[str, Any]) -> str:
+    """Build a stable non-sensitive identity for a queue entry."""
+    supplied = str(execution_context.get("queue_id") or "").strip()
+    if supplied:
+        return supplied
+    material = json.dumps(
+        {"signal": signal, "accounts": execution_context.get("account_ids", [])},
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
 class QueueCapacityError(RuntimeError):
     """The durable queue cannot admit more data without losing readability."""
 
@@ -39,15 +55,23 @@ class QueuedSignal:
     signal: dict
     execute_at: str
     created_at: str
+    execution_context: dict[str, Any] = field(default_factory=dict)
     status: str = "pending"
     failure_message: str = ""
     failed_at: str | None = None
 
     @classmethod
-    def from_signal(cls, signal: SignalMessage) -> "QueuedSignal":
+    def from_signal(
+        cls, signal: SignalMessage, execution_context: dict[str, Any] | None = None
+    ) -> "QueuedSignal":
         execute_at = next_market_open(signal.market).isoformat()
         created_at = datetime.now(timezone.utc).isoformat()
-        return cls(signal=signal.raw, execute_at=execute_at, created_at=created_at)
+        return cls(
+            signal=dict(signal.raw),
+            execute_at=execute_at,
+            created_at=created_at,
+            execution_context=dict(execution_context or {}),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +127,8 @@ class OffHoursOrderQueue:
                 "execute_at": item.execute_at,
                 "created_at": item.created_at,
             }
+            if item.execution_context:
+                record["execution_context"] = item.execution_context
             if item.status != "pending":
                 record["status"] = item.status
             if item.failure_message:
@@ -145,10 +171,20 @@ class OffHoursOrderQueue:
             if temporary_path is not None and temporary_path.exists():
                 temporary_path.unlink()
 
-    def enqueue(self, signal: SignalMessage) -> QueuedSignal:
-        queued_signal = QueuedSignal.from_signal(signal)
+    def enqueue(
+        self, signal: SignalMessage, execution_context: dict[str, Any] | None = None
+    ) -> QueuedSignal:
+        context = dict(execution_context or {})
+        context["queue_id"] = _queue_identity(signal.raw, context)
+        queued_signal = QueuedSignal.from_signal(signal, context)
         with FileLock(self.lock_path):
             items = self._load()
+            for item in items:
+                if (
+                    item.status == "pending"
+                    and item.execution_context.get("queue_id") == context["queue_id"]
+                ):
+                    return item
             items.append(queued_signal)
             self._save(items, reserve_failure_metadata=True)
         return queued_signal
@@ -171,8 +207,11 @@ class OffHoursOrderQueue:
 
             processed = 0
             for item in due:
+                payload = dict(item.signal)
+                if item.execution_context:
+                    payload[QUEUE_CONTEXT_KEY] = dict(item.execution_context)
                 try:
-                    outcome = executor(item.signal)
+                    outcome = executor(payload)
                 except Exception as exc:  # noqa: BLE001 - isolate poison queue items
                     outcome = QueueExecutionResult(
                         "failed",
