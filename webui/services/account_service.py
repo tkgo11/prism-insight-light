@@ -18,6 +18,7 @@ CONFIG_PATH = writable_kis_config_path()
 SECRET_FIELDS = {"app_key", "app_secret", "my_app", "my_sec", "paper_app", "paper_sec", "my_token"}
 EDITABLE_TOP_LEVEL_FIELDS: dict[str, type] = {
     "default_mode": str,
+    "multi_account_trading_enabled": bool,
     "auto_trading": bool,
     "default_unit_amount": int,
     "default_unit_amount_usd": float,
@@ -124,6 +125,7 @@ def list_accounts() -> dict[str, Any]:
                 "product": product,
                 "account_masked": _mask_account(account_number, product),
                 "primary": bool(account.get("primary")),
+                "enabled": bool(account.get("enabled", True)),
                 "buy_amount_krw": _safe_scalar(account.get("buy_amount_krw")),
                 "buy_amount_usd": _safe_scalar(account.get("buy_amount_usd")),
                 "buy_percent_krw": _safe_scalar(account.get("buy_percent_krw")),
@@ -139,6 +141,11 @@ def list_accounts() -> dict[str, Any]:
         "writable": config_writable(),
         "default_mode": str(data.get("default_mode") or "demo"),
         "auto_trading": bool(data.get("auto_trading")),
+        "multi_account_trading_enabled": bool(
+            (data.get("multi_account_trading") or {}).get("enabled", False)
+            if isinstance(data.get("multi_account_trading"), dict)
+            else data.get("multi_account_trading", False)
+        ),
         "accounts": safe_accounts,
         "count": len(safe_accounts),
         "error": config_error,
@@ -149,7 +156,11 @@ def get_config_editor_model() -> dict[str, Any]:
     data, config_error = _load_config_for_view()
     safe_fields = []
     for name, expected_type in EDITABLE_TOP_LEVEL_FIELDS.items():
-        value = data.get(name)
+        if name == "multi_account_trading_enabled":
+            configured = data.get("multi_account_trading")
+            value = configured.get("enabled", False) if isinstance(configured, dict) else configured
+        else:
+            value = data.get(name)
         safe_fields.append({"name": name, "value": "" if value is None else str(value), "type": expected_type.__name__})
     strategy = data.get("signal_strategy") if isinstance(data.get("signal_strategy"), dict) else {}
     current_strategy_name = str(strategy.get("name") or "")
@@ -208,13 +219,18 @@ def _coerce_value(name: str, raw: str) -> Any:
 def update_config_fields(fields: dict[str, str], strategy: dict[str, str] | None = None) -> dict[str, Any]:
     data = load_config()
     updates: dict[str, Any] = {}
+    multi_account_enabled: bool | None = None
     for name, raw_value in fields.items():
         if name in EDITABLE_TOP_LEVEL_FIELDS:
             if str(raw_value).strip() == "":
                 if name == "default_mode":
                     raise ValueError("default_mode is required")
                 continue
-            updates[name] = _coerce_value(name, raw_value)
+            value = _coerce_value(name, raw_value)
+            if name == "multi_account_trading_enabled":
+                multi_account_enabled = value
+            else:
+                updates[name] = value
     next_strategy: dict[str, Any] | None = None
     if strategy is not None:
         current = data.get("signal_strategy") if isinstance(data.get("signal_strategy"), dict) else {}
@@ -239,6 +255,11 @@ def update_config_fields(fields: dict[str, str], strategy: dict[str, str] | None
         next_strategy["name"] = name
         next_strategy["split_count"] = split_count
     data.update(updates)
+    if multi_account_enabled is not None:
+        current_multi = data.get("multi_account_trading")
+        multi_config = dict(current_multi) if isinstance(current_multi, dict) else {}
+        multi_config["enabled"] = multi_account_enabled
+        data["multi_account_trading"] = multi_config
     if next_strategy is not None:
         data["signal_strategy"] = next_strategy
     mode = str(data.get("default_mode") or "").strip().lower()

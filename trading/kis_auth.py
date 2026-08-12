@@ -337,10 +337,12 @@ def _build_normalized_account(
     item: dict[str, Any],
     *,
     primary_default: bool = False,
+    include_disabled: bool = False,
 ) -> dict[str, Any] | None:
     if not isinstance(item, dict):
         return None
-    if item.get("enabled", True) is False:
+    enabled = _to_bool(item.get("enabled"), default=True)
+    if not enabled and not include_disabled:
         return None
 
     account_number = item.get("account") or item.get("account_number") or item.get("cano")
@@ -358,6 +360,7 @@ def _build_normalized_account(
         "product": product,
         "account": str(account_number),
         "market": market,
+        "enabled": enabled,
         "primary": _to_bool(item.get("primary"), default=primary_default),
         "buy_amount_krw": _normalize_buy_amount(item.get("buy_amount_krw") or item.get("buy_amount")),
         "buy_amount_usd": _normalize_buy_amount(item.get("buy_amount_usd")),
@@ -429,6 +432,7 @@ def get_configured_accounts(
     product: str | None = None,
     market: str | None = None,
     primary_only: bool = False,
+    include_disabled: bool = False,
 ) -> list[dict]:
     """
     Return normalized account definitions from config.
@@ -444,7 +448,9 @@ def get_configured_accounts(
 
     if isinstance(raw_accounts, list):
         for index, item in enumerate(raw_accounts):
-            normalized = _build_normalized_account(index, item)
+            normalized = _build_normalized_account(
+                index, item, include_disabled=include_disabled
+            )
             if normalized:
                 normalized_accounts.append(normalized)
 

@@ -105,6 +105,39 @@ Recommended first-run flow:
 4. run with `--dry-run`;
 5. only then configure real accounts if needed.
 
+### Multi-account automatic trading
+
+Existing deployments remain **single-account by default**. To execute each validated automatic signal independently across every configured, enabled account that matches the selected mode and signal market, opt in explicitly:
+
+```yaml
+multi_account_trading:
+  enabled: true
+
+accounts:
+  - name: "Demo KR A"
+    enabled: true
+    mode: demo
+    market: kr
+    account: "12345678"
+    product: "01"
+    app_key: "..."
+    app_secret: "..."
+    buy_amount_krw: 100000
+
+  - name: "Demo KR B"
+    enabled: true
+    mode: demo
+    market: kr
+    account: "87654321"
+    product: "01"
+    app_key: "..."
+    app_secret: "..."
+    buy_amount_krw: 300000
+```
+
+The dispatcher filters disabled, wrong-mode, and market-incompatible accounts before execution. Each eligible account runs the existing strategy with its own account-bound KIS environment, credentials, balance/positions, risk and sizing settings. Broker work is serialized intentionally because KIS environment activation is shared; failure or authentication loss for one account is collected as a per-account result and does not stop the remaining eligible accounts.
+
+Off-hours queue records preserve opaque target-account identities and replay only the original eligible targets. Automatic signal/account executions use a durable seven-day execution ledger to suppress duplicate Pub/Sub deliveries, restarts, retries, and ambiguous network replays. A queued target that has since been disabled, removed, or made market-incompatible is skipped deterministically. Dry-run exercises the same account selection and returns a per-account simulation without placing orders.
 
 ### USD auto-exchange for US buys
 

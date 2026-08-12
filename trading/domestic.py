@@ -79,6 +79,7 @@ class DomesticStockTrading:
         auto_trading: bool = AUTO_TRADING,
         account_name: str = None,
         account_index: int = None,
+        account_key: str = None,
         product_code: str = "01",
     ):
         """
@@ -103,6 +104,7 @@ class DomesticStockTrading:
             product=str(product_code),
             account_name=account_name,
             account_index=account_index,
+            account_key=account_key,
             market="kr",
         )
         self.account_name = self.account_config["name"]
@@ -1774,6 +1776,7 @@ class AsyncTradingContext:
         auto_trading: bool = AUTO_TRADING,
         account_name: str = None,
         account_index: int = None,
+        account_key: str = None,
         product_code: str = "01",
     ):
         self.mode = mode
@@ -1781,18 +1784,22 @@ class AsyncTradingContext:
         self.auto_trading = auto_trading
         self.account_name = account_name
         self.account_index = account_index
+        self.account_key = account_key
         self.product_code = product_code
         self.trader = None
 
     async def __aenter__(self):
-        self.trader = DomesticStockTrading(
-            mode=self.mode,
-            buy_amount=self.buy_amount,
-            auto_trading=self.auto_trading,
-            account_name=self.account_name,
-            account_index=self.account_index,
-            product_code=self.product_code,
-        )
+        trader_kwargs = {
+            "mode": self.mode,
+            "buy_amount": self.buy_amount,
+            "auto_trading": self.auto_trading,
+            "account_name": self.account_name,
+            "account_index": self.account_index,
+            "product_code": self.product_code,
+        }
+        if self.account_key is not None:
+            trader_kwargs["account_key"] = self.account_key
+        self.trader = DomesticStockTrading(**trader_kwargs)
         return self.trader
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
