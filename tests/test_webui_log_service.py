@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from webui.services import log_service
 from webui.services.log_service import tail_log
