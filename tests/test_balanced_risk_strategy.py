@@ -316,28 +316,20 @@ def test_aggressive_balanced_defaults_disable_all_entry_filters():
     assert config.sell.default_sell_percent == 1.0
 
 
-def test_example_config_uses_aggressive_execution_defaults():
+def test_example_config_uses_requested_execution_defaults():
     payload = yaml.safe_load(
         Path("trading/config/kis_devlp.yaml.example").read_text(encoding="utf-8")
     )
-    strategy = payload["signal_strategy"]
 
+    assert payload["default_mode"] == "real"
+    assert payload["auto_trading"] is True
+    assert payload["multi_account_trading"] == {"enabled": False}
     assert payload["default_unit_amount"] == 1_000_000
-    assert payload["default_unit_amount_usd"] == 2_000
-    assert payload["default_unit_asset_percent"] == 100
-    assert payload["default_unit_asset_percent_usd"] == 100
+    assert payload["default_unit_amount_usd"] == 1_000
+    assert payload["default_unit_asset_percent"] == 10
+    assert payload["default_unit_asset_percent_usd"] == 10
     assert payload["auto_exchange_usd_on_buy"] is True
     assert payload["auto_exchange_min_shortfall_usd"] == 0
-    assert strategy["name"] == "balanced_risk"
-    assert strategy["split_count"] == 1
-    assert strategy["min_score"] == 0
-    assert strategy["score_bands"] == {0: 1.0}
-    assert strategy["require_stop_loss"] is False
-    assert strategy["require_target_price"] is False
-    assert strategy["min_reward_risk"] == 0
-    assert strategy["max_position_amount_krw"] == 0
-    assert strategy["max_position_amount_usd"] == 0
-    assert strategy["profit_bands"] == {}
-    assert strategy["apply_to_signal_types"] == []
-    assert strategy["risk_off_event_types"] == []
-    assert strategy["buy_size_multiplier"] == 1.0
+    assert payload["max_auto_exchange_krw"] is None
+    assert payload["default_product_code"] == "01"
+    assert payload["signal_strategy"] == {"name": "balanced_risk"}
