@@ -255,6 +255,7 @@ class USStockTrading:
         auto_trading: bool = None,
         account_name: str = None,
         account_index: int = None,
+        account_key: str = None,
         product_code: str = "01",
     ):
         """
@@ -276,6 +277,7 @@ class USStockTrading:
             product=str(product_code),
             account_name=account_name,
             account_index=account_index,
+            account_key=account_key,
             market="us",
         )
         self.account_name = self.account_config["name"]

@@ -137,6 +137,7 @@ async def update_config(request: Request):
     form = await get_urlencoded_form(request)
     editable_fields = (
         "default_mode",
+        "multi_account_trading_enabled",
         "auto_trading",
         "default_unit_amount",
         "default_unit_amount_usd",
