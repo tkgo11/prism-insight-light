@@ -1792,7 +1792,6 @@ class USStockTrading:
             if res.isOK():
                 body = res.getBody()
                 output2 = body.output2 if hasattr(body, 'output2') else []
-                output3 = body.output3 if hasattr(body, 'output3') else {}
 
                 # Extract USD info from output2
                 usd_cash = 0.0

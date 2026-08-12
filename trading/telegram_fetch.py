@@ -96,7 +96,6 @@ def fetch_channel_posts(
     session: requests.Session | None = None,
     timeout: float = 10.0,
 ) -> list[TelegramChannelPost]:
-    preview_url = build_channel_preview_url(channel)
     client = session or requests.Session()
     headers = {
         "User-Agent": (

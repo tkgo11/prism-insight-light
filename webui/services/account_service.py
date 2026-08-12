@@ -11,7 +11,7 @@ from typing import Any
 from trading import yaml_compat as yaml
 from trading.config_paths import EXAMPLE_CONFIG_PATH, writable_kis_config_path
 from trading.schema import infer_market
-from trading.strategy_names import SUPPORTED_STRATEGY_NAMES, WEBUI_EDITABLE_STRATEGY_NAMES
+from trading.strategy_names import WEBUI_EDITABLE_STRATEGY_NAMES
 from webui.services.masking import mask_secret_value
 
 CONFIG_PATH = writable_kis_config_path()

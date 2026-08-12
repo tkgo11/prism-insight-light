@@ -1,7 +1,6 @@
 from trading.telegram_fetch import (
     DEFAULT_TELEGRAM_CHANNEL_URL,
     ParsedTelegramSignal,
-    TelegramChannelPost,
     build_channel_preview_url,
     extract_channel_posts,
     fetch_signal_messages,
