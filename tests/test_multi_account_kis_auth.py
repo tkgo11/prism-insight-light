@@ -1,5 +1,7 @@
 import threading
+import re
 import time
+from pathlib import Path
 
 import pytest
 
@@ -563,3 +565,17 @@ def test_retry_attempt_parser_rejects_negative_values(monkeypatch):
     monkeypatch.setenv("TEST_KIS_ATTEMPTS", "-1")
     with pytest.raises(ValueError):
         ka._nonnegative_int_env("TEST_KIS_ATTEMPTS", 10)
+
+
+def test_token_filename_preserves_legacy_and_secure_mode_shapes(monkeypatch, tmp_path):
+    monkeypatch.setattr(ka, "config_root", str(tmp_path))
+
+    monkeypatch.delenv("KIS_SECURE_TOKEN", raising=False)
+    legacy_path = Path(ka.get_token_filename())
+    assert legacy_path.parent == tmp_path
+    assert re.fullmatch(r"KIS\d{8}", legacy_path.name)
+
+    monkeypatch.setenv("KIS_SECURE_TOKEN", "true")
+    secure_path = Path(ka.get_token_filename())
+    assert secure_path.parent == tmp_path
+    assert re.fullmatch(r"KIS_\d{8}_[0-9a-f]{8}\.token", secure_path.name)
