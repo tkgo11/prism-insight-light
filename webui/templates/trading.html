@@ -38,7 +38,7 @@
     {% for account in accounts.accounts %}
     <div class="account-card">
       <div><strong>{{ account.name }}</strong><small>{{ account.account_masked }}</small></div>
-      <div class="tag-row"><span class="pill">{{ account.market_label }}</span><span class="pill">{{ account.mode }}</span>{% if account.primary %}<span class="pill success">Primary</span>{% endif %}</div>
+      <div class="tag-row"><span class="pill">{{ account.market_label }}</span><span class="pill">{{ account.mode }}</span>{% if account.enabled %}<span class="pill success">Enabled</span>{% else %}<span class="pill">Disabled</span>{% endif %}{% if account.primary %}<span class="pill success">Primary</span>{% endif %}</div>
       <small>KRW {{ account.buy_amount_krw or 'default' }} · USD {{ account.buy_amount_usd or 'default' }} · FX {{ 'on' if account.auto_exchange_usd_on_buy else 'off' }}</small>
     </div>
     {% else %}<p class="empty">No accounts available.</p>{% endfor %}
@@ -47,7 +47,7 @@
 
 <section class="two-column" id="config">
   <article class="panel">
-    <div class="panel-head"><div><p class="eyebrow">Configuration</p><h2>Safe config editor</h2></div><span class="pill">{{ config_model.path_label }}</span></div>
+    <div class="panel-head"><div><p class="eyebrow">Configuration</p><h2>Safe config editor</h2><small>Automatic signals: {{ 'all eligible accounts' if accounts.multi_account_trading_enabled else 'primary account only' }}</small></div><span class="pill">{{ config_model.path_label }}</span></div>
     {% if config_model.error %}<p class="warning">{{ config_model.error }}</p>{% endif %}
     {% if not config_model.writable %}<p class="warning">Configuration is read-only in this deployment. Edit the mounted host file and restart the subscriber.</p>{% endif %}
     {% if config_result and config_result.ok %}<p class="success-text">Saved to {{ config_result.path_label }}. Restart the subscriber to apply runtime changes.</p>{% endif %}
