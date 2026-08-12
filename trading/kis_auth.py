@@ -22,7 +22,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from io import StringIO
 import stat
-import hashlib
+import secrets
 import importlib
 import importlib.util
 from pathlib import Path
@@ -215,8 +215,6 @@ KIS_HTTP_READ_TIMEOUT_SECONDS = _finite_float_env(
 KIS_HTTP_TIMEOUT = (KIS_HTTP_CONNECT_TIMEOUT_SECONDS, KIS_HTTP_READ_TIMEOUT_SECONDS)
 
 
-clearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
-
 key_bytes = 32
 # Find config folder based on kis_auth.py file directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -243,7 +241,7 @@ def get_token_filename():
     # Security enhancement: Add random suffix (optional)
     # Control security level via environment variable
     if os.environ.get('KIS_SECURE_TOKEN', 'false').lower() == 'true':
-        random_suffix = hashlib.md5(os.urandom(8)).hexdigest()[:8]
+        random_suffix = secrets.token_hex(4)
         return os.path.join(config_root, f"KIS_{date_str}_{random_suffix}.token")
     else:
         # Maintain existing method (compatibility)

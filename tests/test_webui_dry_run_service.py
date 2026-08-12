@@ -1,6 +1,5 @@
 import importlib
 
-import pytest
 
 from webui.app import create_app
 from webui.services.dry_run_service import simulate_dispatch
