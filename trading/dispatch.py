@@ -25,6 +25,8 @@ from .strategies import (
     BalanceSplitStrategyConfig,
     BalancedRiskStrategy,
     BalancedRiskStrategyConfig,
+    BracketExitStrategy,
+    BracketExitStrategyConfig,
     CooldownStrategy,
     CooldownStrategyConfig,
     EventRiskOffStrategy,
@@ -39,6 +41,8 @@ from .strategies import (
     RiskBracketStrategyConfig,
     ScoreRiskStrategy,
     ScoreRiskStrategyConfig,
+    SignalTrailingStopStrategy,
+    SignalTrailingStopStrategyConfig,
     ScoreWeightedStrategy,
     ScoreWeightedStrategyConfig,
     StopLossSellStrategy,
@@ -319,8 +323,12 @@ class TradeDispatcher:
         )
         self.balance_split_config = BalanceSplitStrategyConfig.from_mapping(self.strategy_config)
         self.balanced_risk_config = BalancedRiskStrategyConfig.from_mapping(self.strategy_config)
+        self.bracket_exit_config = BracketExitStrategyConfig.from_mapping(self.strategy_config)
         self.score_weighted_config = ScoreWeightedStrategyConfig.from_mapping(self.strategy_config)
         self.score_risk_config = ScoreRiskStrategyConfig.from_mapping(self.strategy_config)
+        self.signal_trailing_stop_config = SignalTrailingStopStrategyConfig.from_mapping(
+            self.strategy_config
+        )
         self.risk_bracket_config = RiskBracketStrategyConfig.from_mapping(self.strategy_config)
         self.profit_ladder_config = ProfitLadderStrategyConfig.from_mapping(self.strategy_config)
         self.protective_exit_config = ProtectiveExitStrategyConfig.from_mapping(self.strategy_config)
@@ -462,6 +470,8 @@ class TradeDispatcher:
             return CooldownStrategy(config=self.cooldown_config)
         if self.limit_buffer_config is not None and signal.is_trade:
             return LimitBufferStrategy(config=self.limit_buffer_config)
+        if self.signal_trailing_stop_config is not None and signal.is_trade:
+            return SignalTrailingStopStrategy(config=self.signal_trailing_stop_config)
         if signal.signal_type == "BUY":
             if self.balance_split_config is not None:
                 return BalanceSplitStrategy(config=self.balance_split_config)
@@ -472,6 +482,8 @@ class TradeDispatcher:
             if self.score_risk_config is not None:
                 return ScoreRiskStrategy(config=self.score_risk_config)
         if signal.signal_type == "SELL":
+            if self.bracket_exit_config is not None:
+                return BracketExitStrategy(config=self.bracket_exit_config)
             if self.stop_loss_sell_config is not None:
                 return StopLossSellStrategy(config=self.stop_loss_sell_config)
             if self.profit_ladder_config is not None:
