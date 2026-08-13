@@ -12,6 +12,8 @@ strategy.
 - `score_weighted`: BUY with score weighting; missing/low scores still execute.
 - `score_risk`: use stop-loss risk sizing when available, otherwise use the broker default BUY size.
 - `risk_bracket`: BUY from a risk budget derived from `price` and `stop_loss`, with optional bracket metadata persistence.
+- `bracket_exit`: SELL only when the signal price crosses its supplied target or stop-loss bracket.
+- `signal_trailing_stop`: track per-ticker high-water marks from incoming signals and SELL after a configured drawdown.
 - `profit_ladder`: SELL fully by default, with optional configured profit bands.
 - `protective_exit`: SELL fully by default, with optional staged exits.
 - `stop_loss_sell`: SELL at the incoming `stop_loss` price by default, using `price` when configured as a fallback or when a triggered US stop-loss sell needs a marketable limit.

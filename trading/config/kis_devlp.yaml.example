@@ -131,6 +131,17 @@ signal_strategy:
 #   window_minutes: 30
 #   apply_to_signal_types: ["BUY"]
 #   scope: "market_ticker"
+#
+# 신호의 target_price와 stop_loss만으로 매도 조건을 제한하려면:
+#   name: "bracket_exit"
+#   target_sell_percent: 0.50
+#   stop_loss_sell_percent: 1.0
+#
+# 외부 시세 조회 없이 수신 신호 가격으로만 trailing stop을 관리하려면:
+#   name: "signal_trailing_stop"
+#   trail_percent: 8.0
+#   sell_fraction: 1.0
+#   require_tracked_entry: true
 
 # -----------------------------------------------------------------------------
 # 6. KIS 연결 정보 (보통 수정하지 않음)

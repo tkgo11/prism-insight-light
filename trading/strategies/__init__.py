@@ -1,6 +1,7 @@
 """Strategy primitives for opt-in trading policies."""
 
 from .balance_split import BALANCE_SPLIT, BalanceSplitStrategy, BalanceSplitStrategyConfig
+from .bracket_exit import BRACKET_EXIT, BracketExitStrategy, BracketExitStrategyConfig
 from .balanced_risk import BALANCED_RISK, BalancedRiskStrategy, BalancedRiskStrategyConfig
 from .cooldown import COOLDOWN, CooldownStrategy, CooldownStrategyConfig
 from .event_risk_off import EVENT_RISK_OFF, EventRiskOffStrategy, EventRiskOffStrategyConfig
@@ -9,6 +10,11 @@ from .profit_ladder import PROFIT_LADDER, ProfitLadderStrategy, ProfitLadderStra
 from .protective_exit import PROTECTIVE_EXIT, ProtectiveExitStrategy, ProtectiveExitStrategyConfig
 from .risk_bracket import RISK_BRACKET, RiskBracketStrategy, RiskBracketStrategyConfig
 from .score_risk import SCORE_RISK, ScoreRiskStrategy, ScoreRiskStrategyConfig
+from .signal_trailing_stop import (
+    SIGNAL_TRAILING_STOP,
+    SignalTrailingStopStrategy,
+    SignalTrailingStopStrategyConfig,
+)
 from .score_weighted import SCORE_WEIGHTED, ScoreWeightedStrategy, ScoreWeightedStrategyConfig
 from .stop_loss_sell import STOP_LOSS_SELL, StopLossSellStrategy, StopLossSellStrategyConfig
 from ..strategy_names import SUPPORTED_STRATEGY_NAMES
@@ -17,6 +23,9 @@ __all__ = [
     "BALANCE_SPLIT",
     "BalanceSplitStrategy",
     "BalanceSplitStrategyConfig",
+    "BRACKET_EXIT",
+    "BracketExitStrategy",
+    "BracketExitStrategyConfig",
     "BALANCED_RISK",
     "BalancedRiskStrategy",
     "BalancedRiskStrategyConfig",
@@ -39,6 +48,9 @@ __all__ = [
     "RiskBracketStrategy",
     "RiskBracketStrategyConfig",
     "SCORE_RISK",
+    "SIGNAL_TRAILING_STOP",
+    "SignalTrailingStopStrategy",
+    "SignalTrailingStopStrategyConfig",
     "ScoreRiskStrategy",
     "ScoreRiskStrategyConfig",
     "SCORE_WEIGHTED",
