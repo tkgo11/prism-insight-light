@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from concurrent.futures import ThreadPoolExecutor
+from types import SimpleNamespace
 
 import pytest
 
@@ -35,6 +36,32 @@ class FakeUSTrader:
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
         self.buy_calls.append((ticker, buy_amount, limit_price))
         return {"success": self.success, "message": "us-buy"}
+
+
+class FakeAutoExchangeUSTrader(FakeUSTrader):
+    def __init__(
+        self,
+        *,
+        available_amount=0.0,
+        after_exchange_amount=1000.0,
+        current_orderable_amount=0.0,
+        exchange_rate=1300.0,
+        max_krw=None,
+    ):
+        super().__init__(available_amount=available_amount)
+        self.auto_exchange = SimpleNamespace(enabled=True, max_krw=max_krw)
+        self.after_exchange_amount = after_exchange_amount
+        self.current_orderable_amount = current_orderable_amount
+        self.exchange_rate = exchange_rate
+        self.buyable_calls = []
+
+    def get_overseas_buyable_amount(self, ticker, price, exchange=None):
+        self.buyable_calls.append((ticker, price, exchange))
+        return {
+            "ord_psbl_frcr_amt": str(self.current_orderable_amount),
+            "echm_af_ord_psbl_amt": str(self.after_exchange_amount),
+            "exrt": str(self.exchange_rate),
+        }
 
 
 class FakeKRTrader:
@@ -111,6 +138,40 @@ async def test_balance_split_fails_without_available_balance(balance_split_strat
 
     assert result.status == "failed"
     assert trader.buy_calls == []
+
+
+@pytest.mark.asyncio
+async def test_us_balance_split_uses_after_exchange_buying_power_when_usd_cash_is_zero(balance_split_strategy):
+    trader = FakeAutoExchangeUSTrader(after_exchange_amount=1000.0)
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200})
+
+    result = await strategy._execute_us(signal, trader=trader)
+
+    assert result.status == "executed"
+    assert result.available_amount == 1000.0
+    assert result.buy_amount == 500.0
+    assert result.cash_source == "after_exchange_buying_power"
+    assert trader.buyable_calls == [("AAPL", 200.0, None)]
+    assert trader.buy_calls == [("AAPL", 500.0, 200.0)]
+
+
+@pytest.mark.asyncio
+async def test_us_balance_split_after_exchange_buying_power_respects_krw_cap(balance_split_strategy):
+    trader = FakeAutoExchangeUSTrader(
+        after_exchange_amount=1000.0,
+        exchange_rate=1300.0,
+        max_krw=130000.0,
+    )
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 50})
+
+    result = await strategy._execute_us(signal, trader=trader)
+
+    assert result.status == "executed"
+    assert result.available_amount == 100.0
+    assert result.buy_amount == 50.0
+    assert trader.buy_calls == [("AAPL", 50.0, 50.0)]
 
 
 @pytest.mark.asyncio
