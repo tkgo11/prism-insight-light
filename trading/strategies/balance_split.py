@@ -99,6 +99,10 @@ class BalanceSplitStrategy:
         execution_lock = await acquire_file_lock(self.execution_lock_path)
         try:
             available_amount, cash_source, summary = self._available_amount(trader, market="US")
+            if available_amount <= 0:
+                available_amount, cash_source = self._after_exchange_buying_power(
+                    signal, trader=trader, summary=summary
+                )
             buy_amount = self._buy_amount(available_amount)
             if buy_amount <= 0:
                 return self._no_balance(signal, available_amount, buy_amount, cash_source=cash_source)
@@ -126,6 +130,79 @@ class BalanceSplitStrategy:
             return execution
         finally:
             execution_lock.__exit__(None, None, None)
+
+    def _after_exchange_buying_power(
+        self,
+        signal: SignalMessage,
+        *,
+        trader: _BuyTrader,
+        summary: dict[str, Any],
+    ) -> tuple[float, str]:
+        """Return KIS after-exchange US buying power for a zero-USD cash balance.
+
+        Balance split ordinarily sizes a buy from immediately available USD cash.
+        When that value is zero, an auto-exchange-enabled US trader must first ask
+        KIS for its after-exchange buying-power field; otherwise the strategy exits
+        before the normal US order path can apply auto exchange.
+        """
+        auto_exchange = getattr(trader, "auto_exchange", None)
+        if not getattr(auto_exchange, "enabled", False):
+            return 0.0, "available_amount"
+        if signal.price in (None, 0):
+            return 0.0, "available_amount"
+
+        try:
+            price = float(signal.price)
+        except (TypeError, ValueError):
+            return 0.0, "available_amount"
+        if price <= 0:
+            return 0.0, "available_amount"
+
+        inquiry = getattr(trader, "get_overseas_buyable_amount", None)
+        if not callable(inquiry):
+            return 0.0, "available_amount"
+        try:
+            buyable = inquiry(signal.ticker, price)
+        except Exception as exc:
+            logger.warning(
+                "[%s] Balance split after-exchange buying-power inquiry failed: %s",
+                signal.ticker,
+                exc,
+            )
+            return 0.0, "available_amount"
+        if not isinstance(buyable, dict):
+            return 0.0, "available_amount"
+
+        def positive_number(value: Any) -> float:
+            try:
+                parsed = float(value)
+            except (TypeError, ValueError):
+                return 0.0
+            return parsed if parsed > 0 else 0.0
+
+        current_orderable = positive_number(buyable.get("ord_psbl_frcr_amt"))
+        after_exchange = positive_number(buyable.get("echm_af_ord_psbl_amt"))
+        if after_exchange <= 0:
+            after_exchange = positive_number(buyable.get("ovrs_ord_psbl_amt"))
+        if after_exchange <= 0:
+            return 0.0, "available_amount"
+
+        max_krw = getattr(auto_exchange, "max_krw", None)
+        exchange_rate = positive_number(buyable.get("exrt")) or positive_number(
+            summary.get("exchange_rate")
+        )
+        if max_krw is not None and exchange_rate > 0:
+            max_exchange_usd = positive_number(max_krw) / exchange_rate
+            after_exchange = min(after_exchange, current_orderable + max_exchange_usd)
+
+        if after_exchange <= 0:
+            return 0.0, "available_amount"
+        logger.info(
+            "[%s] Using KIS after-exchange buying power %.2f USD as balance split cash base",
+            signal.ticker,
+            after_exchange,
+        )
+        return after_exchange, "after_exchange_buying_power"
 
     async def _execute_kr(self, signal: SignalMessage, *, trader: _BuyTrader) -> BalanceSplitExecution:
         execution_lock = await acquire_file_lock(self.execution_lock_path)
