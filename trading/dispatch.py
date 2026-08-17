@@ -41,6 +41,8 @@ from .strategies import (
     RiskBracketStrategyConfig,
     ScoreRiskStrategy,
     ScoreRiskStrategyConfig,
+    ScoreMaxCapitalStrategy,
+    ScoreMaxCapitalStrategyConfig,
     SignalTrailingStopStrategy,
     SignalTrailingStopStrategyConfig,
     ScoreWeightedStrategy,
@@ -326,6 +328,9 @@ class TradeDispatcher:
         self.bracket_exit_config = BracketExitStrategyConfig.from_mapping(self.strategy_config)
         self.score_weighted_config = ScoreWeightedStrategyConfig.from_mapping(self.strategy_config)
         self.score_risk_config = ScoreRiskStrategyConfig.from_mapping(self.strategy_config)
+        self.score_max_capital_config = ScoreMaxCapitalStrategyConfig.from_mapping(
+            self.strategy_config
+        )
         self.signal_trailing_stop_config = SignalTrailingStopStrategyConfig.from_mapping(
             self.strategy_config
         )
@@ -462,6 +467,8 @@ class TradeDispatcher:
         return None
 
     def _resolve_strategy(self, signal: SignalMessage):
+        if self.score_max_capital_config is not None and signal.is_trade:
+            return ScoreMaxCapitalStrategy(config=self.score_max_capital_config)
         if self.balanced_risk_config is not None and signal.is_trade:
             return BalancedRiskStrategy(config=self.balanced_risk_config)
         if self.event_risk_off_config is not None:
@@ -532,3 +539,4 @@ class TradeDispatcher:
 
 
 SignalDispatcher = TradeDispatcher
+

@@ -10,6 +10,11 @@ from .profit_ladder import PROFIT_LADDER, ProfitLadderStrategy, ProfitLadderStra
 from .protective_exit import PROTECTIVE_EXIT, ProtectiveExitStrategy, ProtectiveExitStrategyConfig
 from .risk_bracket import RISK_BRACKET, RiskBracketStrategy, RiskBracketStrategyConfig
 from .score_risk import SCORE_RISK, ScoreRiskStrategy, ScoreRiskStrategyConfig
+from .score_max_capital import (
+    SCORE_MAX_CAPITAL,
+    ScoreMaxCapitalStrategy,
+    ScoreMaxCapitalStrategyConfig,
+)
 from .signal_trailing_stop import (
     SIGNAL_TRAILING_STOP,
     SignalTrailingStopStrategy,
@@ -48,6 +53,9 @@ __all__ = [
     "RiskBracketStrategy",
     "RiskBracketStrategyConfig",
     "SCORE_RISK",
+    "SCORE_MAX_CAPITAL",
+    "ScoreMaxCapitalStrategy",
+    "ScoreMaxCapitalStrategyConfig",
     "SIGNAL_TRAILING_STOP",
     "SignalTrailingStopStrategy",
     "SignalTrailingStopStrategyConfig",
@@ -61,3 +69,4 @@ __all__ = [
     "StopLossSellStrategy",
     "StopLossSellStrategyConfig",
 ]
+
