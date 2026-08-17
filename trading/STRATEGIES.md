@@ -22,6 +22,7 @@ order when the account has no cash/position or the order itself is invalid.
 | --- | --- | --- |
 | `balance_split` | Split the cash into equal pieces and buy with one piece. | BUY |
 | `balanced_risk` | Execute every trade signal, using risk data when available. | BUY and SELL |
+| `score_max_capital` | Always act on valid BUY and SELL signals, using score-selected fractions of available cash or current holdings. | BUY and SELL |
 | `score_weighted` | Weight BUY size by score without dropping scoreless signals. | BUY |
 | `score_risk` | Size from stop-loss risk when possible, otherwise use the broker default. | BUY |
 | `risk_bracket` | Decide the buy size by how much money you are willing to risk. | BUY |
@@ -194,6 +195,53 @@ whole available cash balance for the signal.
 ### When it is useful
 
 Use this when you do not want one BUY signal to spend all your cash.
+
+## `score_max_capital`
+
+### In one sentence
+
+`score_max_capital` always submits valid BUY and SELL signals, using the signal score to choose what fraction of currently available cash to spend or what fraction of the current holding to sell.
+
+### What it does
+
+- It handles **BUY** and **SELL** signals. Valid trade signals are not rejected because their score is low or missing.
+- For BUY, it reads current available cash and spends the positive fraction selected by `buy_score_bands`.
+- For SELL, it sells the positive fraction of the current holding selected by `sell_score_bands`.
+- The existing cash-reservation logic is used for BUY signals, so a stale broker cash balance is not repeatedly allocated to rapid successful buys.
+- `buy_score` is the only score field in the current signal schema. A SELL signal without `buy_score` uses `missing_sell_score_ratio`.
+- This is intentionally a high-risk strategy. It has no stop-loss, target-price, reward/risk, position-cap, cooldown, or risk-off filter of its own.
+
+### Main settings
+
+- `buy_score_bands`: score thresholds mapped to a **strictly positive** `0–1` fraction of available cash.
+- `sell_score_bands`: score thresholds mapped to a **strictly positive** `0–1` fraction of the current holding.
+- `missing_buy_score_ratio`: strictly positive cash fraction for a BUY without `buy_score`; default `1.0`.
+- `missing_sell_score_ratio`: strictly positive holding fraction for a SELL without `buy_score`; default `1.0`.
+
+Scores use the current `0–10` signal scale. A score selects the largest configured threshold that is less than or equal to the supplied score. Scores below the first threshold use that first threshold's ratio. Ratios of `0` are rejected at configuration time so a valid BUY or SELL is never silently suppressed.
+
+### High-risk example
+
+```yaml
+signal_strategy:
+  name: "score_max_capital"
+  buy_score_bands:
+    0: 0.60
+    6: 0.85
+    8: 1.00
+  sell_score_bands:
+    0: 0.25
+    6: 0.60
+    8: 1.00
+  missing_buy_score_ratio: 1.00
+  missing_sell_score_ratio: 1.00
+```
+
+With this example, every valid BUY executes. A score below 6 spends 60% of available cash; a score of 8 or higher spends all available cash. Every valid SELL also executes; a score below 6 sells 25% of the holding while a score of 8 or higher sells all of it. A SELL without a score sells all by default.
+
+### When it is useful
+
+Use it only when the incoming signal stream is deliberately trusted, the operator accepts high concentration and rapid turnover, and the goal is aggressive score-weighted deployment rather than risk filtering.
 
 ## `score_weighted`
 
@@ -468,3 +516,4 @@ Use this when news, market stress, or another event should temporarily stop new 
 
 When developers add a new strategy in `trading/strategies`, they must also update this file.
 Users should be able to open this guide and understand every available strategy without reading Python code.
+

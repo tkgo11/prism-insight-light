@@ -142,6 +142,16 @@ signal_strategy:
 #   trail_percent: 8.0
 #   sell_fraction: 1.0
 #   require_tracked_entry: true
+#
+# 높은 위험을 수용하고, 모든 유효 BUY/SELL 신호를 실행하며 점수별 비율로
+# 가용 현금과 보유 수량을 배분하려면:
+#   name: "score_max_capital"
+#   buy_score_bands: {0: 0.60, 6: 0.85, 8: 1.00}
+#   sell_score_bands: {0: 0.25, 6: 0.60, 8: 1.00}
+#   missing_buy_score_ratio: 1.00
+#   missing_sell_score_ratio: 1.00
+# 비율은 반드시 0보다 크고 1 이하여야 합니다. 이 전략은 별도의 손절,
+# 포지션 한도, 보상-위험 또는 위험회피 필터를 적용하지 않습니다.
 
 # -----------------------------------------------------------------------------
 # 6. KIS 연결 정보 (보통 수정하지 않음)
@@ -158,3 +168,4 @@ prod: "https://openapi.koreainvestment.com:9443"
 ops: "ws://ops.koreainvestment.com:21000"
 vps: "https://openapivts.koreainvestment.com:29443"
 vops: "ws://ops.koreainvestment.com:31000"
+

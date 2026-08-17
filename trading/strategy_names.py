@@ -11,6 +11,7 @@ SUPPORTED_STRATEGY_NAMES = (
     "protective_exit",
     "risk_bracket",
     "score_risk",
+    "score_max_capital",
     "score_weighted",
     "signal_trailing_stop",
     "stop_loss_sell",
@@ -18,3 +19,4 @@ SUPPORTED_STRATEGY_NAMES = (
 
 # The WebUI currently exposes all required fields only for balance_split.
 WEBUI_EDITABLE_STRATEGY_NAMES = ("balance_split",)
+
