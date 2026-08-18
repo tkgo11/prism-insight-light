@@ -171,7 +171,11 @@ class BalanceSplitStrategy:
             )
             return 0.0, "available_amount"
         if not isinstance(buyable, dict):
-            return 0.0, "available_amount"
+            logger.warning(
+                "[%s] Auto-exchange enabled but KIS returned a non-object buying-power response",
+                signal.ticker,
+            )
+            return 0.0, "after_exchange_buying_power_unavailable"
 
         def positive_number(value: Any) -> float:
             try:
@@ -181,11 +185,24 @@ class BalanceSplitStrategy:
             return parsed if parsed > 0 else 0.0
 
         current_orderable = positive_number(buyable.get("ord_psbl_frcr_amt"))
-        after_exchange = positive_number(buyable.get("echm_af_ord_psbl_amt"))
+        reported_after_exchange = positive_number(buyable.get("echm_af_ord_psbl_amt"))
+        reported_overseas_orderable = positive_number(buyable.get("ovrs_ord_psbl_amt"))
+        after_exchange = reported_after_exchange or reported_overseas_orderable
         if after_exchange <= 0:
-            after_exchange = positive_number(buyable.get("ovrs_ord_psbl_amt"))
-        if after_exchange <= 0:
-            return 0.0, "available_amount"
+            exchange_rate = positive_number(buyable.get("exrt")) or positive_number(
+                summary.get("exchange_rate")
+            )
+            logger.warning(
+                "[%s] Auto-exchange enabled but KIS reported no usable after-exchange buying power "
+                "(current_orderable_usd=%.2f, after_exchange_usd=%.2f, "
+                "overseas_orderable_usd=%.2f, exchange_rate_available=%s)",
+                signal.ticker,
+                current_orderable,
+                reported_after_exchange,
+                reported_overseas_orderable,
+                bool(exchange_rate > 0),
+            )
+            return 0.0, "after_exchange_buying_power_unavailable"
 
         max_krw = getattr(auto_exchange, "max_krw", None)
         exchange_rate = positive_number(buyable.get("exrt")) or positive_number(
@@ -509,9 +526,16 @@ class BalanceSplitStrategy:
         *,
         cash_source: str,
     ) -> BalanceSplitExecution:
+        if cash_source == "after_exchange_buying_power_unavailable":
+            message = (
+                "Auto-exchange is enabled but KIS reported no usable after-exchange buying power "
+                "for balance split buy"
+            )
+        else:
+            message = f"No cash balance to allocate for balance split buy (cash source: {cash_source})"
         return BalanceSplitExecution(
             status="failed",
-            message=f"No cash balance to allocate for balance split buy (cash source: {cash_source})",
+            message=message,
             market=signal.market,
             ticker=signal.ticker,
             available_amount=available_amount,
