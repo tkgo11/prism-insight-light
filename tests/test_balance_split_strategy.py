@@ -157,6 +157,29 @@ async def test_us_balance_split_uses_after_exchange_buying_power_when_usd_cash_i
 
 
 @pytest.mark.asyncio
+async def test_us_balance_split_reports_zero_kis_after_exchange_buying_power(
+    balance_split_strategy, caplog
+):
+    trader = FakeAutoExchangeUSTrader(
+        after_exchange_amount=0.0,
+        current_orderable_amount=0.0,
+        exchange_rate=0.0,
+    )
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200})
+
+    result = await strategy._execute_us(signal, trader=trader)
+
+    assert result.status == "failed"
+    assert result.cash_source == "after_exchange_buying_power_unavailable"
+    assert "KIS reported no usable after-exchange buying power" in result.message
+    assert trader.buyable_calls == [("AAPL", 200.0, None)]
+    assert trader.buy_calls == []
+    assert "current_orderable_usd=0.00" in caplog.text
+    assert "after_exchange_usd=0.00" in caplog.text
+
+
+@pytest.mark.asyncio
 async def test_us_balance_split_after_exchange_buying_power_respects_krw_cap(balance_split_strategy):
     trader = FakeAutoExchangeUSTrader(
         after_exchange_amount=1000.0,
