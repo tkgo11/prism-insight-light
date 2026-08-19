@@ -1,7 +1,59 @@
 {% extends "base.html" %}
 {% block title %}Telegram Preview - PRISM{% endblock %}
 {% block content %}
-<section class="page-head"><div><p class="eyebrow">Telegram</p><h1>Read-only signal discovery</h1><p>Fetch a bounded preview from the configured Telegram signal channel. Candidates are never dispatched from this page.</p></div></section>
-<section class="panel code-panel"><h2>API</h2><pre>POST /telegram/api?pages=1&amp;max_posts=20
-X-WebUI-CSRF: {{ request.app.state.settings.csrf_token }}</pre><p class="muted">Fetching requires CSRF confirmation. Parsed candidates can be copied into the Signal Workbench or Trading Desk.</p></section>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Signal intake</p>
+    <h1>Preview channel candidates before they reach a desk.</h1>
+    <p>This review surface is read-only. It fetches a bounded number of posts, masks returned text, and highlights items the existing parser recognizes as structured signals.</p>
+  </div>
+  <div class="page-head-actions"><a class="btn ghost" href="/signals">Back to Signal Studio</a></div>
+</section>
+
+<section class="workspace-grid workspace-grid--telegram">
+  <article class="panel panel--form">
+    <div class="panel-head"><div><p class="eyebrow">Preview</p><h2>Telegram channel</h2></div><span class="pill">Read-only</span></div>
+    <form method="post" action="/telegram/preview" class="form-grid form-grid--preview">
+      <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
+      <label class="span-2" for="telegram-channel">Channel override <input id="telegram-channel" name="channel" value="{{ channel }}" maxlength="256" placeholder="Leave blank to use the configured channel"></label>
+      <label for="telegram-pages">Pages <input id="telegram-pages" name="pages" type="number" min="1" max="5" value="{{ pages }}" required></label>
+      <label for="telegram-limit">Maximum posts <input id="telegram-limit" name="max_posts" type="number" min="1" max="100" value="{{ max_posts }}" required></label>
+      <p class="field-hint span-2">Limits are enforced: 1–5 pages and 1–100 posts. A preview never submits an order or changes the queue.</p>
+      <button class="btn primary span-2" type="submit">Fetch bounded preview</button>
+    </form>
+  </article>
+  <aside class="panel panel--signal-guide">
+    <p class="eyebrow">Operator path</p><h2>Review then validate</h2>
+    <ol class="step-list">
+      <li><span>1</span><div><strong>Preview safely</strong><small>Posts are read and masked through the existing integration.</small></div></li>
+      <li><span>2</span><div><strong>Inspect candidates</strong><small>Only successfully parsed items display a normalized signal summary.</small></div></li>
+      <li><span>3</span><div><strong>Use Signal Studio</strong><small>Copy the relevant text into the validator before simulation or a guarded action.</small></div></li>
+    </ol>
+  </aside>
+</section>
+
+{% if preview %}
+<section class="panel" aria-live="polite">
+  <div class="panel-head">
+    <div><p class="eyebrow">Preview result</p><h2>{{ preview["items"]|length if preview["items"] else 0 }} posts returned</h2>{% if preview.error %}<p class="warning">{{ preview.error }}</p>{% endif %}</div>
+    <span class="status-badge {{ 'success' if preview.ok else 'danger' }}">{{ 'Complete' if preview.ok else 'Unavailable' }}</span>
+  </div>
+  {% if preview["items"] %}
+  <div class="candidate-list">
+    {% for item in preview["items"] %}
+    <article class="candidate-card {{ 'candidate-card--parsed' if item.parsed else '' }}">
+      <div class="candidate-meta"><span class="pill">Post {{ item.message_id }}</span>{% if item.parsed %}<span class="status-badge success">Signal recognized</span>{% else %}<span class="status-badge neutral">Review text</span>{% endif %}</div>
+      <p class="candidate-text">{{ item.text }}</p>
+      {% if item.parsed and item.signal %}
+      <dl class="inline-details"><div><dt>Action</dt><dd>{{ item.signal.signal_type }}</dd></div><div><dt>Ticker</dt><dd>{{ item.signal.ticker }}</dd></div><div><dt>Market</dt><dd>{{ item.signal.market }}</dd></div><div><dt>Company</dt><dd>{{ item.signal.company_name or '—' }}</dd></div></dl>
+      {% endif %}
+      {% if item.source %}<a class="text-link" href="{{ item.source }}" rel="noreferrer">Open source</a>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% elif preview.ok %}
+  <div class="empty-state"><strong>No posts were available in this bounded preview.</strong><p>Try a configured source or adjust the limit within the permitted range.</p></div>
+  {% endif %}
+</section>
+{% endif %}
 {% endblock %}

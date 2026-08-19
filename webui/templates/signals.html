@@ -1,11 +1,63 @@
 {% extends "base.html" %}
-{% block title %}Signal Workbench - PRISM{% endblock %}
+{% block title %}Signal Studio - PRISM{% endblock %}
 {% block content %}
-<section class="page-head"><div><p class="eyebrow">Signal workbench</p><h1>Validate JSON or Telegram-style signals.</h1><p>POST to <code>/signals/validate</code> with CSRF header. The parser auto-detects KR vs US when market is missing.</p></div></section>
-<section class="panel code-panel">
-  <h2>Example payloads</h2>
-  <pre>{"payload":{"type":"BUY","ticker":"005930","company_name":"Samsung Electronics","price":70000}}
-{"payload":{"type":"SELL","ticker":"AAPL","company_name":"Apple","price":190.5}}</pre>
-  <p class="muted">Tip: numeric ticker means KR; alphabetic ticker means US.</p>
+<section class="page-head page-head--signal">
+  <div>
+    <p class="eyebrow">Signal Studio</p>
+    <h1>Turn incoming text into an order-ready signal.</h1>
+    <p>Paste a JSON payload or a Telegram-style message. PRISM validates the structure and infers KR or US only when the incoming payload does not specify a market.</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn ghost" href="/telegram">Preview Telegram</a>
+    <a class="btn primary" href="/dry-run">Run a safe simulation</a>
+  </div>
 </section>
+
+<section class="workspace-grid workspace-grid--signal">
+  <article class="panel panel--form">
+    <div class="panel-head">
+      <div><p class="eyebrow">Validate</p><h2>Signal input</h2></div>
+      <span class="pill">No broker call</span>
+    </div>
+    <form method="post" action="/signals/validate-form" class="form-stack">
+      <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
+      <label for="signal-payload">JSON or Telegram-style text
+        <textarea id="signal-payload" name="payload" rows="16" placeholder='{"type":"BUY","ticker":"005930","company_name":"Samsung Electronics","price":70000}' required>{{ payload }}</textarea>
+      </label>
+      <p class="field-hint">Expected JSON uses <code>type</code>, <code>ticker</code>, and <code>price</code>. Telegram-style labeled text is also supported when configured.</p>
+      <button class="btn primary" type="submit">Validate signal</button>
+    </form>
+  </article>
+
+  <aside class="panel panel--signal-guide">
+    <p class="eyebrow">Input guide</p>
+    <h2>What the parser checks</h2>
+    <ol class="step-list">
+      <li><span>1</span><div><strong>Format</strong><small>JSON is checked first; PRISM then attempts the configured Telegram parser.</small></div></li>
+      <li><span>2</span><div><strong>Market</strong><small>Numeric tickers infer KR and alphabetic tickers infer US only if absent.</small></div></li>
+      <li><span>3</span><div><strong>Readiness</strong><small>Validation does not place an order or change the off-hours queue.</small></div></li>
+    </ol>
+    <div class="callout callout--info"><strong>Next step</strong><p>Use the safe simulator to inspect a valid JSON signal without invoking broker or queue services.</p></div>
+  </aside>
+</section>
+
+{% if validation_result %}
+<section class="panel result-panel {{ 'result-panel--success' if validation_result.ok else 'result-panel--error' }}" aria-live="polite">
+  {% if validation_result.ok %}
+  <div class="panel-head"><div><p class="eyebrow">Validated</p><h2>Normalized signal</h2><p>The payload is structurally valid. Review these fields before choosing a simulation or guarded order action.</p></div><span class="status-badge success">Ready for review</span></div>
+  <dl class="detail-grid">
+    <div><dt>Action</dt><dd>{{ validation_result.signal.signal_type }}</dd></div>
+    <div><dt>Market</dt><dd>{{ validation_result.signal.market }}</dd></div>
+    <div><dt>Ticker</dt><dd>{{ validation_result.signal.ticker }}</dd></div>
+    <div><dt>Company</dt><dd>{{ validation_result.signal.company_name or 'Not provided' }}</dd></div>
+    <div><dt>Price</dt><dd>{{ validation_result.signal.price }}</dd></div>
+    <div><dt>Source</dt><dd>{{ validation_result.signal.source or 'Manual input' }}</dd></div>
+  </dl>
+  <div class="result-actions"><a class="btn primary" href="/dry-run">Simulate this pattern</a><a class="btn ghost" href="/trading">Open guarded order ticket</a></div>
+  {% else %}
+  <div class="panel-head"><div><p class="eyebrow">Needs attention</p><h2>Signal could not be validated</h2><p>{{ validation_result.error }}</p></div><span class="status-badge danger">Check input</span></div>
+  <p class="field-hint">Correct the field or format indicated above, then submit again. No order or queue action was attempted.</p>
+  {% endif %}
+</section>
+{% endif %}
 {% endblock %}

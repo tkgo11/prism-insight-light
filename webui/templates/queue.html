@@ -1,11 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Pending Signals - PRISM{% endblock %}
+{% block title %}Queue - PRISM{% endblock %}
 {% block content %}
-<section class="page-head"><div><p class="eyebrow">Pending signals</p><h1>Off-hours queue</h1><p>Signals queued by demo mode while KR/US markets are closed.</p></div><span class="lock-badge">{{ queue.count }} waiting</span></section>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Off-hours queue</p>
+    <h1>Review what is waiting for its market window.</h1>
+    <p>PRISM displays deferred signals created by the existing runtime. This screen is intentionally read-only: no entries are created, edited, or dispatched here.</p>
+  </div>
+  <div class="page-head-actions"><span class="lock-badge">{{ queue.count }} waiting</span><a class="btn ghost" href="/signals">Validate a new signal</a></div>
+</section>
+
+<section class="status-overview status-overview--compact" aria-label="Queue status">
+  <article class="status-card"><div class="metric-icon" aria-hidden="true">↗</div><div><span>Total entries</span><strong>{{ queue.count }}</strong><small>Bounded queue summary</small></div></article>
+  <article class="status-card"><div class="metric-icon {{ 'success' if queue.pending_count == 0 else 'warning' }}" aria-hidden="true">{{ '✓' if queue.pending_count == 0 else '!' }}</div><div><span>Pending</span><strong>{{ queue.pending_count }}</strong><small>{{ 'No pending signal needs review.' if queue.pending_count == 0 else 'Awaiting scheduled execution.' }}</small></div></article>
+  <article class="status-card"><div class="metric-icon {{ 'warning' if queue.failed_count else 'success' }}" aria-hidden="true">{{ '!' if queue.failed_count else '✓' }}</div><div><span>Failed</span><strong>{{ queue.failed_count }}</strong><small>{{ 'Inspect logs if retry details are needed.' if queue.failed_count else 'No recorded queue failures.' }}</small></div></article>
+</section>
+
 <section class="panel">
-  {% if queue.error %}<p class="error">{{ queue.error }}</p>{% endif %}
-  <div class="table-wrap"><table><thead><tr><th>Execute at</th><th>Action</th><th>Market</th><th>Ticker</th><th>Company</th><th>Created</th></tr></thead><tbody>
-  {% for item in queue["items"] %}<tr><td>{{ item.execute_at }}</td><td><span class="pill">{{ item.signal_type }}</span></td><td>{{ item.market }}</td><td><strong>{{ item.ticker }}</strong></td><td>{{ item.company_name }}</td><td>{{ item.created_at }}</td></tr>{% else %}<tr><td colspan="6" class="empty">No pending signals.</td></tr>{% endfor %}
+  <div class="panel-head"><div><p class="eyebrow">Scheduled activity</p><h2>Queue entries</h2></div><a class="text-link" href="/logs">Inspect runtime logs</a></div>
+  {% if queue.error %}<div class="callout callout--danger"><strong>Queue unavailable</strong><p>{{ queue.error }}</p></div>{% endif %}
+  {% if queue["items"] %}
+  <div class="table-wrap"><table><thead><tr><th>Execute at</th><th>State</th><th>Action</th><th>Market</th><th>Ticker</th><th>Company</th><th>Created</th></tr></thead><tbody>
+    {% for item in queue["items"] %}<tr><td>{{ item.execute_at }}</td><td><span class="status-badge {{ 'success' if item.status == 'pending' else 'neutral' }}">{{ item.status }}</span></td><td><span class="pill">{{ item.signal_type }}</span></td><td>{{ item.market }}</td><td><strong>{{ item.ticker }}</strong></td><td>{{ item.company_name or '—' }}</td><td>{{ item.created_at }}</td></tr>{% endfor %}
   </tbody></table></div>
+  {% else %}
+  <div class="empty-state"><strong>The off-hours queue is clear.</strong><p>Use Signal Studio to validate an incoming payload or the safe simulator to preview a normalized signal without queue mutation.</p><div class="empty-state-actions"><a class="btn primary" href="/signals">Open Signal Studio</a><a class="btn ghost" href="/dry-run">Run safe simulation</a></div></div>
+  {% endif %}
 </section>
 {% endblock %}
