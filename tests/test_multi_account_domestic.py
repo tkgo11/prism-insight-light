@@ -285,7 +285,7 @@ async def test_async_sell_reuses_verified_holding_quantity(monkeypatch):
     trader._stock_locks = {}
     trader._semaphore = dst.asyncio.Semaphore(1)
     trader._global_lock = dst.asyncio.Lock()
-    trader.get_portfolio = lambda: [
+    trader.get_portfolio = lambda **kwargs: [
         {
             "stock_code": "005930",
             "quantity": 18,
@@ -327,7 +327,7 @@ async def test_async_sell_without_limit_preserves_market_order_intent(monkeypatc
     trader._stock_locks = {}
     trader._semaphore = dst.asyncio.Semaphore(1)
     trader._global_lock = dst.asyncio.Lock()
-    trader.get_portfolio = lambda: [
+    trader.get_portfolio = lambda **kwargs: [
         {
             "stock_code": "005930",
             "quantity": 18,
@@ -356,6 +356,50 @@ async def test_async_sell_without_limit_preserves_market_order_intent(monkeypatc
     assert result["success"] is True
     assert result["quantity"] == 18
     assert calls == [("005930", None, 18)]
+
+
+def test_get_portfolio_can_raise_temporary_kis_inquiry_failure():
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.mode = "demo"
+    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+
+    class Response:
+        @staticmethod
+        def isOK():
+            return False
+
+        @staticmethod
+        def getErrorCode():
+            return "EGW00215"
+
+        @staticmethod
+        def getErrorMessage():
+            return "ledger request rate limit exceeded"
+
+    trader._request = lambda *args, **kwargs: Response()
+
+    assert trader.get_portfolio() == []
+    with pytest.raises(dst.PortfolioInquiryError, match="EGW00215"):
+        trader.get_portfolio(raise_on_error=True)
+
+
+@pytest.mark.asyncio
+async def test_async_sell_surfaces_portfolio_inquiry_failure_without_order_submission():
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader._stock_locks = {}
+    trader._semaphore = dst.asyncio.Semaphore(1)
+    trader._global_lock = dst.asyncio.Lock()
+
+    trader.get_portfolio = lambda: []
+    trader._last_portfolio_inquiry_error = "Balance inquiry failed: EGW00215 - ledger rate limit exceeded"
+    trader.get_current_price = lambda stock_code: pytest.fail("price lookup must not run")
+    trader.smart_sell_all = lambda *args, **kwargs: pytest.fail("sell order must not run")
+
+    result = await trader._execute_sell_stock("005930")
+
+    assert result["success"] is False
+    assert "EGW00215" in result["message"]
+    assert "not found in portfolio" not in result["message"]
 
 
 def test_smart_buy_routes_after_kst_close_to_reserved_order(monkeypatch):

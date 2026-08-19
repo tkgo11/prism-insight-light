@@ -173,6 +173,10 @@ class TokenRequestError(KISAuthError):
 
 
 KIS_RATE_LIMIT_ERROR_CODE = "EGW00201"
+KIS_LEDGER_RATE_LIMIT_ERROR_CODE = "EGW00215"
+KIS_RATE_LIMIT_ERROR_CODES = frozenset(
+    {KIS_RATE_LIMIT_ERROR_CODE, KIS_LEDGER_RATE_LIMIT_ERROR_CODE}
+)
 KIS_EXPIRED_TOKEN_ERROR_CODE = "EGW00123"
 KIS_TOKEN_EXPIRY_TZ = ZoneInfo("Asia/Seoul")
 
@@ -1604,8 +1608,9 @@ class APIRespError(APIResp):
 
 
 def _is_kis_rate_limit_response(res) -> bool:
+    """Return whether KIS rejected a request for either supported rate-limit condition."""
     try:
-        return res.getErrorCode() == KIS_RATE_LIMIT_ERROR_CODE
+        return res.getErrorCode() in KIS_RATE_LIMIT_ERROR_CODES
     except Exception:
         return False
 

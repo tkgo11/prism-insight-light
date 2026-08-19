@@ -359,6 +359,43 @@ def test_url_fetch_retries_kis_rate_limit_then_succeeds(monkeypatch):
     assert sleeps == [0.25]
 
 
+def test_url_fetch_retries_kis_ledger_rate_limit_then_succeeds(monkeypatch):
+    calls = []
+    sleeps = []
+
+    class Env:
+        my_url = "https://example.com"
+
+    monkeypatch.setattr(ka, "getTREnv", lambda: Env())
+    monkeypatch.setattr(ka, "_getBaseHeader", lambda: {})
+    monkeypatch.setattr(ka, "isPaperTrading", lambda: False)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 3)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_BASE_SECONDS", 0.25)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_MAX_SECONDS", 1.0)
+    monkeypatch.setattr(ka.time, "sleep", lambda seconds: sleeps.append(seconds))
+
+    def fake_post(url, headers, data, **kwargs):
+        calls.append((url, headers, data))
+        if len(calls) == 1:
+            return _FakeResponse(
+                500,
+                {
+                    "rt_cd": "1",
+                    "msg_cd": "EGW00215",
+                    "msg1": "ledger request rate limit exceeded",
+                },
+            )
+        return _FakeResponse(200, {"rt_cd": "0", "msg_cd": "0", "msg1": "OK", "output": {}})
+
+    monkeypatch.setattr(ka.requests, "post", fake_post)
+
+    response = ka._url_fetch("/uapi/test", "TTTC0012U", "", {"PDNO": "085620"}, postFlag=True)
+
+    assert response.isOK()
+    assert len(calls) == 2
+    assert sleeps == [0.25]
+
+
 def test_url_fetch_stops_after_configured_rate_limit_retries(monkeypatch):
     calls = []
     sleeps = []
