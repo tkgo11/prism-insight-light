@@ -48,6 +48,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+class PortfolioInquiryError(RuntimeError):
+    """Raised when KIS cannot provide a domestic portfolio response."""
+
+
 def _now_kst() -> datetime.datetime:
     """Return current Korea time for domestic-market routing.
 
@@ -1334,6 +1338,11 @@ class DomesticStockTrading:
                         # Defensive logic 1: Verify holding in portfolio
                         logger.info(f"[Async Sell API] {stock_code} checking portfolio...")
                         current_portfolio = await asyncio.to_thread(self.get_portfolio)
+                        inquiry_error = getattr(self, "_last_portfolio_inquiry_error", None)
+                        if inquiry_error:
+                            result["message"] = f"Portfolio inquiry unavailable: {inquiry_error}"
+                            logger.warning("[Async Sell API] %s %s", stock_code, result["message"])
+                            return result
 
                         # Check if stock exists in portfolio
                         target_stock = None
@@ -1429,9 +1438,12 @@ class DomesticStockTrading:
 
         return result
 
-    def get_portfolio(self) -> List[Dict[str, Any]]:
+    def get_portfolio(self, *, raise_on_error: bool = False) -> List[Dict[str, Any]]:
         """
-        Get current account portfolio
+        Get current account portfolio.
+
+        When ``raise_on_error`` is true, propagate a temporary KIS inquiry failure
+        instead of treating it as a genuinely empty portfolio.
 
         Returns:
             [{
@@ -1467,6 +1479,7 @@ class DomesticStockTrading:
             "CTX_AREA_NK100": ""
         }
 
+        self._last_portfolio_inquiry_error = None
         try:
             res = self._request(api_url, tr_id, params)
 
@@ -1505,11 +1518,21 @@ class DomesticStockTrading:
                 return current_portfolio
 
             else:
-                logger.error(f"Balance inquiry failed: {res.getErrorCode()} - {res.getErrorMessage()}")
+                message = f"Balance inquiry failed: {res.getErrorCode()} - {res.getErrorMessage()}"
+                logger.error(message)
+                self._last_portfolio_inquiry_error = message
+                if raise_on_error:
+                    raise PortfolioInquiryError(message)
                 return []
 
+        except PortfolioInquiryError:
+            raise
         except Exception as e:
-            logger.error(f"Error during balance inquiry: {str(e)}")
+            message = f"Error during balance inquiry: {str(e)}"
+            logger.error(message)
+            self._last_portfolio_inquiry_error = message
+            if raise_on_error:
+                raise PortfolioInquiryError(message) from e
             return []
 
     def get_account_summary(self) -> None | dict[Any, Any] | dict[str, float]:
