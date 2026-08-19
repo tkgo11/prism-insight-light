@@ -1,7 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Logs - PRISM{% endblock %}
+{% block title %}Masked Logs - PRISM{% endblock %}
 {% block content %}
-<section class="page-head"><div><p class="eyebrow">Logs</p><h1>{{ log.name }} tail</h1><p>Bounded and masked for account numbers, tokens, and secrets.</p></div></section>
-<section class="panel code-panel">{% if log.error %}<p class="error">{{ log.error }}</p>{% endif %}<pre>{% for line in log.lines %}{{ line }}
-{% else %}No log lines available.{% endfor %}</pre></section>
+<section class="page-head">
+  <div><p class="eyebrow">System diagnostics</p><h1>{{ log.name }} log tail</h1><p>Output is bounded and masked before rendering. Use it to investigate runtime behavior without exposing account numbers, tokens, or long secrets.</p></div>
+  <div class="page-head-actions"><a class="btn ghost" href="/readiness">Back to System</a></div>
+</section>
+<section class="panel code-panel">
+  <div class="panel-head"><div><p class="eyebrow">Masked output</p><h2>Recent lines</h2></div><span class="pill">Read-only</span></div>
+  {% if log.error %}<div class="callout callout--danger"><strong>Log unavailable</strong><p>{{ log.error }}</p></div>{% endif %}
+  <pre aria-label="Masked {{ log.name }} log output">{% for line in log.lines %}{{ line }}
+{% else %}No log lines are available for this source.{% endfor %}</pre>
+</section>
 {% endblock %}

@@ -1,56 +1,49 @@
 {% extends "base.html" %}
 {% block title %}Command Center - PRISM{% endblock %}
 {% block content %}
-<section class="hero-panel">
+<section class="hero-panel hero-panel--command">
   <div>
-    <p class="eyebrow">Operations dashboard</p>
-    <h1>Remote trading, pending signals, and config in one focused console.</h1>
-    <p class="hero-copy">KR/US market detection uses ticker shape when market is omitted. Live broker calls stay locked unless you explicitly enable them on this local host.</p>
+    <p class="eyebrow">Command center</p>
+    <h1>Operate every signal with context, not clutter.</h1>
+    <p class="hero-copy">Review the local runtime, prepare incoming signals, simulate safely, and open a guarded order ticket only when your operational checks are complete.</p>
   </div>
-  <div class="hero-actions">
-    <a class="btn primary" href="/trading">Open trading desk</a>
-    <a class="btn ghost" href="/signals">Validate signal</a>
-  </div>
+  <div class="hero-actions"><a class="btn primary" href="/signals">Open Signal Studio</a><a class="btn ghost" href="/trading">Open guarded trade</a></div>
 </section>
 
-<section class="metric-grid" aria-label="Runtime metrics">
-  <article class="metric-card"><div class="metric-top"><span>Readiness</span><span class="metric-icon {{ 'success' if readiness.status == 'ready' else 'warning' }}">{{ '✓' if readiness.status == 'ready' else '!' }}</span></div><strong>{{ readiness.status }}</strong><small>{{ readiness.message }}</small></article>
-  <article class="metric-card"><div class="metric-top"><span>Pending signals</span><span class="metric-icon">↗</span></div><strong>{{ queue.count }}</strong><small>{{ queue.path_label }}</small></article>
-  <article class="metric-card"><div class="metric-top"><span>Accounts</span><span class="metric-icon">◎</span></div><strong>{{ accounts.count }}</strong><small>{{ accounts.path_label }}{% if accounts.using_example %} example{% endif %}</small></article>
-  <article class="metric-card"><div class="metric-top"><span>Live trade lock</span><span class="metric-icon {{ 'success' if trade_guard.enabled else 'warning' }}">{{ "!" if not trade_guard.enabled else "✓" }}</span></div><strong>{{ "Open" if trade_guard.enabled else "Locked" }}</strong><small>{{ trade_guard.message }}</small></article>
+<section class="status-overview" aria-label="Operational status">
+  <article class="status-card status-card--{{ 'ready' if readiness.status == 'ready' else 'attention' }}"><div class="metric-icon {{ 'success' if readiness.status == 'ready' else 'warning' }}" aria-hidden="true">{{ '✓' if readiness.status == 'ready' else '!' }}</div><div><span>Runtime readiness</span><strong>{{ readiness.status }}</strong><small>{{ readiness.message }}</small></div></article>
+  <article class="status-card"><div class="metric-icon" aria-hidden="true">⌁</div><div><span>Guard state</span><strong>{{ 'Armed' if trade_guard.enabled else 'Locked' }}</strong><small>{{ trade_guard.message }}</small></div></article>
+  <article class="status-card"><div class="metric-icon" aria-hidden="true">↗</div><div><span>Pending signals</span><strong>{{ queue.count }}</strong><small>{{ 'Review queue timing and state.' if queue.count else 'No off-hours actions awaiting execution.' }}</small></div></article>
 </section>
 
-<section class="two-column">
+<section class="two-column two-column--command">
+  <article class="panel panel--priority">
+    <div class="panel-head"><div><p class="eyebrow">Start here</p><h2>Operator workflow</h2><p>Use the shortest safe path from incoming signal to reviewed action.</p></div></div>
+    <div class="action-list">
+      <a class="action-card" href="/signals"><span class="action-index">01</span><div><strong>Validate an incoming signal</strong><small>Normalize JSON or Telegram-style text without changing runtime state.</small></div><span aria-hidden="true">→</span></a>
+      <a class="action-card" href="/dry-run"><span class="action-index">02</span><div><strong>Run a safe simulation</strong><small>Confirm the dispatch shape without creating broker or queue activity.</small></div><span aria-hidden="true">→</span></a>
+      <a class="action-card" href="/trading"><span class="action-index">03</span><div><strong>Review a guarded order</strong><small>Choose an account and submit only after explicit operator arming.</small></div><span aria-hidden="true">→</span></a>
+    </div>
+  </article>
+
   <article class="panel">
-    <div class="panel-head"><div><p class="eyebrow">Accounts</p><h2>Per-account routing</h2></div><a href="/trading" class="text-link">Manage</a></div>
+    <div class="panel-head"><div><p class="eyebrow">Account routes</p><h2>{{ accounts.count }} configured</h2><p>Masked summaries of configured execution routes.</p></div><a href="/trading" class="text-link">Review routes</a></div>
     <div class="account-list">
       {% for account in accounts.accounts %}
-      <div class="account-row">
-        <div><strong>{{ account.name }}</strong><small>{{ account.account_masked }} · {{ account.market_label }} · {{ account.mode }}</small></div>
-        <span class="pill {{ 'success' if account.primary else '' }}">{{ 'Primary' if account.primary else 'Backup' }}</span>
-      </div>
+      <div class="account-row"><div><strong>{{ account.name }}</strong><small>{{ account.account_masked }} · {{ account.market_label }} · {{ account.mode }}</small></div><div class="tag-row">{% if account.primary %}<span class="pill success">Primary</span>{% endif %}<span class="pill">{{ 'Enabled' if account.enabled else 'Disabled' }}</span></div></div>
       {% else %}
-      <p class="empty">No accounts configured yet. Open Config to add accounts to trading/config/kis_devlp.yaml.</p>
-      {% endfor %}
-    </div>
-  </article>
-
-  <article class="panel">
-    <div class="panel-head"><div><p class="eyebrow">Pending</p><h2>Queued signals</h2></div><a href="/queue" class="text-link">View all</a></div>
-    <div class="queue-mini">
-      {% for item in queue["items"][:5] %}
-      <div class="signal-row"><span class="pill">{{ item.signal_type }}</span><strong>{{ item.ticker }}</strong><small>{{ item.market }} · {{ item.execute_at }}</small></div>
-      {% else %}
-      <p class="empty">No pending off-hours signals.</p>
+      <div class="empty-state"><strong>No account routes are configured.</strong><p>Open System to review readiness and safely configure the mounted runtime.</p></div>
       {% endfor %}
     </div>
   </article>
 </section>
 
-<section class="feature-grid">
-  <a class="feature-card" href="/trading"><h3>Remote BUY/SELL</h3><p>Manual order form with automatic KR/US detection, demo/real mode selector, and live-order arming.</p></a>
-  <a class="feature-card" href="/trading#config"><h3>Easy config editor</h3><p>Edit safe operational fields and signal split strategy without exposing secrets.</p></a>
-  <a class="feature-card" href="/signals"><h3>Signal validator</h3><p>Parse JSON or Telegram-style text and preview normalized market/action fields.</p></a>
-  <a class="feature-card" href="/logs"><h3>Masked logs</h3><p>Tail subscriber logs with account numbers and long secrets masked.</p></a>
+<section class="panel panel--queue">
+  <div class="panel-head"><div><p class="eyebrow">Off-hours queue</p><h2>Signals awaiting their execution window</h2><p>Queued actions are displayed for review; this console does not manufacture or alter queue entries from the Command Center.</p></div><a href="/queue" class="text-link">View queue</a></div>
+  {% if queue["items"] %}
+  <div class="queue-mini">{% for item in queue["items"][:5] %}<div class="signal-row"><div class="tag-row"><span class="pill">{{ item.signal_type }}</span><strong>{{ item.ticker }}</strong></div><small>{{ item.market }} · {{ item.execute_at }}</small><span class="status-badge {{ 'success' if item.status == 'pending' else 'neutral' }}">{{ item.status }}</span></div>{% endfor %}</div>
+  {% else %}
+  <div class="empty-state empty-state--compact"><strong>The queue is clear.</strong><p>Validated signals can be simulated or submitted from their dedicated workflows.</p></div>
+  {% endif %}
 </section>
 {% endblock %}

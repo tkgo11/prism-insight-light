@@ -1,13 +1,49 @@
 {% extends "base.html" %}
-{% block title %}Config - PRISM{% endblock %}
+{% block title %}System - PRISM{% endblock %}
 {% block content %}
-<section class="page-head"><div><p class="eyebrow">Config & readiness</p><h1>Masked operational status</h1><p>Use Trading Desk for safe edits; this page shows environment readiness without exposing secrets.</p></div><a class="btn primary" href="/trading#config">Edit config</a></section>
-<section class="panel">
-  <div class="panel-head"><div><h2>Readiness</h2><p>{{ readiness.message }}</p></div><span class="pill {{ 'success' if readiness.status == 'ready' else '' }}">{{ readiness.status }}</span></div>
-  <div class="table-wrap"><table><thead><tr><th>Name</th><th>Configured</th><th>Safe value</th></tr></thead><tbody>
-  {% for item in readiness.config["items"] %}<tr><td>{{ item.name }}</td><td>{{ item.configured }}</td><td>{{ item.value }}</td></tr>{% endfor %}
-  </tbody></table></div>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">System</p>
+    <h1>Keep the local trading runtime visible and controlled.</h1>
+    <p>Review masked readiness information, run the explicit Pub/Sub probe when needed, and edit only the operational values this console is authorized to change.</p>
+  </div>
+  <div class="page-head-actions"><a class="btn ghost" href="/logs">Open masked logs</a></div>
 </section>
-<section class="panel code-panel"><h2>Live probe API</h2><pre>POST /readiness/probe
-X-WebUI-CSRF: {{ request.app.state.settings.csrf_token }}</pre><p class="muted">The live Pub/Sub permission check is explicit because it contacts Google Cloud.</p></section>
+
+<section class="status-overview" aria-label="Runtime status">
+  <article class="status-card status-card--{{ 'ready' if readiness.status == 'ready' else 'attention' }}">
+    <div class="metric-icon {{ 'success' if readiness.status == 'ready' else 'warning' }}" aria-hidden="true">{{ '✓' if readiness.status == 'ready' else '!' }}</div>
+    <div><span>Readiness</span><strong>{{ readiness.status }}</strong><small>{{ readiness.message }}</small></div>
+  </article>
+  <article class="status-card"><div class="metric-icon" aria-hidden="true">◌</div><div><span>Config entries</span><strong>{{ readiness.config["items"]|length }}</strong><small>Masked values only</small></div></article>
+  <article class="status-card"><div class="metric-icon" aria-hidden="true">⌁</div><div><span>Console access</span><strong>{{ 'Local' if not request.app.state.network_read_only else 'Read-only' }}</strong><small>{{ 'Mutations are available on loopback.' if not request.app.state.network_read_only else 'Network access cannot alter settings.' }}</small></div></article>
+</section>
+
+<section class="two-column two-column--system">
+  <article class="panel">
+    <div class="panel-head"><div><p class="eyebrow">Readiness</p><h2>Masked configuration check</h2><p>Only configuration presence and safe values are displayed.</p></div><span class="status-badge {{ 'success' if readiness.status == 'ready' else 'warning' }}">{{ readiness.status }}</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Configured</th><th>Safe value</th></tr></thead><tbody>
+      {% for item in readiness.config["items"] %}<tr><td>{{ item.name }}</td><td><span class="status-badge {{ 'success' if item.configured else 'neutral' }}">{{ 'Yes' if item.configured else 'No' }}</span></td><td><code>{{ item.value }}</code></td></tr>{% endfor %}
+    </tbody></table></div>
+  </article>
+  <aside class="panel panel--probe">
+    <p class="eyebrow">Explicit network check</p><h2>Pub/Sub readiness probe</h2><p>Use this only when you need a current permission/connectivity result. The check contacts Google Cloud and returns masked diagnostics.</p>
+    <form method="post" action="/readiness/probe-form"><input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}"><button class="btn ghost" type="submit">Run live probe</button></form>
+  </aside>
+</section>
+
+<section class="panel" id="config">
+  <div class="panel-head"><div><p class="eyebrow">Operational configuration</p><h2>Authorized local settings</h2><p>Changes are written only to the existing allowlisted configuration fields. Restart the subscriber before expecting runtime changes.</p></div><span class="pill">{{ config_model.path_label }}</span></div>
+  {% if config_model.error %}<div class="callout callout--warning"><strong>Configuration unavailable</strong><p>{{ config_model.error }}</p></div>{% endif %}
+  {% if not config_model.writable %}<div class="callout callout--warning"><strong>Read-only deployment</strong><p>Edit the mounted host file and restart the subscriber. This page cannot change configuration from network read-only access.</p></div>{% endif %}
+  {% if config_result and config_result.ok %}<div class="callout callout--success"><strong>Configuration saved</strong><p>Saved to {{ config_result.path_label }}. Restart the subscriber to apply runtime changes.</p></div>{% endif %}
+  {% if config_result and config_result.error %}<div class="callout callout--danger"><strong>Configuration not saved</strong><p>{{ config_result.error }}</p></div>{% endif %}
+  <form method="post" action="/readiness/config" class="form-grid form-grid--config"><fieldset class="contents" {% if not config_model.writable %}disabled{% endif %}>
+    <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
+    {% for field in config_model.fields %}<label>{{ field.name }}<input name="{{ field.name }}" value="{{ field.value }}"></label>{% endfor %}
+    <label>Signal strategy<select name="signal_strategy_name"><option value="" {% if not config_model.strategy.name %}selected{% endif %}>Disabled</option>{% for strategy_name in config_model.strategy_names %}<option value="{{ strategy_name }}" {% if config_model.strategy.name == strategy_name %}selected{% endif %}>{{ strategy_name }}{% if strategy_name not in config_model.editable_strategy_names %} (preserve only){% endif %}</option>{% endfor %}</select></label>
+    <label>Strategy split count<input name="signal_strategy_split_count" value="{{ config_model.strategy.split_count }}"></label>
+    <button class="btn primary span-2" type="submit">Save authorized settings</button>
+  </fieldset></form>
+</section>
 {% endblock %}

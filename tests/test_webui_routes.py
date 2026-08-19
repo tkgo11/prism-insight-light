@@ -109,10 +109,9 @@ def test_dashboard_readiness_icon_reflects_missing_status(monkeypatch):
     c = client()
     response = c.get("/")
     assert response.status_code == 200
-    assert (
-        '<span class="metric-icon warning">!</span></div><strong>missing</strong>'
-        in response.text
-    )
+    assert "Runtime readiness" in response.text
+    assert "missing" in response.text
+    assert 'metric-icon warning' in response.text
 
 
 def test_sidebar_safety_chip_reflects_non_loopback_and_live_trading(monkeypatch):
@@ -254,20 +253,24 @@ def test_manual_order_requires_csrf_and_live_unlock():
     assert "AAPL" in response.text
 
 
-def test_configured_csrf_token_is_rendered_in_both_trading_forms():
+def test_configured_csrf_token_is_rendered_in_trading_and_system_forms():
     token = "configured-token-with-sufficient-entropy"
     c = TestClient(
         create_app(WebUISettings(csrf_token=token)), base_url="http://127.0.0.1"
     )
 
-    response = c.get("/trading")
+    trading = c.get("/trading")
+    system = c.get("/readiness")
 
-    assert response.status_code == 200
-    assert response.text.count(f'name="x_webui_csrf" value="{token}"') == 2
-    assert "local-webui" not in response.text
+    assert trading.status_code == 200
+    assert system.status_code == 200
+    assert trading.text.count(f'name="x_webui_csrf" value="{token}"') == 1
+    assert system.text.count(f'name="x_webui_csrf" value="{token}"') == 2
+    assert "local-webui" not in trading.text
+    assert "local-webui" not in system.text
 
 
-def test_configured_csrf_token_is_rendered_in_dry_run_api_example():
+def test_configured_csrf_token_is_rendered_in_dry_run_form():
     token = "configured-dry-run-token-with-entropy"
     c = TestClient(
         create_app(WebUISettings(csrf_token=token)), base_url="http://127.0.0.1"
@@ -276,7 +279,7 @@ def test_configured_csrf_token_is_rendered_in_dry_run_api_example():
     response = c.get("/dry-run")
 
     assert response.status_code == 200
-    assert f"X-WebUI-CSRF: {token}" in response.text
+    assert f'name="x_webui_csrf" value="{token}"' in response.text
 
 
 def test_live_manual_order_awaits_dispatcher(monkeypatch):
@@ -416,9 +419,10 @@ def test_non_loopback_webui_blocks_order_and_config_mutations(monkeypatch):
         )
     )
     page = c.get("/trading")
+    system_page = c.get("/readiness")
     assert "diagnostic and read-only" in page.text
     assert "Network read-only" in page.text
-    assert '<fieldset class="contents" disabled>' in page.text
+    assert '<fieldset class="contents" disabled>' in system_page.text
     assert 'name="order_nonce"' not in page.text
     assert c.get("/trading/guard/api").json()["enabled"] is False
 
@@ -434,7 +438,7 @@ def test_non_loopback_webui_blocks_order_and_config_mutations(monkeypatch):
         },
     )
     config = c.post(
-        "/trading/config",
+        "/readiness/config",
         data={
             "x_webui_csrf": "local-webui",
             "default_mode": "real",
@@ -753,7 +757,7 @@ def test_config_update_rejects_blank_mode_and_preserves_omitted_fields(
     c = client()
 
     blank = c.post(
-        "/trading/config",
+        "/readiness/config",
         data={
             "x_webui_csrf": "local-webui",
             "default_mode": "",
@@ -790,7 +794,7 @@ def test_partial_config_route_preserves_strategy(monkeypatch, tmp_path):
     monkeypatch.setattr(account_service, "EXAMPLE_CONFIG_PATH", tmp_path / "missing.yaml")
 
     response = client().post(
-        "/trading/config",
+        "/readiness/config",
         data={
             "x_webui_csrf": "local-webui",
             "default_unit_amount": "2000",
@@ -816,13 +820,13 @@ def test_read_only_deployment_disables_and_rejects_config_editor(monkeypatch, tm
     monkeypatch.setenv("WEBUI_CONFIG_READ_ONLY", "true")
 
     c = client()
-    page = c.get("/trading")
+    page = c.get("/readiness")
     assert page.status_code == 200
-    assert "Configuration is read-only" in page.text
+    assert "Read-only deployment" in page.text
     assert "<fieldset class=\"contents\" disabled>" in page.text
 
     response = c.post(
-        "/trading/config",
+        "/readiness/config",
         data={
             "x_webui_csrf": "local-webui",
             "default_mode": "real",
@@ -864,9 +868,9 @@ def test_malformed_config_is_reported_and_not_overwritten(monkeypatch, tmp_path)
     monkeypatch.setattr(account_service, "CONFIG_PATH", config_path)
     monkeypatch.setattr(account_service, "EXAMPLE_CONFIG_PATH", tmp_path / "missing.yaml")
 
-    page = client().get("/trading")
+    page = client().get("/readiness")
     update = client().post(
-        "/trading/config",
+        "/readiness/config",
         data={
             "x_webui_csrf": "local-webui",
             "default_mode": "demo",
@@ -878,3 +882,102 @@ def test_malformed_config_is_reported_and_not_overwritten(monkeypatch, tmp_path)
     assert "Repair the YAML" in page.text
     assert update.status_code == 400
     assert config_path.read_text(encoding="utf-8") == malformed
+
+
+def test_signal_studio_form_validates_and_renders_normalized_signal():
+    response = client().post(
+        "/signals/validate-form",
+        data={
+            "x_webui_csrf": "local-webui",
+            "payload": '{"type":"BUY","ticker":"AAPL","company_name":"Apple","price":190.5}',
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Normalized signal" in response.text
+    assert "Ready for review" in response.text
+    assert "AAPL" in response.text
+    assert "No broker call" in response.text
+
+
+def test_safe_simulator_form_renders_dry_run_without_execution():
+    response = client().post(
+        "/dry-run/simulate-form",
+        data={
+            "x_webui_csrf": "local-webui",
+            "payload": '{"type":"BUY","ticker":"AAPL","company_name":"Apple","price":190.5}',
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Simulation complete" in response.text
+    assert "No execution" in response.text
+    assert "AAPL" in response.text
+
+
+def test_telegram_preview_form_renders_bounded_read_only_candidates(monkeypatch):
+    from webui.routes import telegram
+
+    monkeypatch.setattr(
+        telegram.telegram_service,
+        "preview_telegram",
+        lambda channel, *, pages, max_posts: {
+            "ok": True,
+            "items": [
+                {
+                    "message_id": "42",
+                    "source": "https://example.test/post/42",
+                    "text": "BUY AAPL at 190.5",
+                    "parsed": True,
+                    "signal": {
+                        "signal_type": "BUY",
+                        "market": "US",
+                        "ticker": "AAPL",
+                        "company_name": "Apple",
+                    },
+                }
+            ],
+            "error": None,
+        },
+    )
+
+    response = client().post(
+        "/telegram/preview",
+        data={
+            "x_webui_csrf": "local-webui",
+            "channel": "example_channel",
+            "pages": "1",
+            "max_posts": "20",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "1 posts returned" in response.text
+    assert "Signal recognized" in response.text
+    assert "BUY AAPL at 190.5" in response.text
+    assert "Read-only" in response.text
+
+
+def test_telegram_preview_form_rejects_oversized_channel_override(monkeypatch):
+    from webui.routes import telegram
+
+    calls = []
+    monkeypatch.setattr(
+        telegram.telegram_service,
+        "preview_telegram",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+
+    response = client().post(
+        "/telegram/preview",
+        data={
+            "x_webui_csrf": "local-webui",
+            "channel": "x" * 257,
+            "pages": "1",
+            "max_posts": "20",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "must not exceed 256 characters" in response.text
+    assert calls == []
