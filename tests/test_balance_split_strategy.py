@@ -45,6 +45,8 @@ class FakeAutoExchangeUSTrader(FakeUSTrader):
         available_amount=0.0,
         after_exchange_amount=1000.0,
         current_orderable_amount=0.0,
+        integrated_orderable_amount=0.0,
+        integrated_max_quantity=0,
         exchange_rate=1300.0,
         max_krw=None,
     ):
@@ -52,6 +54,8 @@ class FakeAutoExchangeUSTrader(FakeUSTrader):
         self.auto_exchange = SimpleNamespace(enabled=True, max_krw=max_krw)
         self.after_exchange_amount = after_exchange_amount
         self.current_orderable_amount = current_orderable_amount
+        self.integrated_orderable_amount = integrated_orderable_amount
+        self.integrated_max_quantity = integrated_max_quantity
         self.exchange_rate = exchange_rate
         self.buyable_calls = []
 
@@ -60,6 +64,8 @@ class FakeAutoExchangeUSTrader(FakeUSTrader):
         return {
             "ord_psbl_frcr_amt": str(self.current_orderable_amount),
             "echm_af_ord_psbl_amt": str(self.after_exchange_amount),
+            "frcr_ord_psbl_amt1": str(self.integrated_orderable_amount),
+            "ovrs_max_ord_psbl_qty": str(self.integrated_max_quantity),
             "exrt": str(self.exchange_rate),
         }
 
@@ -154,6 +160,29 @@ async def test_us_balance_split_uses_after_exchange_buying_power_when_usd_cash_i
     assert result.cash_source == "after_exchange_buying_power"
     assert trader.buyable_calls == [("AAPL", 200.0, None)]
     assert trader.buy_calls == [("AAPL", 500.0, 200.0)]
+
+
+@pytest.mark.asyncio
+async def test_us_balance_split_uses_kis_integrated_buying_power_when_exchange_fields_are_zero(
+    balance_split_strategy,
+):
+    trader = FakeAutoExchangeUSTrader(
+        after_exchange_amount=0.0,
+        integrated_orderable_amount=22_105.18,
+        integrated_max_quantity=172,
+        exchange_rate=1_402.5,
+    )
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "NOW", "market": "US", "price": 127.79})
+
+    result = await strategy._execute_us(signal, trader=trader)
+
+    # KIS caps the available integrated amount to 172 whole shares at $127.79.
+    assert result.status == "executed"
+    assert result.available_amount == pytest.approx(172 * 127.79)
+    assert result.buy_amount == pytest.approx((172 * 127.79) / 2)
+    assert result.cash_source == "after_exchange_buying_power"
+    assert trader.buy_calls == [("NOW", pytest.approx((172 * 127.79) / 2), 127.79)]
 
 
 @pytest.mark.asyncio

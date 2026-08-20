@@ -187,19 +187,33 @@ class BalanceSplitStrategy:
         current_orderable = positive_number(buyable.get("ord_psbl_frcr_amt"))
         reported_after_exchange = positive_number(buyable.get("echm_af_ord_psbl_amt"))
         reported_overseas_orderable = positive_number(buyable.get("ovrs_ord_psbl_amt"))
-        after_exchange = reported_after_exchange or reported_overseas_orderable
+        reported_integrated_orderable = positive_number(buyable.get("frcr_ord_psbl_amt1"))
+        integrated_max_quantity = positive_number(buyable.get("ovrs_max_ord_psbl_qty"))
+        integrated_orderable = reported_integrated_orderable
+        if integrated_orderable > 0 and integrated_max_quantity > 0:
+            integrated_orderable = min(integrated_orderable, integrated_max_quantity * price)
+        else:
+            integrated_orderable = 0.0
+        after_exchange = max(
+            reported_after_exchange,
+            reported_overseas_orderable,
+            integrated_orderable,
+        )
         if after_exchange <= 0:
             exchange_rate = positive_number(buyable.get("exrt")) or positive_number(
                 summary.get("exchange_rate")
             )
             logger.warning(
-                "[%s] Auto-exchange enabled but KIS reported no usable after-exchange buying power "
+                "[%s] Auto-exchange enabled but KIS reported no usable buying power "
                 "(current_orderable_usd=%.2f, after_exchange_usd=%.2f, "
-                "overseas_orderable_usd=%.2f, exchange_rate_available=%s)",
+                "overseas_orderable_usd=%.2f, integrated_orderable_usd=%.2f, "
+                "integrated_max_quantity=%.0f, exchange_rate_available=%s)",
                 signal.ticker,
                 current_orderable,
                 reported_after_exchange,
                 reported_overseas_orderable,
+                reported_integrated_orderable,
+                integrated_max_quantity,
                 bool(exchange_rate > 0),
             )
             return 0.0, "after_exchange_buying_power_unavailable"
@@ -215,7 +229,7 @@ class BalanceSplitStrategy:
         if after_exchange <= 0:
             return 0.0, "available_amount"
         logger.info(
-            "[%s] Using KIS after-exchange buying power %.2f USD as balance split cash base",
+            "[%s] Using KIS auto-exchange or integrated buying power %.2f USD as balance split cash base",
             signal.ticker,
             after_exchange,
         )

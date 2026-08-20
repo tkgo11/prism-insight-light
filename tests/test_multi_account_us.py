@@ -227,6 +227,24 @@ def test_us_buy_quantity_uses_kis_after_exchange_buying_power_when_enabled():
     assert trader.calculate_buy_quantity("AAPL") == 2
 
 
+def test_us_buy_quantity_uses_kis_integrated_buying_power_with_quantity_cap():
+    trader = _bare_us_trader(auto_exchange=True)
+    trader.buy_amount = 200.0
+    trader.buy_sizing = ust.build_buy_sizing(fixed_amount=200.0, asset_percent=None)
+    trader.get_account_summary = lambda: {"available_amount": 0.0, "usd_cash": 0.0, "exchange_rate": 1_402.5}
+    trader.get_overseas_buyable_amount = lambda *args, **kwargs: {
+        "ord_psbl_frcr_amt": "0.00",
+        "echm_af_ord_psbl_amt": "0.00",
+        "ovrs_ord_psbl_amt": "0.00",
+        "frcr_ord_psbl_amt1": "500.00",
+        "ovrs_max_ord_psbl_qty": "2",
+        "exrt": "1402.50",
+    }
+
+    # The $500 integrated amount is constrained to two $50 shares by KIS.
+    assert trader.calculate_buy_quantity("AAPL") == 2
+
+
 def test_us_after_exchange_buying_power_respects_max_auto_exchange_krw():
     trader = _bare_us_trader(auto_exchange=True, max_krw=13_000.0)
     trader.get_account_summary = lambda: {"available_amount": 40.0, "usd_cash": 40.0, "exchange_rate": 1300.0}
