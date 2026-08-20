@@ -481,6 +481,11 @@ class USStockTrading:
             if buyable
             else 0.0
         )
+        integrated_orderable = _safe_float(buyable.get("frcr_ord_psbl_amt1")) if buyable else 0.0
+        integrated_max_quantity = _safe_int(buyable.get("ovrs_max_ord_psbl_qty")) if buyable else 0
+        if integrated_orderable > 0 and integrated_max_quantity > 0 and price > 0:
+            integrated_orderable = min(integrated_orderable, integrated_max_quantity * price)
+            after_exchange_orderable = max(after_exchange_orderable, integrated_orderable)
 
         cash_orderable = usd_cash
         if has_current_orderable:
@@ -507,6 +512,7 @@ class USStockTrading:
                             "auto_exchange_used": resolved > cash_orderable,
                             "exchange_rate": exchange_rate,
                             "orderable_after_exchange_usd": after_exchange_orderable,
+                            "integrated_orderable_usd": integrated_orderable,
                         }
                     )
                     logger.info(
