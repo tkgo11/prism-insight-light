@@ -1691,15 +1691,16 @@ def _url_fetch(
     rate_limit_attempt = 1
     while rate_limit_attempt <= attempts:
         res = _request_once(url, headers, params, postFlag=postFlag)
+        response = APIResp(res) if res.status_code == 200 else APIRespError(res.status_code, res.text)
 
-        if res.status_code == 200:
-            ar = APIResp(res)
+        if response.isOK():
             if _DEBUG:
-                ar.printAll()
-            return ar
+                response.printAll()
+            return response
 
-        error_response = APIRespError(res.status_code, res.text)
-        if _is_kis_expired_token_response(error_response) and not expired_token_retry_used:
+        # KIS business failures are conveyed in the JSON response body. Handle
+        # them consistently whether the HTTP transport returned 200 or an error.
+        if _is_kis_expired_token_response(response) and not expired_token_retry_used:
             expired_token_retry_used = True
             logging.warning(
                 "KIS API reported expired token %s from %s (TR %s); refreshing token and retrying once",
@@ -1710,10 +1711,14 @@ def _url_fetch(
             try:
                 _refresh_after_expired_token_response()
             except Exception as refresh_error:
-                logging.error("Failed to refresh KIS token after %s: %s", KIS_EXPIRED_TOKEN_ERROR_CODE, refresh_error)
-                print("Error Code : " + str(res.status_code) + " | " + res.text)
-                return error_response
-
+                logging.error(
+                    "Failed to refresh KIS token after %s for %s (TR %s): %s",
+                    KIS_EXPIRED_TOKEN_ERROR_CODE,
+                    api_url,
+                    tr_id,
+                    refresh_error,
+                )
+                return response
             headers = _getBaseHeader()
             headers["tr_id"] = tr_id
             headers["custtype"] = "P"
@@ -1723,14 +1728,21 @@ def _url_fetch(
                     headers[x] = appendHeaders.get(x)
             continue
 
-        if not _is_kis_rate_limit_response(error_response) or rate_limit_attempt >= attempts:
-            print("Error Code : " + str(res.status_code) + " | " + res.text)
-            return error_response
+        if not _is_kis_rate_limit_response(response) or rate_limit_attempt >= attempts:
+            logging.error(
+                "KIS API request failed for %s (TR %s, HTTP %s, KIS %s): %s",
+                api_url,
+                tr_id,
+                res.status_code,
+                response.getErrorCode(),
+                response.getErrorMessage(),
+            )
+            return response
 
         delay_seconds = _kis_retry_delay_seconds(rate_limit_attempt)
         logging.warning(
             "KIS API rate limit %s from %s (TR %s); retrying attempt %s/%s after %.2fs",
-            KIS_RATE_LIMIT_ERROR_CODE,
+            response.getErrorCode(),
             api_url,
             tr_id,
             rate_limit_attempt + 1,
@@ -1739,6 +1751,7 @@ def _url_fetch(
         )
         rate_limit_attempt += 1
         time.sleep(delay_seconds)
+
 
     return APIRespError(599, "KIS API retry loop exhausted unexpectedly")
 
