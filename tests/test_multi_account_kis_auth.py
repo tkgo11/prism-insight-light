@@ -616,3 +616,70 @@ def test_token_filename_preserves_legacy_and_secure_mode_shapes(monkeypatch, tmp
     secure_path = Path(ka.get_token_filename())
     assert secure_path.parent == tmp_path
     assert re.fullmatch(r"KIS_\d{8}_[0-9a-f]{8}\.token", secure_path.name)
+
+
+def test_url_fetch_retries_http_200_kis_rate_limit_then_succeeds(monkeypatch):
+    calls = []
+    sleeps = []
+
+    class Env:
+        my_url = "https://example.com"
+
+    monkeypatch.setattr(ka, "getTREnv", lambda: Env())
+    monkeypatch.setattr(ka, "_getBaseHeader", lambda: {})
+    monkeypatch.setattr(ka, "isPaperTrading", lambda: False)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 3)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_BASE_SECONDS", 0.25)
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_MAX_SECONDS", 1.0)
+    monkeypatch.setattr(ka.time, "sleep", lambda seconds: sleeps.append(seconds))
+
+    def fake_get(url, headers, params, **kwargs):
+        calls.append((url, headers, params))
+        if len(calls) == 1:
+            return _FakeResponse(
+                200,
+                {
+                    "rt_cd": "1",
+                    "msg_cd": "EGW00215",
+                    "msg1": "ledger request rate limit exceeded",
+                },
+            )
+        return _FakeResponse(200, {"rt_cd": "0", "msg_cd": "0", "msg1": "OK", "output": {}})
+
+    monkeypatch.setattr(ka.requests, "get", fake_get)
+
+    response = ka._url_fetch("/uapi/test", "TTTC8434R", "", {"CANO": "12345678"})
+
+    assert response.isOK()
+    assert len(calls) == 2
+    assert sleeps == [0.25]
+
+
+def test_url_fetch_refreshes_http_200_expired_token_then_succeeds(monkeypatch):
+    calls = []
+    refreshes = []
+
+    class Env:
+        my_url = "https://example.com"
+
+    monkeypatch.setattr(ka, "getTREnv", lambda: Env())
+    monkeypatch.setattr(ka, "_getBaseHeader", lambda: {"authorization": f"Bearer token-{len(refreshes)}"})
+    monkeypatch.setattr(ka, "isPaperTrading", lambda: False)
+    monkeypatch.setattr(ka, "_refresh_after_expired_token_response", lambda: refreshes.append("refresh"))
+    monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_ATTEMPTS", 1)
+
+    def fake_get(url, headers, params, **kwargs):
+        calls.append((url, dict(headers), params))
+        if len(calls) == 1:
+            return _FakeResponse(200, {"rt_cd": "1", "msg_cd": "EGW00123", "msg1": "expired"})
+        return _FakeResponse(200, {"rt_cd": "0", "msg_cd": "0", "msg1": "OK", "output": {}})
+
+    monkeypatch.setattr(ka.requests, "get", fake_get)
+
+    response = ka._url_fetch("/uapi/test", "TTTC8434R", "", {"CANO": "12345678"})
+
+    assert response.isOK()
+    assert refreshes == ["refresh"]
+    assert len(calls) == 2
+    assert calls[0][1]["authorization"] == "Bearer token-0"
+    assert calls[1][1]["authorization"] == "Bearer token-1"
