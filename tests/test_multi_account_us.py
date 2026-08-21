@@ -141,9 +141,16 @@ def test_us_trader_uses_account_buy_amount_override(monkeypatch):
     assert trader.account_key == "vps:90909090:01"
 
 
-def test_get_exchange_code_defaults():
+def test_get_exchange_code_returns_only_known_preference():
     assert ust.get_exchange_code("AAPL") == "NASD"
-    assert ust.get_exchange_code("IBM") == "NYSE"
+    assert ust.get_exchange_code("LITE") is None
+    assert ust.get_exchange_code("IBM") is None
+
+
+def test_exchange_probe_order_uses_all_supported_exchanges_for_unknown_ticker():
+    assert ust.exchange_probe_order("LITE") == ("NASD", "NYSE", "AMEX")
+    assert ust.exchange_probe_order("LITE", "NYS") == ("NYSE",)
+    assert ust.exchange_probe_order("LITE", "LSE") == ()
 
 
 def test_auto_exchange_defaults_are_aggressive():
@@ -169,7 +176,7 @@ def test_us_calculate_buy_quantity_uses_percent_resolved_amount():
     trader.buy_amount = 100.0
     trader.buy_sizing = ust.build_buy_sizing(fixed_amount=100.0, asset_percent=5)
     trader.get_account_summary = lambda: {"total_eval_amount": 10_000.0, "available_amount": 9_000.0}
-    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 125.0}
+    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 125.0, "exchange": "NASD"}
 
     assert trader.calculate_buy_quantity("AAPL") == 4
 
@@ -203,7 +210,7 @@ def _bare_us_trader(*, auto_exchange=False, max_krw=None, min_shortfall_usd=0.0)
         min_shortfall_usd=min_shortfall_usd,
     )
     trader.trenv = SimpleNamespace(my_acct="90909090", my_prod="01")
-    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 50.0}
+    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 50.0, "exchange": "NASD"}
     return trader
 
 
@@ -255,6 +262,53 @@ def test_us_after_exchange_buying_power_respects_max_auto_exchange_krw():
     }
 
     assert trader.calculate_buy_quantity("AAPL") == 1
+
+
+def test_get_current_price_validates_unknown_ticker_by_probing_supported_exchanges():
+    trader = ust.USStockTrading.__new__(ust.USStockTrading)
+    requests = []
+
+    def fake_request(api_url, tr_id, params, **kwargs):
+        requests.append((api_url, tr_id, params, kwargs))
+        if params["EXCD"] == "NAS":
+            return _FakeKISResponse(ok=False)
+        if params["EXCD"] == "NYS":
+            return _FakeKISResponse(output={"last": "125.50", "rate": "1.25", "tvol": "12", "name": "IBM"})
+        raise AssertionError("The resolver must stop after KIS validates the product")
+
+    trader._request = fake_request
+
+    assert trader.get_current_price("IBM") == {
+        "ticker": "IBM",
+        "stock_name": "IBM",
+        "current_price": 125.5,
+        "change_rate": 1.25,
+        "volume": 12,
+        "exchange": "NYSE",
+    }
+    assert [request[2]["EXCD"] for request in requests] == ["NAS", "NYS"]
+
+
+def test_get_overseas_buyable_amount_resolves_unknown_ticker_before_kis_inquiry():
+    trader = _bare_us_trader(auto_exchange=True)
+    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 879.29, "exchange": "NASD"}
+    requests = []
+
+    def fake_request(api_url, tr_id, params, **kwargs):
+        requests.append((api_url, tr_id, params, kwargs))
+        return _FakeKISResponse(output={"echm_af_ord_psbl_amt": "123.45"})
+
+    trader._request = fake_request
+
+    assert trader.get_overseas_buyable_amount("LITE", 879.835) == {"echm_af_ord_psbl_amt": "123.45"}
+    assert requests[0][2]["OVRS_EXCG_CD"] == "NASD"
+
+
+def test_get_overseas_buyable_amount_fails_closed_for_unsupported_explicit_exchange():
+    trader = _bare_us_trader(auto_exchange=True)
+    trader._request = lambda *args, **kwargs: pytest.fail("KIS must not be called")
+
+    assert trader.get_overseas_buyable_amount("LITE", 879.835, "LSE") == {}
 
 
 def test_get_overseas_buyable_amount_calls_kis_inquire_psamount():
@@ -392,7 +446,7 @@ async def test_async_buy_uses_auto_exchange_before_zero_quantity_rejection():
     trader._stock_locks = {}
     trader._semaphore = asyncio.Semaphore(1)
     trader._global_lock = asyncio.Lock()
-    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 50.0}
+    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 50.0, "exchange": "NASD"}
     trader.get_account_summary = lambda: {"available_amount": 20.0, "usd_cash": 20.0, "exchange_rate": 1300.0}
     trader.get_overseas_buyable_amount = lambda *args, **kwargs: {
         "ord_psbl_frcr_amt": "20.00",
@@ -423,7 +477,7 @@ async def test_async_buy_uses_lower_limit_for_affordability(monkeypatch):
     trader._stock_locks = {}
     trader._semaphore = asyncio.Semaphore(1)
     trader._global_lock = asyncio.Lock()
-    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 110.0}
+    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 110.0, "exchange": "NASD"}
     observed_prices = []
 
     def resolve_orderable(ticker, amount, price, exchange):
