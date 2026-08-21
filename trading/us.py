@@ -192,9 +192,13 @@ def build_auto_exchange_config(account_config: dict[str, Any] | None) -> AutoExc
 # Exchange code mapping (for trading/portfolio APIs using OVRS_EXCG_CD)
 EXCHANGE_CODES = {
     "NASDAQ": "NASD",
+    "NASDAQGS": "NASD",
     "NYSE": "NYSE",
     "AMEX": "AMEX",
-    "NASD": "NASD",  # Allow direct use
+    "NASD": "NASD",
+    "NAS": "NASD",
+    "NYS": "NYSE",
+    "AMS": "AMEX",
 }
 
 # Price query API uses shorter exchange codes (EXCD parameter)
@@ -202,12 +206,11 @@ PRICE_EXCHANGE_CODES = {
     "NASD": "NAS",
     "NYSE": "NYS",
     "AMEX": "AMS",
-    "NAS": "NAS",
-    "NYS": "NYS",
-    "AMS": "AMS",
 }
+TRADING_EXCHANGE_CODES = ("NASD", "NYSE", "AMEX")
 
-# Common NASDAQ stocks for exchange detection
+# Common NASDAQ stocks are a preferred first probe only. Unknown symbols are
+# never assumed to be listed on NYSE; KIS quote success validates the exchange.
 NASDAQ_TICKERS = {
     "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "NVDA", "TSLA",
     "AVGO", "COST", "ADBE", "CSCO", "PEP", "NFLX", "INTC", "AMD",
@@ -217,25 +220,27 @@ NASDAQ_TICKERS = {
 }
 
 
-def get_exchange_code(ticker: str) -> str:
-    """
-    Determine the exchange code for a given ticker.
+def normalize_exchange_code(exchange: str | None) -> str | None:
+    """Normalize a caller-supplied KIS US exchange code, if supported."""
+    if not isinstance(exchange, str) or not exchange.strip():
+        return None
+    return EXCHANGE_CODES.get(exchange.strip().upper())
 
-    Args:
-        ticker: Stock ticker symbol
 
-    Returns:
-        Exchange code (NASD, NYSE, AMEX)
-    """
-    # Simple heuristic - most tech stocks are on NASDAQ
-    # In production, you'd want to look this up from a database or API
-    ticker_upper = ticker.upper()
+def get_exchange_code(ticker: str) -> str | None:
+    """Return only a preferred exchange probe; never infer NYSE for unknown symbols."""
+    return "NASD" if ticker.upper() in NASDAQ_TICKERS else None
 
-    if ticker_upper in NASDAQ_TICKERS:
-        return "NASD"
 
-    # Default to NYSE for unknown tickers (can be overridden)
-    return "NYSE"
+def exchange_probe_order(ticker: str, exchange: str | None = None) -> tuple[str, ...]:
+    """Return KIS exchanges to probe, prioritizing an explicit or known exchange."""
+    explicit_exchange = normalize_exchange_code(exchange)
+    if exchange is not None:
+        return (explicit_exchange,) if explicit_exchange else ()
+
+    preferred_exchange = get_exchange_code(ticker)
+    ordered = ([preferred_exchange] if preferred_exchange else []) + list(TRADING_EXCHANGE_CODES)
+    return tuple(dict.fromkeys(ordered))
 
 
 class USStockTrading:
@@ -333,78 +338,104 @@ class USStockTrading:
                 logger.debug("KIS trading environment unavailable after request; keeping existing trader environment")
             return response
 
+    def _resolve_exchange_code(self, ticker: str, exchange: str | None = None) -> str | None:
+        """Resolve a supported trading exchange, validating inferred values with KIS."""
+        normalized_exchange = normalize_exchange_code(exchange)
+        if exchange is not None:
+            if normalized_exchange is None:
+                logger.warning("[%s] Unsupported explicit exchange: %r", ticker, exchange)
+            return normalized_exchange
+
+        quote = self.get_current_price(ticker)
+        resolved_exchange = normalize_exchange_code(quote.get("exchange")) if quote else None
+        if resolved_exchange is None:
+            logger.warning("[%s] Refusing orderable inquiry/order: KIS could not validate exchange", ticker)
+        return resolved_exchange
+
+    def _exchange_resolution_failure(self, ticker: str) -> Dict[str, Any]:
+        return {
+            "success": False,
+            "order_no": None,
+            "ticker": ticker,
+            "quantity": 0,
+            "message": "KIS could not validate a supported US exchange for this ticker",
+        }
+
     def get_current_price(self, ticker: str, exchange: str = None) -> Optional[Dict[str, Any]]:
-        """
-        Get current market price for US stock
+        """Return a KIS-validated US quote and its corresponding trading exchange.
 
-        Args:
-            ticker: Stock ticker symbol (e.g., "AAPL", "MSFT")
-            exchange: Exchange code (NASD, NYSE, AMEX) - auto-detected if not provided
-
-        Returns:
-            {
-                'ticker': 'AAPL',
-                'stock_name': 'APPLE INC',
-                'current_price': 185.50,
-                'change_rate': 1.25,
-                'volume': 45000000,
-                'exchange': 'NASD'
-            }
+        When the caller does not supply an exchange, the method performs bounded,
+        read-only quote probes across the supported US exchanges. This prevents an
+        unknown ticker from being silently routed to NYSE and used in an orderable
+        amount inquiry or order request without KIS first validating the product.
         """
-        if exchange is None:
-            exchange = get_exchange_code(ticker)
-        else:
-            exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
+        exchanges = exchange_probe_order(ticker, exchange)
+        if not exchanges:
+            logger.warning("[%s] Unsupported explicit exchange: %r", ticker, exchange)
+            return None
 
         api_url = "/uapi/overseas-price/v1/quotations/price"
         tr_id = "HHDFS00000300"
+        last_error = None
 
-        # Price API uses shorter exchange codes (NAS/NYS/AMS)
-        price_excd = PRICE_EXCHANGE_CODES.get(exchange, exchange)
+        for candidate_exchange in exchanges:
+            params = {
+                "AUTH": "",
+                "EXCD": PRICE_EXCHANGE_CODES[candidate_exchange],
+                "SYMB": ticker.upper(),
+            }
+            try:
+                res = self._request(api_url, tr_id, params)
+            except Exception as exc:
+                last_error = str(exc)
+                logger.warning("[%s] Price lookup on %s raised: %s", ticker, candidate_exchange, exc)
+                continue
 
-        params = {
-            "AUTH": "",
-            "EXCD": price_excd,
-            "SYMB": ticker.upper()
-        }
+            if not res.isOK():
+                last_error = f"{res.getErrorCode()} - {res.getErrorMessage()}"
+                logger.debug("[%s] No valid %s price result: %s", ticker, candidate_exchange, last_error)
+                continue
 
-        try:
-            res = self._request(api_url, tr_id, params)
+            data = res.getBody().output or {}
+            current_price = _safe_float(data.get("last"))
+            if current_price <= 0:
+                base_price = _safe_float(data.get("base"))
+                if base_price > 0:
+                    logger.info(
+                        "[%s] Market closed on %s - 'last' empty, using base price $%.2f",
+                        ticker,
+                        candidate_exchange,
+                        base_price,
+                    )
+                    current_price = base_price
+                else:
+                    last_error = f"invalid price last={data.get('last')!r}, base={data.get('base')!r}"
+                    logger.debug("[%s] %s", ticker, last_error)
+                    continue
 
-            if res.isOK():
-                data = res.getBody().output
+            result = {
+                "ticker": ticker.upper(),
+                "stock_name": data.get("name", ""),
+                "current_price": current_price,
+                "change_rate": _safe_float(data.get("rate")),
+                "volume": _safe_int(data.get("tvol")),
+                "exchange": candidate_exchange,
+            }
+            logger.info(
+                "[%s] Current price: $%.2f (%+.2f%%) on %s",
+                ticker,
+                result["current_price"],
+                result["change_rate"],
+                candidate_exchange,
+            )
+            return result
 
-                # Use safe conversion helpers to handle empty strings from API
-                current_price = _safe_float(data.get('last'))
-
-                # When market is closed, 'last' is empty; fall back to 'base' (previous day close)
-                if current_price <= 0:
-                    base_price = _safe_float(data.get('base'))
-                    if base_price > 0:
-                        logger.info(f"[{ticker}] Market closed - 'last' empty, using base price ${base_price:.2f}")
-                        current_price = base_price
-                    else:
-                        logger.warning(f"[{ticker}] Invalid price received: last='{data.get('last')}', base='{data.get('base')}'")
-                        return None
-
-                result = {
-                    'ticker': ticker.upper(),
-                    'stock_name': data.get('name', ''),
-                    'current_price': current_price,
-                    'change_rate': _safe_float(data.get('rate')),
-                    'volume': _safe_int(data.get('tvol')),
-                    'exchange': exchange
-                }
-
-                logger.info(f"[{ticker}] Current price: ${result['current_price']:.2f} ({result['change_rate']:+.2f}%)")
-                return result
-            else:
-                logger.error(f"Price query failed: {res.getErrorCode()} - {res.getErrorMessage()}")
-                return None
-
-        except Exception as e:
-            logger.error(f"Error getting price: {str(e)}")
-            return None
+        logger.warning(
+            "[%s] KIS could not validate a supported US exchange%s",
+            ticker,
+            f": {last_error}" if last_error else "",
+        )
+        return None
 
     def _resolve_buy_amount(self, buy_amount: float | None = None) -> float:
         if buy_amount is not None:
@@ -428,10 +459,9 @@ class USStockTrading:
         buying-power calculation/order flow rather than by this bot placing a
         separate, poorly documented FX order.
         """
-        if exchange is None:
-            exchange = get_exchange_code(ticker)
-        else:
-            exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
+        exchange = self._resolve_exchange_code(ticker, exchange)
+        if not exchange:
+            return {}
 
         api_url = "/uapi/overseas-stock/v1/trading/inquire-psamount"
         tr_id = "TTTS3007R" if self.mode == "real" else "VTTS3007R"
@@ -610,11 +640,15 @@ class USStockTrading:
             logger.error(f"[{ticker}] Invalid current price: ${current_price}")
             return 0, {"requested_amount": amount, "current_price": current_price}
 
+        resolved_exchange = normalize_exchange_code(price_info.get("exchange"))
+        if not resolved_exchange:
+            logger.warning("[%s] Cannot calculate buy quantity without a KIS-validated exchange", ticker)
+            return 0, {"requested_amount": amount}
         resolved_amount, exchange_info = self._resolve_orderable_usd(
             ticker,
             amount,
             current_price,
-            EXCHANGE_CODES.get(exchange.upper(), exchange) if exchange else get_exchange_code(ticker),
+            resolved_exchange,
         )
 
         quantity = math.floor(resolved_amount / current_price)
@@ -661,10 +695,9 @@ class USStockTrading:
                 'message': 'Auto trading is disabled (AUTO_TRADING=False)'
             }
 
-        if exchange is None:
-            exchange = get_exchange_code(ticker)
-        else:
-            exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
+        exchange = self._resolve_exchange_code(ticker, exchange)
+        if not exchange:
+            return self._exchange_resolution_failure(ticker)
 
         # Calculate buy quantity, including optional KIS after-exchange buying power
         buy_quantity, buy_info = self._calculate_buy_quantity_inputs(ticker, buy_amount, exchange)
@@ -762,10 +795,9 @@ class USStockTrading:
                 'message': 'Auto trading is disabled (AUTO_TRADING=False)'
             }
 
-        if exchange is None:
-            exchange = get_exchange_code(ticker)
-        else:
-            exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
+        exchange = self._resolve_exchange_code(ticker, exchange)
+        if not exchange:
+            return self._exchange_resolution_failure(ticker)
 
         amount = self._resolve_buy_amount(buy_amount)
         amount, buy_info = self._resolve_orderable_usd(ticker, amount, limit_price, exchange)
@@ -892,10 +924,9 @@ class USStockTrading:
                 'message': 'Auto trading is disabled (AUTO_TRADING=False)'
             }
 
-        if exchange is None:
-            exchange = get_exchange_code(ticker)
-        else:
-            exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
+        exchange = self._resolve_exchange_code(ticker, exchange)
+        if not exchange:
+            return self._exchange_resolution_failure(ticker)
 
         # Check holding quantity
         quantity = holding_quantity if holding_quantity is not None else self.get_holding_quantity(ticker)
@@ -1076,10 +1107,9 @@ class USStockTrading:
                 'message': 'Limit price is required for US reserved orders (market order not supported)'
             }
 
-        if exchange is None:
-            exchange = get_exchange_code(ticker)
-        else:
-            exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
+        exchange = self._resolve_exchange_code(ticker, exchange)
+        if not exchange:
+            return self._exchange_resolution_failure(ticker)
 
         amount = self._resolve_buy_amount(buy_amount)
 
@@ -1200,10 +1230,9 @@ class USStockTrading:
                 'message': 'Limit price is required for reserved sell (or use use_moo=True for Market On Open)'
             }
 
-        if exchange is None:
-            exchange = get_exchange_code(ticker)
-        else:
-            exchange = EXCHANGE_CODES.get(exchange.upper(), exchange)
+        exchange = self._resolve_exchange_code(ticker, exchange)
+        if not exchange:
+            return self._exchange_resolution_failure(ticker)
 
         if not self.is_reserved_order_available():
             return self._reserved_window_closed(ticker, 'sell', limit_price or 0)
@@ -1498,12 +1527,16 @@ class USStockTrading:
                             if limit_price and limit_price > 0
                             else current_price
                         )
+                        resolved_exchange = normalize_exchange_code(price_info.get("exchange"))
+                        if not resolved_exchange:
+                            result["message"] = "KIS could not validate a supported US exchange for this ticker"
+                            return result
                         resolved_amount, buy_info = await asyncio.to_thread(
                             self._resolve_orderable_usd,
                             ticker,
                             amount,
                             effective_limit_price,
-                            EXCHANGE_CODES.get(exchange.upper(), exchange) if exchange else get_exchange_code(ticker),
+                            resolved_exchange,
                         )
                         buy_quantity = math.floor(
                             resolved_amount / effective_limit_price
@@ -1528,7 +1561,7 @@ class USStockTrading:
                         logger.info(f"[Async Buy] {ticker} limit_price: ${effective_limit_price:.2f} (provided: {limit_price})")
 
                         buy_result = await asyncio.to_thread(
-                            self.smart_buy, ticker, resolved_amount, exchange, effective_limit_price
+                            self.smart_buy, ticker, resolved_amount, resolved_exchange, effective_limit_price
                         )
 
                         if buy_result['success']:
