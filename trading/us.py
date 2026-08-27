@@ -1652,19 +1652,50 @@ class USStockTrading:
                                 result['message'] = 'Partial sell quantity rounds down to 0 shares'
                                 return result
 
-                        resolved_exchange = exchange or target_stock.get('exchange')
-
                         logger.info(f"[Async Sell] {ticker} holdings verified: {target_stock['quantity']} shares")
 
-                        # Get current price for estimate
-                        price_info = await asyncio.to_thread(
-                            self.get_current_price, ticker, resolved_exchange
+                        # Determine candidate exchange from explicit argument or portfolio item
+                        candidate_exchange = (
+                            normalize_exchange_code(exchange)
+                            or normalize_exchange_code(target_stock.get('exchange'))
                         )
 
+                        # Fetch current price and validate exchange
+                        # If explicit exchange requested by caller, probe only that exchange.
+                        # Otherwise probe candidate exchange first, falling back to all supported exchanges.
+                        price_info = None
+                        if exchange is not None:
+                            price_info = await asyncio.to_thread(
+                                self.get_current_price, ticker, candidate_exchange
+                            )
+                        else:
+                            if candidate_exchange:
+                                price_info = await asyncio.to_thread(
+                                    self.get_current_price, ticker, candidate_exchange
+                                )
+                            if not price_info:
+                                price_info = await asyncio.to_thread(
+                                    self.get_current_price, ticker, None
+                                )
+
                         current_price = 0.0
+                        resolved_exchange = None
                         if price_info:
-                            current_price = price_info['current_price']
+                            current_price = price_info.get('current_price', 0.0)
                             result['current_price'] = current_price
+                            resolved_exchange = normalize_exchange_code(price_info.get('exchange'))
+
+                        if not resolved_exchange:
+                            resolved_exchange = candidate_exchange or normalize_exchange_code(get_exchange_code(ticker))
+
+                        if not resolved_exchange:
+                            resolved_exchange = await asyncio.to_thread(
+                                self._resolve_exchange_code, ticker, None
+                            )
+
+                        if not resolved_exchange:
+                            result['message'] = 'KIS could not validate a supported US exchange for this ticker'
+                            return result
 
                         # Use current_price as limit_price if not provided or invalid
                         # This is important for reserved orders when market is closed
@@ -1767,6 +1798,12 @@ class USStockTrading:
                         # Use safe conversion to handle empty strings
                         quantity = _safe_int(item.get('ovrs_cblc_qty'))
                         if quantity > 0:
+                            item_exchange = (
+                                normalize_exchange_code(item.get('ovrs_excg_cd'))
+                                or normalize_exchange_code(item.get('ovrs_excg_cd_name'))
+                                or normalize_exchange_code(item.get('ovrs_pdno_excg_cd'))
+                                or exchange
+                            )
                             stock_info = {
                                 'ticker': item.get('ovrs_pdno', ''),
                                 'stock_name': item.get('ovrs_item_name', ''),
@@ -1776,7 +1813,7 @@ class USStockTrading:
                                 'eval_amount': _safe_float(item.get('ovrs_stck_evlu_amt')),
                                 'profit_amount': _safe_float(item.get('frcr_evlu_pfls_amt')),
                                 'profit_rate': _safe_float(item.get('evlu_pfls_rt')),
-                                'exchange': exchange
+                                'exchange': item_exchange
                             }
                             portfolio.append(stock_info)
 
@@ -1787,14 +1824,20 @@ class USStockTrading:
                 continue
 
         # Deduplicate by ticker (KIS API may return same stock from multiple exchanges)
-        seen_tickers = set()
-        unique_portfolio = []
+        seen_tickers = {}
         for stock in portfolio:
             ticker = stock.get('ticker')
-            if ticker and ticker not in seen_tickers:
-                seen_tickers.add(ticker)
-                unique_portfolio.append(stock)
+            if not ticker:
+                continue
+            ticker_key = ticker.upper()
+            if ticker_key not in seen_tickers:
+                seen_tickers[ticker_key] = stock
+            else:
+                existing = seen_tickers[ticker_key]
+                if stock.get('exchange') and not existing.get('exchange'):
+                    seen_tickers[ticker_key] = stock
 
+        unique_portfolio = list(seen_tickers.values())
         logger.info(f"Portfolio: {len(unique_portfolio)} US stocks held")
         return unique_portfolio
 

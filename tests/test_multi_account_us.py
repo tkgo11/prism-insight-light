@@ -540,3 +540,101 @@ def test_us_account_total_assets_include_usd_cash():
     assert summary["total_eval_amount"] == 1_250.50
     assert summary["available_amount"] == 250.50
     assert summary["account_key"] == "vps:12345678:01"
+
+
+def test_get_portfolio_normalizes_item_exchange_code():
+    trader = object.__new__(ust.USStockTrading)
+    trader.mode = "demo"
+    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+
+    class Response:
+        def __init__(self, items):
+            self.items = items
+
+        def isOK(self):
+            return True
+
+        def getBody(self):
+            return SimpleNamespace(output1=self.items)
+
+    def fake_request(api_url, tr_id, params, **kwargs):
+        # KIS returns holdings with ovrs_excg_cd='NYS' even when queried with 'NASD'
+        if params["OVRS_EXCG_CD"] == "NASD":
+            return Response([
+                {
+                    "ovrs_pdno": "COP",
+                    "ovrs_item_name": "CONOCOPHILLIPS",
+                    "ovrs_cblc_qty": "82",
+                    "pchs_avg_pric": "120.00",
+                    "now_pric2": "128.77",
+                    "ovrs_stck_evlu_amt": "10559.14",
+                    "frcr_evlu_pfls_amt": "719.14",
+                    "evlu_pfls_rt": "7.30",
+                    "ovrs_excg_cd": "NYS",
+                }
+            ])
+        return Response([])
+
+    trader._request = fake_request
+    portfolio = trader.get_portfolio()
+
+    assert len(portfolio) == 1
+    assert portfolio[0]["ticker"] == "COP"
+    assert portfolio[0]["exchange"] == "NYSE"
+    assert portfolio[0]["quantity"] == 82
+
+
+@pytest.mark.asyncio
+async def test_async_sell_stock_recovers_and_routes_to_nyse(monkeypatch):
+    trader = object.__new__(ust.USStockTrading)
+    trader.mode = "demo"
+    trader._stock_locks = {}
+    trader._semaphore = asyncio.Semaphore(1)
+    trader._global_lock = asyncio.Lock()
+
+    # Portfolio initially has an unvalidated / wrong exchange 'NASD'
+    trader.get_portfolio = lambda: [
+        {"ticker": "COP", "quantity": 82, "exchange": "NASD", "avg_price": 120.0}
+    ]
+
+    probed_exchanges = []
+
+    def fake_get_current_price(ticker, exchange=None):
+        probed_exchanges.append(exchange)
+        if exchange == "NASD":
+            return None  # Price lookup on NASDAQ fails for NYSE ticker
+        if exchange in (None, "NYSE"):
+            return {"ticker": "COP", "current_price": 128.77, "exchange": "NYSE"}
+        return None
+
+    trader.get_current_price = fake_get_current_price
+
+    sell_calls = []
+
+    def fake_smart_sell_all(ticker, exchange=None, limit_price=None, use_moo=False, holding_quantity=None):
+        sell_calls.append({
+            "ticker": ticker,
+            "exchange": exchange,
+            "limit_price": limit_price,
+            "use_moo": use_moo,
+            "holding_quantity": holding_quantity,
+        })
+        return {"success": True, "order_no": "sell-1", "quantity": holding_quantity, "message": "ok"}
+
+    trader.smart_sell_all = fake_smart_sell_all
+
+    async def no_sleep(_seconds):
+        return None
+
+    monkeypatch.setattr(ust.asyncio, "sleep", no_sleep)
+
+    result = await trader._execute_sell_stock("COP", limit_price=128.77)
+
+    assert result["success"] is True
+    assert result["quantity"] == 82
+    assert result["order_no"] == "sell-1"
+    # Verify smart_sell_all was routed with the validated exchange 'NYSE', NOT the wrong 'NASD'
+    assert len(sell_calls) == 1
+    assert sell_calls[0]["exchange"] == "NYSE"
+    assert sell_calls[0]["holding_quantity"] == 82
+
