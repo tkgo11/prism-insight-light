@@ -209,14 +209,57 @@ PRICE_EXCHANGE_CODES = {
 }
 TRADING_EXCHANGE_CODES = ("NASD", "NYSE", "AMEX")
 
-# Common NASDAQ stocks are a preferred first probe only. Unknown symbols are
-# never assumed to be listed on NYSE; KIS quote success validates the exchange.
+# Common known exchange ticker mappings for preferred probe and fallback routing.
+# Unknown symbols return None and are validated dynamically by KIS quote probes.
 NASDAQ_TICKERS = {
     "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "NVDA", "TSLA",
     "AVGO", "COST", "ADBE", "CSCO", "PEP", "NFLX", "INTC", "AMD",
     "QCOM", "TXN", "HON", "CMCSA", "SBUX", "GILD", "MDLZ", "ISRG",
     "VRTX", "REGN", "ATVI", "ADP", "BKNG", "CHTR", "LRCX", "MU",
-    "KLAC", "SNPS", "CDNS", "MRVL", "PANW", "CRWD", "ZS", "DDOG"
+    "KLAC", "SNPS", "CDNS", "MRVL", "PANW", "CRWD", "ZS", "DDOG",
+    "PDD", "MELI", "ARM", "MCHP", "ON", "FTNT", "TEAM", "WDAY",
+    "ABNB", "DXCM", "KDP", "NXPI", "PCAR", "ROST", "ODFL", "FAST",
+    "PAYX", "CPRT", "CTAS", "MNST", "AEP", "EXC", "XEL", "IDXX",
+    "EA", "ILMN", "BIIB", "ALGN", "WBD", "DLTR", "EBAY", "SIRI",
+    "TTD", "COIN", "PLUG", "SOFI", "LCID", "RIVN", "ROKU", "SMCI",
+}
+
+NYSE_TICKERS = {
+    # Energy
+    "COP", "OXY", "XOM", "CVX", "SLB", "HAL", "EOG", "MPC", "VLO", "PSX",
+    "KMI", "WMB", "HES", "DVN", "BKR", "FANG", "EQT", "OKE", "TRGP",
+    # Financials & Berkshire
+    "BRK.A", "BRK.B", "BRK/A", "BRK/B", "BRKA", "BRKB", "JPM", "BAC", "WFC", "C",
+    "GS", "MS", "BLK", "SCHW", "AXP", "V", "MA", "PNC", "USB", "TFC",
+    "BK", "COF", "MET", "PRU", "AIG", "ALL", "TRV", "CB", "SPGI", "MCO",
+    "ICE", "RJF", "AFL", "AMP", "AJG", "MMC", "AON",
+    # Health Care
+    "UNH", "JNJ", "LLY", "ABBV", "MRK", "PFE", "TMO", "ABT", "DHR", "BMY",
+    "MDT", "SYK", "ELV", "CI", "HCA", "BSX", "BDX", "ZTS", "CVS", "HUM",
+    "MCK", "COR", "CAH", "CNC", "IQV", "EW", "BAX", "RMD",
+    # Industrials & Defense
+    "BA", "CAT", "GE", "GEV", "RTX", "LMT", "UNP", "UPS", "FDX", "DE",
+    "GD", "NOC", "ETN", "WM", "RSG", "EMR", "PH", "ITW", "TT", "JCI",
+    "CARR", "OTIS", "IR", "PWR", "NSC", "CSX", "DAL", "UAL", "LUV",
+    # Consumer & Retail
+    "WMT", "PG", "KO", "NKE", "MCD", "DIS", "PM", "MO", "TGT", "LOW",
+    "HD", "TJX", "EL", "CL", "KMB", "GIS", "SYY", "ADM", "STZ", "DG",
+    "DLTR", "KR", "TSN", "HRL", "MKC", "CHD", "CLX", "YUM", "CMG",
+    # Tech, Telco & Enterprise
+    "IBM", "ORCL", "CRM", "NOW", "SNOW", "UBER", "SQ", "SHOP", "PLTR",
+    "TSM", "BABA", "SAP", "SONY", "SPOT", "NET", "DELL", "HPQ", "HPE",
+    "ANET", "KEYS", "TEL", "APH", "GLW", "T", "VZ", "INFY", "WIT",
+    # Materials, Real Estate & Utilities
+    "LIN", "APD", "ECL", "SHW", "FCX", "NEM", "SCCO", "VALE", "RIO", "BHP",
+    "NEE", "SO", "DUK", "D", "SRE", "PEG", "ED", "EIX", "WEC", "ES",
+    "PLD", "AMT", "EQIX", "CCI", "PSA", "O", "SPG", "WELL", "DLR", "VICI",
+}
+
+AMEX_TICKERS = {
+    "SPY", "IVV", "VOO", "GLD", "SLV", "IAU", "GDX", "GDXJ", "XLE", "XLF",
+    "XLK", "XLV", "XLI", "XLP", "XLU", "XLY", "XLB", "XLRE", "XLC", "HYG",
+    "LQD", "EEM", "EFA", "VWO", "VEA", "IWM", "DIA", "VTI", "VT", "UNG",
+    "USO", "BOIL", "KOLD", "BITO",
 }
 
 
@@ -228,8 +271,24 @@ def normalize_exchange_code(exchange: str | None) -> str | None:
 
 
 def get_exchange_code(ticker: str) -> str | None:
-    """Return only a preferred exchange probe; never infer NYSE for unknown symbols."""
-    return "NASD" if ticker.upper() in NASDAQ_TICKERS else None
+    """Return a preferred exchange probe for known symbols; unknown symbols return None to probe supported exchanges."""
+    if not isinstance(ticker, str) or not ticker.strip():
+        return None
+    sym = ticker.strip().upper()
+    if sym in NASDAQ_TICKERS:
+        return "NASD"
+    if sym in NYSE_TICKERS:
+        return "NYSE"
+    if sym in AMEX_TICKERS:
+        return "AMEX"
+    # Also check normalized dotted / non-dotted variant (e.g., BRK.B <-> BRKB)
+    alt_sym = sym.replace("-", ".").replace("/", ".")
+    if alt_sym in NYSE_TICKERS:
+        return "NYSE"
+    nodot_sym = sym.replace(".", "").replace("-", "").replace("/", "")
+    if nodot_sym in NYSE_TICKERS:
+        return "NYSE"
+    return None
 
 
 def exchange_probe_order(ticker: str, exchange: str | None = None) -> tuple[str, ...]:
@@ -348,6 +407,8 @@ class USStockTrading:
 
         quote = self.get_current_price(ticker)
         resolved_exchange = normalize_exchange_code(quote.get("exchange")) if quote else None
+        if resolved_exchange is None:
+            resolved_exchange = get_exchange_code(ticker)
         if resolved_exchange is None:
             logger.warning("[%s] Refusing orderable inquiry/order: KIS could not validate exchange", ticker)
         return resolved_exchange
@@ -1659,6 +1720,7 @@ class USStockTrading:
                             normalize_exchange_code(exchange)
                             or normalize_exchange_code(target_stock.get('exchange'))
                         )
+                        known_exchange = get_exchange_code(ticker)
 
                         # Fetch current price and validate exchange
                         # If explicit exchange requested by caller, probe only that exchange.
@@ -1669,9 +1731,10 @@ class USStockTrading:
                                 self.get_current_price, ticker, candidate_exchange
                             )
                         else:
-                            if candidate_exchange:
+                            probe_exchange = candidate_exchange or known_exchange
+                            if probe_exchange:
                                 price_info = await asyncio.to_thread(
-                                    self.get_current_price, ticker, candidate_exchange
+                                    self.get_current_price, ticker, probe_exchange
                                 )
                             if not price_info:
                                 price_info = await asyncio.to_thread(
@@ -1686,7 +1749,7 @@ class USStockTrading:
                             resolved_exchange = normalize_exchange_code(price_info.get('exchange'))
 
                         if not resolved_exchange:
-                            resolved_exchange = candidate_exchange or normalize_exchange_code(get_exchange_code(ticker))
+                            resolved_exchange = known_exchange or candidate_exchange
 
                         if not resolved_exchange:
                             resolved_exchange = await asyncio.to_thread(
@@ -1798,14 +1861,16 @@ class USStockTrading:
                         # Use safe conversion to handle empty strings
                         quantity = _safe_int(item.get('ovrs_cblc_qty'))
                         if quantity > 0:
+                            item_ticker = item.get('ovrs_pdno', '')
                             item_exchange = (
                                 normalize_exchange_code(item.get('ovrs_excg_cd'))
                                 or normalize_exchange_code(item.get('ovrs_excg_cd_name'))
                                 or normalize_exchange_code(item.get('ovrs_pdno_excg_cd'))
+                                or get_exchange_code(item_ticker)
                                 or exchange
                             )
                             stock_info = {
-                                'ticker': item.get('ovrs_pdno', ''),
+                                'ticker': item_ticker,
                                 'stock_name': item.get('ovrs_item_name', ''),
                                 'quantity': quantity,
                                 'avg_price': _safe_float(item.get('pchs_avg_pric')),
@@ -1834,7 +1899,13 @@ class USStockTrading:
                 seen_tickers[ticker_key] = stock
             else:
                 existing = seen_tickers[ticker_key]
-                if stock.get('exchange') and not existing.get('exchange'):
+                existing_exchange = existing.get('exchange')
+                current_exchange = stock.get('exchange')
+                known_exchange = get_exchange_code(ticker_key)
+
+                if known_exchange and current_exchange == known_exchange:
+                    seen_tickers[ticker_key] = stock
+                elif not existing_exchange and current_exchange:
                     seen_tickers[ticker_key] = stock
 
         unique_portfolio = list(seen_tickers.values())
