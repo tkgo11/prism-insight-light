@@ -143,8 +143,13 @@ def test_us_trader_uses_account_buy_amount_override(monkeypatch):
 
 def test_get_exchange_code_returns_only_known_preference():
     assert ust.get_exchange_code("AAPL") == "NASD"
+    assert ust.get_exchange_code("COP") == "NYSE"
+    assert ust.get_exchange_code("OXY") == "NYSE"
+    assert ust.get_exchange_code("IBM") == "NYSE"
+    assert ust.get_exchange_code("BRK.B") == "NYSE"
+    assert ust.get_exchange_code("SPY") == "AMEX"
+    assert ust.get_exchange_code("UNKNOWN_XYZ") is None
     assert ust.get_exchange_code("LITE") is None
-    assert ust.get_exchange_code("IBM") is None
 
 
 def test_exchange_probe_order_uses_all_supported_exchanges_for_unknown_ticker():
@@ -273,14 +278,14 @@ def test_get_current_price_validates_unknown_ticker_by_probing_supported_exchang
         if params["EXCD"] == "NAS":
             return _FakeKISResponse(ok=False)
         if params["EXCD"] == "NYS":
-            return _FakeKISResponse(output={"last": "125.50", "rate": "1.25", "tvol": "12", "name": "IBM"})
+            return _FakeKISResponse(output={"last": "125.50", "rate": "1.25", "tvol": "12", "name": "UNKNOWN"})
         raise AssertionError("The resolver must stop after KIS validates the product")
 
     trader._request = fake_request
 
-    assert trader.get_current_price("IBM") == {
-        "ticker": "IBM",
-        "stock_name": "IBM",
+    assert trader.get_current_price("UNKNOWN_STOCK") == {
+        "ticker": "UNKNOWN_STOCK",
+        "stock_name": "UNKNOWN",
         "current_price": 125.5,
         "change_rate": 1.25,
         "volume": 12,
@@ -637,4 +642,100 @@ async def test_async_sell_stock_recovers_and_routes_to_nyse(monkeypatch):
     assert len(sell_calls) == 1
     assert sell_calls[0]["exchange"] == "NYSE"
     assert sell_calls[0]["holding_quantity"] == 82
+
+
+def test_get_portfolio_falls_back_to_known_exchange_when_item_exchange_missing():
+    trader = object.__new__(ust.USStockTrading)
+    trader.mode = "demo"
+    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+
+    class Response:
+        def __init__(self, items):
+            self.items = items
+
+        def isOK(self):
+            return True
+
+        def getBody(self):
+            return SimpleNamespace(output1=self.items)
+
+    def fake_request(api_url, tr_id, params, **kwargs):
+        # KIS returns holdings with empty/missing ovrs_excg_cd when queried with 'NASD'
+        if params["OVRS_EXCG_CD"] == "NASD":
+            return Response([
+                {
+                    "ovrs_pdno": "COP",
+                    "ovrs_item_name": "CONOCOPHILLIPS",
+                    "ovrs_cblc_qty": "50",
+                    "pchs_avg_pric": "110.00",
+                    "now_pric2": "115.00",
+                    "ovrs_stck_evlu_amt": "5750.00",
+                    "frcr_evlu_pfls_amt": "250.00",
+                    "evlu_pfls_rt": "4.55",
+                    "ovrs_excg_cd": "",
+                }
+            ])
+        return Response([])
+
+    trader._request = fake_request
+    portfolio = trader.get_portfolio()
+
+    assert len(portfolio) == 1
+    assert portfolio[0]["ticker"] == "COP"
+    assert portfolio[0]["exchange"] == "NYSE"
+    assert portfolio[0]["quantity"] == 50
+
+
+@pytest.mark.asyncio
+async def test_async_sell_stock_routes_known_nyse_ticker_when_quote_probe_fails(monkeypatch):
+    trader = object.__new__(ust.USStockTrading)
+    trader.mode = "demo"
+    trader._stock_locks = {}
+    trader._semaphore = asyncio.Semaphore(1)
+    trader._global_lock = asyncio.Lock()
+
+    # Portfolio has no exchange or wrong exchange, and price probe fails (e.g. off-hours)
+    trader.get_portfolio = lambda: [
+        {"ticker": "OXY", "quantity": 30, "exchange": None, "avg_price": 55.0}
+    ]
+    trader.get_current_price = lambda ticker, exchange=None: None
+
+    sell_calls = []
+
+    def fake_smart_sell_all(ticker, exchange=None, limit_price=None, use_moo=False, holding_quantity=None):
+        sell_calls.append({
+            "ticker": ticker,
+            "exchange": exchange,
+            "limit_price": limit_price,
+            "use_moo": use_moo,
+            "holding_quantity": holding_quantity,
+        })
+        return {"success": True, "order_no": "sell-oxy", "quantity": holding_quantity, "message": "ok"}
+
+    trader.smart_sell_all = fake_smart_sell_all
+
+    async def no_sleep(_seconds):
+        return None
+
+    monkeypatch.setattr(ust.asyncio, "sleep", no_sleep)
+
+    result = await trader._execute_sell_stock("OXY", limit_price=55.0)
+
+    assert result["success"] is True
+    assert result["quantity"] == 30
+    assert result["order_no"] == "sell-oxy"
+    assert len(sell_calls) == 1
+    assert sell_calls[0]["exchange"] == "NYSE"
+    assert sell_calls[0]["holding_quantity"] == 30
+
+
+def test_resolve_exchange_code_falls_back_to_known_exchange_when_quote_fails():
+    trader = object.__new__(ust.USStockTrading)
+    trader.get_current_price = lambda ticker, exchange=None: None
+
+    assert trader._resolve_exchange_code("COP") == "NYSE"
+    assert trader._resolve_exchange_code("OXY") == "NYSE"
+    assert trader._resolve_exchange_code("AAPL") == "NASD"
+    assert trader._resolve_exchange_code("SPY") == "AMEX"
+    assert trader._resolve_exchange_code("UNKNOWN_SYMBOL") is None
 
