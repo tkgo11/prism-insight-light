@@ -21,6 +21,7 @@ import importlib
 import importlib.util
 import logging
 import math
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -209,58 +210,45 @@ PRICE_EXCHANGE_CODES = {
 }
 TRADING_EXCHANGE_CODES = ("NASD", "NYSE", "AMEX")
 
-# Common known exchange ticker mappings for preferred probe and fallback routing.
-# Unknown symbols return None and are validated dynamically by KIS quote probes.
-NASDAQ_TICKERS = {
-    "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "NVDA", "TSLA",
-    "AVGO", "COST", "ADBE", "CSCO", "PEP", "NFLX", "INTC", "AMD",
-    "QCOM", "TXN", "HON", "CMCSA", "SBUX", "GILD", "MDLZ", "ISRG",
-    "VRTX", "REGN", "ATVI", "ADP", "BKNG", "CHTR", "LRCX", "MU",
-    "KLAC", "SNPS", "CDNS", "MRVL", "PANW", "CRWD", "ZS", "DDOG",
-    "PDD", "MELI", "ARM", "MCHP", "ON", "FTNT", "TEAM", "WDAY",
-    "ABNB", "DXCM", "KDP", "NXPI", "PCAR", "ROST", "ODFL", "FAST",
-    "PAYX", "CPRT", "CTAS", "MNST", "AEP", "EXC", "XEL", "IDXX",
-    "EA", "ILMN", "BIIB", "ALGN", "WBD", "DLTR", "EBAY", "SIRI",
-    "TTD", "COIN", "PLUG", "SOFI", "LCID", "RIVN", "ROKU", "SMCI",
-}
+# Dynamic in-memory exchange cache. Validated mappings are populated dynamically
+# via KIS quote probes, balance inquiries, and master symbol lookups.
+_EXCHANGE_CACHE: Dict[str, str] = {}
+_CACHE_LOCK = threading.Lock()
 
-NYSE_TICKERS = {
-    # Energy
-    "COP", "OXY", "XOM", "CVX", "SLB", "HAL", "EOG", "MPC", "VLO", "PSX",
-    "KMI", "WMB", "HES", "DVN", "BKR", "FANG", "EQT", "OKE", "TRGP",
-    # Financials & Berkshire
-    "BRK.A", "BRK.B", "BRK/A", "BRK/B", "BRKA", "BRKB", "JPM", "BAC", "WFC", "C",
-    "GS", "MS", "BLK", "SCHW", "AXP", "V", "MA", "PNC", "USB", "TFC",
-    "BK", "COF", "MET", "PRU", "AIG", "ALL", "TRV", "CB", "SPGI", "MCO",
-    "ICE", "RJF", "AFL", "AMP", "AJG", "MMC", "AON",
-    # Health Care
-    "UNH", "JNJ", "LLY", "ABBV", "MRK", "PFE", "TMO", "ABT", "DHR", "BMY",
-    "MDT", "SYK", "ELV", "CI", "HCA", "BSX", "BDX", "ZTS", "CVS", "HUM",
-    "MCK", "COR", "CAH", "CNC", "IQV", "EW", "BAX", "RMD",
-    # Industrials & Defense
-    "BA", "CAT", "GE", "GEV", "RTX", "LMT", "UNP", "UPS", "FDX", "DE",
-    "GD", "NOC", "ETN", "WM", "RSG", "EMR", "PH", "ITW", "TT", "JCI",
-    "CARR", "OTIS", "IR", "PWR", "NSC", "CSX", "DAL", "UAL", "LUV",
-    # Consumer & Retail
-    "WMT", "PG", "KO", "NKE", "MCD", "DIS", "PM", "MO", "TGT", "LOW",
-    "HD", "TJX", "EL", "CL", "KMB", "GIS", "SYY", "ADM", "STZ", "DG",
-    "DLTR", "KR", "TSN", "HRL", "MKC", "CHD", "CLX", "YUM", "CMG",
-    # Tech, Telco & Enterprise
-    "IBM", "ORCL", "CRM", "NOW", "SNOW", "UBER", "SQ", "SHOP", "PLTR",
-    "TSM", "BABA", "SAP", "SONY", "SPOT", "NET", "DELL", "HPQ", "HPE",
-    "ANET", "KEYS", "TEL", "APH", "GLW", "T", "VZ", "INFY", "WIT",
-    # Materials, Real Estate & Utilities
-    "LIN", "APD", "ECL", "SHW", "FCX", "NEM", "SCCO", "VALE", "RIO", "BHP",
-    "NEE", "SO", "DUK", "D", "SRE", "PEG", "ED", "EIX", "WEC", "ES",
-    "PLD", "AMT", "EQIX", "CCI", "PSA", "O", "SPG", "WELL", "DLR", "VICI",
-}
 
-AMEX_TICKERS = {
-    "SPY", "IVV", "VOO", "GLD", "SLV", "IAU", "GDX", "GDXJ", "XLE", "XLF",
-    "XLK", "XLV", "XLI", "XLP", "XLU", "XLY", "XLB", "XLRE", "XLC", "HYG",
-    "LQD", "EEM", "EFA", "VWO", "VEA", "IWM", "DIA", "VTI", "VT", "UNG",
-    "USO", "BOIL", "KOLD", "BITO",
-}
+def get_cached_exchange(ticker: str) -> str | None:
+    """Return the cached exchange code for ticker, if previously resolved."""
+    if not isinstance(ticker, str) or not ticker.strip():
+        return None
+    sym = ticker.strip().upper()
+    with _CACHE_LOCK:
+        if sym in _EXCHANGE_CACHE:
+            return _EXCHANGE_CACHE[sym]
+        alt_sym = sym.replace("-", ".").replace("/", ".")
+        if alt_sym in _EXCHANGE_CACHE:
+            return _EXCHANGE_CACHE[alt_sym]
+        nodot_sym = sym.replace(".", "").replace("-", "").replace("/", "")
+        return _EXCHANGE_CACHE.get(nodot_sym)
+
+
+def cache_exchange_code(ticker: str, exchange: str | None) -> None:
+    """Record a validated exchange mapping for ticker in the dynamic cache."""
+    normalized = normalize_exchange_code(exchange)
+    if not normalized or not isinstance(ticker, str) or not ticker.strip():
+        return
+    sym = ticker.strip().upper()
+    alt_sym = sym.replace("-", ".").replace("/", ".")
+    nodot_sym = sym.replace(".", "").replace("-", "").replace("/", "")
+    with _CACHE_LOCK:
+        _EXCHANGE_CACHE[sym] = normalized
+        _EXCHANGE_CACHE[alt_sym] = normalized
+        _EXCHANGE_CACHE[nodot_sym] = normalized
+
+
+def clear_exchange_cache() -> None:
+    """Clear cached exchange mappings (primarily for tests)."""
+    with _CACHE_LOCK:
+        _EXCHANGE_CACHE.clear()
 
 
 def normalize_exchange_code(exchange: str | None) -> str | None:
@@ -271,34 +259,18 @@ def normalize_exchange_code(exchange: str | None) -> str | None:
 
 
 def get_exchange_code(ticker: str) -> str | None:
-    """Return a preferred exchange probe for known symbols; unknown symbols return None to probe supported exchanges."""
-    if not isinstance(ticker, str) or not ticker.strip():
-        return None
-    sym = ticker.strip().upper()
-    if sym in NASDAQ_TICKERS:
-        return "NASD"
-    if sym in NYSE_TICKERS:
-        return "NYSE"
-    if sym in AMEX_TICKERS:
-        return "AMEX"
-    # Also check normalized dotted / non-dotted variant (e.g., BRK.B <-> BRKB)
-    alt_sym = sym.replace("-", ".").replace("/", ".")
-    if alt_sym in NYSE_TICKERS:
-        return "NYSE"
-    nodot_sym = sym.replace(".", "").replace("-", "").replace("/", "")
-    if nodot_sym in NYSE_TICKERS:
-        return "NYSE"
-    return None
+    """Return the dynamically cached exchange code for ticker, or None if unprobed."""
+    return get_cached_exchange(ticker)
 
 
 def exchange_probe_order(ticker: str, exchange: str | None = None) -> tuple[str, ...]:
-    """Return KIS exchanges to probe, prioritizing an explicit or known exchange."""
+    """Return KIS exchanges to probe, prioritizing an explicit or cached exchange."""
     explicit_exchange = normalize_exchange_code(exchange)
     if exchange is not None:
         return (explicit_exchange,) if explicit_exchange else ()
 
-    preferred_exchange = get_exchange_code(ticker)
-    ordered = ([preferred_exchange] if preferred_exchange else []) + list(TRADING_EXCHANGE_CODES)
+    cached_exchange = get_exchange_code(ticker)
+    ordered = ([cached_exchange] if cached_exchange else []) + list(TRADING_EXCHANGE_CODES)
     return tuple(dict.fromkeys(ordered))
 
 
@@ -397,21 +369,57 @@ class USStockTrading:
                 logger.debug("KIS trading environment unavailable after request; keeping existing trader environment")
             return response
 
+    def _lookup_overseas_master_exchange(self, ticker: str) -> str | None:
+        """Query KIS Overseas Stock Basic Info API (CTPF1702R) to dynamically resolve exchange 24/7."""
+        api_url = "/uapi/overseas-price/v1/quotations/search-info"
+        tr_id = "CTPF1702R"
+        params = {
+            "PRDT_TYPE_CD": "512",
+            "PDNO": ticker.upper(),
+        }
+        try:
+            res = self._request(api_url, tr_id, params)
+            if res and res.isOK():
+                data = res.getBody().output or {}
+                exc_code = (
+                    normalize_exchange_code(data.get("ovrs_excg_cd"))
+                    or normalize_exchange_code(data.get("ovrs_excg_cd_name"))
+                    or normalize_exchange_code(data.get("natn_cd"))
+                )
+                if exc_code:
+                    logger.info("[%s] Resolved exchange %s via KIS master search-info", ticker, exc_code)
+                    return exc_code
+        except Exception as exc:
+            logger.debug("[%s] Master search-info lookup failed: %s", ticker, exc)
+        return None
+
     def _resolve_exchange_code(self, ticker: str, exchange: str | None = None) -> str | None:
         """Resolve a supported trading exchange, validating inferred values with KIS."""
         normalized_exchange = normalize_exchange_code(exchange)
         if exchange is not None:
             if normalized_exchange is None:
                 logger.warning("[%s] Unsupported explicit exchange: %r", ticker, exchange)
+            else:
+                cache_exchange_code(ticker, normalized_exchange)
             return normalized_exchange
 
-        quote = self.get_current_price(ticker)
+        cached = get_cached_exchange(ticker)
+        if cached:
+            return cached
+
+        quote = self.get_current_price(ticker, None)
         resolved_exchange = normalize_exchange_code(quote.get("exchange")) if quote else None
-        if resolved_exchange is None:
-            resolved_exchange = get_exchange_code(ticker)
-        if resolved_exchange is None:
-            logger.warning("[%s] Refusing orderable inquiry/order: KIS could not validate exchange", ticker)
-        return resolved_exchange
+        if resolved_exchange:
+            cache_exchange_code(ticker, resolved_exchange)
+            return resolved_exchange
+
+        master_exchange = self._lookup_overseas_master_exchange(ticker)
+        if master_exchange:
+            cache_exchange_code(ticker, master_exchange)
+            return master_exchange
+
+        logger.warning("[%s] Refusing orderable inquiry/order: KIS could not validate exchange", ticker)
+        return None
 
     def _exchange_resolution_failure(self, ticker: str) -> Dict[str, Any]:
         return {
@@ -482,6 +490,7 @@ class USStockTrading:
                 "volume": _safe_int(data.get("tvol")),
                 "exchange": candidate_exchange,
             }
+            cache_exchange_code(ticker, candidate_exchange)
             logger.info(
                 "[%s] Current price: $%.2f (%+.2f%%) on %s",
                 ticker,
@@ -1749,11 +1758,14 @@ class USStockTrading:
                             resolved_exchange = normalize_exchange_code(price_info.get('exchange'))
 
                         if not resolved_exchange:
-                            resolved_exchange = known_exchange or candidate_exchange
-
-                        if not resolved_exchange:
-                            resolved_exchange = await asyncio.to_thread(
-                                self._resolve_exchange_code, ticker, None
+                            resolved_exchange = (
+                                candidate_exchange
+                                or get_cached_exchange(ticker)
+                                or await asyncio.to_thread(
+                                    self._resolve_exchange_code,
+                                    ticker,
+                                    candidate_exchange if exchange is not None else None,
+                                )
                             )
 
                         if not resolved_exchange:
@@ -1866,9 +1878,13 @@ class USStockTrading:
                                 normalize_exchange_code(item.get('ovrs_excg_cd'))
                                 or normalize_exchange_code(item.get('ovrs_excg_cd_name'))
                                 or normalize_exchange_code(item.get('ovrs_pdno_excg_cd'))
-                                or get_exchange_code(item_ticker)
-                                or exchange
+                                or get_cached_exchange(item_ticker)
                             )
+                            if item_exchange:
+                                cache_exchange_code(item_ticker, item_exchange)
+                            else:
+                                item_exchange = exchange
+
                             stock_info = {
                                 'ticker': item_ticker,
                                 'stock_name': item.get('ovrs_item_name', ''),
@@ -1901,9 +1917,9 @@ class USStockTrading:
                 existing = seen_tickers[ticker_key]
                 existing_exchange = existing.get('exchange')
                 current_exchange = stock.get('exchange')
-                known_exchange = get_exchange_code(ticker_key)
+                cached_exchange = get_cached_exchange(ticker_key)
 
-                if known_exchange and current_exchange == known_exchange:
+                if cached_exchange and current_exchange == cached_exchange:
                     seen_tickers[ticker_key] = stock
                 elif not existing_exchange and current_exchange:
                     seen_tickers[ticker_key] = stock

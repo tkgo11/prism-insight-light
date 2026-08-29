@@ -141,15 +141,23 @@ def test_us_trader_uses_account_buy_amount_override(monkeypatch):
     assert trader.account_key == "vps:90909090:01"
 
 
-def test_get_exchange_code_returns_only_known_preference():
+def test_get_exchange_code_uses_dynamic_cache():
+    ust.clear_exchange_cache()
+    assert ust.get_exchange_code("AAPL") is None
+    assert ust.get_exchange_code("COP") is None
+
+    ust.cache_exchange_code("AAPL", "NASD")
+    ust.cache_exchange_code("COP", "NYSE")
+    ust.cache_exchange_code("BRK.B", "NYSE")
+
     assert ust.get_exchange_code("AAPL") == "NASD"
     assert ust.get_exchange_code("COP") == "NYSE"
-    assert ust.get_exchange_code("OXY") == "NYSE"
-    assert ust.get_exchange_code("IBM") == "NYSE"
+    assert ust.get_exchange_code("BRKB") == "NYSE"
     assert ust.get_exchange_code("BRK.B") == "NYSE"
-    assert ust.get_exchange_code("SPY") == "AMEX"
     assert ust.get_exchange_code("UNKNOWN_XYZ") is None
-    assert ust.get_exchange_code("LITE") is None
+
+    ust.clear_exchange_cache()
+    assert ust.get_exchange_code("AAPL") is None
 
 
 def test_exchange_probe_order_uses_all_supported_exchanges_for_unknown_ticker():
@@ -645,6 +653,8 @@ async def test_async_sell_stock_recovers_and_routes_to_nyse(monkeypatch):
 
 
 def test_get_portfolio_falls_back_to_known_exchange_when_item_exchange_missing():
+    ust.clear_exchange_cache()
+    ust.cache_exchange_code("COP", "NYSE")
     trader = object.__new__(ust.USStockTrading)
     trader.mode = "demo"
     trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
@@ -688,6 +698,8 @@ def test_get_portfolio_falls_back_to_known_exchange_when_item_exchange_missing()
 
 @pytest.mark.asyncio
 async def test_async_sell_stock_routes_known_nyse_ticker_when_quote_probe_fails(monkeypatch):
+    ust.clear_exchange_cache()
+    ust.cache_exchange_code("OXY", "NYSE")
     trader = object.__new__(ust.USStockTrading)
     trader.mode = "demo"
     trader._stock_locks = {}
@@ -699,6 +711,7 @@ async def test_async_sell_stock_routes_known_nyse_ticker_when_quote_probe_fails(
         {"ticker": "OXY", "quantity": 30, "exchange": None, "avg_price": 55.0}
     ]
     trader.get_current_price = lambda ticker, exchange=None: None
+    trader._lookup_overseas_master_exchange = lambda ticker: "NYSE" if ticker == "OXY" else None
 
     sell_calls = []
 
@@ -729,13 +742,13 @@ async def test_async_sell_stock_routes_known_nyse_ticker_when_quote_probe_fails(
     assert sell_calls[0]["holding_quantity"] == 30
 
 
-def test_resolve_exchange_code_falls_back_to_known_exchange_when_quote_fails():
+def test_resolve_exchange_code_falls_back_to_master_info_when_quote_fails():
+    ust.clear_exchange_cache()
     trader = object.__new__(ust.USStockTrading)
     trader.get_current_price = lambda ticker, exchange=None: None
+    trader._lookup_overseas_master_exchange = lambda ticker: "NYSE" if ticker == "COP" else None
 
     assert trader._resolve_exchange_code("COP") == "NYSE"
-    assert trader._resolve_exchange_code("OXY") == "NYSE"
-    assert trader._resolve_exchange_code("AAPL") == "NASD"
-    assert trader._resolve_exchange_code("SPY") == "AMEX"
+    assert ust.get_cached_exchange("COP") == "NYSE"
     assert trader._resolve_exchange_code("UNKNOWN_SYMBOL") is None
 
