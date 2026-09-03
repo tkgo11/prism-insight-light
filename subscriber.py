@@ -26,6 +26,7 @@ from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must loa
 from trading.market_hours import KST  # noqa: E402 - config env must load first
 from trading.off_hours_queue import QueueCapacityError  # noqa: E402
 from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E402
+from trading.stop_loss_watcher import StopLossWatcher, StopLossWatcherConfig  # noqa: E402
 
 LOGGER = logging.getLogger("subscriber")
 
@@ -435,6 +436,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Start the local guarded operator WebUI alongside the Pub/Sub subscriber",
     )
+    parser.add_argument(
+        "--stop-loss-poll-seconds",
+        type=float,
+        default=None,
+        help="Optional override for stop-loss watcher polling interval in seconds",
+    )
+    parser.add_argument(
+        "--disable-stop-loss-watcher",
+        action="store_true",
+        help="Explicitly disable the background stop-loss price watcher",
+    )
     return parser.parse_args(argv)
 
 
@@ -528,6 +540,24 @@ def main(argv: list[str] | None = None) -> None:
     )
     queue_worker = QueueWorker(dispatcher, args.queue_poll_seconds, work_tracker)
 
+    stop_loss_config = dispatcher.stop_loss_watcher_config
+    if args.disable_stop_loss_watcher:
+        stop_loss_config = StopLossWatcherConfig(enabled=False)
+    elif args.stop_loss_poll_seconds is not None:
+        stop_loss_config = StopLossWatcherConfig(
+            enabled=True,
+            poll_seconds=args.stop_loss_poll_seconds,
+            request_interval_seconds=stop_loss_config.request_interval_seconds,
+            storage_path=stop_loss_config.storage_path,
+        )
+
+    stop_loss_watcher = StopLossWatcher(
+        dispatcher=dispatcher,
+        config=stop_loss_config,
+        tracker=dispatcher.stop_loss_tracker,
+        work_tracker=work_tracker,
+    )
+
     credentials = None
     if args.credentials_path:
         from google.oauth2 import service_account
@@ -576,6 +606,7 @@ def main(argv: list[str] | None = None) -> None:
 
     try:
         queue_worker.start()
+        stop_loss_watcher.start()
         if args.web_ui:
             assert web_ui_stop_event is not None
             web_ui_thread = _start_web_ui_thread(
@@ -602,6 +633,7 @@ def main(argv: list[str] | None = None) -> None:
         signal.signal(signal.SIGTERM, previous_sigterm)
         streaming_pull_future.cancel()
         queue_worker.request_stop()
+        stop_loss_watcher.request_stop()
         work_tracker.close()
         if web_ui_stop_event is not None:
             web_ui_stop_event.set()
@@ -627,6 +659,7 @@ def main(argv: list[str] | None = None) -> None:
             )
             work_tracker.wait_for_idle(None)
         queue_worker.stop()
+        stop_loss_watcher.stop()
         try:
             # ``await_callbacks_on_shutdown`` keeps Pub/Sub's ack dispatcher alive
             # until every admitted callback has returned.  The bounded wait above

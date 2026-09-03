@@ -512,8 +512,32 @@ Until the note is old, kids cannot run there, or they must be extra careful.
 
 Use this when news, market stress, or another event should temporarily stop new buying.
 
+## `stop_loss_watcher` (Real-Time Background Stop-Loss Monitor)
+
+### In one sentence
+
+`stop_loss_watcher` records the `stop_loss` set during a successful BUY signal and periodically inspects the real-time market price during regular trading hours, automatically dispatching a SELL order when the market price touches or drops below the stop-loss price without waiting for an external SELL signal.
+
+### What it does
+
+- Tracks positions purchased with a positive `stop_loss` in `runtime/stop_loss_positions.json`.
+- Automatically clears tracked positions when any SELL signal for that ticker is executed.
+- Polls current market prices via KIS API during market hours (KR & US).
+- Protects KIS API rate limits by enforcing an interval delay (`request_interval_seconds: 0.2`) between ticker price queries.
+- When `current_price <= stop_loss`, automatically generates an internal `SELL` signal with `sell_reason="stop_loss"` and dispatches it through the configured trading pipeline.
+
+### Configuration
+
+```yaml
+stop_loss_watcher:
+  enabled: true                 # enable background stop-loss monitoring
+  poll_seconds: 5.0             # check interval in seconds (default: 5.0)
+  request_interval_seconds: 0.2 # delay between quotes for rate-limit protection (default: 0.2)
+```
+
 ## Adding a new strategy
 
 When developers add a new strategy in `trading/strategies`, they must also update this file.
 Users should be able to open this guide and understand every available strategy without reading Python code.
+
 
