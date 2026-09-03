@@ -252,6 +252,30 @@ def test_limit_buffer_uses_conservative_kr_tick_rounding():
     assert strategy._price(sell) == 100
 
 
+def test_limit_buffer_uses_automatic_krx_tick_rounding():
+    config = LimitBufferStrategyConfig.from_mapping(
+        {
+            "name": "limit_buffer",
+            "buy_buffer_percent": 5,
+            "sell_buffer_percent": 5,
+        }
+    )
+    strategy = LimitBufferStrategy(config=config)
+    # Samsung SDI incident scenario: 549,000 KRW
+    # Sell with 5% buffer: 549000 * 0.95 = 521,550 KRW -> floor to 1000 tick -> 521,000 KRW
+    # Buy with 5% buffer: 549000 * 1.05 = 576,450 KRW -> ceil to 1000 tick -> 577,000 KRW
+    sell_sdi = parse_signal_payload(
+        {"type": "SELL", "ticker": "006400", "market": "KR", "price": 549000}
+    )
+    buy_sdi = parse_signal_payload(
+        {"type": "BUY", "ticker": "006400", "market": "KR", "price": 549000}
+    )
+
+    assert strategy._price(sell_sdi) == 521000
+    assert strategy._price(buy_sdi) == 577000
+
+
+
 @pytest.mark.asyncio
 async def test_risk_bracket_falls_back_when_stop_is_not_usable(tmp_path):
     config = RiskBracketStrategyConfig.from_mapping({"name": "risk_bracket", "risk_amount_usd": 25})

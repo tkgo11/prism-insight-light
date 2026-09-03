@@ -432,3 +432,114 @@ def test_smart_sell_routes_after_kst_close_to_reserved_order(monkeypatch):
 
     assert result["success"] is True
     assert calls == [("reserved", "443060", 226_000)]
+
+
+@pytest.mark.parametrize(
+    ("price", "expected_tick"),
+    [
+        (500, 1),
+        (1999, 1),
+        (2000, 5),
+        (4995, 5),
+        (5000, 10),
+        (19990, 10),
+        (20000, 50),
+        (49950, 50),
+        (50000, 100),
+        (199900, 100),
+        (200000, 500),
+        (499500, 500),
+        (500000, 1000),
+        (548500, 1000),
+        (1200000, 1000),
+    ],
+)
+def test_krx_tick_size_tiers(price, expected_tick):
+    assert dst.get_krx_tick_size(price) == expected_tick
+
+
+def test_align_krx_tick_price_incident_samsung_sdi():
+    # Samsung SDI incident reproduction: 548,500 KRW must align to 1,000 KRW ticks
+    raw_price = 548500
+    assert dst.align_krx_tick_price(raw_price, method="round") == 549000
+    assert dst.align_krx_tick_price(raw_price, method="floor") == 548000
+    assert dst.align_krx_tick_price(raw_price, method="buy") == 548000
+    assert dst.align_krx_tick_price(raw_price, method="ceil") == 549000
+
+
+def test_regular_session_sell_aligns_unaligned_limit_price_to_krx_tick():
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.auto_trading = True
+    trader.mode = "demo"
+    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+    captured = {}
+
+    class Response:
+        @staticmethod
+        def isOK():
+            return True
+
+        @staticmethod
+        def getBody():
+            return SimpleNamespace(output={"odno": "tick-sell-1"})
+
+    def request(api_url, tr_id, params, **kwargs):
+        captured.update(
+            api_url=api_url,
+            tr_id=tr_id,
+            params=params,
+            kwargs=kwargs,
+        )
+        return Response()
+
+    trader._request = request
+    # 548,500 KRW is not a multiple of 1,000 KRW tick -> must align to 549,000 KRW
+    result = trader.sell_all_market_price(
+        "006400",
+        holding_quantity=9,
+        limit_price=548500,
+    )
+
+    assert result["success"] is True
+    assert captured["params"]["ORD_DVSN"] == "00"
+    assert captured["params"]["ORD_UNPR"] == "549000"
+    assert captured["params"]["ORD_QTY"] == "9"
+    assert result["limit_price"] == 549000
+
+
+def test_regular_session_buy_limit_aligns_unaligned_price_to_krx_tick():
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.auto_trading = True
+    trader.mode = "demo"
+    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+    trader.buy_amount = 5_000_000
+    trader._resolve_buy_amount = lambda buy_amount=None: 5_000_000
+    captured = {}
+
+    class Response:
+        @staticmethod
+        def isOK():
+            return True
+
+        @staticmethod
+        def getBody():
+            return SimpleNamespace(output={"odno": "tick-buy-1"})
+
+    def request(api_url, tr_id, params, **kwargs):
+        captured.update(
+            api_url=api_url,
+            tr_id=tr_id,
+            params=params,
+            kwargs=kwargs,
+        )
+        return Response()
+
+    trader._request = request
+    # Buy limit with floor alignment: 548,500 KRW -> 548,000 KRW
+    result = trader.buy_limit_price("006400", limit_price=548500)
+
+    assert result["success"] is True
+    assert captured["params"]["ORD_DVSN"] == "00"
+    assert captured["params"]["ORD_UNPR"] == "548000"
+    assert result["limit_price"] == 548000
+

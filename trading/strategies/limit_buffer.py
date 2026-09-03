@@ -64,11 +64,21 @@ class LimitBufferStrategy:
         price = float(signal.price) * (1 + pct / 100)
         if signal.market == "KR":
             tick = self.config.kr_tick_rounding
-            units = price / tick
-            price = float(
-                (math.ceil(units) if signal.signal_type == "BUY" else math.floor(units))
-                * tick
-            )
+            if tick <= 1:
+                from ..domestic import align_krx_tick_price
+
+                price = float(
+                    align_krx_tick_price(
+                        price,
+                        method="ceil" if signal.signal_type == "BUY" else "floor",
+                    )
+                )
+            else:
+                units = price / tick
+                price = float(
+                    (math.ceil(units) if signal.signal_type == "BUY" else math.floor(units))
+                    * tick
+                )
         else:
             price = round(price, self.config.us_price_decimals)
         if not math.isfinite(price) or price <= 0:

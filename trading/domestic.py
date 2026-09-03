@@ -60,6 +60,76 @@ def _now_kst() -> datetime.datetime:
     """
     return datetime.datetime.now(tz=KST)
 
+
+def get_krx_tick_size(price: float | int) -> int:
+    """Return the KRX stock tick size (호가단위) for a given price in KRW.
+
+    Unified standard across KOSPI, KOSDAQ, and KONEX (effective Jan 25, 2023):
+      - Price < 2,000 KRW: 1 KRW
+      - 2,000 <= Price < 5,000 KRW: 5 KRW
+      - 5,000 <= Price < 20,000 KRW: 10 KRW
+      - 20,000 <= Price < 50,000 KRW: 50 KRW
+      - 50,000 <= Price < 200,000 KRW: 100 KRW
+      - 200,000 <= Price < 500,000 KRW: 500 KRW
+      - Price >= 500,000 KRW: 1,000 KRW
+    """
+    p = float(price)
+    if p < 2000:
+        return 1
+    elif p < 5000:
+        return 5
+    elif p < 20000:
+        return 10
+    elif p < 50000:
+        return 50
+    elif p < 200000:
+        return 100
+    elif p < 500000:
+        return 500
+    else:
+        return 1000
+
+
+def align_krx_tick_price(price: float | int, method: str = "round") -> int:
+    """Align a price to the valid KRX tick unit (호가단위).
+
+    Args:
+        price: Raw price in KRW.
+        method: Rounding method ('round', 'floor', 'ceil', 'buy', 'sell').
+                'buy' / 'floor' ensures price does not exceed the target price.
+                'ceil' rounds up to the next valid tick.
+                'round' / 'sell' / 'nearest' rounds to the closest valid tick (half-up).
+
+    Returns:
+        Integer price aligned to KRX tick size.
+    """
+    if price is None:
+        return 0
+    p = float(price)
+    if p <= 0:
+        return 0
+
+    tick = get_krx_tick_size(p)
+    if method in ("floor", "buy"):
+        aligned = math.floor(p / tick) * tick
+    elif method == "ceil":
+        aligned = math.ceil(p / tick) * tick
+    else:
+        aligned = math.floor(p / tick + 0.5) * tick
+
+    aligned_int = int(aligned)
+    # Check if boundary crossed into another tick bracket
+    new_tick = get_krx_tick_size(aligned_int)
+    if aligned_int % new_tick != 0:
+        if method in ("floor", "buy"):
+            aligned_int = int(math.floor(aligned_int / new_tick) * new_tick)
+        elif method == "ceil":
+            aligned_int = int(math.ceil(aligned_int / new_tick) * new_tick)
+        else:
+            aligned_int = int(math.floor(aligned_int / new_tick + 0.5) * new_tick)
+
+    return aligned_int
+
 # Load configuration file
 CONFIG_FILE = active_kis_config_path()
 with open(CONFIG_FILE, encoding="UTF-8") as f:
@@ -459,10 +529,21 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute buy order. (AUTO_TRADING=False)'
             }
 
+        effective_limit_price = align_krx_tick_price(limit_price, method="floor") if limit_price else 0
+        if effective_limit_price <= 0:
+            return {
+                'success': False,
+                'order_no': None,
+                'stock_code': stock_code,
+                'quantity': 0,
+                'limit_price': limit_price,
+                'message': f'Invalid limit price: {limit_price}'
+            }
+
         amount = self._resolve_buy_amount(buy_amount)
 
         # Calculate buyable quantity (based on limit price)
-        buy_quantity = math.floor(amount / limit_price)
+        buy_quantity = math.floor(amount / effective_limit_price)
 
         if buy_quantity <= 0:
             return {
@@ -470,8 +551,8 @@ class DomesticStockTrading:
                 'order_no': None,
                 'stock_code': stock_code,
                 'quantity': 0,
-                'limit_price': limit_price,
-                'message': f'Buyable quantity is 0 (limit price {limit_price:,} KRW > buy amount {amount:,} KRW)'
+                'limit_price': effective_limit_price,
+                'message': f'Buyable quantity is 0 (limit price {effective_limit_price:,} KRW > buy amount {amount:,} KRW)'
             }
 
         # Execute limit price buy order
@@ -488,7 +569,7 @@ class DomesticStockTrading:
             "PDNO": stock_code,
             "ORD_DVSN": "00",  # 00: Limit price
             "ORD_QTY": str(buy_quantity),
-            "ORD_UNPR": str(limit_price),  # Limit price
+            "ORD_UNPR": str(effective_limit_price),  # Limit price aligned to KRX tick
             "EXCG_ID_DVSN_CD": "KRX",
             "SLL_TYPE": "",
             "CNDT_PRIC": ""
@@ -501,15 +582,15 @@ class DomesticStockTrading:
                 output = res.getBody().output
                 order_no = output.get('odno', '')
 
-                logger.info(f"[{stock_code}] Limit buy order successful: {buy_quantity} shares x {limit_price:,} KRW, order no: {order_no}")
+                logger.info(f"[{stock_code}] Limit buy order successful: {buy_quantity} shares x {effective_limit_price:,} KRW, order no: {order_no}")
 
                 return {
                     'success': True,
                     'order_no': order_no,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
-                    'limit_price': limit_price,
-                    'message': f'Limit buy order completed ({buy_quantity} shares x {limit_price:,} KRW)'
+                    'limit_price': effective_limit_price,
+                    'message': f'Buy order successful ({buy_quantity} shares x {effective_limit_price:,} KRW)'
                 }
             else:
                 error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
@@ -568,11 +649,12 @@ class DomesticStockTrading:
         if datetime.time(9, 0) <= current_time <= datetime.time(15, 30):
             # Regular trading hours
             if limit_price and limit_price > 0:
+                effective_limit_price = align_krx_tick_price(limit_price, method="floor")
                 logger.info(
                     f"[{stock_code}] Regular trading hours - executing limit buy "
-                    f"@ {limit_price:,} KRW"
+                    f"@ {effective_limit_price:,} KRW"
                 )
-                return self.buy_limit_price(stock_code, int(limit_price), buy_amount)
+                return self.buy_limit_price(stock_code, effective_limit_price, buy_amount)
             logger.info(f"[{stock_code}] Regular trading hours - executing market buy")
             return self.buy_market_price(stock_code, buy_amount)
 
@@ -583,11 +665,13 @@ class DomesticStockTrading:
 
         else:
             # Reserved order (limit or market price)
-            if limit_price:
-                logger.info(f"[{stock_code}] Outside trading hours - executing reserved order (limit: {limit_price:,} KRW)")
+            if limit_price and limit_price > 0:
+                effective_limit_price = align_krx_tick_price(limit_price, method="floor")
+                logger.info(f"[{stock_code}] Outside trading hours - executing reserved order (limit: {effective_limit_price:,} KRW)")
             else:
+                effective_limit_price = None
                 logger.info(f"[{stock_code}] Outside trading hours - executing reserved order (market)")
-            return self.buy_reserved_order(stock_code, buy_amount, limit_price=limit_price)
+            return self.buy_reserved_order(stock_code, buy_amount, limit_price=effective_limit_price)
 
     def buy_closing_price(self, stock_code: str, buy_amount: int = None) -> Dict[str, Any]:
         """
@@ -709,11 +793,12 @@ class DomesticStockTrading:
 
         # Set order type and unit price
         if limit_price and limit_price > 0:
+            effective_limit_price = align_krx_tick_price(limit_price, method="floor")
             ord_dvsn_cd = "00"  # Limit price
-            ord_unpr = str(int(limit_price))
+            ord_unpr = str(int(effective_limit_price))
             # Calculate quantity based on limit price (must be int for API)
-            buy_quantity = int(amount // limit_price)
-            logger.info(f"[{stock_code}] Reserved order limit price: {int(limit_price):,} KRW, quantity: {buy_quantity} shares")
+            buy_quantity = int(amount // effective_limit_price)
+            logger.info(f"[{stock_code}] Reserved order limit price: {effective_limit_price:,} KRW, quantity: {buy_quantity} shares")
         else:
             ord_dvsn_cd = "01"  # Market price
             ord_unpr = "0"
@@ -860,13 +945,14 @@ class DomesticStockTrading:
             tr_id = "VTTC0011U"  # Demo sell
 
         use_limit = limit_price is not None and limit_price > 0
+        effective_limit_price = align_krx_tick_price(limit_price, method="round") if use_limit else None
         params = {
             "CANO": self.trenv.my_acct,
             "ACNT_PRDT_CD": self.trenv.my_prod,
             "PDNO": stock_code,
             "ORD_DVSN": "00" if use_limit else "01",
             "ORD_QTY": str(buy_quantity),
-            "ORD_UNPR": str(int(limit_price)) if use_limit else "0",
+            "ORD_UNPR": str(int(effective_limit_price)) if use_limit else "0",
             "EXCG_ID_DVSN_CD": "KRX",
             "SLL_TYPE": "01",  # 01: Regular sell
             "CNDT_PRIC": ""
@@ -887,7 +973,7 @@ class DomesticStockTrading:
                     'order_no': order_no,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
-                    'limit_price': int(limit_price) if use_limit else None,
+                    'limit_price': int(effective_limit_price) if use_limit else None,
                     'message': f'{order_kind} sell all order completed ({buy_quantity} shares)'
                 }
             else:
@@ -943,16 +1029,18 @@ class DomesticStockTrading:
         # Branch by time period
         if datetime.time(9, 0) <= current_time <= datetime.time(15, 30):
             if limit_price and limit_price > 0:
+                effective_limit_price = align_krx_tick_price(limit_price, method="round")
                 logger.info(
                     f"[{stock_code}] Regular trading hours - executing limit sell "
-                    f"@ {limit_price:,} KRW"
+                    f"@ {effective_limit_price:,} KRW"
                 )
             else:
+                effective_limit_price = None
                 logger.info(f"[{stock_code}] Regular trading hours - executing market sell")
             return self.sell_all_market_price(
                 stock_code,
                 holding_quantity=holding_quantity,
-                limit_price=limit_price,
+                limit_price=effective_limit_price,
             )
 
         elif datetime.time(15, 40) <= current_time <= datetime.time(16, 0):
@@ -962,11 +1050,13 @@ class DomesticStockTrading:
 
         else:
             # Reserved order (limit or market price)
-            if limit_price:
-                logger.info(f"[{stock_code}] Outside trading hours - executing reserved order (limit: {limit_price:,} KRW)")
+            if limit_price and limit_price > 0:
+                effective_limit_price = align_krx_tick_price(limit_price, method="round")
+                logger.info(f"[{stock_code}] Outside trading hours - executing reserved order (limit: {effective_limit_price:,} KRW)")
             else:
+                effective_limit_price = None
                 logger.info(f"[{stock_code}] Outside trading hours - executing reserved order (market)")
-            return self.sell_all_reserved_order(stock_code, limit_price=limit_price, holding_quantity=holding_quantity)
+            return self.sell_all_reserved_order(stock_code, limit_price=effective_limit_price, holding_quantity=holding_quantity)
 
     def sell_all_closing_price(self, stock_code: str, holding_quantity: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -1085,9 +1175,10 @@ class DomesticStockTrading:
 
         # Set order type and unit price
         if limit_price and limit_price > 0:
+            effective_limit_price = align_krx_tick_price(limit_price, method="round")
             ord_dvsn_cd = "00"  # Limit price
-            ord_unpr = str(int(limit_price))
-            logger.info(f"[{stock_code}] Reserved sell order limit price: {int(limit_price):,} KRW, quantity: {buy_quantity} shares")
+            ord_unpr = str(int(effective_limit_price))
+            logger.info(f"[{stock_code}] Reserved sell order limit price: {effective_limit_price:,} KRW, quantity: {buy_quantity} shares")
         else:
             ord_dvsn_cd = "01"  # Market price
             ord_unpr = "0"
@@ -1239,7 +1330,7 @@ class DomesticStockTrading:
                         # Step 2: Calculate buyable quantity using the submitted price.
                         current_price = current_price_info['current_price']
                         requested_limit_price = (
-                            int(limit_price)
+                            align_krx_tick_price(limit_price, method="floor")
                             if limit_price and limit_price > 0
                             else None
                         )
@@ -1392,7 +1483,7 @@ class DomesticStockTrading:
                         # price could leave a regular-session market sell unfilled.
                         # KIS requires integer price strings for explicit limits.
                         effective_limit_price = (
-                            int(limit_price)
+                            align_krx_tick_price(limit_price, method="round")
                             if limit_price and limit_price > 0
                             else None
                         )
