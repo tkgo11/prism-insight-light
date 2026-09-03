@@ -50,6 +50,7 @@ from .strategies import (
     StopLossSellStrategy,
     StopLossSellStrategyConfig,
 )
+from .stop_loss_watcher import StopLossTracker, StopLossWatcherConfig
 from .us import USStockTrading
 
 logger = logging.getLogger(__name__)
@@ -341,6 +342,10 @@ class TradeDispatcher:
         self.cooldown_config = CooldownStrategyConfig.from_mapping(self.strategy_config)
         self.event_risk_off_config = EventRiskOffStrategyConfig.from_mapping(self.strategy_config)
         self.stop_loss_sell_config = StopLossSellStrategyConfig.from_mapping(self.strategy_config)
+        self.stop_loss_watcher_config = StopLossWatcherConfig.from_mapping(
+            self._runtime_config.get("stop_loss_watcher")
+        )
+        self.stop_loss_tracker = StopLossTracker(self.stop_loss_watcher_config.storage_path)
         self.account_name = account_name
         self.account_index = account_index
         setting = self._runtime_config.get("multi_account_trading") or {}
@@ -356,13 +361,16 @@ class TradeDispatcher:
     async def dispatch(self, signal: SignalMessage, *, allow_queue: bool = True) -> DispatchResult:
         async with _serialized_broker_workflow():
             if self.multi_account_enabled:
-                return await self.multi_account_dispatcher.dispatch(
+                result = await self.multi_account_dispatcher.dispatch(
                     signal, allow_queue=allow_queue
                 )
-            if self.dry_run:
+            elif self.dry_run:
                 logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
-                return DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
-            return await self._dispatch_serialized(signal, allow_queue=allow_queue)
+                result = DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
+            else:
+                result = await self._dispatch_serialized(signal, allow_queue=allow_queue)
+            self._update_stop_loss_tracking(signal, result)
+            return result
 
     async def _dispatch_serialized(
         self,
@@ -433,10 +441,34 @@ class TradeDispatcher:
                 requested_ids = queue_context.get("account_ids")
                 if not isinstance(requested_ids, list) or not all(isinstance(item, str) for item in requested_ids):
                     return DispatchResult("failed", "Queued multi-account targets are invalid", signal.signal_type, signal.market)
-                return await self.multi_account_dispatcher.dispatch(
+                result = await self.multi_account_dispatcher.dispatch(
                     signal, allow_queue=False, requested_ids=requested_ids
                 )
+                self._update_stop_loss_tracking(signal, result)
+                return result
         return await self.dispatch(signal, allow_queue=False)
+
+    def _update_stop_loss_tracking(self, signal: SignalMessage, result: DispatchResult) -> None:
+        if self.stop_loss_tracker is None:
+            return
+        is_success = (
+            result.status in {"executed", "dry-run"}
+            or any(acct.status in {"executed", "dry-run"} for acct in result.accounts)
+        )
+        if not is_success:
+            return
+
+        if signal.signal_type == "BUY" and signal.stop_loss is not None and signal.stop_loss > 0:
+            self.stop_loss_tracker.record_position(
+                market=signal.market,
+                ticker=signal.ticker,
+                stop_loss=signal.stop_loss,
+                entry_price=signal.price or 0.0,
+                company_name=signal.company_name,
+                target_price=signal.target_price,
+            )
+        elif signal.signal_type == "SELL":
+            self.stop_loss_tracker.remove_position(signal.market, signal.ticker)
 
     def drain_due_orders(self) -> int:
         def _executor(payload: dict) -> QueueExecutionResult:
