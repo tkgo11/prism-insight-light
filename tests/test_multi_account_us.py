@@ -752,3 +752,47 @@ def test_resolve_exchange_code_falls_back_to_master_info_when_quote_fails():
     assert ust.get_cached_exchange("COP") == "NYSE"
     assert trader._resolve_exchange_code("UNKNOWN_SYMBOL") is None
 
+
+@pytest.mark.asyncio
+async def test_async_sell_stock_elevates_limit_price_when_lower(monkeypatch):
+    ust.clear_exchange_cache()
+    ust.cache_exchange_code("AAPL", "NASD")
+    trader = object.__new__(ust.USStockTrading)
+    trader.mode = "demo"
+    trader._stock_locks = {}
+    trader._semaphore = asyncio.Semaphore(1)
+    trader._global_lock = asyncio.Lock()
+
+    trader.get_portfolio = lambda: [
+        {"ticker": "AAPL", "quantity": 10, "exchange": "NASD", "avg_price": 180.0}
+    ]
+    # Current price is $220.00, but signal limit is lower at $210.00
+    trader.get_current_price = lambda ticker, exchange=None: {"current_price": 220.0, "exchange": "NASD"}
+
+    sell_calls = []
+
+    def fake_smart_sell_all(ticker, exchange=None, limit_price=None, use_moo=False, holding_quantity=None):
+        sell_calls.append({
+            "ticker": ticker,
+            "exchange": exchange,
+            "limit_price": limit_price,
+            "use_moo": use_moo,
+            "holding_quantity": holding_quantity,
+        })
+        return {"success": True, "order_no": "sell-aapl", "quantity": holding_quantity, "message": "ok"}
+
+    trader.smart_sell_all = fake_smart_sell_all
+
+    async def no_sleep(_seconds):
+        return None
+
+    monkeypatch.setattr(ust.asyncio, "sleep", no_sleep)
+
+    result = await trader._execute_sell_stock("AAPL", limit_price=210.0)
+
+    assert result["success"] is True
+    assert result["quantity"] == 10
+    # Limit price should be elevated from $210.0 to current price $220.0
+    assert sell_calls[0]["limit_price"] == 220.0
+
+

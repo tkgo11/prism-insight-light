@@ -543,3 +543,82 @@ def test_regular_session_buy_limit_aligns_unaligned_price_to_krx_tick():
     assert captured["params"]["ORD_UNPR"] == "548000"
     assert result["limit_price"] == 548000
 
+
+@pytest.mark.asyncio
+async def test_async_sell_elevates_limit_price_to_current_price_when_lower(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader._stock_locks = {}
+    trader._semaphore = dst.asyncio.Semaphore(1)
+    trader._global_lock = dst.asyncio.Lock()
+    trader.get_portfolio = lambda **kwargs: [
+        {
+            "stock_code": "006400",
+            "quantity": 9,
+            "avg_price": 520000,
+            "profit_amount": 261000,
+            "profit_rate": 5.58,
+        }
+    ]
+    # Current price is 549,000 KRW, but signal limit is lower at 540,000 KRW
+    trader.get_current_price = lambda stock_code: {"current_price": 549000}
+    calls = []
+
+    def fake_smart_sell_all(stock_code, limit_price=None, holding_quantity=None):
+        calls.append((stock_code, limit_price, holding_quantity))
+        return {
+            "success": True,
+            "order_no": "sell-1",
+            "stock_code": stock_code,
+            "quantity": holding_quantity,
+            "message": "sold",
+        }
+
+    trader.smart_sell_all = fake_smart_sell_all
+
+    result = await trader._execute_sell_stock("006400", limit_price=540000)
+
+    assert result["success"] is True
+    assert result["quantity"] == 9
+    # Limit price should be elevated from 540,000 to current price 549,000
+    assert calls == [("006400", 549000, 9)]
+
+
+@pytest.mark.asyncio
+async def test_async_sell_retains_limit_price_when_higher_than_current_price(monkeypatch):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader._stock_locks = {}
+    trader._semaphore = dst.asyncio.Semaphore(1)
+    trader._global_lock = dst.asyncio.Lock()
+    trader.get_portfolio = lambda **kwargs: [
+        {
+            "stock_code": "006400",
+            "quantity": 9,
+            "avg_price": 520000,
+            "profit_amount": 261000,
+            "profit_rate": 5.58,
+        }
+    ]
+    # Current price is 549,000 KRW, but signal limit is higher at 560,000 KRW
+    trader.get_current_price = lambda stock_code: {"current_price": 549000}
+    calls = []
+
+    def fake_smart_sell_all(stock_code, limit_price=None, holding_quantity=None):
+        calls.append((stock_code, limit_price, holding_quantity))
+        return {
+            "success": True,
+            "order_no": "sell-2",
+            "stock_code": stock_code,
+            "quantity": holding_quantity,
+            "message": "sold",
+        }
+
+    trader.smart_sell_all = fake_smart_sell_all
+
+    result = await trader._execute_sell_stock("006400", limit_price=560000)
+
+    assert result["success"] is True
+    assert result["quantity"] == 9
+    # Limit price should remain 560,000
+    assert calls == [("006400", 560000, 9)]
+
+

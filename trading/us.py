@@ -1772,9 +1772,18 @@ class USStockTrading:
                             result['message'] = 'KIS could not validate a supported US exchange for this ticker'
                             return result
 
-                        # Use current_price as limit_price if not provided or invalid
-                        # This is important for reserved orders when market is closed
-                        effective_limit_price = limit_price if (limit_price and limit_price > 0) else current_price
+                        # If sell limit price is lower than current market price, elevate to current price
+                        # to secure better execution; otherwise use requested limit price.
+                        if limit_price and limit_price > 0:
+                            if current_price > 0 and limit_price < current_price:
+                                logger.info(
+                                    f"[Async Sell] {ticker} signal limit price (${limit_price:.2f}) is lower than current market price (${current_price:.2f}); elevating limit to current price"
+                                )
+                                effective_limit_price = current_price
+                            else:
+                                effective_limit_price = limit_price
+                        else:
+                            effective_limit_price = current_price
 
                         # If no valid price at all, use MOO (Market On Open) for reserved orders
                         effective_use_moo = use_moo
