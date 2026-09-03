@@ -1459,9 +1459,14 @@ class DomesticStockTrading:
                             self.get_current_price, stock_code
                         )
 
-                        if current_price_info:
-                            result['current_price'] = current_price_info['current_price']
-                            logger.info(f"[Async Sell API] {stock_code} current price: {current_price_info['current_price']:,} KRW")
+                        current_price = (
+                            current_price_info['current_price']
+                            if current_price_info and current_price_info.get('current_price')
+                            else 0
+                        )
+                        if current_price > 0:
+                            result['current_price'] = current_price
+                            logger.info(f"[Async Sell API] {stock_code} current price: {current_price:,} KRW")
 
                         # Reuse the quantity from the portfolio verification above.
                         # A second immediate balance inquiry can exceed the KIS
@@ -1478,13 +1483,21 @@ class DomesticStockTrading:
                                 result['message'] = 'Partial sell quantity rounds down to 0 shares'
                                 return result
 
-                        # Preserve the caller's order intent. Current price is used
-                        # only for reporting; silently turning it into a limit
-                        # price could leave a regular-session market sell unfilled.
-                        # KIS requires integer price strings for explicit limits.
+                        # If sell limit price is lower than current market price, elevate to current price
+                        # to secure better execution; otherwise use the requested limit price.
+                        target_price = None
+                        if limit_price and limit_price > 0:
+                            if current_price > 0 and limit_price < current_price:
+                                logger.info(
+                                    f"[Async Sell API] {stock_code} signal limit price ({limit_price:,} KRW) is lower than current market price ({current_price:,} KRW); elevating limit to current price"
+                                )
+                                target_price = current_price
+                            else:
+                                target_price = limit_price
+
                         effective_limit_price = (
-                            align_krx_tick_price(limit_price, method="round")
-                            if limit_price and limit_price > 0
+                            align_krx_tick_price(target_price, method="round")
+                            if target_price and target_price > 0
                             else None
                         )
 
