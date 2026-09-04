@@ -157,6 +157,8 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
     class FakeDispatcher:
         dry_run = True
         trading_mode = "demo"
+        stop_loss_watcher_config = subscriber.StopLossWatcherConfig(enabled=False)
+        stop_loss_tracker = object()
 
         def __init__(self, **kwargs):
             self.kwargs = kwargs
@@ -387,6 +389,8 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
     class FakeDispatcher:
         dry_run = True
         trading_mode = "demo"
+        stop_loss_watcher_config = subscriber.StopLossWatcherConfig(enabled=False)
+        stop_loss_tracker = object()
 
         def __init__(self, **kwargs):
             self.kwargs = kwargs
