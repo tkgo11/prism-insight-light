@@ -16,6 +16,8 @@ from . import yaml_compat as yaml
 from .config_paths import active_kis_config_path
 from .domestic import AsyncTradingContext
 from .execution_ledger import ExecutionLedger, execution_identity
+from .execution_outcome import classify_broker_result
+from .file_lock import FileLock
 from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
 from .modes import normalize_trading_mode
 from .off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue, QueueExecutionResult
@@ -56,16 +58,29 @@ from .us import USStockTrading
 logger = logging.getLogger(__name__)
 CONFIG_FILE = active_kis_config_path()
 _BROKER_EXECUTION_LOCK = threading.Lock()
+_BROKER_EXECUTION_FILE_LOCK = (
+    Path(__file__).resolve().parents[1] / "runtime" / "broker_execution.lock"
+)
 
 
 @asynccontextmanager
 async def _serialized_broker_workflow():
-    """Serialize in-process Pub/Sub, queue, and WebUI broker workflows."""
+    """Serialize broker workflows across threads and sibling processes."""
     while not _BROKER_EXECUTION_LOCK.acquire(blocking=False):
         await asyncio.sleep(0.01)
+    process_lock = None
     try:
+        while process_lock is None:
+            candidate = FileLock(_BROKER_EXECUTION_FILE_LOCK, timeout=0)
+            try:
+                candidate.__enter__()
+                process_lock = candidate
+            except TimeoutError:
+                await asyncio.sleep(0.05)
         yield
     finally:
+        if process_lock is not None:
+            process_lock.__exit__(None, None, None)
         _BROKER_EXECUTION_LOCK.release()
 
 
@@ -173,6 +188,9 @@ class MultiAccountTradeDispatcher:
         elif counts.get("failed", 0) == len(results):
             status = "failed"
             message = f"All {len(results)} account execution(s) failed"
+        elif counts.get("unknown", 0) == len(results):
+            status = "unknown"
+            message = f"All {len(results)} account execution outcome(s) are unknown"
         elif counts.get("skipped", 0) == len(results):
             status = "skipped"
             message = f"All {len(results)} account execution(s) were skipped"
@@ -251,26 +269,28 @@ class MultiAccountTradeDispatcher:
         for account in accounts:
             account_id = _account_id(account["account_key"])
             identity = execution_identity(signal.raw, account["account_key"])
-            claimed, previous_status = self.ledger.claim(identity)
-            if not claimed:
-                results.append(
-                    AccountDispatchResult(
-                        account=account["name"],
-                        account_id=account_id,
-                        status="skipped",
-                        message=f"Duplicate signal/account execution suppressed (previous status: {previous_status})",
+            if self.dispatcher.execution_dedupe:
+                claimed, previous_status = self.ledger.claim(identity)
+                if not claimed:
+                    results.append(
+                        AccountDispatchResult(
+                            account=account["name"],
+                            account_id=account_id,
+                            status="skipped",
+                            message=f"Duplicate signal/account execution suppressed (previous status: {previous_status})",
+                        )
                     )
-                )
-                logger.warning(
-                    "[Account: %s] suppressed duplicate automatic %s %s(%s)",
-                    account["name"], signal.signal_type, signal.company_name, signal.ticker,
-                )
-                continue
+                    logger.warning(
+                        "[Account: %s] suppressed duplicate automatic %s %s(%s)",
+                        account["name"], signal.signal_type, signal.company_name, signal.ticker,
+                    )
+                    continue
             try:
                 result = await self.dispatcher._dispatch_serialized(
                     signal, allow_queue=False, account=account
                 )
-                self.ledger.finalize(identity, result.status)
+                if self.dispatcher.execution_dedupe:
+                    self.ledger.finalize(identity, result.status)
                 results.append(
                     AccountDispatchResult(
                         account=account["name"],
@@ -284,20 +304,25 @@ class MultiAccountTradeDispatcher:
                     account["name"], signal.signal_type, signal.company_name, signal.ticker,
                     result.status, result.message,
                 )
+            except asyncio.CancelledError:
+                if self.dispatcher.execution_dedupe:
+                    self.ledger.finalize(identity, "unknown")
+                raise
             except Exception as exc:  # noqa: BLE001 - each account is an isolated boundary
                 error_message = f"{type(exc).__name__}: {str(exc)[:512]}"
-                self.ledger.finalize(identity, "failed")
+                if self.dispatcher.execution_dedupe:
+                    self.ledger.finalize(identity, "unknown")
                 results.append(
                     AccountDispatchResult(
                         account=account["name"],
                         account_id=account_id,
-                        status="failed",
-                        message="Account execution failed",
+                        status="unknown",
+                        message="Account execution outcome is unknown; automatic retry suppressed",
                         error=error_message,
                     )
                 )
                 logger.exception(
-                    "[Account: %s] automatic %s %s(%s) failed",
+                    "[Account: %s] automatic %s %s(%s) outcome unknown",
                     account["name"], signal.signal_type, signal.company_name, signal.ticker,
                 )
         return self._aggregate(signal, results)
@@ -315,8 +340,10 @@ class TradeDispatcher:
         account_name: str | None = None,
         account_index: int | None = None,
         execution_ledger_path: Path | None = None,
+        execution_dedupe: bool = True,
     ):
         self.dry_run = dry_run
+        self.execution_dedupe = execution_dedupe
         selected_mode = get_trading_mode() if trading_mode is None else trading_mode
         self.trading_mode = normalize_trading_mode(selected_mode)
         self.queue = queue or OffHoursOrderQueue(queue_path)
@@ -354,8 +381,9 @@ class TradeDispatcher:
             and self.account_index is None
             and _as_enabled(setting.get("enabled") if isinstance(setting, dict) else setting)
         )
+        self.execution_ledger = ExecutionLedger(execution_ledger_path)
         self.multi_account_dispatcher = MultiAccountTradeDispatcher(
-            self, ExecutionLedger(execution_ledger_path)
+            self, self.execution_ledger
         )
 
     async def dispatch(self, signal: SignalMessage, *, allow_queue: bool = True) -> DispatchResult:
@@ -422,16 +450,56 @@ class TradeDispatcher:
                     signal.market,
                 )
 
-        if strategy is not None:
-            strategy_result = await strategy.execute(
-                signal,
-                trading_mode=self.trading_mode,
-                trader_kwargs=self._strategy_trader_kwargs(account),
+        identity = None
+        if account is None and self.execution_dedupe:
+            identity = execution_identity(
+                signal.raw, self._single_account_execution_selector(signal)
             )
-            return DispatchResult(strategy_result.status, strategy_result.message, signal.signal_type, signal.market)
-        if account is None:
-            return await self._execute_legacy_trade(signal)
-        return await self._execute_legacy_trade(signal, account=account)
+            claimed, previous_status = self.execution_ledger.claim(identity)
+            if not claimed:
+                logger.warning(
+                    "Suppressed duplicate automatic %s %s(%s) (previous status: %s)",
+                    signal.signal_type,
+                    signal.company_name,
+                    signal.ticker,
+                    previous_status,
+                )
+                return DispatchResult(
+                    "skipped",
+                    f"Duplicate automatic execution suppressed (previous status: {previous_status})",
+                    signal.signal_type,
+                    signal.market,
+                )
+
+        try:
+            if strategy is not None:
+                strategy_result = await strategy.execute(
+                    signal,
+                    trading_mode=self.trading_mode,
+                    trader_kwargs=self._strategy_trader_kwargs(account),
+                )
+                result = DispatchResult(
+                    strategy_result.status,
+                    strategy_result.message,
+                    signal.signal_type,
+                    signal.market,
+                )
+            elif account is None:
+                result = await self._execute_legacy_trade(signal)
+            else:
+                result = await self._execute_legacy_trade(signal, account=account)
+        except asyncio.CancelledError:
+            if identity is not None:
+                self.execution_ledger.finalize(identity, "unknown")
+            raise
+        except Exception:
+            if identity is not None:
+                self.execution_ledger.finalize(identity, "unknown")
+            raise
+
+        if identity is not None:
+            self.execution_ledger.finalize(identity, result.status)
+        return result
 
     async def execute_queued_signal(self, payload: dict) -> DispatchResult:
         queue_context = payload.pop(QUEUE_CONTEXT_KEY, None)
@@ -475,7 +543,7 @@ class TradeDispatcher:
             result = asyncio.run(self.execute_queued_signal(payload))
             if result.status == "deferred":
                 return QueueExecutionResult("deferred", result.message)
-            if result.status in {"failed", "skipped"}:
+            if result.status in {"failed", "unknown", "skipped"}:
                 logger.error(
                     "Quarantining failed queued %s order on %s: %s",
                     result.signal_type, result.market, result.message,
@@ -531,6 +599,15 @@ class TradeDispatcher:
                 return ProtectiveExitStrategy(config=self.protective_exit_config)
         return None
 
+    def _single_account_execution_selector(self, signal: SignalMessage) -> str:
+        if self.account_name:
+            selector = f"name:{self.account_name}"
+        elif self.account_index is not None:
+            selector = f"index:{self.account_index}"
+        else:
+            selector = "primary"
+        return f"{self.trading_mode}:{signal.market}:{selector}"
+
     def _strategy_trader_kwargs(self, account: dict[str, Any] | None = None) -> dict[str, Any]:
         if account is not None:
             return {
@@ -563,7 +640,7 @@ class TradeDispatcher:
                     trade_result = await trader.async_buy_stock(stock_code=signal.ticker, limit_price=None if limit_price is None else int(limit_price))
                 else:
                     trade_result = await trader.async_sell_stock(stock_code=signal.ticker, limit_price=None if limit_price is None else int(limit_price))
-        status = "executed" if trade_result.get("success") else "failed"
+        status = classify_broker_result(trade_result)
         message = str(trade_result.get("message", ""))
         account_prefix = f"[Account: {account['name']}] " if account else ""
         logger.info("%s%s %s(%s): %s", account_prefix, signal.signal_type, signal.company_name, signal.ticker, message)
