@@ -393,3 +393,164 @@ async def test_broker_workflows_are_serialized_across_dispatchers(monkeypatch):
     await asyncio.gather(first_task, second_task)
     assert calls == ["AAPL", "MSFT"]
     assert max_active == 1
+
+
+@pytest.mark.asyncio
+async def test_single_account_duplicate_signal_is_suppressed_before_second_broker_call(
+    monkeypatch, tmp_path
+):
+    calls = []
+
+    class FakeUSTrader:
+        def __init__(self, **kwargs):
+            pass
+
+        async def async_buy_stock(self, ticker, limit_price=None):
+            calls.append((ticker, limit_price))
+            return {"success": True, "order_no": "US-1", "message": "accepted"}
+
+    monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo",
+        strategy_config={"name": ""},
+        execution_ledger_path=tmp_path / "ledger.json",
+    )
+    signal = parse_signal_payload(
+        {
+            "signal_id": "signal-duplicate-1",
+            "type": "BUY",
+            "ticker": "AAPL",
+            "market": "US",
+            "price": 200,
+        }
+    )
+
+    first = await dispatcher.dispatch(signal)
+    second = await dispatcher.dispatch(signal)
+
+    assert first.status == "executed"
+    assert second.status == "skipped"
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_ambiguous_broker_result_is_unknown_and_not_retried(monkeypatch, tmp_path):
+    calls = []
+
+    class FakeUSTrader:
+        def __init__(self, **kwargs):
+            pass
+
+        async def async_buy_stock(self, ticker, limit_price=None):
+            calls.append(ticker)
+            return {
+                "success": False,
+                "order_no": None,
+                "message": "Error during buy order: read timed out",
+            }
+
+    monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo",
+        strategy_config={"name": ""},
+        execution_ledger_path=tmp_path / "ledger.json",
+    )
+    signal = parse_signal_payload(
+        {
+            "signal_id": "signal-timeout-1",
+            "type": "BUY",
+            "ticker": "AAPL",
+            "market": "US",
+            "price": 200,
+        }
+    )
+
+    first = await dispatcher.dispatch(signal)
+    second = await dispatcher.dispatch(signal)
+
+    assert first.status == "unknown"
+    assert second.status == "skipped"
+    assert calls == ["AAPL"]
+
+
+@pytest.mark.asyncio
+async def test_exception_during_automatic_execution_is_claimed_unknown(monkeypatch, tmp_path):
+    calls = []
+
+    class RaisingUSTrader:
+        def __init__(self, **kwargs):
+            pass
+
+        async def async_sell_stock(self, ticker, limit_price=None):
+            calls.append(ticker)
+            raise TypeError("response parsing failed after submission")
+
+    monkeypatch.setattr("trading.dispatch.USStockTrading", RaisingUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo",
+        strategy_config={"name": ""},
+        execution_ledger_path=tmp_path / "ledger.json",
+    )
+    signal = parse_signal_payload(
+        {
+            "signal_id": "signal-exception-1",
+            "type": "SELL",
+            "ticker": "AAPL",
+            "market": "US",
+            "price": 200,
+        }
+    )
+
+    with pytest.raises(TypeError, match="after submission"):
+        await dispatcher.dispatch(signal)
+
+    retry = await dispatcher.dispatch(signal)
+    assert retry.status == "skipped"
+    assert calls == ["AAPL"]
+
+
+@pytest.mark.asyncio
+async def test_stop_loss_tracker_failure_after_order_does_not_make_order_retryable(
+    monkeypatch, tmp_path
+):
+    class FakeUSTrader:
+        def __init__(self, **kwargs):
+            pass
+
+        async def async_buy_stock(self, ticker, limit_price=None):
+            return {"success": True, "order_no": "US-2", "message": "accepted"}
+
+    class BrokenTracker:
+        def record_position(self, **kwargs):
+            raise RuntimeError("corrupt tracker")
+
+        def remove_position(self, *args, **kwargs):
+            raise RuntimeError("corrupt tracker")
+
+    monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo",
+        strategy_config={"name": ""},
+        execution_ledger_path=tmp_path / "ledger.json",
+    )
+    dispatcher.stop_loss_tracker = BrokenTracker()
+    signal = parse_signal_payload(
+        {
+            "signal_id": "signal-tracker-failure",
+            "type": "BUY",
+            "ticker": "AAPL",
+            "market": "US",
+            "price": 200,
+            "stop_loss": 180,
+        }
+    )
+
+    result = await dispatcher.dispatch(signal)
+    retry = await dispatcher.dispatch(signal)
+
+    assert result.status == "executed"
+    assert retry.status == "skipped"
