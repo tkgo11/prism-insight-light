@@ -236,3 +236,72 @@ def test_stop_loss_watcher_clears_zero_holding_position(tmp_path, monkeypatch):
 
     # But should be cleared from tracker
     assert tracker.get_position("US", "AAPL") is None
+
+def test_stop_loss_tracker_corruption_fails_closed(tmp_path):
+    tracker_file = tmp_path / "stop_loss_positions.json"
+    tracker_file.write_text("{not-json", encoding="utf-8")
+    tracker = StopLossTracker(tracker_file)
+
+    with pytest.raises(RuntimeError, match="unreadable"):
+        tracker.get_positions()
+
+
+def test_stop_loss_watcher_blocks_sell_when_holding_is_unknown(tmp_path):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("KR", "005930", 70000.0, entry_price=73000.0)
+
+    config = StopLossWatcherConfig(
+        enabled=True,
+        request_interval_seconds=0.0,
+        storage_path=tracker_file,
+    )
+    mock_trader = MagicMock()
+    mock_trader.get_current_price.return_value = {"current_price": 69000}
+    mock_trader.get_holding_quantity.side_effect = RuntimeError("KIS balance unavailable")
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "real"
+    dispatcher.multi_account_enabled = False
+    dispatcher.dispatch = AsyncMock()
+
+    watcher = StopLossWatcher(dispatcher, config, tracker=tracker)
+    watcher._get_trader = MagicMock(return_value=mock_trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        results = watcher.check_stop_loss_once()
+
+    assert results == []
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position("KR", "005930") is not None
+
+
+def test_stop_loss_signal_id_is_stable_for_same_tracked_position(tmp_path):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("US", "AAPL", 170.0, entry_price=180.0)
+    pos = tracker.get_position("US", "AAPL")
+    assert pos is not None
+
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock(
+        return_value=DispatchResult(
+            "unknown",
+            "Broker outcome unknown",
+            "SELL",
+            "US",
+        )
+    )
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, storage_path=tracker_file),
+        tracker=tracker,
+    )
+
+    watcher._trigger_sell("US", "AAPL", 169.0, pos)
+    watcher._trigger_sell("US", "AAPL", 168.0, pos)
+
+    first_signal = dispatcher.dispatch.call_args_list[0].args[0]
+    second_signal = dispatcher.dispatch.call_args_list[1].args[0]
+    assert first_signal.raw["signal_id"] == second_signal.raw["signal_id"]
+    assert tracker.get_position("US", "AAPL") is not None
