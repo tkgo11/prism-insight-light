@@ -228,6 +228,18 @@ Behavior:
 - `EVENT`: log and ack, with no trade.
 - malformed or unsupported payload: log and ack.
 
+### Automatic execution safety
+
+Automatic Pub/Sub, off-hours queue replay, and stop-loss signals are claimed in a durable execution ledger before the broker call. Redelivery or process restart therefore cannot place a second automatic order for the same signal/account identity.
+
+- An explicit KIS rejection is recorded as `failed`.
+- Timeouts, connection loss, response-parsing failures, and other outcomes where broker acceptance cannot be proven are recorded as `unknown` and are **not retried automatically**.
+- Broker workflows from sibling processes such as the subscriber, standalone WebUI, or cron jobs are serialized with a shared file lock.
+- The stop-loss watcher blocks SELL when the actual holding quantity cannot be confirmed; a damaged stop-loss ledger is not treated as an empty ledger.
+- WebUI manual orders are intentionally outside the seven-day automatic-signal dedupe because users may deliberately repeat them. Existing CSRF, single-use ticket, and arming-phrase protections still apply.
+
+If an `unknown` outcome appears, inspect KIS order/execution history before taking operator action. The runtime deliberately does not auto-retry it.
+
 ## Telegram fetch helper
 
 `trading.telegram_fetch` can fetch and parse signal-like posts from Telegram public preview pages.

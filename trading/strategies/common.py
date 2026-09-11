@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Callable, Protocol
 
 from ..domestic import AsyncTradingContext
+from ..execution_outcome import classify_broker_result
 from ..file_lock import FileLock
 from ..schema import SignalMessage
 from ..us import USStockTrading
@@ -151,7 +152,7 @@ def execution_from_result(signal: SignalMessage, result: dict[str, Any], message
     broker_message = str(result.get("message", ""))
     message = f"{message_prefix}: {broker_message}" if broker_message else message_prefix
     return StrategyExecution(
-        status="executed" if result.get("success") else "failed",
+        status=classify_broker_result(result),
         message=message,
         market=signal.market,
         ticker=signal.ticker,

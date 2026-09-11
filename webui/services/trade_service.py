@@ -106,6 +106,7 @@ async def dispatch_manual_order(
                 trading_mode=trading_mode or None,
                 strategy_config={"name": ""},
                 account_name=account_name or None,
+                execution_dedupe=False,
             )
             result = await dispatcher.dispatch(signal)
         finally:
