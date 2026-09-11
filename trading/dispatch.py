@@ -526,17 +526,30 @@ class TradeDispatcher:
         if not is_success:
             return
 
-        if signal.signal_type == "BUY" and signal.stop_loss is not None and signal.stop_loss > 0:
-            self.stop_loss_tracker.record_position(
-                market=signal.market,
-                ticker=signal.ticker,
-                stop_loss=signal.stop_loss,
-                entry_price=signal.price or 0.0,
-                company_name=signal.company_name,
-                target_price=signal.target_price,
+        try:
+            if signal.signal_type == "BUY" and signal.stop_loss is not None and signal.stop_loss > 0:
+                self.stop_loss_tracker.record_position(
+                    market=signal.market,
+                    ticker=signal.ticker,
+                    stop_loss=signal.stop_loss,
+                    entry_price=signal.price or 0.0,
+                    company_name=signal.company_name,
+                    target_price=signal.target_price,
+                )
+            elif signal.signal_type == "SELL":
+                self.stop_loss_tracker.remove_position(signal.market, signal.ticker)
+        except RuntimeError:
+            # The broker outcome is already known at this point. Do not turn a
+            # successful order into a retryable subscriber failure merely
+            # because the local stop-loss tracker is damaged.
+            logger.critical(
+                "Stop-loss tracker update failed after %s %s(%s); "
+                "manual position protection verification is required",
+                signal.signal_type,
+                signal.company_name,
+                signal.ticker,
+                exc_info=True,
             )
-        elif signal.signal_type == "SELL":
-            self.stop_loss_tracker.remove_position(signal.market, signal.ticker)
 
     def drain_due_orders(self) -> int:
         def _executor(payload: dict) -> QueueExecutionResult:
