@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -120,20 +121,27 @@ class StopLossTracker:
         try:
             raw = self.path.read_text(encoding="utf-8")
             data = json.loads(raw)
-            if isinstance(data, dict):
-                return data
-            if isinstance(data, list):
-                result = {}
-                for item in data:
-                    if isinstance(item, dict) and "market" in item and "ticker" in item:
-                        result[self._key(item["market"], item["ticker"])] = item
-                return result
-            return {}
         except FileNotFoundError:
             return {}
-        except Exception as exc:
-            logger.warning("Could not read stop-loss positions file (%s): %s", self.path, exc)
-            return {}
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            logger.error(
+                "Stop-loss positions file is unreadable (%s): %s", self.path, exc
+            )
+            raise RuntimeError(
+                "Stop-loss tracker is unreadable; automated stop-loss actions are blocked"
+            ) from exc
+
+        if isinstance(data, dict):
+            return data
+        if isinstance(data, list):
+            result = {}
+            for item in data:
+                if isinstance(item, dict) and "market" in item and "ticker" in item:
+                    result[self._key(item["market"], item["ticker"])] = item
+            return result
+        raise RuntimeError(
+            "Stop-loss tracker has an invalid format; automated stop-loss actions are blocked"
+        )
 
     def _save(self, data: dict[str, dict[str, Any]]) -> None:
         temp_file = self.path.with_suffix(".tmp")
@@ -326,8 +334,14 @@ class StopLossWatcher:
                 try:
                     holding_qty = trader.get_holding_quantity(ticker)
                 except Exception as exc:
-                    logger.warning("[Stop-Loss] Could not check holding quantity for %s %s: %s", market, ticker, exc)
-                    holding_qty = 1
+                    logger.error(
+                        "[Stop-Loss] Holding quantity is UNKNOWN for %s %s; "
+                        "blocking automatic SELL: %s",
+                        market,
+                        ticker,
+                        exc,
+                    )
+                    continue
 
                 if holding_qty <= 0:
                     logger.info(
@@ -355,7 +369,17 @@ class StopLossWatcher:
         self, market: str, ticker: str, current_price: float, pos: dict[str, Any]
     ) -> dict[str, Any]:
         """Dispatch an automated stop-loss SELL signal."""
-        signal_id = f"stop_loss_{market}_{ticker}_{int(time.time())}"
+        identity_material = "|".join(
+            (
+                market,
+                ticker,
+                str(pos.get("created_at") or ""),
+                str(pos.get("entry_price") or ""),
+                str(pos.get("stop_loss") or ""),
+            )
+        )
+        signal_digest = hashlib.sha256(identity_material.encode("utf-8")).hexdigest()[:20]
+        signal_id = f"stop_loss_{market}_{ticker}_{signal_digest}"
         signal_payload = {
             "signal_id": signal_id,
             "type": "SELL",
