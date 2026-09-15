@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, Depends, Request, status
 
 from webui.routes.guards import (
@@ -82,7 +84,9 @@ async def update_config(request: Request):
         if source in form
     }
     try:
-        config_result = update_config_fields(fields, strategy or None)
+        config_result = await asyncio.to_thread(
+            update_config_fields, fields, strategy or None
+        )
         response_status = status.HTTP_200_OK
     except (OSError, TypeError, ValueError) as exc:
         config_result = {

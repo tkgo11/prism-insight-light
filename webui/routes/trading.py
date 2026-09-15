@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import math
 
 from fastapi import APIRouter, Depends, Request, status
@@ -158,7 +159,8 @@ async def update_config(request: Request):
         if source in form
     }
     try:
-        result = update_config_fields(
+        result = await asyncio.to_thread(
+            update_config_fields,
             fields,
             strategy or None,
         )

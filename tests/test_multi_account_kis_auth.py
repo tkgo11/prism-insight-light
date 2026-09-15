@@ -773,13 +773,14 @@ def test_auth_keys_token_files_by_resolved_account(monkeypatch, tmp_path):
 
     monkeypatch.setattr(ka, "_request_token_with_retry", fake_request)
 
-    original_save = ka.save_token
+    original_save = ka._save_token_inner
 
     def spy_save(token, expired, account_key=None):
         captured["account_key"] = account_key
         return original_save(token, expired, account_key=account_key)
 
-    monkeypatch.setattr(ka, "save_token", spy_save)
+    # auth() mints under the token-write lock via the lock-free inner save.
+    monkeypatch.setattr(ka, "_save_token_inner", spy_save)
 
     ka.auth(svr="vps", account_name="acct-a")
 

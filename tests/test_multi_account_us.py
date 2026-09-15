@@ -96,6 +96,8 @@ async def test_async_us_trading_context_returns_single_account_trader(monkeypatc
 
 @pytest.mark.asyncio
 async def test_multi_account_us_context_fans_out_orders_but_reads_primary(monkeypatch):
+    # Display/price reads stay on the primary account; holding quantity sums
+    # across all accounts so a secondary-account position is never missed.
     FakeUSTrader.init_calls = []
     accounts = [
         {"name": "us-primary", "account_key": "vps:us-primary:01", "product": "01"},
@@ -124,7 +126,7 @@ async def test_multi_account_us_context_fans_out_orders_but_reads_primary(monkey
         assert trader.get_account_summary() == {"account_name": "us-primary"}
         assert trader.get_current_price("AAPL") == {"ticker": "AAPL", "account_name": "us-primary"}
         assert trader.calculate_buy_quantity("AAPL") == 4
-        assert trader.get_holding_quantity("AAPL") == 2
+        assert trader.get_holding_quantity("AAPL") == 4
 
 
 @pytest.mark.asyncio

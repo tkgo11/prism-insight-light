@@ -99,6 +99,10 @@ async def test_multi_account_trading_context_fans_out_orders_but_reads_primary(m
         ]
         assert trader.get_portfolio() == [{"account_name": "kr-primary"}]
 
+        # Holding quantity sums across all accounts so a secondary-account
+        # position is never reported as 0 (stop-loss protection depends on it).
+        assert trader.get_holding_quantity("005930") == 14
+
 
 @pytest.mark.asyncio
 async def test_multi_account_aggregate_counts_only_executed_quantities(monkeypatch):
