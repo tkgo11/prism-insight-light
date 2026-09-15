@@ -42,6 +42,10 @@ class ScoreWeightedStrategy:
             if signal.buy_score is not None and signal.buy_score >= score: weight = band_weight
         base_amount = market_base_amount(signal, krw=self.config.base_amount_krw, usd=self.config.base_amount_usd)
         buy_amount = base_amount * weight if base_amount > 0 else None
+        if buy_amount is not None and buy_amount <= 0:
+            # A zero-weight band suppresses the order; reject it honestly instead of
+            # surfacing a broker-layer "invalid amount" error as an unknown outcome.
+            return StrategyExecution("rejected", "Score band weight produced a zero buy amount", signal.market, signal.ticker)
         result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=buy_amount, limit_price=signal.price)
         amount_label = f"{buy_amount:.2f}" if buy_amount is not None else "broker default"
         return execution_from_result(signal, result, f"Score weighted buy {amount_label} at weight {weight:.2f}", buy_amount=buy_amount, weight=weight)

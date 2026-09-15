@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import json
 import os
 import threading
 
@@ -83,6 +84,44 @@ def test_queue_rejects_over_capacity_save_without_corrupting_existing_work(
 
     assert queue.storage_path.read_bytes() == original
     assert queue.pending_count() == 1
+
+
+def test_queue_quarantines_malformed_execute_at_and_drains_due_items(tmp_path):
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    for ticker in ("005930", "000660"):
+        queue.enqueue(
+            parse_signal_payload(
+                {"type": "BUY", "ticker": ticker, "market": "KR", "price": 82000}
+            )
+        )
+    data = json.loads(queue.storage_path.read_text(encoding="utf-8"))
+    data[0]["execute_at"] = "not-a-timestamp"
+    data[1]["execute_at"] = "2000-01-01T00:00:00"  # naive: no timezone info
+    queue.storage_path.write_text(json.dumps(data), encoding="utf-8")
+    queue.enqueue(
+        parse_signal_payload(
+            {"type": "BUY", "ticker": "035720", "market": "KR", "price": 50000}
+        )
+    )
+
+    executed = []
+    drained = queue.drain_due(
+        lambda payload: executed.append(payload["ticker"]),
+        now=datetime.now(timezone.utc) + timedelta(days=7),
+    )
+
+    assert drained == 1
+    assert executed == ["035720"]
+    assert queue.pending_count() == 0
+    assert queue.failed_count() == 2
+    failure_messages = [item.failure_message for item in queue._load()]
+    assert all("Malformed execute_at" in message for message in failure_messages)
+
+    # A second drain must not resurrect or stall on the quarantined items.
+    assert queue.drain_due(
+        lambda payload: executed.append(payload["ticker"]),
+        now=datetime.now(timezone.utc) + timedelta(days=7),
+    ) == 0
 
 
 def test_queue_quarantines_executor_exception_and_continues(tmp_path):

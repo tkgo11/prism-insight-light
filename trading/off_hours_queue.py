@@ -204,12 +204,34 @@ class OffHoursOrderQueue:
         with FileLock(self.drain_lock_path):
             current = now or datetime.now(timezone.utc)
             with FileLock(self.lock_path):
-                due = [
-                    item
-                    for item in self._load()
-                    if item.status == "pending"
-                    and datetime.fromisoformat(item.execute_at) <= current
-                ]
+                loaded_items = self._load()
+                due: list[QueuedSignal] = []
+                quarantined = False
+                for index, item in enumerate(loaded_items):
+                    if item.status != "pending":
+                        continue
+                    try:
+                        execute_at = datetime.fromisoformat(item.execute_at)
+                    except (TypeError, ValueError):
+                        execute_at = None
+                    if execute_at is None or execute_at.tzinfo is None:
+                        # A malformed or timezone-less execute_at can never be
+                        # ordered against an aware "now". Quarantine it instead
+                        # of letting it stall every future drain.
+                        loaded_items[index] = replace(
+                            item,
+                            status="failed",
+                            failure_message=_safe_failure_message(
+                                f"Malformed execute_at timestamp: {item.execute_at!r}"
+                            ),
+                            failed_at=current.isoformat(),
+                        )
+                        quarantined = True
+                        continue
+                    if execute_at <= current:
+                        due.append(item)
+                if quarantined:
+                    self._save(loaded_items)
 
             processed = 0
             for item in due:
