@@ -781,3 +781,241 @@ def test_discard_token_file_refuses_uninspectable_and_deletes_stale(tmp_path):
 
     # A vanished path is a no-op, not an error.
     ka._discard_token_file(token_file)
+
+
+# ---------------------------------------------------------------------------
+# Wave-5: shutdown/lock-release robustness, queue dispositions, watcher guards
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_broker_workflow_releases_in_process_lock_when_file_lock_exit_fails(
+    monkeypatch,
+):
+    """A failing FileLock.__exit__ must not strand _BROKER_EXECUTION_LOCK."""
+    from trading import dispatch as dispatch_mod
+
+    class _ExplodingLock:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            raise OSError("flock teardown failed")
+
+    monkeypatch.setattr(dispatch_mod, "FileLock", _ExplodingLock)
+
+    async def _run_once():
+        async with dispatch_mod._serialized_broker_workflow():
+            return "ran"
+
+    # The release failure is logged, not raised — the workflow result stands.
+    assert await _run_once() == "ran"
+    # The in-process lock was still released: a second workflow runs.
+    assert await _run_once() == "ran"
+
+
+def test_queue_load_quarantines_non_dict_entries(tmp_path):
+    import json as _json
+
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    queue.storage_path.write_text(
+        _json.dumps(
+            [
+                "not-an-object",
+                {
+                    "signal": {"type": "BUY", "ticker": "005930"},
+                    "execute_at": "2030-01-01T00:00:00+00:00",
+                    "created_at": "2024-01-01T00:00:00+00:00",
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+    # A corrupt entry must not wedge queue operations.
+    assert queue.pending_count() == 1
+    assert queue.failed_count() == 1
+
+
+def test_drain_due_quarantines_malformed_signal_payload(tmp_path):
+    import json as _json
+
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    queue.storage_path.write_text(
+        _json.dumps(
+            [
+                {
+                    "signal": "not-a-dict",
+                    "execute_at": "2000-01-01T00:00:00+00:00",
+                    "created_at": "2024-01-01T00:00:00+00:00",
+                },
+                {
+                    "signal": {"type": "BUY", "ticker": "005930", "market": "KR"},
+                    "execute_at": "2000-01-01T00:00:00+00:00",
+                    "created_at": "2024-01-01T00:00:00+00:00",
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+    from trading.off_hours_queue import QueueExecutionResult
+
+    drained = queue.drain_due(
+        lambda payload: QueueExecutionResult("processed", "ok")
+    )
+
+    # The malformed item is quarantined; the valid one still processes.
+    assert drained == 1
+    assert queue.failed_count() == 1
+    assert queue.pending_count() == 0
+
+
+def _queued_dispatcher_for_drain(tmp_path, monkeypatch, result):
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000}
+    )
+    queue.enqueue(signal)
+
+    import json as _json
+
+    data = _json.loads(queue.storage_path.read_text(encoding="utf-8"))
+    data[0]["execute_at"] = "2000-01-01T00:00:00+00:00"
+    queue.storage_path.write_text(_json.dumps(data), encoding="utf-8")
+
+    async def fake_execute(payload):
+        return result
+
+    dispatcher = TradeDispatcher.__new__(TradeDispatcher)
+    dispatcher.queue = queue
+    monkeypatch.setattr(dispatcher, "execute_queued_signal", fake_execute)
+    return dispatcher, queue
+
+
+def test_partial_success_with_retryable_leg_is_retained_for_retry(tmp_path, monkeypatch):
+    from trading.dispatch import AccountDispatchResult
+
+    result = DispatchResult(
+        "partial_success",
+        "1/2 executed",
+        "BUY",
+        "KR",
+        accounts=[
+            AccountDispatchResult(account="a", account_id="a1", status="executed", message="ok"),
+            AccountDispatchResult(account="b", account_id="b1", status="deferred", message="market closed mid-loop"),
+        ],
+    )
+    dispatcher, queue = _queued_dispatcher_for_drain(tmp_path, monkeypatch, result)
+
+    assert dispatcher.drain_due_orders() == 0
+    # The item is retained — the deferred leg can still execute on retry.
+    assert queue.pending_count() == 1
+    assert queue.failed_count() == 0
+
+
+def test_partial_success_with_unknown_leg_is_quarantined(tmp_path, monkeypatch):
+    from trading.dispatch import AccountDispatchResult
+
+    result = DispatchResult(
+        "partial_success",
+        "1/2 executed, 1 ambiguous",
+        "BUY",
+        "KR",
+        accounts=[
+            AccountDispatchResult(account="a", account_id="a1", status="executed", message="ok"),
+            AccountDispatchResult(account="b", account_id="b1", status="unknown", message="timeout after submit"),
+        ],
+    )
+    dispatcher, queue = _queued_dispatcher_for_drain(tmp_path, monkeypatch, result)
+
+    dispatcher.drain_due_orders()
+    # Ambiguous leg: never auto-retried, never silently dropped.
+    assert queue.failed_count() == 1
+    assert queue.pending_count() == 0
+
+
+def test_partial_success_with_prior_executed_skip_is_processed(tmp_path, monkeypatch):
+    from trading.dispatch import AccountDispatchResult
+
+    result = DispatchResult(
+        "partial_success",
+        "executed + already-executed skip",
+        "BUY",
+        "KR",
+        accounts=[
+            AccountDispatchResult(account="a", account_id="a1", status="executed", message="ok"),
+            AccountDispatchResult(
+                account="b", account_id="b1", status="skipped",
+                message="dup", previous_status="executed",
+            ),
+        ],
+    )
+    dispatcher, queue = _queued_dispatcher_for_drain(tmp_path, monkeypatch, result)
+
+    assert dispatcher.drain_due_orders() == 1
+    assert queue.pending_count() == 0
+    assert queue.failed_count() == 0
+
+
+def test_stop_loss_watcher_config_clamps_non_finite_timing():
+    from trading.stop_loss_watcher import StopLossWatcherConfig
+
+    cfg = StopLossWatcherConfig(poll_seconds=float("inf"))
+    assert cfg.poll_seconds == 5.0
+    cfg = StopLossWatcherConfig(poll_seconds=float("nan"), request_interval_seconds=float("inf"))
+    assert cfg.poll_seconds == 5.0
+    assert cfg.request_interval_seconds == 0.2
+
+
+def test_watcher_cycle_skips_malformed_record_and_checks_rest(tmp_path):
+    import json as _json
+    from unittest.mock import MagicMock, patch
+
+    from trading.stop_loss_watcher import StopLossWatcher, StopLossWatcherConfig
+
+    tracker_file = tmp_path / "tracker.json"
+    tracker_file.write_text(
+        _json.dumps(
+            {
+                "KR:bad": {"market": "KR", "ticker": "BAD", "stop_loss": "not-a-number"},
+                "KR:good": {
+                    "market": "KR",
+                    "ticker": "005930",
+                    "stop_loss": 70000.0,
+                    "entry_price": 72000.0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    config = StopLossWatcherConfig(
+        enabled=True, request_interval_seconds=0.0, storage_path=tracker_file
+    )
+
+    mock_trader = MagicMock()
+    mock_trader.get_current_price.return_value = {"current_price": 71000}
+    mock_trader.get_holding_quantity.return_value = 5
+
+    dispatcher = MagicMock()
+    watcher = StopLossWatcher(dispatcher, config)
+    watcher.tracker = __import__(
+        "trading.stop_loss_watcher", fromlist=["StopLossTracker"]
+    ).StopLossTracker(tracker_file)
+    watcher._get_trader = MagicMock(return_value=mock_trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        results = watcher.check_stop_loss_once()
+
+    # The malformed record was skipped; the valid position was still checked
+    # (price above stop → no sell, but get_current_price was consulted).
+    assert results == []
+    mock_trader.get_current_price.assert_called_once_with("005930")
+
+
+def test_us_cfg_float_validators_reject_non_finite():
+    assert ust._cfg_positive_float(float("inf")) is None
+    assert ust._cfg_positive_float(float("inf"), 3.0) == 3.0
+    assert ust._cfg_positive_float(float("nan"), 3.0) == 3.0
+    assert ust._cfg_nonnegative_float(float("inf"), 2.0) == 2.0
+    assert ust._cfg_positive_float("5.5") == 5.5

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, Depends, Query, Request
 
 from webui.routes.guards import get_urlencoded_form, require_csrf_token
@@ -44,7 +46,8 @@ async def telegram_preview(request: Request):
             raise ValueError("Channel override must not exceed 256 characters")
         pages = min(5, max(1, int(form.get("pages", "1"))))
         max_posts = min(100, max(1, int(form.get("max_posts", "20"))))
-        preview = telegram_service.preview_telegram(
+        preview = await asyncio.to_thread(
+            telegram_service.preview_telegram,
             channel or None,
             pages=pages,
             max_posts=max_posts,

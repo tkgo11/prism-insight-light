@@ -120,11 +120,26 @@ class OffHoursOrderQueue:
             raise ValueError("Off-hours queue must contain a JSON list")
         # Tolerate unknown keys: a queue file written by a different version or
         # edited by hand must not wedge every queue operation with TypeError.
+        # Non-object entries are corrupt data — surface them as failed items so
+        # they remain operator-visible instead of raising AttributeError.
         known_fields = {f.name for f in fields(QueuedSignal)}
-        return [
-            QueuedSignal(**{k: v for k, v in item.items() if k in known_fields})
-            for item in data
-        ]
+        items: list[QueuedSignal] = []
+        for item in data:
+            if not isinstance(item, dict):
+                items.append(
+                    QueuedSignal(
+                        signal={},
+                        execute_at="",
+                        created_at="",
+                        status="failed",
+                        failure_message="Malformed queue entry (not an object)",
+                    )
+                )
+                continue
+            items.append(
+                QueuedSignal(**{k: v for k, v in item.items() if k in known_fields})
+            )
+        return items
 
     def _save(
         self,
@@ -241,10 +256,10 @@ class OffHoursOrderQueue:
 
             processed = 0
             for item in due:
-                payload = dict(item.signal)
-                if item.execution_context:
-                    payload[QUEUE_CONTEXT_KEY] = dict(item.execution_context)
                 try:
+                    payload = dict(item.signal)
+                    if item.execution_context:
+                        payload[QUEUE_CONTEXT_KEY] = dict(item.execution_context)
                     outcome = executor(payload)
                 except Exception as exc:  # noqa: BLE001 - isolate poison queue items
                     outcome = QueueExecutionResult(

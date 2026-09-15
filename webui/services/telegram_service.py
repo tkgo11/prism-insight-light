@@ -9,6 +9,7 @@ from .masking import mask_text
 
 def preview_telegram(channel: str | None = None, *, pages: int = 1, max_posts: int = 20, timeout: float = 10.0) -> dict[str, Any]:
     try:
+        from trading.schema import SignalValidationError
         from trading.telegram_fetch import DEFAULT_TELEGRAM_CHANNEL_URL, fetch_channel_posts, parse_signal_post
 
         selected_channel = channel or DEFAULT_TELEGRAM_CHANNEL_URL
@@ -22,7 +23,11 @@ def preview_telegram(channel: str | None = None, *, pages: int = 1, max_posts: i
         )
         items: list[dict[str, Any]] = []
         for post in posts[:bounded_posts]:
-            parsed = parse_signal_post(post)
+            try:
+                parsed = parse_signal_post(post)
+            except SignalValidationError:
+                # One malformed post must not discard the other candidates.
+                parsed = None
             items.append(
                 {
                     "message_id": post.message_id,
