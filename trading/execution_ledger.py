@@ -46,9 +46,14 @@ class ExecutionLedger:
 
     def __init__(self, path: Path | None = None):
         self.path = path or runtime_file_path(DEFAULT_LEDGER_PATH)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        if os.name != "nt":
-            os.chmod(self.path.parent, 0o700)
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            if not self.path.parent.is_dir():
+                raise
+        else:
+            if os.name != "nt":
+                os.chmod(self.path.parent, 0o700)
         self.lock_path = self.path.with_suffix(self.path.suffix + ".lock")
 
     def _load(self) -> dict[str, dict[str, Any]]:

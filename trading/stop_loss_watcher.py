@@ -115,9 +115,14 @@ class StopLossTracker:
     def __init__(self, path: Path | None = None) -> None:
         self.path = path or default_stop_loss_positions_path()
         self.lock_path = self.path.with_suffix(self.path.suffix + ".lock")
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        if os.name != "nt":
-            os.chmod(self.path.parent, 0o700)
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            if not self.path.parent.is_dir():
+                raise
+        else:
+            if os.name != "nt":
+                os.chmod(self.path.parent, 0o700)
 
     def _key(self, market: str, ticker: str) -> str:
         return f"{market.strip().upper()}:{ticker.strip()}"
@@ -150,7 +155,10 @@ class StopLossTracker:
 
     def _save(self, data: dict[str, dict[str, Any]]) -> None:
         temp_file = self.path.with_suffix(".tmp")
-        temp_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        with temp_file.open("w", encoding="utf-8") as handle:
+            handle.write(json.dumps(data, indent=2, ensure_ascii=False))
+            handle.flush()
+            os.fsync(handle.fileno())
         if os.name != "nt":
             os.chmod(temp_file, 0o600)
         temp_file.replace(self.path)

@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import logging
 import threading
+import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -62,6 +63,13 @@ _BROKER_EXECUTION_FILE_LOCK = (
 )
 
 
+BROKER_WORKFLOW_LOCK_TIMEOUT_SECONDS = 60.0
+
+
+class BrokerWorkflowBusyError(TimeoutError):
+    """Raised when the broker serialization lock stays busy past the deadline."""
+
+
 def _broker_execution_lock_path() -> Path:
     return runtime_file_path(_BROKER_EXECUTION_FILE_LOCK)
 
@@ -69,7 +77,10 @@ def _broker_execution_lock_path() -> Path:
 @asynccontextmanager
 async def _serialized_broker_workflow():
     """Serialize broker workflows across threads and sibling processes."""
+    deadline = time.monotonic() + BROKER_WORKFLOW_LOCK_TIMEOUT_SECONDS
     while not _BROKER_EXECUTION_LOCK.acquire(blocking=False):
+        if time.monotonic() >= deadline:
+            raise BrokerWorkflowBusyError("in-process broker execution lock is busy")
         await asyncio.sleep(0.01)
     process_lock = None
     try:
@@ -79,6 +90,8 @@ async def _serialized_broker_workflow():
                 candidate.__enter__()
                 process_lock = candidate
             except TimeoutError:
+                if time.monotonic() >= deadline:
+                    raise BrokerWorkflowBusyError("cross-process broker execution lock is busy")
                 await asyncio.sleep(0.05)
         yield
     finally:
@@ -390,18 +403,31 @@ class TradeDispatcher:
         )
 
     async def dispatch(self, signal: SignalMessage, *, allow_queue: bool = True) -> DispatchResult:
-        async with _serialized_broker_workflow():
-            if self.multi_account_enabled:
-                result = await self.multi_account_dispatcher.dispatch(
-                    signal, allow_queue=allow_queue
-                )
-            elif self.dry_run:
-                logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
-                result = DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
-            else:
-                result = await self._dispatch_serialized(signal, allow_queue=allow_queue)
-            self._update_stop_loss_tracking(signal, result)
-            return result
+        try:
+            async with _serialized_broker_workflow():
+                if self.multi_account_enabled:
+                    result = await self.multi_account_dispatcher.dispatch(
+                        signal, allow_queue=allow_queue
+                    )
+                elif self.dry_run:
+                    logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
+                    result = DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
+                else:
+                    result = await self._dispatch_serialized(signal, allow_queue=allow_queue)
+                self._update_stop_loss_tracking(signal, result)
+                return result
+        except BrokerWorkflowBusyError:
+            logger.warning(
+                "Deferred %s %s(%s): broker execution lock stayed busy past %.0fs",
+                signal.signal_type, signal.company_name, signal.ticker,
+                BROKER_WORKFLOW_LOCK_TIMEOUT_SECONDS,
+            )
+            return DispatchResult(
+                "deferred",
+                "Broker execution is busy; order retained for retry",
+                signal.signal_type,
+                signal.market,
+            )
 
     async def _dispatch_serialized(
         self,
@@ -507,25 +533,45 @@ class TradeDispatcher:
     async def execute_queued_signal(self, payload: dict) -> DispatchResult:
         queue_context = payload.pop(QUEUE_CONTEXT_KEY, None)
         signal = parse_signal_payload(payload)
-        async with _serialized_broker_workflow():
-            if isinstance(queue_context, dict) and queue_context.get("multi_account"):
-                requested_ids = queue_context.get("account_ids")
-                if not isinstance(requested_ids, list) or not all(isinstance(item, str) for item in requested_ids):
-                    return DispatchResult("failed", "Queued multi-account targets are invalid", signal.signal_type, signal.market)
-                result = await self.multi_account_dispatcher.dispatch(
-                    signal, allow_queue=False, requested_ids=requested_ids
-                )
-                self._update_stop_loss_tracking(signal, result)
-                return result
+        try:
+            async with _serialized_broker_workflow():
+                if isinstance(queue_context, dict) and queue_context.get("multi_account"):
+                    requested_ids = queue_context.get("account_ids")
+                    if not isinstance(requested_ids, list) or not all(isinstance(item, str) for item in requested_ids):
+                        return DispatchResult("failed", "Queued multi-account targets are invalid", signal.signal_type, signal.market)
+                    result = await self.multi_account_dispatcher.dispatch(
+                        signal, allow_queue=False, requested_ids=requested_ids
+                    )
+                    self._update_stop_loss_tracking(signal, result)
+                    return result
+        except BrokerWorkflowBusyError:
+            return DispatchResult(
+                "deferred",
+                "Broker execution is busy; order retained for retry",
+                signal.signal_type,
+                signal.market,
+            )
         return await self.dispatch(signal, allow_queue=False)
 
     def _update_stop_loss_tracking(self, signal: SignalMessage, result: DispatchResult) -> None:
+        # Dry-run and deferred outcomes must never mutate real position protection:
+        # a simulated SELL would drop tracking for a position that still exists, and
+        # a simulated BUY would register a phantom position.
         if self.stop_loss_tracker is None:
             return
-        is_success = (
-            result.status in {"executed", "dry-run"}
-            or any(acct.status in {"executed", "dry-run"} for acct in result.accounts)
-        )
+        if signal.signal_type == "BUY":
+            is_success = result.status == "executed" or any(
+                acct.status == "executed" for acct in result.accounts
+            )
+        elif signal.signal_type == "SELL":
+            # Removing protection is only safe when every eligible account exited;
+            # a partial SELL leaves the remaining accounts' position unprotected.
+            if result.accounts:
+                is_success = all(acct.status == "executed" for acct in result.accounts)
+            else:
+                is_success = result.status == "executed"
+        else:
+            return
         if not is_success:
             return
 

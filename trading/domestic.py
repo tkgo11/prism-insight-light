@@ -28,6 +28,7 @@ from .kis_auth import (
     TokenRequestError
 )
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
+from .execution_outcome import classify_broker_result
 from .market_hours import KST
 
 # Logging setup
@@ -369,7 +370,14 @@ class DomesticStockTrading:
         if not current_price_info:
             return 0
 
-        current_price = current_price_info['current_price']
+        try:
+            current_price = float(current_price_info.get('current_price'))
+        except (TypeError, ValueError):
+            logger.warning(f"[{stock_code}] Unusable current price quote; cannot size buy")
+            return 0
+        if not math.isfinite(current_price) or current_price <= 0:
+            logger.warning(f"[{stock_code}] Non-positive current price {current_price}; cannot size buy")
+            return 0
 
         # Calculate buyable quantity (floor division)
         current_quantity = math.floor(amount / current_price)
@@ -1748,6 +1756,7 @@ class MultiAccountDomesticStockTrading:
                 buy_amount=self.buy_amount,
                 auto_trading=self.auto_trading,
                 account_name=account["name"],
+                account_key=account["account_key"],
                 product_code=account["product"],
             )
             self._traders[account["account_key"]] = trader
@@ -1814,12 +1823,35 @@ class MultiAccountDomesticStockTrading:
         return self._get_primary_trader().get_holding_quantity(stock_code)
 
     def _aggregate_results(self, stock_code: str, results: List[Dict[str, Any]], action: str) -> Dict[str, Any]:
-        success_count = sum(1 for result in results if result.get("success"))
+        statuses = [classify_broker_result(result) for result in results]
         total_accounts = len(results)
-        total_quantity = sum(result.get("quantity", 0) for result in results)
-        total_amount = sum(result.get("total_amount", result.get("estimated_amount", 0)) for result in results)
-        successful_accounts = [result.get("account_name") for result in results if result.get("success")]
-        failed_accounts = [result.get("account_name") for result in results if not result.get("success")]
+        executed_results = [
+            result for result, status in zip(results, statuses) if status == "executed"
+        ]
+        success_count = len(executed_results)
+        # Only confirmed executions count toward aggregate exposure.  Failed and
+        # unknown results may carry estimate fields that must not inflate totals.
+        total_quantity = sum(result.get("quantity", 0) for result in executed_results)
+        total_amount = sum(
+            result.get("total_amount", result.get("estimated_amount", 0))
+            for result in executed_results
+        )
+        successful_accounts = [
+            result.get("account_name")
+            for result, status in zip(results, statuses)
+            if status == "executed"
+        ]
+        failed_accounts = [
+            result.get("account_name")
+            for result, status in zip(results, statuses)
+            if status == "failed"
+        ]
+        unknown_accounts = [
+            result.get("account_name")
+            for result, status in zip(results, statuses)
+            if status == "unknown"
+        ]
+        outcome_unknown = len(unknown_accounts) > 0
 
         messages = [
             f"{result.get('account_name')}: {result.get('message', '')}"
@@ -1830,6 +1862,7 @@ class MultiAccountDomesticStockTrading:
             return {
                 "success": False,
                 "partial_success": False,
+                "outcome_unknown": False,
                 "stock_code": stock_code,
                 "quantity": 0,
                 "total_amount": 0,
@@ -1839,20 +1872,27 @@ class MultiAccountDomesticStockTrading:
                 "account_results": [],
                 "successful_accounts": [],
                 "failed_accounts": [],
+                "unknown_accounts": [],
             }
+
+        summary = f"{action} executed for {success_count}/{total_accounts} accounts"
+        if unknown_accounts:
+            summary += f" ({len(unknown_accounts)} outcome(s) unknown)"
 
         return {
             "success": success_count == total_accounts and total_accounts > 0,
             "partial_success": 0 < success_count < total_accounts,
+            "outcome_unknown": outcome_unknown,
             "stock_code": stock_code,
             "quantity": total_quantity,
             "total_amount": total_amount,
             "estimated_amount": total_amount,
             "order_no": None,
-            "message": f"{action} executed for {success_count}/{total_accounts} accounts | " + " ; ".join(messages),
+            "message": summary + " | " + " ; ".join(messages),
             "account_results": results,
             "successful_accounts": successful_accounts,
             "failed_accounts": failed_accounts,
+            "unknown_accounts": unknown_accounts,
         }
 
 

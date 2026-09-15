@@ -328,6 +328,48 @@ async def test_kr_balance_split_deducts_recent_successful_buys_when_broker_cash_
     assert second_trader.buy_calls == [("012510", 6409681, 119400)]
 
 
+@pytest.mark.asyncio
+async def test_us_balance_split_marks_ambiguous_broker_result_unknown(balance_split_strategy):
+    class AmbiguousUSTrader(FakeUSTrader):
+        async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
+            self.buy_calls.append((ticker, buy_amount, limit_price))
+            return {
+                "success": False,
+                "order_no": "000123",
+                "message": "read timed out waiting for broker response",
+            }
+
+    trader = AmbiguousUSTrader(available_amount=900.0)
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200})
+
+    result = await strategy._execute_us(signal, trader=trader)
+
+    # An ambiguous broker outcome must not be reported as a clean failure, and
+    # must not reserve cash — the order may already be live at the broker.
+    assert result.status == "unknown"
+    assert strategy._load_reservations() == []
+
+
+@pytest.mark.asyncio
+async def test_us_balance_split_does_not_treat_truthy_non_true_success_as_executed(
+    balance_split_strategy,
+):
+    class DeceptiveUSTrader(FakeUSTrader):
+        async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
+            self.buy_calls.append((ticker, buy_amount, limit_price))
+            return {"success": "false", "message": "broker rejected the order"}
+
+    trader = DeceptiveUSTrader(available_amount=900.0)
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200})
+
+    result = await strategy._execute_us(signal, trader=trader)
+
+    assert result.status == "failed"
+    assert strategy._load_reservations() == []
+
+
 def test_pending_reservations_are_not_double_counted_after_cash_report_updates(balance_split_strategy):
     strategy = balance_split_strategy(split_count=2)
     strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=23871362, amount=11052000)
