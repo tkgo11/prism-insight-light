@@ -95,9 +95,17 @@ async def _serialized_broker_workflow():
                 await asyncio.sleep(0.05)
         yield
     finally:
-        if process_lock is not None:
-            process_lock.__exit__(None, None, None)
-        _BROKER_EXECUTION_LOCK.release()
+        try:
+            if process_lock is not None:
+                process_lock.__exit__(None, None, None)
+        except Exception:
+            # A failed flock release must neither mask the broker outcome nor
+            # strand the in-process lock below: log and always release.
+            logger.critical(
+                "cross-process broker execution lock release failed", exc_info=True
+            )
+        finally:
+            _BROKER_EXECUTION_LOCK.release()
 
 
 def _account_id(account_key: str) -> str:
@@ -123,6 +131,10 @@ class AccountDispatchResult:
     message: str
     order_id: str | None = None
     error: str | None = None
+    # For skipped legs: the ledger status that suppressed this attempt. Lets
+    # queue-drain dispositions tell "already executed earlier" apart from
+    # "blocked by an ambiguous claim".
+    previous_status: str | None = None
 
 
 @dataclass(slots=True)
@@ -311,6 +323,7 @@ class MultiAccountTradeDispatcher:
                             account_id=account_id,
                             status="skipped",
                             message=f"Duplicate signal/account execution suppressed (previous status: {previous_status})",
+                            previous_status=previous_status,
                         )
                     )
                     logger.warning(
@@ -655,6 +668,35 @@ class TradeDispatcher:
                 # Skipped work (dedupe suppression, disabled/unconfigured
                 # targets) needs no retry — drop it without a failure label.
                 return QueueExecutionResult("processed", f"Skipped: {result.message}")
+            if result.status == "partial_success":
+                # Some account legs executed and some did not. Legs that are
+                # still retryable (deferred/failed/rejected/dry-run, or skipped
+                # behind a live claim) keep the item queued; executed legs and
+                # legs skipped by an earlier EXECUTED claim suppress safely on
+                # retry. An "unknown" leg must neither be retried nor silently
+                # dropped — quarantine for operator reconciliation.
+                unresolved = [
+                    leg
+                    for leg in result.accounts
+                    if leg.status != "executed"
+                    and not (
+                        leg.status == "skipped" and leg.previous_status == "executed"
+                    )
+                ]
+                if not unresolved:
+                    return QueueExecutionResult("processed", result.message)
+                if any(
+                    leg.status == "unknown"
+                    or (leg.status == "skipped" and leg.previous_status == "unknown")
+                    for leg in unresolved
+                ):
+                    logger.error(
+                        "Quarantining partially executed queued %s order on %s "
+                        "with an ambiguous leg: %s",
+                        result.signal_type, result.market, result.message,
+                    )
+                    return QueueExecutionResult("failed", result.message)
+                return QueueExecutionResult("deferred", result.message)
             if result.status in {"failed", "unknown"}:
                 logger.error(
                     "Quarantining failed queued %s order on %s: %s",

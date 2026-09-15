@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import math
 import os
 import threading
 import time
@@ -46,6 +47,15 @@ class StopLossWatcherConfig:
     poll_seconds: float = 5.0
     request_interval_seconds: float = 0.2
     storage_path: Path = field(default_factory=default_stop_loss_positions_path)
+
+    def __post_init__(self) -> None:
+        # Clamp non-finite timing values: Event.wait(inf)/sleep(nan) raise
+        # OverflowError/ValueError, which would silently kill the watcher
+        # thread. Covers every construction path (from_mapping, CLI flags).
+        if not math.isfinite(self.poll_seconds) or self.poll_seconds <= 0:
+            object.__setattr__(self, "poll_seconds", 5.0)
+        if not math.isfinite(self.request_interval_seconds) or self.request_interval_seconds < 0:
+            object.__setattr__(self, "request_interval_seconds", 0.2)
 
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "StopLossWatcherConfig":
@@ -344,9 +354,15 @@ class StopLossWatcher:
                 if self._stop_event.is_set():
                     break
 
-                ticker = pos.get("ticker", "")
-                stop_loss = float(pos.get("stop_loss", 0.0))
-                if not ticker or stop_loss <= 0:
+                try:
+                    ticker = str(pos.get("ticker", "") or "")
+                    stop_loss = float(pos.get("stop_loss", 0.0))
+                except (AttributeError, TypeError, ValueError):
+                    # One malformed persisted record must not abort the cycle
+                    # and leave every later position unchecked.
+                    logger.error("[Stop-Loss] Skipping malformed tracked record: %r", pos)
+                    continue
+                if not ticker or not math.isfinite(stop_loss) or stop_loss <= 0:
                     continue
 
                 if self.config.request_interval_seconds > 0:

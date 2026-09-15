@@ -163,7 +163,7 @@ def _cfg_positive_float(value: Any, default: float | None = None) -> float | Non
         parsed = float(value)
     except (TypeError, ValueError):
         return default
-    return parsed if parsed > 0 else default
+    return parsed if math.isfinite(parsed) and parsed > 0 else default
 
 
 def _cfg_nonnegative_float(value: Any, default: float = 0.0) -> float:
@@ -173,7 +173,7 @@ def _cfg_nonnegative_float(value: Any, default: float = 0.0) -> float:
         parsed = float(value)
     except (TypeError, ValueError):
         return default
-    return parsed if parsed >= 0 else default
+    return parsed if math.isfinite(parsed) and parsed >= 0 else default
 
 
 def build_auto_exchange_config(account_config: dict[str, Any] | None) -> AutoExchangeConfig:

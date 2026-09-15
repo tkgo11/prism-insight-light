@@ -14,7 +14,7 @@ import os
 import signal
 import threading
 import time
-from concurrent.futures import TimeoutError
+from concurrent.futures import CancelledError, TimeoutError
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -627,6 +627,11 @@ def main(argv: list[str] | None = None) -> None:
                 break
             except TimeoutError:
                 continue
+            except CancelledError:
+                # The stop handler cancelled the pull future (a BaseException
+                # subclass on supported Pythons, so `except Exception` would
+                # miss it). Exit the poll loop so the finally drain runs.
+                break
             except KeyboardInterrupt:
                 request_stop(signal.SIGINT, None)
             except Exception:
@@ -648,6 +653,8 @@ def main(argv: list[str] | None = None) -> None:
             LOGGER.warning("Timed out waiting for Pub/Sub subscriber shutdown")
         except KeyboardInterrupt:
             LOGGER.debug("Pub/Sub subscriber shutdown interrupted after cancellation")
+        except CancelledError:
+            LOGGER.debug("Pub/Sub subscriber shutdown wait observed a cancelled future")
         except Exception as exc:  # noqa: BLE001 - cancellation commonly raises library-specific futures errors
             LOGGER.debug("Pub/Sub subscriber shutdown completed with %s", type(exc).__name__)
         drain_seconds = _positive_seconds_from_env("SUBSCRIBER_SHUTDOWN_DRAIN_SECONDS", 180.0)
@@ -673,6 +680,8 @@ def main(argv: list[str] | None = None) -> None:
             streaming_pull_future.result()
         except KeyboardInterrupt:
             LOGGER.debug("Pub/Sub subscriber final shutdown wait was interrupted")
+        except CancelledError:
+            LOGGER.debug("Pub/Sub subscriber final wait observed a cancelled future")
         except Exception as exc:  # noqa: BLE001 - cancellation raises a library-specific exception
             LOGGER.debug("Pub/Sub subscriber final shutdown completed with %s", type(exc).__name__)
         subscriber.close()
