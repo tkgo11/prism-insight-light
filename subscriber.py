@@ -24,7 +24,7 @@ load_dotenv(ROOT / ".env")
 
 from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must load first
 from trading.market_hours import KST  # noqa: E402 - config env must load first
-from trading.off_hours_queue import QueueCapacityError  # noqa: E402
+from trading.off_hours_queue import QueueCapacityError, default_queue_path  # noqa: E402
 from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E402
 from trading.stop_loss_watcher import StopLossWatcher, StopLossWatcherConfig  # noqa: E402
 
@@ -423,7 +423,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Python logging level (default: INFO)",
     )
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--queue-path", default="runtime/off_hours_queue.json")
+    parser.add_argument(
+        "--queue-path",
+        default=None,
+        help="Off-hours queue file (default: runtime/off_hours_queue.json or $PRISM_RUNTIME_DIR/off_hours_queue.json)",
+    )
     parser.add_argument("--queue-poll-seconds", type=_positive_poll_seconds, default=60)
     parser.add_argument(
         "--max-in-flight-messages",
@@ -531,12 +535,13 @@ def main(argv: list[str] | None = None) -> None:
     work_tracker = ActiveWorkTracker()
     web_ui_thread: threading.Thread | None = None
     web_ui_stop_event = threading.Event() if args.web_ui else None
+    queue_path = Path(args.queue_path) if args.queue_path else default_queue_path()
 
     from google.cloud import pubsub_v1
 
     dispatcher = TradeDispatcher(
         dry_run=args.dry_run,
-        queue_path=Path(args.queue_path),
+        queue_path=queue_path,
     )
     queue_worker = QueueWorker(dispatcher, args.queue_poll_seconds, work_tracker)
 
@@ -571,7 +576,7 @@ def main(argv: list[str] | None = None) -> None:
         subscription_path,
         args.dry_run,
         dispatcher.trading_mode,
-        args.queue_path,
+        queue_path,
         args.queue_poll_seconds,
         args.raw_pubsub_log_file or "disabled",
     )
@@ -611,7 +616,7 @@ def main(argv: list[str] | None = None) -> None:
             assert web_ui_stop_event is not None
             web_ui_thread = _start_web_ui_thread(
                 force_dry_run=args.dry_run,
-                queue_path=Path(args.queue_path),
+                queue_path=queue_path,
                 work_tracker=work_tracker,
                 shutdown_event=web_ui_stop_event,
             )

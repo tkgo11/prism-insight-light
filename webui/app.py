@@ -15,7 +15,10 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from trading.config_paths import runtime_file_path
+
 MAX_REQUEST_BODY_BYTES = 64 * 1024
+DEFAULT_QUEUE_PATH = Path("runtime") / "off_hours_queue.json"
 
 
 class RequestBodyLimitMiddleware:
@@ -122,7 +125,7 @@ class WebUISettings:
     allow_non_loopback: bool = False
     allowed_hosts: tuple[str, ...] = ()
     force_dry_run: bool = False
-    queue_path: Path = Path("runtime/off_hours_queue.json")
+    queue_path: Path = field(default_factory=lambda: runtime_file_path(DEFAULT_QUEUE_PATH))
     csrf_token: str = field(default_factory=lambda: secrets.token_urlsafe(32))
 
 
@@ -146,7 +149,9 @@ def load_settings(env: dict[str, str] | None = None) -> WebUISettings:
         allow_non_loopback=_to_bool(source.get("WEBUI_ALLOW_NON_LOOPBACK")),
         allowed_hosts=allowed_hosts,
         force_dry_run=_to_bool(source.get("WEBUI_FORCE_DRY_RUN")),
-        queue_path=Path(source.get("WEBUI_QUEUE_PATH") or "runtime/off_hours_queue.json"),
+        queue_path=Path(source["WEBUI_QUEUE_PATH"]).expanduser()
+        if str(source.get("WEBUI_QUEUE_PATH") or "").strip()
+        else runtime_file_path(DEFAULT_QUEUE_PATH),
         csrf_token=(source.get("WEBUI_CSRF_TOKEN") or "").strip()
         or secrets.token_urlsafe(32),
     )

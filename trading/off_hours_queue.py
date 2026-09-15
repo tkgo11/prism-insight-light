@@ -11,10 +11,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+from .config_paths import runtime_file_path
 from .file_lock import FileLock
 from .market_hours import next_market_open
 from .schema import SignalMessage
 
+DEFAULT_QUEUE_PATH = Path("runtime") / "off_hours_queue.json"
 MAX_QUEUE_BYTES = 16 * 1024 * 1024
 FAILURE_METADATA_RESERVE_BYTES = 512
 QUEUE_CONTEXT_KEY = "__prism_queue_context"
@@ -86,9 +88,13 @@ class QueueExecutionResult:
             raise ValueError(f"Unsupported queue disposition '{self.disposition}'")
 
 
+def default_queue_path() -> Path:
+    return runtime_file_path(DEFAULT_QUEUE_PATH)
+
+
 class OffHoursOrderQueue:
     def __init__(self, storage_path: Path | None = None):
-        self.storage_path = storage_path or Path("runtime") / "off_hours_queue.json"
+        self.storage_path = storage_path or default_queue_path()
         try:
             self.storage_path.parent.mkdir(parents=True, exist_ok=False)
         except FileExistsError:

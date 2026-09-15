@@ -13,7 +13,7 @@ from typing import Any
 
 from . import kis_auth as ka
 from . import yaml_compat as yaml
-from .config_paths import active_kis_config_path
+from .config_paths import active_kis_config_path, runtime_file_path
 from .domestic import AsyncTradingContext
 from .execution_ledger import ExecutionLedger, execution_identity
 from .execution_outcome import classify_broker_result
@@ -56,11 +56,14 @@ from .stop_loss_watcher import StopLossTracker, StopLossWatcherConfig
 from .us import USStockTrading
 
 logger = logging.getLogger(__name__)
-CONFIG_FILE = active_kis_config_path()
 _BROKER_EXECUTION_LOCK = threading.Lock()
 _BROKER_EXECUTION_FILE_LOCK = (
     Path(__file__).resolve().parents[1] / "runtime" / "broker_execution.lock"
 )
+
+
+def _broker_execution_lock_path() -> Path:
+    return runtime_file_path(_BROKER_EXECUTION_FILE_LOCK)
 
 
 @asynccontextmanager
@@ -71,7 +74,7 @@ async def _serialized_broker_workflow():
     process_lock = None
     try:
         while process_lock is None:
-            candidate = FileLock(_BROKER_EXECUTION_FILE_LOCK, timeout=0)
+            candidate = FileLock(_broker_execution_lock_path(), timeout=0)
             try:
                 candidate.__enter__()
                 process_lock = candidate
@@ -570,9 +573,6 @@ class TradeDispatcher:
         with open(active_kis_config_path(), encoding="utf-8") as fh:
             payload = yaml.safe_load(fh) or {}
         return payload if isinstance(payload, dict) else {}
-
-    def _load_strategy_config(self) -> dict[str, Any]:
-        return self._load_runtime_config().get("signal_strategy") or {}
 
     def _resolve_event_strategy(self, signal: SignalMessage) -> EventRiskOffStrategy | None:
         if signal.is_event and self.event_risk_off_config is not None:

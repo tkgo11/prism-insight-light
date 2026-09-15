@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .config_paths import runtime_file_path
 from .domestic import DomesticStockTrading, MultiAccountDomesticStockTrading
 from .file_lock import FileLock
 from .market_hours import is_market_open
@@ -23,6 +24,10 @@ from .us import MultiAccountUSStockTrading, USStockTrading
 logger = logging.getLogger("trading.stop_loss_watcher")
 
 DEFAULT_STOP_LOSS_POSITIONS_PATH = Path("runtime") / "stop_loss_positions.json"
+
+
+def default_stop_loss_positions_path() -> Path:
+    return runtime_file_path(DEFAULT_STOP_LOSS_POSITIONS_PATH)
 
 
 def _as_enabled(value: Any, default: bool = False) -> bool:
@@ -40,7 +45,7 @@ class StopLossWatcherConfig:
     enabled: bool = False
     poll_seconds: float = 5.0
     request_interval_seconds: float = 0.2
-    storage_path: Path = field(default_factory=lambda: DEFAULT_STOP_LOSS_POSITIONS_PATH)
+    storage_path: Path = field(default_factory=default_stop_loss_positions_path)
 
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "StopLossWatcherConfig":
@@ -62,7 +67,7 @@ class StopLossWatcherConfig:
             request_interval = 0.2
 
         storage_raw = payload.get("storage_path")
-        storage_path = Path(storage_raw) if storage_raw else DEFAULT_STOP_LOSS_POSITIONS_PATH
+        storage_path = Path(storage_raw) if storage_raw else default_stop_loss_positions_path()
 
         return cls(
             enabled=enabled,
@@ -108,7 +113,7 @@ class StopLossTracker:
     """Thread-safe and process-safe JSON ledger for active stop-loss positions."""
 
     def __init__(self, path: Path | None = None) -> None:
-        self.path = path or DEFAULT_STOP_LOSS_POSITIONS_PATH
+        self.path = path or default_stop_loss_positions_path()
         self.lock_path = self.path.with_suffix(self.path.suffix + ".lock")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if os.name != "nt":

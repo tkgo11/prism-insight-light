@@ -12,6 +12,7 @@ from pathlib import Path
 
 
 KIS_CONFIG_PATH_ENV = "PRISM_KIS_CONFIG_PATH"
+RUNTIME_DIR_ENV = "PRISM_RUNTIME_DIR"
 TRADING_DIR = Path(__file__).resolve().parent
 DEFAULT_CONFIG_PATH = TRADING_DIR / "config" / "kis_devlp.yaml"
 EXAMPLE_CONFIG_PATH = TRADING_DIR / "config" / "kis_devlp.yaml.example"
@@ -38,3 +39,20 @@ def active_kis_config_path(env: dict[str, str] | None = None) -> Path:
     if DEFAULT_CONFIG_PATH.exists():
         return DEFAULT_CONFIG_PATH
     return EXAMPLE_CONFIG_PATH
+
+
+def configured_runtime_dir(env: dict[str, str] | None = None) -> Path | None:
+    """Return the optional runtime-state directory override, if configured."""
+
+    source = os.environ if env is None else env
+    raw_path = str(source.get(RUNTIME_DIR_ENV) or "").strip()
+    return Path(raw_path).expanduser() if raw_path else None
+
+
+def runtime_file_path(default: Path, *, env: dict[str, str] | None = None) -> Path:
+    """Relocate a runtime-state file under PRISM_RUNTIME_DIR when configured."""
+
+    override = configured_runtime_dir(env)
+    if override is None:
+        return default
+    return override / default.name
