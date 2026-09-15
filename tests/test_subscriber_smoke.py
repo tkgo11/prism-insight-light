@@ -244,7 +244,11 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
 
     assert len(launched) == 1
     assert launched[0]["force_dry_run"] is True
-    assert launched[0]["queue_path"] == __import__("pathlib").Path("runtime/off_hours_queue.json")
+    expected_queue = (
+        __import__("pathlib").Path(os.environ["PRISM_RUNTIME_DIR"])
+        / "off_hours_queue.json"
+    )
+    assert launched[0]["queue_path"] == expected_queue
     assert isinstance(launched[0]["work_tracker"], subscriber.ActiveWorkTracker)
     assert hasattr(launched[0]["shutdown_event"], "set")
     assert launched[0]["shutdown_event"].is_set()

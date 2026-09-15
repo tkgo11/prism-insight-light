@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Protocol
 
+from ..config_paths import configured_runtime_dir
 from ..domestic import AsyncTradingContext
 from ..execution_outcome import classify_broker_result
 from ..file_lock import FileLock
@@ -21,6 +22,12 @@ from ..us import USStockTrading
 
 logger = logging.getLogger(__name__)
 RUNTIME_DIR = Path(__file__).resolve().parents[2] / "runtime"
+
+
+def runtime_dir() -> Path:
+    """Return the configured runtime-state directory (defaults to the repo runtime dir)."""
+
+    return configured_runtime_dir() or RUNTIME_DIR
 
 
 @dataclass(slots=True)

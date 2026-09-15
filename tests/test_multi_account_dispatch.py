@@ -62,10 +62,17 @@ async def test_multi_account_dispatch_selects_matching_accounts_and_isolates_fai
     assert result.status == "partial_success"
     assert [(item.account, item.status) for item in result.accounts] == [
         ("KR-A", "executed"),
-        ("KR-B", "failed"),
+        ("KR-B", "unknown"),
         ("KR-C", "executed"),
     ]
     assert result.accounts[1].error == "RuntimeError: B credential rejected"
+    assert result.accounts[1].message == (
+        "Account execution outcome is unknown; automatic retry suppressed"
+    )
+
+    retry = await dispatcher.dispatch(signal)
+    assert calls == ["KR-A", "KR-B", "KR-C"]
+    assert [item.status for item in retry.accounts] == ["skipped", "skipped", "skipped"]
 
 
 @pytest.mark.asyncio

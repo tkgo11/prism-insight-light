@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Protocol
 
+from ..config_paths import runtime_file_path
 from ..domestic import AsyncTradingContext
 from ..file_lock import FileLock
 from ..schema import SignalMessage
@@ -64,7 +65,7 @@ class BalanceSplitStrategy:
 
     def __init__(self, *, config: BalanceSplitStrategyConfig):
         self.config = config
-        self.reservation_path = RESERVATION_PATH
+        self.reservation_path = runtime_file_path(RESERVATION_PATH)
 
     @property
     def reservation_lock_path(self) -> Path:

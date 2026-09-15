@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from .config_paths import runtime_file_path
 from .file_lock import FileLock
 
 DEFAULT_LEDGER_PATH = Path("runtime") / "multi_account_execution_ledger.json"
@@ -44,7 +45,7 @@ class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
     def __init__(self, path: Path | None = None):
-        self.path = path or DEFAULT_LEDGER_PATH
+        self.path = path or runtime_file_path(DEFAULT_LEDGER_PATH)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if os.name != "nt":
             os.chmod(self.path.parent, 0o700)
