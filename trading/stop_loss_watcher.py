@@ -202,17 +202,38 @@ class StopLossTracker:
                 entry_price,
             )
 
-    def remove_position(self, market: str, ticker: str) -> bool:
-        """Remove a position from stop-loss tracking."""
+    def remove_position(
+        self,
+        market: str,
+        ticker: str,
+        *,
+        expected_updated_at: Any = None,
+    ) -> bool:
+        """Remove a position from stop-loss tracking.
+
+        When ``expected_updated_at`` is given, the record is deleted only if it
+        is still the same tracked record the caller inspected — a position that
+        was re-registered by a concurrent BUY must not be silently wiped.
+        ``updated_at`` (not ``created_at``) is the discriminator because
+        re-registration preserves the original ``created_at``.
+        """
         key = self._key(market, ticker)
         with FileLock(self.lock_path):
             positions = self._load()
-            if key in positions:
-                del positions[key]
-                self._save(positions)
-                logger.info("[StopLossTracker] Removed %s %s from stop-loss tracking", market.upper(), ticker)
-                return True
-            return False
+            record = positions.get(key)
+            if record is None:
+                return False
+            if expected_updated_at is not None and record.get("updated_at") != expected_updated_at:
+                logger.info(
+                    "[StopLossTracker] Keeping %s %s: tracked record changed since inspection",
+                    market.upper(),
+                    ticker,
+                )
+                return False
+            del positions[key]
+            self._save(positions)
+            logger.info("[StopLossTracker] Removed %s %s from stop-loss tracking", market.upper(), ticker)
+            return True
 
     def get_positions(self, market: str | None = None) -> list[dict[str, Any]]:
         """Return all tracked positions, optionally filtered by market."""
@@ -362,7 +383,9 @@ class StopLossWatcher:
                         market,
                         ticker,
                     )
-                    self.tracker.remove_position(market, ticker)
+                    self.tracker.remove_position(
+                        market, ticker, expected_updated_at=pos.get("updated_at")
+                    )
                     continue
 
                 if current_price <= stop_loss:
@@ -415,8 +438,12 @@ class StopLossWatcher:
                 result.status,
                 result.message,
             )
-            if result.status in {"executed", "dry-run"}:
-                self.tracker.remove_position(market, ticker)
+            # Only a confirmed execution may drop protection; a dry-run or
+            # deferred SELL leaves the tracked record (and the shares) intact.
+            if result.status == "executed":
+                self.tracker.remove_position(
+                    market, ticker, expected_updated_at=pos.get("updated_at")
+                )
             return {
                 "market": market,
                 "ticker": ticker,

@@ -336,6 +336,7 @@ def _handle_message(
     _log_raw_pubsub_message(message, context, raw_logger)
     active_logger.info("Received Pub/Sub message (%s, bytes=%s)", context, len(message.data or b""))
     acknowledge = True
+    redelivery_reason = "durable off-hours queue capacity is exhausted"
     try:
         signal = parse_signal_bytes(message.data)
         active_logger.info(
@@ -357,6 +358,15 @@ def _handle_message(
             result.message,
             context,
         )
+        if result.status == "deferred":
+            # The dispatcher could not execute and nothing was retained
+            # locally; nack so Pub/Sub redelivers instead of dropping it.
+            acknowledge = False
+            redelivery_reason = "broker execution stayed busy past the dispatch deadline"
+            active_logger.warning(
+                "Releasing message for redelivery because dispatch was deferred (%s)",
+                context,
+            )
     except SignalValidationError as exc:
         active_logger.warning("Acknowledging invalid signal (%s): %s", context, exc)
     except QueueCapacityError as exc:
@@ -374,17 +384,7 @@ def _handle_message(
             message.ack()
             active_logger.info("Acknowledged Pub/Sub message (%s)", context)
         else:
-            _release_message_for_redelivery(
-                message, reason="durable off-hours queue capacity is exhausted"
-            )
-
-
-def build_callback(
-    dispatcher: TradeDispatcher,
-    logger: logging.Logger | None = None,
-    raw_logger: logging.Logger | None = None,
-):
-    return lambda message: _handle_message(message, dispatcher, logger, raw_logger)
+            _release_message_for_redelivery(message, reason=redelivery_reason)
 
 
 def _release_message_for_redelivery(message, *, reason: str) -> None:

@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 import tempfile
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, fields, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
@@ -118,7 +118,13 @@ class OffHoursOrderQueue:
         data = json.loads(raw.decode("utf-8"))
         if not isinstance(data, list):
             raise ValueError("Off-hours queue must contain a JSON list")
-        return [QueuedSignal(**item) for item in data]
+        # Tolerate unknown keys: a queue file written by a different version or
+        # edited by hand must not wedge every queue operation with TypeError.
+        known_fields = {f.name for f in fields(QueuedSignal)}
+        return [
+            QueuedSignal(**{k: v for k, v in item.items() if k in known_fields})
+            for item in data
+        ]
 
     def _save(
         self,

@@ -132,6 +132,7 @@ class DispatchResult:
     signal_type: str
     market: str
     accounts: list[AccountDispatchResult] = field(default_factory=list)
+    order_no: str | None = None
 
 
 class MultiAccountTradeDispatcher:
@@ -210,6 +211,12 @@ class MultiAccountTradeDispatcher:
         elif counts.get("skipped", 0) == len(results):
             status = "skipped"
             message = f"All {len(results)} account execution(s) were skipped"
+        elif counts.get("rejected", 0) == len(results):
+            status = "rejected"
+            message = f"All {len(results)} account execution(s) were rejected"
+        elif counts.get("acknowledged", 0) == len(results):
+            status = "acknowledged"
+            message = f"Acknowledged for {len(results)} account(s)"
         else:
             status = "partial_success"
             summary = ", ".join(f"{key}={value}" for key, value in sorted(counts.items()))
@@ -223,6 +230,14 @@ class MultiAccountTradeDispatcher:
         allow_queue: bool,
         requested_ids: list[str] | None = None,
     ) -> DispatchResult:
+        if signal.is_event:
+            # Event signals are account-agnostic state (e.g. risk-off). Route
+            # them through the single-account path exactly once instead of
+            # queueing or ledger-claiming them per account.
+            return await self.dispatcher._dispatch_serialized(
+                signal, allow_queue=allow_queue
+            )
+
         accounts, results = self._eligible_accounts(signal, requested_ids)
         if not accounts:
             return self._aggregate(signal, results)
@@ -286,7 +301,9 @@ class MultiAccountTradeDispatcher:
             account_id = _account_id(account["account_key"])
             identity = execution_identity(signal.raw, account["account_key"])
             if self.dispatcher.execution_dedupe:
-                claimed, previous_status = self.ledger.claim(identity)
+                claimed, previous_status = await asyncio.to_thread(
+                    self.ledger.claim, identity
+                )
                 if not claimed:
                     results.append(
                         AccountDispatchResult(
@@ -306,13 +323,23 @@ class MultiAccountTradeDispatcher:
                     signal, allow_queue=False, account=account
                 )
                 if self.dispatcher.execution_dedupe:
-                    self.ledger.finalize(identity, result.status)
+                    if result.status == "deferred":
+                        # The inner market re-check can still defer after the
+                        # claim (an earlier account's workflow may straddle a
+                        # market boundary). Nothing was submitted, so the claim
+                        # must be released or the identity is poisoned forever.
+                        await asyncio.to_thread(self.ledger.release, identity)
+                    else:
+                        await asyncio.to_thread(
+                            self.ledger.finalize, identity, result.status
+                        )
                 results.append(
                     AccountDispatchResult(
                         account=account["name"],
                         account_id=account_id,
                         status=result.status,
                         message=result.message,
+                        order_id=result.order_no,
                     )
                 )
                 logger.info(
@@ -414,7 +441,7 @@ class TradeDispatcher:
                     result = DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
                 else:
                     result = await self._dispatch_serialized(signal, allow_queue=allow_queue)
-                self._update_stop_loss_tracking(signal, result)
+                await asyncio.to_thread(self._update_stop_loss_tracking, signal, result)
                 return result
         except BrokerWorkflowBusyError:
             logger.warning(
@@ -439,10 +466,15 @@ class TradeDispatcher:
         event_strategy = self._resolve_event_strategy(signal)
         if signal.is_event:
             if event_strategy is not None:
-                strategy_result = await event_strategy.execute(
-                    signal,
-                    trading_mode=self.trading_mode,
-                    trader_kwargs=self._strategy_trader_kwargs(account),
+                # Strategies perform blocking broker/file I/O internally; run
+                # the coroutine on a worker thread so this loop stays free.
+                strategy_result = await asyncio.to_thread(
+                    asyncio.run,
+                    event_strategy.execute(
+                        signal,
+                        trading_mode=self.trading_mode,
+                        trader_kwargs=self._strategy_trader_kwargs(account),
+                    ),
                 )
                 return DispatchResult(strategy_result.status, strategy_result.message, signal.signal_type, signal.market)
             logger.info("Ignoring EVENT signal for %s(%s)", signal.company_name, signal.ticker)
@@ -460,7 +492,7 @@ class TradeDispatcher:
                     signal.signal_type, signal.company_name, signal.ticker, signal.market,
                 )
             elif allow_queue:
-                queued_signal = self.queue.enqueue(signal)
+                queued_signal = await asyncio.to_thread(self.queue.enqueue, signal)
                 logger.info(
                     "Queued %s-mode %s %s(%s) for %s",
                     self.trading_mode, signal.signal_type, signal.company_name,
@@ -484,7 +516,9 @@ class TradeDispatcher:
             identity = execution_identity(
                 signal.raw, self._single_account_execution_selector(signal)
             )
-            claimed, previous_status = self.execution_ledger.claim(identity)
+            claimed, previous_status = await asyncio.to_thread(
+                self.execution_ledger.claim, identity
+            )
             if not claimed:
                 logger.warning(
                     "Suppressed duplicate automatic %s %s(%s) (previous status: %s)",
@@ -502,10 +536,13 @@ class TradeDispatcher:
 
         try:
             if strategy is not None:
-                strategy_result = await strategy.execute(
-                    signal,
-                    trading_mode=self.trading_mode,
-                    trader_kwargs=self._strategy_trader_kwargs(account),
+                strategy_result = await asyncio.to_thread(
+                    asyncio.run,
+                    strategy.execute(
+                        signal,
+                        trading_mode=self.trading_mode,
+                        trader_kwargs=self._strategy_trader_kwargs(account),
+                    ),
                 )
                 result = DispatchResult(
                     strategy_result.status,
@@ -527,7 +564,9 @@ class TradeDispatcher:
             raise
 
         if identity is not None:
-            self.execution_ledger.finalize(identity, result.status)
+            await asyncio.to_thread(
+                self.execution_ledger.finalize, identity, result.status
+            )
         return result
 
     async def execute_queued_signal(self, payload: dict) -> DispatchResult:
@@ -542,7 +581,9 @@ class TradeDispatcher:
                     result = await self.multi_account_dispatcher.dispatch(
                         signal, allow_queue=False, requested_ids=requested_ids
                     )
-                    self._update_stop_loss_tracking(signal, result)
+                    await asyncio.to_thread(
+                        self._update_stop_loss_tracking, signal, result
+                    )
                     return result
         except BrokerWorkflowBusyError:
             return DispatchResult(
@@ -585,9 +626,14 @@ class TradeDispatcher:
                     company_name=signal.company_name,
                     target_price=signal.target_price,
                 )
-            elif signal.signal_type == "SELL":
+            elif signal.signal_type == "SELL" and signal.sell_reason != "stop_loss":
+                # Watcher-generated stop-loss sells own removal via a
+                # compare-and-delete keyed on the record the watcher observed.
+                # Removing unconditionally here would delete a record that was
+                # re-registered after the watcher's snapshot, leaving the new
+                # position unprotected.
                 self.stop_loss_tracker.remove_position(signal.market, signal.ticker)
-        except RuntimeError:
+        except Exception:
             # The broker outcome is already known at this point. Do not turn a
             # successful order into a retryable subscriber failure merely
             # because the local stop-loss tracker is damaged.
@@ -605,7 +651,11 @@ class TradeDispatcher:
             result = asyncio.run(self.execute_queued_signal(payload))
             if result.status == "deferred":
                 return QueueExecutionResult("deferred", result.message)
-            if result.status in {"failed", "unknown", "skipped"}:
+            if result.status == "skipped":
+                # Skipped work (dedupe suppression, disabled/unconfigured
+                # targets) needs no retry — drop it without a failure label.
+                return QueueExecutionResult("processed", f"Skipped: {result.message}")
+            if result.status in {"failed", "unknown"}:
                 logger.error(
                     "Quarantining failed queued %s order on %s: %s",
                     result.signal_type, result.market, result.message,
@@ -688,7 +738,11 @@ class TradeDispatcher:
     ) -> DispatchResult:
         limit_price = None if signal.price in (None, 0) else signal.price
         if signal.market == "US":
-            trader = USStockTrading(**self._trader_kwargs(account))
+            # Construction authenticates synchronously (token file scan, lock,
+            # possible mint); keep it off the event loop.
+            trader = await asyncio.to_thread(
+                USStockTrading, **self._trader_kwargs(account)
+            )
             if signal.signal_type == "BUY":
                 trade_result = await trader.async_buy_stock(ticker=signal.ticker, limit_price=limit_price)
             else:
@@ -703,7 +757,10 @@ class TradeDispatcher:
         message = str(trade_result.get("message", ""))
         account_prefix = f"[Account: {account['name']}] " if account else ""
         logger.info("%s%s %s(%s): %s", account_prefix, signal.signal_type, signal.company_name, signal.ticker, message)
-        return DispatchResult(status, message, signal.signal_type, signal.market)
+        return DispatchResult(
+            status, message, signal.signal_type, signal.market,
+            order_no=str(trade_result.get("order_no") or "") or None,
+        )
 
 
 SignalDispatcher = TradeDispatcher

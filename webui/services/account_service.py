@@ -9,13 +9,14 @@ from pathlib import Path
 from typing import Any
 
 from trading import yaml_compat as yaml
-from trading.config_paths import EXAMPLE_CONFIG_PATH, writable_kis_config_path
+from trading.config_paths import EXAMPLE_CONFIG_PATH, runtime_file_path, writable_kis_config_path
+from trading.file_lock import FileLock
 from trading.schema import infer_market
 from trading.strategy_names import WEBUI_EDITABLE_STRATEGY_NAMES
 from webui.services.masking import mask_secret_value
 
 CONFIG_PATH = writable_kis_config_path()
-SECRET_FIELDS = {"app_key", "app_secret", "my_app", "my_sec", "paper_app", "paper_sec", "my_token"}
+_CONFIG_LOCK_PATH = runtime_file_path(Path("runtime") / "kis_config_webui.lock")
 EDITABLE_TOP_LEVEL_FIELDS: dict[str, type] = {
     "default_mode": str,
     "multi_account_trading_enabled": bool,
@@ -217,6 +218,13 @@ def _coerce_value(name: str, raw: str) -> Any:
 
 
 def update_config_fields(fields: dict[str, str], strategy: dict[str, str] | None = None) -> dict[str, Any]:
+    # Serialize the load/mutate/save cycle so concurrent WebUI saves cannot
+    # silently drop each other's fields.
+    with FileLock(_CONFIG_LOCK_PATH, timeout=30.0):
+        return _update_config_fields_locked(fields, strategy)
+
+
+def _update_config_fields_locked(fields: dict[str, str], strategy: dict[str, str] | None = None) -> dict[str, Any]:
     data = load_config()
     updates: dict[str, Any] = {}
     multi_account_enabled: bool | None = None
