@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from trading.config_paths import runtime_file_path
+
 from .masking import mask_text
 
 DEFAULT_QUEUE_PATH = Path("runtime") / "off_hours_queue.json"
@@ -27,7 +29,8 @@ def _empty_summary(path: Path, *, ok: bool, error: str | None = None) -> dict[st
     }
 
 
-def summarize_queue(path: Path = DEFAULT_QUEUE_PATH) -> dict[str, Any]:
+def summarize_queue(path: Path | None = None) -> dict[str, Any]:
+    path = path or runtime_file_path(DEFAULT_QUEUE_PATH)
     if not path.exists():
         return _empty_summary(path, ok=True)
     try:

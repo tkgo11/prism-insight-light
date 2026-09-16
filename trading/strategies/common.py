@@ -11,8 +11,9 @@ import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Protocol
+from typing import Any, Callable
 
+from ..config_paths import configured_runtime_dir
 from ..domestic import AsyncTradingContext
 from ..execution_outcome import classify_broker_result
 from ..file_lock import FileLock
@@ -23,6 +24,12 @@ logger = logging.getLogger(__name__)
 RUNTIME_DIR = Path(__file__).resolve().parents[2] / "runtime"
 
 
+def runtime_dir() -> Path:
+    """Return the configured runtime-state directory (defaults to the repo runtime dir)."""
+
+    return configured_runtime_dir() or RUNTIME_DIR
+
+
 @dataclass(slots=True)
 class StrategyExecution:
     status: str
@@ -30,10 +37,6 @@ class StrategyExecution:
     market: str
     ticker: str = ""
     details: dict[str, Any] | None = None
-
-
-class StrategyTrader(Protocol):
-    def get_account_summary(self) -> dict[str, Any] | None: ...
 
 
 def strategy_name(payload: dict[str, Any] | None) -> str:
@@ -115,11 +118,6 @@ def integer_value(
 
 def market_base_amount(signal: SignalMessage, *, krw: float, usd: float) -> float:
     return usd if signal.market == "US" else krw
-
-
-def available_cash(trader: StrategyTrader) -> float:
-    summary = trader.get_account_summary() or {}
-    return float(summary.get("available_amount", summary.get("cash_balance", summary.get("total_cash", 0))) or 0)
 
 
 async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount: float | None = None, limit_price: float | None = None, sell_fraction: float | None = None, trader_kwargs: dict[str, Any] | None = None) -> dict[str, Any]:

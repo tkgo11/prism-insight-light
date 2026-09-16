@@ -122,6 +122,13 @@ async def test_dispatcher_registers_stop_loss_on_buy(tmp_path, monkeypatch):
     res = await dispatcher.dispatch(signal)
     assert res.status == "dry-run"
 
+    # Dry-run BUY must not register a phantom position.
+    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is None
+
+    # An executed BUY registers the position.
+    dispatcher._update_stop_loss_tracking(
+        signal, DispatchResult("executed", "Order executed", "BUY", "KR")
+    )
     pos = dispatcher.stop_loss_tracker.get_position("KR", "005930")
     assert pos is not None
     assert pos["stop_loss"] == 69000.0
@@ -145,7 +152,13 @@ async def test_dispatcher_registers_stop_loss_on_buy(tmp_path, monkeypatch):
     res_sell = await dispatcher.dispatch(sell_signal)
     assert res_sell.status == "dry-run"
 
-    # Should be removed after SELL
+    # Dry-run SELL must not drop protection for a real position.
+    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is not None
+
+    # An executed SELL removes it.
+    dispatcher._update_stop_loss_tracking(
+        sell_signal, DispatchResult("executed", "Order executed", "SELL", "KR")
+    )
     assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is None
 
 

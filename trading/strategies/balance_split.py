@@ -11,7 +11,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Protocol
 
+from ..config_paths import runtime_file_path
 from ..domestic import AsyncTradingContext
+from ..execution_outcome import classify_broker_result
 from ..file_lock import FileLock
 from ..schema import SignalMessage
 from ..us import USStockTrading
@@ -64,7 +66,7 @@ class BalanceSplitStrategy:
 
     def __init__(self, *, config: BalanceSplitStrategyConfig):
         self.config = config
-        self.reservation_path = RESERVATION_PATH
+        self.reservation_path = runtime_file_path(RESERVATION_PATH)
 
     @property
     def reservation_lock_path(self) -> Path:
@@ -567,7 +569,7 @@ class BalanceSplitStrategy:
         buy_amount: float,
         cash_source: str,
     ) -> BalanceSplitExecution:
-        status = "executed" if result.get("success") else "failed"
+        status = classify_broker_result(result)
         broker_message = str(result.get("message", ""))
         if broker_message:
             message = f"Balance split buy {buy_amount:.2f} from {cash_source} {available_amount:.2f}: {broker_message}"

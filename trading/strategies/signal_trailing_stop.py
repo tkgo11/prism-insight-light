@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from ..schema import SignalMessage
 from .common import (
-    RUNTIME_DIR,
     StrategyExecution,
     acquire_file_lock,
     execute_order,
@@ -15,6 +14,7 @@ from .common import (
     fraction_value,
     load_json_list,
     positive_number,
+    runtime_dir,
     save_json,
     strategy_name,
 )
@@ -29,7 +29,9 @@ class SignalTrailingStopStrategyConfig:
     trail_percent: float = 8.0
     sell_fraction: float = 1.0
     require_tracked_entry: bool = True
-    runtime_path: Path = RUNTIME_DIR / "signal_trailing_stops.json"
+    runtime_path: Path = field(
+        default_factory=lambda: runtime_dir() / "signal_trailing_stops.json"
+    )
 
     @classmethod
     def from_mapping(
@@ -49,7 +51,7 @@ class SignalTrailingStopStrategyConfig:
             require_tracked_entry=raw_required,
             runtime_path=Path(
                 payload.get("runtime_path")
-                or (RUNTIME_DIR / "signal_trailing_stops.json")
+                or (runtime_dir() / "signal_trailing_stops.json")
             ),
         )
 

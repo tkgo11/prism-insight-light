@@ -15,15 +15,30 @@ SUPPORTED_MARKETS = {"KR", "US"}
 def infer_market(ticker: str) -> str:
     """Infer market from ticker shape when upstream payload omits it."""
 
-    return "KR" if ticker.strip().isdigit() else "US"
+    stripped = ticker.strip()
+    return "KR" if stripped.isascii() and stripped.isdigit() else "US"
 
 
 class SignalValidationError(ValueError):
     """Raised when an inbound trading signal is malformed."""
 
 
+def _as_text(value: Any, *, field_name: str) -> str:
+    """Coerce an optional text field; reject non-string payloads and log-hostile chars."""
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise SignalValidationError(f"'{field_name}' must be a string")
+    cleaned = "".join(ch if ch.isprintable() else " " for ch in value)
+    return " ".join(cleaned.split())
+
+
 def _as_float(value: Any, *, field_name: str) -> float | None:
-    if value in (None, ""):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise SignalValidationError(f"Invalid numeric value for '{field_name}'")
+    if isinstance(value, str) and not value.strip():
         return None
     try:
         number = float(value)
@@ -84,15 +99,18 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
     if not isinstance(payload, dict):
         raise SignalValidationError("Signal payload must be a JSON object")
 
-    signal_type = str(payload.get("type", "")).strip().upper()
+    signal_type = _as_text(payload.get("type"), field_name="type").upper()
     if signal_type not in SUPPORTED_SIGNAL_TYPES:
         raise SignalValidationError(f"Unsupported signal type '{payload.get('type')}'")
 
-    ticker = str(payload.get("ticker", "")).strip().upper()
-    company_name = str(payload.get("company_name", "")).strip()
+    ticker = _as_text(payload.get("ticker"), field_name="ticker").upper()
+    company_name = _as_text(payload.get("company_name"), field_name="company_name")
 
     market_value = payload.get("market")
-    market = str(market_value).strip().upper() if market_value not in (None, "") else infer_market(ticker)
+    if market_value is None or (isinstance(market_value, str) and not market_value.strip()):
+        market = infer_market(ticker)
+    else:
+        market = _as_text(market_value, field_name="market").upper()
     if market not in SUPPORTED_MARKETS:
         raise SignalValidationError(f"Unsupported market '{payload.get('market')}'")
 
@@ -116,20 +134,22 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
         target_price=_as_positive_float(payload.get("target_price"), field_name="target_price"),
         stop_loss=_as_positive_float(payload.get("stop_loss"), field_name="stop_loss"),
         buy_score=_as_int(payload.get("buy_score"), field_name="buy_score"),
-        rationale=str(payload.get("rationale", "")).strip(),
+        rationale=_as_text(payload.get("rationale"), field_name="rationale"),
         profit_rate=_as_float(payload.get("profit_rate"), field_name="profit_rate"),
-        sell_reason=str(payload.get("sell_reason", "")).strip(),
+        sell_reason=_as_text(payload.get("sell_reason"), field_name="sell_reason"),
         buy_price=_as_positive_float(payload.get("buy_price"), field_name="buy_price"),
-        event_type=str(payload.get("event_type", "")).strip(),
-        event_source=str(payload.get("source", "")).strip(),
-        event_description=str(payload.get("event_description", "")).strip(),
+        event_type=_as_text(payload.get("event_type"), field_name="event_type"),
+        event_source=_as_text(payload.get("source"), field_name="source"),
+        event_description=_as_text(payload.get("event_description"), field_name="event_description"),
         raw=dict(payload),
     )
 
 
 def parse_signal_bytes(message_bytes: bytes) -> SignalMessage:
+    if not isinstance(message_bytes, (bytes, bytearray)):
+        raise SignalValidationError("Signal payload must be UTF-8 JSON bytes")
     try:
-        payload = json.loads(message_bytes.decode("utf-8"))
+        payload = json.loads(bytes(message_bytes).decode("utf-8"))
     except UnicodeDecodeError as exc:
         raise SignalValidationError("Signal payload must be UTF-8 JSON") from exc
     except json.JSONDecodeError as exc:

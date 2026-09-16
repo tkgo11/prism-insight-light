@@ -1,16 +1,16 @@
 """Event-aware risk-off strategy state."""
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from ..schema import SignalMessage
-from .common import RUNTIME_DIR, StrategyExecution, execute_order, execution_from_result, fraction_value, fresh_items, integer_value, load_json_list, strategy_name, string_list, update_json_list
+from .common import StrategyExecution, execute_order, execution_from_result, fraction_value, fresh_items, integer_value, load_json_list, runtime_dir, strategy_name, string_list, update_json_list
 
 EVENT_RISK_OFF = "event_risk_off"
 @dataclass(frozen=True, slots=True)
 class EventRiskOffStrategyConfig:
-    risk_off_event_types: tuple[str, ...] = (); risk_off_window_minutes: int = 1; buy_size_multiplier: float = 1.0; runtime_path: Path = RUNTIME_DIR / "event_risk_off.json"
+    risk_off_event_types: tuple[str, ...] = (); risk_off_window_minutes: int = 1; buy_size_multiplier: float = 1.0; runtime_path: Path = field(default_factory=lambda: runtime_dir() / "event_risk_off.json")
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "EventRiskOffStrategyConfig | None":
         if not payload or strategy_name(payload) != EVENT_RISK_OFF: return None
@@ -24,7 +24,7 @@ class EventRiskOffStrategyConfig:
             fraction_value(payload, "buy_size_multiplier", 1.0),
             Path(
                 payload.get("runtime_path")
-                or (RUNTIME_DIR / "event_risk_off.json")
+                or (runtime_dir() / "event_risk_off.json")
             ),
         )
 

@@ -11,20 +11,21 @@ from trading import domestic as dst
 class FakeDomesticTrader:
     init_calls = []
 
-    def __init__(self, mode="demo", buy_amount=None, auto_trading=True, account_name=None, account_index=None, product_code="01"):
+    def __init__(self, mode="demo", buy_amount=None, auto_trading=True, account_name=None, account_index=None, account_key=None, product_code="01"):
         self.mode = mode
         self.buy_amount = buy_amount
         self.auto_trading = auto_trading
         self.account_name = account_name
         self.account_index = account_index
+        self.account_key = account_key or f"vps:{account_name}:{product_code}"
         self.product_code = product_code
-        self.account_key = f"vps:{account_name}:{product_code}"
         type(self).init_calls.append(
             {
                 "mode": mode,
                 "buy_amount": buy_amount,
                 "auto_trading": auto_trading,
                 "account_name": account_name,
+                "account_key": account_key,
                 "product_code": product_code,
             }
         )
@@ -92,7 +93,106 @@ async def test_multi_account_trading_context_fans_out_orders_but_reads_primary(m
         assert result["partial_success"] is True
         assert result["successful_accounts"] == ["kr-primary"]
         assert result["failed_accounts"] == ["kr-secondary"]
+        assert [call["account_key"] for call in FakeDomesticTrader.init_calls] == [
+            "vps:kr-primary:01",
+            "vps:kr-secondary:01",
+        ]
         assert trader.get_portfolio() == [{"account_name": "kr-primary"}]
+
+        # Holding quantity sums across all accounts so a secondary-account
+        # position is never reported as 0 (stop-loss protection depends on it).
+        assert trader.get_holding_quantity("005930") == 14
+
+
+@pytest.mark.asyncio
+async def test_multi_account_aggregate_counts_only_executed_quantities(monkeypatch):
+    class EstimateFakeTrader:
+        def __init__(self, account_key=None, account_name=None, **kwargs):
+            self.account_key = account_key
+            self.account_name = account_name
+
+        async def async_buy_stock(self, stock_code, **kwargs):
+            if self.account_key == "vps:kr-bad:01":
+                return {
+                    "success": False,
+                    "stock_code": stock_code,
+                    "quantity": 7,
+                    "estimated_amount": 350000,
+                    "message": "rejected",
+                }
+            return {
+                "success": True,
+                "stock_code": stock_code,
+                "quantity": 2,
+                "estimated_amount": 100000,
+                "message": "ok",
+            }
+
+    accounts = [
+        {"name": "kr-good", "account_key": "vps:kr-good:01", "product": "01"},
+        {"name": "kr-bad", "account_key": "vps:kr-bad:01", "product": "01"},
+    ]
+    monkeypatch.setattr(dst, "DomesticStockTrading", EstimateFakeTrader)
+    monkeypatch.setattr(dst.ka, "get_configured_accounts", lambda **kwargs: accounts)
+    monkeypatch.setattr(dst.ka, "resolve_account", lambda **kwargs: accounts[0])
+
+    trader = dst.MultiAccountDomesticStockTrading(mode="demo")
+    result = await trader.async_buy_stock("005930")
+
+    # The rejected account's estimated quantity/amount must not inflate totals.
+    assert result["quantity"] == 2
+    assert result["estimated_amount"] == 100000
+    assert result["successful_accounts"] == ["kr-good"]
+    assert result["failed_accounts"] == ["kr-bad"]
+    assert result["unknown_accounts"] == []
+    assert result["outcome_unknown"] is False
+
+
+@pytest.mark.asyncio
+async def test_multi_account_aggregate_propagates_unknown_outcome(monkeypatch):
+    from trading.execution_outcome import classify_broker_result
+
+    class AmbiguousFakeTrader:
+        def __init__(self, account_key=None, account_name=None, **kwargs):
+            self.account_key = account_key
+            self.account_name = account_name
+
+        async def async_buy_stock(self, stock_code, **kwargs):
+            if self.account_key == "vps:kr-mystery:01":
+                return {
+                    "success": False,
+                    "outcome_unknown": True,
+                    "stock_code": stock_code,
+                    "quantity": 5,
+                    "estimated_amount": 250000,
+                    "message": "read timed out after order submission",
+                }
+            return {
+                "success": True,
+                "stock_code": stock_code,
+                "quantity": 2,
+                "estimated_amount": 100000,
+                "message": "ok",
+            }
+
+    accounts = [
+        {"name": "kr-good", "account_key": "vps:kr-good:01", "product": "01"},
+        {"name": "kr-mystery", "account_key": "vps:kr-mystery:01", "product": "01"},
+    ]
+    monkeypatch.setattr(dst, "DomesticStockTrading", AmbiguousFakeTrader)
+    monkeypatch.setattr(dst.ka, "get_configured_accounts", lambda **kwargs: accounts)
+    monkeypatch.setattr(dst.ka, "resolve_account", lambda **kwargs: accounts[0])
+
+    trader = dst.MultiAccountDomesticStockTrading(mode="demo")
+    result = await trader.async_buy_stock("005930")
+
+    assert result["success"] is False
+    assert result["partial_success"] is True
+    assert result["outcome_unknown"] is True
+    assert result["unknown_accounts"] == ["kr-mystery"]
+    assert result["quantity"] == 2
+    # The aggregate itself must classify as ambiguous, never a clean failure.
+    assert classify_broker_result(result) == "unknown"
 
 
 def test_domestic_request_serializes_activation_and_fetch(monkeypatch):
@@ -161,6 +261,16 @@ def test_domestic_calculate_buy_quantity_uses_percent_resolved_amount(monkeypatc
     trader.get_current_price = lambda stock_code: {"current_price": 8_000}
 
     assert trader.calculate_buy_quantity("005930") == 2
+
+
+@pytest.mark.parametrize("bad_price", [0, -5000, "halted", None])
+def test_domestic_calculate_buy_quantity_rejects_unusable_price(bad_price):
+    trader = dst.DomesticStockTrading.__new__(dst.DomesticStockTrading)
+    trader.buy_amount = 10_000
+    trader.buy_sizing = dst.build_buy_sizing(fixed_amount=10_000, asset_percent=None)
+    trader.get_current_price = lambda stock_code: {"current_price": bad_price}
+
+    assert trader.calculate_buy_quantity("005930") == 0
 
 
 def test_smart_buy_routes_by_kst_not_server_local_time(monkeypatch):

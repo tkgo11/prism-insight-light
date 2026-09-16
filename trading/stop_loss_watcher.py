@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import math
 import os
 import threading
 import time
@@ -14,6 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .config_paths import runtime_file_path
 from .domestic import DomesticStockTrading, MultiAccountDomesticStockTrading
 from .file_lock import FileLock
 from .market_hours import is_market_open
@@ -23,6 +25,10 @@ from .us import MultiAccountUSStockTrading, USStockTrading
 logger = logging.getLogger("trading.stop_loss_watcher")
 
 DEFAULT_STOP_LOSS_POSITIONS_PATH = Path("runtime") / "stop_loss_positions.json"
+
+
+def default_stop_loss_positions_path() -> Path:
+    return runtime_file_path(DEFAULT_STOP_LOSS_POSITIONS_PATH)
 
 
 def _as_enabled(value: Any, default: bool = False) -> bool:
@@ -40,7 +46,16 @@ class StopLossWatcherConfig:
     enabled: bool = False
     poll_seconds: float = 5.0
     request_interval_seconds: float = 0.2
-    storage_path: Path = field(default_factory=lambda: DEFAULT_STOP_LOSS_POSITIONS_PATH)
+    storage_path: Path = field(default_factory=default_stop_loss_positions_path)
+
+    def __post_init__(self) -> None:
+        # Clamp non-finite timing values: Event.wait(inf)/sleep(nan) raise
+        # OverflowError/ValueError, which would silently kill the watcher
+        # thread. Covers every construction path (from_mapping, CLI flags).
+        if not math.isfinite(self.poll_seconds) or self.poll_seconds <= 0:
+            object.__setattr__(self, "poll_seconds", 5.0)
+        if not math.isfinite(self.request_interval_seconds) or self.request_interval_seconds < 0:
+            object.__setattr__(self, "request_interval_seconds", 0.2)
 
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "StopLossWatcherConfig":
@@ -62,7 +77,7 @@ class StopLossWatcherConfig:
             request_interval = 0.2
 
         storage_raw = payload.get("storage_path")
-        storage_path = Path(storage_raw) if storage_raw else DEFAULT_STOP_LOSS_POSITIONS_PATH
+        storage_path = Path(storage_raw) if storage_raw else default_stop_loss_positions_path()
 
         return cls(
             enabled=enabled,
@@ -108,11 +123,16 @@ class StopLossTracker:
     """Thread-safe and process-safe JSON ledger for active stop-loss positions."""
 
     def __init__(self, path: Path | None = None) -> None:
-        self.path = path or DEFAULT_STOP_LOSS_POSITIONS_PATH
+        self.path = path or default_stop_loss_positions_path()
         self.lock_path = self.path.with_suffix(self.path.suffix + ".lock")
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        if os.name != "nt":
-            os.chmod(self.path.parent, 0o700)
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            if not self.path.parent.is_dir():
+                raise
+        else:
+            if os.name != "nt":
+                os.chmod(self.path.parent, 0o700)
 
     def _key(self, market: str, ticker: str) -> str:
         return f"{market.strip().upper()}:{ticker.strip()}"
@@ -145,7 +165,10 @@ class StopLossTracker:
 
     def _save(self, data: dict[str, dict[str, Any]]) -> None:
         temp_file = self.path.with_suffix(".tmp")
-        temp_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        with temp_file.open("w", encoding="utf-8") as handle:
+            handle.write(json.dumps(data, indent=2, ensure_ascii=False))
+            handle.flush()
+            os.fsync(handle.fileno())
         if os.name != "nt":
             os.chmod(temp_file, 0o600)
         temp_file.replace(self.path)
@@ -189,17 +212,38 @@ class StopLossTracker:
                 entry_price,
             )
 
-    def remove_position(self, market: str, ticker: str) -> bool:
-        """Remove a position from stop-loss tracking."""
+    def remove_position(
+        self,
+        market: str,
+        ticker: str,
+        *,
+        expected_updated_at: Any = None,
+    ) -> bool:
+        """Remove a position from stop-loss tracking.
+
+        When ``expected_updated_at`` is given, the record is deleted only if it
+        is still the same tracked record the caller inspected — a position that
+        was re-registered by a concurrent BUY must not be silently wiped.
+        ``updated_at`` (not ``created_at``) is the discriminator because
+        re-registration preserves the original ``created_at``.
+        """
         key = self._key(market, ticker)
         with FileLock(self.lock_path):
             positions = self._load()
-            if key in positions:
-                del positions[key]
-                self._save(positions)
-                logger.info("[StopLossTracker] Removed %s %s from stop-loss tracking", market.upper(), ticker)
-                return True
-            return False
+            record = positions.get(key)
+            if record is None:
+                return False
+            if expected_updated_at is not None and record.get("updated_at") != expected_updated_at:
+                logger.info(
+                    "[StopLossTracker] Keeping %s %s: tracked record changed since inspection",
+                    market.upper(),
+                    ticker,
+                )
+                return False
+            del positions[key]
+            self._save(positions)
+            logger.info("[StopLossTracker] Removed %s %s from stop-loss tracking", market.upper(), ticker)
+            return True
 
     def get_positions(self, market: str | None = None) -> list[dict[str, Any]]:
         """Return all tracked positions, optionally filtered by market."""
@@ -310,9 +354,15 @@ class StopLossWatcher:
                 if self._stop_event.is_set():
                     break
 
-                ticker = pos.get("ticker", "")
-                stop_loss = float(pos.get("stop_loss", 0.0))
-                if not ticker or stop_loss <= 0:
+                try:
+                    ticker = str(pos.get("ticker", "") or "")
+                    stop_loss = float(pos.get("stop_loss", 0.0))
+                except (AttributeError, TypeError, ValueError):
+                    # One malformed persisted record must not abort the cycle
+                    # and leave every later position unchecked.
+                    logger.error("[Stop-Loss] Skipping malformed tracked record: %r", pos)
+                    continue
+                if not ticker or not math.isfinite(stop_loss) or stop_loss <= 0:
                     continue
 
                 if self.config.request_interval_seconds > 0:
@@ -349,7 +399,9 @@ class StopLossWatcher:
                         market,
                         ticker,
                     )
-                    self.tracker.remove_position(market, ticker)
+                    self.tracker.remove_position(
+                        market, ticker, expected_updated_at=pos.get("updated_at")
+                    )
                     continue
 
                 if current_price <= stop_loss:
@@ -402,8 +454,12 @@ class StopLossWatcher:
                 result.status,
                 result.message,
             )
-            if result.status in {"executed", "dry-run"}:
-                self.tracker.remove_position(market, ticker)
+            # Only a confirmed execution may drop protection; a dry-run or
+            # deferred SELL leaves the tracked record (and the shares) intact.
+            if result.status == "executed":
+                self.tracker.remove_position(
+                    market, ticker, expected_updated_at=pos.get("updated_at")
+                )
             return {
                 "market": market,
                 "ticker": ticker,

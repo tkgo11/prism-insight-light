@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import copy
 import hashlib
 import json
@@ -16,12 +15,9 @@ import tempfile
 import time
 import threading
 import warnings
-from base64 import b64decode
 from collections import namedtuple
-from collections.abc import Callable
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from io import StringIO
 import stat
 import secrets
 import importlib
@@ -30,21 +26,8 @@ from pathlib import Path
 from typing import Any, Optional, Tuple
 
 from .buy_sizing import normalize_amount, normalize_percent
-from .config_paths import active_kis_config_path
-
-pd_spec = importlib.util.find_spec("pandas")
-if pd_spec is not None:
-    pd = importlib.import_module("pandas")
-else:  # pragma: no cover - exercised only in minimal test environments
-    class _PandasFallback:
-        class DataFrame:
-            pass
-
-        @staticmethod
-        def read_csv(*args, **kwargs):
-            raise ModuleNotFoundError("pandas is required for KIS websocket tabular data parsing")
-
-    pd = _PandasFallback()
+from .config_paths import active_kis_config_path, runtime_file_path
+from .file_lock import FileLock
 
 tenacity_spec = importlib.util.find_spec("tenacity")
 if tenacity_spec is not None:
@@ -87,42 +70,8 @@ else:  # pragma: no cover - minimal test environment fallback
 
     requests = _RequestsFallback()
 
-# Declare web socket module
-websockets_spec = importlib.util.find_spec("websockets")
-if websockets_spec is not None:
-    websockets = importlib.import_module("websockets")
-else:  # pragma: no cover - minimal test environment fallback
-    class _WebSocketsFallback:
-        class ClientConnection:
-            pass
-
-        @staticmethod
-        def connect(*args, **kwargs):
-            raise RuntimeError("websockets is required for websocket connections")
-
-    websockets = _WebSocketsFallback()
-
 # pip install PyYAML (package installation)
 from . import yaml_compat as yaml
-crypto_root_spec = importlib.util.find_spec("Crypto")
-crypto_spec = importlib.util.find_spec("Crypto.Cipher") if crypto_root_spec is not None else None
-crypto_padding_spec = importlib.util.find_spec("Crypto.Util.Padding") if crypto_root_spec is not None else None
-if crypto_spec is not None and crypto_padding_spec is not None:
-    AES = importlib.import_module("Crypto.Cipher.AES")
-    unpad = importlib.import_module("Crypto.Util.Padding").unpad
-else:  # pragma: no cover - minimal test environment fallback
-    class _AESFallback:
-        MODE_CBC = 1
-        block_size = 16
-
-        @staticmethod
-        def new(*args, **kwargs):
-            raise RuntimeError("pycryptodome is required for encrypted websocket payloads")
-
-    AES = _AESFallback()
-
-    def unpad(data, block_size):
-        return data
 
 cryptography_spec = importlib.util.find_spec("cryptography")
 fernet_spec = importlib.util.find_spec("cryptography.fernet") if cryptography_spec is not None else None
@@ -221,9 +170,11 @@ KIS_HTTP_TIMEOUT = (KIS_HTTP_CONNECT_TIMEOUT_SECONDS, KIS_HTTP_READ_TIMEOUT_SECO
 
 
 key_bytes = 32
-# Find config folder based on kis_auth.py file directory
+# Find config folder based on kis_auth.py file directory.  When
+# PRISM_RUNTIME_DIR is configured, token/key files live under its "config"
+# subdirectory so isolated runs never share broker credentials state.
 current_dir = os.path.dirname(os.path.abspath(__file__))
-config_root = os.path.join(current_dir, "config")
+config_root = str(runtime_file_path(Path(current_dir) / "config"))
 # config_root = "$HOME/KIS/config/"  # Folder where token files are stored, set path to be difficult for third parties to find
 # token_tmp = config_root + 'KIS000000'  # Specify file name for local token storage, avoid file names that can infer token value
 # token_tmp = config_root + 'KIS' + datetime.today().strftime("%Y%m%d%H%M%S")  # Token local storage filename YYYYMMDDHHMMSS
@@ -234,7 +185,7 @@ os.makedirs(config_root, exist_ok=True)
 if os.name != 'nt':
     try:
         os.chmod(config_root, stat.S_IRWXU)  # 700 permission
-    except:
+    except Exception:
         pass  # Ignore permission change failure
 
 # Generate security-enhanced token filename
@@ -280,8 +231,6 @@ def mask_account_number(account_number: str | None) -> str:
     account_str = str(account_number)
     if len(account_str) <= 4:
         return "*" * len(account_str)
-    if len(account_str) <= 6:
-        return f"{account_str[:2]}{'*' * (len(account_str) - 4)}{account_str[-2:]}"
     return f"{account_str[:2]}{'*' * (len(account_str) - 4)}{account_str[-2:]}"
 
 
@@ -541,8 +490,11 @@ def resolve_account(
 
     if requested_product:
         product_accounts = [account for account in accounts if account["product"] == requested_product]
-        if product_accounts:
-            accounts = product_accounts
+        if not product_accounts:
+            raise ValueError(
+                f"No accounts configured for mode '{requested_svr}' and product '{requested_product}'"
+            )
+        accounts = product_accounts
 
     if account_index is not None:
         if account_index < 0 or account_index >= len(accounts):
@@ -592,31 +544,71 @@ _base_headers = {
     "User-Agent": _cfg["my_agent"],
 }
 
+# Fields that must never appear in debug dumps or logs.
+_SENSITIVE_HEADER_KEYS = {"authorization", "appkey", "appsecret", "hashkey"}
+_SENSITIVE_FIELD_FRAGMENTS = (
+    "cano",
+    "acnt",
+    "appkey",
+    "appsecret",
+    "app_key",
+    "app_secret",
+    "authorization",
+    "hashkey",
+    "token",
+    "secret",
+    "password",
+)
+
+
+def _is_sensitive_field(name: Any) -> bool:
+    text = str(name).casefold()
+    return any(fragment in text for fragment in _SENSITIVE_FIELD_FRAGMENTS)
+
+
+def _redact_mapping(mapping: dict) -> dict:
+    return {
+        key: ("***" if _is_sensitive_field(key) else value)
+        for key, value in mapping.items()
+    }
+
 def _get_or_create_encryption_key():
     """Generate or load encryption key"""
     key_file = os.path.join(config_root, ".token_key")
 
-    if os.path.exists(key_file):
+    # O_EXCL create-if-absent: no exists-then-create race and no window where
+    # the key file exists with default (potentially world-readable) permissions.
+    try:
+        fd = os.open(key_file, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
         with open(key_file, 'rb') as f:
-            key = f.read()
-    else:
-        # Generate new encryption key
-        key = Fernet.generate_key()
-        with open(key_file, 'wb') as f:
-            f.write(key)
+            return f.read()
 
-        # Set key file permissions (maximum security)
-        if os.name != 'nt':
-            os.chmod(key_file, 0o600)
-        else:
-            # Windows: Set file hidden attribute
-            try:
-                import ctypes
-                ctypes.windll.kernel32.SetFileAttributesW(key_file, 2)  # FILE_ATTRIBUTE_HIDDEN
-            except:
-                pass
+    try:
+        key = Fernet.generate_key()
+        os.write(fd, key)
+    finally:
+        os.close(fd)
+
+    if os.name == 'nt':
+        # Windows: Set file hidden attribute (mode is ignored by os.open)
+        try:
+            import ctypes
+            ctypes.windll.kernel32.SetFileAttributesW(key_file, 2)  # FILE_ATTRIBUTE_HIDDEN
+        except Exception:
+            pass
 
     return key
+
+def _token_write_lock() -> FileLock:
+    """Exclusive cross-process lock guarding token issuance and file writes.
+
+    The timeout must exceed the worst-case token request: the issuance call
+    retries with exponential backoff inside the lock, which can take ~2
+    minutes when the KIS token endpoint is slow.
+    """
+    return FileLock(Path(config_root) / ".token_write.lock", timeout=150.0)
+
 
 # Obtain and save token (token value, token validity time 1 day, same token value if applied within 6 hours, notification sent when issued)
 def save_token(my_token: str, my_expired: str, account_key: Optional[str] = None):
@@ -636,8 +628,20 @@ def save_token(my_token: str, my_expired: str, account_key: Optional[str] = None
         account_key: Optional account key for per-account token file isolation
 
     Raises:
-        TokenFileError: If token data is invalid or write fails
+        TokenFileError: If token data is invalid, the write fails, or the
+            token-write lock cannot be acquired within its timeout.
     """
+    try:
+        with _token_write_lock():
+            _save_token_inner(my_token, my_expired, account_key=account_key)
+    except TimeoutError as lock_timeout:
+        raise TokenFileError(
+            "Timed out waiting for the KIS token write lock"
+        ) from lock_timeout
+
+
+def _save_token_inner(my_token: str, my_expired: str, account_key: Optional[str] = None):
+    """save_token body without locking; callers may already hold the lock."""
     # Validate token data BEFORE any file operations
     if not my_token or len(my_token) < 10:
         raise TokenFileError("Cannot save empty or invalid token")
@@ -671,21 +675,17 @@ def save_token(my_token: str, my_expired: str, account_key: Optional[str] = None
     else:
         target_token_file = token_tmp
 
-    # Atomic write with file locking (prevents race conditions)
-    lock_file = os.path.join(config_root, ".token_write.lock")
-
     try:
-        with CrossPlatformFileLock(lock_file, timeout=30):
-            # Use atomic write (temp file + rename)
-            _atomic_write(target_token_file, encrypted_data)
+        # Use atomic write (temp file + rename)
+        _atomic_write(target_token_file, encrypted_data)
 
-            # Set secure file permissions
-            _set_secure_file_permissions(target_token_file)
+        # Set secure file permissions
+        _set_secure_file_permissions(target_token_file)
 
-            # Clean up old token files
-            cleanup_old_tokens()
+        # Clean up old token files
+        cleanup_old_tokens()
 
-            logging.info(f"✅ Encrypted token saved atomically: {target_token_file}")
+        logging.info(f"✅ Encrypted token saved atomically: {target_token_file}")
 
     except TokenFileError:
         raise
@@ -719,30 +719,32 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
             acct_token_path = _token_file_for_account(account_key)
             token_files = [acct_token_path] if acct_token_path.exists() else []
         else:
-            # Global mode: find all token files (multiple patterns for compatibility)
-            token_files = list(Path(config_root).glob("KIS*.token")) + \
-                          list(Path(config_root).glob("KIS20*"))
-
-            # Also check current token_tmp path
-            if os.path.exists(token_tmp) and Path(token_tmp) not in token_files:
-                token_files.append(Path(token_tmp))
+            # Global mode: find all non-account-scoped token files
+            token_files = _global_token_files()
 
         if not token_files:
             logging.debug("No token files found")
             return None
 
-        # Sort by modification time (newest first)
-        token_files = sorted(token_files, key=lambda f: f.stat().st_mtime, reverse=True)
+        # Sort by modification time (newest first); files may vanish mid-scan
+        token_files = sorted(token_files, key=_safe_mtime, reverse=True)
 
         # Try each token file, clean up invalid ones
         for token_file in token_files:
+            # Initialize per-file so a stat() failure cannot reuse a stale or
+            # unbound signature from a previous iteration.
+            signature = None
             try:
-                file_size = token_file.stat().st_size
+                file_stat = token_file.stat()
+                file_size = file_stat.st_size
+                # Remember the inspected inode's signature: a file replaced by a
+                # concurrent save must never be deleted by this scan.
+                signature = (file_stat.st_ino, file_stat.st_mtime_ns, file_stat.st_size)
 
                 # AUTO-RECOVERY: Delete empty files (Issue #137 fix)
                 if file_size == 0:
                     logging.warning(f"⚠️  Found empty token file, deleting: {token_file}")
-                    _safe_delete(token_file)
+                    _delete_token_if_unchanged(token_file, signature)
                     continue
 
                 # Try to read and decrypt
@@ -759,7 +761,7 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
                         encrypted_data = f.read()
                         if not encrypted_data:
                             logging.warning(f"⚠️  Empty token data, deleting: {token_file}")
-                            _safe_delete(token_file)
+                            _delete_token_if_unchanged(token_file, signature)
                             continue
                         decrypted_data = fernet.decrypt(encrypted_data)
                         token_data = json.loads(decrypted_data.decode('utf-8'))
@@ -776,21 +778,21 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
                             content = f.read().strip()
                             if not content:
                                 logging.warning(f"⚠️  Empty legacy token, deleting: {token_file}")
-                                _safe_delete(token_file)
+                                _delete_token_if_unchanged(token_file, signature)
                                 continue
                             token_data = json.loads(content)
 
                             if token_data and 'valid_date' in token_data and 'token' in token_data:
                                 valid_date_str = token_data['valid_date']
                                 token = token_data['token']
-                    except:
+                    except Exception:
                         # Try YAML format (oldest format)
                         try:
                             with open(token_file, 'r', encoding='UTF-8') as f:
                                 content = f.read().strip()
                                 if not content:
                                     logging.warning(f"⚠️  Empty YAML token, deleting: {token_file}")
-                                    _safe_delete(token_file)
+                                    _delete_token_if_unchanged(token_file, signature)
                                     continue
                                 tkg_tmp = yaml.safe_load(content)
 
@@ -800,13 +802,13 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
                         except Exception as yaml_error:
                             # AUTO-RECOVERY: Delete corrupted files
                             logging.warning(f"⚠️  Corrupted token file, deleting: {token_file} ({yaml_error})")
-                            _safe_delete(token_file)
+                            _delete_token_if_unchanged(token_file, signature)
                             continue
 
                 # Validate token data
                 if not valid_date_str or not token:
                     logging.warning(f"⚠️  Invalid token data (missing fields), deleting: {token_file}")
-                    _safe_delete(token_file)
+                    _delete_token_if_unchanged(token_file, signature)
                     continue
 
                 # Check expiry
@@ -814,7 +816,7 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
                     valid_date = datetime.strptime(valid_date_str, "%Y-%m-%d %H:%M:%S")
                 except ValueError:
                     logging.warning(f"⚠️  Invalid date format in token, deleting: {token_file}")
-                    _safe_delete(token_file)
+                    _delete_token_if_unchanged(token_file, signature)
                     continue
 
                 if not _is_token_expired(valid_date):
@@ -823,13 +825,13 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
                 else:
                     # AUTO-RECOVERY: Delete expired tokens
                     logging.info(f"⏰ Token expired at {valid_date}, deleting: {token_file}")
-                    _safe_delete(token_file)
+                    _delete_token_if_unchanged(token_file, signature)
                     continue
 
             except Exception as file_error:
                 # AUTO-RECOVERY: Delete unreadable files
                 logging.warning(f"⚠️  Error reading token file, deleting: {token_file} ({file_error})")
-                _safe_delete(token_file)
+                _delete_token_if_unchanged(token_file, signature)
                 continue
 
         # No valid token found after checking all files
@@ -889,7 +891,7 @@ def _set_secure_file_permissions(file_path):
                     import ctypes
                     ctypes.windll.kernel32.SetFileAttributesW(file_path, 2)  # FILE_ATTRIBUTE_HIDDEN
                     logging.warning(f"Set hidden attribute for: {file_path} (install pywin32 for better security)")
-                except:
+                except Exception:
                     logging.warning(f"Could not set Windows file attributes for: {file_path}")
         else:  # Unix/Linux/Mac
             # 600 permissions (owner read/write only)
@@ -901,30 +903,71 @@ def _set_secure_file_permissions(file_path):
         # Treat permission setting failure as a fatal error
         raise SecurityError(f"Cannot secure file permissions: {e}")
 
+def _safe_mtime(path: Path) -> float:
+    """Return a file's mtime, tolerating mid-scan deletion."""
+    try:
+        return path.stat().st_mtime
+    except OSError:
+        return 0.0
+
+
+def _delete_token_if_unchanged(token_file: Path, signature: tuple | None) -> bool:
+    """Delete a token file only when it still matches the inspected inode.
+
+    A concurrent save may have replaced a stale file with a fresh valid token
+    between the scan and the delete; never remove a file whose signature moved.
+    A ``None`` signature means the file could not be inspected at all — the
+    name may already resolve to a different inode (unlink → recreate gap), so
+    deleting blindly could remove a just-minted token. Refuse instead; the
+    next ``read_token`` scan re-inspects whatever is there.
+    """
+    if signature is None:
+        return False
+    try:
+        current = token_file.stat()
+    except OSError:
+        return True  # Already gone
+    if (current.st_ino, current.st_mtime_ns, current.st_size) != signature:
+        logging.info(f"Token file replaced since scan, keeping: {token_file}")
+        return False
+    return _safe_delete(token_file)
+
+
+def _global_token_files() -> list[Path]:
+    """Return global token files, excluding per-account KIS_acct_* files."""
+    token_files = [
+        path
+        for path in Path(config_root).glob("KIS*.token")
+        if not path.name.startswith("KIS_acct_")
+    ]
+    token_files.extend(Path(config_root).glob("KIS20*"))
+
+    # Also check current token_tmp path
+    if os.path.exists(token_tmp) and Path(token_tmp) not in token_files:
+        token_files.append(Path(token_tmp))
+    return token_files
+
+
 # Clean up old token files
 def cleanup_old_tokens():
     """Auto-delete token files older than 1 day"""
     try:
-        # Find all token files
-        token_patterns = ["KIS*.token", "KIS20*"]  # Support multiple patterns
-        token_files = []
-
-        for pattern in token_patterns:
-            token_files.extend(Path(config_root).glob(pattern))
+        token_files = _global_token_files()
 
         now = datetime.now()
         for token_file in token_files:
             # Check file modification time
-            file_mtime = datetime.fromtimestamp(token_file.stat().st_mtime)
+            file_stat = token_file.stat()
+            file_mtime = datetime.fromtimestamp(file_stat.st_mtime)
             age_days = (now - file_mtime).days
 
             # Delete files older than 1 day
             if age_days > 1:
-                try:
-                    os.remove(token_file)
+                if _delete_token_if_unchanged(
+                    token_file,
+                    (file_stat.st_ino, file_stat.st_mtime_ns, file_stat.st_size),
+                ):
                     logging.info(f"Cleaned up old token: {token_file}")
-                except Exception as e:
-                    logging.warning(f"Could not delete old token: {e}")
 
     except Exception as e:
         logging.error(f"Error during token cleanup: {e}")
@@ -965,66 +1008,6 @@ def validate_credentials(app_key: str, mode: str) -> Tuple[bool, str]:
         )
 
     return True, ""
-
-
-# ============== Cross-Platform File Lock ==============
-class CrossPlatformFileLock:
-    """Cross-platform file lock using atomic file creation (works on Windows and Unix)"""
-
-    def __init__(self, lock_path: str, timeout: float = 30.0):
-        self.lock_path = Path(lock_path)
-        self.timeout = timeout
-        self._lock_fd = None
-
-    def acquire(self) -> bool:
-        """Attempt to acquire lock within timeout"""
-        start_time = time.time()
-
-        while time.time() - start_time < self.timeout:
-            try:
-                # O_CREAT | O_EXCL: Only create if file doesn't exist (atomic)
-                self._lock_fd = os.open(
-                    str(self.lock_path),
-                    os.O_CREAT | os.O_EXCL | os.O_WRONLY
-                )
-                os.write(self._lock_fd, str(os.getpid()).encode())
-                return True
-            except FileExistsError:
-                # Lock file exists - check if stale (older than 5 minutes)
-                try:
-                    lock_age = time.time() - self.lock_path.stat().st_mtime
-                    if lock_age > 300:  # 5 minutes
-                        logging.warning(f"Removing stale lock file: {self.lock_path}")
-                        self.lock_path.unlink()
-                        continue
-                except FileNotFoundError:
-                    continue
-                time.sleep(0.1)
-            except OSError as e:
-                logging.warning(f"Lock acquisition error: {e}")
-                time.sleep(0.1)
-        return False
-
-    def release(self):
-        """Release the lock"""
-        if self._lock_fd is not None:
-            try:
-                os.close(self._lock_fd)
-            except:
-                pass
-            self._lock_fd = None
-        try:
-            self.lock_path.unlink()
-        except:
-            pass
-
-    def __enter__(self):
-        if not self.acquire():
-            raise TokenFileError(f"Could not acquire file lock: {self.lock_path}")
-        return self
-
-    def __exit__(self, *args):
-        self.release()
 
 
 # ============== Retry Logic for Token Request ==============
@@ -1077,19 +1060,25 @@ def _request_token_with_retry(url: str, params: dict, headers: dict) -> dict:
 
 # ============== Safe File Delete (Windows compatible) ==============
 def _safe_delete(file_path: Path, max_retries: int = 3) -> bool:
-    """Safely delete a file with retries (handles Windows locked files)"""
+    """Safely delete a file with retries (handles Windows locked files).
+
+    Never raises: callers use this as best-effort cleanup while scanning, so a
+    single stubborn file must not abort the whole operation.
+    """
     for attempt in range(max_retries):
         try:
             file_path.unlink()
             return True
+        except FileNotFoundError:
+            return True  # Already deleted
         except PermissionError:
             if os.name == 'nt':
                 # Windows: File may be locked by another process
                 time.sleep(0.2 * (attempt + 1))
-            else:
-                raise
-        except FileNotFoundError:
-            return True  # Already deleted
+                continue
+            break
+        except OSError:
+            break
 
     logging.warning(f"Could not delete file (may be in use): {file_path}")
     return False
@@ -1103,20 +1092,33 @@ def _token_file_for_account(account_key: str | None) -> Path | None:
 
 
 def _discard_saved_token(account_key: str | None = None) -> None:
-    """Delete saved token files so the next auth call must request a new token."""
+    """Delete saved token files so the next auth call must request a new token.
+
+    Deletes are signature-guarded: a sibling process may have just minted and
+    atomically installed a fresh token under the same name, and removing it
+    would force a redundant issuance (KIS penalizes rapid minting).
+    """
     if account_key:
         token_file = _token_file_for_account(account_key)
         if token_file and token_file.exists():
             logging.info("Deleting expired KIS token file for account %s: %s", _mask_account_key(account_key), token_file)
-            _safe_delete(token_file)
+            _discard_token_file(token_file)
         return
 
-    token_files = list(Path(config_root).glob("KIS*.token")) + list(Path(config_root).glob("KIS20*"))
-    if os.path.exists(token_tmp) and Path(token_tmp) not in token_files:
-        token_files.append(Path(token_tmp))
-    for token_file in token_files:
+    for token_file in _global_token_files():
         logging.info("Deleting expired KIS token file: %s", token_file)
-        _safe_delete(token_file)
+        _discard_token_file(token_file)
+
+
+def _discard_token_file(token_file: Path) -> None:
+    """Delete a token file only if it is still the inode we just inspected."""
+    try:
+        file_stat = token_file.stat()
+    except OSError:
+        return  # Already gone (or uninspectable); nothing safe to remove.
+    _delete_token_if_unchanged(
+        token_file, (file_stat.st_ino, file_stat.st_mtime_ns, file_stat.st_size)
+    )
 
 
 # ============== Atomic Write (Cross-platform) ==============
@@ -1157,7 +1159,7 @@ def _atomic_write(file_path_str: str, data: bytes) -> bool:
                 backup_path = file_path.with_suffix('.old')
                 try:
                     shutil.move(str(file_path), str(backup_path))
-                except:
+                except Exception:
                     raise TokenFileError(f"Cannot replace locked file: {file_path}")
 
         # Atomic rename
@@ -1169,7 +1171,7 @@ def _atomic_write(file_path_str: str, data: bytes) -> bool:
         if temp_path and os.path.exists(temp_path):
             try:
                 os.unlink(temp_path)
-            except:
+            except Exception:
                 pass
         raise TokenFileError(f"Atomic write failed: {e}")
 
@@ -1177,7 +1179,17 @@ def _atomic_write(file_path_str: str, data: bytes) -> bool:
 # Check token validity time and reissue if expired
 def _getBaseHeader():
     if _autoReAuth:
-        reAuth()
+        # Re-authenticate with the account that established the current
+        # context; a hardcoded account would silently switch credentials
+        # mid-request (and recurse through auth -> _getBaseHeader -> reAuth).
+        ctx = dict(_CURRENT_AUTH_CONTEXT)
+        reAuth(
+            ctx.get("svr", "prod"),
+            ctx.get("product", DEFAULT_PRODUCT_CODE),
+            account_name=ctx.get("account_name"),
+            account_index=ctx.get("account_index"),
+            account_key=ctx.get("account_key"),
+        )
     headers = copy.deepcopy(_base_headers)  # static fields only (Content-Type, User-Agent, etc.)
     if _TRENV is not None:
         headers["authorization"] = f"Bearer {_TRENV.my_token}"
@@ -1238,6 +1250,16 @@ def changeTREnv(
     cfg = dict()
 
     global _isPaper, _smartSleep, _CURRENT_AUTH_CONTEXT
+    # Resolve the account before mutating shared mode state so a resolution
+    # failure cannot leave _isPaper/_smartSleep half-switched.
+    account = resolve_account(
+        svr=svr,
+        product=product,
+        account_name=account_name,
+        account_index=account_index,
+        account_key=account_key,
+    )
+
     if svr == "prod":  # Live trading
         ak1 = "my_app"  # App key for live trading
         ak2 = "my_sec"  # App secret for live trading
@@ -1248,14 +1270,8 @@ def changeTREnv(
         ak2 = "paper_sec"  # App secret for paper trading
         _isPaper = True
         _smartSleep = 0.5
-
-    account = resolve_account(
-        svr=svr,
-        product=product,
-        account_name=account_name,
-        account_index=account_index,
-        account_key=account_key,
-    )
+    else:
+        raise ValueError(f"Invalid server type: {svr}. Must be 'prod' or 'vps'")
 
     # Use per-account credentials if configured, fall back to global keys
     cfg["my_app"] = account.get("app_key") or _cfg[ak1]
@@ -1271,7 +1287,7 @@ def changeTREnv(
     except (AttributeError, TypeError):
         my_token = ""
     cfg["my_token"] = token_key or my_token
-    cfg["my_url_ws"] = _cfg["ops" if svr == "prod" else "vops"]
+    cfg["my_url_ws"] = _cfg.get("ops" if svr == "prod" else "vops", "")
 
     # print(cfg)
     _setTRENV(cfg)
@@ -1281,14 +1297,8 @@ def changeTREnv(
         "account_name": account_name,
         "account_index": account_index,
         "account_key": account.get("account_key") or account_key,
-        "token_account_key": account_key,
+        "token_account_key": account.get("account_key") or account_key,
     }
-
-
-def _getResultObject(json_data):
-    _tc_ = namedtuple("res", json_data.keys())
-
-    return _tc_(**json_data)
 
 
 # Token issuance, validity 1 day, maintains existing token if issued within 6 hours, notification sent on issuance
@@ -1334,22 +1344,21 @@ def auth(
     else:
         raise ValueError(f"Invalid server type: {svr}. Must be 'prod' or 'vps'")
 
-    # Resolve account early to pick up per-account app_key/app_secret if configured
-    try:
-        _auth_account = resolve_account(
-            svr=svr,
-            product=product,
-            account_name=account_name,
-            account_index=account_index,
-            account_key=account_key,
-        )
-        app_key = _auth_account.get("app_key") or _cfg.get(ak1)
-        app_secret = _auth_account.get("app_secret") or _cfg.get(ak2)
-    except Exception:
-        # Fallback to global keys if account resolution fails at this stage
-        app_key = _cfg.get(ak1)
-        app_secret = _cfg.get(ak2)
-        _auth_account = None
+    # Resolve account early to pick up per-account app_key/app_secret if configured.
+    # A resolution failure is fatal (changeTREnv resolves the same way), so failing
+    # fast here avoids minting a token under mismatched credentials.
+    _auth_account = resolve_account(
+        svr=svr,
+        product=product,
+        account_name=account_name,
+        account_index=account_index,
+        account_key=account_key,
+    )
+    app_key = _auth_account.get("app_key") or _cfg.get(ak1)
+    app_secret = _auth_account.get("app_secret") or _cfg.get(ak2)
+    # Tokens are always keyed by the resolved account so a caller that selects
+    # by name/index cannot leak another account's token through the global file.
+    token_account_key = _auth_account["account_key"]
 
     if not app_key or not app_secret:
         raise CredentialMismatchError(
@@ -1365,45 +1374,71 @@ def auth(
     p["appkey"] = app_key
     p["appsecret"] = app_secret
 
-    # Check for existing valid token (per-account if account_key provided)
-    saved_token = read_token(account_key=account_key)
+    # Check for existing valid token (per-account, keyed by resolved account)
+    saved_token = read_token(account_key=token_account_key)
 
     if saved_token is None:
-        # No valid token - request new one
-        token_url = f"{_cfg[svr]}/oauth2/tokenP"
-        logging.info(f"Requesting new token from KIS API ({svr} mode)...")
-
+        # Single-flight issuance: hold the token-write lock across re-read,
+        # request, and save so concurrent processes cannot mint duplicate
+        # tokens (KIS penalizes repeated issuance).
         try:
-            # Use retry logic for transient failures
-            result = _request_token_with_retry(token_url, p, _getBaseHeader())
+            with _token_write_lock():
+                # Re-check under the lock: another process may have minted one.
+                saved_token = read_token(account_key=token_account_key)
 
-            my_token = result.get("access_token")
-            my_expired = result.get("access_token_token_expired")
+                if saved_token is None:
+                    # No valid token - request new one
+                    token_url = f"{_cfg[svr]}/oauth2/tokenP"
+                    logging.info(f"Requesting new token from KIS API ({svr} mode)...")
 
-            if not my_token or not my_expired:
+                    try:
+                        # Use retry logic for transient failures. Token issuance
+                        # uses static headers only: _getBaseHeader() would inject
+                        # the PREVIOUS account's authorization/appkey/appsecret
+                        # alongside this account's credentials.
+                        result = _request_token_with_retry(token_url, p, copy.deepcopy(_base_headers))
+
+                        minted_token = result.get("access_token")
+                        my_expired = result.get("access_token_token_expired")
+
+                        if not minted_token or not my_expired:
+                            raise TokenRequestError(
+                                "Invalid response from KIS API: missing token or expiry",
+                                status_code=200,
+                                response_text=str(result)
+                            )
+
+                        # Save the new token (per-account, keyed by resolved account)
+                        _save_token_inner(minted_token, my_expired, account_key=token_account_key)
+                        saved_token = minted_token
+                        logging.info(f"✅ New token obtained and saved (expires: {my_expired})")
+
+                    except TokenRequestError as e:
+                        logging.error(f"❌ Token request failed: {e}")
+                        logging.error(f"   Status Code: {e.status_code}")
+                        logging.error(f"   Response: {e.response_text}")
+                        # Re-raise with clear error message
+                        raise
+
+                    except TokenFileError:
+                        # Token persistence failures keep their dedicated contract so
+                        # callers can distinguish disk problems from KIS API failures.
+                        raise
+
+                    except Exception as e:
+                        logging.error(f"❌ Unexpected error during token request: {e}")
+                        raise TokenRequestError(f"Unexpected error: {e}")
+        except TimeoutError as lock_timeout:
+            # The lock holder may have minted a token while we waited; prefer a
+            # fresh on-disk token over failing with a raw lock timeout.
+            saved_token = read_token(account_key=token_account_key)
+            if saved_token is None:
                 raise TokenRequestError(
-                    "Invalid response from KIS API: missing token or expiry",
-                    status_code=200,
-                    response_text=str(result)
-                )
+                    "Timed out waiting for the KIS token issuance lock"
+                ) from lock_timeout
 
-            # Save the new token (per-account if account_key provided)
-            save_token(my_token, my_expired, account_key=account_key)
-            logging.info(f"✅ New token obtained and saved (expires: {my_expired})")
-
-        except TokenRequestError as e:
-            logging.error(f"❌ Token request failed: {e}")
-            logging.error(f"   Status Code: {e.status_code}")
-            logging.error(f"   Response: {e.response_text}")
-            # Re-raise with clear error message
-            raise
-
-        except Exception as e:
-            logging.error(f"❌ Unexpected error during token request: {e}")
-            raise TokenRequestError(f"Unexpected error: {e}")
-
-    else:
-        my_token = saved_token
+    my_token = saved_token
+    if saved_token is not None:
         logging.info("✅ Using existing valid token")
 
     # Set up environment with token
@@ -1415,12 +1450,6 @@ def auth(
         account_index=account_index,
         account_key=account_key,
     )
-
-    # Update base headers
-    if _TRENV is not None:
-        _base_headers["authorization"] = f"Bearer {my_token}"
-        _base_headers["appkey"] = _TRENV.my_app
-        _base_headers["appsecret"] = _TRENV.my_sec
 
     global _last_auth_time
     _last_auth_time = datetime.now()
@@ -1442,36 +1471,10 @@ def reAuth(svr="prod", product=DEFAULT_PRODUCT_CODE, account_name=None, account_
         auth(svr, product, account_name=account_name, account_index=account_index, account_key=account_key)
 
 
-def getEnv():
-    return _cfg
-
-
-def smart_sleep():
-    if _DEBUG:
-        print(f"[RateLimit] Sleeping {_smartSleep}s ")
-
-    time.sleep(_smartSleep)
-
-
 def getTREnv():
     if _TRENV is None:
         raise RuntimeError("Authentication not completed. Call auth() function first.")
     return _TRENV
-
-
-# Function to receive hash key value for order API and set it in header
-# Currently hash key is not mandatory, can be omitted, used when concerned about tampering during API calls
-# Input: HTTP Header, HTTP post param
-# Output: None
-def set_order_hash_key(h, p):
-    url = f"{getTREnv().my_url}/uapi/hashkey"  # hashkey issuance API URL
-
-    res = requests.post(url, data=json.dumps(p), headers=h, timeout=KIS_HTTP_TIMEOUT)
-    rescode = res.status_code
-    if rescode == 200:
-        h["hashkey"] = _getResultObject(res.json()).HASH
-    else:
-        print("Error:", rescode)
 
 
 # Common function for processing API call responses
@@ -1481,8 +1484,8 @@ class APIResp:
         self._resp = resp
         self._header = self._setHeader()
         self._body = self._setBody()
-        self._err_code = self._body.msg_cd
-        self._err_message = self._body.msg1
+        self._err_code = getattr(self._body, "msg_cd", "")
+        self._err_message = getattr(self._body, "msg1", "")
 
     def getResCode(self):
         return self._rescode
@@ -1497,9 +1500,12 @@ class APIResp:
         return _th_(**fld)
 
     def _setBody(self):
-        _tb_ = namedtuple("body", self._resp.json().keys())
+        payload = self._resp.json()
+        if not isinstance(payload, dict):
+            payload = {}
+        _tb_ = namedtuple("body", payload.keys())
 
-        return _tb_(**self._resp.json())
+        return _tb_(**payload)
 
     def getHeader(self):
         return self._header
@@ -1516,7 +1522,7 @@ class APIResp:
                 return True
             else:
                 return False
-        except:
+        except Exception:
             return False
 
     def getErrorCode(self):
@@ -1526,38 +1532,29 @@ class APIResp:
         return self._err_message
 
     def printAll(self):
+        # Response dumps must not disclose credentials or account numbers.
         print("<Header>")
         for x in self.getHeader()._fields:
-            print(f"\t-{x}: {getattr(self.getHeader(), x)}")
+            value = getattr(self.getHeader(), x)
+            print(f"\t-{x}: {'***' if _is_sensitive_field(x) else value}")
         print("<Body>")
         for x in self.getBody()._fields:
-            print(f"\t-{x}: {getattr(self.getBody(), x)}")
-
-    def printError(self, url):
-        print(
-            "-------------------------------\nError in response: ",
-            self.getResCode(),
-            " url=",
-            url,
-        )
-        print(
-            "rt_cd : ",
-            self.getBody().rt_cd,
-            "/ msg_cd : ",
-            self.getErrorCode(),
-            "/ msg1 : ",
-            self.getErrorMessage(),
-        )
-        print("-------------------------------")
+            value = getattr(self.getBody(), x)
+            print(f"\t-{x}: {'***' if _is_sensitive_field(x) else value}")
 
     # end of class APIResp
 
 
 class APIRespError(APIResp):
     def __init__(self, status_code, error_text):
-        # Initialize directly without calling parent constructor
+        # Initialize directly without calling parent constructor, but keep the
+        # parent's attribute contract so inherited accessors do not raise.
         self.status_code = status_code
         self.error_text = error_text
+        self._rescode = status_code
+        self._resp = None
+        self._header = None
+        self._body = None
         self._error_code = str(status_code)
         self._error_message = error_text
         try:
@@ -1600,11 +1597,6 @@ class APIRespError(APIResp):
         print(f"Status Code: {self.status_code}")
         print(f"Error Message: {self.error_text}")
         print(f"======================")
-
-    def printError(self, url=""):
-        print(f"Error Code : {self.status_code} | {self.error_text}")
-        if url:
-            print(f"URL: {url}")
 
 
 def _is_kis_rate_limit_response(res) -> bool:
@@ -1667,7 +1659,7 @@ def _url_fetch(
 
     # Set additional Headers
     tr_id = ptr_id
-    if ptr_id[0] in ("T", "J", "C"):  # Check TR id for live trading
+    if ptr_id and ptr_id[0] in ("T", "J", "C"):  # Check TR id for live trading
         if isPaperTrading():  # Identify TR id for paper trading
             tr_id = "V" + ptr_id[1:]
 
@@ -1681,10 +1673,20 @@ def _url_fetch(
                 headers[x] = appendHeaders.get(x)
 
     if _DEBUG:
+        # Debug dumps must never disclose credentials or account numbers.
+        safe_headers = {
+            key: (
+                "***"
+                if str(key).casefold() in _SENSITIVE_HEADER_KEYS
+                else value
+            )
+            for key, value in headers.items()
+        }
+        safe_params = _redact_mapping(params)
         print("< Sending Info >")
         print(f"URL: {url}, TR: {tr_id}")
-        print(f"<header>\n{headers}")
-        print(f"<body>\n{params}")
+        print(f"<header>\n{safe_headers}")
+        print(f"<body>\n{safe_params}")
 
     attempts = max(1, KIS_RATE_LIMIT_RETRY_ATTEMPTS)
     expired_token_retry_used = False
@@ -1753,354 +1755,3 @@ def _url_fetch(
         time.sleep(delay_seconds)
 
 
-    return APIRespError(599, "KIS API retry loop exhausted unexpectedly")
-
-
-# auth()
-# print("Pass through the end of the line")
-
-
-########### New - websocket support
-
-_base_headers_ws = {
-    "content-type": "utf-8",
-}
-
-
-def _getBaseHeader_ws():
-    if _autoReAuth:
-        reAuth_ws()
-
-    return copy.deepcopy(_base_headers_ws)
-
-
-def auth_ws(svr="prod", product=DEFAULT_PRODUCT_CODE, account_name=None, account_index=None, account_key=None):
-    p = {"grant_type": "client_credentials"}
-    if svr == "prod":
-        ak1 = "my_app"
-        ak2 = "my_sec"
-    elif svr == "vps":
-        ak1 = "paper_app"
-        ak2 = "paper_sec"
-
-    p["appkey"] = _cfg[ak1]
-    p["secretkey"] = _cfg[ak2]
-
-    url = f"{_cfg[svr]}/oauth2/Approval"
-    res = requests.post(
-        url,
-        data=json.dumps(p),
-        headers=_getBaseHeader(),
-        timeout=KIS_HTTP_TIMEOUT,
-    )  # Token issuance
-    rescode = res.status_code
-    if rescode == 200:  # Token issued successfully
-        approval_key = _getResultObject(res.json()).approval_key
-    else:
-        print("Get Approval token fail!\nYou have to restart your app!!!")
-        return
-
-    changeTREnv(None, svr, product, account_name=account_name, account_index=account_index, account_key=account_key)
-
-    _base_headers_ws["approval_key"] = approval_key
-
-    global _last_auth_time
-    _last_auth_time = datetime.now()
-
-    if _DEBUG:
-        print(f"[{_last_auth_time}] => get AUTH Key completed!")
-
-
-def reAuth_ws(svr="prod", product=DEFAULT_PRODUCT_CODE, account_name=None, account_index=None, account_key=None):
-    n2 = datetime.now()
-    if (n2 - _last_auth_time).total_seconds() >= 82800:
-        auth_ws(svr, product, account_name=account_name, account_index=account_index, account_key=account_key)
-
-
-def data_fetch(tr_id, tr_type, params, appendHeaders=None) -> dict:
-    headers = _getBaseHeader_ws()  # Organize basic header values
-
-    headers["tr_type"] = tr_type
-    headers["custtype"] = "P"
-
-    if appendHeaders is not None:
-        if len(appendHeaders) > 0:
-            for x in appendHeaders.keys():
-                headers[x] = appendHeaders.get(x)
-
-    if _DEBUG:
-        print("< Sending Info >")
-        print(f"TR: {tr_id}")
-        print(f"<header>\n{headers}")
-
-    inp = {
-        "tr_id": tr_id,
-    }
-    inp.update(params)
-
-    return {"header": headers, "body": {"input": inp}}
-
-
-# Return iv, ekey, encrypt in dict so they can be saved to each function method file
-def system_resp(data):
-    isPingPong = False
-    isUnSub = False
-    isOk = False
-    tr_msg = None
-    tr_key = None
-    encrypt, iv, ekey = None, None, None
-
-    rdic = json.loads(data)
-
-    tr_id = rdic["header"]["tr_id"]
-    if tr_id != "PINGPONG":
-        tr_key = rdic["header"]["tr_key"]
-        encrypt = rdic["header"]["encrypt"]
-    if rdic.get("body", None) is not None:
-        isOk = True if rdic["body"]["rt_cd"] == "0" else False
-        tr_msg = rdic["body"]["msg1"]
-        # Extract key for decryption
-        if "output" in rdic["body"]:
-            iv = rdic["body"]["output"]["iv"]
-            ekey = rdic["body"]["output"]["key"]
-        isUnSub = True if tr_msg[:5] == "UNSUB" else False
-    else:
-        isPingPong = True if tr_id == "PINGPONG" else False
-
-    nt2 = namedtuple(
-        "SysMsg",
-        [
-            "isOk",
-            "tr_id",
-            "tr_key",
-            "isUnSub",
-            "isPingPong",
-            "tr_msg",
-            "iv",
-            "ekey",
-            "encrypt",
-        ],
-    )
-    d = {
-        "isOk": isOk,
-        "tr_id": tr_id,
-        "tr_key": tr_key,
-        "tr_msg": tr_msg,
-        "isUnSub": isUnSub,
-        "isPingPong": isPingPong,
-        "iv": iv,
-        "ekey": ekey,
-        "encrypt": encrypt,
-    }
-
-    return nt2(**d)
-
-
-def aes_cbc_base64_dec(key, iv, cipher_text):
-    if key is None or iv is None:
-        raise AttributeError("key and iv cannot be None")
-
-    cipher = AES.new(key.encode("utf-8"), AES.MODE_CBC, iv.encode("utf-8"))
-    return bytes.decode(unpad(cipher.decrypt(b64decode(cipher_text)), AES.block_size))
-
-
-#####
-open_map: dict = {}
-
-
-def add_open_map(
-        name: str,
-        request: Callable[[str, str, ...], (dict, list[str])],
-        data: str | list[str],
-        kwargs: dict = None,
-):
-    if open_map.get(name, None) is None:
-        open_map[name] = {
-            "func": request,
-            "items": [],
-            "kwargs": kwargs,
-        }
-
-    if type(data) is list:
-        open_map[name]["items"] += data
-    elif type(data) is str:
-        open_map[name]["items"].append(data)
-
-
-data_map: dict = {}
-
-
-def add_data_map(
-        tr_id: str,
-        columns: list = None,
-        encrypt: str = None,
-        key: str = None,
-        iv: str = None,
-):
-    if data_map.get(tr_id, None) is None:
-        data_map[tr_id] = {"columns": [], "encrypt": False, "key": None, "iv": None}
-
-    if columns is not None:
-        data_map[tr_id]["columns"] = columns
-
-    if encrypt is not None:
-        data_map[tr_id]["encrypt"] = encrypt
-
-    if key is not None:
-        data_map[tr_id]["key"] = key
-
-    if iv is not None:
-        data_map[tr_id]["iv"] = iv
-
-
-class KISWebSocket:
-    api_url: str = ""
-    on_result: Callable[
-        [websockets.ClientConnection, str, pd.DataFrame, dict], None
-    ] = None
-    result_all_data: bool = False
-
-    retry_count: int = 0
-    amx_retries: int = 0
-
-    # init
-    def __init__(self, api_url: str, max_retries: int = 3):
-        self.api_url = api_url
-        self.max_retries = max_retries
-
-    # private
-    async def __subscriber(self, ws: websockets.ClientConnection):
-        async for raw in ws:
-            logging.info("received message >> %s" % raw)
-            show_result = False
-
-            df = pd.DataFrame()
-
-            if raw[0] in ["0", "1"]:
-                d1 = raw.split("|")
-                if len(d1) < 4:
-                    raise ValueError("data not found...")
-
-                tr_id = d1[1]
-
-                dm = data_map[tr_id]
-                d = d1[3]
-                if dm.get("encrypt", None) == "Y":
-                    d = aes_cbc_base64_dec(dm["key"], dm["iv"], d)
-
-                df = pd.read_csv(
-                    StringIO(d), header=None, sep="^", names=dm["columns"], dtype=object
-                )
-
-                show_result = True
-
-            else:
-                rsp = system_resp(raw)
-
-                tr_id = rsp.tr_id
-                add_data_map(
-                    tr_id=rsp.tr_id, encrypt=rsp.encrypt, key=rsp.ekey, iv=rsp.iv
-                )
-
-                if rsp.isPingPong:
-                    print(f"### RECV [PINGPONG] [{raw}]")
-                    await ws.pong(raw)
-                    print(f"### SEND [PINGPONG] [{raw}]")
-
-                if self.result_all_data:
-                    show_result = True
-
-            if show_result is True and self.on_result is not None:
-                self.on_result(ws, tr_id, df, data_map[tr_id])
-
-    async def __runner(self):
-        if len(open_map.keys()) > 40:
-            raise ValueError("Subscription's max is 40")
-
-        url = f"{getTREnv().my_url_ws}{self.api_url}"
-
-        while self.retry_count < self.max_retries:
-            try:
-                async with websockets.connect(url) as ws:
-                    # request subscribe
-                    for name, obj in open_map.items():
-                        await self.send_multiple(
-                            ws, obj["func"], "1", obj["items"], obj["kwargs"]
-                        )
-
-                    # subscriber
-                    await asyncio.gather(
-                        self.__subscriber(ws),
-                    )
-            except Exception as e:
-                print("Connection exception >> ", e)
-                self.retry_count += 1
-                await asyncio.sleep(1)
-
-    # func
-    @classmethod
-    async def send(
-            cls,
-            ws: websockets.ClientConnection,
-            request: Callable[[str, str, ...], (dict, list[str])],
-            tr_type: str,
-            data: str,
-            kwargs: dict = None,
-    ):
-        k = {} if kwargs is None else kwargs
-        msg, columns = request(tr_type, data, **k)
-
-        add_data_map(tr_id=msg["body"]["input"]["tr_id"], columns=columns)
-
-        logging.info("send message >> %s" % json.dumps(msg))
-
-        await ws.send(json.dumps(msg))
-        smart_sleep()
-
-    async def send_multiple(
-            self,
-            ws: websockets.ClientConnection,
-            request: Callable[[str, str, ...], (dict, list[str])],
-            tr_type: str,
-            data: list | str,
-            kwargs: dict = None,
-    ):
-        if type(data) is str:
-            await self.send(ws, request, tr_type, data, kwargs)
-        elif type(data) is list:
-            for d in data:
-                await self.send(ws, request, tr_type, d, kwargs)
-        else:
-            raise ValueError("data must be str or list")
-
-    @classmethod
-    def subscribe(
-            cls,
-            request: Callable[[str, str, ...], (dict, list[str])],
-            data: list | str,
-            kwargs: dict = None,
-    ):
-        add_open_map(request.__name__, request, data, kwargs)
-
-    def unsubscribe(
-            self,
-            ws: websockets.ClientConnection,
-            request: Callable[[str, str, ...], (dict, list[str])],
-            data: list | str,
-    ):
-        self.send_multiple(ws, request, "2", data)
-
-    # start
-    def start(
-            self,
-            on_result: Callable[
-                [websockets.ClientConnection, str, pd.DataFrame, dict], None
-            ],
-            result_all_data: bool = False,
-    ):
-        self.on_result = on_result
-        self.result_all_data = result_all_data
-        try:
-            asyncio.run(self.__runner())
-        except KeyboardInterrupt:
-            print("Closing by KeyboardInterrupt")

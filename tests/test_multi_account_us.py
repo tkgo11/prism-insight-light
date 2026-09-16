@@ -16,6 +16,7 @@ class FakeUSTrader:
         auto_trading=None,
         account_name=None,
         account_index=None,
+        account_key=None,
         product_code="01",
     ):
         self.mode = mode or "demo"
@@ -24,13 +25,14 @@ class FakeUSTrader:
         self.account_name = account_name
         self.account_index = account_index
         self.product_code = product_code
-        self.account_key = f"vps:{account_name}:{product_code}" if account_name else "window-checker"
+        self.account_key = account_key or (f"vps:{account_name}:{product_code}" if account_name else "window-checker")
         type(self).init_calls.append(
             {
                 "mode": self.mode,
                 "buy_amount": buy_amount,
                 "auto_trading": auto_trading,
                 "account_name": account_name,
+                "account_key": account_key,
                 "product_code": product_code,
             }
         )
@@ -86,6 +88,7 @@ async def test_async_us_trading_context_returns_single_account_trader(monkeypatc
             "buy_amount": 150.0,
             "auto_trading": ust.AsyncUSTradingContext.AUTO_TRADING,
             "account_name": "us-main",
+            "account_key": None,
             "product_code": "01",
         }
     ]
@@ -93,6 +96,8 @@ async def test_async_us_trading_context_returns_single_account_trader(monkeypatc
 
 @pytest.mark.asyncio
 async def test_multi_account_us_context_fans_out_orders_but_reads_primary(monkeypatch):
+    # Display/price reads stay on the primary account; holding quantity sums
+    # across all accounts so a secondary-account position is never missed.
     FakeUSTrader.init_calls = []
     accounts = [
         {"name": "us-primary", "account_key": "vps:us-primary:01", "product": "01"},
@@ -113,11 +118,121 @@ async def test_multi_account_us_context_fans_out_orders_but_reads_primary(monkey
             "vps:us-primary:01",
             "vps:us-secondary:01",
         ]
+        assert [call["account_key"] for call in FakeUSTrader.init_calls] == [
+            "vps:us-primary:01",
+            "vps:us-secondary:01",
+        ]
         assert trader.get_portfolio() == [{"account_name": "us-primary"}]
         assert trader.get_account_summary() == {"account_name": "us-primary"}
         assert trader.get_current_price("AAPL") == {"ticker": "AAPL", "account_name": "us-primary"}
         assert trader.calculate_buy_quantity("AAPL") == 4
-        assert trader.get_holding_quantity("AAPL") == 2
+        assert trader.get_holding_quantity("AAPL") == 4
+
+
+@pytest.mark.asyncio
+async def test_multi_account_us_aggregate_counts_only_executed_quantities(monkeypatch):
+    class EstimateFakeUSTrader:
+        def __init__(self, account_key=None, account_name=None, **kwargs):
+            self.account_key = account_key
+            self.account_name = account_name
+
+        async def async_buy_stock(self, ticker, **kwargs):
+            if self.account_key == "vps:us-bad:01":
+                return {
+                    "success": False,
+                    "ticker": ticker,
+                    "quantity": 7,
+                    "estimated_amount": 350.0,
+                    "message": "rejected",
+                }
+            return {
+                "success": True,
+                "ticker": ticker,
+                "quantity": 2,
+                "estimated_amount": 100.0,
+                "message": "ok",
+            }
+
+    accounts = [
+        {"name": "us-good", "account_key": "vps:us-good:01", "product": "01"},
+        {"name": "us-bad", "account_key": "vps:us-bad:01", "product": "01"},
+    ]
+    monkeypatch.setattr(ust, "USStockTrading", EstimateFakeUSTrader)
+    monkeypatch.setattr(ust.ka, "get_configured_accounts", lambda **kwargs: accounts)
+    monkeypatch.setattr(ust.ka, "resolve_account", lambda **kwargs: accounts[0])
+
+    trader = ust.MultiAccountUSStockTrading(mode="demo")
+    result = await trader.async_buy_stock("AAPL")
+
+    # The rejected account's estimated quantity/amount must not inflate totals.
+    assert result["quantity"] == 2
+    assert result["estimated_amount"] == 100.0
+    assert result["successful_accounts"] == ["us-good"]
+    assert result["failed_accounts"] == ["us-bad"]
+    assert result["unknown_accounts"] == []
+    assert result["outcome_unknown"] is False
+
+
+@pytest.mark.asyncio
+async def test_multi_account_us_aggregate_propagates_unknown_outcome(monkeypatch):
+    from trading.execution_outcome import classify_broker_result
+
+    class AmbiguousFakeUSTrader:
+        def __init__(self, account_key=None, account_name=None, **kwargs):
+            self.account_key = account_key
+            self.account_name = account_name
+
+        async def async_buy_stock(self, ticker, **kwargs):
+            if self.account_key == "vps:us-mystery:01":
+                return {
+                    "success": False,
+                    "outcome_unknown": True,
+                    "ticker": ticker,
+                    "quantity": 5,
+                    "estimated_amount": 250.0,
+                    "message": "read timed out after order submission",
+                }
+            return {
+                "success": True,
+                "ticker": ticker,
+                "quantity": 2,
+                "estimated_amount": 100.0,
+                "message": "ok",
+            }
+
+    accounts = [
+        {"name": "us-good", "account_key": "vps:us-good:01", "product": "01"},
+        {"name": "us-mystery", "account_key": "vps:us-mystery:01", "product": "01"},
+    ]
+    monkeypatch.setattr(ust, "USStockTrading", AmbiguousFakeUSTrader)
+    monkeypatch.setattr(ust.ka, "get_configured_accounts", lambda **kwargs: accounts)
+    monkeypatch.setattr(ust.ka, "resolve_account", lambda **kwargs: accounts[0])
+
+    trader = ust.MultiAccountUSStockTrading(mode="demo")
+    result = await trader.async_buy_stock("AAPL")
+
+    assert result["success"] is False
+    assert result["partial_success"] is True
+    assert result["outcome_unknown"] is True
+    assert result["unknown_accounts"] == ["us-mystery"]
+    assert result["quantity"] == 2
+    # The aggregate itself must classify as ambiguous, never a clean failure.
+    assert classify_broker_result(result) == "unknown"
+
+
+@pytest.mark.parametrize("limit_price", [0, -50.0, None, float("nan"), float("inf"), "not-a-price"])
+def test_us_limit_buy_rejects_invalid_limit_price(limit_price):
+    trader = ust.USStockTrading.__new__(ust.USStockTrading)
+    trader.auto_trading = True
+    trader.mode = "demo"
+    trader.trenv = SimpleNamespace(my_acct="90909090", my_prod="01")
+    trader._request = lambda *args, **kwargs: pytest.fail("KIS must not be called")
+
+    result = trader.buy_limit_price("AAPL", limit_price=limit_price, buy_amount=100.0)
+
+    assert result["success"] is False
+    assert result["quantity"] == 0
+    assert "Invalid limit price" in result["message"]
 
 
 def test_us_trader_uses_account_buy_amount_override(monkeypatch):
