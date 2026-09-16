@@ -4,6 +4,8 @@ import tempfile
 import textwrap
 from pathlib import Path
 
+import pytest
+
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -46,6 +48,18 @@ CONFIG_FILE.write_text(
     + "\n",
     encoding="utf-8",
 )
+
+
+@pytest.fixture(autouse=True)
+def _isolated_runtime_dir(tmp_path, monkeypatch):
+    """Keep runtime state (ledgers, queues, locks) inside per-test temp dirs.
+
+    Without this, tests would read and mutate the deployment ``runtime/``
+    directory: leftover dedupe entries suppress otherwise-valid test signals,
+    and test executions pollute real broker dedupe state.
+    """
+
+    monkeypatch.setenv("PRISM_RUNTIME_DIR", str(tmp_path / "runtime"))
 
 
 def pytest_configure(config):

@@ -6,15 +6,17 @@ import hashlib
 import json
 import os
 import tempfile
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, fields, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+from .config_paths import runtime_file_path
 from .file_lock import FileLock
 from .market_hours import next_market_open
 from .schema import SignalMessage
 
+DEFAULT_QUEUE_PATH = Path("runtime") / "off_hours_queue.json"
 MAX_QUEUE_BYTES = 16 * 1024 * 1024
 FAILURE_METADATA_RESERVE_BYTES = 512
 QUEUE_CONTEXT_KEY = "__prism_queue_context"
@@ -86,9 +88,13 @@ class QueueExecutionResult:
             raise ValueError(f"Unsupported queue disposition '{self.disposition}'")
 
 
+def default_queue_path() -> Path:
+    return runtime_file_path(DEFAULT_QUEUE_PATH)
+
+
 class OffHoursOrderQueue:
     def __init__(self, storage_path: Path | None = None):
-        self.storage_path = storage_path or Path("runtime") / "off_hours_queue.json"
+        self.storage_path = storage_path or default_queue_path()
         try:
             self.storage_path.parent.mkdir(parents=True, exist_ok=False)
         except FileExistsError:
@@ -112,7 +118,28 @@ class OffHoursOrderQueue:
         data = json.loads(raw.decode("utf-8"))
         if not isinstance(data, list):
             raise ValueError("Off-hours queue must contain a JSON list")
-        return [QueuedSignal(**item) for item in data]
+        # Tolerate unknown keys: a queue file written by a different version or
+        # edited by hand must not wedge every queue operation with TypeError.
+        # Non-object entries are corrupt data — surface them as failed items so
+        # they remain operator-visible instead of raising AttributeError.
+        known_fields = {f.name for f in fields(QueuedSignal)}
+        items: list[QueuedSignal] = []
+        for item in data:
+            if not isinstance(item, dict):
+                items.append(
+                    QueuedSignal(
+                        signal={},
+                        execute_at="",
+                        created_at="",
+                        status="failed",
+                        failure_message="Malformed queue entry (not an object)",
+                    )
+                )
+                continue
+            items.append(
+                QueuedSignal(**{k: v for k, v in item.items() if k in known_fields})
+            )
+        return items
 
     def _save(
         self,
@@ -198,19 +225,41 @@ class OffHoursOrderQueue:
         with FileLock(self.drain_lock_path):
             current = now or datetime.now(timezone.utc)
             with FileLock(self.lock_path):
-                due = [
-                    item
-                    for item in self._load()
-                    if item.status == "pending"
-                    and datetime.fromisoformat(item.execute_at) <= current
-                ]
+                loaded_items = self._load()
+                due: list[QueuedSignal] = []
+                quarantined = False
+                for index, item in enumerate(loaded_items):
+                    if item.status != "pending":
+                        continue
+                    try:
+                        execute_at = datetime.fromisoformat(item.execute_at)
+                    except (TypeError, ValueError):
+                        execute_at = None
+                    if execute_at is None or execute_at.tzinfo is None:
+                        # A malformed or timezone-less execute_at can never be
+                        # ordered against an aware "now". Quarantine it instead
+                        # of letting it stall every future drain.
+                        loaded_items[index] = replace(
+                            item,
+                            status="failed",
+                            failure_message=_safe_failure_message(
+                                f"Malformed execute_at timestamp: {item.execute_at!r}"
+                            ),
+                            failed_at=current.isoformat(),
+                        )
+                        quarantined = True
+                        continue
+                    if execute_at <= current:
+                        due.append(item)
+                if quarantined:
+                    self._save(loaded_items)
 
             processed = 0
             for item in due:
-                payload = dict(item.signal)
-                if item.execution_context:
-                    payload[QUEUE_CONTEXT_KEY] = dict(item.execution_context)
                 try:
+                    payload = dict(item.signal)
+                    if item.execution_context:
+                        payload[QUEUE_CONTEXT_KEY] = dict(item.execution_context)
                     outcome = executor(payload)
                 except Exception as exc:  # noqa: BLE001 - isolate poison queue items
                     outcome = QueueExecutionResult(

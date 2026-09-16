@@ -244,7 +244,11 @@ def test_web_ui_flag_runs_alongside_subscriber(monkeypatch):
 
     assert len(launched) == 1
     assert launched[0]["force_dry_run"] is True
-    assert launched[0]["queue_path"] == __import__("pathlib").Path("runtime/off_hours_queue.json")
+    expected_queue = (
+        __import__("pathlib").Path(os.environ["PRISM_RUNTIME_DIR"])
+        / "off_hours_queue.json"
+    )
+    assert launched[0]["queue_path"] == expected_queue
     assert isinstance(launched[0]["work_tracker"], subscriber.ActiveWorkTracker)
     assert hasattr(launched[0]["shutdown_event"], "set")
     assert launched[0]["shutdown_event"].is_set()
@@ -483,3 +487,100 @@ def test_main_cancels_streaming_pull_on_sigint(monkeypatch):
         (signal.SIGINT, f"previous-{signal.SIGINT}"),
         (signal.SIGTERM, f"previous-{signal.SIGTERM}"),
     ]
+
+
+def test_main_shutdown_completes_when_streaming_pull_future_is_cancelled(monkeypatch):
+    """concurrent.futures.CancelledError is BaseException (3.8+): the poll loop
+    and the finally drain must both survive a cancelled pull future."""
+    import sys
+    import types
+    from concurrent.futures import CancelledError
+
+    stopped = []
+    closed = []
+    shutdown_order = []
+    registered = {}
+
+    class FakeDispatcher:
+        dry_run = True
+        trading_mode = "demo"
+        stop_loss_watcher_config = subscriber.StopLossWatcherConfig(enabled=False)
+        stop_loss_tracker = object()
+
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    class FakeQueueWorker:
+        def __init__(self, dispatcher, poll_seconds, work_tracker):
+            pass
+
+        def start(self):
+            pass
+
+        def request_stop(self):
+            pass
+
+        def stop(self):
+            stopped.append(True)
+            shutdown_order.append("queue-stop")
+
+    class FakeFuture:
+        def __init__(self):
+            self.calls = 0
+
+        def result(self, timeout=None):
+            self.calls += 1
+            if self.calls == 1:
+                # First poll tick: trigger the SIGINT handler, which cancels us.
+                registered[signal.SIGINT](signal.SIGINT, None)
+                raise CancelledError
+            # Every subsequent wait on a cancelled future raises CancelledError.
+            raise CancelledError
+
+        def cancel(self):
+            pass
+
+    class FakeSubscriberClient:
+        def __init__(self, credentials=None):
+            pass
+
+        def subscription_path(self, project_id, subscription_id):
+            return f"projects/{project_id}/subscriptions/{subscription_id}"
+
+        def subscribe(self, subscription_path, callback, *, flow_control, await_callbacks_on_shutdown):
+            return FakeFuture()
+
+        def close(self):
+            closed.append(True)
+            shutdown_order.append("client-close")
+
+    fake_pubsub = types.SimpleNamespace(
+        SubscriberClient=FakeSubscriberClient,
+        types=types.SimpleNamespace(
+            FlowControl=lambda **kwargs: types.SimpleNamespace(**kwargs)
+        ),
+    )
+    monkeypatch.setitem(sys.modules, "google.cloud.pubsub_v1", fake_pubsub)
+    monkeypatch.setattr(subscriber, "TradeDispatcher", FakeDispatcher)
+    monkeypatch.setattr(subscriber, "QueueWorker", FakeQueueWorker)
+    monkeypatch.setattr(subscriber.signal, "getsignal", lambda signum: f"previous-{signum}")
+    monkeypatch.setattr(
+        subscriber.signal,
+        "signal",
+        lambda signum, handler: registered.__setitem__(signum, handler)
+        if not isinstance(handler, str)
+        else None,
+    )
+
+    # The cancelled future must not abort main() or skip the drain sequence.
+    subscriber.main([
+        "--project-id", "project",
+        "--subscription-id", "subscription",
+        "--log-file", "",
+        "--dry-run",
+    ])
+
+    assert "queue-stop" in shutdown_order
+    assert "client-close" in shutdown_order
+    assert stopped == [True]
+    assert closed == [True]

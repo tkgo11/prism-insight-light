@@ -14,7 +14,7 @@ import os
 import signal
 import threading
 import time
-from concurrent.futures import TimeoutError
+from concurrent.futures import CancelledError, TimeoutError
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -24,7 +24,7 @@ load_dotenv(ROOT / ".env")
 
 from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must load first
 from trading.market_hours import KST  # noqa: E402 - config env must load first
-from trading.off_hours_queue import QueueCapacityError  # noqa: E402
+from trading.off_hours_queue import QueueCapacityError, default_queue_path  # noqa: E402
 from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E402
 from trading.stop_loss_watcher import StopLossWatcher, StopLossWatcherConfig  # noqa: E402
 
@@ -336,6 +336,7 @@ def _handle_message(
     _log_raw_pubsub_message(message, context, raw_logger)
     active_logger.info("Received Pub/Sub message (%s, bytes=%s)", context, len(message.data or b""))
     acknowledge = True
+    redelivery_reason = "durable off-hours queue capacity is exhausted"
     try:
         signal = parse_signal_bytes(message.data)
         active_logger.info(
@@ -357,6 +358,15 @@ def _handle_message(
             result.message,
             context,
         )
+        if result.status == "deferred":
+            # The dispatcher could not execute and nothing was retained
+            # locally; nack so Pub/Sub redelivers instead of dropping it.
+            acknowledge = False
+            redelivery_reason = "broker execution stayed busy past the dispatch deadline"
+            active_logger.warning(
+                "Releasing message for redelivery because dispatch was deferred (%s)",
+                context,
+            )
     except SignalValidationError as exc:
         active_logger.warning("Acknowledging invalid signal (%s): %s", context, exc)
     except QueueCapacityError as exc:
@@ -374,17 +384,7 @@ def _handle_message(
             message.ack()
             active_logger.info("Acknowledged Pub/Sub message (%s)", context)
         else:
-            _release_message_for_redelivery(
-                message, reason="durable off-hours queue capacity is exhausted"
-            )
-
-
-def build_callback(
-    dispatcher: TradeDispatcher,
-    logger: logging.Logger | None = None,
-    raw_logger: logging.Logger | None = None,
-):
-    return lambda message: _handle_message(message, dispatcher, logger, raw_logger)
+            _release_message_for_redelivery(message, reason=redelivery_reason)
 
 
 def _release_message_for_redelivery(message, *, reason: str) -> None:
@@ -423,7 +423,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Python logging level (default: INFO)",
     )
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--queue-path", default="runtime/off_hours_queue.json")
+    parser.add_argument(
+        "--queue-path",
+        default=None,
+        help="Off-hours queue file (default: runtime/off_hours_queue.json or $PRISM_RUNTIME_DIR/off_hours_queue.json)",
+    )
     parser.add_argument("--queue-poll-seconds", type=_positive_poll_seconds, default=60)
     parser.add_argument(
         "--max-in-flight-messages",
@@ -531,12 +535,13 @@ def main(argv: list[str] | None = None) -> None:
     work_tracker = ActiveWorkTracker()
     web_ui_thread: threading.Thread | None = None
     web_ui_stop_event = threading.Event() if args.web_ui else None
+    queue_path = Path(args.queue_path) if args.queue_path else default_queue_path()
 
     from google.cloud import pubsub_v1
 
     dispatcher = TradeDispatcher(
         dry_run=args.dry_run,
-        queue_path=Path(args.queue_path),
+        queue_path=queue_path,
     )
     queue_worker = QueueWorker(dispatcher, args.queue_poll_seconds, work_tracker)
 
@@ -571,7 +576,7 @@ def main(argv: list[str] | None = None) -> None:
         subscription_path,
         args.dry_run,
         dispatcher.trading_mode,
-        args.queue_path,
+        queue_path,
         args.queue_poll_seconds,
         args.raw_pubsub_log_file or "disabled",
     )
@@ -611,7 +616,7 @@ def main(argv: list[str] | None = None) -> None:
             assert web_ui_stop_event is not None
             web_ui_thread = _start_web_ui_thread(
                 force_dry_run=args.dry_run,
-                queue_path=Path(args.queue_path),
+                queue_path=queue_path,
                 work_tracker=work_tracker,
                 shutdown_event=web_ui_stop_event,
             )
@@ -622,6 +627,11 @@ def main(argv: list[str] | None = None) -> None:
                 break
             except TimeoutError:
                 continue
+            except CancelledError:
+                # The stop handler cancelled the pull future (a BaseException
+                # subclass on supported Pythons, so `except Exception` would
+                # miss it). Exit the poll loop so the finally drain runs.
+                break
             except KeyboardInterrupt:
                 request_stop(signal.SIGINT, None)
             except Exception:
@@ -643,6 +653,8 @@ def main(argv: list[str] | None = None) -> None:
             LOGGER.warning("Timed out waiting for Pub/Sub subscriber shutdown")
         except KeyboardInterrupt:
             LOGGER.debug("Pub/Sub subscriber shutdown interrupted after cancellation")
+        except CancelledError:
+            LOGGER.debug("Pub/Sub subscriber shutdown wait observed a cancelled future")
         except Exception as exc:  # noqa: BLE001 - cancellation commonly raises library-specific futures errors
             LOGGER.debug("Pub/Sub subscriber shutdown completed with %s", type(exc).__name__)
         drain_seconds = _positive_seconds_from_env("SUBSCRIBER_SHUTDOWN_DRAIN_SECONDS", 180.0)
@@ -668,6 +680,8 @@ def main(argv: list[str] | None = None) -> None:
             streaming_pull_future.result()
         except KeyboardInterrupt:
             LOGGER.debug("Pub/Sub subscriber final shutdown wait was interrupted")
+        except CancelledError:
+            LOGGER.debug("Pub/Sub subscriber final wait observed a cancelled future")
         except Exception as exc:  # noqa: BLE001 - cancellation raises a library-specific exception
             LOGGER.debug("Pub/Sub subscriber final shutdown completed with %s", type(exc).__name__)
         subscriber.close()

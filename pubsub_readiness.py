@@ -289,11 +289,13 @@ def check_pubsub_readiness(
     if metadata.message:
         diagnostics.append(metadata.message)
 
-    if primary_status == "ready":
-        return _ready(subscription_path, diagnostics)
-
+    # testIamPermissions reports inherited project-level permissions even when the
+    # subscription itself does not exist, so existence must be verified first.
     if metadata.state == "missing":
         return _hard_failure(f"subscription not found for {subscription_path}", diagnostics)
+
+    if primary_status == "ready":
+        return _ready(subscription_path, diagnostics)
 
     if primary_status == "denied":
         return _denied(subscription_path, diagnostics)

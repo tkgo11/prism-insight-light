@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 from ..schema import SignalMessage
-from .common import RUNTIME_DIR, StrategyExecution, append_json_item, boolean_value, execute_order, execution_from_result, market_base_amount, positive_number, strategy_name
+from .common import StrategyExecution, append_json_item, boolean_value, execute_order, execution_from_result, market_base_amount, positive_number, runtime_dir, strategy_name
 
 RISK_BRACKET = "risk_bracket"
 
@@ -17,7 +17,7 @@ class RiskBracketStrategyConfig:
         return cls(positive_number(payload,"risk_amount_krw"), positive_number(payload,"risk_amount_usd"), positive_number(payload,"max_position_amount_krw"), positive_number(payload,"max_position_amount_usd"), boolean_value(payload, "require_stop_loss", False), boolean_value(payload, "require_target_price", False))
 
 class RiskBracketStrategy:
-    metadata_path = RUNTIME_DIR / "risk_brackets.json"
+    metadata_path: Path | None = None
     def __init__(self, *, config: RiskBracketStrategyConfig): self.config = config
     async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.signal_type != "BUY": return StrategyExecution("rejected", "Risk bracket strategy only supports BUY signals", signal.market, signal.ticker)
@@ -34,5 +34,5 @@ class RiskBracketStrategy:
         amount_label = f"{buy_amount:.2f}" if submitted_amount is not None else "broker default"
         execution = execution_from_result(signal, result, f"Risk bracket buy {amount_label} with risk {risk_budget:.2f}", buy_amount=submitted_amount, risk_budget=risk_budget)
         if execution.status == "executed":
-            append_json_item(self.metadata_path, {"market": signal.market, "ticker": signal.ticker, "entry_price": signal.price, "stop_loss": signal.stop_loss, "target_price": signal.target_price, "risk_budget": risk_budget, "created_at": datetime.now(timezone.utc).isoformat()})
+            append_json_item(self.metadata_path or runtime_dir() / "risk_brackets.json", {"market": signal.market, "ticker": signal.ticker, "entry_price": signal.price, "stop_loss": signal.stop_loss, "target_price": signal.target_price, "risk_budget": risk_budget, "created_at": datetime.now(timezone.utc).isoformat()})
         return execution

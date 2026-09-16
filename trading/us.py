@@ -64,6 +64,11 @@ PROJECT_ROOT = TRADING_DIR.parent
 
 from . import kis_auth as ka
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
+from .execution_outcome import (
+    PortfolioInquiryError,
+    classify_broker_result,
+    rejection_is_ambiguous,
+)
 
 # Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -99,9 +104,12 @@ def _safe_float(value, default: float = 0.0) -> float:
     if value is None or value == '':
         return default
     try:
-        return float(value)
+        converted = float(value)
     except (ValueError, TypeError):
         return default
+    if not math.isfinite(converted):
+        return default
+    return converted
 
 
 def _safe_int(value, default: int = 0) -> int:
@@ -118,9 +126,12 @@ def _safe_int(value, default: int = 0) -> int:
     if value is None or value == '':
         return default
     try:
-        return int(float(value))  # Handle "123.0" string case
+        converted = float(value)  # Handle "123.0" string case
     except (ValueError, TypeError):
         return default
+    if not math.isfinite(converted):
+        return default
+    return int(converted)
 
 
 @dataclass(frozen=True)
@@ -152,7 +163,7 @@ def _cfg_positive_float(value: Any, default: float | None = None) -> float | Non
         parsed = float(value)
     except (TypeError, ValueError):
         return default
-    return parsed if parsed > 0 else default
+    return parsed if math.isfinite(parsed) and parsed > 0 else default
 
 
 def _cfg_nonnegative_float(value: Any, default: float = 0.0) -> float:
@@ -162,7 +173,7 @@ def _cfg_nonnegative_float(value: Any, default: float = 0.0) -> float:
         parsed = float(value)
     except (TypeError, ValueError):
         return default
-    return parsed if parsed >= 0 else default
+    return parsed if math.isfinite(parsed) and parsed >= 0 else default
 
 
 def build_auto_exchange_config(account_config: dict[str, Any] | None) -> AutoExchangeConfig:
@@ -828,6 +839,7 @@ class USStockTrading:
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'auto_exchange_used': buy_info.get('auto_exchange_used', False),
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Buy order failed: {error_msg}'
                 }
 
@@ -838,6 +850,7 @@ class USStockTrading:
                 'order_no': None,
                 'ticker': ticker,
                 'quantity': buy_quantity,
+                'outcome_unknown': True,
                 'message': f'Buy order error: {str(e)}'
             }
 
@@ -864,6 +877,21 @@ class USStockTrading:
                 'limit_price': limit_price,
                 'message': 'Auto trading is disabled (AUTO_TRADING=False)'
             }
+
+        try:
+            normalized_limit_price = float(limit_price)
+        except (TypeError, ValueError):
+            normalized_limit_price = float("nan")
+        if not math.isfinite(normalized_limit_price) or normalized_limit_price <= 0:
+            return {
+                'success': False,
+                'order_no': None,
+                'ticker': ticker,
+                'quantity': 0,
+                'limit_price': limit_price,
+                'message': f'Invalid limit price: {limit_price}'
+            }
+        limit_price = normalized_limit_price
 
         exchange = self._resolve_exchange_code(ticker, exchange)
         if not exchange:
@@ -933,6 +961,7 @@ class USStockTrading:
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
                     'auto_exchange_used': buy_info.get('auto_exchange_used', False),
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Buy order failed: {error_msg}'
                 }
 
@@ -944,6 +973,7 @@ class USStockTrading:
                 'ticker': ticker,
                 'quantity': buy_quantity,
                 'limit_price': limit_price,
+                'outcome_unknown': True,
                 'message': f'Buy order error: {str(e)}'
             }
 
@@ -956,8 +986,13 @@ class USStockTrading:
 
         Returns:
             Holding quantity (0 if not held)
+
+        Raises:
+            PortfolioInquiryError: when KIS cannot confirm the balance, so
+                callers (e.g. the stop-loss watcher) never treat an inquiry
+                outage as "holding quantity is 0".
         """
-        portfolio = self.get_portfolio()
+        portfolio = self.get_portfolio(raise_on_error=True)
 
         for stock in portfolio:
             if stock['ticker'].upper() == ticker.upper():
@@ -1068,6 +1103,7 @@ class USStockTrading:
                     'order_no': None,
                     'ticker': ticker,
                     'quantity': quantity,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Sell order failed: {error_msg}'
                 }
 
@@ -1078,6 +1114,7 @@ class USStockTrading:
                 'order_no': None,
                 'ticker': ticker,
                 'quantity': quantity,
+                'outcome_unknown': True,
                 'message': f'Sell order error: {str(e)}'
             }
 
@@ -1250,6 +1287,7 @@ class USStockTrading:
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Reserved buy order failed: {error_msg}'
                 }
 
@@ -1261,6 +1299,7 @@ class USStockTrading:
                 'ticker': ticker,
                 'quantity': buy_quantity,
                 'limit_price': limit_price,
+                'outcome_unknown': True,
                 'message': f'Reserved buy order error: {str(e)}'
             }
 
@@ -1373,6 +1412,7 @@ class USStockTrading:
                     'order_no': None,
                     'ticker': ticker,
                     'quantity': quantity,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Reserved sell order failed: {error_msg}'
                 }
 
@@ -1383,6 +1423,7 @@ class USStockTrading:
                 'order_no': None,
                 'ticker': ticker,
                 'quantity': quantity,
+                'outcome_unknown': True,
                 'message': f'Reserved sell order error: {str(e)}'
             }
 
@@ -1559,6 +1600,7 @@ class USStockTrading:
         async with stock_lock:
             async with self._semaphore:
                 async with self._global_lock:
+                    submission_attempted = False
                     try:
                         logger.info(f"[Async Buy] {ticker} starting (amount: ${amount:.2f})")
 
@@ -1630,20 +1672,25 @@ class USStockTrading:
                         # This is important for reserved orders when market is closed
                         logger.info(f"[Async Buy] {ticker} limit_price: ${effective_limit_price:.2f} (provided: {limit_price})")
 
+                        submission_attempted = True
                         buy_result = await asyncio.to_thread(
                             self.smart_buy, ticker, resolved_amount, resolved_exchange, effective_limit_price
                         )
 
-                        if buy_result['success']:
+                        submission_status = classify_broker_result(buy_result)
+                        if submission_status == "executed":
                             result['quantity'] = int(buy_result.get('quantity') or buy_quantity)
                             result['total_amount'] = result['quantity'] * effective_limit_price
                             result['success'] = True
                             result['order_no'] = buy_result['order_no']
                             result['message'] = f"Buy completed: {result['quantity']} shares x ${effective_limit_price:.2f} = ${result['total_amount']:.2f}"
                         else:
-                            result['message'] = f"Buy failed: {buy_result['message']}"
+                            result['outcome_unknown'] = submission_status == "unknown"
+                            result['order_no'] = buy_result.get('order_no')
+                            result['message'] = f"Buy {submission_status}: {buy_result['message']}"
 
                     except Exception as e:
+                        result['outcome_unknown'] = submission_attempted
                         result['message'] = f'Async buy error: {str(e)}'
                         logger.error(f"[Async Buy] {ticker} error: {str(e)}")
 
@@ -1692,11 +1739,17 @@ class USStockTrading:
         async with stock_lock:
             async with self._semaphore:
                 async with self._global_lock:
+                    submission_attempted = False
                     try:
                         logger.info(f"[Async Sell] {ticker} starting")
 
                         # Verify portfolio holdings
                         portfolio = await asyncio.to_thread(self.get_portfolio)
+                        inquiry_error = getattr(self, "_last_portfolio_inquiry_error", None)
+                        if inquiry_error:
+                            result["message"] = f"Portfolio inquiry unavailable: {inquiry_error}"
+                            logger.warning("[Async Sell] %s %s", ticker, result["message"])
+                            return result
 
                         target_stock = None
                         for stock in portfolio:
@@ -1794,6 +1847,7 @@ class USStockTrading:
                         logger.info(f"[Async Sell] {ticker} limit_price: ${effective_limit_price:.2f}, use_moo: {effective_use_moo}")
 
                         # Execute sell
+                        submission_attempted = True
                         sell_result = await asyncio.to_thread(
                             self.smart_sell_all,
                             ticker,
@@ -1803,7 +1857,8 @@ class USStockTrading:
                             holding_quantity,
                         )
 
-                        if sell_result['success']:
+                        submission_status = classify_broker_result(sell_result)
+                        if submission_status == "executed":
                             result['success'] = True
                             result['quantity'] = sell_result['quantity']
                             result['order_no'] = sell_result['order_no']
@@ -1820,9 +1875,12 @@ class USStockTrading:
                                                f"est: ${result['estimated_amount']:.2f}, "
                                                f"P/L: {result['profit_rate']:+.2f}%)")
                         else:
-                            result['message'] = f"Sell failed: {sell_result['message']}"
+                            result['outcome_unknown'] = submission_status == "unknown"
+                            result['order_no'] = sell_result.get('order_no')
+                            result['message'] = f"Sell {submission_status}: {sell_result['message']}"
 
                     except Exception as e:
+                        result['outcome_unknown'] = submission_attempted
                         result['message'] = f'Async sell error: {str(e)}'
                         logger.error(f"[Async Sell] {ticker} error: {str(e)}")
 
@@ -1830,9 +1888,13 @@ class USStockTrading:
 
         return result
 
-    def get_portfolio(self) -> List[Dict[str, Any]]:
+    def get_portfolio(self, *, raise_on_error: bool = False) -> List[Dict[str, Any]]:
         """
         Get current US stock portfolio
+
+        When ``raise_on_error`` is true, propagate a temporary KIS inquiry
+        failure as ``PortfolioInquiryError`` instead of returning a partial
+        list that callers could mistake for an empty portfolio.
 
         Returns:
             [{
@@ -1864,6 +1926,7 @@ class USStockTrading:
         }
 
         portfolio = []
+        self._last_portfolio_inquiry_error = None
 
         # Query each exchange
         for exchange in ["NASD", "NYSE", "AMEX"]:
@@ -1906,11 +1969,28 @@ class USStockTrading:
                                 'exchange': item_exchange
                             }
                             portfolio.append(stock_info)
+                else:
+                    # A rejected exchange query leaves the portfolio partial;
+                    # holdings on that exchange become invisible to callers.
+                    message = (
+                        f"Balance inquiry failed for {exchange}: "
+                        f"{res.getErrorCode()} - {res.getErrorMessage()}"
+                    )
+                    logger.error(message)
+                    self._last_portfolio_inquiry_error = message
+                    if raise_on_error:
+                        raise PortfolioInquiryError(message)
 
                 time.sleep(0.1)  # Rate limit
 
+            except PortfolioInquiryError:
+                raise
             except Exception as e:
-                logger.error(f"Error getting portfolio for {exchange}: {str(e)}")
+                message = f"Error getting portfolio for {exchange}: {str(e)}"
+                logger.error(message)
+                self._last_portfolio_inquiry_error = message
+                if raise_on_error:
+                    raise PortfolioInquiryError(message) from e
                 continue
 
         # Deduplicate by ticker (KIS API may return same stock from multiple exchanges)
@@ -2043,6 +2123,7 @@ class MultiAccountUSStockTrading:
                 buy_amount=self.buy_amount,
                 auto_trading=self.auto_trading,
                 account_name=account["name"],
+                account_key=account["account_key"],
                 product_code=account["product"],
             )
             self._traders[account["account_key"]] = trader
@@ -2112,15 +2193,57 @@ class MultiAccountUSStockTrading:
         return self._get_primary_trader().calculate_buy_quantity(ticker, buy_amount, exchange)
 
     def get_holding_quantity(self, ticker: str) -> int:
-        return self._get_primary_trader().get_holding_quantity(ticker)
+        # Holdings may live on any configured account; checking only the
+        # primary trader would report a secondary-account position as 0.
+        if not self.account_configs:
+            return 0
+        return sum(
+            self._get_trader(account).get_holding_quantity(ticker)
+            for account in self.account_configs
+        )
 
     def _aggregate_results(self, ticker: str, results: List[Dict[str, Any]], action: str) -> Dict[str, Any]:
-        success_count = sum(1 for result in results if result.get("success"))
+        statuses = [classify_broker_result(result) for result in results]
         total_accounts = len(results)
-        total_quantity = sum(result.get("quantity", 0) for result in results)
-        total_amount = sum(result.get("total_amount", result.get("estimated_amount", 0)) for result in results)
-        successful_accounts = [result.get("account_name") for result in results if result.get("success")]
-        failed_accounts = [result.get("account_name") for result in results if not result.get("success")]
+        executed_results = [
+            result for result, status in zip(results, statuses) if status == "executed"
+        ]
+        success_count = len(executed_results)
+        # Only confirmed executions count toward aggregate exposure.  Failed and
+        # unknown results may carry estimate fields that must not inflate totals.
+        total_quantity = sum(result.get("quantity", 0) for result in executed_results)
+        total_amount = sum(
+            result.get("total_amount", result.get("estimated_amount", 0))
+            for result in executed_results
+        )
+        successful_accounts = [
+            result.get("account_name")
+            for result, status in zip(results, statuses)
+            if status == "executed"
+        ]
+        failed_accounts = [
+            result.get("account_name")
+            for result, status in zip(results, statuses)
+            if status == "failed"
+        ]
+        unknown_accounts = [
+            result.get("account_name")
+            for result, status in zip(results, statuses)
+            if status == "unknown"
+        ]
+        outcome_unknown = len(unknown_accounts) > 0
+
+        # Surface acceptance evidence: a broker order id on any executed or
+        # unknown account proves at least one live order exists.
+        aggregate_order_no = next(
+            (
+                str(result.get("order_no")).strip()
+                for result, status in zip(results, statuses)
+                if status in {"executed", "unknown"}
+                and str(result.get("order_no") or "").strip()
+            ),
+            None,
+        )
 
         messages = [
             f"{result.get('account_name')}: {result.get('message', '')}"
@@ -2131,29 +2254,37 @@ class MultiAccountUSStockTrading:
             return {
                 "success": False,
                 "partial_success": False,
+                "outcome_unknown": False,
                 "ticker": ticker,
                 "quantity": 0,
                 "total_amount": 0,
                 "estimated_amount": 0,
-                "order_no": None,
+                "order_no": aggregate_order_no,
                 "message": f"No US accounts configured for {action}",
                 "account_results": [],
                 "successful_accounts": [],
                 "failed_accounts": [],
+                "unknown_accounts": [],
             }
+
+        summary = f"{action} executed for {success_count}/{total_accounts} accounts"
+        if unknown_accounts:
+            summary += f" ({len(unknown_accounts)} outcome(s) unknown)"
 
         return {
             "success": success_count == total_accounts and total_accounts > 0,
             "partial_success": 0 < success_count < total_accounts,
+            "outcome_unknown": outcome_unknown,
             "ticker": ticker,
             "quantity": total_quantity,
             "total_amount": total_amount,
             "estimated_amount": total_amount,
-            "order_no": None,
-            "message": f"{action} executed for {success_count}/{total_accounts} accounts | " + " ; ".join(messages),
+            "order_no": aggregate_order_no,
+            "message": summary + " | " + " ; ".join(messages),
             "account_results": results,
             "successful_accounts": successful_accounts,
             "failed_accounts": failed_accounts,
+            "unknown_accounts": unknown_accounts,
         }
 
 
@@ -2213,7 +2344,10 @@ class AsyncUSTradingContext:
         self.trader = None
 
     async def __aenter__(self):
-        self.trader = USStockTrading(
+        # Construction authenticates synchronously (token scan, lock, possible
+        # mint); keep it off the event loop.
+        self.trader = await asyncio.to_thread(
+            USStockTrading,
             mode=self.mode,
             buy_amount=self.buy_amount,
             auto_trading=self.auto_trading,

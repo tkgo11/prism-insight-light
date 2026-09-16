@@ -1,4 +1,5 @@
 import threading
+import os
 import re
 import time
 from pathlib import Path
@@ -683,3 +684,160 @@ def test_url_fetch_refreshes_http_200_expired_token_then_succeeds(monkeypatch):
     assert len(calls) == 2
     assert calls[0][1]["authorization"] == "Bearer token-0"
     assert calls[1][1]["authorization"] == "Bearer token-1"
+
+
+def test_global_token_scan_ignores_per_account_files(monkeypatch, tmp_path):
+    """A global read_token must never load another account's KIS_acct token."""
+    from datetime import datetime, timedelta
+    import hashlib
+
+    monkeypatch.setattr(ka, "config_root", str(tmp_path))
+    monkeypatch.setattr(ka, "token_tmp", str(tmp_path / "KIS.token"))
+
+    account_key = "vps:12345678:01"
+    expiry = (datetime.now(ka.KIS_TOKEN_EXPIRY_TZ) + timedelta(hours=1)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    ka.save_token("account-token-value", expiry, account_key=account_key)
+    account_hash = hashlib.sha256(account_key.encode()).hexdigest()[:8]
+    assert (tmp_path / f"KIS_acct_{account_hash}.token").exists()
+
+    # Global read must not see the per-account file.
+    assert ka.read_token() is None
+    assert ka.read_token(account_key=account_key) == "account-token-value"
+
+
+def test_global_token_discard_and_cleanup_spare_per_account_files(monkeypatch, tmp_path):
+    """Global token cleanup must not touch KIS_acct_* files."""
+    from datetime import datetime, timedelta
+    import hashlib
+
+    monkeypatch.setattr(ka, "config_root", str(tmp_path))
+    monkeypatch.setattr(ka, "token_tmp", str(tmp_path / "KIS20990101"))
+
+    account_key = "vps:12345678:01"
+    expiry = (datetime.now(ka.KIS_TOKEN_EXPIRY_TZ) + timedelta(hours=1)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    ka.save_token("account-token-value", expiry, account_key=account_key)
+    account_hash = hashlib.sha256(account_key.encode()).hexdigest()[:8]
+    acct_file = tmp_path / f"KIS_acct_{account_hash}.token"
+    assert acct_file.exists()
+
+    ka._discard_saved_token()
+    assert acct_file.exists()
+
+    # Age the file beyond the 1-day cleanup horizon.
+    old = time.time() - 3 * 86400
+    os.utime(acct_file, (old, old))
+    ka.cleanup_old_tokens()
+    assert acct_file.exists()
+
+
+def test_auth_keys_token_files_by_resolved_account(monkeypatch, tmp_path):
+    """auth(account_name=...) must read/save the per-account token, not global."""
+    cfg = _base_cfg()
+    cfg.update(
+        {
+            "paper_app": "PSVTdemokey123456",
+            "paper_sec": "demosecret",
+            "vps": "https://vps.example.com",
+            "vops": "wss://vps.example.com",
+            "my_htsid": "hts",
+        }
+    )
+    cfg["accounts"] = [
+        {
+            "name": "acct-a",
+            "mode": "demo",
+            "account": "11110000",
+            "product": "01",
+            "market": "kr",
+        },
+        {
+            "name": "acct-b",
+            "mode": "demo",
+            "account": "22220000",
+            "product": "01",
+            "market": "kr",
+        },
+    ]
+    _patch_cfg(monkeypatch, cfg)
+    monkeypatch.setattr(ka, "config_root", str(tmp_path))
+    monkeypatch.setattr(ka, "token_tmp", str(tmp_path / "KIS20990101"))
+
+    captured = {}
+
+    def fake_request(url, params, headers):
+        return {"access_token": "new-token-value-1234", "access_token_token_expired": "2099-01-01 00:00:00"}
+
+    monkeypatch.setattr(ka, "_request_token_with_retry", fake_request)
+
+    original_save = ka._save_token_inner
+
+    def spy_save(token, expired, account_key=None):
+        captured["account_key"] = account_key
+        return original_save(token, expired, account_key=account_key)
+
+    # auth() mints under the token-write lock via the lock-free inner save.
+    monkeypatch.setattr(ka, "_save_token_inner", spy_save)
+
+    ka.auth(svr="vps", account_name="acct-a")
+
+    assert captured["account_key"] == "vps:11110000:01"
+    # Token must have landed in acct-a's file, and no global token file exists.
+    assert not list(tmp_path.glob("KIS20*"))
+    assert ka._CURRENT_AUTH_CONTEXT["token_account_key"] == "vps:11110000:01"
+
+
+def test_api_resp_error_honors_parent_accessors():
+    error = ka.APIRespError(500, '{"msg_cd": "EGW00201", "msg1": "rate limit"}')
+
+    assert error.getResCode() == 500
+    assert error.getResponse() is None
+    assert error.isOK() is False
+    assert error.getErrorCode() == "EGW00201"
+    assert error.getErrorMessage() == "rate limit"
+
+
+def test_api_resp_tolerates_body_without_error_fields():
+    class Response:
+        status_code = 200
+        headers = {}
+
+        def json(self):
+            return {"rt_cd": "0", "output": {"x": 1}}
+
+    response = ka.APIResp(Response())
+
+    assert response.isOK() is True
+    assert response.getErrorCode() == ""
+    assert response.getErrorMessage() == ""
+
+
+def test_resolve_account_rejects_unmatched_product(monkeypatch):
+    cfg = _base_cfg()
+    cfg["accounts"] = [
+        {
+            "name": "acct-a",
+            "mode": "demo",
+            "account": "11110000",
+            "product": "29",
+            "market": "kr",
+        },
+    ]
+    _patch_cfg(monkeypatch, cfg)
+
+    with pytest.raises(ValueError, match="product '01'"):
+        ka.resolve_account(svr="vps", product="01", market="kr")
+
+
+def test_safe_delete_never_raises(monkeypatch, tmp_path):
+    assert ka._safe_delete(tmp_path / "missing") is True
+
+    stubborn = tmp_path / "stubborn"
+    stubborn.write_text("x")
+    monkeypatch.setattr(
+        Path, "unlink", lambda self, *a, **k: (_ for _ in ()).throw(PermissionError("denied"))
+    )
+    assert ka._safe_delete(stubborn) is False

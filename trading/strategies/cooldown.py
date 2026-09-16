@@ -1,16 +1,16 @@
 """Per-ticker cooldown guard strategy."""
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from ..schema import SignalMessage
-from .common import RUNTIME_DIR, StrategyExecution, acquire_file_lock, execute_order, execution_from_result, fresh_items, integer_value, load_json_list, save_json, strategy_name, string_list
+from .common import StrategyExecution, acquire_file_lock, execute_order, execution_from_result, fresh_items, integer_value, load_json_list, runtime_dir, save_json, strategy_name, string_list
 
 COOLDOWN = "cooldown"
 @dataclass(frozen=True, slots=True)
 class CooldownStrategyConfig:
-    window_minutes: int = 1; apply_to_signal_types: tuple[str, ...] = (); scope: str = "market_ticker"; runtime_path: Path = RUNTIME_DIR / "cooldown_executions.json"
+    window_minutes: int = 1; apply_to_signal_types: tuple[str, ...] = (); scope: str = "market_ticker"; runtime_path: Path = field(default_factory=lambda: runtime_dir() / "cooldown_executions.json")
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "CooldownStrategyConfig | None":
         if not payload or strategy_name(payload) != COOLDOWN: return None
@@ -19,7 +19,7 @@ class CooldownStrategyConfig:
             value.upper()
             for value in string_list(payload, "apply_to_signal_types", [])
         )
-        return cls(window, types, str(payload.get("scope", "market_ticker")), Path(payload.get("runtime_path") or (RUNTIME_DIR / "cooldown_executions.json")))
+        return cls(window, types, str(payload.get("scope", "market_ticker")), Path(payload.get("runtime_path") or (runtime_dir() / "cooldown_executions.json")))
 
 class CooldownStrategy:
     def __init__(self, *, config: CooldownStrategyConfig): self.config = config

@@ -17,10 +17,18 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from .config_paths import runtime_file_path
 from .file_lock import FileLock
 
 DEFAULT_LEDGER_PATH = Path("runtime") / "multi_account_execution_ledger.json"
 MAX_LEDGER_ENTRIES = 10_000
+
+# Statuses that provably mean "no order exists at the broker" — a claim whose
+# prior attempt ended in one of these may be retried without risking a
+# duplicate submission.  "executed" and "unknown" deliberately suppress.
+_RETRYABLE_STATUSES = frozenset(
+    {"failed", "rejected", "dry-run", "deferred", "queued", "skipped"}
+)
 RETENTION = timedelta(days=7)
 
 
@@ -44,10 +52,15 @@ class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
     def __init__(self, path: Path | None = None):
-        self.path = path or DEFAULT_LEDGER_PATH
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        if os.name != "nt":
-            os.chmod(self.path.parent, 0o700)
+        self.path = path or runtime_file_path(DEFAULT_LEDGER_PATH)
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            if not self.path.parent.is_dir():
+                raise
+        else:
+            if os.name != "nt":
+                os.chmod(self.path.parent, 0o700)
         self.lock_path = self.path.with_suffix(self.path.suffix + ".lock")
 
     def _load(self) -> dict[str, dict[str, Any]]:
@@ -110,14 +123,27 @@ class ExecutionLedger:
         return dict(ordered[:MAX_LEDGER_ENTRIES])
 
     def claim(self, identity: str) -> tuple[bool, str | None]:
-        """Claim an identity or return the prior status without exposing account data."""
+        """Claim an identity or return the prior status without exposing account data.
+
+        Entries whose recorded status provably means "no order exists at the
+        broker" (clean failure, explicit rejection, dry-run, deferred, queued,
+        or a skipped duplicate marker) are re-claimable: retrying them cannot
+        create a duplicate.  ``executed`` and ``unknown`` stay permanently
+        suppressing because a retry could double-submit a live or ambiguous
+        order.
+        """
 
         now = datetime.now(timezone.utc)
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
             existing = entries.get(identity)
             if existing is not None:
-                return False, str(existing.get("status") or "in_progress")
+                previous_status = str(existing.get("status") or "in_progress")
+                if previous_status not in _RETRYABLE_STATUSES:
+                    return False, previous_status
+                entries[identity] = {"status": "in_progress", "claimed_at": now.isoformat()}
+                self._save(entries)
+                return True, previous_status
             entries[identity] = {"status": "in_progress", "claimed_at": now.isoformat()}
             self._save(entries)
         return True, None
@@ -131,6 +157,23 @@ class ExecutionLedger:
             if identity in entries:
                 entries[identity]["status"] = str(status)
                 entries[identity]["finished_at"] = now.isoformat()
+                self._save(entries)
+
+    def release(self, identity: str) -> None:
+        """Drop an open claim whose attempt provably submitted nothing.
+
+        Only an entry still marked ``in_progress`` is removed; a finalized
+        status carries information (executed/failed/unknown) that must keep
+        suppressing duplicates.  Releasing a deferred claim lets a later retry
+        execute instead of being silently suppressed forever.
+        """
+
+        now = datetime.now(timezone.utc)
+        with FileLock(self.lock_path):
+            entries = self._prune(self._load(), now)
+            existing = entries.get(identity)
+            if existing is not None and existing.get("status") == "in_progress":
+                del entries[identity]
                 self._save(entries)
 
 

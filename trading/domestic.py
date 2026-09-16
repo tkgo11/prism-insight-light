@@ -28,6 +28,11 @@ from .kis_auth import (
     TokenRequestError
 )
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
+from .execution_outcome import (
+    PortfolioInquiryError,
+    classify_broker_result,
+    rejection_is_ambiguous,
+)
 from .market_hours import KST
 
 # Logging setup
@@ -46,10 +51,6 @@ def _kst_log_time(*args: Any) -> time.struct_time:
 logging.Formatter.converter = _kst_log_time
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-
-class PortfolioInquiryError(RuntimeError):
-    """Raised when KIS cannot provide a domestic portfolio response."""
 
 
 def _now_kst() -> datetime.datetime:
@@ -369,7 +370,14 @@ class DomesticStockTrading:
         if not current_price_info:
             return 0
 
-        current_price = current_price_info['current_price']
+        try:
+            current_price = float(current_price_info.get('current_price'))
+        except (TypeError, ValueError):
+            logger.warning(f"[{stock_code}] Unusable current price quote; cannot size buy")
+            return 0
+        if not math.isfinite(current_price) or current_price <= 0:
+            logger.warning(f"[{stock_code}] Non-positive current price {current_price}; cannot size buy")
+            return 0
 
         # Calculate buyable quantity (floor division)
         current_quantity = math.floor(amount / current_price)
@@ -468,6 +476,7 @@ class DomesticStockTrading:
                     'order_no': None,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Buy order failed: {error_msg}'
                 }
 
@@ -478,6 +487,7 @@ class DomesticStockTrading:
                 'order_no': None,
                 'stock_code': stock_code,
                 'quantity': buy_quantity,
+                'outcome_unknown': True,
                 'message': f'Error during buy order: {str(e)}'
             }
 
@@ -490,8 +500,13 @@ class DomesticStockTrading:
 
         Returns:
             Holding quantity (0 if none)
+
+        Raises:
+            PortfolioInquiryError: when KIS cannot confirm the balance, so
+                callers (e.g. the stop-loss watcher) never treat an inquiry
+                outage as "holding quantity is 0".
         """
-        current_portfolio = self.get_portfolio()
+        current_portfolio = self.get_portfolio(raise_on_error=True)
 
         for current_stock in current_portfolio:
             if current_stock['stock_code'] == stock_code:
@@ -602,6 +617,7 @@ class DomesticStockTrading:
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Buy order failed: {error_msg}'
                 }
 
@@ -613,6 +629,7 @@ class DomesticStockTrading:
                 'stock_code': stock_code,
                 'quantity': buy_quantity,
                 'limit_price': limit_price,
+                'outcome_unknown': True,
                 'message': f'Error during buy order: {str(e)}'
             }
 
@@ -752,6 +769,7 @@ class DomesticStockTrading:
                     'order_no': None,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Buy order failed: {error_msg}'
                 }
 
@@ -762,6 +780,7 @@ class DomesticStockTrading:
                 'order_no': None,
                 'stock_code': stock_code,
                 'quantity': buy_quantity,
+                'outcome_unknown': True,
                 'message': f'Error during buy order: {str(e)}'
             }
 
@@ -873,6 +892,7 @@ class DomesticStockTrading:
                     'order_no': None,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f"Reserved order failed: {error_msg}"
                 }
 
@@ -883,6 +903,7 @@ class DomesticStockTrading:
                 'order_no': None,
                 'stock_code': stock_code,
                 'quantity': buy_quantity,
+                'outcome_unknown': True,
                 'message': f"Error during reserved buy order: {str(e)}"
             }
 
@@ -985,6 +1006,7 @@ class DomesticStockTrading:
                     'order_no': None,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Sell order failed: {error_msg}'
                 }
 
@@ -995,6 +1017,7 @@ class DomesticStockTrading:
                 'order_no': None,
                 'stock_code': stock_code,
                 'quantity': buy_quantity,
+                'outcome_unknown': True,
                 'message': f'Error during sell order: {str(e)}'
             }
 
@@ -1127,6 +1150,7 @@ class DomesticStockTrading:
                     'order_no': None,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f'Sell failed: {error_msg}'
                 }
 
@@ -1136,6 +1160,7 @@ class DomesticStockTrading:
                 'order_no': None,
                 'stock_code': stock_code,
                 'quantity': buy_quantity,
+                'outcome_unknown': True,
                 'message': f'Error during sell: {str(e)}'
             }
 
@@ -1242,6 +1267,7 @@ class DomesticStockTrading:
                     'order_no': None,
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
+                    'outcome_unknown': rejection_is_ambiguous(res),
                     'message': f"Reserved order failed: {error_msg}"
                 }
 
@@ -1252,6 +1278,7 @@ class DomesticStockTrading:
                 'order_no': None,
                 'stock_code': stock_code,
                 'quantity': buy_quantity,
+                'outcome_unknown': True,
                 'message': f"Error during reserved sell order: {str(e)}"
             }
 
@@ -1310,6 +1337,7 @@ class DomesticStockTrading:
         async with stock_lock:  # Level 1: Prevent concurrent trading per stock
             async with self._semaphore:  # Level 2: Limit total concurrent requests
                 async with self._global_lock:  # Level 3: Protect account information
+                    submission_attempted = False
                     try:
                         logger.info(f"[Async Buy API] {stock_code} buy process started (amount: {amount:,} KRW)")
 
@@ -1352,11 +1380,13 @@ class DomesticStockTrading:
                             logger.info(f"[Async Buy API] {stock_code} executing limit buy order: {buy_quantity} shares x {effective_price:,} KRW")
                         else:
                             logger.info(f"[Async Buy API] {stock_code} executing market/reserved-market buy for an estimated {buy_quantity} shares")
+                        submission_attempted = True
                         buy_result = await asyncio.to_thread(
                             self.smart_buy, stock_code, amount, requested_limit_price
                         )
 
-                        if buy_result['success']:
+                        submission_status = classify_broker_result(buy_result)
+                        if submission_status == "executed":
                             result['quantity'] = int(
                                 buy_result.get('quantity') or buy_quantity
                             )
@@ -1366,10 +1396,15 @@ class DomesticStockTrading:
                             result['message'] = f"Buy submitted: {result['quantity']} shares x {effective_price:,} KRW = {result['total_amount']:,} KRW"
                             logger.info(f"[Async Buy API] {stock_code} buy successful")
                         else:
-                            result['message'] = f"Buy failed: {buy_result['message']}"
-                            logger.error(f"[Async Buy API] {stock_code} buy failed: {buy_result['message']}")
+                            # Unknown outcomes keep their flag and order id so
+                            # callers never retry an order that may be live.
+                            result['outcome_unknown'] = submission_status == "unknown"
+                            result['order_no'] = buy_result.get('order_no')
+                            result['message'] = f"Buy {submission_status}: {buy_result['message']}"
+                            logger.error(f"[Async Buy API] {stock_code} buy {submission_status}: {buy_result['message']}")
 
                     except Exception as e:
+                        result['outcome_unknown'] = submission_attempted
                         result['message'] = f'Error during async buy API execution: {str(e)}'
                         logger.error(f"[Async Buy API] {stock_code} error: {str(e)}")
 
@@ -1423,6 +1458,7 @@ class DomesticStockTrading:
         async with stock_lock:  # Level 1: Prevent concurrent trading per stock
             async with self._semaphore:  # Level 2: Limit total concurrent requests
                 async with self._global_lock:  # Level 3: Protect account information
+                    submission_attempted = False
                     try:
                         logger.info(f"[Async Sell API] {stock_code} sell process started")
 
@@ -1505,11 +1541,13 @@ class DomesticStockTrading:
                             logger.info(f"[Async Sell API] {stock_code} executing sell all (holding: {holding_quantity} shares, limit: {effective_limit_price:,} KRW)")
                         else:
                             logger.info(f"[Async Sell API] {stock_code} executing sell all (holding: {holding_quantity} shares, market)")
+                        submission_attempted = True
                         all_sell_result = await asyncio.to_thread(
                             self.smart_sell_all, stock_code, effective_limit_price, holding_quantity
                         )
 
-                        if all_sell_result['success']:
+                        submission_status = classify_broker_result(all_sell_result)
+                        if submission_status == "executed":
                             result['success'] = True
                             result['quantity'] = all_sell_result['quantity']
                             result['order_no'] = all_sell_result['order_no']
@@ -1530,10 +1568,13 @@ class DomesticStockTrading:
 
                             logger.info(f"[Async Sell API] {stock_code} sell successful")
                         else:
-                            result['message'] = f"Sell failed: {all_sell_result['message']}"
-                            logger.error(f"[Async Sell API] {stock_code} sell failed: {all_sell_result['message']}")
+                            result['outcome_unknown'] = submission_status == "unknown"
+                            result['order_no'] = all_sell_result.get('order_no')
+                            result['message'] = f"Sell {submission_status}: {all_sell_result['message']}"
+                            logger.error(f"[Async Sell API] {stock_code} sell {submission_status}: {all_sell_result['message']}")
 
                     except Exception as e:
+                        result['outcome_unknown'] = submission_attempted
                         result['message'] = f'Error during async sell API execution: {str(e)}'
                         logger.error(f"[Async Sell API] {stock_code} error: {str(e)}")
 
@@ -1748,6 +1789,7 @@ class MultiAccountDomesticStockTrading:
                 buy_amount=self.buy_amount,
                 auto_trading=self.auto_trading,
                 account_name=account["name"],
+                account_key=account["account_key"],
                 product_code=account["product"],
             )
             self._traders[account["account_key"]] = trader
@@ -1811,15 +1853,57 @@ class MultiAccountDomesticStockTrading:
         return self._get_primary_trader().calculate_buy_quantity(stock_code, buy_amount)
 
     def get_holding_quantity(self, stock_code: str) -> int:
-        return self._get_primary_trader().get_holding_quantity(stock_code)
+        # Holdings may live on any configured account; checking only the
+        # primary trader would report a secondary-account position as 0.
+        if not self.account_configs:
+            return 0
+        return sum(
+            self._get_trader(account).get_holding_quantity(stock_code)
+            for account in self.account_configs
+        )
 
     def _aggregate_results(self, stock_code: str, results: List[Dict[str, Any]], action: str) -> Dict[str, Any]:
-        success_count = sum(1 for result in results if result.get("success"))
+        statuses = [classify_broker_result(result) for result in results]
         total_accounts = len(results)
-        total_quantity = sum(result.get("quantity", 0) for result in results)
-        total_amount = sum(result.get("total_amount", result.get("estimated_amount", 0)) for result in results)
-        successful_accounts = [result.get("account_name") for result in results if result.get("success")]
-        failed_accounts = [result.get("account_name") for result in results if not result.get("success")]
+        executed_results = [
+            result for result, status in zip(results, statuses) if status == "executed"
+        ]
+        success_count = len(executed_results)
+        # Only confirmed executions count toward aggregate exposure.  Failed and
+        # unknown results may carry estimate fields that must not inflate totals.
+        total_quantity = sum(result.get("quantity", 0) for result in executed_results)
+        total_amount = sum(
+            result.get("total_amount", result.get("estimated_amount", 0))
+            for result in executed_results
+        )
+        successful_accounts = [
+            result.get("account_name")
+            for result, status in zip(results, statuses)
+            if status == "executed"
+        ]
+        failed_accounts = [
+            result.get("account_name")
+            for result, status in zip(results, statuses)
+            if status == "failed"
+        ]
+        unknown_accounts = [
+            result.get("account_name")
+            for result, status in zip(results, statuses)
+            if status == "unknown"
+        ]
+        outcome_unknown = len(unknown_accounts) > 0
+
+        # Surface acceptance evidence: a broker order id on any executed or
+        # unknown account proves at least one live order exists.
+        aggregate_order_no = next(
+            (
+                str(result.get("order_no")).strip()
+                for result, status in zip(results, statuses)
+                if status in {"executed", "unknown"}
+                and str(result.get("order_no") or "").strip()
+            ),
+            None,
+        )
 
         messages = [
             f"{result.get('account_name')}: {result.get('message', '')}"
@@ -1830,29 +1914,37 @@ class MultiAccountDomesticStockTrading:
             return {
                 "success": False,
                 "partial_success": False,
+                "outcome_unknown": False,
                 "stock_code": stock_code,
                 "quantity": 0,
                 "total_amount": 0,
                 "estimated_amount": 0,
-                "order_no": None,
+                "order_no": aggregate_order_no,
                 "message": f"No domestic accounts configured for {action}",
                 "account_results": [],
                 "successful_accounts": [],
                 "failed_accounts": [],
+                "unknown_accounts": [],
             }
+
+        summary = f"{action} executed for {success_count}/{total_accounts} accounts"
+        if unknown_accounts:
+            summary += f" ({len(unknown_accounts)} outcome(s) unknown)"
 
         return {
             "success": success_count == total_accounts and total_accounts > 0,
             "partial_success": 0 < success_count < total_accounts,
+            "outcome_unknown": outcome_unknown,
             "stock_code": stock_code,
             "quantity": total_quantity,
             "total_amount": total_amount,
             "estimated_amount": total_amount,
-            "order_no": None,
-            "message": f"{action} executed for {success_count}/{total_accounts} accounts | " + " ; ".join(messages),
+            "order_no": aggregate_order_no,
+            "message": summary + " | " + " ; ".join(messages),
             "account_results": results,
             "successful_accounts": successful_accounts,
             "failed_accounts": failed_accounts,
+            "unknown_accounts": unknown_accounts,
         }
 
 
@@ -1926,7 +2018,9 @@ class AsyncTradingContext:
         }
         if self.account_key is not None:
             trader_kwargs["account_key"] = self.account_key
-        self.trader = DomesticStockTrading(**trader_kwargs)
+        # Construction authenticates synchronously (token scan, lock, possible
+        # mint); keep it off the event loop.
+        self.trader = await asyncio.to_thread(DomesticStockTrading, **trader_kwargs)
         return self.trader
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
