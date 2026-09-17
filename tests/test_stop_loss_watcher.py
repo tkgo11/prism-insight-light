@@ -318,3 +318,50 @@ def test_stop_loss_signal_id_is_stable_for_same_tracked_position(tmp_path):
     second_signal = dispatcher.dispatch.call_args_list[1].args[0]
     assert first_signal.raw["signal_id"] == second_signal.raw["signal_id"]
     assert tracker.get_position("US", "AAPL") is not None
+
+
+def test_stop_loss_watcher_skips_balance_inquiry_until_stop_hit_or_interval(tmp_path):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("KR", "005930", 70000.0, entry_price=73000.0)
+
+    config = StopLossWatcherConfig(
+        enabled=True,
+        request_interval_seconds=0.0,
+        holding_check_interval_seconds=60.0,
+        storage_path=tracker_file,
+    )
+
+    mock_trader = MagicMock()
+    mock_trader.get_current_price.return_value = {"current_price": 72000}  # Above stop
+    mock_trader.get_holding_quantity.return_value = 10
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "real"
+    dispatcher.multi_account_enabled = False
+    dispatcher.dispatch = AsyncMock()
+
+    watcher = StopLossWatcher(dispatcher, config, tracker=tracker)
+    watcher._get_trader = MagicMock(return_value=mock_trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        watcher.check_stop_loss_once()  # first cycle reconciles holdings
+        watcher.check_stop_loss_once()
+        watcher.check_stop_loss_once()
+
+    # Trader is constructed once and reused; balance is queried only on the first cycle
+    assert watcher._get_trader.call_count == 1
+    assert mock_trader.get_current_price.call_count == 3
+    assert mock_trader.get_holding_quantity.call_count == 1
+    dispatcher.dispatch.assert_not_called()
+
+    # Once the stop is hit, holdings are verified before selling
+    mock_trader.get_current_price.return_value = {"current_price": 69000}
+    dispatcher.dispatch = AsyncMock(
+        return_value=DispatchResult("executed", "Order executed", "SELL", "KR")
+    )
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        results = watcher.check_stop_loss_once()
+
+    assert len(results) == 1
+    assert mock_trader.get_holding_quantity.call_count == 2
