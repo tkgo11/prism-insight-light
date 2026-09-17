@@ -524,6 +524,7 @@ Use this when news, market stress, or another event should temporarily stop new 
 - Automatically clears tracked positions when any SELL signal for that ticker is executed.
 - Polls current market prices via KIS API during market hours (KR & US).
 - Protects KIS API rate limits by enforcing an interval delay (`request_interval_seconds: 0.2`) between ticker price queries.
+- Reuses one trader per market across poll cycles and only queries the account balance (`inquire-balance`) when a stop is hit or every `holding_check_interval_seconds` (default: 60) to reconcile already-sold positions, instead of on every 5-second poll.
 - When `current_price <= stop_loss`, automatically generates an internal `SELL` signal with `sell_reason="stop_loss"` and dispatches it through the configured trading pipeline.
 
 ### Configuration
@@ -533,6 +534,7 @@ stop_loss_watcher:
   enabled: true                 # enable background stop-loss monitoring
   poll_seconds: 5.0             # check interval in seconds (default: 5.0)
   request_interval_seconds: 0.2 # delay between quotes for rate-limit protection (default: 0.2)
+  holding_check_interval_seconds: 60.0 # how often to reconcile holdings via balance inquiry (default: 60.0)
 ```
 
 ## Adding a new strategy
