@@ -46,6 +46,7 @@ class StopLossWatcherConfig:
     enabled: bool = False
     poll_seconds: float = 5.0
     request_interval_seconds: float = 0.2
+    holding_check_interval_seconds: float = 60.0
     storage_path: Path = field(default_factory=default_stop_loss_positions_path)
 
     def __post_init__(self) -> None:
@@ -56,6 +57,11 @@ class StopLossWatcherConfig:
             object.__setattr__(self, "poll_seconds", 5.0)
         if not math.isfinite(self.request_interval_seconds) or self.request_interval_seconds < 0:
             object.__setattr__(self, "request_interval_seconds", 0.2)
+        if (
+            not math.isfinite(self.holding_check_interval_seconds)
+            or self.holding_check_interval_seconds < 0
+        ):
+            object.__setattr__(self, "holding_check_interval_seconds", 60.0)
 
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "StopLossWatcherConfig":
@@ -76,6 +82,13 @@ class StopLossWatcherConfig:
         except (TypeError, ValueError):
             request_interval = 0.2
 
+        try:
+            holding_check_interval = float(payload.get("holding_check_interval_seconds", 60.0))
+            if holding_check_interval < 0:
+                holding_check_interval = 60.0
+        except (TypeError, ValueError):
+            holding_check_interval = 60.0
+
         storage_raw = payload.get("storage_path")
         storage_path = Path(storage_raw) if storage_raw else default_stop_loss_positions_path()
 
@@ -83,6 +96,7 @@ class StopLossWatcherConfig:
             enabled=enabled,
             poll_seconds=poll_seconds,
             request_interval_seconds=request_interval,
+            holding_check_interval_seconds=holding_check_interval,
             storage_path=storage_path,
         )
 
@@ -283,6 +297,8 @@ class StopLossWatcher:
         self._stop_event = threading.Event()
         self._activity_lock = threading.Lock()
         self._thread: threading.Thread | None = None
+        self._traders: dict[str, Any] = {}
+        self._last_holding_check: dict[str, float] = {}
 
     def start(self) -> None:
         if not self.config.enabled:
@@ -334,6 +350,19 @@ class StopLossWatcher:
             return MultiAccountUSStockTrading(mode=mode) if multi_account else USStockTrading(mode=mode)
         return MultiAccountDomesticStockTrading(mode=mode) if multi_account else DomesticStockTrading(mode=mode)
 
+    def _get_cached_trader(self, market: str):
+        trader = self._traders.get(market)
+        if trader is None:
+            trader = self._get_trader(market)
+            self._traders[market] = trader
+        return trader
+
+    def _holding_check_due(self, market: str, now: float) -> bool:
+        last = self._last_holding_check.get(market)
+        if last is None:
+            return True
+        return now - last >= self.config.holding_check_interval_seconds
+
     def check_stop_loss_once(self) -> list[dict[str, Any]]:
         """Inspect tracked positions and trigger automatic SELL when current price <= stop_loss."""
         triggered_results: list[dict[str, Any]] = []
@@ -349,7 +378,11 @@ class StopLossWatcher:
             if not positions:
                 continue
 
-            trader = self._get_trader(market)
+            trader = self._get_cached_trader(market)
+            cycle_started = time.monotonic()
+            reconcile_holdings = self._holding_check_due(market, cycle_started)
+            if reconcile_holdings:
+                self._last_holding_check[market] = cycle_started
             for pos in positions:
                 if self._stop_event.is_set():
                     break
@@ -381,6 +414,10 @@ class StopLossWatcher:
                 if current_price <= 0:
                     continue
 
+                stop_hit = current_price <= stop_loss
+                if not stop_hit and not reconcile_holdings:
+                    continue
+
                 try:
                     holding_qty = trader.get_holding_quantity(ticker)
                 except Exception as exc:
@@ -404,7 +441,7 @@ class StopLossWatcher:
                     )
                     continue
 
-                if current_price <= stop_loss:
+                if stop_hit:
                     logger.warning(
                         "[Stop-Loss Triggered] %s %s current price (%s) reached stop_loss (%s). Executing automatic SELL.",
                         market,

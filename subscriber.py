@@ -553,6 +553,7 @@ def main(argv: list[str] | None = None) -> None:
             enabled=True,
             poll_seconds=args.stop_loss_poll_seconds,
             request_interval_seconds=stop_loss_config.request_interval_seconds,
+            holding_check_interval_seconds=stop_loss_config.holding_check_interval_seconds,
             storage_path=stop_loss_config.storage_path,
         )
 
