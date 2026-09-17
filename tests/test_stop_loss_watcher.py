@@ -318,3 +318,42 @@ def test_stop_loss_signal_id_is_stable_for_same_tracked_position(tmp_path):
     second_signal = dispatcher.dispatch.call_args_list[1].args[0]
     assert first_signal.raw["signal_id"] == second_signal.raw["signal_id"]
     assert tracker.get_position("US", "AAPL") is not None
+
+
+def test_stop_loss_watcher_reuses_trader_across_cycles(tmp_path):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("KR", "005930", 70000.0, entry_price=73000.0)
+
+    config = StopLossWatcherConfig(
+        enabled=True,
+        request_interval_seconds=0.0,
+        storage_path=tracker_file,
+    )
+
+    mock_trader = MagicMock()
+    mock_trader.get_current_price.return_value = {"current_price": 72000}
+    mock_trader.get_holding_quantity.return_value = 10
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "real"
+    dispatcher.multi_account_enabled = False
+
+    watcher = StopLossWatcher(dispatcher, config, tracker=tracker)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True), patch(
+        "trading.stop_loss_watcher.DomesticStockTrading", return_value=mock_trader
+    ) as trader_cls:
+        watcher.check_stop_loss_once()
+        watcher.check_stop_loss_once()
+        watcher.check_stop_loss_once()
+
+    trader_cls.assert_called_once_with(mode="real")
+    assert mock_trader.get_current_price.call_count == 3
+
+    dispatcher.multi_account_enabled = True
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True), patch(
+        "trading.stop_loss_watcher.MultiAccountDomesticStockTrading", return_value=MagicMock()
+    ) as multi_cls:
+        watcher.check_stop_loss_once()
+    multi_cls.assert_called_once_with(mode="real")
