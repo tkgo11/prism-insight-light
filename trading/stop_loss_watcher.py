@@ -283,6 +283,7 @@ class StopLossWatcher:
         self._stop_event = threading.Event()
         self._activity_lock = threading.Lock()
         self._thread: threading.Thread | None = None
+        self._traders: dict[tuple[str, str, bool], Any] = {}
 
     def start(self) -> None:
         if not self.config.enabled:
@@ -330,6 +331,15 @@ class StopLossWatcher:
     def _get_trader(self, market: str):
         mode = getattr(self.dispatcher, "trading_mode", "real")
         multi_account = getattr(self.dispatcher, "multi_account_enabled", False)
+        key = (market, mode, bool(multi_account))
+        trader = self._traders.get(key)
+        if trader is None:
+            trader = self._create_trader(market, mode, multi_account)
+            self._traders[key] = trader
+        return trader
+
+    @staticmethod
+    def _create_trader(market: str, mode: str, multi_account: bool):
         if market == "US":
             return MultiAccountUSStockTrading(mode=mode) if multi_account else USStockTrading(mode=mode)
         return MultiAccountDomesticStockTrading(mode=mode) if multi_account else DomesticStockTrading(mode=mode)
