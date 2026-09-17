@@ -12,6 +12,7 @@ import logging.handlers
 import math
 import os
 import signal
+import subprocess
 import threading
 import time
 from concurrent.futures import CancelledError, TimeoutError
@@ -205,6 +206,36 @@ def _parse_log_level(level: str) -> int:
     return resolved
 
 
+def _short_commit_hash() -> str:
+    """Return the current deployment commit as a seven-character hash."""
+
+    for name in (
+        "PRISM_COMMIT_SHA",
+        "GITHUB_SHA",
+        "GIT_COMMIT",
+        "COMMIT_SHA",
+        "SOURCE_VERSION",
+    ):
+        value = os.environ.get(name, "").strip()
+        if value:
+            return value[:7]
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short=7", "HEAD"],
+            cwd=ROOT,
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+
+    value = result.stdout.strip()
+    return value[:7] if result.returncode == 0 and value else "unknown"
+
+
 def _configure_logging(log_file: str | None, *, level: str = "INFO") -> None:
     handlers: list[logging.Handler] = [logging.StreamHandler()]
     if log_file:
@@ -212,7 +243,10 @@ def _configure_logging(log_file: str | None, *, level: str = "INFO") -> None:
         _ensure_log_directory(log_path.parent)
         handlers.append(_KSTDailyFileHandler(log_path, encoding="utf-8"))
 
-    formatter = _KSTFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    commit_hash = _short_commit_hash()
+    formatter = _KSTFormatter(
+        f"%(asctime)s - [commit={commit_hash}] - %(name)s - %(levelname)s - %(message)s"
+    )
     for handler in handlers:
         handler.setFormatter(formatter)
 
@@ -237,7 +271,9 @@ def _configure_raw_pubsub_logging(log_file: str | None) -> logging.Logger | None
     log_path = Path(log_file)
     _ensure_log_directory(log_path.parent)
     handler = _KSTDailyFileHandler(log_path, encoding="utf-8")
-    handler.setFormatter(_KSTFormatter("%(asctime)s - %(message)s"))
+    handler.setFormatter(
+        _KSTFormatter(f"%(asctime)s - [commit={_short_commit_hash()}] - %(message)s")
+    )
     handler.setLevel(logging.INFO)
 
     RAW_PUBSUB_LOGGER.handlers.clear()
