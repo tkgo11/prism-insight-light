@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}PRISM Trading Console{% endblock %}</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/console.css">
+  <script src="/static/console.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   {% set active_path = request.url.path if request is defined else "/" %}
   {% set safety_chip = safety_chip_status(request.app.state.settings, trade_guard if trade_guard is defined else none) %}
   {% set signal_active = active_path.startswith('/signals') or active_path.startswith('/telegram') or active_path.startswith('/dry-run') %}
-  {% set system_active = active_path.startswith('/readiness') or active_path.startswith('/logs') %}
+  {% set system_active = active_path.startswith('/readiness') %}
   <div class="shell">
     <aside class="sidebar" aria-label="Primary navigation">
       <a class="brand" href="/" aria-label="PRISM command center">
@@ -25,12 +27,43 @@
         <a href="/signals" class="nav-item {{ 'active' if signal_active else '' }}" {% if signal_active %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Zm0 12L4 11v5l8 5 8-5v-5l-8 4Z"/></svg><span>Signal Studio</span></a>
         <a href="/queue" class="nav-item {{ 'active' if active_path.startswith('/queue') else '' }}" {% if active_path.startswith('/queue') %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v2H7V3Zm-2 4h14v2H5V7Zm-2 4h18v10H3V11Zm2 2v6h14v-6H5Z"/></svg><span>Queue</span></a>
         <a href="/readiness" class="nav-item {{ 'active' if system_active else '' }}" {% if system_active %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 16.2-3.5-3.5L4 14.2 9 19 20 8l-1.5-1.5L9 16.2Z"/></svg><span>System</span></a>
+        <a href="/activity" class="nav-item {{ 'active' if active_path == '/activity' else '' }}" {% if active_path == '/activity' %}aria-current="page"{% endif %}><span class="nav-symbol" aria-hidden="true">↗</span><span>Execution activity</span></a>
+        <a href="/logs" class="nav-item {{ 'active' if active_path == '/logs' else '' }}" {% if active_path == '/logs' %}aria-current="page"{% endif %}><span class="nav-symbol" aria-hidden="true">≡</span><span>Runtime logs</span></a>
       </nav>
       <div class="side-note"><strong>Local-first control</strong><span>Live broker actions require an environment unlock, CSRF verification, and a typed arming phrase.</span></div>
     </aside>
     <main class="content" id="main-content" tabindex="-1">
+      <header class="console-bar">
+        <div class="console-breadcrumb"><span class="status-dot"></span> PRISM <span>/</span> <strong>Trading Console</strong></div>
+        <div class="console-controls" data-enhanced>
+          <button type="button" class="btn ghost compact-button" data-command-open aria-label="Open navigation search">Search <kbd>Ctrl K</kbd></button>
+          <label class="sr-only" for="console-theme">Color theme</label><select id="console-theme"><option value="system">System theme</option><option value="dark">Dark</option><option value="light">Light</option></select>
+          <button type="button" class="btn ghost compact-button" data-density aria-pressed="false">Compact</button>
+        </div>
+      </header>
+      <div class="page-utilities" data-enhanced>
+        <div class="market-clocks"><span>SEOUL <time data-clock="Asia/Seoul">—</time></span><span>NEW YORK <time data-clock="America/New_York">—</time></span></div>
+        {% if active_path in ['/', '/queue', '/activity', '/logs'] %}<div class="refresh-controls"><span data-refresh-status aria-live="polite">Snapshot loaded</span><label class="sr-only" for="refresh-interval">Auto refresh</label><select id="refresh-interval"><option value="0">Auto refresh off</option><option value="30">Every 30 seconds</option><option value="60">Every minute</option></select><button class="btn ghost compact-button" type="button" data-refresh>Refresh</button></div>{% endif %}
+      </div>
       {% block content %}{% endblock %}
     </main>
   </div>
+  <dialog id="command-dialog" aria-labelledby="command-title">
+    <div class="panel-head"><h2 id="command-title">Go to workspace</h2><button class="btn ghost" type="button" data-command-close>Close <kbd>Esc</kbd></button></div>
+    <label for="command-query" class="sr-only">Search pages</label><input id="command-query" type="search" placeholder="Search pages…" autocomplete="off">
+    <nav class="command-results" aria-label="Quick navigation">
+      <a href="/">Command center <small>Overview and runtime status</small></a>
+      <a href="/trading">Trading <small>Accounts and guarded order ticket</small></a>
+      <a href="/signals">Signal Studio <small>Validate incoming signals</small></a>
+      <a href="/dry-run">Safe simulator <small>Inspect signals without execution</small></a>
+      <a href="/telegram">Telegram preview <small>Review signal candidates</small></a>
+      <a href="/queue">Queue <small>Deferred signals and timing</small></a>
+      <a href="/activity">Execution activity <small>Inspect execution protection records</small></a>
+      <a href="/readiness">System <small>Configuration and readiness</small></a>
+      <a href="/logs">Runtime logs <small>Search masked log output</small></a>
+    </nav><p data-command-empty hidden>No matching pages.</p>
+  </dialog>
+  <div class="toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>
+
