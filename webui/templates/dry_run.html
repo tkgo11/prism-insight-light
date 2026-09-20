@@ -15,8 +15,12 @@
     <div class="panel-head"><div><p class="eyebrow">Simulate</p><h2>JSON signal payload</h2></div><span class="status-badge success">No execution</span></div>
     <form method="post" action="/dry-run/simulate-form" class="form-stack">
       <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
+      <div class="editor-toolbar" data-editor-tools="simulation-payload" data-enhanced>
+        <label>Load example<select data-example><option value="">Choose an example</option><option value="kr-buy">KR buy</option><option value="us-buy">US buy</option><option value="us-sell">US sell</option><option value="event">Event</option></select></label>
+        <button class="btn ghost" type="button" data-format-json>Format JSON</button><button class="btn ghost" type="button" data-copy-editor>Copy</button><button class="btn ghost" type="button" data-clear-editor>Clear</button>
+      </div>
       <label for="simulation-payload">Signal JSON
-        <textarea id="simulation-payload" name="payload" rows="16" placeholder='{"type":"BUY","ticker":"AAPL","company_name":"Apple","price":190.5}' required>{{ payload }}</textarea>
+        <textarea spellcheck="false" maxlength="50000" id="simulation-payload" name="payload" rows="16" placeholder='{"type":"BUY","ticker":"AAPL","company_name":"Apple","price":190.5}' required>{{ payload }}</textarea>
       </label>
       <p class="field-hint">The simulator accepts a JSON object only. It returns the normalized signal and a dry-run result without dispatching anything.</p>
       <button class="btn primary" type="submit">Run safe simulation</button>
@@ -49,3 +53,4 @@
 </section>
 {% endif %}
 {% endblock %}
+

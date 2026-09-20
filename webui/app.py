@@ -248,6 +248,7 @@ def create_app(settings: WebUISettings | None = None, *, work_tracker=None) -> F
         return response
 
     from .routes import (
+        activity,
         dashboard,
         dry_run,
         logs,
@@ -258,6 +259,7 @@ def create_app(settings: WebUISettings | None = None, *, work_tracker=None) -> F
         trading,
     )
 
+    app.include_router(activity.router)
     app.include_router(dashboard.router)
     app.include_router(readiness.router)
     app.include_router(signals.router)
@@ -267,3 +269,4 @@ def create_app(settings: WebUISettings | None = None, *, work_tracker=None) -> F
     app.include_router(logs.router)
     app.include_router(queue.router)
     return app
+

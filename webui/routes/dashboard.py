@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Request
 
+from webui.services.activity_service import summarize_activity
 from webui.services.account_service import get_config_editor_model, list_accounts
 from webui.services.log_service import get_known_log_paths
 from webui.services.queue_service import summarize_queue
@@ -24,12 +25,14 @@ def dashboard(request: Request):
         {
             "request": request,
             "readiness": readiness,
+            "activity": summarize_activity(),
             "queue": queue,
             "logs": get_known_log_paths(),
             "settings": request.app.state.settings,
             "accounts": accounts,
             "config_model": get_config_editor_model(),
-            "trade_guard": trading_guard_status(force_dry_run=settings.force_dry_run),
+            "trade_guard": trading_guard_status(force_dry_run=settings.force_dry_run or request.app.state.network_read_only),
             "csrf_token": request.app.state.settings.csrf_token,
         },
     )
+

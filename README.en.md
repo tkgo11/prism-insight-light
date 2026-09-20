@@ -379,6 +379,19 @@ An explicitly enabled non-loopback bind is diagnostic and read-only: broker orde
 
 Install the web dependencies with the normal requirements file, then start the subscriber and UI together explicitly:
 
+
+### Operator workspace
+
+- **Appearance:** responsive navigation, dark/light/system themes, compact density, `Ctrl+K` / `Cmd+K` page search, and Seoul/New York clocks.
+- **Queue:** ticker/company/date search, market/state/action filters, timezone-aware date sorting, pagination, due-time labels, failure details, and filtered CSV export.
+- **Execution activity:** `/activity` shows status totals and up to 500 recent automatic deduplication records. This read-only view is not broker fills or complete order history; it does not infer account or ticker metadata.
+- **Logs:** source, severity and text filters, up to 500 lines within a 64 KB tail, masked download/copy, and line wrapping.
+- **Signals:** illustrative KR/US examples, JSON formatting/copy/clear, and direct validated-payload handoff to the isolated simulator.
+- **Inspection:** account-route search, manual refresh, and opt-in 30/60-second refresh on read-only pages. Refresh pauses when the tab is hidden or filters/forms are being edited.
+
+Only theme/density preferences persist in local storage. Refresh handoff stores only a path and interval in session storage; payloads, accounts and logs are not saved to browser storage. Native server-rendered pages and forms remain usable without JavaScript. Filters and CSV cover the bounded records loaded on the page. Configuration readiness does not prove subscriber liveness or broker connectivity.
+
+
 ```bash
 pip install -r requirements.txt
 python subscriber.py --web-ui
@@ -446,3 +459,10 @@ pytest tests/test_docker_installer_smoke.py
 - Korean guide: [README.ko.md](README.ko.md)
 - Original project: <https://github.com/dragon1086/prism-insight>
 - Sponsor the original creator: <https://github.com/sponsors/dragon1086>
+
+
+### Optional browser regression check
+
+The browser smoke test uses synthetic queue/ledger data and a forced dry-run app. In an isolated test environment, run `python tests/webui_fixture_server.py`, then in another terminal run `node tests/webui_browser_smoke.cjs` with Playwright available to Node (for example via `NODE_PATH`). Install Chromium through Playwright first. `PRISM_WEBUI_TEST_PORT` and `PRISM_WEBUI_TEST_URL` can select another loopback port; `PRISM_SCREENSHOT_DIR` optionally saves screenshots. The fixture server uses a temporary runtime and never uses deployment credentials.
+
+The check covers all nine pages, desktop/mobile overflow, theme persistence, navigation search, table filters/pagination, timezone-aware sorting, CSV formula escaping, validation-to-simulation handoff, browser errors, and JavaScript-disabled fallback.
