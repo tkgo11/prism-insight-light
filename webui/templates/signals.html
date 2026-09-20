@@ -21,8 +21,12 @@
     </div>
     <form method="post" action="/signals/validate-form" class="form-stack">
       <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
+      <div class="editor-toolbar" data-editor-tools="signal-payload" data-enhanced>
+        <label>Load example<select data-example><option value="">Choose an example</option><option value="kr-buy">KR buy</option><option value="us-buy">US buy</option><option value="us-sell">US sell</option><option value="event">Event</option></select></label>
+        <button class="btn ghost" type="button" data-format-json>Format JSON</button><button class="btn ghost" type="button" data-copy-editor>Copy</button><button class="btn ghost" type="button" data-clear-editor>Clear</button>
+      </div>
       <label for="signal-payload">JSON or Telegram-style text
-        <textarea id="signal-payload" name="payload" rows="16" placeholder='{"type":"BUY","ticker":"005930","company_name":"Samsung Electronics","price":70000}' required>{{ payload }}</textarea>
+        <textarea spellcheck="false" maxlength="50000" id="signal-payload" name="payload" rows="16" placeholder='{"type":"BUY","ticker":"005930","company_name":"Samsung Electronics","price":70000}' required>{{ payload }}</textarea>
       </label>
       <p class="field-hint">Expected JSON uses <code>type</code>, <code>ticker</code>, and <code>price</code>. Telegram-style labeled text is also supported when configured.</p>
       <button class="btn primary" type="submit">Validate signal</button>
@@ -51,9 +55,9 @@
     <div><dt>Ticker</dt><dd>{{ validation_result.signal.ticker }}</dd></div>
     <div><dt>Company</dt><dd>{{ validation_result.signal.company_name or 'Not provided' }}</dd></div>
     <div><dt>Price</dt><dd>{{ validation_result.signal.price }}</dd></div>
-    <div><dt>Source</dt><dd>{{ validation_result.signal.source or 'Manual input' }}</dd></div>
+    <div><dt>Source</dt><dd>{{ validation_result.signal.event_source or 'Manual input' }}</dd></div>
   </dl>
-  <div class="result-actions"><a class="btn primary" href="/dry-run">Simulate this pattern</a><a class="btn ghost" href="/trading">Open guarded order ticket</a></div>
+  <div class="result-actions"><form method="post" action="/dry-run/simulate-form"><input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}"><input type="hidden" name="payload" value="{{ dict(validation_result.signal, type=validation_result.signal.signal_type, source=validation_result.signal.event_source) | tojson | forceescape }}"><button class="btn primary" type="submit">Simulate this signal</button></form><a class="btn ghost" href="/trading">Open guarded order ticket</a></div>
   {% else %}
   <div class="panel-head"><div><p class="eyebrow">Needs attention</p><h2>Signal could not be validated</h2><p>{{ validation_result.error }}</p></div><span class="status-badge danger">Check input</span></div>
   <p class="field-hint">Correct the field or format indicated above, then submit again. No order or queue action was attempted.</p>
@@ -61,3 +65,4 @@
 </section>
 {% endif %}
 {% endblock %}
+

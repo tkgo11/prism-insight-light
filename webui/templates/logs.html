@@ -5,10 +5,22 @@
   <div><p class="eyebrow">System diagnostics</p><h1>{{ log.name }} log tail</h1><p>Output is bounded and masked before rendering. Use it to investigate runtime behavior without exposing account numbers, tokens, or long secrets.</p></div>
   <div class="page-head-actions"><a class="btn ghost" href="/readiness">Back to System</a></div>
 </section>
+<section class="panel">
+  <form method="get" action="/logs" class="table-toolbar log-filter">
+    <label>Source<select name="name">{% for source in sources %}<option value="{{ source }}" {{ 'selected' if source == log.name else '' }}>{{ source }}</option>{% endfor %}</select></label>
+    <label>Tail limit<select name="lines">{% for count in [20, 100, 250, 500] %}<option value="{{ count }}" {{ 'selected' if count == selected_lines else '' }}>{{ count }} lines</option>{% endfor %}</select></label>
+    <label>Level<select name="level">{% for value in levels %}<option {{ 'selected' if value == level else '' }}>{{ value }}</option>{% endfor %}</select></label>
+    <label>Search masked text<input type="search" name="q" value="{{ q }}" maxlength="200" placeholder="Find a ticker or message"></label>
+    <button class="btn primary" type="submit">Apply filters</button>
+    <button class="btn ghost" type="submit" formaction="/logs/download">Download masked log</button>
+  </form>
+</section>
 <section class="panel code-panel">
-  <div class="panel-head"><div><p class="eyebrow">Masked output</p><h2>Recent lines</h2></div><span class="pill">Read-only</span></div>
+  <div class="panel-head"><div><p class="eyebrow">Masked output</p><h2>{{ log.matched_count }} matching lines</h2><p>Searched {{ log.scanned_count }} recent lines within a 64 KB tail.</p></div><span class="pill">Read-only</span></div>
   {% if log.error %}<div class="callout callout--danger"><strong>Log unavailable</strong><p>{{ log.error }}</p></div>{% endif %}
-  <pre aria-label="Masked {{ log.name }} log output">{% for line in log.lines %}{{ line }}
+  <div class="editor-toolbar" data-enhanced><button class="btn ghost" type="button" data-copy-target="log-output">Copy masked output</button><button class="btn ghost" type="button" data-log-wrap aria-pressed="true">Wrap lines</button></div>
+  <pre id="log-output" aria-label="Masked {{ log.name }} log output">{% for line in log.lines %}{{ line }}
 {% else %}No log lines are available for this source.{% endfor %}</pre>
 </section>
 {% endblock %}
+

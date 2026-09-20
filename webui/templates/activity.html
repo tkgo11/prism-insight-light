@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Execution Activity - PRISM{% endblock %}
+{% block content %}
+<section class="page-head"><div><p class="eyebrow">Execution diagnostics</p><h1>Every execution state, in focus.</h1><p>Read-only automatic execution ledger. These are duplicate-protection records, not broker fills or a complete order history. Retention is managed by the runtime.</p></div><a class="btn ghost" href="/logs">Inspect logs</a></section>
+<section class="status-overview">
+  <article class="status-card"><div class="metric-icon">↗</div><div><span>Retained records</span><strong>{{ activity.count }}</strong><small>All records in the local ledger</small></div></article>
+  <article class="status-card"><div class="metric-icon success">✓</div><div><span>Executed status</span><strong>{{ activity.counts.get('executed', 0) }}</strong><small>Runtime result; verify fills with your broker</small></div></article>
+  <article class="status-card"><div class="metric-icon warning">!</div><div><span>Needs inspection</span><strong>{{ activity.counts.get('unknown', 0) + activity.counts.get('in_progress', 0) }}</strong><small>Unknown or in progress; inspect before retrying</small></div></article>
+</section>
+<section class="panel" data-table-panel>
+  <div class="panel-head"><div><p class="eyebrow">Local ledger</p><h2>Execution activity</h2></div><span class="pill">Read-only</span></div>
+  {% if activity.error %}<div class="callout callout--danger" role="alert">{{ activity.error }}</div>
+  {% elif activity['items'] %}
+  <p class="field-hint">Showing {{ activity.displayed_count }} of {{ activity.count }} records, newest first.{% if activity.truncated %} Filters and exports cover only these displayed records.{% endif %} Timestamps use UTC.</p>
+  <div class="table-toolbar" data-table-tools><label>Search records<input type="search" data-table-search placeholder="Identity, state or date"></label><label>State<select data-table-filter="1"><option value="">All states</option>{% for state in activity.counts %}<option>{{ state }}</option>{% endfor %}</select></label><button type="button" class="btn ghost" data-export-csv="execution-activity">Export filtered CSV</button></div>
+  <div class="table-wrap"><table data-interactive-table><caption class="sr-only">Execution ledger records</caption><thead><tr><th>Execution identity</th><th>State</th><th data-sort-type="date">Claimed at · UTC</th><th data-sort-type="date">Finished at · UTC</th></tr></thead><tbody>{% for item in activity['items'] %}<tr><td class="identity-cell"><code>{{ item.identity }}</code></td><td><span class="status-badge {{ 'success' if item.status == 'executed' else 'warning' if item.status in ['unknown', 'in_progress'] else 'neutral' }}">{{ item.status }}</span></td><td>{{ item.claimed_at or 'Unavailable' }}</td><td>{{ item.finished_at or '—' }}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty-state"><strong>No execution records yet.</strong><p>Automatic dispatch activity will appear here when the runtime writes its ledger.</p></div>{% endif %}
+</section>
+{% endblock %}

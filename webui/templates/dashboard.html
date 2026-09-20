@@ -4,16 +4,16 @@
 <section class="hero-panel hero-panel--command">
   <div>
     <p class="eyebrow">Command center</p>
-    <h1>Operate every signal with context, not clutter.</h1>
-    <p class="hero-copy">Review the local runtime, prepare incoming signals, simulate safely, and open a guarded order ticket only when your operational checks are complete.</p>
+    <h1>Your execution workspace.</h1>
+    <p class="hero-copy">One place to inspect your runtime, review deferred signals, and prepare the next action.</p>
   </div>
   <div class="hero-actions"><a class="btn primary" href="/signals">Open Signal Studio</a><a class="btn ghost" href="/trading">Open guarded trade</a></div>
 </section>
 
 <section class="status-overview" aria-label="Operational status">
-  <article class="status-card status-card--{{ 'ready' if readiness.status == 'ready' else 'attention' }}"><div class="metric-icon {{ 'success' if readiness.status == 'ready' else 'warning' }}" aria-hidden="true">{{ '✓' if readiness.status == 'ready' else '!' }}</div><div><span>Runtime readiness</span><strong>{{ readiness.status }}</strong><small>{{ readiness.message }}</small></div></article>
+  <article class="status-card status-card--{{ 'ready' if readiness.status == 'ready' else 'attention' }}"><div class="metric-icon {{ 'success' if readiness.status == 'ready' else 'warning' }}" aria-hidden="true">{{ '✓' if readiness.status == 'ready' else '!' }}</div><div><span>Runtime readiness</span><strong>{{ readiness.status }}</strong><small>{{ readiness.message }} Configuration check only; not subscriber liveness.</small></div></article>
   <article class="status-card"><div class="metric-icon" aria-hidden="true">⌁</div><div><span>Guard state</span><strong>{{ 'Armed' if trade_guard.enabled else 'Locked' }}</strong><small>{{ trade_guard.message }}</small></div></article>
-  <article class="status-card"><div class="metric-icon" aria-hidden="true">↗</div><div><span>Pending signals</span><strong>{{ queue.count }}</strong><small>{{ 'Review queue timing and state.' if queue.count else 'No off-hours actions awaiting execution.' }}</small></div></article>
+  <article class="status-card"><div class="metric-icon" aria-hidden="true">↗</div><div><span>Queue entries</span><strong>{{ "Unavailable" if queue.error else queue.count }}</strong><small>{{ "Queue could not be read." if queue.error else "Review queue timing and state." if queue.count else "No off-hours actions awaiting execution." }}</small></div></article>
 </section>
 
 <section class="two-column two-column--command">
@@ -40,10 +40,19 @@
 
 <section class="panel panel--queue">
   <div class="panel-head"><div><p class="eyebrow">Off-hours queue</p><h2>Signals awaiting their execution window</h2><p>Queued actions are displayed for review; this console does not manufacture or alter queue entries from the Command Center.</p></div><a href="/queue" class="text-link">View queue</a></div>
-  {% if queue["items"] %}
+  {% if queue.error %}<div class="callout callout--danger" role="alert"><strong>Queue unavailable</strong><p>{{ queue.error }}</p></div>
+  {% elif queue["items"] %}
   <div class="queue-mini">{% for item in queue["items"][:5] %}<div class="signal-row"><div class="tag-row"><span class="pill">{{ item.signal_type }}</span><strong>{{ item.ticker }}</strong></div><small>{{ item.market }} · {{ item.execute_at }}</small><span class="status-badge {{ 'success' if item.status == 'pending' else 'neutral' }}">{{ item.status }}</span></div>{% endfor %}</div>
   {% else %}
   <div class="empty-state empty-state--compact"><strong>The queue is clear.</strong><p>Validated signals can be simulated or submitted from their dedicated workflows.</p></div>
   {% endif %}
 </section>
+<section class="two-column">
+  <article class="panel"><div class="panel-head"><div><p class="eyebrow">Execution diagnostics</p><h2>{{ activity.count }} retained records</h2></div><a href="/activity" class="text-link">Explore activity →</a></div>
+    {% if activity.error %}<div class="callout callout--danger">{{ activity.error }}</div>{% elif activity.count %}<div class="stat-strip"><div><strong>{{ activity.counts.get('executed', 0) }}</strong><span>Executed status</span></div><div><strong>{{ activity.counts.get('in_progress', 0) }}</strong><span>In progress</span></div><div><strong>{{ activity.counts.get('unknown', 0) }}</strong><span>Unknown</span></div></div>{% else %}<p class="muted">No automatic execution records yet.</p>{% endif %}
+    <p class="field-hint">Duplicate-protection state from the local ledger, not broker fills.</p>
+  </article>
+  <article class="panel"><div class="panel-head"><div><p class="eyebrow">Investigation tools</p><h2>Follow the signal</h2></div></div><div class="quick-links"><a href="/queue">Inspect scheduled signals <span>→</span></a><a href="/logs">Search masked runtime logs <span>→</span></a><a href="/readiness">Review configuration readiness <span>→</span></a></div></article>
+</section>
 {% endblock %}
+

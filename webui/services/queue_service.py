@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -46,11 +47,14 @@ def summarize_queue(path: Path | None = None) -> dict[str, Any]:
         items: list[dict[str, Any]] = []
         for item in data[:MAX_DISPLAY_ITEMS]:
             signal = item.get("signal", {}) if isinstance(item, dict) else {}
+            valid_signal = isinstance(signal, dict)
+            if not valid_signal:
+                signal = {}
             items.append(
                 {
                     "execute_at": str(item.get("execute_at", "")) if isinstance(item, dict) else "",
                     "created_at": str(item.get("created_at", "")) if isinstance(item, dict) else "",
-                    "status": str(item.get("status", "pending")) if isinstance(item, dict) else "invalid",
+                    "status": str(item.get("status", "pending")) if isinstance(item, dict) and valid_signal else "invalid",
                     "failure_message": (
                         mask_text(item.get("failure_message", ""))
                         if isinstance(item, dict)
@@ -67,6 +71,7 @@ def summarize_queue(path: Path | None = None) -> dict[str, Any]:
                     "company_name": str(signal.get("company_name", signal.get("company", ""))),
                 }
             )
+        items = [{key: mask_text(value, os.environ) for key, value in item.items()} for item in items]
         return {
             "ok": True,
             "path_label": path.name,
@@ -86,3 +91,4 @@ def summarize_queue(path: Path | None = None) -> dict[str, Any]:
         }
     except Exception as exc:  # noqa: BLE001 - safe UI diagnostic
         return _empty_summary(path, ok=False, error=mask_text(str(exc)))
+
