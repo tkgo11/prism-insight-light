@@ -1,0 +1,28 @@
+name: Validate skill package
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate skill variants
+        run: make validate
+      - name: Verify package checksums
+        run: sha256sum --check CHECKSUMS.txt
+      - name: Test installers
+        run: bash tests/test_installers.sh
+
+  validate-powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test PowerShell installers
+        shell: pwsh
+        run: ./tests/test_installers.ps1
