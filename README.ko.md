@@ -208,6 +208,11 @@ Pub/Sub 메시지는 아래 필드를 사용할 수 있습니다.
 | `event_type` | 이벤트 종류 |
 | `source` | 신호 출처 URL |
 | `event_description` | 이벤트 설명 |
+| `signal_id` / `event_id` / `id` | 선택적 업스트림 안정 식별자 — `signal_id` → `event_id` → `id` 순으로 중복 주문 억제에 사용 |
+| `timestamp` | 선택적 신호 생성 시각(ISO-8601 또는 epoch 초/밀리초/마이크로초). 타임존이 없는 ISO 문자열은 KST로 해석 |
+| `published_at` | 선택적 발행 시각 — `timestamp`가 없을 때 대체로 사용 |
+| `valid_until` | 선택적 절대 만료 시각 — 이 시각 이후의 신호는 절대 실행하지 않음 |
+| `schema_version` | 선택적 발행자 스키마 표시 — 로그에만 사용되며 필수 아님 |
 
 처리 방식은 다음과 같습니다.
 
@@ -218,10 +223,37 @@ Pub/Sub 메시지는 아래 필드를 사용할 수 있습니다.
   - 대기열 주문 실패: 자동 재시도하지 않고 운영자 확인용 실패 상태로 격리
 - `EVENT`: 로그 기록 후 ack 처리, 주문 없음
 - 잘못된 메시지 또는 지원하지 않는 메시지: 로그 기록 후 ack 처리
+- 수신측 안전 게이트에 의해 거부된 신호: 로그·감사 기록 후 ack 처리 — 재전달돼도 오래되거나 모순된 데이터는 유효해지지 않음
+
+### 수신측 신호 안전 게이트
+
+업스트림 발행자는 이 저장소에서 수정할 수 없고 완전히 신뢰할 수도 없으므로, 모든 수신 신호는 KIS 주문 제출 전에 2단계 안전 게이트(`trading/signal_safety.py`)를 통과합니다.
+
+**수신 시점**(Pub/Sub 메시지별):
+
+- 종목/시장 일관성 — 6자리 숫자 코드는 `KR`이어야 하며, 숫자로만 이뤄진 티커가 `US`로 표시되거나 형식이 잘못된 심볼은 거부됩니다.
+- 의미적 정합성 — 기준가는 양의 유한값이어야 하고 `target_price`/`stop_loss`/`buy_price`/`profit_rate`는 허용 범위를 검사하며, 모순된 BUY 브라켓(예: `stop_loss >= price`, `target_price <= price`)은 거부됩니다.
+- 시각 메타데이터 — `timestamp`/`published_at`/`valid_until`이 있으면 파싱합니다. 지난 `valid_until`, `SIGNAL_MAX_FUTURE_SKEW_SECONDS` 이상 미래로 치우친 시각, 대기열 상한을 넘는 오래된 신호는 거부됩니다.
+- 시각 메타데이터가 없어도 `SIGNAL_STRICT_TIMESTAMP=true`가 아니면 그것만으로 거부하지 않습니다. Pub/Sub `publish_time`이 있으면 그것으로 신선도 하한을 대신 계산합니다.
+
+**브로커 주문 직전**(장외 대기열 재생 포함):
+
+- 만료·신선도를 다시 검사합니다 — 수신 시에는 유효했어도 `SIGNAL_MAX_AGE_*_SECONDS`(실시간 경로) 또는 `SIGNAL_QUEUED_MAX_AGE_SECONDS`(대기열 경로)를 넘은 신호는 제출되지 않습니다.
+- `SIGNAL_FRESH_QUOTE_ENABLED=true`(기본값)이면 신호가 주장하는 `price`를 기존 KR/US 시세 조회로 가져온 최신 KIS 가격과 비교합니다. `abs(quote - price) / price`가 `SIGNAL_PRICE_DEVIATION_BUY` / `SIGNAL_PRICE_DEVIATION_SELL` 범위를 벗어나면 거부됩니다.
+- 시세 조회 실패·불가는 일시적 오류로 취급합니다 — 주문을 지연시키고 Pub/Sub가 재전달하도록(또는 대기열 항목을 보류하도록) 합니다. 검증할 수 없는 가격으로는 아무것도 제출하지 않습니다.
+- dry-run 모드는 시세 조회를 수행하지 않으므로 오프라인에서도 완전히 테스트 가능합니다.
+
+시세 제공자는 시장별 트레이더와 짧은 TTL의 시세를 캐시(`SIGNAL_QUOTE_CACHE_SECONDS`, 기본 5초)해 중복 전달·다계좌 분산이 KIS 호출을 증폭시키지 않습니다.
+
+**ACK/NACK 모델**: 영구적으로 잘못되었거나 의심스러운 입력(깨진 페이로드, 의미/티커 불일치, 오래된 신호, 과도한 가격 이탈)은 로그·감사 후 ack합니다 — 재전달해도 고쳐지지 않기 때문입니다. 일시적 주문 전 실패(브로커 직렬화 락 바쁨, 최신 시세 불가, 대기열 용량 초과)는 nack해 Pub/Sub가 재시도합니다. 제출 후의 애매한 결과(`unknown`)는 실행 원장에 fail-closed로 남으며 자동 재시도되지 않습니다.
+
+거부되거나 억제된 신호는 크기 제한이 있는 JSONL 감사 파일(기본 `runtime/signal_rejections.jsonl`; `SIGNAL_AUDIT_ENABLED`/`SIGNAL_AUDIT_PATH`/`SIGNAL_AUDIT_MAX_ENTRIES`로 설정)에 `stale_signal`, `future_timestamp`, `invalid_market`, `semantic_validation_failed`, `price_deviation`, `fresh_quote_unavailable`, `duplicate_signal`, `expired_queued_signal` 같은 사유 코드와 함께 기록됩니다. 비밀 정보·계좌 식별자는 기록되지 않습니다.
+
+**한계**: 검증 강도는 제공된 메타데이터에 의존합니다 — 타임스탬프가 없는 페이로드는 Pub/Sub `publish_time`과 대기열 `enqueued_at`으로만 상한을 둘 수 있고, 최신 시세 검사는 가격 정합성만 검증할 뿐 신호 품질은 보증하지 않습니다. 내부적으로 일관된 위조 신호는 게이트가 감지할 수 없습니다. `SIGNAL_SAFETY_ENABLED=true`(기본값)를 유지하세요. `false`는 비상용 킬 스위치일 뿐입니다.
 
 ### 자동 주문 안전 처리
 
-자동으로 들어오는 Pub/Sub, 장외 대기열 재생, stop-loss 신호는 broker 호출 전에 영속 실행 원장에 claim됩니다. 같은 신호/계좌 조합이 재전달되거나 프로세스가 재시작되어도 두 번째 자동 주문은 차단됩니다.
+자동으로 들어오는 Pub/Sub, 장외 대기열 재생, stop-loss 신호는 broker 호출 전에 영속 실행 원장에 claim됩니다. 같은 신호/계좌 조합이 재전달되거나 프로세스가 재시작되어도 두 번째 자동 주문은 차단됩니다. 실행 식별자는 안정적인 업스트림 식별자(`signal_id` → `event_id` → `id`)를 우선 사용하고, 없으면 전송 전용 필드(`message_id`, `published_at`, `delivery_attempt` 등)를 제외한 정규화된 페이로드 지문을 사용합니다 — 같은 논리 신호의 재전달은 중복 억제되면서도 같은 종목의 서로 다른 합법적 신호는 하나로 합쳐지지 않습니다.
 
 - KIS가 명시적으로 주문을 거절하면 `failed`로 기록합니다.
 - timeout, 연결 종료, 응답 파싱 중단 등 broker 접수 여부를 확정할 수 없는 결과는 `unknown`으로 기록하며 **자동 재주문하지 않습니다**.

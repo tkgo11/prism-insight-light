@@ -26,6 +26,10 @@ from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must loa
 from trading.market_hours import KST  # noqa: E402 - config env must load first
 from trading.off_hours_queue import QueueCapacityError, default_queue_path  # noqa: E402
 from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E402
+from trading.signal_safety import (  # noqa: E402 - config env must load first
+    REASON_MALFORMED_PAYLOAD,
+    SignalSafetyGate,
+)
 from trading.stop_loss_watcher import StopLossWatcher, StopLossWatcherConfig  # noqa: E402
 
 LOGGER = logging.getLogger("subscriber")
@@ -307,6 +311,16 @@ def _message_context(message) -> str:
     return " ".join(parts) if parts else "message_id=unknown"
 
 
+def _message_metadata(message) -> dict:
+    """Structured Pub/Sub delivery metadata for safety logs and audit records."""
+    metadata = {}
+    for attr in ("message_id", "publish_time", "ordering_key", "delivery_attempt"):
+        value = getattr(message, attr, None)
+        if value not in (None, ""):
+            metadata[attr] = value
+    return metadata
+
+
 def _log_raw_pubsub_message(message, context: str, raw_logger: logging.Logger | None) -> None:
     if raw_logger is None:
         return
@@ -330,15 +344,57 @@ def _handle_message(
     dispatcher: TradeDispatcher,
     logger: logging.Logger | None = None,
     raw_logger: logging.Logger | None = None,
+    safety_gate: SignalSafetyGate | None = None,
 ) -> None:
     active_logger = logger or LOGGER
     context = _message_context(message)
+    metadata = _message_metadata(message)
     _log_raw_pubsub_message(message, context, raw_logger)
     active_logger.info("Received Pub/Sub message (%s, bytes=%s)", context, len(message.data or b""))
     acknowledge = True
     redelivery_reason = "durable off-hours queue capacity is exhausted"
+    gate = safety_gate or getattr(dispatcher, "signal_gate", None) or SignalSafetyGate()
     try:
         signal = parse_signal_bytes(message.data)
+
+        # Receiver-side safety gate. A permanent rejection acknowledges the
+        # message — redelivery cannot make stale or contradictory data valid.
+        # A transient outcome nacks so Pub/Sub can retry after the condition
+        # clears; nothing has been submitted to the broker at this point.
+        publish_time = getattr(message, "publish_time", None)
+        decision = gate.evaluate_received(
+            signal,
+            publish_time=publish_time if isinstance(publish_time, datetime.datetime) else None,
+            context=metadata,
+        )
+        if decision.outcome == "reject":
+            active_logger.warning(
+                "Rejected inbound signal %s %s(%s) market=%s price=%s [%s]: %s "
+                "(age=%ss timestamp=%s) (%s)",
+                signal.signal_type,
+                signal.company_name,
+                signal.ticker,
+                signal.market,
+                signal.price,
+                decision.reason,
+                decision.detail,
+                decision.signal_age_seconds,
+                decision.signal_timestamp,
+                context,
+            )
+            return
+        if decision.outcome == "retry":
+            acknowledge = False
+            redelivery_reason = f"signal safety gate could not complete evaluation [{decision.reason}]"
+            active_logger.warning(
+                "Releasing message for redelivery because safety evaluation was "
+                "incomplete [%s]: %s (%s)",
+                decision.reason,
+                decision.detail,
+                context,
+            )
+            return
+
         active_logger.info(
             "Dispatching %s %s(%s) market=%s price=%s (%s)",
             signal.signal_type,
@@ -367,8 +423,29 @@ def _handle_message(
                 "Releasing message for redelivery because dispatch was deferred (%s)",
                 context,
             )
+        elif result.status == "rejected":
+            # The execution-time safety gate rejected the signal before any
+            # broker submission (already audited); ack — retrying cannot help.
+            active_logger.warning(
+                "Signal rejected by execution-time safety gate; acknowledging "
+                "without retry: %s (%s)",
+                result.message,
+                context,
+            )
     except SignalValidationError as exc:
         active_logger.warning("Acknowledging invalid signal (%s): %s", context, exc)
+        try:
+            raw_excerpt = (message.data or b"")[:512].decode("utf-8", errors="replace")
+        except Exception:  # noqa: BLE001 - audit context is best-effort
+            raw_excerpt = ""
+        gate.audit_record(
+            signal=None,
+            reason=REASON_MALFORMED_PAYLOAD,
+            detail=str(exc)[:512],
+            context=metadata,
+            path="receipt",
+            extra={"raw_excerpt": raw_excerpt},
+        )
     except QueueCapacityError as exc:
         acknowledge = False
         active_logger.error(

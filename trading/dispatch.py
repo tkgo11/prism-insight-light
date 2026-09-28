@@ -5,24 +5,31 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import math
 import threading
 import time
 from contextlib import asynccontextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass, replace, field
 from pathlib import Path
 from typing import Any
 
 from . import kis_auth as ka
 from . import yaml_compat as yaml
 from .config_paths import active_kis_config_path, runtime_file_path
-from .domestic import AsyncTradingContext
-from .execution_ledger import ExecutionLedger, execution_identity
+from .domestic import AsyncTradingContext, DomesticStockTrading
+from .execution_ledger import ExecutionLedger, execution_identities
 from .execution_outcome import classify_broker_result
 from .file_lock import FileLock
 from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
 from .modes import normalize_trading_mode
 from .off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue, QueueExecutionResult
 from .schema import SignalMessage, parse_signal_payload
+from .signal_safety import (
+    OUTCOME_REJECT,
+    REASON_DUPLICATE,
+    SignalSafetyConfig,
+    SignalSafetyGate,
+)
 from .strategies import (
     BalanceSplitStrategy,
     BalanceSplitStrategyConfig,
@@ -119,6 +126,87 @@ def _as_enabled(value: Any, default: bool = False) -> bool:
     if isinstance(value, bool):
         return value
     return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _fresh_quote_price(info: Any) -> float | None:
+    """Extract a usable price from a trader's quote payload, or None."""
+    if not isinstance(info, dict):
+        return None
+    try:
+        price = float(info.get("current_price"))
+    except (TypeError, ValueError):
+        return None
+    return price if math.isfinite(price) and price > 0 else None
+
+
+class KisQuoteProvider:
+    """Fresh-quote lookup reused from the existing KIS trader classes.
+
+    Trader construction authenticates synchronously, so the trader instance is
+    created lazily per market and cached for the process lifetime; quotes
+    themselves are cached for ``cache_seconds`` so duplicate deliveries and
+    multi-account fan-out do not multiply KIS API traffic.  Construction
+    failures are throttled for the same window to avoid hammering the auth
+    endpoint while it is failing.
+
+    ``get_current_price`` performs blocking HTTP — callers must run it off the
+    event loop (``asyncio.to_thread``).
+    """
+
+    def __init__(
+        self,
+        *,
+        mode: str,
+        trader_kwargs: dict[str, Any] | None = None,
+        cache_seconds: float = 5.0,
+    ) -> None:
+        self.mode = mode
+        self.trader_kwargs = dict(trader_kwargs or {})
+        self.cache_seconds = max(cache_seconds, 0.0)
+        self._traders: dict[str, Any] = {}
+        self._cache: dict[tuple[str, str], tuple[float, float]] = {}
+        self._construction_failures: dict[str, float] = {}
+        self._lock = threading.Lock()
+
+    def get_current_price(self, market: str, ticker: str) -> float | None:
+        market_key = str(market).upper()
+        symbol = str(ticker).strip().upper()
+        if not symbol:
+            return None
+        now = time.monotonic()
+        with self._lock:
+            cached = self._cache.get((market_key, symbol))
+            if cached is not None and now - cached[0] <= self.cache_seconds:
+                return cached[1]
+        trader = self._trader(market_key)
+        price = _fresh_quote_price(trader.get_current_price(symbol))
+        if price is not None:
+            with self._lock:
+                self._cache[(market_key, symbol)] = (now, price)
+        return price
+
+    def _trader(self, market: str):
+        with self._lock:
+            trader = self._traders.get(market)
+            if trader is not None:
+                return trader
+            failed_at = self._construction_failures.get(market)
+            if failed_at is not None and time.monotonic() - failed_at <= self.cache_seconds:
+                raise RuntimeError(f"{market} quote trader construction is cooling down")
+        try:
+            if market == "KR":
+                trader = DomesticStockTrading(mode=self.mode, **self.trader_kwargs)
+            elif market == "US":
+                trader = USStockTrading(mode=self.mode, **self.trader_kwargs)
+            else:
+                raise ValueError(f"Unsupported market '{market}' for quote lookup")
+        except Exception:
+            with self._lock:
+                self._construction_failures[market] = time.monotonic()
+            raise
+        with self._lock:
+            self._traders[market] = trader
+        return trader
 
 
 @dataclass(slots=True)
@@ -241,14 +329,16 @@ class MultiAccountTradeDispatcher:
         *,
         allow_queue: bool,
         requested_ids: list[str] | None = None,
+        queued_context: dict[str, Any] | None = None,
     ) -> DispatchResult:
         if signal.is_event:
             # Event signals are account-agnostic state (e.g. risk-off). Route
             # them through the single-account path exactly once instead of
             # queueing or ledger-claiming them per account.
-            return await self.dispatcher._dispatch_serialized(
-                signal, allow_queue=allow_queue
-            )
+            event_kwargs: dict[str, Any] = {"allow_queue": allow_queue}
+            if queued_context is not None:
+                event_kwargs["queued_context"] = queued_context
+            return await self.dispatcher._dispatch_serialized(signal, **event_kwargs)
 
         accounts, results = self._eligible_accounts(signal, requested_ids)
         if not accounts:
@@ -311,10 +401,10 @@ class MultiAccountTradeDispatcher:
 
         for account in accounts:
             account_id = _account_id(account["account_key"])
-            identity = execution_identity(signal.raw, account["account_key"])
+            identity, aliases = execution_identities(signal.raw, account["account_key"])
             if self.dispatcher.execution_dedupe:
                 claimed, previous_status = await asyncio.to_thread(
-                    self.ledger.claim, identity
+                    self.ledger.claim, identity, aliases=aliases
                 )
                 if not claimed:
                     results.append(
@@ -326,14 +416,23 @@ class MultiAccountTradeDispatcher:
                             previous_status=previous_status,
                         )
                     )
+                    self.dispatcher.signal_gate.audit_record(
+                        signal=signal,
+                        reason=REASON_DUPLICATE,
+                        detail=f"Duplicate execution suppressed for account {account['name']} (previous status: {previous_status})",
+                        path="multi_account_dispatch",
+                    )
                     logger.warning(
                         "[Account: %s] suppressed duplicate automatic %s %s(%s)",
                         account["name"], signal.signal_type, signal.company_name, signal.ticker,
                     )
                     continue
             try:
+                serialized_kwargs: dict[str, Any] = {"allow_queue": False, "account": account}
+                if queued_context is not None:
+                    serialized_kwargs["queued_context"] = queued_context
                 result = await self.dispatcher._dispatch_serialized(
-                    signal, allow_queue=False, account=account
+                    signal, **serialized_kwargs
                 )
                 if self.dispatcher.execution_dedupe:
                     if result.status == "deferred":
@@ -397,6 +496,9 @@ class TradeDispatcher:
         account_index: int | None = None,
         execution_ledger_path: Path | None = None,
         execution_dedupe: bool = True,
+        signal_gate: SignalSafetyGate | None = None,
+        quote_provider: Any | None = None,
+        fresh_quote_enabled: bool | None = None,
     ):
         self.dry_run = dry_run
         self.execution_dedupe = execution_dedupe
@@ -441,19 +543,54 @@ class TradeDispatcher:
         self.multi_account_dispatcher = MultiAccountTradeDispatcher(
             self, self.execution_ledger
         )
+        self.signal_safety_config = SignalSafetyConfig.resolve(
+            self._runtime_config.get("signal_safety")
+        )
+        if fresh_quote_enabled is not None:
+            # Trusted-price callers (e.g. WebUI manual limit orders, where the
+            # operator picks the limit price) disable fresh-quote revalidation
+            # while keeping structural/semantic/freshness checks.
+            self.signal_safety_config = replace(
+                self.signal_safety_config, fresh_quote_enabled=fresh_quote_enabled
+            )
+        if signal_gate is not None:
+            self.signal_gate = signal_gate
+        else:
+            provider = quote_provider
+            if provider is None and self.signal_safety_config.fresh_quote_enabled:
+                provider = KisQuoteProvider(
+                    mode=self.trading_mode,
+                    trader_kwargs=self._strategy_trader_kwargs(None),
+                    cache_seconds=self.signal_safety_config.quote_cache_seconds,
+                )
+            self.signal_gate = SignalSafetyGate(
+                config=self.signal_safety_config,
+                quote_provider=provider,
+            )
 
-    async def dispatch(self, signal: SignalMessage, *, allow_queue: bool = True) -> DispatchResult:
+    async def dispatch(
+        self,
+        signal: SignalMessage,
+        *,
+        allow_queue: bool = True,
+        queued_context: dict[str, Any] | None = None,
+    ) -> DispatchResult:
         try:
             async with _serialized_broker_workflow():
                 if self.multi_account_enabled:
                     result = await self.multi_account_dispatcher.dispatch(
-                        signal, allow_queue=allow_queue
+                        signal,
+                        allow_queue=allow_queue,
+                        queued_context=queued_context,
                     )
                 elif self.dry_run:
                     logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
                     result = DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
                 else:
-                    result = await self._dispatch_serialized(signal, allow_queue=allow_queue)
+                    serialized_kwargs: dict[str, Any] = {"allow_queue": allow_queue}
+                    if queued_context is not None:
+                        serialized_kwargs["queued_context"] = queued_context
+                    result = await self._dispatch_serialized(signal, **serialized_kwargs)
                 await asyncio.to_thread(self._update_stop_loss_tracking, signal, result)
                 return result
         except BrokerWorkflowBusyError:
@@ -475,6 +612,7 @@ class TradeDispatcher:
         *,
         allow_queue: bool,
         account: dict[str, Any] | None = None,
+        queued_context: dict[str, Any] | None = None,
     ) -> DispatchResult:
         event_strategy = self._resolve_event_strategy(signal)
         if signal.is_event:
@@ -524,15 +662,74 @@ class TradeDispatcher:
                     signal.market,
                 )
 
+        # Receiver-side safety gate: re-validate freshness (live vs queued
+        # TTLs) and re-check the signal price against a fresh KIS quote
+        # immediately before any order can be submitted.  The gate performs
+        # blocking broker/file I/O, so run it off the event loop.
+        safety_decision = await asyncio.to_thread(
+            self.signal_gate.evaluate_execution,
+            signal,
+            queued=queued_context is not None,
+            enqueued_at=(queued_context or {}).get("enqueued_at"),
+        )
+        if safety_decision.outcome == OUTCOME_REJECT:
+            logger.warning(
+                "Rejected %s %s(%s) before broker submission [%s]: %s",
+                signal.signal_type,
+                signal.company_name,
+                signal.ticker,
+                safety_decision.reason,
+                safety_decision.detail,
+            )
+            return DispatchResult(
+                "rejected",
+                f"{safety_decision.reason}: {safety_decision.detail}",
+                signal.signal_type,
+                signal.market,
+            )
+        if safety_decision.outcome == "retry":
+            # A transient pre-submission failure (e.g. fresh-quote lookup).
+            # Nothing was claimed or submitted, so deferral is safe.
+            logger.warning(
+                "Deferred %s %s(%s): pre-submission safety check incomplete [%s]: %s",
+                signal.signal_type,
+                signal.company_name,
+                signal.ticker,
+                safety_decision.reason,
+                safety_decision.detail,
+            )
+            return DispatchResult(
+                "deferred",
+                f"{safety_decision.reason}: {safety_decision.detail}",
+                signal.signal_type,
+                signal.market,
+            )
+        if safety_decision.fresh_quote is not None:
+            logger.info(
+                "Fresh-quote check %s %s(%s): signal=%s quote=%s deviation=%.4f",
+                signal.signal_type,
+                signal.company_name,
+                signal.ticker,
+                safety_decision.reference_price,
+                safety_decision.fresh_quote,
+                safety_decision.price_deviation or 0.0,
+            )
+
         identity = None
         if account is None and self.execution_dedupe:
-            identity = execution_identity(
+            identity, aliases = execution_identities(
                 signal.raw, self._single_account_execution_selector(signal)
             )
             claimed, previous_status = await asyncio.to_thread(
-                self.execution_ledger.claim, identity
+                self.execution_ledger.claim, identity, aliases=aliases
             )
             if not claimed:
+                self.signal_gate.audit_record(
+                    signal=signal,
+                    reason=REASON_DUPLICATE,
+                    detail=f"Duplicate execution suppressed (previous status: {previous_status})",
+                    path="queue_drain" if queued_context is not None else "dispatch",
+                )
                 logger.warning(
                     "Suppressed duplicate automatic %s %s(%s) (previous status: %s)",
                     signal.signal_type,
@@ -585,6 +782,7 @@ class TradeDispatcher:
     async def execute_queued_signal(self, payload: dict) -> DispatchResult:
         queue_context = payload.pop(QUEUE_CONTEXT_KEY, None)
         signal = parse_signal_payload(payload)
+        queued_context = queue_context if isinstance(queue_context, dict) else None
         try:
             async with _serialized_broker_workflow():
                 if isinstance(queue_context, dict) and queue_context.get("multi_account"):
@@ -592,7 +790,10 @@ class TradeDispatcher:
                     if not isinstance(requested_ids, list) or not all(isinstance(item, str) for item in requested_ids):
                         return DispatchResult("failed", "Queued multi-account targets are invalid", signal.signal_type, signal.market)
                     result = await self.multi_account_dispatcher.dispatch(
-                        signal, allow_queue=False, requested_ids=requested_ids
+                        signal,
+                        allow_queue=False,
+                        requested_ids=requested_ids,
+                        queued_context=queued_context,
                     )
                     await asyncio.to_thread(
                         self._update_stop_loss_tracking, signal, result
@@ -605,7 +806,7 @@ class TradeDispatcher:
                 signal.signal_type,
                 signal.market,
             )
-        return await self.dispatch(signal, allow_queue=False)
+        return await self.dispatch(signal, allow_queue=False, queued_context=queued_context)
 
     def _update_stop_loss_tracking(self, signal: SignalMessage, result: DispatchResult) -> None:
         # Dry-run and deferred outcomes must never mutate real position protection:
@@ -664,6 +865,15 @@ class TradeDispatcher:
             result = asyncio.run(self.execute_queued_signal(payload))
             if result.status == "deferred":
                 return QueueExecutionResult("deferred", result.message)
+            if result.status == "rejected":
+                # The receiver-side safety gate rejected this item at drain
+                # time (e.g. it expired while queued). Quarantine it as failed
+                # so it stays operator-visible instead of silently dropping.
+                logger.warning(
+                    "Quarantining rejected queued %s order on %s: %s",
+                    result.signal_type, result.market, result.message,
+                )
+                return QueueExecutionResult("failed", result.message)
             if result.status == "skipped":
                 # Skipped work (dedupe suppression, disabled/unconfigured
                 # targets) needs no retry — drop it without a failure label.

@@ -107,6 +107,9 @@ async def dispatch_manual_order(
                 strategy_config={"name": ""},
                 account_name=account_name or None,
                 execution_dedupe=False,
+                # The operator types the limit price deliberately, so the
+                # fresh-quote deviation check does not apply to manual orders.
+                fresh_quote_enabled=False,
             )
             result = await dispatcher.dispatch(signal)
         finally:

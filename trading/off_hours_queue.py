@@ -258,8 +258,12 @@ class OffHoursOrderQueue:
             for item in due:
                 try:
                     payload = dict(item.signal)
-                    if item.execution_context:
-                        payload[QUEUE_CONTEXT_KEY] = dict(item.execution_context)
+                    # Always carry the enqueue timestamp so the drain-time
+                    # safety revalidation can expire queued signals even when
+                    # the stored payload carries no execution context.
+                    context = dict(item.execution_context or {})
+                    context.setdefault("enqueued_at", item.created_at)
+                    payload[QUEUE_CONTEXT_KEY] = context
                     outcome = executor(payload)
                 except Exception as exc:  # noqa: BLE001 - isolate poison queue items
                     outcome = QueueExecutionResult(
