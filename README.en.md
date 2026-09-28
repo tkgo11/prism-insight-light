@@ -217,6 +217,11 @@ Inbound Pub/Sub messages may use these fields.
 | `event_type` | Event category |
 | `source` | Source URL |
 | `event_description` | Event description |
+| `signal_id` / `event_id` / `id` | Optional stable upstream identifiers; used for durable duplicate suppression in preference order `signal_id` → `event_id` → `id` |
+| `timestamp` | Optional signal generation time (ISO-8601 or epoch seconds/ms/µs); naive ISO strings are read as KST |
+| `published_at` | Optional publish timestamp; used as a fallback when `timestamp` is absent |
+| `valid_until` | Optional absolute expiry; a signal is never executed after this instant |
+| `schema_version` | Optional publisher schema marker; logged but not required |
 
 Behavior:
 
@@ -227,10 +232,37 @@ Behavior:
   - failed queued attempts are quarantined for operator review instead of being retried blindly.
 - `EVENT`: log and ack, with no trade.
 - malformed or unsupported payload: log and ack.
+- signals rejected by the receiver-side safety gate: log, audit, and ack — redelivery cannot make stale or contradictory data valid.
+
+### Receiver-side signal safety gate
+
+Because the upstream publisher is not modified and cannot be fully trusted, every inbound signal passes a two-stage safety gate (`trading/signal_safety.py`) before any KIS order is submitted.
+
+**At receipt** (per Pub/Sub message):
+
+- ticker/market consistency — a six-digit code must be labelled `KR`, a numeric-only ticker labelled `US` (or a malformed symbol) is rejected;
+- semantic sanity — positive finite reference price, plausible `target_price`/`stop_loss`/`buy_price`/`profit_rate` values, and no contradictory BUY brackets (e.g. `stop_loss >= price` or `target_price <= price`);
+- timestamp sanity — `timestamp`/`published_at`/`valid_until` are parsed when present; expired `valid_until`, timestamps beyond `SIGNAL_MAX_FUTURE_SKEW_SECONDS` in the future, and signals older than the coarse queued bound are rejected;
+- missing timestamp metadata never rejects by itself unless `SIGNAL_STRICT_TIMESTAMP=true`; the Pub/Sub `publish_time` still bounds staleness when present.
+
+**Immediately before broker submission** (including off-hours queue replay):
+
+- expiry and staleness are re-checked — a signal that was valid at intake but aged past `SIGNAL_MAX_AGE_*_SECONDS` (live path) or `SIGNAL_QUEUED_MAX_AGE_SECONDS` (queued path) is never submitted;
+- when `SIGNAL_FRESH_QUOTE_ENABLED=true` (default), the signal's claimed `price` is compared against a fresh KIS quote fetched through the existing KR/US quote methods: `abs(quote - price) / price` must stay within `SIGNAL_PRICE_DEVIATION_BUY` / `SIGNAL_PRICE_DEVIATION_SELL`;
+- a failed or unavailable quote lookup is treated as transient — the order is deferred and Pub/Sub redelivers (or the queued item stays pending); nothing is submitted on an unverifiable price;
+- dry-run mode never performs quote lookups, so it stays fully testable offline.
+
+The quote provider caches per-market traders and short-TTL quotes (`SIGNAL_QUOTE_CACHE_SECONDS`, default 5 s) so duplicate deliveries and multi-account fan-out do not multiply KIS traffic.
+
+**ACK/NACK model**: permanently invalid or suspicious input (malformed payload, semantic/ticker mismatch, stale, excessive price deviation) is acknowledged after being logged and audited — redelivery cannot fix it. Transient pre-submission failures (busy broker serialization lock, unavailable fresh quote, full durable queue) are nacked so Pub/Sub retries. Ambiguous post-submission outcomes stay fail-closed in the execution ledger (`unknown`) and are never retried automatically.
+
+Rejected or suppressed signals are appended to a bounded JSONL audit file (`runtime/signal_rejections.jsonl` by default; `SIGNAL_AUDIT_ENABLED`/`SIGNAL_AUDIT_PATH`/`SIGNAL_AUDIT_MAX_ENTRIES`) with reason codes such as `stale_signal`, `future_timestamp`, `invalid_market`, `semantic_validation_failed`, `price_deviation`, `fresh_quote_unavailable`, `duplicate_signal`, and `expired_queued_signal`. No secrets or account identifiers are recorded.
+
+**Limitations**: validation is only as strong as the metadata supplied — a payload without any timestamp can only be bounded by the Pub/Sub `publish_time` and the queue `enqueued_at`; a fresh-quote check validates price sanity, not signal quality; and the gate cannot detect a fabricated but internally consistent signal. Keep `SIGNAL_SAFETY_ENABLED=true` (default); `SIGNAL_SAFETY_ENABLED=false` is an emergency kill switch only.
 
 ### Automatic execution safety
 
-Automatic Pub/Sub, off-hours queue replay, and stop-loss signals are claimed in a durable execution ledger before the broker call. Redelivery or process restart therefore cannot place a second automatic order for the same signal/account identity.
+Automatic Pub/Sub, off-hours queue replay, and stop-loss signals are claimed in a durable execution ledger before the broker call. Redelivery or process restart therefore cannot place a second automatic order for the same signal/account identity. The execution identity prefers stable upstream identifiers (`signal_id` → `event_id` → `id`) and otherwise falls back to a canonical payload fingerprint with transport-only fields (`message_id`, `published_at`, `delivery_attempt`, …) scrubbed, so a replayed delivery of the same logical signal still dedupes while distinct signals for the same ticker do not collapse.
 
 - An explicit KIS rejection is recorded as `failed`.
 - Timeouts, connection loss, response-parsing failures, and other outcomes where broker acceptance cannot be proven are recorded as `unknown` and are **not retried automatically**.
