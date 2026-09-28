@@ -12,6 +12,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 _TEST_CONFIG_DIR = tempfile.TemporaryDirectory(prefix="prism-insight-light-tests-")
 CONFIG_FILE = Path(_TEST_CONFIG_DIR.name) / "kis_devlp.yaml"
 os.environ["PRISM_KIS_CONFIG_PATH"] = str(CONFIG_FILE)
+# The receiver-side fresh-quote check would try real KIS authentication in
+# legacy dispatch tests that exercise broker paths.  It stays disabled here;
+# test_signal_safety.py exercises the enabled path with injected providers.
+os.environ.setdefault("SIGNAL_FRESH_QUOTE_ENABLED", "false")
 CONFIG_FILE.write_text(
     textwrap.dedent(
             """

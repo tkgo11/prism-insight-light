@@ -15,7 +15,7 @@ import os
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from .config_paths import runtime_file_path
 from .file_lock import FileLock
@@ -31,21 +31,85 @@ _RETRYABLE_STATUSES = frozenset(
 )
 RETENTION = timedelta(days=7)
 
+# Upstream identifiers that describe the logical signal, in preference order.
+_STABLE_ID_FIELDS = ("signal_id", "event_id", "id")
+
+# Identifier order used before the replay-hardened scheme — kept so that a
+# claim recorded under the old format still suppresses a duplicate.
+_LEGACY_ID_FIELDS = ("signal_id", "id")
+
+# Payload keys that only describe transport (re)delivery rather than signal
+# content.  They are excluded from the canonical hash fallback so a replay of
+# the same logical signal with refreshed delivery metadata still dedupes.
+# Signal content such as ``timestamp`` stays in the fingerprint so distinct
+# legitimate signals for the same ticker do not collapse into one identity.
+_TRANSPORT_ONLY_KEYS = frozenset(
+    {
+        "message_id",
+        "publish_time",
+        "published_at",
+        "delivery_attempt",
+        "ack_id",
+        "ordering_key",
+        "subscription",
+        "attributes",
+        "received_at",
+    }
+)
+
+
+def _identity_source(
+    signal_payload: dict[str, Any],
+    id_fields: Iterable[str],
+    excluded_keys: frozenset[str],
+) -> str:
+    for field in id_fields:
+        value = str(signal_payload.get(field) or "").strip()
+        if value:
+            return f"id:{value}"
+    # A canonical payload fingerprint is the deterministic fallback for sources
+    # that do not supply a stable identifier.  Do not include any account
+    # details here.
+    material = {
+        key: value
+        for key, value in signal_payload.items()
+        if key not in excluded_keys
+    }
+    return "payload:" + json.dumps(
+        material, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+
+
+def execution_identities(
+    signal_payload: dict[str, Any], account_key: str
+) -> tuple[str, tuple[str, ...]]:
+    """Return ``(primary_identity, compatibility_aliases)`` for an execution.
+
+    The primary identity prefers stable upstream identifiers in the order
+    ``signal_id`` → ``event_id`` → ``id`` and otherwise falls back to a
+    canonical payload fingerprint with transport-only fields scrubbed.
+
+    A compatibility alias is the identity the previous scheme would have used
+    (``signal_id``/``id`` only, full-payload hash).  It is non-empty only when
+    it differs from the primary identity and exists so that an in-flight
+    signal claimed before the upgrade cannot be re-submitted afterwards.
+    """
+
+    account_digest = hashlib.sha256(account_key.encode("utf-8")).hexdigest()
+
+    def _digest(source: str) -> str:
+        return hashlib.sha256(f"{source}|{account_digest}".encode("utf-8")).hexdigest()
+
+    primary = _digest(_identity_source(signal_payload, _STABLE_ID_FIELDS, _TRANSPORT_ONLY_KEYS))
+    legacy = _digest(_identity_source(signal_payload, _LEGACY_ID_FIELDS, frozenset()))
+    return primary, () if legacy == primary else (legacy,)
+
 
 def execution_identity(signal_payload: dict[str, Any], account_key: str) -> str:
     """Return a stable, non-sensitive identity for one signal/account execution."""
 
-    signal_id = str(signal_payload.get("signal_id") or signal_payload.get("id") or "").strip()
-    if signal_id:
-        source = f"id:{signal_id}"
-    else:
-        # A canonical payload fingerprint is the deterministic fallback for sources
-        # that do not supply a message id.  Do not include any account details here.
-        source = "payload:" + json.dumps(
-            signal_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-        )
-    account_digest = hashlib.sha256(account_key.encode("utf-8")).hexdigest()
-    return hashlib.sha256(f"{source}|{account_digest}".encode("utf-8")).hexdigest()
+    primary, _ = execution_identities(signal_payload, account_key)
+    return primary
 
 
 class ExecutionLedger:
@@ -122,8 +186,15 @@ class ExecutionLedger:
         )
         return dict(ordered[:MAX_LEDGER_ENTRIES])
 
-    def claim(self, identity: str) -> tuple[bool, str | None]:
+    def claim(
+        self, identity: str, *, aliases: Iterable[str] = ()
+    ) -> tuple[bool, str | None]:
         """Claim an identity or return the prior status without exposing account data.
+
+        ``aliases`` are legacy identities for the same logical signal (see
+        :func:`execution_identities`): a suppressed alias blocks the claim
+        exactly like a suppressed primary, while a retryable alias is folded
+        into the primary claim so the ledger converges on one entry.
 
         Entries whose recorded status provably means "no order exists at the
         broker" (clean failure, explicit rejection, dry-run, deferred, queued,
@@ -136,17 +207,22 @@ class ExecutionLedger:
         now = datetime.now(timezone.utc)
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
-            existing = entries.get(identity)
-            if existing is not None:
-                previous_status = str(existing.get("status") or "in_progress")
-                if previous_status not in _RETRYABLE_STATUSES:
-                    return False, previous_status
-                entries[identity] = {"status": "in_progress", "claimed_at": now.isoformat()}
-                self._save(entries)
-                return True, previous_status
+            previous_status: str | None = None
+            for key in (identity, *aliases):
+                existing = entries.get(key)
+                if existing is None:
+                    continue
+                status = str(existing.get("status") or "in_progress")
+                if status not in _RETRYABLE_STATUSES:
+                    return False, status
+                if previous_status is None:
+                    previous_status = status
+            for alias in aliases:
+                if alias != identity:
+                    entries.pop(alias, None)
             entries[identity] = {"status": "in_progress", "claimed_at": now.isoformat()}
             self._save(entries)
-        return True, None
+        return True, previous_status
 
     def finalize(self, identity: str, status: str) -> None:
         """Record a non-sensitive terminal status for an already claimed identity."""
@@ -177,4 +253,4 @@ class ExecutionLedger:
                 self._save(entries)
 
 
-__all__ = ["ExecutionLedger", "execution_identity"]
+__all__ = ["ExecutionLedger", "execution_identities", "execution_identity"]
