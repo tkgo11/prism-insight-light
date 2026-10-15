@@ -821,8 +821,22 @@ class TradeDispatcher:
         elif signal.signal_type == "SELL":
             # Removing protection is only safe when every eligible account exited;
             # a partial SELL leaves the remaining accounts' position unprotected.
+            # Accounts with no position (0 holdings or not in portfolio) or whose
+            # orders were already executed in an earlier attempt are considered satisfied.
             if result.accounts:
-                is_success = all(acct.status == "executed" for acct in result.accounts)
+                is_success = (
+                    any(
+                        acct.status == "executed"
+                        or (acct.status == "skipped" and getattr(acct, "previous_status", None) == "executed")
+                        for acct in result.accounts
+                    )
+                    and all(
+                        acct.status == "executed"
+                        or (acct.status == "skipped" and getattr(acct, "previous_status", None) == "executed")
+                        or _is_no_position_account_result(acct)
+                        for acct in result.accounts
+                    )
+                )
             else:
                 is_success = result.status == "executed"
         else:
@@ -988,7 +1002,14 @@ class TradeDispatcher:
     async def _execute_legacy_trade(
         self, signal: SignalMessage, *, account: dict[str, Any] | None = None
     ) -> DispatchResult:
-        limit_price = None if signal.price in (None, 0) else signal.price
+        is_stop_loss = (
+            getattr(signal, "sell_reason", None) == "stop_loss"
+            or getattr(signal, "type", None) == "STOP_LOSS"
+            or getattr(signal, "signal_type", None) == "STOP_LOSS"
+        )
+        # Automatic stop-loss sells MUST execute as market orders so liquidation
+        # is immediate and not left pending as an unfilled limit order.
+        limit_price = None if is_stop_loss or signal.price in (None, 0) else signal.price
         if signal.market == "US":
             # Construction authenticates synchronously (token file scan, lock,
             # possible mint); keep it off the event loop.
@@ -1015,5 +1036,20 @@ class TradeDispatcher:
         )
 
 
+def _is_no_position_account_result(account_result: Any) -> bool:
+    msg = str(getattr(account_result, "message", "") or "").lower()
+    return any(
+        phrase in msg
+        for phrase in (
+            "not found in portfolio",
+            "not in portfolio",
+            "holding quantity is 0",
+            "holding quantity 0",
+            "no holding quantity",
+        )
+    )
+
+
 SignalDispatcher = TradeDispatcher
+
 

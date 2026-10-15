@@ -299,6 +299,7 @@ class StopLossWatcher:
         self._thread: threading.Thread | None = None
         self._traders: dict[str, Any] = {}
         self._last_holding_check: dict[str, float] = {}
+        self._last_trigger_attempt: dict[str, float] = {}
 
     def start(self) -> None:
         if not self.config.enabled:
@@ -442,6 +443,16 @@ class StopLossWatcher:
                     continue
 
                 if stop_hit:
+                    key = self.tracker._key(market, ticker)
+                    now_mono = time.monotonic()
+                    last_attempt = self._last_trigger_attempt.get(key, 0.0)
+                    if now_mono - last_attempt < 15.0:
+                        logger.debug(
+                            "[Stop-Loss] %s %s sell in backoff cooldown (%.1fs < 15.0s); skipping",
+                            market, ticker, now_mono - last_attempt,
+                        )
+                        continue
+                    self._last_trigger_attempt[key] = now_mono
                     logger.warning(
                         "[Stop-Loss Triggered] %s %s current price (%s) reached stop_loss (%s). Executing automatic SELL.",
                         market,
@@ -453,6 +464,20 @@ class StopLossWatcher:
                     triggered_results.append(action_result)
 
         return triggered_results
+
+    @staticmethod
+    def _is_no_position_result(account_result: Any) -> bool:
+        msg = str(getattr(account_result, "message", "") or "").lower()
+        return any(
+            phrase in msg
+            for phrase in (
+                "not found in portfolio",
+                "not in portfolio",
+                "holding quantity is 0",
+                "holding quantity 0",
+                "no holding quantity",
+            )
+        )
 
     def _trigger_sell(
         self, market: str, ticker: str, current_price: float, pos: dict[str, Any]
@@ -491,12 +516,49 @@ class StopLossWatcher:
                 result.status,
                 result.message,
             )
-            # Only a confirmed execution may drop protection; a dry-run or
-            # deferred SELL leaves the tracked record (and the shares) intact.
-            if result.status == "executed":
+            trader = self._get_cached_trader(market)
+            # In multi-account setups, if the sell executed on holding accounts
+            # and other accounts were already satisfied or had no position,
+            # or if 0 shares remain across accounts, protection is safely dropped.
+            all_accounts_clean = (
+                bool(result.accounts)
+                and any(
+                    a.status == "executed"
+                    or (a.status == "skipped" and getattr(a, "previous_status", None) == "executed")
+                    for a in result.accounts
+                )
+                and all(
+                    a.status == "executed"
+                    or (a.status == "skipped" and getattr(a, "previous_status", None) == "executed")
+                    or self._is_no_position_result(a)
+                    for a in result.accounts
+                )
+            )
+            if result.status == "executed" or all_accounts_clean:
                 self.tracker.remove_position(
                     market, ticker, expected_updated_at=pos.get("updated_at")
                 )
+                self._last_trigger_attempt.pop(self.tracker._key(market, ticker), None)
+            elif result.status == "partial_success":
+                try:
+                    remaining_qty = trader.get_holding_quantity(ticker)
+                    if remaining_qty <= 0:
+                        logger.info(
+                            "[Stop-Loss] %s %s has 0 remaining holdings across accounts after sell; clearing from tracking",
+                            market,
+                            ticker,
+                        )
+                        self.tracker.remove_position(
+                            market, ticker, expected_updated_at=pos.get("updated_at")
+                        )
+                        self._last_trigger_attempt.pop(self.tracker._key(market, ticker), None)
+                except Exception as exc:
+                    logger.warning(
+                        "[Stop-Loss] Could not verify remaining holdings for %s %s after partial sell: %s",
+                        market,
+                        ticker,
+                        exc,
+                    )
             return {
                 "market": market,
                 "ticker": ticker,

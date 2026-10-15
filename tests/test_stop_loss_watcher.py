@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from trading.dispatch import DispatchResult, TradeDispatcher
+from trading.dispatch import AccountDispatchResult, DispatchResult, TradeDispatcher
 from trading.schema import SignalMessage
 from trading.stop_loss_watcher import (
     StopLossTracker,
@@ -365,3 +365,244 @@ def test_stop_loss_watcher_skips_balance_inquiry_until_stop_hit_or_interval(tmp_
 
     assert len(results) == 1
     assert mock_trader.get_holding_quantity.call_count == 2
+
+
+def test_multi_account_stop_loss_clears_tracking_when_non_holding_account_fails(tmp_path):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0, company_name="샘씨엔에스")
+
+    config = StopLossWatcherConfig(
+        enabled=True,
+        request_interval_seconds=0.0,
+        storage_path=tracker_file,
+    )
+
+    mock_trader = MagicMock()
+    mock_trader.get_current_price.return_value = {"current_price": 14090.0}
+    mock_trader.get_holding_quantity.return_value = 695
+
+    # Multi-account dispatch outcome: Account A executed, Account B failed because stock was not in portfolio
+    accounts_result = [
+        AccountDispatchResult(
+            account="고태경",
+            account_id="id-a",
+            status="executed",
+            message="Sell completed: 695 shares",
+        ),
+        AccountDispatchResult(
+            account="고정호",
+            account_id="id-b",
+            status="failed",
+            message="Stock 252990 not found in portfolio",
+        ),
+    ]
+    dispatch_res = DispatchResult(
+        status="partial_success",
+        message="Multi-account result: executed=1, failed=1",
+        signal_type="SELL",
+        market="KR",
+        accounts=accounts_result,
+    )
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "real"
+    dispatcher.multi_account_enabled = True
+    dispatcher.dispatch = AsyncMock(return_value=dispatch_res)
+
+    watcher = StopLossWatcher(dispatcher, config, tracker=tracker)
+    watcher._get_trader = MagicMock(return_value=mock_trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        results = watcher.check_stop_loss_once()
+
+    assert len(results) == 1
+    assert results[0]["status"] == "partial_success"
+    # The tracked position MUST be cleared since the holding account executed and the failed account had no holdings
+    assert tracker.get_position("KR", "252990") is None
+
+
+def test_multi_account_stop_loss_clears_tracking_when_duplicate_suppressed_behind_executed(tmp_path):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0, company_name="샘씨엔에스")
+
+    config = StopLossWatcherConfig(
+        enabled=True,
+        request_interval_seconds=0.0,
+        storage_path=tracker_file,
+    )
+
+    mock_trader = MagicMock()
+    mock_trader.get_current_price.return_value = {"current_price": 14090.0}
+    mock_trader.get_holding_quantity.return_value = 695
+
+    # On a subsequent check: Account A suppressed duplicate (previously executed), Account B not in portfolio
+    accounts_result = [
+        AccountDispatchResult(
+            account="고태경",
+            account_id="id-a",
+            status="skipped",
+            message="Duplicate execution suppressed",
+            previous_status="executed",
+        ),
+        AccountDispatchResult(
+            account="고정호",
+            account_id="id-b",
+            status="failed",
+            message="Stock 252990 not found in portfolio",
+        ),
+    ]
+    dispatch_res = DispatchResult(
+        status="partial_success",
+        message="Multi-account result: failed=1, skipped=1",
+        signal_type="SELL",
+        market="KR",
+        accounts=accounts_result,
+    )
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "real"
+    dispatcher.multi_account_enabled = True
+    dispatcher.dispatch = AsyncMock(return_value=dispatch_res)
+
+    watcher = StopLossWatcher(dispatcher, config, tracker=tracker)
+    watcher._get_trader = MagicMock(return_value=mock_trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        results = watcher.check_stop_loss_once()
+
+    assert len(results) == 1
+    # Tracking must be cleared to break the infinite trigger storm
+    assert tracker.get_position("KR", "252990") is None
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_stop_loss_sell_signal_uses_market_order_in_legacy_trade(tmp_path, monkeypatch):
+    captured_limit_prices: list[int | None] = []
+
+    class FakeTrader:
+        async def async_sell_stock(self, stock_code, limit_price=None):
+            captured_limit_prices.append(limit_price)
+            return {"success": True, "order_no": "999", "message": "sold"}
+
+    class FakeContext:
+        def __init__(self, **kwargs):
+            pass
+        async def __aenter__(self):
+            return FakeTrader()
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    monkeypatch.setattr("trading.dispatch.AsyncTradingContext", FakeContext)
+
+    dispatcher = TradeDispatcher(
+        trading_mode="real",
+        dry_run=False,
+        execution_dedupe=False,
+        queue_path=tmp_path / "queue.json",
+        execution_ledger_path=tmp_path / "ledger.json",
+    )
+
+    # A stop loss signal that carries current_price in price field
+    stop_loss_signal = SignalMessage(
+        raw={
+            "signal_type": "SELL",
+            "market": "KR",
+            "ticker": "252990",
+            "price": 14090.0,
+            "stop_loss": 15000.0,
+            "sell_reason": "stop_loss",
+        },
+        signal_type="SELL",
+        market="KR",
+        ticker="252990",
+        price=14090.0,
+        stop_loss=15000.0,
+        sell_reason="stop_loss",
+    )
+
+    result = await dispatcher._execute_legacy_trade(stop_loss_signal)
+    assert result.status == "executed"
+    # MUST be None so that it triggers a MARKET order (ORD_DVSN: "01"), not a limit order
+    assert captured_limit_prices == [None]
+
+
+def test_dispatcher_update_stop_loss_tracking_clears_with_non_holding_accounts(tmp_path):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0)
+
+    dispatcher = TradeDispatcher(dry_run=False)
+    dispatcher.stop_loss_tracker = tracker
+
+    sell_signal = SignalMessage(
+        raw={"signal_type": "SELL", "market": "KR", "ticker": "252990"},
+        signal_type="SELL",
+        market="KR",
+        ticker="252990",
+    )
+
+    # Multi-account dispatch result where one account executed and one had no holdings
+    dispatch_result = DispatchResult(
+        status="partial_success",
+        message="Multi-account result: executed=1, failed=1",
+        signal_type="SELL",
+        market="KR",
+        accounts=[
+            AccountDispatchResult(
+                account="고태경",
+                account_id="id-a",
+                status="executed",
+                message="Sell completed: 695 shares",
+            ),
+            AccountDispatchResult(
+                account="고정호",
+                account_id="id-b",
+                status="failed",
+                message="Stock 252990 not found in portfolio",
+            ),
+        ],
+    )
+
+    dispatcher._update_stop_loss_tracking(sell_signal, dispatch_result)
+    assert tracker.get_position("KR", "252990") is None
+
+
+def test_stop_loss_watcher_cooldown_prevents_immediate_retrigger_storm(tmp_path):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0)
+
+    config = StopLossWatcherConfig(
+        enabled=True,
+        request_interval_seconds=0.0,
+        storage_path=tracker_file,
+    )
+
+    mock_trader = MagicMock()
+    mock_trader.get_current_price.return_value = {"current_price": 14090.0}
+    mock_trader.get_holding_quantity.return_value = 100
+
+    # Broker returns failed or deferred (e.g., broker rate limit)
+    dispatch_res = DispatchResult("failed", "Broker busy", "SELL", "KR")
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "real"
+    dispatcher.multi_account_enabled = False
+    dispatcher.dispatch = AsyncMock(return_value=dispatch_res)
+
+    watcher = StopLossWatcher(dispatcher, config, tracker=tracker)
+    watcher._get_trader = MagicMock(return_value=mock_trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        # 1st cycle triggers sell
+        res1 = watcher.check_stop_loss_once()
+        assert len(res1) == 1
+        assert dispatcher.dispatch.call_count == 1
+
+        # 2nd cycle immediately after should be suppressed by cooldown (15s)
+        res2 = watcher.check_stop_loss_once()
+        assert len(res2) == 0
+        assert dispatcher.dispatch.call_count == 1
+
