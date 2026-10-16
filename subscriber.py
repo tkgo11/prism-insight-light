@@ -67,6 +67,21 @@ def _positive_seconds_from_env(name: str, default: float) -> float:
     return seconds
 
 
+def _positive_int_from_env(name: str, default: int) -> int:
+    raw_value = os.environ.get(name)
+    if raw_value in (None, ""):
+        return default
+    try:
+        count = int(raw_value)
+    except (TypeError, ValueError):
+        LOGGER.warning("Ignoring invalid %s=%r; using %s", name, raw_value, default)
+        return default
+    if count <= 0:
+        LOGGER.warning("Ignoring non-positive %s=%r; using %s", name, raw_value, default)
+        return default
+    return count
+
+
 RAW_PUBSUB_LOGGER = logging.getLogger("subscriber.raw_pubsub")
 
 
@@ -338,6 +353,161 @@ class QueueWorker:
                 self.work_tracker.end()
 
 
+class TelegramSignalWorker:
+    """Periodically fetch and dispatch supplementary signals from a public Telegram channel."""
+
+    def __init__(
+        self,
+        dispatcher: TradeDispatcher,
+        work_tracker: ActiveWorkTracker,
+        *,
+        channel_url: str | None = None,
+        fetch_pages: int = 3,
+        poll_seconds: float = 60.0,
+        enabled: bool = True,
+        safety_gate: SignalSafetyGate | None = None,
+    ) -> None:
+        self.dispatcher = dispatcher
+        self.work_tracker = work_tracker
+        self.channel_url = channel_url
+        self.fetch_pages = max(1, fetch_pages)
+        self.poll_seconds = max(1.0, poll_seconds)
+        self.enabled = enabled and bool(channel_url)
+        self.safety_gate = safety_gate or getattr(dispatcher, "signal_gate", None) or SignalSafetyGate()
+        self._thread: threading.Thread | None = None
+        self._stop_event = threading.Event()
+        self._activity_lock = threading.Lock()
+        self._seen_post_ids: set[str] = set()
+
+    def start(self) -> None:
+        if not self.enabled:
+            LOGGER.info("Telegram signal worker disabled")
+            return
+        self._thread = threading.Thread(
+            target=self._run, name="telegram-signal-worker", daemon=True
+        )
+        self._thread.start()
+        LOGGER.info(
+            "Telegram signal worker started (channel=%s, poll_seconds=%s, pages=%s)",
+            self.channel_url,
+            self.poll_seconds,
+            self.fetch_pages,
+        )
+
+    def request_stop(self) -> None:
+        with self._activity_lock:
+            self._stop_event.set()
+
+    def stop(self) -> None:
+        self.request_stop()
+        if self._thread:
+            self._thread.join(timeout=5)
+            if self._thread.is_alive():
+                LOGGER.warning("Telegram signal worker thread did not exit after active work drained")
+            else:
+                LOGGER.info("Telegram signal worker stopped")
+
+    def _run(self) -> None:
+        while not self._stop_event.is_set():
+            with self._activity_lock:
+                if self._stop_event.is_set():
+                    return
+                if not self.work_tracker.begin():
+                    return
+            try:
+                self.poll_once()
+            except Exception as exc:  # noqa: BLE001 - keep worker thread alive across transient errors
+                LOGGER.exception("Telegram signal worker error: %s", exc)
+            finally:
+                self.work_tracker.end()
+
+            if self._stop_event.wait(self.poll_seconds):
+                break
+
+    def poll_once(self) -> int:
+        from trading.telegram_fetch import TelegramFetchError, fetch_signal_messages
+
+        if not self.channel_url:
+            return 0
+
+        try:
+            candidates = fetch_signal_messages(
+                channel=self.channel_url,
+                pages=self.fetch_pages,
+                timeout=10.0,
+            )
+        except (TelegramFetchError, Exception) as exc:
+            LOGGER.warning("Could not fetch Telegram signals from %s: %s", self.channel_url, exc)
+            return 0
+
+        dispatched_count = 0
+        for item in candidates:
+            post_id = item.post.message_id
+            if post_id and post_id in self._seen_post_ids:
+                continue
+
+            signal = item.signal
+            metadata = {
+                "source": "telegram",
+                "channel": item.post.channel,
+                "message_id": post_id,
+                "url": item.post.url,
+                "published_at": item.post.published_at,
+            }
+            context = f"telegram_post={post_id or item.post.url}"
+            decision = self.safety_gate.evaluate_received(
+                signal,
+                context=metadata,
+            )
+            if decision.outcome == "reject":
+                LOGGER.warning(
+                    "Rejected Telegram signal %s %s(%s) market=%s price=%s [%s]: %s (%s)",
+                    signal.signal_type,
+                    signal.company_name,
+                    signal.ticker,
+                    signal.market,
+                    signal.price,
+                    decision.reason,
+                    decision.detail,
+                    context,
+                )
+                if post_id:
+                    self._seen_post_ids.add(post_id)
+                continue
+
+            LOGGER.info(
+                "Dispatching Telegram signal %s %s(%s) market=%s price=%s (%s)",
+                signal.signal_type,
+                signal.company_name,
+                signal.ticker,
+                signal.market,
+                signal.price,
+                context,
+            )
+            try:
+                result = asyncio.run(self.dispatcher.dispatch(signal))
+                LOGGER.info(
+                    "Handled Telegram signal %s %s(%s) -> %s: %s (%s)",
+                    signal.signal_type,
+                    signal.company_name,
+                    signal.ticker,
+                    result.status,
+                    result.message,
+                    context,
+                )
+                dispatched_count += 1
+            except Exception as exc:  # noqa: BLE001
+                LOGGER.exception("Failed to dispatch Telegram signal (%s): %s", context, exc)
+            finally:
+                if post_id:
+                    self._seen_post_ids.add(post_id)
+
+        if len(self._seen_post_ids) > 2000:
+            self._seen_post_ids.clear()
+
+        return dispatched_count
+
+
 def _message_context(message) -> str:
     parts = []
     for attr in ("message_id", "publish_time", "ordering_key", "delivery_attempt"):
@@ -564,6 +734,29 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Explicitly disable the background stop-loss price watcher",
     )
+    parser.add_argument(
+        "--telegram-channel",
+        default=os.environ.get("TELEGRAM_SIGNAL_CHANNEL_URL", "https://t.me/prism_insight_global_en"),
+        help="Telegram channel URL for supplementary signals (default: $TELEGRAM_SIGNAL_CHANNEL_URL or https://t.me/prism_insight_global_en)",
+    )
+    parser.add_argument(
+        "--telegram-fetch-pages",
+        type=int,
+        default=_positive_int_from_env("TELEGRAM_FETCH_PAGES", 3),
+        help="Number of Telegram preview pages to fetch per poll (default: 3)",
+    )
+    parser.add_argument(
+        "--telegram-poll-seconds",
+        type=float,
+        default=_positive_seconds_from_env("TELEGRAM_POLL_SECONDS", 60.0),
+        help="Polling interval in seconds for supplementary Telegram signals (default: 60)",
+    )
+    parser.add_argument(
+        "--disable-telegram-poller",
+        action="store_true",
+        default=os.environ.get("TELEGRAM_POLLER_ENABLED", "true").lower() in ("0", "false", "no", "f"),
+        help="Explicitly disable the background Telegram signal poller",
+    )
     return parser.parse_args(argv)
 
 
@@ -677,6 +870,15 @@ def main(argv: list[str] | None = None) -> None:
         work_tracker=work_tracker,
     )
 
+    telegram_worker = TelegramSignalWorker(
+        dispatcher=dispatcher,
+        work_tracker=work_tracker,
+        channel_url=args.telegram_channel,
+        fetch_pages=args.telegram_fetch_pages,
+        poll_seconds=args.telegram_poll_seconds,
+        enabled=not args.disable_telegram_poller,
+    )
+
     credentials = None
     if args.credentials_path:
         from google.oauth2 import service_account
@@ -726,6 +928,7 @@ def main(argv: list[str] | None = None) -> None:
     try:
         queue_worker.start()
         stop_loss_watcher.start()
+        telegram_worker.start()
         if args.web_ui:
             assert web_ui_stop_event is not None
             web_ui_thread = _start_web_ui_thread(
@@ -756,6 +959,7 @@ def main(argv: list[str] | None = None) -> None:
         signal.signal(signal.SIGINT, previous_sigint)
         signal.signal(signal.SIGTERM, previous_sigterm)
         streaming_pull_future.cancel()
+        telegram_worker.request_stop()
         queue_worker.request_stop()
         stop_loss_watcher.request_stop()
         work_tracker.close()
@@ -784,6 +988,7 @@ def main(argv: list[str] | None = None) -> None:
                 work_tracker.active_count,
             )
             work_tracker.wait_for_idle(None)
+        telegram_worker.stop()
         queue_worker.stop()
         stop_loss_watcher.stop()
         try:

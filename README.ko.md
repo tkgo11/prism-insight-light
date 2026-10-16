@@ -263,17 +263,22 @@ Pub/Sub 메시지는 아래 필드를 사용할 수 있습니다.
 
 `unknown` 상태가 발생하면 KIS 주문/체결 내역을 확인한 뒤 운영자가 조치하세요. 자동 retry는 안전상 수행하지 않습니다.
 
-## Telegram 신호 가져오기 보조 도구
+## Telegram 신호 보완 및 자동 수집 도구
 
-`trading.telegram_fetch`는 Telegram 공개 미리보기 페이지에서 신호 후보를 가져오고 파싱하는 보조 모듈입니다.
+`trading.telegram_fetch`와 `subscriber.py`의 `TelegramSignalWorker`는 Telegram 공개 미리보기 페이지에서 신호 후보를 가져오고 주기적으로 보완하는 도구입니다.
 
 - 기본 채널: `https://t.me/prism_insight_global_en`
 - 가져오기 URL 형식: `https://t.me/s/<channel>`
+- 동작 방식:
+  - `subscriber.py` 실행 시 백그라운드 스레드(`TelegramSignalWorker`)가 함께 시작되어 주기적으로(기본 60초) Telegram 채널을 폴링합니다.
+  - Pub/Sub을 통해 이미 체결되었거나 대기열에 들어간 신호는 실행 원장(`multi_account_execution_ledger.json`)에 의해 자동으로 중복 억제(`suppressed duplicate`)됩니다.
+  - **Pub/Sub에서 누락되었거나 새로 유입된 신호만 안전 게이트(`SignalSafetyGate`)를 거쳐 즉시 집행 또는 대기열에 자동 적재**됩니다.
+  - 비활성화가 필요한 경우 `--disable-telegram-poller` 옵션이나 `.env`에 `TELEGRAM_POLLER_ENABLED=false`를 지정할 수 있습니다.
 - 지원 형식:
-  - 위 신호 계약에 맞는 JSON 본문
+  - JSON 본문 형식
   - `New Buy`, `Sell`, `Event` 같은 라벨 기반 영어 게시글
 
-예시:
+Python 코드에서 직접 조회하는 예시:
 
 ```python
 from trading.telegram_fetch import fetch_signal_messages

@@ -197,6 +197,8 @@ def parse_signal_post(post: TelegramChannelPost) -> ParsedTelegramSignal | None:
     if "source" in payload and payload["source"] != post.url:
         payload["content_source"] = payload["source"]
     payload["source"] = post.url
+    if post.published_at and "published_at" not in payload and "timestamp" not in payload:
+        payload["published_at"] = post.published_at
     signal = parse_signal_payload(payload)
     return ParsedTelegramSignal(post=post, payload=payload, signal=signal)
 
