@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from ..schema import SignalMessage
+from ..signal_safety import parse_signal_times
 from .common import StrategyExecution, execute_order, execution_from_result, fraction_value, fresh_items, integer_value, load_json_list, runtime_dir, strategy_name, string_list, update_json_list
 
 EVENT_RISK_OFF = "event_risk_off"
@@ -33,7 +34,13 @@ class EventRiskOffStrategy:
     async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.is_event:
             if signal.event_type.strip().upper() in self.config.risk_off_event_types:
-                item = {"market": signal.market, "ticker": signal.ticker, "event_type": signal.event_type.upper(), "created_at": datetime.now(timezone.utc).isoformat()}
+                event_time = parse_signal_times(signal.raw).timestamp or datetime.now(timezone.utc)
+                item = {
+                    "market": signal.market,
+                    "ticker": signal.ticker,
+                    "event_type": signal.event_type.upper(),
+                    "created_at": event_time.isoformat(),
+                }
                 window = timedelta(minutes=self.config.risk_off_window_minutes)
                 update_json_list(
                     self.config.runtime_path,

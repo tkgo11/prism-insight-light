@@ -23,6 +23,7 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
 
+from trading.config_paths import DEFAULT_TELEGRAM_SEEN_POSTS_PATH, runtime_file_path  # noqa: E402 - config env must load first
 from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must load first
 from trading.market_hours import KST  # noqa: E402 - config env must load first
 from trading.off_hours_queue import QueueCapacityError, default_queue_path  # noqa: E402
@@ -366,6 +367,7 @@ class TelegramSignalWorker:
         poll_seconds: float = 60.0,
         enabled: bool = True,
         safety_gate: SignalSafetyGate | None = None,
+        seen_posts_path: Path | None = None,
     ) -> None:
         self.dispatcher = dispatcher
         self.work_tracker = work_tracker
@@ -374,10 +376,46 @@ class TelegramSignalWorker:
         self.poll_seconds = max(1.0, poll_seconds)
         self.enabled = enabled and bool(channel_url)
         self.safety_gate = safety_gate or getattr(dispatcher, "signal_gate", None) or SignalSafetyGate()
+        self.seen_posts_path = seen_posts_path or runtime_file_path(DEFAULT_TELEGRAM_SEEN_POSTS_PATH)
         self._thread: threading.Thread | None = None
         self._stop_event = threading.Event()
         self._activity_lock = threading.Lock()
-        self._seen_post_ids: set[str] = set()
+        self._seen_post_ids: set[str] = self._load_seen_post_ids()
+
+    def _load_seen_post_ids(self) -> set[str]:
+        if not self.seen_posts_path:
+            return set()
+        try:
+            raw = self.seen_posts_path.read_text(encoding="utf-8")
+            data = json.loads(raw)
+            if isinstance(data, list):
+                return {str(item).strip() for item in data if str(item).strip()}
+        except FileNotFoundError:
+            pass
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.warning("Could not load seen Telegram post IDs from %s: %s", self.seen_posts_path, exc)
+        return set()
+
+    def _save_seen_post_ids(self) -> None:
+        if not self.seen_posts_path:
+            return
+        try:
+            self.seen_posts_path.parent.mkdir(parents=True, exist_ok=True)
+            post_ids = list(self._seen_post_ids)
+            if len(post_ids) > 2000:
+                try:
+                    post_ids = sorted(post_ids, key=int)[-1000:]
+                except ValueError:
+                    post_ids = sorted(post_ids)[-1000:]
+                self._seen_post_ids = set(post_ids)
+            temp_path = self.seen_posts_path.with_suffix(f"{self.seen_posts_path.suffix}.tmp")
+            temp_path.write_text(
+                json.dumps(sorted(post_ids), indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            temp_path.replace(self.seen_posts_path)
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.warning("Could not save seen Telegram post IDs to %s: %s", self.seen_posts_path, exc)
 
     def start(self) -> None:
         if not self.enabled:
@@ -478,6 +516,7 @@ class TelegramSignalWorker:
                 )
                 if post_id:
                     self._seen_post_ids.add(post_id)
+                    self._save_seen_post_ids()
                 continue
 
             LOGGER.info(
@@ -507,9 +546,7 @@ class TelegramSignalWorker:
             finally:
                 if post_id and result is not None and getattr(result, "status", None) != "deferred":
                     self._seen_post_ids.add(post_id)
-
-        if len(self._seen_post_ids) > 2000:
-            self._seen_post_ids.clear()
+                    self._save_seen_post_ids()
 
         return dispatched_count
 
@@ -763,6 +800,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=os.environ.get("TELEGRAM_POLLER_ENABLED", "true").lower() in ("0", "false", "no", "f"),
         help="Explicitly disable the background Telegram signal poller",
     )
+    parser.add_argument(
+        "--telegram-seen-posts-path",
+        default=os.environ.get("TELEGRAM_SEEN_POSTS_PATH"),
+        help="Path to persist seen Telegram post IDs (default: trading/config/telegram_seen_posts.json or $TELEGRAM_SEEN_POSTS_PATH)",
+    )
     return parser.parse_args(argv)
 
 
@@ -883,6 +925,7 @@ def main(argv: list[str] | None = None) -> None:
         fetch_pages=args.telegram_fetch_pages,
         poll_seconds=args.telegram_poll_seconds,
         enabled=not args.disable_telegram_poller,
+        seen_posts_path=Path(args.telegram_seen_posts_path) if args.telegram_seen_posts_path else None,
     )
 
     credentials = None

@@ -172,11 +172,13 @@ def test_parse_args_telegram_options():
         "--telegram-fetch-pages", "5",
         "--telegram-poll-seconds", "30.0",
         "--disable-telegram-poller",
+        "--telegram-seen-posts-path", "runtime/custom_seen.json",
     ])
     assert args.telegram_channel == "https://t.me/custom_channel"
     assert args.telegram_fetch_pages == 5
     assert args.telegram_poll_seconds == 30.0
     assert args.disable_telegram_poller is True
+    assert args.telegram_seen_posts_path == "runtime/custom_seen.json"
 
 
 def test_telegram_worker_keeps_deferred_posts_eligible():
@@ -281,4 +283,112 @@ def test_cross_source_signal_dedupe_identity_matches_pubsub(tmp_path):
     claimed_again, status = ledger.claim(telegram_id)
     assert claimed_again is False
     assert status == "in_progress"
+
+
+def test_telegram_worker_persists_seen_posts_across_restarts(tmp_path):
+    seen_path = tmp_path / "seen_posts.json"
+    dispatcher = FakeDispatcher()
+    tracker = ActiveWorkTracker()
+    worker1 = TelegramSignalWorker(
+        dispatcher,
+        tracker,
+        channel_url="https://t.me/test_channel",
+        seen_posts_path=seen_path,
+        enabled=True,
+    )
+
+    sig = _make_parsed_signal("701")
+    with patch("trading.telegram_fetch.fetch_signal_messages", return_value=[sig]):
+        dispatched = worker1.poll_once()
+        assert dispatched == 1
+        assert "701" in worker1._seen_post_ids
+        assert seen_path.exists()
+
+        # Restart simulation: new worker instance with same seen_posts_path
+        dispatcher2 = FakeDispatcher()
+        tracker2 = ActiveWorkTracker()
+        worker2 = TelegramSignalWorker(
+            dispatcher2,
+            tracker2,
+            channel_url="https://t.me/test_channel",
+            seen_posts_path=seen_path,
+            enabled=True,
+        )
+        assert "701" in worker2._seen_post_ids
+        dispatched2 = worker2.poll_once()
+        assert dispatched2 == 0
+        assert len(dispatcher2.dispatched) == 0
+
+
+def test_distinct_idless_signals_different_published_at_do_not_collapse(tmp_path):
+    from trading.execution_ledger import ExecutionLedger, execution_identity
+
+    account_key = "primary:KR:primary"
+    # Labeled signals with identical price/ticker on two different days
+    day1_payload = {
+        "type": "BUY",
+        "ticker": "005930",
+        "company_name": "Samsung",
+        "market": "KR",
+        "price": 70000.0,
+        "published_at": "2026-10-17T09:00:00+09:00",
+        "source": "https://t.me/channel/101",
+    }
+    day2_payload = {
+        "type": "BUY",
+        "ticker": "005930",
+        "company_name": "Samsung",
+        "market": "KR",
+        "price": 70000.0,
+        "published_at": "2026-10-18T09:00:00+09:00",
+        "source": "https://t.me/channel/102",
+    }
+
+    id_day1 = execution_identity(day1_payload, account_key)
+    id_day2 = execution_identity(day2_payload, account_key)
+
+    # Must NOT collapse into the same execution identity
+    assert id_day1 != id_day2
+
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    claimed1, _ = ledger.claim(id_day1)
+    assert claimed1 is True
+    ledger.finalize(id_day1, "executed")
+
+    # Day 2 signal must remain eligible for execution
+    claimed2, _ = ledger.claim(id_day2)
+    assert claimed2 is True
+
+
+@pytest.mark.asyncio
+async def test_event_risk_off_strategy_records_original_event_publication_time(tmp_path):
+    from trading.schema import parse_signal_payload
+    from trading.strategies.event_risk_off import EventRiskOffStrategy, EventRiskOffStrategyConfig
+
+    runtime_path = tmp_path / "risk_off.json"
+    config = EventRiskOffStrategyConfig.from_mapping({
+        "name": "event_risk_off",
+        "risk_off_event_types": ["RISK_OFF"],
+        "risk_off_window_minutes": 60,
+        "runtime_path": str(runtime_path),
+    })
+    strategy = EventRiskOffStrategy(config=config)
+
+    published_time = "2026-10-17T08:00:00+00:00"
+    event = parse_signal_payload({
+        "type": "EVENT",
+        "ticker": "005930",
+        "market": "KR",
+        "event_type": "RISK_OFF",
+        "published_at": published_time,
+    })
+
+    result = await strategy.execute(event, trading_mode="demo")
+    assert result.status == "acknowledged"
+
+    data = json.loads(runtime_path.read_text(encoding="utf-8"))
+    assert len(data) == 1
+    # created_at must match the original event published time rather than current time
+    assert data[0]["created_at"] == published_time
+
 

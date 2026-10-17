@@ -16,6 +16,7 @@ RUNTIME_DIR_ENV = "PRISM_RUNTIME_DIR"
 TRADING_DIR = Path(__file__).resolve().parent
 DEFAULT_CONFIG_PATH = TRADING_DIR / "config" / "kis_devlp.yaml"
 EXAMPLE_CONFIG_PATH = TRADING_DIR / "config" / "kis_devlp.yaml.example"
+DEFAULT_TELEGRAM_SEEN_POSTS_PATH = TRADING_DIR / "config" / "telegram_seen_posts.json"
 
 
 def configured_kis_config_path(env: dict[str, str] | None = None) -> Path | None:
