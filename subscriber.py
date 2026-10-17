@@ -425,15 +425,18 @@ class TelegramSignalWorker:
                 break
 
     def poll_once(self) -> int:
+        from trading.signal_safety import parse_temporal_value
         from trading.telegram_fetch import TelegramFetchError, fetch_signal_messages
 
         if not self.channel_url:
             return 0
 
+        calculated_limit = max(20, self.fetch_pages * 25)
         try:
             candidates = fetch_signal_messages(
                 channel=self.channel_url,
                 pages=self.fetch_pages,
+                limit=calculated_limit,
                 timeout=10.0,
             )
         except (TelegramFetchError, Exception) as exc:
@@ -455,8 +458,10 @@ class TelegramSignalWorker:
                 "published_at": item.post.published_at,
             }
             context = f"telegram_post={post_id or item.post.url}"
+            publish_time = parse_temporal_value(item.post.published_at)
             decision = self.safety_gate.evaluate_received(
                 signal,
+                publish_time=publish_time,
                 context=metadata,
             )
             if decision.outcome == "reject":
@@ -484,6 +489,7 @@ class TelegramSignalWorker:
                 signal.price,
                 context,
             )
+            result = None
             try:
                 result = asyncio.run(self.dispatcher.dispatch(signal))
                 LOGGER.info(
@@ -499,7 +505,7 @@ class TelegramSignalWorker:
             except Exception as exc:  # noqa: BLE001
                 LOGGER.exception("Failed to dispatch Telegram signal (%s): %s", context, exc)
             finally:
-                if post_id:
+                if post_id and result is not None and getattr(result, "status", None) != "deferred":
                     self._seen_post_ids.add(post_id)
 
         if len(self._seen_post_ids) > 2000:

@@ -191,3 +191,26 @@ def test_fetch_signal_messages_uses_post_url_as_canonical_source():
     assert len(signals) == 1
     assert signals[0].payload["source"] == "https://t.me/prism_insight_global_en/202"
     assert signals[0].payload["content_source"] == "Bloomberg"
+
+
+def test_fetch_signal_messages_scales_limit_with_pages():
+    from unittest.mock import patch
+    with patch("trading.telegram_fetch.fetch_channel_posts", return_value=[]) as mock_fetch:
+        fetch_signal_messages(pages=3)
+        mock_fetch.assert_called_once_with(
+            DEFAULT_TELEGRAM_CHANNEL_URL,
+            limit=75,
+            pages=3,
+            session=None,
+            timeout=10.0,
+        )
+
+    with patch("trading.telegram_fetch.fetch_channel_posts", return_value=[]) as mock_fetch:
+        fetch_signal_messages(limit=50, pages=3)
+        mock_fetch.assert_called_once_with(
+            DEFAULT_TELEGRAM_CHANNEL_URL,
+            limit=50,
+            pages=3,
+            session=None,
+            timeout=10.0,
+        )

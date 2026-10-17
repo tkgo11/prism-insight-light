@@ -54,6 +54,8 @@ _TRANSPORT_ONLY_KEYS = frozenset(
         "subscription",
         "attributes",
         "received_at",
+        "source",
+        "content_source",
     }
 )
 
