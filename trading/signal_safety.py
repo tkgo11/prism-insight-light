@@ -324,6 +324,9 @@ def _parse_temporal_value(value: Any) -> datetime | None:
     return None
 
 
+parse_temporal_value = _parse_temporal_value
+
+
 def parse_signal_times(payload: dict[str, Any]) -> SignalTimes:
     """Extract supported timestamp/expiry metadata from a raw payload.
 
@@ -898,4 +901,5 @@ __all__ = [
     "SignalSafetyGate",
     "SignalTimes",
     "parse_signal_times",
+    "parse_temporal_value",
 ]

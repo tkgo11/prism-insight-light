@@ -54,6 +54,8 @@ _TRANSPORT_ONLY_KEYS = frozenset(
         "subscription",
         "attributes",
         "received_at",
+        "source",
+        "content_source",
     }
 )
 
@@ -75,6 +77,11 @@ def _identity_source(
         for key, value in signal_payload.items()
         if key not in excluded_keys
     }
+    has_timestamp = bool(str(signal_payload.get("timestamp") or "").strip())
+    published_at = str(signal_payload.get("published_at") or "").strip()
+    if not has_timestamp and published_at:
+        material["published_at"] = published_at
+
     return "payload:" + json.dumps(
         material, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     )

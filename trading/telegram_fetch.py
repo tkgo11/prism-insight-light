@@ -173,13 +173,14 @@ def extract_channel_posts(html: str, *, channel: str) -> list[TelegramChannelPos
 def fetch_signal_messages(
     channel: str = DEFAULT_TELEGRAM_CHANNEL_URL,
     *,
-    limit: int = 20,
+    limit: int | None = None,
     pages: int = 1,
     session: requests.Session | None = None,
     timeout: float = 10.0,
 ) -> list[ParsedTelegramSignal]:
+    max_limit = limit if limit is not None else max(20, max(1, pages) * 25)
     parsed: list[ParsedTelegramSignal] = []
-    for post in fetch_channel_posts(channel, limit=limit, pages=pages, session=session, timeout=timeout):
+    for post in fetch_channel_posts(channel, limit=max_limit, pages=pages, session=session, timeout=timeout):
         try:
             signal = parse_signal_post(post)
         except SignalValidationError:
@@ -197,6 +198,8 @@ def parse_signal_post(post: TelegramChannelPost) -> ParsedTelegramSignal | None:
     if "source" in payload and payload["source"] != post.url:
         payload["content_source"] = payload["source"]
     payload["source"] = post.url
+    if post.published_at and "published_at" not in payload and "timestamp" not in payload:
+        payload["published_at"] = post.published_at
     signal = parse_signal_payload(payload)
     return ParsedTelegramSignal(post=post, payload=payload, signal=signal)
 

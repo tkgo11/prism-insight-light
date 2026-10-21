@@ -272,12 +272,17 @@ Automatic Pub/Sub, off-hours queue replay, and stop-loss signals are claimed in 
 
 If an `unknown` outcome appears, inspect KIS order/execution history before taking operator action. The runtime deliberately does not auto-retry it.
 
-## Telegram fetch helper
+## Telegram signal poller and supplementary helper
 
-`trading.telegram_fetch` can fetch and parse signal-like posts from Telegram public preview pages.
+`trading.telegram_fetch` and the subscriber's `TelegramSignalWorker` can fetch, parse, and periodically ingest signal posts from Telegram public preview pages.
 
 - Default channel: `https://t.me/prism_insight_global_en`
 - Fetch source format: `https://t.me/s/<channel>`
+- Runtime behavior:
+  - When `subscriber.py` runs, `TelegramSignalWorker` starts in the background and polls the Telegram channel periodically (default: 60s).
+  - Signals already processed via Pub/Sub or prior runs are automatically deduplicated and suppressed by `multi_account_execution_ledger.json`.
+  - **New or missed signals not seen on Pub/Sub are validated through `SignalSafetyGate` and dispatched or queued automatically**.
+  - Can be disabled via `--disable-telegram-poller` CLI flag or `TELEGRAM_POLLER_ENABLED=false` in `.env`.
 - Supported parsed post shapes:
   - JSON bodies matching the signal contract above;
   - labeled English text posts such as `New Buy`, `Sell`, and `Event`.
