@@ -186,6 +186,38 @@ async def test_us_balance_split_uses_kis_integrated_buying_power_when_exchange_f
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "buying_power_fields",
+    [
+        {"after_exchange_amount": float("inf")},
+        {"after_exchange_amount": float("nan")},
+        {
+            "after_exchange_amount": 0.0,
+            "integrated_orderable_amount": float("inf"),
+            "integrated_max_quantity": float("inf"),
+        },
+    ],
+)
+async def test_us_balance_split_rejects_nonfinite_after_exchange_buying_power(
+    balance_split_strategy, buying_power_fields
+):
+    # KIS numeric fields may arrive as strings such as 'inf' or 'nan'.
+    # Never pass these through to the broker as an unbounded BUY budget.
+    trader = FakeAutoExchangeUSTrader(**buying_power_fields)
+    strategy = balance_split_strategy(split_count=1)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200}
+    )
+
+    result = await strategy._execute_us(signal, trader=trader)
+
+    assert result.status == "failed"
+    assert result.buy_amount == 0.0
+    assert result.cash_source == "after_exchange_buying_power_unavailable"
+    assert trader.buy_calls == []
+
+
+@pytest.mark.asyncio
 async def test_us_balance_split_reports_zero_kis_after_exchange_buying_power(
     balance_split_strategy, caplog
 ):
