@@ -4,10 +4,10 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "automation-run-8-2026-10-31T18:21:18.391Z",
-    "started_at": "2026-10-31T18:17:48Z",
-    "completed_at": "2026-10-31T18:21:47.388Z",
-    "lock_owner": null
+    "id": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
+    "started_at": "2026-10-31T19:22:39Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-01T04:22:39+09:00"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
