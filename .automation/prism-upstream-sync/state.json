@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "automation-turn-11-2026-11-01T07:17+09:00",
-    "started_at": "2026-11-01T07:17:05+09:00",
-    "completed_at": "2026-11-01T07:17:05+09:00",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-01T08:20:24+09:00",
+    "started_at": "2026-11-01T08:20:24+09:00",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-01T08:20:24+09:00",
     "last_mutation_commit": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
     "last_mutation_at": "2026-10-31T21:24:16.500Z",
-    "result": "CI_SUCCESS_PARTIAL_REVIEW_NO_PASS_EXTERNAL_PENDING",
+    "result": "RUNNING_TARGETED_SCHEMA_AUDIT",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
