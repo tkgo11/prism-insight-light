@@ -176,22 +176,24 @@ class ExecutionLedger:
         cutoff = now - RETENTION
         retained: dict[str, dict[str, Any]] = {}
         for key, value in entries.items():
+            # Accepted/unknown/in-progress orders are not proven safe to replay.
+            # Never expire or evict their identities solely due to age or size:
+            # an old Pub/Sub redelivery could otherwise submit a second order.
+            status = str(value.get("status") or "in_progress")
+            if status not in _RETRYABLE_STATUSES:
+                retained[key] = value
+                continue
             try:
                 claimed_at = datetime.fromisoformat(str(value.get("claimed_at", "")))
                 if claimed_at.tzinfo is None:
                     claimed_at = claimed_at.replace(tzinfo=timezone.utc)
-            except ValueError:
-                # Preserve malformed records: dropping them could re-enable a duplicate.
+            except (TypeError, ValueError, OverflowError):
+                # Unknown timestamps must fail closed, even for retryable statuses.
                 retained[key] = value
                 continue
             if claimed_at >= cutoff:
                 retained[key] = value
-        if len(retained) <= MAX_LEDGER_ENTRIES:
-            return retained
-        ordered = sorted(
-            retained.items(), key=lambda pair: str(pair[1].get("claimed_at", "")), reverse=True
-        )
-        return dict(ordered[:MAX_LEDGER_ENTRIES])
+        return retained
 
     def claim(
         self, identity: str, *, aliases: Iterable[str] = ()
@@ -228,6 +230,13 @@ class ExecutionLedger:
                 if alias != identity:
                     entries.pop(alias, None)
             entries[identity] = {"status": "in_progress", "claimed_at": now.isoformat()}
+            # Fail closed at capacity. Silently dropping older accepted/unknown
+            # claims to make room would re-enable duplicate broker submissions.
+            if len(entries) > MAX_LEDGER_ENTRIES:
+                raise RuntimeError(
+                    "Automatic-trading execution ledger is full; "
+                    "operator reconciliation is required before new orders"
+                )
             self._save(entries)
         return True, previous_status
 
