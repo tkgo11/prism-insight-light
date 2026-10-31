@@ -33,6 +33,7 @@
 - `tests/test_partial_exit_stop_loss_safety.py`: watcher keeps residual holdings protected, retains record on failed balance inquiry.
 - `tests/test_strategy_partial_matrix.py`: 10 BUY strategy configurations and 9 SELL strategy configurations.
 - `tests/test_queue_and_account_sizing.py`: serialized queue retains sizing and each KIS account uses its own budget.
+- `tests/test_effective_order_metadata.py`: strategy messages and detailed order metadata reflect the **effective** fraction/budget sent to the broker, preserving unscaled strategy bases separately.
 - Existing `tests/test_multi_account_*.py`, `tests/test_stop_loss_watcher.py`, `tests/test_dispatch.py`, `tests/test_signal_safety.py` and `tests/test_wave4_execution_safety.py` remain regression guards.
 
 ## Critical limitations and residual risks (not waived)
