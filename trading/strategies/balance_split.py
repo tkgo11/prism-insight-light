@@ -503,6 +503,21 @@ class BalanceSplitStrategy:
         reservations = self._fresh_reservations(loaded_reservations)
         reservations_changed = len(reservations) != len(loaded_reservations)
 
+        # A single broker cash decrease is one observation for this account,
+        # NOT independent proof that every pending BUY was filled. Previously
+        # two 300-unit reservations against cash 1000 were both removed when
+        # cash first fell to 700, leaving an unfilled BUY unreserved.
+        matching = [
+            item for item in reservations
+            if str(item.get("market", "")).upper() == market.upper()
+            and str(item.get("account_key", "default")) == account_key
+        ]
+        cash_anchor = max(
+            (float(item["before_cash"]) for item in matching),
+            default=current_cash,
+        )
+        unallocated_cash_drop = max(0.0, cash_anchor - current_cash)
+
         reserved_amount = 0.0
         retained_reservations: list[dict[str, Any]] = []
         for reservation in reservations:
@@ -520,22 +535,22 @@ class BalanceSplitStrategy:
             if not all(math.isfinite(x) and x > 0 for x in (before_cash, amount)):
                 raise RuntimeError("Balance split reservation contains invalid amounts")
 
-            # Once the broker-reported cash drops, persist that observation so a
-            # later cash rebound (sell proceeds, deposits, or canceled orders)
-            # cannot make already-reflected buys look unreflected again.  Partial
-            # broker updates keep only the still-unreflected remainder.
-            # Compare each order with the actual broker cash snapshot. Deducting
-            # earlier unreflected reservations here would falsely mark later
-            # orders as settled even though broker cash never moved.
-            reflected_amount = max(0.0, before_cash - current_cash)
-            unreflected_amount = max(0.0, amount - reflected_amount)
+            # Apply the observed cash drop AT MOST ONCE across pending orders,
+            # oldest first. Also move the cash anchor of every surviving order
+            # down to this snapshot, so the same drop cannot be counted again
+            # on a subsequent poll. Cash movement alone is not a per-order fill
+            # confirmation; authoritative broker reconciliation is still needed.
+            reflected_amount = min(amount, unallocated_cash_drop)
+            unallocated_cash_drop -= reflected_amount
+            unreflected_amount = amount - reflected_amount
             if unreflected_amount <= 0:
                 reservations_changed = True
                 continue
-            if reflected_amount > 0:
+            new_before_cash = min(before_cash, current_cash)
+            if reflected_amount > 0 or new_before_cash < before_cash:
                 reservation = {
                     **reservation,
-                    "before_cash": float(current_cash),
+                    "before_cash": float(new_before_cash),
                     "amount": float(unreflected_amount),
                 }
                 reservations_changed = True
