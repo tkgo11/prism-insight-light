@@ -6,10 +6,31 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
     "started_at": "2026-10-31T19:22:39Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
+    "completed_at": "2026-10-31T19:27:00Z",
+    "lock_owner": null,
     "last_mutation_commit": "17e622d232a015e10b2507d8713b025a4d34a238",
-    "last_mutation_at": "2026-10-31T19:24:00Z"
+    "last_mutation_at": "2026-10-31T19:24:00Z",
+    "result": "FINANCIAL_RESERVATION_FIX_PUSHED_CI_IN_PROGRESS_AUDIT_INCOMPLETE",
+    "pr_comment_id": 6548058385,
+    "last_report": {
+      "phase": "related_code_audit",
+      "related": 0,
+      "full": 0,
+      "pr_head": "17e622d232a015e10b2507d8713b025a4d34a238",
+      "modified_files": [
+        "trading/strategies/balance_split.py",
+        "tests/test_balance_split_strategy.py"
+      ],
+      "new_commit": "17e622d232a015e10b2507d8713b025a4d34a238",
+      "ci_run_id": 41234048109,
+      "ci_status": "in_progress",
+      "targeted_review_files": 2,
+      "related_full_review_completed": false,
+      "whole_repo_blob_files": 158,
+      "whole_repo_files_reviewed": 0,
+      "merged": false,
+      "reason": "Unfinished CI, incomplete per-file audits, unresolved broker fill/cash attribution risk and required demo/human review"
+    }
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -32,7 +53,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "FIXED_PARTIAL_BROKER_REPORT_UNDER_RESERVATION_CI_PENDING"
+    "status": "DRAFT_AUDIT_RESET_AFTER_PARTIAL_BROKER_AMOUNT_FIX_CI_PENDING"
   },
   "candidates": [
     {
@@ -52,7 +73,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "STALE_AFTER_PARTIAL_BROKER_AMOUNT_FIX",
+    "status": "PARTIAL_TARGETED_REVIEW_ONLY_NO_AUDIT_PASS",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
@@ -138,6 +159,20 @@
         "path": "tests/test_balance_split_strategy.py",
         "ref": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
         "status": "TARGETED_REGRESSION_REVIEW_ONLY_NOT_FULL_AUDIT"
+      },
+      {
+        "path": "trading/strategies/balance_split.py",
+        "blob_sha": "1672dc8600127fcbc7b9d15d6229de6abed9aa0c",
+        "ref": "17e622d232a015e10b2507d8713b025a4d34a238",
+        "status": "TARGETED_PARTIAL_BROKER_RESERVATION_FIX_REVIEW_ONLY",
+        "evidence": "https://github.com/tkgo11/prism-insight-light/commit/17e622d232a015e10b2507d8713b025a4d34a238"
+      },
+      {
+        "path": "tests/test_balance_split_strategy.py",
+        "blob_sha": "30d4ddb9430b042d78967f5fe4c25eba3d51dfb3",
+        "ref": "17e622d232a015e10b2507d8713b025a4d34a238",
+        "status": "TARGETED_REGRESSION_REVIEW_ONLY_CI_PENDING",
+        "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234048109"
       }
     ],
     "scope_estimate": "PR changed 34 files; current PR tree has 158 tracked blob files. Dependency closure and per-file review not complete.",
@@ -308,6 +343,21 @@
         "Full pytest suite: completed/success",
         "Windows runtime smoke: completed/success"
       ]
+    },
+    {
+      "run_id": 41234048109,
+      "head_sha": "17e622d232a015e10b2507d8713b025a4d34a238",
+      "status": "in_progress",
+      "conclusion": null,
+      "jobs": [
+        "Full pytest suite: in_progress",
+        "Windows runtime smoke: in_progress"
+      ],
+      "additional_statuses": [
+        "qlty check: pending",
+        "security/snyk (tkgo11): success"
+      ],
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234048109"
     }
   ],
   "upstream_changes": [
