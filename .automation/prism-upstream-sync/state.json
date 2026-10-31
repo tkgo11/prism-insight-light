@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
     "started_at": "2026-10-31T20:24:12Z",
-    "completed_at": "2026-10-31T20:27:10.229Z",
+    "completed_at": "2026-10-31T20:28:54.734Z",
     "lock_owner": null,
     "last_mutation_commit": "3c47cbca447215dbf18c3e82cb59f8049295f330",
     "last_mutation_at": "2026-10-31T20:27:10.229Z",
-    "result": "TWO_FINANCIAL_SAFETY_FIXES_CI_PENDING_AUDIT_NOT_COMPLETE",
+    "result": "TWO_FINANCIAL_SAFETY_FIXES_CI_SUCCESS_AUDITS_INCOMPLETE",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
@@ -32,8 +32,17 @@
         {
           "id": 41238941028,
           "head_sha": "3c47cbca447215dbf18c3e82cb59f8049295f330",
-          "status": "in_progress",
-          "conclusion": null
+          "status": "completed",
+          "conclusion": "success",
+          "jobs": [
+            "Full pytest suite: success (pytest, static smoke, Docker build)",
+            "Windows runtime smoke: success"
+          ],
+          "external_statuses": [
+            "security/snyk: success",
+            "qlty check: success",
+            "qlty usage: pending (non-required usage meter)"
+          ]
         }
       ],
       "targeted_review_files": 4,
@@ -41,8 +50,9 @@
       "whole_repo_blob_files": 158,
       "whole_repo_files_reviewed": 0,
       "merged": false,
-      "reason": "CI not completed; dependency closure and file-by-file audits incomplete; no authoritative broker order-fill reconciliation or KIS/GCP demo integration"
-    }
+      "reason": "Related dependency audit and whole repository per-file audit incomplete; demo KIS/GCP, authoritative fill reconciliation and human approval still missing"
+    },
+    "pr_comment_id": 6548733485
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -65,7 +75,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "CI_PENDING_AFTER_TWO_TARGETED_FINANCIAL_FIXES_DRAFT"
+    "status": "CI_SUCCESS_RELATED_AUDIT_INCOMPLETE_DRAFT"
   },
   "candidates": [
     {
@@ -249,7 +259,7 @@
     "tracked_blob_files_on_pr": 158,
     "sha": "3c47cbca447215dbf18c3e82cb59f8049295f330",
     "files_checked": 0,
-    "checksum": "3c47cbca447215dbf18c3e82cb59f8049295f330",
+    "checksum": "d2eb9196795c00cabc0400c29abb1ed5d82064a7",
     "checksum_kind": "git_tree_sha",
     "files": [
       {
@@ -1220,13 +1230,18 @@
     {
       "run_id": 41238941028,
       "head_sha": "3c47cbca447215dbf18c3e82cb59f8049295f330",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "success",
       "jobs": [
-        "Full pytest suite: queued/in progress",
-        "Windows runtime smoke: queued/in progress"
+        "Full pytest suite: completed/success",
+        "Windows runtime smoke: completed/success"
       ],
-      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41238941028"
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41238941028",
+      "additional_statuses": [
+        "security/snyk: success",
+        "qlty check: success",
+        "qlty usage: pending"
+      ]
     }
   ],
   "upstream_changes": [
@@ -1509,14 +1524,14 @@
       "id": "cash-drop-double-reconciliation",
       "severity": "high",
       "fixed_in": "27f828e7c2ce95f58b51ce2a08611214eae1eae9",
-      "status": "CODE_PATCHED_CI_PENDING",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
       "description": "One broker cash drop was credited independently to multiple pending BUY reservations."
     },
     {
       "id": "score-max-concurrent-ratio",
       "severity": "high",
       "fixed_in": "3c47cbca447215dbf18c3e82cb59f8049295f330",
-      "status": "CODE_PATCHED_CI_PENDING",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
       "description": "Concurrent score-max-capital BUYs shared a mutable score ratio across async tasks."
     }
   ],
