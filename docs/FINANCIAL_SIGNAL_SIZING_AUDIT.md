@@ -1,0 +1,50 @@
+# Financial signal sizing compatibility audit — PR #42
+
+> Scope: `dragon1086/prism-insight` publisher BUY/SELL sizing → `tkgo11/prism-insight-light` subscriber, branch `feat/upstream-signal-sizing-20261031`. **Static/CI audit, NOT live brokerage certification. Do not enable real orders solely based on CI.**
+
+## Contract and test invariants
+
+1. Parse inbound `BUY.position_fraction` in (0,1], default 1.0; `SELL.sell_denominator` as a positive integer, default 1. Unsupported `ADD` **must not** become BUY.
+2. For each account, determine one **local configured order budget** before applying upstream BUY fraction. Fixed-amount settings retain their old semantics. Percent-of-assets settings use the account's `total_eval_amount` and cap by verified `available_amount`; a missing summary or zero orderable cash must reject the fractional order without broker submission.
+3. A strategy's explicit BUY notional is the base; multiply upstream fraction **exactly once**. A fractional default BUY must not silently fall back to full size.
+4. For SELL, apply the strategy-specific exit fraction divided by the upstream denominator; the broker uses `floor(verified_holding * fraction)`, never round up. Zero orderable shares produce no SELL order.
+5. Execute the **same** order-sizing semantics in legacy, strategy, KR, US, and multi-account paths; each account has an independent budget, holdings, and durable execution identity.
+6. Replay and queued payloads preserve the original sizing fields. Unknown broker outcomes must never be automatically retried. Pre-submission sizing rejections must not be mistaken for broker-accepted orders.
+7. Partial exits **must not** delete trailing-stop records or stop-loss protection while holdings remain. For a configured exit strategy, the watcher retains tracking unless a fresh post-order holding check proves flat.
+8. `event_risk_off.buy_size_multiplier` must work even if the source payload does not supply `buy_amount`; combine it with upstream fraction once.
+
+## Related source paths reviewed against this contract
+
+| Group | Source files | Invariant |
+| --- | --- | --- |
+| Inbound parsing | `trading/schema.py`, `subscriber.py`, `trading/telegram_fetch.py`, `trading/signal_safety.py` | 1, 6 |
+| Execution orchestration | `trading/dispatch.py`, `trading/execution_ledger.py`, `trading/execution_outcome.py`, `trading/off_hours_queue.py`, `trading/file_lock.py` | 3–7 |
+| Broker budget + orders | `trading/signal_sizing.py`, `trading/buy_sizing.py`, `trading/domestic.py`, `trading/us.py`, `trading/kis_auth.py` | 2–5 |
+| BUY and combined strategies | `trading/strategies/common.py`, `balance_split.py`, `score_max_capital.py`, `score_risk.py`, `score_weighted.py`, `risk_bracket.py`, `balanced_risk.py` | 2–5 |
+| SELL and mixed strategies | `trading/strategies/bracket_exit.py`, `protective_exit.py`, `profit_ladder.py`, `stop_loss_sell.py`, `signal_trailing_stop.py`, `event_risk_off.py`, `cooldown.py`, `limit_buffer.py` | 3–4, 7–8 |
+| Protection and external controls | `trading/stop_loss_watcher.py`, `webui/services/trade_service.py`, `account_service.py`, `signal_service.py`, `webui/routes/trading.py`, `trading/config/kis_devlp.yaml.example` | 5–7 |
+| Operational entry points | `setup_subscriber_crontab.sh`, `setup_subscriber_docker_crontab.sh`, `pubsub_readiness.py`, `webui/services/dry_run_service.py` | Verify they delegate to shared execution/validation rather than independently sizing |
+
+## Evidence in repository tests
+
+- `tests/test_upstream_signal_sizing.py`: schema validation, legacy defaults, unsupported ADD, KR/US basic sizing.
+- `tests/test_upstream_strategy_compatibility.py`: trailing stop, score-max-capital composition, zero-cash failure, rejection outcome.
+- `tests/test_financial_sizing_audit.py`: KR/US percent-of-assets budgets, missing cash fail-closed, risk-off multiplication.
+- `tests/test_partial_exit_stop_loss_safety.py`: watcher keeps residual holdings protected, retains record on failed balance inquiry.
+- `tests/test_strategy_partial_matrix.py`: 10 BUY strategy configurations and 9 SELL strategy configurations.
+- `tests/test_queue_and_account_sizing.py`: serialized queue retains sizing and each KIS account uses its own budget.
+- Existing `tests/test_multi_account_*.py`, `tests/test_stop_loss_watcher.py`, `tests/test_dispatch.py`, `tests/test_signal_safety.py` and `tests/test_wave4_execution_safety.py` remain regression guards.
+
+## Critical limitations and residual risks (not waived)
+
+- **Order acceptance ≠ fill.** Broker `success=True` may not establish complete exchange execution. Position reconciliation, partial fills, pending orders, cancellation and amendments need a read-only KIS demo integration harness and account-level post-trade verification before live use.
+- **No complete live KIS or live GCP Pub/Sub run here.** Both domestic/overseas, regular/off-hours, real/demo, multi-account and auto-exchange need controlled integration tests with actual sandbox credentials and non-financial limits.
+- **Stop-loss partial liquidation:** tracking is retained for configured strategy exits, but ledger idempotency may suppress repeated watcher-generated signals after a previously accepted order. Remaining holdings require operator reconciliation; automatically issuing another order without confirming the first is filled would be unsafe.
+- **Small fractional quantities:** an order can round to zero whole shares; the broker rejects/does not submit. This is not a full-position exit, and no share count should be inferred from a requested fraction alone.
+- **Partial publisher exits combined with strategy exits:** the effective fraction is `strategy_sell_fraction / sell_denominator`; this is deliberately conservative and may differ from the upstream standalone subscriber's exact liquidation quantity.
+- **`ADD` is intentionally unsupported** pending idempotency, hold checks, and per-position caps.
+- **Do not claim formal verification or a perfect financial system:** simulations, mocks, code review and CI are necessary but insufficient for production guarantees.
+
+## Deployment gate
+
+Keep the PR unmerged until a human reviews all modified logic and a separate demo-environment integration test verifies no unexpected trade, no account mix-up, idempotency across restarts, price-limit checks, filled vs accepted status handling, residual holdings after partial sells and all stop-loss watcher transitions. Use a manual kill switch and small demo positions in all testing.
