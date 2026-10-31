@@ -4,9 +4,9 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "automation-turn-4-2026-10-31T14:18Z",
-    "started_at": "2026-10-31T14:18:12Z",
-    "completed_at": "2026-10-31T14:20:26.468Z",
+    "id": "scheduled-2026-10-31T15:20Z",
+    "started_at": "2026-10-31T15:20:10Z",
+    "completed_at": "2026-10-31T15:22:23.172Z",
     "lock_owner": null
   },
   "source": {
@@ -26,11 +26,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
+    "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DURABLE_LEDGER_FIX_COMMITTED_NEW_HEAD_CI_RUNNING"
+    "status": "NONFINITE_KIS_BUYING_POWER_FIX_COMMITTED_CI_RUNNING"
   },
   "candidates": [
     {
@@ -39,18 +39,18 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
+      "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
       "mutation_allowed": true,
-      "changed_files": 33
+      "changed_files": 34
     }
   ],
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_REQUIRES_COMPLETE_REAUDIT_AFTER_LEDGER_FIX",
+    "status": "PARTIAL_REQUIRES_COMPLETE_REAUDIT_AFTER_NONFINITE_BUYING_POWER_FIX",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
@@ -106,9 +106,19 @@
         "path": "trading/execution_ledger.py",
         "ref": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
         "status": "PARTIAL_READ_STALE_AFTER_FIX"
+      },
+      {
+        "path": "trading/strategies/balance_split.py",
+        "ref": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
+        "status": "TARGETED_FIX_ONLY_NOT_FULL_AUDIT"
+      },
+      {
+        "path": "tests/test_balance_split_strategy.py",
+        "ref": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
+        "status": "REGRESSION_ADDED_NOT_FULL_AUDIT"
       }
     ],
-    "scope_estimate": "PR currently changes 31 files; 157 tracked blob files in resulting tree, but related dependency closure not fully audited",
+    "scope_estimate": "PR changes 34 files; 157 tracked blob files in PR tree before this run. Complete dependency closure not yet audited.",
     "checksum": null,
     "modified_files": [
       "trading/stop_loss_watcher.py",
@@ -122,14 +132,16 @@
       "trading/signal_sizing.py",
       "tests/test_upstream_signal_sizing.py",
       "trading/execution_ledger.py",
-      "tests/test_execution_ledger_retention.py"
+      "tests/test_execution_ledger_retention.py",
+      "trading/strategies/balance_split.py",
+      "tests/test_balance_split_strategy.py"
     ]
   },
   "full_manifest": {
     "status": "NOT_STARTED",
     "tracked_tree_entries_on_pr": null,
     "tracked_blob_files_on_pr": null,
-    "sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
+    "sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
     "files_checked": 0,
     "checksum": null
   },
@@ -196,6 +208,22 @@
       "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
       "status": "in_progress",
       "conclusion": null
+    },
+    {
+      "run_id": 41209608548,
+      "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite",
+        "Windows runtime smoke"
+      ]
+    },
+    {
+      "run_id": 41214519214,
+      "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
+      "status": "in_progress",
+      "conclusion": null
     }
   ],
   "upstream_changes": [
@@ -256,6 +284,13 @@
       "description": "Seven-day expiry and 10,000-entry truncation previously deleted executed/unknown/in_progress duplicate-protection identities, allowing old replay to re-submit broker orders. Now retain all non-retryable identities, prune only old provably retryable statuses, and fail closed when new claim exceeds cap.",
       "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
       "evidence": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa"
+    },
+    {
+      "severity": "HIGH",
+      "area": "US auto-exchange BUY sizing",
+      "description": "KIS after-exchange numeric fields accepted float('inf') as positive buying power, allowing a full-size balance_split or score_max_capital BUY to pass an infinite budget into the broker path. Reject all nonfinite buying-power values before order sizing; regression cases cover inf/nan.",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
+      "evidence": "9b9dd41be871c09b9cd81900899dbc27e58a179b"
     }
   ],
   "audit_evidence": [
@@ -333,15 +368,33 @@
       "ci_prior_head_run_id": 41205354414,
       "ci_latest_run_id": 41209608548,
       "notes": "Inspected current default branches, upstream SHA, PR, 157-file prior tree, PR changed-file list, CI results, execution ledger and watcher/dispatcher/subscriber/queue paths. Found 7-day age pruning and max-entry truncation could silently remove accepted/unknown/in-progress claims and re-enable duplicate broker submissions. Fixed with fail-closed capacity guard and four regression tests. New-head CI queued. No local tests (container cannot resolve github.com); related dependency closure and file-by-file audit incomplete. No PASS; no merge."
+    },
+    {
+      "run_id": "scheduled-2026-10-31T15:20Z",
+      "kind": "TARGETED_NONFINITE_BUDGET_FIX_NOT_FULL_AUDIT",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
+      "commit_shas": [
+        "abfab8ec14f9c130bb28c9ab12910458bc155ced",
+        "9b9dd41be871c09b9cd81900899dbc27e58a179b"
+      ],
+      "changed_files": [
+        "trading/strategies/balance_split.py",
+        "tests/test_balance_split_strategy.py"
+      ],
+      "ci_prior_head_run_id": 41209608548,
+      "ci_latest_run_id": 41214519214,
+      "notes": "Confirmed latest prior-head CI successful (Linux full pytest, Windows runtime). Reviewed ledger, stop-loss watcher, dispatcher, subscriber, queue, broker outcome classifier, balance-split and score-max-capital paths, strategy tests. Found nonfinite KIS after-exchange buying-power fields could be treated as positive and forwarded as unbounded full BUY budget. Fixed finite validation and added three regression scenarios. Local pytest not run (container DNS unavailable); new-head CI in progress. Related closure not complete; no PASS; no merge."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
     "Full related-code dependency closure and file-by-file audit not completed",
-    "New-head CI queued/not yet verified",
+    "Latest head CI still in progress",
     "No safe demo KIS/GCP end-to-end integration; partial fills and durable stop-loss follow-up still require operator reconciliation",
     "No two consecutive passing related/full audits"
   ],
-  "next_action": "Wait for latest-head CI #41209608548; fix failures if any. Rebuild complete related-code manifest and perform a full file-by-file audit on unchanged head; do not award PASS on partial review."
+  "next_action": "Check latest-head CI run 41214519214, fix failures if any. Rebuild complete related manifest on stable head and perform file-by-file audit. Do not award PASS on partial review."
 }
