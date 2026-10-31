@@ -354,10 +354,12 @@ async def test_kr_balance_split_deducts_recent_successful_buys_when_broker_cash_
     second_result = await strategy._execute_kr(signal, trader=second_trader)
 
     assert second_result.status == "executed"
-    assert second_result.available_amount == 12819362
-    assert second_result.buy_amount == 6409681.0
+    # The broker's 11,052,000 KRW report can be a partial fill; the accepted
+    # 11,935,681 KRW commitment must remain reserved until reconciliation.
+    assert second_result.available_amount == 11935681.0
+    assert second_result.buy_amount == 5967840.0
     assert second_result.cash_source == "cash_balance-after-reservations"
-    assert second_trader.buy_calls == [("012510", 6409681, 119400)]
+    assert second_trader.buy_calls == [("012510", 5967840, 119400)]
 
 
 @pytest.mark.asyncio
