@@ -864,23 +864,17 @@ class TradeDispatcher:
                     target_price=signal.target_price,
                 )
             elif signal.signal_type == "SELL" and signal.sell_reason != "stop_loss":
-                # A partial upstream SELL must leave protection for the residual
-                # holding. Strategies may also liquidate only a fraction of a
-                # position, even with the default upstream denominator=1.
-                # Without a verified post-trade holding of zero, retain the
-                # watcher entry rather than accidentally unprotect a position.
-                if signal.sell_denominator != 1 or (
-                    getattr(self, "strategy_config", None) is not None
-                    and self._resolve_strategy(signal) is not None
-                ):
-                    logger.info(
-                        "Keeping stop-loss tracking after potentially partial SELL %s(%s)",
-                        signal.company_name, signal.ticker,
-                    )
-                    return
-                # Watcher-generated stop-loss sells own removal via a
-                # compare-and-delete keyed on the record the watcher observed.
-                self.stop_loss_tracker.remove_position(signal.market, signal.ticker)
+                # An accepted broker order (including a full-size SELL) is not
+                # evidence that the shares were filled. Do not drop durable
+                # protection based on an order-acceptance status or an account
+                # summary; the watcher must independently confirm a fresh,
+                # aggregate zero balance before removing the tracked position.
+                # This also covers partial fills and strategy-specific exits.
+                logger.info(
+                    "Keeping stop-loss tracking after SELL %s(%s) pending "
+                    "verified flat holdings",
+                    signal.company_name, signal.ticker,
+                )
         except Exception:
             # The broker outcome is already known at this point. Do not turn a
             # successful order into a retryable subscriber failure merely
