@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
     "started_at": "2026-10-31T19:22:39Z",
-    "completed_at": "2026-10-31T19:27:00Z",
-    "lock_owner": null,
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
     "last_mutation_commit": "17e622d232a015e10b2507d8713b025a4d34a238",
     "last_mutation_at": "2026-10-31T19:24:00Z",
-    "result": "FINANCIAL_RESERVATION_FIX_PUSHED_CI_IN_PROGRESS_AUDIT_INCOMPLETE",
+    "result": "REOPENED_AFTER_CI_FAILURE_FIX_STALE_TEST_EXPECTATIONS",
     "pr_comment_id": 6548058385,
     "last_report": {
       "phase": "related_code_audit",
@@ -347,11 +347,11 @@
     {
       "run_id": 41234048109,
       "head_sha": "17e622d232a015e10b2507d8713b025a4d34a238",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "failure",
       "jobs": [
-        "Full pytest suite: in_progress",
-        "Windows runtime smoke: in_progress"
+        "Full pytest suite: 761 passed, 1 failed (stale KR cash-reservation test expected reported partial amount instead of full submitted commitment)",
+        "Windows runtime smoke: success"
       ],
       "additional_statuses": [
         "qlty check: pending",
