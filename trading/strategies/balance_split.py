@@ -8,7 +8,7 @@ import math
 import os
 import tempfile
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -24,7 +24,6 @@ from .common import acquire_file_lock, integer_value
 logger = logging.getLogger(__name__)
 
 BALANCE_SPLIT = "balance_split"
-RESERVATION_TTL = timedelta(minutes=30)
 RESERVATION_PATH = (
     Path(__file__).resolve().parents[2] / "runtime" / "balance_split_reservations.json"
 )
@@ -107,6 +106,15 @@ class BalanceSplitStrategy:
                 available_amount, cash_source = self._after_exchange_buying_power(
                     signal, trader=trader, summary=summary
                 )
+                if available_amount > 0:
+                    reserved = self._pending_reserved_amount(
+                        market="US",
+                        current_cash=available_amount,
+                        account_key=self._reservation_account_key(summary),
+                    )
+                    available_amount = max(0.0, available_amount - reserved)
+                    if reserved > 0:
+                        cash_source += "-after-reservations"
             base_amount = self._buy_amount(available_amount)
             if base_amount <= 0:
                 # Preserve the no-balance result for fractional upstream BUYs.
@@ -129,12 +137,12 @@ class BalanceSplitStrategy:
                 buy_amount=buy_amount,
                 cash_source=cash_source,
             )
-            if execution.status == "executed":
+            if execution.status in {"executed", "unknown"}:
                 self._record_cash_reservation(
                     market=signal.market,
                     ticker=signal.ticker,
                     before_cash=available_amount,
-                    amount=self._executed_amount(result) or buy_amount,
+                    amount=self._safe_reservation_amount(result, buy_amount),
                     account_key=self._reservation_account_key(summary),
                 )
             return execution
@@ -278,12 +286,12 @@ class BalanceSplitStrategy:
                 buy_amount=float(int(buy_amount)),
                 cash_source=cash_source,
             )
-            if execution.status == "executed":
+            if execution.status in {"executed", "unknown"}:
                 self._record_cash_reservation(
                     market=signal.market,
                     ticker=signal.ticker,
                     before_cash=available_amount,
-                    amount=self._executed_amount(result) or float(int(buy_amount)),
+                    amount=self._safe_reservation_amount(result, float(int(buy_amount))),
                     account_key=self._reservation_account_key(summary),
                 )
             return execution
@@ -449,7 +457,6 @@ class BalanceSplitStrategy:
     def _fresh_reservations(
         self, reservations: list[dict[str, Any]] | None = None
     ) -> list[dict[str, Any]]:
-        cutoff = datetime.now(timezone.utc) - RESERVATION_TTL
         fresh: list[dict[str, Any]] = []
         source_reservations = reservations if reservations is not None else self._load_reservations()
         for reservation in source_reservations:
@@ -472,8 +479,10 @@ class BalanceSplitStrategy:
                 raise RuntimeError("Balance split reservation has an invalid timestamp") from exc
             if created_at.tzinfo is None:
                 created_at = created_at.replace(tzinfo=timezone.utc)
-            if created_at >= cutoff:
-                fresh.append(reservation)
+            # Age alone cannot prove broker settlement or cancellation. Retain
+            # unresolved BUY commitments until observed cash reconciliation;
+            # otherwise a delayed balance refresh can re-spend the same funds.
+            fresh.append(reservation)
         return fresh
 
     def _pending_reserved_amount(
@@ -495,7 +504,6 @@ class BalanceSplitStrategy:
         reservations_changed = len(reservations) != len(loaded_reservations)
 
         reserved_amount = 0.0
-        adjusted_cash = current_cash
         retained_reservations: list[dict[str, Any]] = []
         for reservation in reservations:
             if str(reservation.get("market", "")).upper() != market.upper():
@@ -516,7 +524,10 @@ class BalanceSplitStrategy:
             # later cash rebound (sell proceeds, deposits, or canceled orders)
             # cannot make already-reflected buys look unreflected again.  Partial
             # broker updates keep only the still-unreflected remainder.
-            reflected_amount = max(0.0, before_cash - adjusted_cash)
+            # Compare each order with the actual broker cash snapshot. Deducting
+            # earlier unreflected reservations here would falsely mark later
+            # orders as settled even though broker cash never moved.
+            reflected_amount = max(0.0, before_cash - current_cash)
             unreflected_amount = max(0.0, amount - reflected_amount)
             if unreflected_amount <= 0:
                 reservations_changed = True
@@ -524,13 +535,12 @@ class BalanceSplitStrategy:
             if reflected_amount > 0:
                 reservation = {
                     **reservation,
-                    "before_cash": float(adjusted_cash),
+                    "before_cash": float(current_cash),
                     "amount": float(unreflected_amount),
                 }
                 reservations_changed = True
             retained_reservations.append(reservation)
             reserved_amount += unreflected_amount
-            adjusted_cash = max(0.0, adjusted_cash - unreflected_amount)
 
         if reservations_changed:
             self._save_reservations(retained_reservations)
@@ -553,8 +563,10 @@ class BalanceSplitStrategy:
         amount: float,
         account_key: str = "default",
     ) -> None:
-        if market.upper() not in {"KR", "US"} or before_cash <= 0 or amount <= 0:
+        if market.upper() not in {"KR", "US"}:
             return
+        if not all(math.isfinite(x) and x > 0 for x in (before_cash, amount)):
+            raise RuntimeError("Balance split reservation contains invalid amounts")
         with FileLock(self.reservation_lock_path):
             reservations = self._fresh_reservations()
             reservations.append(
@@ -593,6 +605,11 @@ class BalanceSplitStrategy:
         except (TypeError, ValueError):
             total_amount = 0.0
         return total_amount
+
+    @staticmethod
+    def _safe_reservation_amount(result: dict[str, Any], budget: float) -> float:
+        reported = BalanceSplitStrategy._executed_amount(result)
+        return reported if math.isfinite(reported) and reported > 0 else budget
 
     def _no_balance(
         self,
