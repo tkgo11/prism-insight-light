@@ -4,9 +4,9 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "scheduled-2026-10-31T12:20:27Z",
-    "started_at": "2026-10-31T12:20:27Z",
-    "completed_at": "2026-10-31T12:25:34.442Z",
+    "id": "scheduled-2026-10-31T13:20:27Z",
+    "started_at": "2026-10-31T13:20:27Z",
+    "completed_at": "2026-10-31T13:23:53.297Z",
     "lock_owner": null
   },
   "source": {
@@ -26,11 +26,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "41f779232c71d026dd0217863dcb5f98b96be85f",
+    "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "CODE_FIXES_COMMITTED_AWAITING_REVIEW"
+    "status": "CI_REGRESSION_FIXED_AND_ADDITIONAL_GUARDS_COMMITTED_AWAITING_NEW_CI"
   },
   "candidates": [
     {
@@ -39,71 +39,71 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "41f779232c71d026dd0217863dcb5f98b96be85f",
+      "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
       "mutation_allowed": true,
-      "changed_files": 26
+      "changed_files": 31
     }
   ],
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_REQUIRES_COMPLETE_REAUDIT",
+    "status": "PARTIAL_REQUIRES_COMPLETE_REAUDIT_AFTER_CODE_CHANGES",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "PREVIOUS_PARTIAL_READ_STALE"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "trading/schema.py",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "PREVIOUS_PARTIAL_READ_STALE"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "PREVIOUS_PARTIAL_READ_STALE"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": ".github/workflows/tests.yml",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "PREVIOUS_PARTIAL_READ_STALE"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "trading/dispatch.py",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "MODIFIED_REQUIRES_NEW_COMPLETE_AUDIT"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "trading/stop_loss_watcher.py",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "MODIFIED_REQUIRES_NEW_COMPLETE_AUDIT"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "trading/strategies/common.py",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "PREVIOUS_PARTIAL_READ_STALE"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "trading/buy_sizing.py",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "PREVIOUS_PARTIAL_READ_STALE"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "trading/domestic.py",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "MODIFIED_REQUIRES_NEW_COMPLETE_AUDIT"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "trading/us.py",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "MODIFIED_REQUIRES_NEW_COMPLETE_AUDIT"
+        "status": "STALE_AFTER_CODE_CHANGES"
       }
     ],
-    "scope_estimate": "PR 26 changed files plus all dependent source/test/config; not enumerated completely",
+    "scope_estimate": "PR currently changes 31 files; 157 tracked blob files in resulting tree, but related dependency closure not fully audited",
     "checksum": null,
     "modified_files": [
       "trading/stop_loss_watcher.py",
@@ -111,13 +111,18 @@
       "trading/domestic.py",
       "trading/us.py",
       "tests/test_stop_loss_watcher.py",
-      "tests/test_multi_account_empty_balance_fail_closed.py"
+      "tests/test_multi_account_empty_balance_fail_closed.py",
+      "tests/test_upstream_strategy_compatibility.py",
+      "tests/test_wave4_execution_safety.py",
+      "trading/signal_sizing.py",
+      "tests/test_upstream_signal_sizing.py"
     ]
   },
   "full_manifest": {
     "status": "NOT_STARTED",
-    "tracked_tree_entries_on_base": 170,
-    "sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+    "tracked_tree_entries_on_pr": 181,
+    "tracked_blob_files_on_pr": 157,
+    "sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
     "files_checked": 0,
     "checksum": null
   },
@@ -143,12 +148,31 @@
     {
       "run_id": 41200988178,
       "head_sha": "41f779232c71d026dd0217863dcb5f98b96be85f",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "failure",
       "jobs": [
         "Full pytest suite: in_progress",
         "Windows runtime smoke: in_progress"
-      ]
+      ],
+      "details": "Linux pytest 2 failed, 709 passed: stale test assertions expected stop-loss tracking deletion after accepted SELL; Windows smoke passed"
+    },
+    {
+      "run_id": 41205254073,
+      "head_sha": "ddec5a0a7b5481944fa8c5717155490a989dd200",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 41205318274,
+      "head_sha": "9d7c3b0384d62e2a485cd7ab7a780a2d91f01ff9",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "run_id": 41205354414,
+      "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
+      "status": "in_progress",
+      "conclusion": null
     }
   ],
   "upstream_changes": [
@@ -188,6 +212,20 @@
       "description": "Watcher and dispatcher now retain protection until confirmed aggregate flat balance; multi-account empty configuration fails closed. Remaining accepted-order/durable dedupe reconciliation still requires deeper review.",
       "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
       "evidence": "PR head 41f779232c71d026dd0217863dcb5f98b96be85f"
+    },
+    {
+      "severity": "HIGH",
+      "area": "malformed strategy SELL fraction",
+      "description": "Malformed local strategy sell fraction previously raised non-SignalSizingError before broker submission, risking incorrect unknown-order ledger classification; now converted/validated with explicit pre-submission rejection",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
+      "evidence": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7"
+    },
+    {
+      "severity": "HIGH",
+      "area": "stop-loss watcher malformed price",
+      "description": "Non-numeric broker quote previously could abort stop-loss watcher cycle, skipping later tracked positions; now skip invalid quote per position and continue",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
+      "evidence": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7"
     }
   ],
   "audit_evidence": [
@@ -224,15 +262,39 @@
       "notes": "Converted open PR to Draft under user's explicit authorization. Fixed premature stop-loss tracker deletion on broker order acceptance in watcher and dispatcher, validated finite nonnegative holdings, rejected empty multi-account configurations, updated and added regression tests. No local pytest due unavailable repository network checkout. New-head CI pending/not yet confirmed; no PASS claimed.",
       "ci_run_id": 41200988178,
       "pr_comment_id": 6543332439
+    },
+    {
+      "run_id": "scheduled-2026-10-31T13:20:27Z",
+      "kind": "CI_FAILURE_DIAGNOSIS_AND_TARGETED_CODE_FIX_NOT_FULL_AUDIT",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
+      "commit_shas": [
+        "ddec5a0a7b5481944fa8c5717155490a989dd200",
+        "9d7c3b0384d62e2a485cd7ab7a780a2d91f01ff9",
+        "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7"
+      ],
+      "changed_files": [
+        "tests/test_upstream_strategy_compatibility.py",
+        "tests/test_wave4_execution_safety.py",
+        "trading/signal_sizing.py",
+        "tests/test_upstream_signal_sizing.py",
+        "trading/stop_loss_watcher.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "ci_failed_run_id": 41200988178,
+      "ci_fixed_run_id": 41205254073,
+      "ci_latest_run_id": 41205354414,
+      "notes": "Verified CI failure: 709 pass/2 fail stale tests; aligned assertions with safe acceptance-not-fill semantics. Fixed malformed strategy sell_fraction pre-submission classification and invalid stop-loss quote handling with regression tests. Prior intermediate-head CI success; latest-head CI pending. Full related-code audit incomplete. Local tests not run (container network DNS unavailable). No PASS, no merge."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Full related-code audit not completed",
-    "New-head CI results pending/unverified",
-    "No safe demo KIS/GCP integration; partial fills and durable signal dedupe/reconciliation remain unverified",
+    "Complete related-code dependency manifest and file-by-file audit not done",
+    "Latest-head CI in progress/unverified",
+    "No safe demo KIS/GCP end-to-end integration; partial fills and durable signal dedupe/reconciliation remain unverified",
     "No two consecutive passing audits"
   ],
-  "next_action": "Verify latest PR head and GitHub CI for current SHA; fix failures; re-read all related code and audit full dependency manifest; investigate accepted-but-unfilled stop-loss order reconciliation and safe durable dedupe; no PASS until full audit+CI complete."
+  "next_action": "Recheck latest PR head and CI run; fix new failures if any. Complete all related source/tests/config/dependency audits and manifest, including durable stop-loss idempotency reconciliation. No PASS until complete, repeat on separate scheduled run."
 }
