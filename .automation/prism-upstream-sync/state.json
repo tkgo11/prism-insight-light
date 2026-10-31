@@ -6,30 +6,42 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
     "started_at": "2026-10-31T19:22:39Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
+    "completed_at": "2026-10-31T19:32:00Z",
+    "lock_owner": null,
     "last_mutation_commit": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
     "last_mutation_at": "2026-10-31T19:28:00Z",
-    "result": "REOPENED_AFTER_CI_FAILURE_FIX_STALE_TEST_EXPECTATIONS",
-    "pr_comment_id": 6548058385,
+    "result": "FINANCIAL_FIX_AND_REGRESSION_CI_PASSED_AUDITS_NOT_COMPLETE",
+    "pr_comment_id": 6548088751,
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
       "full": 0,
-      "pr_head": "17e622d232a015e10b2507d8713b025a4d34a238",
+      "pr_head": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
       "modified_files": [
         "trading/strategies/balance_split.py",
         "tests/test_balance_split_strategy.py"
       ],
-      "new_commit": "17e622d232a015e10b2507d8713b025a4d34a238",
-      "ci_run_id": 41234048109,
-      "ci_status": "in_progress",
+      "commits": [
+        "17e622d232a015e10b2507d8713b025a4d34a238",
+        "375878b3e8be0cde71223b15a9ec58bfa5303dc9"
+      ],
+      "ci_runs": [
+        {
+          "id": 41234048109,
+          "conclusion": "failure",
+          "detail": "761 passed, 1 failed (stale test)"
+        },
+        {
+          "id": 41234188307,
+          "conclusion": "success"
+        }
+      ],
       "targeted_review_files": 2,
       "related_full_review_completed": false,
       "whole_repo_blob_files": 158,
       "whole_repo_files_reviewed": 0,
       "merged": false,
-      "reason": "Unfinished CI, incomplete per-file audits, unresolved broker fill/cash attribution risk and required demo/human review"
+      "reason": "Incomplete file-level audits and unresolved brokerage acceptance/fill, reconciliation, demo integration and human review"
     },
     "ci_failure": {
       "run_id": 41234048109,
@@ -61,7 +73,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "TEST_ASSERTION_FIXED_CI_PENDING_DRAFT"
+    "status": "CI_SUCCESS_RELATED_AUDIT_INCOMPLETE_DRAFT"
   },
   "candidates": [
     {
@@ -81,7 +93,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "STALE_AFTER_CI_TEST_ASSERTION_CHANGE",
+    "status": "PARTIAL_TARGETED_REVIEW_ONLY_NO_AUDIT_PASS",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
@@ -181,6 +193,13 @@
         "ref": "17e622d232a015e10b2507d8713b025a4d34a238",
         "status": "TARGETED_REGRESSION_REVIEW_ONLY_CI_PENDING",
         "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234048109"
+      },
+      {
+        "path": "tests/test_balance_split_strategy.py",
+        "blob_sha": "1474958ea6d7e1e84d57c9bef9b02e9cac470bd8",
+        "ref": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
+        "status": "TARGETED_TEST_EXPECTATION_REVIEW_ONLY_CI_SUCCESS",
+        "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234188307"
       }
     ],
     "scope_estimate": "PR changed 34 files; current PR tree has 158 tracked blob files. Dependency closure and per-file review not complete.",
@@ -366,6 +385,22 @@
         "security/snyk (tkgo11): success"
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234048109"
+    },
+    {
+      "run_id": 41234188307,
+      "head_sha": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: completed/success (pytest, static smoke, Docker build)",
+        "Windows runtime smoke: completed/success"
+      ],
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234188307",
+      "additional_statuses": [
+        "security/snyk (tkgo11): success",
+        "qlty check: success",
+        "qlty usage: pending"
+      ]
     }
   ],
   "upstream_changes": [
@@ -466,7 +501,7 @@
       "severity": "HIGH",
       "area": "balance_split partial broker reported amount",
       "description": "A partial fill/estimated broker amount smaller than the accepted order budget previously reduced the reservation and could re-spend an unfilled commitment. Reservation now uses max(submitted budget, reported positive amount), with regression for successive US buys; CI and full dependency audit pending.",
-      "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
+      "status": "FIX_COMMITTED_CI_PASSED_AUDIT_PENDING",
       "evidence": "https://github.com/tkgo11/prism-insight-light/commit/17e622d232a015e10b2507d8713b025a4d34a238"
     }
   ],
