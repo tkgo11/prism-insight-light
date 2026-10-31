@@ -696,3 +696,36 @@ async def test_unknown_buy_reserves_cash_against_next_signal(balance_split_strat
     assert first.status == "unknown"
     assert second.status == "failed"
     assert len(trader.buy_calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_partial_broker_report_cannot_release_unfilled_buy_budget(balance_split_strategy):
+    class PartialReportUSTrader(FakeUSTrader):
+        async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
+            self.buy_calls.append((ticker, buy_amount, limit_price))
+            # This can be a partial fill while the rest remains open at KIS.
+            return {"success": True, "estimated_amount": 50.0, "message": "accepted"}
+
+    trader = PartialReportUSTrader(available_amount=900.0)
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200}
+    )
+
+    first = await strategy._execute_us(signal, trader=trader)
+    second = await strategy._execute_us(signal, trader=trader)
+
+    assert first.status == second.status == "executed"
+    # Reserve the entire accepted 450 USD commitment, not the reported 50 USD.
+    assert trader.buy_calls[0][1] == 450.0
+    assert trader.buy_calls[1][1] == 225.0
+    assert sum(item["amount"] for item in strategy._load_reservations()) == 675.0
+
+
+def test_reservation_uses_larger_broker_amount_when_above_submitted_budget():
+    assert BalanceSplitStrategy._safe_reservation_amount(
+        {"total_amount": 150.0}, 100.0
+    ) == 150.0
+    assert BalanceSplitStrategy._safe_reservation_amount(
+        {"estimated_amount": 10.0}, 100.0
+    ) == 100.0

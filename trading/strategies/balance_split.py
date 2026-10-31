@@ -609,7 +609,11 @@ class BalanceSplitStrategy:
     @staticmethod
     def _safe_reservation_amount(result: dict[str, Any], budget: float) -> float:
         reported = BalanceSplitStrategy._executed_amount(result)
-        return reported if math.isfinite(reported) and reported > 0 else budget
+        # A broker-reported amount can describe a partial fill or an estimate,
+        # not the maximum amount still committed by an accepted BUY. Reserving
+        # less than the submitted budget can re-spend the unfilled remainder.
+        # Retain the larger positive amount until authoritative reconciliation.
+        return max(budget, reported) if math.isfinite(reported) and reported > 0 else budget
 
     def _no_balance(
         self,
