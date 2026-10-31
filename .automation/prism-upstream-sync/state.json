@@ -4,40 +4,41 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T06:20:00+09:00-75170f89",
-    "started_at": "2026-10-31T21:24:16.500Z",
-    "completed_at": "2026-10-31T21:24:16.500Z",
+    "id": "automation-turn-11-2026-11-01T07:17+09:00",
+    "started_at": "2026-11-01T07:17:05+09:00",
+    "completed_at": "2026-11-01T07:17:05+09:00",
     "lock_owner": null,
     "last_mutation_commit": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
     "last_mutation_at": "2026-10-31T21:24:16.500Z",
-    "result": "CASH_ONLY_RECONCILIATION_DISABLED_CI_PENDING_AUDITS_ZERO",
+    "result": "CI_SUCCESS_PARTIAL_REVIEW_NO_PASS_EXTERNAL_PENDING",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
       "full": 0,
+      "source_head": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "pr_head": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
-      "modified_files": [
-        "trading/strategies/balance_split.py",
-        "tests/test_balance_split_strategy.py",
-        "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
-      ],
-      "commits": [
-        "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff"
-      ],
+      "pr_number": 42,
+      "pr_changed_files": 35,
+      "related_review_complete": false,
+      "full_tree_files": 158,
+      "full_tree_files_reviewed": 0,
       "ci_runs": [
         {
           "id": 41243400167,
-          "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
-          "status": "queued",
-          "conclusion": null
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff"
         }
       ],
-      "targeted_review_files": 3,
-      "related_full_review_completed": false,
-      "whole_repo_blob_files": 158,
-      "whole_repo_files_reviewed": 0,
+      "external_checks": {
+        "snyk": "success",
+        "qlty_check": "success",
+        "qlty_usage": "pending"
+      },
+      "local_tests_executed": false,
       "merged": false,
-      "reason": "Cash-only broker balance change cannot prove order fill; conservative retention fix committed. CI pending, full related audit incomplete; no KIS/GCP integration."
+      "reason": "No full dependency audit, no broker demo, external status pending, branch protection inaccessible"
     },
     "pr_comment_id": 6548733485
   },
@@ -62,7 +63,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "CI_QUEUED_RELATED_AUDIT_INCOMPLETE_DRAFT"
+    "status": "CI_SUCCESS_RELATED_AUDIT_INCOMPLETE_EXTERNAL_CHECK_PENDING_DRAFT"
   },
   "candidates": [
     {
@@ -82,7 +83,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_TARGETED_REVIEW_NEW_HEAD_CI_QUEUED_NO_PASS",
+    "status": "PARTIAL_TARGETED_REVIEW_NO_PASS_CI_SUCCESS_EXTERNAL_PENDING",
     "checksum": null,
     "scope_estimate": "PR 35 changed files; dependency closure not fully audited",
     "checked_files": [
@@ -1106,7 +1107,32 @@
     "latest_workflow_run_id": 41243400167,
     "latest_workflow_run_status": "queued",
     "latest_workflow_run_conclusion": null,
-    "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff"
+    "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+    "automation-turn-11": {
+      "run_id": 41243400167,
+      "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: completed/success",
+        "Windows runtime smoke: completed/success"
+      ],
+      "external_commit_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        },
+        {
+          "context": "qlty usage",
+          "state": "pending"
+        }
+      ],
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41243400167"
+    }
   },
   "upstream_changes": [
     {
@@ -1361,6 +1387,27 @@
       "ci_previous_head_run_id": 41223929687,
       "ci_latest_run_id": 41228881618,
       "notes": "Confirmed upstream and fork main unchanged, PR 42 Draft, 158 tracked blobs; previous-head Linux pytest and Windows smoke both succeeded. Found 30-minute expiry of unsettled BUY reservations, false reconciliation of multiple reservations using adjusted rather than actual cash, missing budget reservation for unknown broker outcome, and auto-exchange fallback bypassing reservation deduction. Atomic two-file Git commit adds four regression tests and updates ambiguous-order test. Local pytest not executed: container github.com DNS unavailable. New-head CI queued; related dependency closure not complete; no PASS and no merge."
+    },
+    {
+      "run_id": "automation-turn-11-2026-11-01T07:17+09:00",
+      "kind": "CI_VERIFICATION_AND_PARTIAL_SOURCE_REVIEW_NO_PASS",
+      "phase": "related_code_audit",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "reviewed_targets": [
+        "trading/strategies/balance_split.py",
+        "trading/execution_ledger.py",
+        "trading/strategies/score_max_capital.py",
+        "trading/signal_sizing.py",
+        "trading/dispatch.py",
+        "trading/stop_loss_watcher.py",
+        "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+        "tests/test_balance_split_strategy.py"
+      ],
+      "notes": "Read targeted portions, verified PR 35 changed files and prior 158-blob full-tree manifest; no complete dependency-closure file-by-file audit or local execution. PR head 75170f89 CI 41243400167 completed/success; Full pytest suite and Windows runtime smoke completed/success. Additional check-run 41243396451 also success; qlty usage commit status pending; security/snyk and qlty check success. No review submitted; branch-protection read returned integration 403. No KIS/GCP demo evidence; no merge."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -1369,13 +1416,16 @@
     "Full related dependency closure and file-by-file audit incomplete",
     "Broker fill/partial-fill and order-id reconciliation require safe demo evidence",
     "Full repository audit not started",
-    "New-head CI incomplete",
     "Full related dependency audit incomplete",
     "Real/demo KIS and GCP integration not performed",
     "Broker fill/stop-loss reconciliation unresolved",
-    "Required approvals and branch protection not fully verified"
+    "Required approvals and branch protection not fully verified",
+    "Related dependency-closure file-by-file audit incomplete",
+    "External qlty usage status pending",
+    "No verified broker fill/order-id reconciliation and KIS/GCP demo integration",
+    "Branch protection read forbidden by integration (403); reviews absent"
   ],
-  "next_action": "Wait for new-head CI; inspect failures and fix if needed. Complete dependency-closure file-by-file audit. Never count PASS or merge before gates.",
+  "next_action": "Continue full dependency-closure review and safe broker mock/demo integration. Recheck qlty usage and approval/protection gates. Keep Draft, both PASS counters zero; no merge.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -1397,6 +1447,16 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Targeted fix changed code; complete dependency audit and new-head CI incomplete"
+    },
+    {
+      "run_id": "automation-turn-11-2026-11-01T07:17+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Related dependency closure incomplete; qlty usage pending; brokerage demo unresolved; no approval/branch protection verification"
     }
   ],
   "discovered_defects": [
