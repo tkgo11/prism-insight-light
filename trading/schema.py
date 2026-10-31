@@ -81,6 +81,8 @@ class SignalMessage:
     profit_rate: float | None = None
     sell_reason: str = ""
     buy_price: float | None = None
+    position_fraction: float = 1.0
+    sell_denominator: int = 1
     event_type: str = ""
     event_source: str = ""
     event_description: str = ""
@@ -125,6 +127,13 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
     if payload.get("buy_amount") not in (None, ""):
         _as_positive_float(payload.get("buy_amount"), field_name="buy_amount")
 
+    position_fraction = _as_float(payload.get("position_fraction", 1.0), field_name="position_fraction")
+    if position_fraction is None or not 0 < position_fraction <= 1:
+        raise SignalValidationError("'position_fraction' must be greater than 0 and at most 1")
+    sell_denominator = _as_int(payload.get("sell_denominator", 1), field_name="sell_denominator")
+    if sell_denominator is None or sell_denominator < 1:
+        raise SignalValidationError("'sell_denominator' must be a positive integer")
+
     return SignalMessage(
         signal_type=signal_type,
         ticker=ticker,
@@ -138,6 +147,8 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
         profit_rate=_as_float(payload.get("profit_rate"), field_name="profit_rate"),
         sell_reason=_as_text(payload.get("sell_reason"), field_name="sell_reason"),
         buy_price=_as_positive_float(payload.get("buy_price"), field_name="buy_price"),
+        position_fraction=position_fraction,
+        sell_denominator=sell_denominator,
         event_type=_as_text(payload.get("event_type"), field_name="event_type"),
         event_source=_as_text(payload.get("source"), field_name="source"),
         event_description=_as_text(payload.get("event_description"), field_name="event_description"),

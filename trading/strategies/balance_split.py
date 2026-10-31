@@ -16,6 +16,7 @@ from ..domestic import AsyncTradingContext
 from ..execution_outcome import classify_broker_result
 from ..file_lock import FileLock
 from ..schema import SignalMessage
+from ..signal_sizing import scaled_buy_amount
 from ..us import USStockTrading
 from .common import acquire_file_lock, integer_value
 
@@ -105,7 +106,7 @@ class BalanceSplitStrategy:
                 available_amount, cash_source = self._after_exchange_buying_power(
                     signal, trader=trader, summary=summary
                 )
-            buy_amount = self._buy_amount(available_amount)
+            buy_amount = scaled_buy_amount(signal, self._buy_amount(available_amount))
             if buy_amount <= 0:
                 return self._no_balance(signal, available_amount, buy_amount, cash_source=cash_source)
 
@@ -241,7 +242,7 @@ class BalanceSplitStrategy:
         execution_lock = await acquire_file_lock(self.execution_lock_path)
         try:
             available_amount, cash_source, summary = self._available_amount(trader, market="KR")
-            buy_amount = self._buy_amount(available_amount)
+            buy_amount = scaled_buy_amount(signal, self._buy_amount(available_amount))
             buy_amount, cash_source = self._cap_buy_amount_for_orderability(
                 buy_amount=buy_amount,
                 cash_source=cash_source,

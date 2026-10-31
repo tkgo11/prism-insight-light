@@ -23,7 +23,8 @@ from .file_lock import FileLock
 from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
 from .modes import normalize_trading_mode
 from .off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue, QueueExecutionResult
-from .schema import SignalMessage, parse_signal_payload
+from .schema import SignalMessage
+from .signal_sizing import adjusted_sell_fraction, scaled_buy_amount, parse_signal_payload
 from .signal_safety import (
     OUTCOME_REJECT,
     REASON_DUPLICATE,
@@ -1017,15 +1018,33 @@ class TradeDispatcher:
                 USStockTrading, **self._trader_kwargs(account)
             )
             if signal.signal_type == "BUY":
-                trade_result = await trader.async_buy_stock(ticker=signal.ticker, limit_price=limit_price)
+                buy_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
+                if signal.position_fraction != 1.0:
+                    buy_kwargs["buy_amount"] = scaled_buy_amount(signal, trader.buy_amount)
+                trade_result = await trader.async_buy_stock(**buy_kwargs)
             else:
-                trade_result = await trader.async_sell_stock(ticker=signal.ticker, limit_price=limit_price)
+                sell_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
+                if signal.sell_denominator != 1:
+                    sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
+                trade_result = await trader.async_sell_stock(**sell_kwargs)
         else:
             async with AsyncTradingContext(**self._trader_kwargs(account)) as trader:
                 if signal.signal_type == "BUY":
-                    trade_result = await trader.async_buy_stock(stock_code=signal.ticker, limit_price=None if limit_price is None else int(limit_price))
+                    buy_kwargs = {
+                        "stock_code": signal.ticker,
+                        "limit_price": None if limit_price is None else int(limit_price),
+                    }
+                    if signal.position_fraction != 1.0:
+                        buy_kwargs["buy_amount"] = scaled_buy_amount(signal, trader.buy_amount)
+                    trade_result = await trader.async_buy_stock(**buy_kwargs)
                 else:
-                    trade_result = await trader.async_sell_stock(stock_code=signal.ticker, limit_price=None if limit_price is None else int(limit_price))
+                    sell_kwargs = {
+                        "stock_code": signal.ticker,
+                        "limit_price": None if limit_price is None else int(limit_price),
+                    }
+                    if signal.sell_denominator != 1:
+                        sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
+                    trade_result = await trader.async_sell_stock(**sell_kwargs)
         status = classify_broker_result(trade_result)
         message = str(trade_result.get("message", ""))
         account_prefix = f"[Account: {account['name']}] " if account else ""

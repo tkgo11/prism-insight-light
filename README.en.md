@@ -503,3 +503,9 @@ pytest tests/test_docker_installer_smoke.py
 The browser smoke test uses synthetic queue/ledger data and a forced dry-run app. In an isolated test environment, run `python tests/webui_fixture_server.py`, then in another terminal run `node tests/webui_browser_smoke.cjs` with Playwright available to Node (for example via `NODE_PATH`). Install Chromium through Playwright first. `PRISM_WEBUI_TEST_PORT` and `PRISM_WEBUI_TEST_URL` can select another loopback port; `PRISM_SCREENSHOT_DIR` optionally saves screenshots. The fixture server uses a temporary runtime and never uses deployment credentials.
 
 The check covers all nine pages, desktop/mobile overflow, theme persistence, navigation search, table filters/pagination, timezone-aware sorting, CSV formula escaping, validation-to-simulation handoff, browser errors, and JavaScript-disabled fallback.
+
+## Upstream signal sizing compatibility
+
+`BUY.position_fraction` (default 1.0; valid (0, 1]) scales the configured per-order budget; an unknown fractional budget never falls back to a full-size order. `SELL.sell_denominator` (default 1; positive integer) reduces the held quantity by that denominator. If an exit strategy specifies its own sell fraction, the two fractions are multiplied.
+
+Upstream `ADD` (micro-split position top-up) remains unsupported: without holding checks, durable signal-level idempotency and position caps, it must never be treated as a new BUY. Unsupported signals are acknowledged without placing an order. BTC trading and publisher/analysis features are outside the light fork's scope. Verify with demo and `--dry-run` before trading live.

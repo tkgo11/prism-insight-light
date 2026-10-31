@@ -18,6 +18,7 @@ from ..domestic import AsyncTradingContext
 from ..execution_outcome import classify_broker_result
 from ..file_lock import FileLock
 from ..schema import SignalMessage
+from ..signal_sizing import adjusted_sell_fraction, scaled_buy_amount
 from ..us import USStockTrading
 
 logger = logging.getLogger(__name__)
@@ -125,24 +126,28 @@ async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount:
     if signal.market == "US":
         trader = USStockTrading(**kwargs)
         if signal.signal_type == "BUY":
-            return await trader.async_buy_stock(ticker=signal.ticker, buy_amount=buy_amount, limit_price=limit_price)
+            base = buy_amount if buy_amount is not None else getattr(trader, "buy_amount", None)
+            sized = scaled_buy_amount(signal, base) if signal.position_fraction != 1.0 else buy_amount
+            return await trader.async_buy_stock(ticker=signal.ticker, buy_amount=sized, limit_price=limit_price)
         return await trader.async_sell_stock(
             ticker=signal.ticker,
             limit_price=limit_price,
-            sell_fraction=sell_fraction,
+            sell_fraction=adjusted_sell_fraction(signal, sell_fraction),
         )
 
     async with AsyncTradingContext(**kwargs) as trader:
         if signal.signal_type == "BUY":
+            base = buy_amount if buy_amount is not None else getattr(trader, "buy_amount", None)
+            sized = scaled_buy_amount(signal, base) if signal.position_fraction != 1.0 else buy_amount
             return await trader.async_buy_stock(
                 stock_code=signal.ticker,
-                buy_amount=None if buy_amount is None else int(buy_amount),
+                buy_amount=None if sized is None else int(sized),
                 limit_price=None if limit_price is None else int(limit_price),
             )
         return await trader.async_sell_stock(
             stock_code=signal.ticker,
             limit_price=None if limit_price is None else int(limit_price),
-            sell_fraction=sell_fraction,
+            sell_fraction=adjusted_sell_fraction(signal, sell_fraction),
         )
 
 
