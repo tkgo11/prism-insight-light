@@ -165,7 +165,8 @@ class SignalTrailingStopStrategy:
                 signal,
                 result,
                 "Signal-trailing-stop untracked SELL pass-through",
-                sell_fraction=self.config.sell_fraction,
+                sell_fraction=adjusted_sell_fraction(signal, self.config.sell_fraction),
+                strategy_sell_fraction=self.config.sell_fraction,
             )
 
         high_price = max(float(record.get("high_price", 0)), float(signal.price))
@@ -191,10 +192,11 @@ class SignalTrailingStopStrategy:
         execution = execution_from_result(
             signal,
             result,
-            f"Signal-trailing-stop sell {self.config.sell_fraction:.0%}",
+            f"Signal-trailing-stop sell {adjusted_sell_fraction(signal, self.config.sell_fraction):.0%}",
             high_price=high_price,
             trailing_stop=trailing_stop,
-            sell_fraction=self.config.sell_fraction,
+            sell_fraction=adjusted_sell_fraction(signal, self.config.sell_fraction),
+            strategy_sell_fraction=self.config.sell_fraction,
         )
         effective_fraction = adjusted_sell_fraction(signal, self.config.sell_fraction)
         if execution.status == "executed" and effective_fraction >= 1:

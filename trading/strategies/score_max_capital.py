@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..schema import SignalMessage
+from ..signal_sizing import adjusted_sell_fraction
 from .balance_split import BalanceSplitExecution, BalanceSplitStrategy, BalanceSplitStrategyConfig
 from .common import (
     StrategyExecution,
@@ -140,11 +141,13 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
                 limit_price=float(signal.price),
                 sell_fraction=sell_fraction,
             )
+            effective_sell_fraction = adjusted_sell_fraction(signal, sell_fraction)
             return execution_from_result(
                 signal,
                 result,
-                f"Score-max-capital sell {sell_fraction:.0%}",
-                sell_fraction=sell_fraction,
+                f"Score-max-capital sell {effective_sell_fraction:.0%}",
+                sell_fraction=effective_sell_fraction,
+                strategy_sell_fraction=sell_fraction,
                 score=signal.buy_score,
             )
 
@@ -197,8 +200,9 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
             cash_source=cash_source,
         )
         broker_message = str(result.get("message", ""))
+        effective_ratio = self._active_buy_ratio * signal.position_fraction
         message = (
-            f"Score-max-capital buy {buy_amount:.2f} ({self._active_buy_ratio:.0%} of "
+            f"Score-max-capital buy {buy_amount:.2f} ({effective_ratio:.0%} of "
             f"{cash_source} {available_amount:.2f})"
         )
         execution.message = f"{message}: {broker_message}" if broker_message else message

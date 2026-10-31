@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass
 from typing import Any
 from ..schema import SignalMessage
+from ..signal_sizing import scaled_buy_amount
 from .common import StrategyExecution, execute_order, execution_from_result, integer_value, market_base_amount, positive_number, strategy_name
 
 SCORE_WEIGHTED = "score_weighted"
@@ -47,5 +48,10 @@ class ScoreWeightedStrategy:
             # surfacing a broker-layer "invalid amount" error as an unknown outcome.
             return StrategyExecution("rejected", "Score band weight produced a zero buy amount", signal.market, signal.ticker)
         result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=buy_amount, limit_price=signal.price)
-        amount_label = f"{buy_amount:.2f}" if buy_amount is not None else "broker default"
-        return execution_from_result(signal, result, f"Score weighted buy {amount_label} at weight {weight:.2f}", buy_amount=buy_amount, weight=weight)
+        submitted_amount = scaled_buy_amount(signal, buy_amount) if buy_amount is not None else None
+        amount_label = (
+            f"{submitted_amount:.2f}" if submitted_amount is not None
+            else "broker-derived fraction" if signal.position_fraction != 1
+            else "broker default"
+        )
+        return execution_from_result(signal, result, f"Score weighted buy {amount_label} at weight {weight:.2f}", buy_amount=submitted_amount, strategy_base_amount=buy_amount, position_fraction=signal.position_fraction, weight=weight)

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 from ..schema import SignalMessage
+from ..signal_sizing import scaled_buy_amount
 from .common import StrategyExecution, append_json_item, boolean_value, execute_order, execution_from_result, market_base_amount, positive_number, runtime_dir, strategy_name
 
 RISK_BRACKET = "risk_bracket"
@@ -31,8 +32,13 @@ class RiskBracketStrategy:
         buy_amount = min(units_notional, max_position) if max_position > 0 else units_notional
         submitted_amount = buy_amount if buy_amount > 0 else None
         result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=submitted_amount, limit_price=signal.price)
-        amount_label = f"{buy_amount:.2f}" if submitted_amount is not None else "broker default"
-        execution = execution_from_result(signal, result, f"Risk bracket buy {amount_label} with risk {risk_budget:.2f}", buy_amount=submitted_amount, risk_budget=risk_budget)
+        effective_amount = scaled_buy_amount(signal, submitted_amount) if submitted_amount is not None else None
+        amount_label = (
+            f"{effective_amount:.2f}" if effective_amount is not None
+            else "broker-derived fraction" if signal.position_fraction != 1
+            else "broker default"
+        )
+        execution = execution_from_result(signal, result, f"Risk bracket buy {amount_label} with risk {risk_budget:.2f}", buy_amount=effective_amount, strategy_base_amount=submitted_amount, position_fraction=signal.position_fraction, risk_budget=risk_budget)
         if execution.status == "executed":
             append_json_item(self.metadata_path or runtime_dir() / "risk_brackets.json", {"market": signal.market, "ticker": signal.ticker, "entry_price": signal.price, "stop_loss": signal.stop_loss, "target_price": signal.target_price, "risk_budget": risk_budget, "created_at": datetime.now(timezone.utc).isoformat()})
         return execution

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..schema import SignalMessage
+from ..signal_sizing import adjusted_sell_fraction
 from .common import (
     StrategyExecution,
     boolean_value,
@@ -91,12 +92,14 @@ class BracketExitStrategy:
             sell_fraction=sell_fraction,
             limit_price=self._limit_price(signal, trigger),
         )
+        effective_fraction = adjusted_sell_fraction(signal, sell_fraction)
         return execution_from_result(
             signal,
             result,
-            f"Bracket-exit {trigger} sell {sell_fraction:.0%}",
+            f"Bracket-exit {trigger} sell {effective_fraction:.0%}",
             trigger=trigger,
-            sell_fraction=sell_fraction,
+            sell_fraction=effective_fraction,
+            strategy_sell_fraction=sell_fraction,
             limit_price=self._limit_price(signal, trigger),
         )
 

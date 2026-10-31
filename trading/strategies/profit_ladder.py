@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 from ..schema import SignalMessage
+from ..signal_sizing import adjusted_sell_fraction
 from .common import StrategyExecution, execute_order, execution_from_result, fraction_value, strategy_name, string_list
 
 PROFIT_LADDER = "profit_ladder"
@@ -43,4 +44,5 @@ class ProfitLadderStrategy:
                 if signal.profit_rate >= profit: sell_fraction = fraction
         if sell_fraction <= 0: return StrategyExecution("rejected", "Profit ladder sell fraction is zero", signal.market, signal.ticker)
         result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, limit_price=signal.price, sell_fraction=sell_fraction)
-        return execution_from_result(signal, result, f"Profit ladder sell fraction {sell_fraction:.2f}", sell_fraction=sell_fraction)
+        effective_fraction = adjusted_sell_fraction(signal, sell_fraction)
+        return execution_from_result(signal, result, f"Profit ladder sell fraction {effective_fraction:.2f}", sell_fraction=effective_fraction, strategy_sell_fraction=sell_fraction)

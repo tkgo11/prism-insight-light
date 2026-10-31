@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..schema import SignalMessage
+from ..signal_sizing import scaled_buy_amount
 from .common import (
     StrategyExecution,
     boolean_value,
@@ -163,12 +164,19 @@ class ScoreRiskStrategy:
             limit_price=entry_price,
         )
         reward_risk = self._reward_risk(signal)
-        amount_label = f"{buy_amount:.2f}" if buy_amount is not None else "broker default"
+        submitted_amount = scaled_buy_amount(signal, buy_amount) if buy_amount is not None else None
+        amount_label = (
+            f"{submitted_amount:.2f}" if submitted_amount is not None
+            else "broker-derived fraction" if signal.position_fraction != 1
+            else "broker default"
+        )
         return execution_from_result(
             signal,
             result,
             f"Score-risk buy {amount_label} at weight {score_weight:.2f}",
-            buy_amount=buy_amount,
+            buy_amount=submitted_amount,
+            strategy_base_amount=buy_amount,
+            position_fraction=signal.position_fraction,
             units=units,
             risk_budget=risk_budget,
             score_weight=score_weight,
