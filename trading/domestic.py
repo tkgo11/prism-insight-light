@@ -1855,8 +1855,12 @@ class MultiAccountDomesticStockTrading:
     def get_holding_quantity(self, stock_code: str) -> int:
         # Holdings may live on any configured account; checking only the
         # primary trader would report a secondary-account position as 0.
+        # No configured accounts is an UNKNOWN balance, not a confirmed zero.
+        # Returning 0 here would silently remove stop-loss protection.
         if not self.account_configs:
-            return 0
+            raise RuntimeError(
+                "Cannot verify aggregate holdings: no accounts configured"
+            )
         return sum(
             self._get_trader(account).get_holding_quantity(stock_code)
             for account in self.account_configs
