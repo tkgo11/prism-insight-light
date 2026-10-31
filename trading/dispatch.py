@@ -24,7 +24,7 @@ from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_a
 from .modes import normalize_trading_mode
 from .off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue, QueueExecutionResult
 from .schema import SignalMessage, parse_signal_payload
-from .signal_sizing import SignalSizingError, adjusted_sell_fraction, scaled_buy_amount
+from .signal_sizing import SignalSizingError, adjusted_sell_fraction, configured_buy_budget, scaled_buy_amount
 from .signal_safety import (
     OUTCOME_REJECT,
     REASON_DUPLICATE,
@@ -1039,7 +1039,7 @@ class TradeDispatcher:
             if signal.signal_type == "BUY":
                 buy_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
                 if signal.position_fraction != 1.0:
-                    buy_kwargs["buy_amount"] = scaled_buy_amount(signal, trader.buy_amount)
+                    buy_kwargs["buy_amount"] = scaled_buy_amount(signal, configured_buy_budget(trader, market=signal.market))
                 trade_result = await trader.async_buy_stock(**buy_kwargs)
             else:
                 sell_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
@@ -1054,7 +1054,7 @@ class TradeDispatcher:
                         "limit_price": None if limit_price is None else int(limit_price),
                     }
                     if signal.position_fraction != 1.0:
-                        buy_kwargs["buy_amount"] = scaled_buy_amount(signal, trader.buy_amount)
+                        buy_kwargs["buy_amount"] = scaled_buy_amount(signal, configured_buy_budget(trader, market=signal.market))
                     trade_result = await trader.async_buy_stock(**buy_kwargs)
                 else:
                     sell_kwargs = {

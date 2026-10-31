@@ -1,6 +1,6 @@
 """Event-aware risk-off strategy state."""
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -49,12 +49,19 @@ class EventRiskOffStrategy:
                 return StrategyExecution("acknowledged", "Risk-off event recorded", signal.market, signal.ticker)
             return StrategyExecution("acknowledged", "Event signal acknowledged", signal.market, signal.ticker)
         buy_amount = None
+        order_signal = signal
+        risk_off_multiplier = None
         if signal.signal_type == "BUY":
             items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.risk_off_window_minutes))
             active = any(item.get("ticker") in ("", signal.ticker) and item.get("market") in ("", signal.market) for item in items)
-            if active and self.config.buy_size_multiplier <= 0: return StrategyExecution("rejected", "Risk-off state blocks BUY signals", signal.market, signal.ticker)
+            if active and self.config.buy_size_multiplier <= 0:
+                return StrategyExecution("rejected", "Risk-off state blocks BUY signals", signal.market, signal.ticker)
             if active:
+                risk_off_multiplier = self.config.buy_size_multiplier
+                # Multiply the upstream fraction and risk-off restriction once.
+                # Shared execution resolves the actual default budget from the broker.
+                order_signal = replace(signal, position_fraction=signal.position_fraction * risk_off_multiplier)
                 configured_amount = signal.raw.get("buy_amount")
-                buy_amount = None if configured_amount in (None, "") else float(configured_amount) * self.config.buy_size_multiplier
-        result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=buy_amount, limit_price=signal.price)
-        return execution_from_result(signal, result, "Event risk-off guarded execution", buy_size_multiplier=self.config.buy_size_multiplier if buy_amount is not None else None)
+                buy_amount = None if configured_amount in (None, "") else float(configured_amount)
+        result = await execute_order(order_signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=buy_amount, limit_price=signal.price)
+        return execution_from_result(signal, result, "Event risk-off guarded execution", buy_size_multiplier=risk_off_multiplier)

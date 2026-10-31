@@ -18,7 +18,7 @@ from ..domestic import AsyncTradingContext
 from ..execution_outcome import classify_broker_result
 from ..file_lock import FileLock
 from ..schema import SignalMessage
-from ..signal_sizing import adjusted_sell_fraction, scaled_buy_amount
+from ..signal_sizing import adjusted_sell_fraction, configured_buy_budget, scaled_buy_amount
 from ..us import USStockTrading
 
 logger = logging.getLogger(__name__)
@@ -126,7 +126,7 @@ async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount:
     if signal.market == "US":
         trader = USStockTrading(**kwargs)
         if signal.signal_type == "BUY":
-            base = buy_amount if buy_amount is not None else getattr(trader, "buy_amount", None)
+            base = buy_amount if buy_amount is not None else configured_buy_budget(trader, market=signal.market)
             sized = scaled_buy_amount(signal, base) if signal.position_fraction != 1.0 else buy_amount
             return await trader.async_buy_stock(ticker=signal.ticker, buy_amount=sized, limit_price=limit_price)
         return await trader.async_sell_stock(
@@ -137,7 +137,7 @@ async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount:
 
     async with AsyncTradingContext(**kwargs) as trader:
         if signal.signal_type == "BUY":
-            base = buy_amount if buy_amount is not None else getattr(trader, "buy_amount", None)
+            base = buy_amount if buy_amount is not None else configured_buy_budget(trader, market=signal.market)
             sized = scaled_buy_amount(signal, base) if signal.position_fraction != 1.0 else buy_amount
             return await trader.async_buy_stock(
                 stock_code=signal.ticker,
