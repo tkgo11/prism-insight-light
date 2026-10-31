@@ -34,7 +34,21 @@ def test_partial_sells_compose_with_local_policy():
     half = signal("SELL", sell_denominator=2)
     assert adjusted_sell_fraction(half) == 0.5
     assert adjusted_sell_fraction(half, 0.4) == 0.2
+    assert adjusted_sell_fraction(half, "0.4") == 0.2
     assert adjusted_sell_fraction(signal("SELL")) is None
+    assert adjusted_sell_fraction(signal("SELL"), 0.4) == 0.4
+
+
+@pytest.mark.parametrize(
+    "value", [True, False, "oops", "", 0, -0.1, 1.1, float("nan"),
+              float("inf"), {}, 10 ** 1000]
+)
+@pytest.mark.parametrize("denominator", [1, 2])
+def test_invalid_local_sell_fraction_is_pre_submission_rejection(value, denominator):
+    from trading.signal_sizing import SignalSizingError
+
+    with pytest.raises(SignalSizingError, match="Strategy sell fraction"):
+        adjusted_sell_fraction(signal("SELL", sell_denominator=denominator), value)
 
 
 @pytest.mark.parametrize("value", [0, -1, 1.5, "NaN", True, None, "oops"])

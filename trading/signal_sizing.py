@@ -77,14 +77,17 @@ def adjusted_sell_fraction(
     signal: SignalMessage, strategy_fraction: float | None = None
 ) -> float | None:
     """Apply publisher partial exit to an optional local strategy exit fraction."""
-    if signal.sell_denominator == 1:
-        return strategy_fraction
-    if strategy_fraction is not None:
-        if (
-            isinstance(strategy_fraction, bool)
-            or not math.isfinite(float(strategy_fraction))
-            or not 0 < strategy_fraction <= 1
-        ):
-            raise SignalSizingError("Strategy sell fraction must be within (0, 1]")
-    effective = 1.0 if strategy_fraction is None else strategy_fraction
-    return effective / signal.sell_denominator
+    if strategy_fraction is None:
+        return None if signal.sell_denominator == 1 else 1.0 / signal.sell_denominator
+    # Reject invalid local strategy parameters *before* broker submission.
+    # Raw float()/comparisons used to raise ValueError/TypeError/OverflowError,
+    # which the dispatcher could mistake for an ambiguous broker outcome.
+    if isinstance(strategy_fraction, bool):
+        raise SignalSizingError("Strategy sell fraction must be within (0, 1]")
+    try:
+        fraction = float(strategy_fraction)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise SignalSizingError("Strategy sell fraction must be within (0, 1]") from exc
+    if not math.isfinite(fraction) or not 0 < fraction <= 1:
+        raise SignalSizingError("Strategy sell fraction must be within (0, 1]")
+    return fraction / signal.sell_denominator
