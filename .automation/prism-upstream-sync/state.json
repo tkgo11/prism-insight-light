@@ -8,8 +8,8 @@
     "started_at": "2026-10-31T19:22:39Z",
     "completed_at": null,
     "lock_owner": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
-    "last_mutation_commit": "17e622d232a015e10b2507d8713b025a4d34a238",
-    "last_mutation_at": "2026-10-31T19:24:00Z",
+    "last_mutation_commit": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
+    "last_mutation_at": "2026-10-31T19:28:00Z",
     "result": "REOPENED_AFTER_CI_FAILURE_FIX_STALE_TEST_EXPECTATIONS",
     "pr_comment_id": 6548058385,
     "last_report": {
@@ -30,6 +30,14 @@
       "whole_repo_files_reviewed": 0,
       "merged": false,
       "reason": "Unfinished CI, incomplete per-file audits, unresolved broker fill/cash attribution risk and required demo/human review"
+    },
+    "ci_failure": {
+      "run_id": 41234048109,
+      "head_sha": "17e622d232a015e10b2507d8713b025a4d34a238",
+      "result": "761 passed, 1 failed",
+      "failed_test": "tests/test_balance_split_strategy.py::test_kr_balance_split_deducts_recent_successful_buys_when_broker_cash_is_stale",
+      "fix_commit": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
+      "explanation": "Existing assertion assumed a partial broker amount released the remaining submitted budget; changed expectation to reserve the full accepted commitment."
     }
   },
   "source": {
@@ -49,11 +57,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "17e622d232a015e10b2507d8713b025a4d34a238",
+    "head_sha": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_AUDIT_RESET_AFTER_PARTIAL_BROKER_AMOUNT_FIX_CI_PENDING"
+    "status": "TEST_ASSERTION_FIXED_CI_PENDING_DRAFT"
   },
   "candidates": [
     {
@@ -62,7 +70,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "17e622d232a015e10b2507d8713b025a4d34a238",
+      "head_sha": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -73,7 +81,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_TARGETED_REVIEW_ONLY_NO_AUDIT_PASS",
+    "status": "STALE_AFTER_CI_TEST_ASSERTION_CHANGE",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
@@ -198,7 +206,7 @@
     "status": "NOT_STARTED",
     "tracked_tree_entries_on_pr": 182,
     "tracked_blob_files_on_pr": 158,
-    "sha": "17e622d232a015e10b2507d8713b025a4d34a238",
+    "sha": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
     "files_checked": 0,
     "checksum": null
   },
