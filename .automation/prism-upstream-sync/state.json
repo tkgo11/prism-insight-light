@@ -6,7 +6,7 @@
   "run": {
     "id": "scheduled-2026-10-31T12:20:27Z",
     "started_at": "2026-10-31T12:20:27Z",
-    "completed_at": "2026-10-31T12:25:03.366Z",
+    "completed_at": "2026-10-31T12:25:34.442Z",
     "lock_owner": null
   },
   "source": {
@@ -139,6 +139,16 @@
         "Full pytest suite",
         "Windows runtime smoke"
       ]
+    },
+    {
+      "run_id": 41200988178,
+      "head_sha": "41f779232c71d026dd0217863dcb5f98b96be85f",
+      "status": "in_progress",
+      "conclusion": null,
+      "jobs": [
+        "Full pytest suite: in_progress",
+        "Windows runtime smoke: in_progress"
+      ]
     }
   ],
   "upstream_changes": [
@@ -211,7 +221,9 @@
         "tests/test_stop_loss_watcher.py",
         "tests/test_multi_account_empty_balance_fail_closed.py"
       ],
-      "notes": "Converted open PR to Draft under user's explicit authorization. Fixed premature stop-loss tracker deletion on broker order acceptance in watcher and dispatcher, validated finite nonnegative holdings, rejected empty multi-account configurations, updated and added regression tests. No local pytest due unavailable repository network checkout. New-head CI pending/not yet confirmed; no PASS claimed."
+      "notes": "Converted open PR to Draft under user's explicit authorization. Fixed premature stop-loss tracker deletion on broker order acceptance in watcher and dispatcher, validated finite nonnegative holdings, rejected empty multi-account configurations, updated and added regression tests. No local pytest due unavailable repository network checkout. New-head CI pending/not yet confirmed; no PASS claimed.",
+      "ci_run_id": 41200988178,
+      "pr_comment_id": 6543332439
     }
   ],
   "last_merged_upstream_sha": null,
