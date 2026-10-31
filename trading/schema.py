@@ -42,7 +42,10 @@ def _as_float(value: Any, *, field_name: str) -> float | None:
         return None
     try:
         number = float(value)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
+        # JSON may contain arbitrarily large integer literals.  Converting
+        # one to float raises OverflowError; keep malformed publisher input
+        # inside the normal SignalValidationError/ACK-NACK safety path.
         raise SignalValidationError(f"Invalid numeric value for '{field_name}'") from exc
     if not math.isfinite(number):
         raise SignalValidationError(f"Invalid numeric value for '{field_name}'")
