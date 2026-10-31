@@ -6,7 +6,7 @@
   "run": {
     "id": "automation-run-8-2026-10-31T18:21:18.391Z",
     "started_at": "2026-10-31T18:17:48Z",
-    "completed_at": "2026-10-31T18:21:18.391Z",
+    "completed_at": "2026-10-31T18:21:47.388Z",
     "lock_owner": null
   },
   "source": {
@@ -30,7 +30,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "FIXED_UNRECONCILED_RESERVATIONS_CI_QUEUED"
+    "status": "FIXED_UNRECONCILED_RESERVATIONS_CI_PASSED_AUDIT_PENDING"
   },
   "candidates": [
     {
@@ -299,9 +299,13 @@
     {
       "run_id": 41228881618,
       "head_sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
-      "status": "queued",
-      "conclusion": null,
-      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41228881618"
+      "status": "completed",
+      "conclusion": "success",
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41228881618",
+      "jobs": [
+        "Full pytest suite: completed/success",
+        "Windows runtime smoke: completed/success"
+      ]
     }
   ],
   "upstream_changes": [
@@ -555,10 +559,9 @@
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Latest-head CI run 41228881618 queued; not yet verified",
     "Full related dependency closure and file-by-file audit incomplete",
     "Broker fill/partial-fill and order-id reconciliation require safe demo evidence",
     "Full repository audit not started"
   ],
-  "next_action": "Confirm latest CI; fix any failures; inspect order-id-based settlement, canceled orders and multi-account reservation reconciliation; build complete related manifest and perform two independent passing audits before Ready for review."
+  "next_action": "Latest-head CI passed. Audit all related files and broker fill/partial-fill reconciliation; maintain 0/2 until a complete separate scheduled-slot audit; then repeat for 2/2 before full audit."
 }
