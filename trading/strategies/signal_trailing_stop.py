@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from ..schema import SignalMessage
+from ..signal_sizing import adjusted_sell_fraction
 from .common import (
     StrategyExecution,
     acquire_file_lock,
@@ -195,7 +196,10 @@ class SignalTrailingStopStrategy:
             trailing_stop=trailing_stop,
             sell_fraction=self.config.sell_fraction,
         )
-        if execution.status == "executed" and self.config.sell_fraction >= 1:
+        effective_fraction = adjusted_sell_fraction(signal, self.config.sell_fraction)
+        if execution.status == "executed" and effective_fraction >= 1:
+            # Upstream sell_denominator>1 means the position still has shares.
+            # Never remove trailing-stop protection after a partial exit.
             self._remove_record(records, self._key(signal))
         return execution
 

@@ -24,7 +24,7 @@ from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_a
 from .modes import normalize_trading_mode
 from .off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue, QueueExecutionResult
 from .schema import SignalMessage, parse_signal_payload
-from .signal_sizing import adjusted_sell_fraction, scaled_buy_amount
+from .signal_sizing import SignalSizingError, adjusted_sell_fraction, scaled_buy_amount
 from .signal_safety import (
     OUTCOME_REJECT,
     REASON_DUPLICATE,
@@ -765,6 +765,14 @@ class TradeDispatcher:
                 result = await self._execute_legacy_trade(signal)
             else:
                 result = await self._execute_legacy_trade(signal, account=account)
+        except SignalSizingError as exc:
+            # Sizing was rejected before broker submission. Never classify it as
+            # an ambiguous order (or leave a ledger claim stuck as "unknown").
+            if identity is not None:
+                await asyncio.to_thread(self.execution_ledger.finalize, identity, "rejected")
+            logger.warning("Rejected %s %s(%s) sizing: %s",
+                           signal.signal_type, signal.company_name, signal.ticker, exc)
+            return DispatchResult("rejected", str(exc), signal.signal_type, signal.market)
         except asyncio.CancelledError:
             if identity is not None:
                 self.execution_ledger.finalize(identity, "unknown")
@@ -856,11 +864,19 @@ class TradeDispatcher:
                     target_price=signal.target_price,
                 )
             elif signal.signal_type == "SELL" and signal.sell_reason != "stop_loss":
+                # A partial upstream SELL must leave protection for the residual
+                # holding. Strategies may also liquidate only a fraction of a
+                # position, even with the default upstream denominator=1.
+                # Without a verified post-trade holding of zero, retain the
+                # watcher entry rather than accidentally unprotect a position.
+                if signal.sell_denominator != 1 or self._resolve_strategy(signal) is not None:
+                    logger.info(
+                        "Keeping stop-loss tracking after potentially partial SELL %s(%s)",
+                        signal.company_name, signal.ticker,
+                    )
+                    return
                 # Watcher-generated stop-loss sells own removal via a
                 # compare-and-delete keyed on the record the watcher observed.
-                # Removing unconditionally here would delete a record that was
-                # re-registered after the watcher's snapshot, leaving the new
-                # position unprotected.
                 self.stop_loss_tracker.remove_position(signal.market, signal.ticker)
         except Exception:
             # The broker outcome is already known at this point. Do not turn a
