@@ -4,9 +4,9 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "scheduled-2026-10-31T13:20:27Z",
-    "started_at": "2026-10-31T13:20:27Z",
-    "completed_at": "2026-10-31T13:23:53.297Z",
+    "id": "automation-turn-4-2026-10-31T14:18Z",
+    "started_at": "2026-10-31T14:18:12Z",
+    "completed_at": null,
     "lock_owner": null
   },
   "source": {
@@ -26,11 +26,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
+    "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "CI_REGRESSION_FIXED_AND_ADDITIONAL_GUARDS_COMMITTED_AWAITING_NEW_CI"
+    "status": "DURABLE_LEDGER_RETENTION_FIX_COMMITTED_NEW_HEAD_CI_QUEUED"
   },
   "candidates": [
     {
@@ -39,18 +39,18 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
+      "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
       "mutation_allowed": true,
-      "changed_files": 31
+      "changed_files": 33
     }
   ],
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_REQUIRES_COMPLETE_REAUDIT_AFTER_CODE_CHANGES",
+    "status": "PARTIAL_REQUIRES_COMPLETE_REAUDIT_AFTER_LEDGER_FIX",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
@@ -101,6 +101,11 @@
         "path": "trading/us.py",
         "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
         "status": "STALE_AFTER_CODE_CHANGES"
+      },
+      {
+        "path": "trading/execution_ledger.py",
+        "ref": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
+        "status": "PARTIAL_READ_STALE_AFTER_FIX"
       }
     ],
     "scope_estimate": "PR currently changes 31 files; 157 tracked blob files in resulting tree, but related dependency closure not fully audited",
@@ -115,14 +120,16 @@
       "tests/test_upstream_strategy_compatibility.py",
       "tests/test_wave4_execution_safety.py",
       "trading/signal_sizing.py",
-      "tests/test_upstream_signal_sizing.py"
+      "tests/test_upstream_signal_sizing.py",
+      "trading/execution_ledger.py",
+      "tests/test_execution_ledger_retention.py"
     ]
   },
   "full_manifest": {
     "status": "NOT_STARTED",
-    "tracked_tree_entries_on_pr": 181,
-    "tracked_blob_files_on_pr": 157,
-    "sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
+    "tracked_tree_entries_on_pr": null,
+    "tracked_blob_files_on_pr": null,
+    "sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
     "files_checked": 0,
     "checksum": null
   },
@@ -172,6 +179,22 @@
       "run_id": 41205354414,
       "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
       "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "run_id": 41205354414,
+      "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite",
+        "Windows runtime smoke"
+      ]
+    },
+    {
+      "run_id": 41209608548,
+      "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
+      "status": "queued",
       "conclusion": null
     }
   ],
@@ -226,6 +249,13 @@
       "description": "Non-numeric broker quote previously could abort stop-loss watcher cycle, skipping later tracked positions; now skip invalid quote per position and continue",
       "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
       "evidence": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7"
+    },
+    {
+      "severity": "HIGH",
+      "area": "execution ledger retention / capacity",
+      "description": "Seven-day expiry and 10,000-entry truncation previously deleted executed/unknown/in_progress duplicate-protection identities, allowing old replay to re-submit broker orders. Now retain all non-retryable identities, prune only old provably retryable statuses, and fail closed when new claim exceeds cap.",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
+      "evidence": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa"
     }
   ],
   "audit_evidence": [
@@ -286,15 +316,32 @@
       "ci_fixed_run_id": 41205254073,
       "ci_latest_run_id": 41205354414,
       "notes": "Verified CI failure: 709 pass/2 fail stale tests; aligned assertions with safe acceptance-not-fill semantics. Fixed malformed strategy sell_fraction pre-submission classification and invalid stop-loss quote handling with regression tests. Prior intermediate-head CI success; latest-head CI pending. Full related-code audit incomplete. Local tests not run (container network DNS unavailable). No PASS, no merge."
+    },
+    {
+      "run_id": "automation-turn-4-2026-10-31T14:18Z",
+      "kind": "DURABLE_REPLAY_SAFETY_FIX_NOT_FULL_AUDIT",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
+      "commit_shas": [
+        "a24dc522a606b222a9a039573fe5d6cfa9f6faaa"
+      ],
+      "changed_files": [
+        "trading/execution_ledger.py",
+        "tests/test_execution_ledger_retention.py"
+      ],
+      "ci_prior_head_run_id": 41205354414,
+      "ci_latest_run_id": 41209608548,
+      "notes": "Inspected current default branches, upstream SHA, PR, 157-file prior tree, PR changed-file list, CI results, execution ledger and watcher/dispatcher/subscriber/queue paths. Found 7-day age pruning and max-entry truncation could silently remove accepted/unknown/in-progress claims and re-enable duplicate broker submissions. Fixed with fail-closed capacity guard and four regression tests. New-head CI queued. No local tests (container cannot resolve github.com); related dependency closure and file-by-file audit incomplete. No PASS; no merge."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Complete related-code dependency manifest and file-by-file audit not done",
-    "Latest-head CI in progress/unverified",
-    "No safe demo KIS/GCP end-to-end integration; partial fills and durable signal dedupe/reconciliation remain unverified",
-    "No two consecutive passing audits"
+    "Full related-code dependency closure and file-by-file audit not completed",
+    "New-head CI queued/not yet verified",
+    "No safe demo KIS/GCP end-to-end integration; partial fills and durable stop-loss follow-up still require operator reconciliation",
+    "No two consecutive passing related/full audits"
   ],
-  "next_action": "Recheck latest PR head and CI run; fix new failures if any. Complete all related source/tests/config/dependency audits and manifest, including durable stop-loss idempotency reconciliation. No PASS until complete, repeat on separate scheduled run."
+  "next_action": "Check latest-head CI #41209608548; fix failures if any; verify durable-ledger retention/capacity semantics and stop-loss follow-up with tests. Complete related file manifest and per-file audit. Never count partial audit as PASS."
 }
