@@ -155,11 +155,11 @@ async def test_dispatcher_registers_stop_loss_on_buy(tmp_path, monkeypatch):
     # Dry-run SELL must not drop protection for a real position.
     assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is not None
 
-    # An executed SELL removes it.
+    # An accepted SELL is not proof of a fill; watcher must confirm flat.
     dispatcher._update_stop_loss_tracking(
-        sell_signal, DispatchResult("executed", "Order executed", "SELL", "KR")
+        sell_signal, DispatchResult("executed", "Order accepted", "SELL", "KR")
     )
-    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is None
+    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is not None
 
 
 def test_stop_loss_watcher_skips_when_market_closed(tmp_path, monkeypatch):
@@ -528,7 +528,7 @@ async def test_dispatcher_stop_loss_sell_signal_uses_market_order_in_legacy_trad
     assert captured_limit_prices == [None]
 
 
-def test_dispatcher_update_stop_loss_tracking_clears_with_non_holding_accounts(tmp_path):
+def test_dispatcher_update_stop_loss_tracking_retains_with_non_holding_accounts(tmp_path):
     tracker_file = tmp_path / "stop_loss_test.json"
     tracker = StopLossTracker(tracker_file)
     tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0)
@@ -566,7 +566,7 @@ def test_dispatcher_update_stop_loss_tracking_clears_with_non_holding_accounts(t
     )
 
     dispatcher._update_stop_loss_tracking(sell_signal, dispatch_result)
-    assert tracker.get_position("KR", "252990") is None
+    assert tracker.get_position("KR", "252990") is not None
 
 
 def test_stop_loss_watcher_cooldown_prevents_immediate_retrigger_storm(tmp_path):
