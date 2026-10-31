@@ -4,9 +4,9 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "scheduled-2026-10-31T16:20Z",
-    "started_at": "2026-10-31T16:21:27Z",
-    "completed_at": "2026-10-31T16:23:44.712Z",
+    "id": "automation-run-7-2026-10-31T17:19:17.495Z",
+    "started_at": "2026-10-31T17:19:17.495Z",
+    "completed_at": "2026-10-31T17:19:17.495Z",
     "lock_owner": null
   },
   "source": {
@@ -26,11 +26,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+    "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "BALANCE_SPLIT_RESERVATION_AND_CASH_FAIL_CLOSED_FIX_COMMITTED_CI_RUNNING"
+    "status": "FIXED_EXPIRED_MALFORMED_RESERVATION_VALIDATION_CI_PENDING"
   },
   "candidates": [
     {
@@ -39,7 +39,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+      "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -50,7 +50,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_REQUIRES_FULL_REAUDIT_AFTER_RESERVATION_AND_CASH_FIX",
+    "status": "PARTIAL_REQUIRES_REAUDIT_AFTER_EXPIRED_RESERVATION_FIX",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
@@ -110,12 +110,22 @@
       {
         "path": "trading/strategies/balance_split.py",
         "ref": "aafc4b8a12dfc388a198752ba7beea578e89f229",
-        "status": "TARGETED_FIX_REVIEW_ONLY_NOT_FULL_AUDIT"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "tests/test_balance_split_strategy.py",
         "ref": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+        "status": "STALE_AFTER_CODE_CHANGES"
+      },
+      {
+        "path": "trading/strategies/balance_split.py",
+        "ref": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
         "status": "TARGETED_FIX_REVIEW_ONLY_NOT_FULL_AUDIT"
+      },
+      {
+        "path": "tests/test_balance_split_strategy.py",
+        "ref": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
+        "status": "TARGETED_REGRESSION_REVIEW_ONLY_NOT_FULL_AUDIT"
       }
     ],
     "scope_estimate": "PR changed 34 files; current PR tree has 158 tracked blob files. Dependency closure and per-file review not complete.",
@@ -141,7 +151,7 @@
     "status": "NOT_STARTED",
     "tracked_tree_entries_on_pr": 182,
     "tracked_blob_files_on_pr": 158,
-    "sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+    "sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
     "files_checked": 0,
     "checksum": null
   },
@@ -246,6 +256,23 @@
       "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
       "status": "in_progress",
       "conclusion": null
+    },
+    {
+      "run_id": 41219454375,
+      "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        "Full pytest suite: 754 passed, 1 failed (expired malformed reservation amount not validated)",
+        "Windows runtime smoke: success"
+      ],
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41219454375"
+    },
+    {
+      "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
+      "status": "pending_discovery",
+      "conclusion": null,
+      "notes": "New code committed, no workflow run returned yet; do not count PASS"
     }
   ],
   "upstream_changes": [
@@ -327,6 +354,13 @@
       "description": "Nonfinite account cash and malformed reservation timestamp/amount could bypass reservation controls or pass invalid budgets to broker. Added finite nonnegative cash validation and fail-closed malformed reservation rejection.",
       "status": "FIX_COMMITTED_AWAITING_CI_AND_FULL_AUDIT",
       "evidence": "aafc4b8a12dfc388a198752ba7beea578e89f229"
+    },
+    {
+      "severity": "HIGH",
+      "area": "balance_split expired/mismatched reservation validation",
+      "description": "Malformed nonfinite amount could be silently pruned by TTL before validation; even foreign-market corrupted reservations evaded validation. Validate finite positive amount and before_cash for all records before expiration or account filtering. One prior-head CI failure (754 passed, 1 failed) is addressed by this code change and expanded regression, but new-head CI not yet verified.",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_FULL_AUDIT",
+      "evidence": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8"
     }
   ],
   "audit_evidence": [
@@ -440,6 +474,26 @@
       "ci_prior_head_run_id": 41214519214,
       "ci_new_head_run_id": 41219454375,
       "notes": "Freshly confirmed upstream and fork default HEAD unchanged, PR 42 draft and open; 158 tracked PR blob files. Prior head CI passed Linux pytest and Windows smoke. Found fail-open corruption/read/write behavior in balance-split cash reservations and nonfinite cash/malformed reservation fields. Two atomic CAS-protected Git commits add fail-closed behavior and 10 regression scenarios across 5 test functions. New-head CI in progress; local pytest unavailable because github.com DNS resolution fails. Did not complete dependency-closure or per-file audit, no PASS, no merge."
+    },
+    {
+      "run_id": "automation-run-7-2026-10-31T17:19:17.495Z",
+      "kind": "CI_FAILURE_DIAGNOSIS_AND_TARGETED_FIX_NOT_FULL_AUDIT",
+      "related_pass": false,
+      "full_pass": false,
+      "source_head_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
+      "previous_head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+      "commit_shas": [
+        "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8"
+      ],
+      "changed_files": [
+        "trading/strategies/balance_split.py",
+        "tests/test_balance_split_strategy.py"
+      ],
+      "ci_failed_run_id": 41219454375,
+      "ci_latest_run_id": null,
+      "notes": "Verified latest previous-head Linux pytest failed 1/755 (expired malformed reservation amount ignored), Windows smoke passed. Read strategy reservation handling, ledger and test code; moved validation of finite positive reservation amount/before_cash before TTL pruning and market/account filtering; added cross-market expired corrupt reservation regression. Atomic two-file commit with branch expected-head lease; no local pytest, new CI not yet available. Dependency closure not fully audited; related/full PASS both 0; no merge."
     }
   ],
   "last_merged_upstream_sha": null,
