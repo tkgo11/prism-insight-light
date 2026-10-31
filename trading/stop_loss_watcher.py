@@ -411,8 +411,21 @@ class StopLossWatcher:
                 if not price_info or not isinstance(price_info, dict):
                     continue
 
-                current_price = float(price_info.get("current_price", 0.0))
-                if current_price <= 0:
+                # A malformed quote must not abort this market's entire
+                # watcher cycle and leave subsequent positions unprotected.
+                try:
+                    current_price = float(price_info.get("current_price", 0.0))
+                except (TypeError, ValueError, OverflowError):
+                    logger.warning(
+                        "[Stop-Loss] Invalid current price for %s %s: %r",
+                        market, ticker, price_info.get("current_price"),
+                    )
+                    continue
+                if not math.isfinite(current_price) or current_price <= 0:
+                    logger.warning(
+                        "[Stop-Loss] Nonpositive or nonfinite current price for %s %s",
+                        market, ticker,
+                    )
                     continue
 
                 stop_hit = current_price <= stop_loss

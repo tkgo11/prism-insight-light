@@ -663,3 +663,36 @@ def test_stop_loss_watcher_invalid_pre_order_holdings_block_sell(
         assert watcher.check_stop_loss_once() == []
     dispatcher.dispatch.assert_not_called()
     assert tracker.get_position("US", "AAPL") is not None
+
+
+@pytest.mark.parametrize("invalid_price", [None, "", "NaN", "inf", "not-a-number"])
+def test_invalid_quote_does_not_abort_other_stop_loss_positions(
+    tmp_path, monkeypatch, invalid_price
+):
+    tracker = StopLossTracker(tmp_path / "tracker.json")
+    tracker.record_position("KR", "111111", 90, entry_price=100)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+
+    trader = MagicMock()
+    trader.get_current_price.side_effect = lambda ticker: {
+        "current_price": invalid_price if ticker == "111111" else 80
+    }
+    trader.get_holding_quantity.return_value = 0
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True,
+            request_interval_seconds=0,
+            storage_path=tmp_path / "tracker.json",
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "KR")
+
+    assert watcher.check_stop_loss_once() == []
+    assert tracker.get_position("KR", "111111") is not None
+    assert tracker.get_position("KR", "222222") is None
+    dispatcher.dispatch.assert_not_called()
