@@ -1,12 +1,12 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "DISCOVERY_CANDIDATE_READ_ONLY",
-  "phase": "ownership_and_related_audit",
+  "state": "ACTIVE_DRAFT_RELATED_AUDIT",
+  "phase": "related_code_audit",
   "run": {
-    "id": "scheduled-2026-10-31T11:20:39.294Z",
-    "started_at": "2026-10-31T11:20:39.294Z",
-    "completed_at": "2026-10-31T11:21:04.290Z",
+    "id": "scheduled-2026-10-31T12:20:27Z",
+    "started_at": "2026-10-31T12:20:27Z",
+    "completed_at": "2026-10-31T12:25:03.366Z",
     "lock_owner": null
   },
   "source": {
@@ -22,7 +22,16 @@
     "default_branch": "main",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081"
   },
-  "active_pr": null,
+  "active_pr": {
+    "number": 42,
+    "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
+    "head_ref": "feat/upstream-signal-sizing-20261031",
+    "head_sha": "41f779232c71d026dd0217863dcb5f98b96be85f",
+    "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+    "draft": true,
+    "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
+    "status": "CODE_FIXES_COMMITTED_AWAITING_REVIEW"
+  },
   "candidates": [
     {
       "number": 42,
@@ -30,72 +39,80 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+      "head_sha": "41f779232c71d026dd0217863dcb5f98b96be85f",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "draft": false,
-      "ownership": "UNVERIFIED_FOR_THIS_AUTOMATION",
-      "mutation_allowed": false,
+      "draft": true,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "mutation_allowed": true,
       "changed_files": 26
     }
   ],
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL",
+    "status": "PARTIAL_REQUIRES_COMPLETE_REAUDIT",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "PREVIOUS_PARTIAL_READ_STALE"
       },
       {
         "path": "trading/schema.py",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "PREVIOUS_PARTIAL_READ_STALE"
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "PREVIOUS_PARTIAL_READ_STALE"
       },
       {
         "path": ".github/workflows/tests.yml",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "PREVIOUS_PARTIAL_READ_STALE"
       },
       {
         "path": "trading/dispatch.py",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "MODIFIED_REQUIRES_NEW_COMPLETE_AUDIT"
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "MODIFIED_REQUIRES_NEW_COMPLETE_AUDIT"
       },
       {
         "path": "trading/strategies/common.py",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "PREVIOUS_PARTIAL_READ_STALE"
       },
       {
         "path": "trading/buy_sizing.py",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "PREVIOUS_PARTIAL_READ_STALE"
       },
       {
         "path": "trading/domestic.py",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "MODIFIED_REQUIRES_NEW_COMPLETE_AUDIT"
       },
       {
         "path": "trading/us.py",
-        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
-        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
+        "status": "MODIFIED_REQUIRES_NEW_COMPLETE_AUDIT"
       }
     ],
     "scope_estimate": "PR 26 changed files plus all dependent source/test/config; not enumerated completely",
-    "checksum": null
+    "checksum": null,
+    "modified_files": [
+      "trading/stop_loss_watcher.py",
+      "trading/dispatch.py",
+      "trading/domestic.py",
+      "trading/us.py",
+      "tests/test_stop_loss_watcher.py",
+      "tests/test_multi_account_empty_balance_fail_closed.py"
+    ]
   },
   "full_manifest": {
     "status": "NOT_STARTED",
@@ -150,12 +167,6 @@
       "status": "BLOCKS_MERGE"
     },
     {
-      "severity": "HIGH",
-      "area": "PR ownership",
-      "description": "No preexisting state/marker proving this automation owns the open user PR; read-only candidate until safely attributable",
-      "status": "BLOCKS_MUTATION"
-    },
-    {
       "severity": "MEDIUM",
       "area": "review availability",
       "description": "No submitted reviews; Codex review comment reports usage limit, not an approval",
@@ -164,9 +175,9 @@
     {
       "severity": "HIGH",
       "area": "legacy stop-loss watcher",
-      "description": "In trading/stop_loss_watcher.py _trigger_sell, result.status == 'executed' removes protection when no configured strategy without verifying a fresh flat balance; broker acceptance is not a fill guarantee. Inherited code path, needs targeted regression and safe reconciliation design.",
-      "status": "BLOCKS_MERGE_PENDING_REVIEW",
-      "evidence": "trading/stop_loss_watcher.py lines 535-595 at PR head 689b4c9e66001c9485d08bb926eeb67df3f20c8a"
+      "description": "Watcher and dispatcher now retain protection until confirmed aggregate flat balance; multi-account empty configuration fails closed. Remaining accepted-order/durable dedupe reconciliation still requires deeper review.",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
+      "evidence": "PR head 41f779232c71d026dd0217863dcb5f98b96be85f"
     }
   ],
   "audit_evidence": [
@@ -176,15 +187,40 @@
       "related_pass": false,
       "full_pass": false,
       "notes": "GitHub metadata, two tree summaries, upstream recent commits and contract search, PR 26-file patch list, four target files read, CI run results checked; no local tests executed, no file-by-file complete audit Additional partial reads: dispatch, watcher, strategy common, buy sizing, KR/US broker adapters. Found legacy stop-loss protection removal risk; no local tests or PR changes."
+    },
+    {
+      "run_id": "scheduled-2026-10-31T12:20:27Z",
+      "kind": "TARGETED_CODE_FIX_NOT_FULL_AUDIT",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "41f779232c71d026dd0217863dcb5f98b96be85f",
+      "commit_shas": [
+        "00d92e90e3a9f8f3782bb20e5b531c1af647c4cd",
+        "17b96c71d0f7623e60de21b1a6ba55e8e57843fe",
+        "37fb69455325c39f7cf7af346cfdd2bf16309f75",
+        "31580a9f8101a37ff33986044ce97b65ab3e3ea6",
+        "67faefc660094d665f9b6a4af48119203a0b00bb",
+        "28a219163e42bf470959251841932e8905afc202",
+        "41f779232c71d026dd0217863dcb5f98b96be85f"
+      ],
+      "changed_files": [
+        "trading/stop_loss_watcher.py",
+        "trading/dispatch.py",
+        "trading/domestic.py",
+        "trading/us.py",
+        "tests/test_stop_loss_watcher.py",
+        "tests/test_multi_account_empty_balance_fail_closed.py"
+      ],
+      "notes": "Converted open PR to Draft under user's explicit authorization. Fixed premature stop-loss tracker deletion on broker order acceptance in watcher and dispatcher, validated finite nonnegative holdings, rejected empty multi-account configurations, updated and added regression tests. No local pytest due unavailable repository network checkout. New-head CI pending/not yet confirmed; no PASS claimed."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Ownership not proven for pre-existing PR",
     "Full related-code audit not completed",
-    "No demo KIS/GCP integration; fill/reconciliation and watcher risks remain",
+    "New-head CI results pending/unverified",
+    "No safe demo KIS/GCP integration; partial fills and durable signal dedupe/reconciliation remain unverified",
     "No two consecutive passing audits"
   ],
-  "next_action": "Re-read current state/SHAs; identify candidate PR ownership from trusted metadata; continue source-level related-code audit without unauthorized PR changes; establish dynamic upstream checkpoint; never increment PASS from partial review."
+  "next_action": "Verify latest PR head and GitHub CI for current SHA; fix failures; re-read all related code and audit full dependency manifest; investigate accepted-but-unfilled stop-loss order reconciliation and safe durable dedupe; no PASS until full audit+CI complete."
 }
