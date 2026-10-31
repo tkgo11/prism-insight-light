@@ -4,9 +4,9 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "automation-run-7-2026-10-31T17:19:17.495Z",
-    "started_at": "2026-10-31T17:19:17.495Z",
-    "completed_at": "2026-10-31T17:19:17.495Z",
+    "id": "automation-run-8-2026-10-31T18:21:18.391Z",
+    "started_at": "2026-10-31T18:17:48Z",
+    "completed_at": "2026-10-31T18:21:18.391Z",
     "lock_owner": null
   },
   "source": {
@@ -26,11 +26,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
+    "head_sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "FIXED_EXPIRED_MALFORMED_RESERVATION_VALIDATION_CI_PENDING"
+    "status": "FIXED_UNRECONCILED_RESERVATIONS_CI_QUEUED"
   },
   "candidates": [
     {
@@ -39,7 +39,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
+      "head_sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -50,7 +50,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_REQUIRES_REAUDIT_AFTER_EXPIRED_RESERVATION_FIX",
+    "status": "PARTIAL_REQUIRES_REAUDIT_AFTER_RESERVATION_RECONCILIATION_FIX",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
@@ -126,6 +126,16 @@
         "path": "tests/test_balance_split_strategy.py",
         "ref": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
         "status": "TARGETED_REGRESSION_REVIEW_ONLY_NOT_FULL_AUDIT"
+      },
+      {
+        "path": "trading/strategies/balance_split.py",
+        "ref": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
+        "status": "TARGETED_REVIEW_ONLY_NOT_FULL_AUDIT"
+      },
+      {
+        "path": "tests/test_balance_split_strategy.py",
+        "ref": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
+        "status": "TARGETED_REGRESSION_REVIEW_ONLY_NOT_FULL_AUDIT"
       }
     ],
     "scope_estimate": "PR changed 34 files; current PR tree has 158 tracked blob files. Dependency closure and per-file review not complete.",
@@ -151,7 +161,7 @@
     "status": "NOT_STARTED",
     "tracked_tree_entries_on_pr": 182,
     "tracked_blob_files_on_pr": 158,
-    "sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
+    "sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
     "files_checked": 0,
     "checksum": null
   },
@@ -274,6 +284,24 @@
       "conclusion": null,
       "notes": "GitHub Actions Tests started for latest PR head; result pending",
       "run_id": 41223929687
+    },
+    {
+      "run_id": 41223929687,
+      "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: success",
+        "Windows runtime smoke: success"
+      ],
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41223929687"
+    },
+    {
+      "run_id": 41228881618,
+      "head_sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
+      "status": "queued",
+      "conclusion": null,
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41228881618"
     }
   ],
   "upstream_changes": [
@@ -362,6 +390,13 @@
       "description": "Malformed nonfinite amount could be silently pruned by TTL before validation; even foreign-market corrupted reservations evaded validation. Validate finite positive amount and before_cash for all records before expiration or account filtering. One prior-head CI failure (754 passed, 1 failed) is addressed by this code change and expanded regression, but new-head CI not yet verified.",
       "status": "FIX_COMMITTED_AWAITING_CI_AND_FULL_AUDIT",
       "evidence": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8"
+    },
+    {
+      "severity": "HIGH",
+      "area": "balance_split reservation age, reconciliation and ambiguous broker orders",
+      "description": "Previously 30-minute TTL could silently free unreflected accepted BUY budget; adjusted_cash falsely reconciled later reservations without any broker cash change; unknown broker outcome did not reserve budget; US auto-exchange fallback skipped reservation deduction. Retain unsettled reservations until observed cash reconciliation, use actual broker cash for each record, reserve unknown outcomes, and deduct US auto-exchange reservations. Remaining broker fill/order-id reconciliation needs safe demo validation.",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
+      "evidence": "https://github.com/tkgo11/prism-insight-light/commit/805ac8aa9f0b65964aafc414da6a7b2a175ccdfc"
     }
   ],
   "audit_evidence": [
@@ -495,15 +530,35 @@
       "ci_failed_run_id": 41219454375,
       "ci_latest_run_id": 41223929687,
       "notes": "Verified latest previous-head Linux pytest failed 1/755 (expired malformed reservation amount ignored), Windows smoke passed. Read strategy reservation handling, ledger and test code; moved validation of finite positive reservation amount/before_cash before TTL pruning and market/account filtering; added cross-market expired corrupt reservation regression. Atomic two-file commit with branch expected-head lease; no local pytest, new CI not yet available. Dependency closure not fully audited; related/full PASS both 0; no merge."
+    },
+    {
+      "run_id": "automation-run-8-2026-10-31T18:21:18.391Z",
+      "kind": "TARGETED_UNRECONCILED_RESERVATION_SAFETY_FIX_NOT_FULL_AUDIT",
+      "related_pass": false,
+      "full_pass": false,
+      "source_head_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "previous_head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
+      "head_sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
+      "commit_shas": [
+        "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc"
+      ],
+      "changed_files": [
+        "trading/strategies/balance_split.py",
+        "tests/test_balance_split_strategy.py"
+      ],
+      "ci_previous_head_run_id": 41223929687,
+      "ci_latest_run_id": 41228881618,
+      "notes": "Confirmed upstream and fork main unchanged, PR 42 Draft, 158 tracked blobs; previous-head Linux pytest and Windows smoke both succeeded. Found 30-minute expiry of unsettled BUY reservations, false reconciliation of multiple reservations using adjusted rather than actual cash, missing budget reservation for unknown broker outcome, and auto-exchange fallback bypassing reservation deduction. Atomic two-file Git commit adds four regression tests and updates ambiguous-order test. Local pytest not executed: container github.com DNS unavailable. New-head CI queued; related dependency closure not complete; no PASS and no merge."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "New-head CI run 41219454375 not yet complete",
+    "Latest-head CI run 41228881618 queued; not yet verified",
     "Full related dependency closure and file-by-file audit incomplete",
-    "Read-only KIS demo integration and pending/partial-fill reconciliation not validated",
+    "Broker fill/partial-fill and order-id reconciliation require safe demo evidence",
     "Full repository audit not started"
   ],
-  "next_action": "Confirm latest CI; fix regressions; review reservation TTL and accepted-order reconciliation with actual broker statuses; complete full related manifest and two separate passing runs before Ready for review."
+  "next_action": "Confirm latest CI; fix any failures; inspect order-id-based settlement, canceled orders and multi-account reservation reconciliation; build complete related manifest and perform two independent passing audits before Ready for review."
 }
