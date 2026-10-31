@@ -4,9 +4,9 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "scheduled-2026-10-31T15:20Z",
-    "started_at": "2026-10-31T15:20:10Z",
-    "completed_at": "2026-10-31T15:22:23.172Z",
+    "id": "scheduled-2026-10-31T16:20Z",
+    "started_at": "2026-10-31T16:21:27Z",
+    "completed_at": "2026-10-31T16:23:44.712Z",
     "lock_owner": null
   },
   "source": {
@@ -26,11 +26,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
+    "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "NONFINITE_KIS_BUYING_POWER_FIX_COMMITTED_CI_RUNNING"
+    "status": "BALANCE_SPLIT_RESERVATION_AND_CASH_FAIL_CLOSED_FIX_COMMITTED_CI_RUNNING"
   },
   "candidates": [
     {
@@ -39,7 +39,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
+      "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -50,7 +50,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_REQUIRES_COMPLETE_REAUDIT_AFTER_NONFINITE_BUYING_POWER_FIX",
+    "status": "PARTIAL_REQUIRES_FULL_REAUDIT_AFTER_RESERVATION_AND_CASH_FIX",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
@@ -105,20 +105,20 @@
       {
         "path": "trading/execution_ledger.py",
         "ref": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
-        "status": "PARTIAL_READ_STALE_AFTER_FIX"
+        "status": "STALE_AFTER_CODE_CHANGES"
       },
       {
         "path": "trading/strategies/balance_split.py",
-        "ref": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
-        "status": "TARGETED_FIX_ONLY_NOT_FULL_AUDIT"
+        "ref": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+        "status": "TARGETED_FIX_REVIEW_ONLY_NOT_FULL_AUDIT"
       },
       {
         "path": "tests/test_balance_split_strategy.py",
-        "ref": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
-        "status": "REGRESSION_ADDED_NOT_FULL_AUDIT"
+        "ref": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+        "status": "TARGETED_FIX_REVIEW_ONLY_NOT_FULL_AUDIT"
       }
     ],
-    "scope_estimate": "PR changes 34 files; 157 tracked blob files in PR tree before this run. Complete dependency closure not yet audited.",
+    "scope_estimate": "PR changed 34 files; current PR tree has 158 tracked blob files. Dependency closure and per-file review not complete.",
     "checksum": null,
     "modified_files": [
       "trading/stop_loss_watcher.py",
@@ -139,9 +139,9 @@
   },
   "full_manifest": {
     "status": "NOT_STARTED",
-    "tracked_tree_entries_on_pr": null,
-    "tracked_blob_files_on_pr": null,
-    "sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
+    "tracked_tree_entries_on_pr": 182,
+    "tracked_blob_files_on_pr": 158,
+    "sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
     "files_checked": 0,
     "checksum": null
   },
@@ -224,6 +224,28 @@
       "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
       "status": "in_progress",
       "conclusion": null
+    },
+    {
+      "run_id": 41214519214,
+      "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite",
+        "Windows runtime smoke"
+      ]
+    },
+    {
+      "run_id": 41219401980,
+      "head_sha": "b0cf6ffdd905d42539d5bcc74f9b638713b6750e",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "run_id": 41219454375,
+      "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+      "status": "in_progress",
+      "conclusion": null
     }
   ],
   "upstream_changes": [
@@ -291,6 +313,20 @@
       "description": "KIS after-exchange numeric fields accepted float('inf') as positive buying power, allowing a full-size balance_split or score_max_capital BUY to pass an infinite budget into the broker path. Reject all nonfinite buying-power values before order sizing; regression cases cover inf/nan.",
       "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
       "evidence": "9b9dd41be871c09b9cd81900899dbc27e58a179b"
+    },
+    {
+      "severity": "HIGH",
+      "area": "balance_split cash reservation integrity",
+      "description": "Unreadable/malformed reservation ledger was silently treated as empty, and persistence failures were only logged; accepted buys could reuse stale broker cash. Changed to fail closed, with tests for corruption, malformed shape, and write failure.",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_FULL_AUDIT",
+      "evidence": "b0cf6ffdd905d42539d5bcc74f9b638713b6750e"
+    },
+    {
+      "severity": "HIGH",
+      "area": "balance_split invalid cash/reservation fields",
+      "description": "Nonfinite account cash and malformed reservation timestamp/amount could bypass reservation controls or pass invalid budgets to broker. Added finite nonnegative cash validation and fail-closed malformed reservation rejection.",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_FULL_AUDIT",
+      "evidence": "aafc4b8a12dfc388a198752ba7beea578e89f229"
     }
   ],
   "audit_evidence": [
@@ -386,15 +422,33 @@
       "ci_prior_head_run_id": 41209608548,
       "ci_latest_run_id": 41214519214,
       "notes": "Confirmed latest prior-head CI successful (Linux full pytest, Windows runtime). Reviewed ledger, stop-loss watcher, dispatcher, subscriber, queue, broker outcome classifier, balance-split and score-max-capital paths, strategy tests. Found nonfinite KIS after-exchange buying-power fields could be treated as positive and forwarded as unbounded full BUY budget. Fixed finite validation and added three regression scenarios. Local pytest not run (container DNS unavailable); new-head CI in progress. Related closure not complete; no PASS; no merge."
+    },
+    {
+      "run_id": "scheduled-2026-10-31T16:20Z",
+      "kind": "TARGETED_RESERVATION_INTEGRITY_AND_NONFINITE_CASH_FIX_NOT_FULL_AUDIT",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
+      "commit_shas": [
+        "b0cf6ffdd905d42539d5bcc74f9b638713b6750e",
+        "aafc4b8a12dfc388a198752ba7beea578e89f229"
+      ],
+      "changed_files": [
+        "trading/strategies/balance_split.py",
+        "tests/test_balance_split_strategy.py"
+      ],
+      "ci_prior_head_run_id": 41214519214,
+      "ci_new_head_run_id": 41219454375,
+      "notes": "Freshly confirmed upstream and fork default HEAD unchanged, PR 42 draft and open; 158 tracked PR blob files. Prior head CI passed Linux pytest and Windows smoke. Found fail-open corruption/read/write behavior in balance-split cash reservations and nonfinite cash/malformed reservation fields. Two atomic CAS-protected Git commits add fail-closed behavior and 9 new parametrized regression scenarios. New-head CI in progress; local pytest unavailable because github.com DNS resolution fails. Did not complete dependency-closure or per-file audit, no PASS, no merge."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Full related-code dependency closure and file-by-file audit not completed",
-    "Latest head CI still in progress",
-    "No safe demo KIS/GCP end-to-end integration; partial fills and durable stop-loss follow-up still require operator reconciliation",
-    "No two consecutive passing related/full audits"
+    "New-head CI run 41219454375 not yet complete",
+    "Full related dependency closure and file-by-file audit incomplete",
+    "Read-only KIS demo integration and pending/partial-fill reconciliation not validated",
+    "Full repository audit not started"
   ],
-  "next_action": "Check latest-head CI run 41214519214, fix failures if any. Rebuild complete related manifest on stable head and perform file-by-file audit. Do not award PASS on partial review."
+  "next_action": "Confirm latest CI; fix regressions; review reservation TTL and accepted-order reconciliation with actual broker statuses; complete full related manifest and two separate passing runs before Ready for review."
 }
