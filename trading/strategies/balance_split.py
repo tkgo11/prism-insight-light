@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import tempfile
 from dataclasses import dataclass
@@ -187,11 +188,13 @@ class BalanceSplitStrategy:
             return 0.0, "after_exchange_buying_power_unavailable"
 
         def positive_number(value: Any) -> float:
+            # A malformed KIS response must never turn infinite buying power
+            # into an order amount (especially for full-size BUY signals).
             try:
                 parsed = float(value)
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, OverflowError):
                 return 0.0
-            return parsed if parsed > 0 else 0.0
+            return parsed if math.isfinite(parsed) and parsed > 0 else 0.0
 
         current_orderable = positive_number(buyable.get("ord_psbl_frcr_amt"))
         reported_after_exchange = positive_number(buyable.get("echm_af_ord_psbl_amt"))
