@@ -23,12 +23,31 @@
       "related_review_complete": false,
       "full_tree_files": 158,
       "full_tree_files_reviewed": 0,
-      "ci_runs": [],
+      "ci_runs": [
+        {
+          "id": 41252260295,
+          "event": "pull_request",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319"
+        },
+        {
+          "id": 41252257251,
+          "event": "push",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319"
+        }
+      ],
       "local_tests_executed": false,
       "merged": false,
-      "reason": "Overflow parser fix committed; all PASS reset; GitHub Actions not yet complete; demo brokerage unresolved"
+      "reason": "Overflow parser fix committed; all PASS reset; GitHub Actions not yet complete; demo brokerage unresolved",
+      "external_checks": {
+        "snyk": "success",
+        "qlty_check": "pending"
+      }
     },
-    "pr_comment_id": 6548733485
+    "pr_comment_id": 6550532026
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -1263,8 +1282,8 @@
         "qlty usage: pending"
       ]
     },
-    "latest_workflow_run_id": 41243400167,
-    "latest_workflow_run_status": "queued",
+    "latest_workflow_run_id": 41252260295,
+    "latest_workflow_run_status": "in_progress",
     "latest_workflow_run_conclusion": null,
     "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
     "automation-turn-11": {
@@ -1294,10 +1313,33 @@
     },
     "2026-11-01T08:20+09:00": {
       "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
-      "status": "queued",
+      "status": "in_progress",
       "conclusion": null,
-      "check_runs": "GitHub check-run IDs present; workflow run ID not yet verified",
-      "note": "No local tests executed; GitHub Actions queued/in_progress"
+      "workflow_runs": [
+        {
+          "id": 41252260295,
+          "event": "pull_request",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319"
+        },
+        {
+          "id": 41252257251,
+          "event": "push",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319"
+        }
+      ],
+      "check_jobs": [
+        "Full pytest suite: in_progress",
+        "Windows runtime smoke: in_progress"
+      ],
+      "external_statuses": [
+        "security/snyk (tkgo11): success",
+        "qlty check: pending"
+      ],
+      "note": "No local tests executed; no PASS until full audit and all required checks complete"
     }
   },
   "upstream_changes": [
