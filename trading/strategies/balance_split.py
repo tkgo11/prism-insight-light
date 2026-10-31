@@ -380,15 +380,24 @@ class BalanceSplitStrategy:
         except FileNotFoundError:
             return []
         except (json.JSONDecodeError, OSError) as exc:
-            logger.warning(
-                "Ignoring unreadable balance split reservation file %s: %s",
+            # Lost reservations can make a second BUY reuse cash already
+            # committed to an accepted broker order. Never treat corruption
+            # or a read failure as an empty reservation ledger.
+            logger.error(
+                "Cannot read balance split reservation file %s: %s",
                 self.reservation_path,
                 exc,
             )
-            return []
-        if not isinstance(payload, list):
-            return []
-        return [item for item in payload if isinstance(item, dict)]
+            raise RuntimeError(
+                "Balance split reservation ledger is unreadable; refusing new BUY"
+            ) from exc
+        if not isinstance(payload, list) or not all(
+            isinstance(item, dict) for item in payload
+        ):
+            raise RuntimeError(
+                "Balance split reservation ledger has an invalid format; refusing new BUY"
+            )
+        return payload
 
     def _save_reservations(self, reservations: list[dict[str, Any]]) -> None:
         temporary_path: Path | None = None
@@ -408,7 +417,13 @@ class BalanceSplitStrategy:
                 os.fsync(handle.fileno())
             os.replace(temporary_path, self.reservation_path)
         except OSError as exc:
-            logger.warning("Unable to save balance split reservation file %s: %s", self.reservation_path, exc)
+            # A broker may already have accepted the BUY. Reporting success
+            # without persisting its reservation would permit overspending
+            # on the next signal while broker balances are stale.
+            logger.error("Unable to save balance split reservation file %s: %s", self.reservation_path, exc)
+            raise RuntimeError(
+                "Balance split reservation ledger write failed; broker order requires reconciliation"
+            ) from exc
         finally:
             if temporary_path is not None and temporary_path.exists():
                 temporary_path.unlink()

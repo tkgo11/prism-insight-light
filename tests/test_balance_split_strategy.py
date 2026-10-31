@@ -530,3 +530,48 @@ def test_us_reservations_are_isolated_by_account(balance_split_strategy):
         )
         == 0
     )
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market", ["KR", "US"])
+async def test_balance_split_corrupt_reservations_block_buy_before_broker_call(
+    balance_split_strategy, market
+):
+    strategy = balance_split_strategy(split_count=2)
+    strategy.reservation_path.write_text("{invalid json", encoding="utf-8")
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "005930" if market == "KR" else "AAPL",
+         "market": market, "price": 100}
+    )
+    trader = FakeKRTrader(available_amount=10000) if market == "KR" else FakeUSTrader(available_amount=900)
+
+    with pytest.raises(RuntimeError, match="reservation ledger is unreadable"):
+        if market == "KR":
+            await strategy._execute_kr(signal, trader=trader)
+        else:
+            await strategy._execute_us(signal, trader=trader)
+    assert trader.buy_calls == []
+
+
+def test_balance_split_malformed_reservation_structure_blocks_budget(
+    balance_split_strategy
+):
+    strategy = balance_split_strategy(split_count=2)
+    strategy.reservation_path.write_text('{"unexpected": "object"}', encoding="utf-8")
+    with pytest.raises(RuntimeError, match="invalid format"):
+        strategy._pending_reserved_amount(market="US", current_cash=900)
+    
+
+def test_balance_split_reservation_write_failure_is_not_silenced(
+    balance_split_strategy, monkeypatch
+):
+    strategy = balance_split_strategy(split_count=2)
+
+    def deny_replace(*_args, **_kwargs):
+        raise OSError("simulated storage failure")
+
+    monkeypatch.setattr("trading.strategies.balance_split.os.replace", deny_replace)
+    with pytest.raises(RuntimeError, match="reservation ledger write failed"):
+        strategy._record_cash_reservation(
+            market="KR", ticker="005930", before_cash=10000, amount=5000
+        )
+    assert not strategy.reservation_path.exists()
