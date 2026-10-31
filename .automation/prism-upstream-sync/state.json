@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "automation_key": "prism-upstream-sync",
+  "state": "DISCOVERY_CANDIDATE_READ_ONLY",
+  "phase": "ownership_and_related_audit",
+  "run": {
+    "id": "scheduled-2026-10-31T11:20:39.294Z",
+    "started_at": "2026-10-31T11:20:39.294Z",
+    "completed_at": null,
+    "lock_owner": null
+  },
+  "source": {
+    "repository": "dragon1086/prism-insight",
+    "default_branch": "main",
+    "latest_observed_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "pinned_contract_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "last_integrated_upstream_sha": null,
+    "checkpoint_status": "UNKNOWN_BASELINE"
+  },
+  "target": {
+    "repository": "tkgo11/prism-insight-light",
+    "default_branch": "main",
+    "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081"
+  },
+  "active_pr": null,
+  "candidates": [
+    {
+      "number": 42,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
+      "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
+      "author": "tkgo11",
+      "head_ref": "feat/upstream-signal-sizing-20261031",
+      "head_sha": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "draft": false,
+      "ownership": "UNVERIFIED_FOR_THIS_AUTOMATION",
+      "mutation_allowed": false,
+      "changed_files": 26
+    }
+  ],
+  "related_consecutive_passes": 0,
+  "full_consecutive_passes": 0,
+  "related_manifest": {
+    "status": "PARTIAL",
+    "checked_files": [
+      {
+        "path": "trading/signal_sizing.py",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "READ_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/schema.py",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "READ_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "READ_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": ".github/workflows/tests.yml",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "READ_NOT_FULLY_AUDITED"
+      }
+    ],
+    "scope_estimate": "PR 26 changed files plus all dependent source/test/config; not enumerated completely",
+    "checksum": null
+  },
+  "full_manifest": {
+    "status": "NOT_STARTED",
+    "tracked_tree_entries_on_base": 170,
+    "sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+    "files_checked": 0,
+    "checksum": null
+  },
+  "checks": [
+    {
+      "run_id": 41191643209,
+      "head_sha": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite",
+        "Windows runtime smoke"
+      ]
+    },
+    {
+      "run_id": 41191639061,
+      "head_sha": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite",
+        "Windows runtime smoke"
+      ]
+    }
+  ],
+  "upstream_changes": [
+    {
+      "scope": "latest observed 2026-10-31 commits",
+      "category": "BTC accounting compression and compaction",
+      "decision": "DEFER_EXCLUDE_FROM_LIGHT",
+      "reason": "BTC accounting/analysis stack is not a required light subscriber function; do not import wholesale"
+    },
+    {
+      "scope": "publisher BUY position_fraction and SELL sell_denominator",
+      "decision": "CANDIDATE_ALREADY_OPEN",
+      "reason": "Pre-existing user PR, cannot claim ownership without evidence"
+    },
+    {
+      "scope": "ADD delta_fraction allocation caps and durable signal ledger",
+      "decision": "DEFER",
+      "reason": "Current light schema explicitly rejects ADD; new order path requires independent holdings, budget, idempotency and demo verification"
+    }
+  ],
+  "risk_register": [
+    {
+      "severity": "HIGH",
+      "area": "brokerage fill and stop-loss",
+      "description": "PR audit document admits order acceptance is not fill, partial exit watcher may remain blocked by idempotency; no safe demo end-to-end evidence",
+      "status": "BLOCKS_MERGE"
+    },
+    {
+      "severity": "HIGH",
+      "area": "PR ownership",
+      "description": "No preexisting state/marker proving this automation owns the open user PR; read-only candidate until safely attributable",
+      "status": "BLOCKS_MUTATION"
+    },
+    {
+      "severity": "MEDIUM",
+      "area": "review availability",
+      "description": "No submitted reviews; Codex review comment reports usage limit, not an approval",
+      "status": "BLOCKS_REQUIRED_REVIEW_IF_POLICY_APPLIES"
+    }
+  ],
+  "audit_evidence": [
+    {
+      "run_id": "scheduled-2026-10-31T11:20:39.294Z",
+      "kind": "DISCOVERY_ONLY",
+      "related_pass": false,
+      "full_pass": false,
+      "notes": "GitHub metadata, two tree summaries, upstream recent commits and contract search, PR 26-file patch list, four target files read, CI run results checked; no local tests executed, no file-by-file complete audit"
+    }
+  ],
+  "last_merged_upstream_sha": null,
+  "last_successful_merge": null,
+  "blockers": [
+    "Ownership not proven for pre-existing PR",
+    "Full related-code audit not completed",
+    "No demo KIS/GCP integration; fill/reconciliation and watcher risks remain",
+    "No two consecutive passing audits"
+  ],
+  "next_action": "Re-read current state/SHAs; identify candidate PR ownership from trusted metadata; continue source-level related-code audit without unauthorized PR changes; establish dynamic upstream checkpoint; never increment PASS from partial review."
+}
