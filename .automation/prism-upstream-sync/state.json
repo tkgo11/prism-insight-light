@@ -6,7 +6,7 @@
   "run": {
     "id": "scheduled-2026-10-31T11:20:39.294Z",
     "started_at": "2026-10-31T11:20:39.294Z",
-    "completed_at": null,
+    "completed_at": "2026-10-31T11:21:04.290Z",
     "lock_owner": null
   },
   "source": {
@@ -62,6 +62,36 @@
         "path": ".github/workflows/tests.yml",
         "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
         "status": "READ_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/dispatch.py",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/stop_loss_watcher.py",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/strategies/common.py",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/buy_sizing.py",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/domestic.py",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/us.py",
+        "ref": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
+        "status": "PARTIAL_READ_NOT_FULLY_AUDITED"
       }
     ],
     "scope_estimate": "PR 26 changed files plus all dependent source/test/config; not enumerated completely",
@@ -130,6 +160,13 @@
       "area": "review availability",
       "description": "No submitted reviews; Codex review comment reports usage limit, not an approval",
       "status": "BLOCKS_REQUIRED_REVIEW_IF_POLICY_APPLIES"
+    },
+    {
+      "severity": "HIGH",
+      "area": "legacy stop-loss watcher",
+      "description": "In trading/stop_loss_watcher.py _trigger_sell, result.status == 'executed' removes protection when no configured strategy without verifying a fresh flat balance; broker acceptance is not a fill guarantee. Inherited code path, needs targeted regression and safe reconciliation design.",
+      "status": "BLOCKS_MERGE_PENDING_REVIEW",
+      "evidence": "trading/stop_loss_watcher.py lines 535-595 at PR head 689b4c9e66001c9485d08bb926eeb67df3f20c8a"
     }
   ],
   "audit_evidence": [
@@ -138,7 +175,7 @@
       "kind": "DISCOVERY_ONLY",
       "related_pass": false,
       "full_pass": false,
-      "notes": "GitHub metadata, two tree summaries, upstream recent commits and contract search, PR 26-file patch list, four target files read, CI run results checked; no local tests executed, no file-by-file complete audit"
+      "notes": "GitHub metadata, two tree summaries, upstream recent commits and contract search, PR 26-file patch list, four target files read, CI run results checked; no local tests executed, no file-by-file complete audit Additional partial reads: dispatch, watcher, strategy common, buy sizing, KR/US broker adapters. Found legacy stop-loss protection removal risk; no local tests or PR changes."
     }
   ],
   "last_merged_upstream_sha": null,
