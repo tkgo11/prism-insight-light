@@ -270,9 +270,10 @@
     },
     {
       "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
-      "status": "pending_discovery",
+      "status": "in_progress",
       "conclusion": null,
-      "notes": "New code committed, no workflow run returned yet; do not count PASS"
+      "notes": "GitHub Actions Tests started for latest PR head; result pending",
+      "run_id": 41223929687
     }
   ],
   "upstream_changes": [
@@ -492,7 +493,7 @@
         "tests/test_balance_split_strategy.py"
       ],
       "ci_failed_run_id": 41219454375,
-      "ci_latest_run_id": null,
+      "ci_latest_run_id": 41223929687,
       "notes": "Verified latest previous-head Linux pytest failed 1/755 (expired malformed reservation amount ignored), Windows smoke passed. Read strategy reservation handling, ledger and test code; moved validation of finite positive reservation amount/before_cash before TTL pruning and market/account filtering; added cross-market expired corrupt reservation regression. Atomic two-file commit with branch expected-head lease; no local pytest, new CI not yet available. Dependency closure not fully audited; related/full PASS both 0; no merge."
     }
   ],
