@@ -420,7 +420,9 @@ class StopLossWatcher:
                     continue
 
                 try:
-                    holding_qty = trader.get_holding_quantity(ticker)
+                    holding_qty = self._validated_holding_quantity(
+                        trader.get_holding_quantity(ticker)
+                    )
                 except Exception as exc:
                     logger.error(
                         "[Stop-Loss] Holding quantity is UNKNOWN for %s %s; "
@@ -430,8 +432,15 @@ class StopLossWatcher:
                         exc,
                     )
                     continue
+                if holding_qty is None:
+                    logger.error(
+                        "[Stop-Loss] Invalid holding quantity for %s %s; "
+                        "blocking automatic SELL and tracker removal",
+                        market, ticker,
+                    )
+                    continue
 
-                if holding_qty <= 0:
+                if holding_qty == 0:
                     logger.info(
                         "[Stop-Loss] %s %s has 0 holding quantity; clearing from tracking",
                         market,
@@ -478,6 +487,19 @@ class StopLossWatcher:
                 "no holding quantity",
             )
         )
+
+    @staticmethod
+    def _validated_holding_quantity(value: Any) -> float | None:
+        """Return a confirmed nonnegative finite balance, or fail closed."""
+        if isinstance(value, bool):
+            return None
+        try:
+            quantity = float(value)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if not math.isfinite(quantity) or quantity < 0:
+            return None
+        return quantity
 
     def _trigger_sell(
         self, market: str, ticker: str, current_price: float, pos: dict[str, Any]
@@ -534,61 +556,35 @@ class StopLossWatcher:
                     for a in result.accounts
                 )
             )
-            if result.status == "executed" or all_accounts_clean:
-                # A configured strategy may intentionally sell only a fraction
-                # of the remaining shares even for a watcher-generated
-                # stop-loss SELL (which has sell_denominator=1). An accepted
-                # order is not proof that the account is now flat. Preserve
-                # protection unless a fresh aggregate holding check confirms
-                # zero shares; on an inquiry error, retain the tracker record.
-                configured_strategy = getattr(self.dispatcher, "strategy_config", None)
-                requires_flat_verification = (
-                    isinstance(configured_strategy, dict)
-                    and bool(str(configured_strategy.get("name", "")).strip())
-                )
-                may_remove = True
-                if requires_flat_verification:
-                    try:
-                        remaining_qty = trader.get_holding_quantity(ticker)
-                        may_remove = remaining_qty <= 0
-                        if not may_remove:
-                            logger.warning(
-                                "[Stop-Loss] Keeping protection for %s %s after "
-                                "strategy-controlled SELL (remaining=%s)",
-                                market, ticker, remaining_qty,
-                            )
-                    except Exception as exc:
-                        may_remove = False
-                        logger.warning(
-                            "[Stop-Loss] Keeping protection for %s %s: "
-                            "post-strategy SELL holdings cannot be verified: %s",
-                            market, ticker, exc,
-                        )
-                if may_remove:
-                    self.tracker.remove_position(
-                        market, ticker, expected_updated_at=pos.get("updated_at")
-                    )
-                    self._last_trigger_attempt.pop(self.tracker._key(market, ticker), None)
-            elif result.status == "partial_success":
+            if result.status in {"executed", "partial_success"} or all_accounts_clean:
+                # Broker acceptance, duplicate suppression, and an account's
+                # "not held" message do not establish that *all* accounts are
+                # flat. Preserve the durable watcher until a fresh aggregate
+                # holdings inquiry confirms exactly zero shares.
                 try:
-                    remaining_qty = trader.get_holding_quantity(ticker)
-                    if remaining_qty <= 0:
-                        logger.info(
-                            "[Stop-Loss] %s %s has 0 remaining holdings across accounts after sell; clearing from tracking",
-                            market,
-                            ticker,
-                        )
+                    remaining_qty = self._validated_holding_quantity(
+                        trader.get_holding_quantity(ticker)
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "[Stop-Loss] Keeping protection for %s %s: "
+                        "post-order holdings cannot be verified: %s",
+                        market, ticker, exc,
+                    )
+                else:
+                    if remaining_qty == 0:
                         self.tracker.remove_position(
                             market, ticker, expected_updated_at=pos.get("updated_at")
                         )
-                        self._last_trigger_attempt.pop(self.tracker._key(market, ticker), None)
-                except Exception as exc:
-                    logger.warning(
-                        "[Stop-Loss] Could not verify remaining holdings for %s %s after partial sell: %s",
-                        market,
-                        ticker,
-                        exc,
-                    )
+                        self._last_trigger_attempt.pop(
+                            self.tracker._key(market, ticker), None
+                        )
+                    else:
+                        logger.warning(
+                            "[Stop-Loss] Keeping protection for %s %s after "
+                            "SELL (remaining=%s; order acceptance is not a fill)",
+                            market, ticker, remaining_qty,
+                        )
             return {
                 "market": market,
                 "ticker": ticker,
