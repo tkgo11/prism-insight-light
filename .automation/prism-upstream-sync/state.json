@@ -4,53 +4,40 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
-    "started_at": "2026-10-31T20:24:12Z",
-    "completed_at": "2026-10-31T20:28:54.734Z",
+    "id": "prism-sync-hourly-2026-11-01T06:20:00+09:00-75170f89",
+    "started_at": "2026-10-31T21:24:16.500Z",
+    "completed_at": "2026-10-31T21:24:16.500Z",
     "lock_owner": null,
-    "last_mutation_commit": "3c47cbca447215dbf18c3e82cb59f8049295f330",
-    "last_mutation_at": "2026-10-31T20:27:10.229Z",
-    "result": "TWO_FINANCIAL_SAFETY_FIXES_CI_SUCCESS_AUDITS_INCOMPLETE",
+    "last_mutation_commit": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+    "last_mutation_at": "2026-10-31T21:24:16.500Z",
+    "result": "CASH_ONLY_RECONCILIATION_DISABLED_CI_PENDING_AUDITS_ZERO",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
       "full": 0,
-      "pr_head": "3c47cbca447215dbf18c3e82cb59f8049295f330",
+      "pr_head": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
       "modified_files": [
         "trading/strategies/balance_split.py",
         "tests/test_balance_split_strategy.py",
-        "trading/strategies/score_max_capital.py",
-        "tests/test_score_max_capital_strategy.py"
+        "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
       ],
       "commits": [
-        "14dd70412d1e82fce554ccf9952a6ea5604c268b",
-        "27f828e7c2ce95f58b51ce2a08611214eae1eae9",
-        "f45bf233de0201360c8c36ed62bc52df4c57ba64",
-        "3c47cbca447215dbf18c3e82cb59f8049295f330"
+        "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff"
       ],
       "ci_runs": [
         {
-          "id": 41238941028,
-          "head_sha": "3c47cbca447215dbf18c3e82cb59f8049295f330",
-          "status": "completed",
-          "conclusion": "success",
-          "jobs": [
-            "Full pytest suite: success (pytest, static smoke, Docker build)",
-            "Windows runtime smoke: success"
-          ],
-          "external_statuses": [
-            "security/snyk: success",
-            "qlty check: success",
-            "qlty usage: pending (non-required usage meter)"
-          ]
+          "id": 41243400167,
+          "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+          "status": "queued",
+          "conclusion": null
         }
       ],
-      "targeted_review_files": 4,
+      "targeted_review_files": 3,
       "related_full_review_completed": false,
       "whole_repo_blob_files": 158,
       "whole_repo_files_reviewed": 0,
       "merged": false,
-      "reason": "Related dependency audit and whole repository per-file audit incomplete; demo KIS/GCP, authoritative fill reconciliation and human approval still missing"
+      "reason": "Cash-only broker balance change cannot prove order fill; conservative retention fix committed. CI pending, full related audit incomplete; no KIS/GCP integration."
     },
     "pr_comment_id": 6548733485
   },
@@ -71,11 +58,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "3c47cbca447215dbf18c3e82cb59f8049295f330",
+    "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "CI_SUCCESS_RELATED_AUDIT_INCOMPLETE_DRAFT"
+    "status": "CI_QUEUED_RELATED_AUDIT_INCOMPLETE_DRAFT"
   },
   "candidates": [
     {
@@ -84,7 +71,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "3c47cbca447215dbf18c3e82cb59f8049295f330",
+      "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -95,171 +82,44 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_TARGETED_FIX_REVIEW_CI_PENDING_NO_PASS",
+    "status": "PARTIAL_TARGETED_REVIEW_NEW_HEAD_CI_QUEUED_NO_PASS",
+    "checksum": null,
+    "scope_estimate": "PR 35 changed files; dependency closure not fully audited",
     "checked_files": [
       {
-        "path": "trading/signal_sizing.py",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
+        "path": "trading/strategies/balance_split.py",
+        "blob_sha": "9fab3c4de66aac613d842374fc1521702a4e0b69",
+        "ref": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+        "status": "TARGETED_CASH_RECONCILIATION_FIX_REVIEW_ONLY_NOT_FULL_AUDIT",
+        "evidence": "https://github.com/tkgo11/prism-insight-light/commit/75170f89b2dfaaad1756cb28e13f5fc6f8edbbff"
       },
       {
-        "path": "trading/schema.py",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
+        "path": "tests/test_balance_split_strategy.py",
+        "blob_sha": "e5de89be1694a45ff1f776522783495fb3d26610",
+        "ref": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+        "status": "TARGETED_REGRESSION_UPDATED_NOT_EXECUTED_ON_NEW_HEAD",
+        "evidence": "https://github.com/tkgo11/prism-insight-light/commit/75170f89b2dfaaad1756cb28e13f5fc6f8edbbff"
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": ".github/workflows/tests.yml",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "trading/dispatch.py",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "trading/stop_loss_watcher.py",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "trading/strategies/common.py",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "trading/buy_sizing.py",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "trading/domestic.py",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "trading/us.py",
-        "ref": "41f779232c71d026dd0217863dcb5f98b96be85f",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "trading/execution_ledger.py",
-        "ref": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "trading/strategies/balance_split.py",
-        "ref": "aafc4b8a12dfc388a198752ba7beea578e89f229",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "tests/test_balance_split_strategy.py",
-        "ref": "aafc4b8a12dfc388a198752ba7beea578e89f229",
-        "status": "STALE_AFTER_CODE_CHANGES"
-      },
-      {
-        "path": "trading/strategies/balance_split.py",
-        "ref": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
-        "status": "TARGETED_FIX_REVIEW_ONLY_NOT_FULL_AUDIT"
-      },
-      {
-        "path": "tests/test_balance_split_strategy.py",
-        "ref": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
-        "status": "TARGETED_REGRESSION_REVIEW_ONLY_NOT_FULL_AUDIT"
-      },
-      {
-        "path": "trading/strategies/balance_split.py",
-        "ref": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
-        "status": "TARGETED_REVIEW_ONLY_NOT_FULL_AUDIT"
-      },
-      {
-        "path": "tests/test_balance_split_strategy.py",
-        "ref": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
-        "status": "TARGETED_REGRESSION_REVIEW_ONLY_NOT_FULL_AUDIT"
-      },
-      {
-        "path": "trading/strategies/balance_split.py",
-        "blob_sha": "1672dc8600127fcbc7b9d15d6229de6abed9aa0c",
-        "ref": "17e622d232a015e10b2507d8713b025a4d34a238",
-        "status": "TARGETED_PARTIAL_BROKER_RESERVATION_FIX_REVIEW_ONLY",
-        "evidence": "https://github.com/tkgo11/prism-insight-light/commit/17e622d232a015e10b2507d8713b025a4d34a238"
-      },
-      {
-        "path": "tests/test_balance_split_strategy.py",
-        "blob_sha": "30d4ddb9430b042d78967f5fe4c25eba3d51dfb3",
-        "ref": "17e622d232a015e10b2507d8713b025a4d34a238",
-        "status": "TARGETED_REGRESSION_REVIEW_ONLY_CI_PENDING",
-        "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234048109"
-      },
-      {
-        "path": "tests/test_balance_split_strategy.py",
-        "blob_sha": "1474958ea6d7e1e84d57c9bef9b02e9cac470bd8",
-        "ref": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
-        "status": "TARGETED_TEST_EXPECTATION_REVIEW_ONLY_CI_SUCCESS",
-        "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234188307"
-      },
-      {
-        "path": "trading/strategies/balance_split.py",
-        "blob_sha": "4ffa3a518caede9b1809e96274440daa4504e0a5",
-        "ref": "3c47cbca447215dbf18c3e82cb59f8049295f330",
-        "status": "TARGETED_CASH_DROP_DEDUPLICATION_FIX_REVIEW_ONLY",
-        "evidence": "https://github.com/tkgo11/prism-insight-light/pull/42/files"
-      },
-      {
-        "path": "tests/test_balance_split_strategy.py",
-        "blob_sha": "8ed2b315ac167d8041a4491ae887574f5620389a",
-        "ref": "3c47cbca447215dbf18c3e82cb59f8049295f330",
-        "status": "TARGETED_CASH_DROP_REGRESSION_REVIEW_ONLY",
-        "evidence": "https://github.com/tkgo11/prism-insight-light/pull/42/files"
-      },
-      {
-        "path": "trading/strategies/score_max_capital.py",
-        "blob_sha": "ad547425270e0dbf5ef1cfcd0760f4914bcb5f98",
-        "ref": "3c47cbca447215dbf18c3e82cb59f8049295f330",
-        "status": "TARGETED_CONCURRENT_SCORE_RATIO_FIX_REVIEW_ONLY",
-        "evidence": "https://github.com/tkgo11/prism-insight-light/pull/42/files"
-      },
-      {
-        "path": "tests/test_score_max_capital_strategy.py",
-        "blob_sha": "31b75c6e5797f634867130e7670daec9c98b47bc",
-        "ref": "3c47cbca447215dbf18c3e82cb59f8049295f330",
-        "status": "TARGETED_CONCURRENCY_REGRESSION_REVIEW_ONLY",
-        "evidence": "https://github.com/tkgo11/prism-insight-light/pull/42/files"
+        "blob_sha": "94c77635bcdb9cb2bd1a3b9dce96a3b0abe58693",
+        "ref": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+        "status": "TARGETED_DOCUMENTATION_REVIEW_ONLY"
       }
     ],
-    "scope_estimate": "PR changed 35 files; current PR tree has 158 tracked blobs. Dependency closure and per-file audit not complete.",
-    "checksum": null,
     "modified_files": [
-      "trading/stop_loss_watcher.py",
-      "trading/dispatch.py",
-      "trading/domestic.py",
-      "trading/us.py",
-      "tests/test_stop_loss_watcher.py",
-      "tests/test_multi_account_empty_balance_fail_closed.py",
-      "tests/test_upstream_strategy_compatibility.py",
-      "tests/test_wave4_execution_safety.py",
-      "trading/signal_sizing.py",
-      "tests/test_upstream_signal_sizing.py",
-      "trading/execution_ledger.py",
-      "tests/test_execution_ledger_retention.py",
       "trading/strategies/balance_split.py",
       "tests/test_balance_split_strategy.py",
-      "trading/strategies/score_max_capital.py",
-      "tests/test_score_max_capital_strategy.py"
+      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
     ]
   },
   "full_manifest": {
     "status": "INDEXED_NOT_AUDITED",
     "tracked_tree_entries_on_pr": 182,
     "tracked_blob_files_on_pr": 158,
-    "sha": "3c47cbca447215dbf18c3e82cb59f8049295f330",
+    "sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
     "files_checked": 0,
-    "checksum": "d2eb9196795c00cabc0400c29abb1ed5d82064a7",
+    "checksum": "65a4ba23e7f58e88334564547a67ea9e95cbf03f",
     "checksum_kind": "git_tree_sha",
     "files": [
       {
@@ -374,7 +234,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "a329901fc961d9be863740336c31e878f0425b82",
+        "blob_sha": "94c77635bcdb9cb2bd1a3b9dce96a3b0abe58693",
         "status": "NOT_REVIEWED"
       },
       {
@@ -429,7 +289,7 @@
       },
       {
         "path": "tests/test_balance_split_strategy.py",
-        "blob_sha": "8ed2b315ac167d8041a4491ae887574f5620389a",
+        "blob_sha": "e5de89be1694a45ff1f776522783495fb3d26610",
         "status": "NOT_REVIEWED"
       },
       {
@@ -774,7 +634,7 @@
       },
       {
         "path": "trading/strategies/balance_split.py",
-        "blob_sha": "4ffa3a518caede9b1809e96274440daa4504e0a5",
+        "blob_sha": "9fab3c4de66aac613d842374fc1521702a4e0b69",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1054,8 +914,8 @@
       }
     ]
   },
-  "checks": [
-    {
+  "checks": {
+    "0": {
       "run_id": 41191643209,
       "head_sha": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
       "conclusion": "success",
@@ -1064,7 +924,7 @@
         "Windows runtime smoke"
       ]
     },
-    {
+    "1": {
       "run_id": 41191639061,
       "head_sha": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
       "conclusion": "success",
@@ -1073,7 +933,7 @@
         "Windows runtime smoke"
       ]
     },
-    {
+    "2": {
       "run_id": 41200988178,
       "head_sha": "41f779232c71d026dd0217863dcb5f98b96be85f",
       "status": "completed",
@@ -1084,25 +944,25 @@
       ],
       "details": "Linux pytest 2 failed, 709 passed: stale test assertions expected stop-loss tracking deletion after accepted SELL; Windows smoke passed"
     },
-    {
+    "3": {
       "run_id": 41205254073,
       "head_sha": "ddec5a0a7b5481944fa8c5717155490a989dd200",
       "status": "completed",
       "conclusion": "success"
     },
-    {
+    "4": {
       "run_id": 41205318274,
       "head_sha": "9d7c3b0384d62e2a485cd7ab7a780a2d91f01ff9",
       "status": "in_progress",
       "conclusion": null
     },
-    {
+    "5": {
       "run_id": 41205354414,
       "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
       "status": "in_progress",
       "conclusion": null
     },
-    {
+    "6": {
       "run_id": 41205354414,
       "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
       "status": "completed",
@@ -1112,13 +972,13 @@
         "Windows runtime smoke"
       ]
     },
-    {
+    "7": {
       "run_id": 41209608548,
       "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
       "status": "in_progress",
       "conclusion": null
     },
-    {
+    "8": {
       "run_id": 41209608548,
       "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
       "status": "completed",
@@ -1128,13 +988,13 @@
         "Windows runtime smoke"
       ]
     },
-    {
+    "9": {
       "run_id": 41214519214,
       "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
       "status": "in_progress",
       "conclusion": null
     },
-    {
+    "10": {
       "run_id": 41214519214,
       "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
       "status": "completed",
@@ -1144,19 +1004,19 @@
         "Windows runtime smoke"
       ]
     },
-    {
+    "11": {
       "run_id": 41219401980,
       "head_sha": "b0cf6ffdd905d42539d5bcc74f9b638713b6750e",
       "status": "in_progress",
       "conclusion": null
     },
-    {
+    "12": {
       "run_id": 41219454375,
       "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
       "status": "in_progress",
       "conclusion": null
     },
-    {
+    "13": {
       "run_id": 41219454375,
       "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
       "status": "completed",
@@ -1167,14 +1027,14 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41219454375"
     },
-    {
+    "14": {
       "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
       "status": "in_progress",
       "conclusion": null,
       "notes": "GitHub Actions Tests started for latest PR head; result pending",
       "run_id": 41223929687
     },
-    {
+    "15": {
       "run_id": 41223929687,
       "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
       "status": "completed",
@@ -1185,7 +1045,7 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41223929687"
     },
-    {
+    "16": {
       "run_id": 41228881618,
       "head_sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
       "status": "completed",
@@ -1196,7 +1056,7 @@
         "Windows runtime smoke: completed/success"
       ]
     },
-    {
+    "17": {
       "run_id": 41234048109,
       "head_sha": "17e622d232a015e10b2507d8713b025a4d34a238",
       "status": "completed",
@@ -1211,7 +1071,7 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234048109"
     },
-    {
+    "18": {
       "run_id": 41234188307,
       "head_sha": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
       "status": "completed",
@@ -1227,7 +1087,7 @@
         "qlty usage: pending"
       ]
     },
-    {
+    "19": {
       "run_id": 41238941028,
       "head_sha": "3c47cbca447215dbf18c3e82cb59f8049295f330",
       "status": "completed",
@@ -1242,8 +1102,12 @@
         "qlty check: success",
         "qlty usage: pending"
       ]
-    }
-  ],
+    },
+    "latest_workflow_run_id": 41243400167,
+    "latest_workflow_run_status": "queued",
+    "latest_workflow_run_conclusion": null,
+    "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff"
+  },
   "upstream_changes": [
     {
       "scope": "latest observed 2026-10-31 commits",
@@ -1504,9 +1368,14 @@
   "blockers": [
     "Full related dependency closure and file-by-file audit incomplete",
     "Broker fill/partial-fill and order-id reconciliation require safe demo evidence",
-    "Full repository audit not started"
+    "Full repository audit not started",
+    "New-head CI incomplete",
+    "Full related dependency audit incomplete",
+    "Real/demo KIS and GCP integration not performed",
+    "Broker fill/stop-loss reconciliation unresolved",
+    "Required approvals and branch protection not fully verified"
   ],
-  "next_action": "Latest-head CI passed. Audit all related files and broker fill/partial-fill reconciliation; maintain 0/2 until a complete separate scheduled-slot audit; then repeat for 2/2 before full audit.",
+  "next_action": "Wait for new-head CI; inspect failures and fix if needed. Complete dependency-closure file-by-file audit. Never count PASS or merge before gates.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -1517,6 +1386,17 @@
       "full_pass": false,
       "reason": "Code changed; CI incomplete; no full dependency audit",
       "manifest_tree_sha": "3c47cbca447215dbf18c3e82cb59f8049295f330"
+    },
+    {
+      "slot": "2026-11-01T06:20+09:00",
+      "run_id": "prism-sync-hourly-2026-11-01T06:20:00+09:00-75170f89",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Targeted fix changed code; complete dependency audit and new-head CI incomplete"
     }
   ],
   "discovered_defects": [
@@ -1533,10 +1413,26 @@
       "fixed_in": "3c47cbca447215dbf18c3e82cb59f8049295f330",
       "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
       "description": "Concurrent score-max-capital BUYs shared a mutable score ratio across async tasks."
+    },
+    {
+      "id": "cash-drop-not-proof-of-fill",
+      "severity": "high",
+      "status": "MITIGATED_PENDING_CI_AND_DEMO",
+      "file": "trading/strategies/balance_split.py",
+      "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+      "description": "Cash-only decreases (withdrawals/FX/unrelated trades) previously released accepted BUY reservations without broker fill evidence",
+      "fix_commit": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
+      "validation": "CI queued; not executed locally"
     }
   ],
   "risks": [
     "Cash-only balance movements are not authoritative per-order fill evidence; unrelated withdrawals and deposits can misattribute reconciliation.",
-    "Actual KIS/GCP demo integration and human financial-safety review not performed."
+    "Actual KIS/GCP demo integration and human financial-safety review not performed.",
+    {
+      "id": "cash-only-reconciliation",
+      "status": "mitigated-conservatively",
+      "impact": "Unresolved BUY reservations persist until manual authoritative reconciliation; could block new orders",
+      "sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff"
+    }
   ]
 }
