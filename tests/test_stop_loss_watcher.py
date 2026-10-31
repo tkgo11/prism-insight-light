@@ -217,8 +217,8 @@ def test_stop_loss_watcher_triggers_sell_when_price_crosses_stop_loss(tmp_path, 
     assert call_signal.price == 69500.0
     assert call_signal.sell_reason == "stop_loss"
 
-    # Tracker should have removed the position after successful execution
-    assert tracker.get_position("KR", "005930") is None
+    # An accepted order does not prove a fill: 10 shares remain.
+    assert tracker.get_position("KR", "005930") is not None
 
 
 def test_stop_loss_watcher_clears_zero_holding_position(tmp_path, monkeypatch):
@@ -364,10 +364,10 @@ def test_stop_loss_watcher_skips_balance_inquiry_until_stop_hit_or_interval(tmp_
         results = watcher.check_stop_loss_once()
 
     assert len(results) == 1
-    assert mock_trader.get_holding_quantity.call_count == 2
+    assert mock_trader.get_holding_quantity.call_count == 3
 
 
-def test_multi_account_stop_loss_clears_tracking_when_non_holding_account_fails(tmp_path):
+def test_multi_account_stop_loss_retains_tracking_when_non_holding_account_fails(tmp_path):
     tracker_file = tmp_path / "stop_loss_test.json"
     tracker = StopLossTracker(tracker_file)
     tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0, company_name="샘씨엔에스")
@@ -418,11 +418,11 @@ def test_multi_account_stop_loss_clears_tracking_when_non_holding_account_fails(
 
     assert len(results) == 1
     assert results[0]["status"] == "partial_success"
-    # The tracked position MUST be cleared since the holding account executed and the failed account had no holdings
-    assert tracker.get_position("KR", "252990") is None
+    # The order was accepted, but aggregate holdings still show 695 shares.
+    assert tracker.get_position("KR", "252990") is not None
 
 
-def test_multi_account_stop_loss_clears_tracking_when_duplicate_suppressed_behind_executed(tmp_path):
+def test_multi_account_stop_loss_retains_tracking_when_duplicate_suppressed_behind_executed(tmp_path):
     tracker_file = tmp_path / "stop_loss_test.json"
     tracker = StopLossTracker(tracker_file)
     tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0, company_name="샘씨엔에스")
@@ -473,8 +473,8 @@ def test_multi_account_stop_loss_clears_tracking_when_duplicate_suppressed_behin
         results = watcher.check_stop_loss_once()
 
     assert len(results) == 1
-    # Tracking must be cleared to break the infinite trigger storm
-    assert tracker.get_position("KR", "252990") is None
+    # A deduplicated accepted order is not proof of liquidation.
+    assert tracker.get_position("KR", "252990") is not None
 
 
 @pytest.mark.asyncio
@@ -606,3 +606,60 @@ def test_stop_loss_watcher_cooldown_prevents_immediate_retrigger_storm(tmp_path)
         assert len(res2) == 0
         assert dispatcher.dispatch.call_count == 1
 
+
+
+@pytest.mark.parametrize("remaining", [0, 2, None, float("nan"), -1])
+def test_stop_loss_watcher_requires_valid_post_order_flat_balance(
+    tmp_path, remaining
+):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("KR", "005930", 70000.0, entry_price=73000.0)
+    pos = tracker.get_position("KR", "005930")
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "demo"
+    dispatcher.strategy_config = None
+    dispatcher.dispatch = AsyncMock(
+        return_value=DispatchResult("executed", "order accepted", "SELL", "KR")
+    )
+    trader = MagicMock()
+    trader.get_holding_quantity.return_value = remaining
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, storage_path=tracker_file),
+        tracker=tracker,
+    )
+    watcher._get_cached_trader = MagicMock(return_value=trader)
+
+    result = watcher._trigger_sell("KR", "005930", 69000.0, pos)
+    assert result["status"] == "executed"
+    assert (tracker.get_position("KR", "005930") is None) is (remaining == 0)
+
+
+@pytest.mark.parametrize("quantity", [None, float("nan"), float("inf"), -1])
+def test_stop_loss_watcher_invalid_pre_order_holdings_block_sell(
+    tmp_path, quantity
+):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("US", "AAPL", 170.0, entry_price=180.0)
+
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 165.0}
+    trader.get_holding_quantity.return_value = quantity
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True, request_interval_seconds=0.0, storage_path=tracker_file
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        assert watcher.check_stop_loss_once() == []
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position("US", "AAPL") is not None
