@@ -7,7 +7,9 @@
     "id": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
     "started_at": "2026-10-31T19:22:39Z",
     "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-01T04:22:39+09:00"
+    "lock_owner": "prism-sync-hourly-2026-11-01T04:22:39+09:00",
+    "last_mutation_commit": "17e622d232a015e10b2507d8713b025a4d34a238",
+    "last_mutation_at": "2026-10-31T19:24:00Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -26,11 +28,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
+    "head_sha": "17e622d232a015e10b2507d8713b025a4d34a238",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "FIXED_UNRECONCILED_RESERVATIONS_CI_PASSED_AUDIT_PENDING"
+    "status": "FIXED_PARTIAL_BROKER_REPORT_UNDER_RESERVATION_CI_PENDING"
   },
   "candidates": [
     {
@@ -39,7 +41,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
+      "head_sha": "17e622d232a015e10b2507d8713b025a4d34a238",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -50,7 +52,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_REQUIRES_REAUDIT_AFTER_RESERVATION_RECONCILIATION_FIX",
+    "status": "STALE_AFTER_PARTIAL_BROKER_AMOUNT_FIX",
     "checked_files": [
       {
         "path": "trading/signal_sizing.py",
@@ -161,7 +163,7 @@
     "status": "NOT_STARTED",
     "tracked_tree_entries_on_pr": 182,
     "tracked_blob_files_on_pr": 158,
-    "sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
+    "sha": "17e622d232a015e10b2507d8713b025a4d34a238",
     "files_checked": 0,
     "checksum": null
   },
@@ -401,6 +403,13 @@
       "description": "Previously 30-minute TTL could silently free unreflected accepted BUY budget; adjusted_cash falsely reconciled later reservations without any broker cash change; unknown broker outcome did not reserve budget; US auto-exchange fallback skipped reservation deduction. Retain unsettled reservations until observed cash reconciliation, use actual broker cash for each record, reserve unknown outcomes, and deduct US auto-exchange reservations. Remaining broker fill/order-id reconciliation needs safe demo validation.",
       "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
       "evidence": "https://github.com/tkgo11/prism-insight-light/commit/805ac8aa9f0b65964aafc414da6a7b2a175ccdfc"
+    },
+    {
+      "severity": "HIGH",
+      "area": "balance_split partial broker reported amount",
+      "description": "A partial fill/estimated broker amount smaller than the accepted order budget previously reduced the reservation and could re-spend an unfilled commitment. Reservation now uses max(submitted budget, reported positive amount), with regression for successive US buys; CI and full dependency audit pending.",
+      "status": "FIX_COMMITTED_AWAITING_CI_AND_AUDIT",
+      "evidence": "https://github.com/tkgo11/prism-insight-light/commit/17e622d232a015e10b2507d8713b025a4d34a238"
     }
   ],
   "audit_evidence": [
