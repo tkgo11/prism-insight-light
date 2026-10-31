@@ -17,7 +17,7 @@ from ..domestic import AsyncTradingContext
 from ..execution_outcome import classify_broker_result
 from ..file_lock import FileLock
 from ..schema import SignalMessage
-from ..signal_sizing import scaled_buy_amount
+from ..signal_sizing import SignalSizingError, scaled_buy_amount
 from ..us import USStockTrading
 from .common import acquire_file_lock, integer_value
 
@@ -295,8 +295,26 @@ class BalanceSplitStrategy:
 
     def _available_amount(self, trader: _BuyTrader, *, market: str) -> tuple[float, str, dict[str, Any]]:
         summary = trader.get_account_summary() or {}
-        available_amount = float(summary.get("available_amount", 0) or 0)
-        cash_balance = float(summary.get("cash_balance", summary.get("total_cash", 0)) or 0)
+        if not isinstance(summary, dict):
+            raise SignalSizingError("Balance split account summary is invalid")
+
+        def verified_cash(value: Any, name: str) -> float:
+            if value is None or value == "":
+                return 0.0
+            if isinstance(value, bool):
+                raise SignalSizingError(f"Balance split {name} is not a valid cash amount")
+            try:
+                cash = float(value)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise SignalSizingError(f"Balance split {name} is not numeric") from exc
+            if not math.isfinite(cash) or cash < 0:
+                raise SignalSizingError(f"Balance split {name} must be finite and nonnegative")
+            return cash
+
+        available_amount = verified_cash(summary.get("available_amount", 0), "available_amount")
+        cash_balance = verified_cash(
+            summary.get("cash_balance", summary.get("total_cash", 0)), "cash_balance"
+        )
         account_key = self._reservation_account_key(summary)
 
         # For domestic accounts, cash_balance/total_cash is the cash portion of
@@ -336,7 +354,7 @@ class BalanceSplitStrategy:
         # Last-resort compatibility fallback for account summaries that do not
         # expose cash_balance/total_cash. Domestic KIS dnca_tot_amt (deposit) can
         # remain stale after same-day buys, so it must not override cash_balance.
-        deposit = float(summary.get("deposit", 0) or 0)
+        deposit = verified_cash(summary.get("deposit", 0), "deposit")
         if deposit > 0:
             logger.info(
                 "Using deposit %.2f as balance split cash base because cash_balance and available_amount are zero",
@@ -437,8 +455,10 @@ class BalanceSplitStrategy:
         for reservation in source_reservations:
             try:
                 created_at = datetime.fromisoformat(str(reservation.get("created_at", "")))
-            except ValueError:
-                continue
+            except (TypeError, ValueError, OverflowError) as exc:
+                # An unparseable timestamp must not silently expire a pending
+                # accepted-order reservation and allow its cash to be reused.
+                raise RuntimeError("Balance split reservation has an invalid timestamp") from exc
             if created_at.tzinfo is None:
                 created_at = created_at.replace(tzinfo=timezone.utc)
             if created_at >= cutoff:
@@ -476,12 +496,10 @@ class BalanceSplitStrategy:
             try:
                 before_cash = float(reservation.get("before_cash", 0) or 0)
                 amount = float(reservation.get("amount", 0) or 0)
-            except (TypeError, ValueError):
-                retained_reservations.append(reservation)
-                continue
-            if before_cash <= 0 or amount <= 0:
-                retained_reservations.append(reservation)
-                continue
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise RuntimeError("Balance split reservation contains invalid amounts") from exc
+            if not all(math.isfinite(x) and x > 0 for x in (before_cash, amount)):
+                raise RuntimeError("Balance split reservation contains invalid amounts")
 
             # Once the broker-reported cash drops, persist that observation so a
             # later cash rebound (sell proceeds, deposits, or canceled orders)

@@ -575,3 +575,53 @@ def test_balance_split_reservation_write_failure_is_not_silenced(
             market="KR", ticker="005930", before_cash=10000, amount=5000
         )
     assert not strategy.reservation_path.exists()
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "market,available,total_cash,deposit",
+    [
+        ("US", float("inf"), None, None),
+        ("US", float("nan"), None, None),
+        ("KR", 0, float("inf"), None),
+        ("KR", 0, None, float("nan")),
+    ],
+)
+async def test_balance_split_rejects_nonfinite_cash_before_order(
+    balance_split_strategy, market, available, total_cash, deposit
+):
+    from trading.signal_sizing import SignalSizingError
+
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL" if market == "US" else "005930",
+         "market": market, "price": 100}
+    )
+    trader = (
+        FakeUSTrader(available_amount=available)
+        if market == "US"
+        else FakeKRTrader(available_amount=available, total_cash=total_cash, deposit=deposit)
+    )
+    with pytest.raises(SignalSizingError, match="finite and nonnegative"):
+        if market == "US":
+            await strategy._execute_us(signal, trader=trader)
+        else:
+            await strategy._execute_kr(signal, trader=trader)
+    assert trader.buy_calls == []
+
+
+@pytest.mark.parametrize(
+    "reservations",
+    [
+        [{"market": "US", "ticker": "AAPL", "amount": 50,
+          "before_cash": 100, "created_at": "not-a-timestamp"}],
+        [{"market": "US", "ticker": "AAPL", "amount": "nan",
+          "before_cash": 100, "created_at": "2026-10-31T00:00:00+00:00"}],
+    ],
+)
+def test_balance_split_invalid_reservation_fields_fail_closed(
+    balance_split_strategy, reservations
+):
+    strategy = balance_split_strategy(split_count=2)
+    strategy.reservation_path.write_text(json.dumps(reservations), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="invalid timestamp|invalid amounts"):
+        strategy._pending_reserved_amount(market="US", current_cash=100)
