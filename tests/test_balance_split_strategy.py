@@ -665,6 +665,42 @@ def test_multiple_stale_cash_reservations_do_not_falsely_reconcile_each_other(
     assert len(strategy._load_reservations()) == 2
 
 
+def test_cash_drop_is_not_double_credited_across_pending_buys(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
+    for ticker in ("111111", "222222"):
+        strategy._record_cash_reservation(
+            market="KR", ticker=ticker, before_cash=1000, amount=300
+        )
+
+    # Only one 300-unit cash decrease occurred. The other BUY may remain open.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=700) == 300
+    remaining = strategy._load_reservations()
+    assert len(remaining) == 1
+    assert remaining[0]["amount"] == 300
+    assert remaining[0]["before_cash"] == 700
+
+    # Polling the same broker snapshot must not release the second commitment.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=700) == 300
+    # A further independent 300-unit decrease can reconcile the remainder.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=400) == 0
+
+
+def test_mixed_reservation_cash_anchors_cannot_reuse_one_drop(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
+    strategy._record_cash_reservation(
+        market="US", ticker="AAPL", before_cash=900, amount=450
+    )
+    strategy._record_cash_reservation(
+        market="US", ticker="MSFT", before_cash=450, amount=225
+    )
+
+    # Cash falling to 700 reflects at most 200 of the earlier commitment.
+    assert strategy._pending_reserved_amount(market="US", current_cash=700) == 475
+    # A repeat read of 700 must not consume any more of either reservation.
+    assert strategy._pending_reserved_amount(market="US", current_cash=700) == 475
+    assert sum(item["amount"] for item in strategy._load_reservations()) == 475
+
+
 @pytest.mark.asyncio
 async def test_auto_exchange_buying_power_respects_pending_reservations(
     balance_split_strategy,
