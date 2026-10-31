@@ -6,7 +6,7 @@
   "run": {
     "id": "automation-turn-4-2026-10-31T14:18Z",
     "started_at": "2026-10-31T14:18:12Z",
-    "completed_at": null,
+    "completed_at": "2026-10-31T14:20:26.468Z",
     "lock_owner": null
   },
   "source": {
@@ -30,7 +30,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DURABLE_LEDGER_RETENTION_FIX_COMMITTED_NEW_HEAD_CI_QUEUED"
+    "status": "DURABLE_LEDGER_FIX_COMMITTED_NEW_HEAD_CI_RUNNING"
   },
   "candidates": [
     {
@@ -194,7 +194,7 @@
     {
       "run_id": 41209608548,
       "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
-      "status": "queued",
+      "status": "in_progress",
       "conclusion": null
     }
   ],
@@ -343,5 +343,5 @@
     "No safe demo KIS/GCP end-to-end integration; partial fills and durable stop-loss follow-up still require operator reconciliation",
     "No two consecutive passing related/full audits"
   ],
-  "next_action": "Check latest-head CI #41209608548; fix failures if any; verify durable-ledger retention/capacity semantics and stop-loss follow-up with tests. Complete related file manifest and per-file audit. Never count partial audit as PASS."
+  "next_action": "Wait for latest-head CI #41209608548; fix failures if any. Rebuild complete related-code manifest and perform a full file-by-file audit on unchanged head; do not award PASS on partial review."
 }
