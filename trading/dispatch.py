@@ -869,7 +869,10 @@ class TradeDispatcher:
                 # position, even with the default upstream denominator=1.
                 # Without a verified post-trade holding of zero, retain the
                 # watcher entry rather than accidentally unprotect a position.
-                if signal.sell_denominator != 1 or self._resolve_strategy(signal) is not None:
+                if signal.sell_denominator != 1 or (
+                    getattr(self, "strategy_config", None) is not None
+                    and self._resolve_strategy(signal) is not None
+                ):
                     logger.info(
                         "Keeping stop-loss tracking after potentially partial SELL %s(%s)",
                         signal.company_name, signal.ticker,
