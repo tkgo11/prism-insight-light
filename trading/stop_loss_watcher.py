@@ -535,10 +535,40 @@ class StopLossWatcher:
                 )
             )
             if result.status == "executed" or all_accounts_clean:
-                self.tracker.remove_position(
-                    market, ticker, expected_updated_at=pos.get("updated_at")
+                # A configured strategy may intentionally sell only a fraction
+                # of the remaining shares even for a watcher-generated
+                # stop-loss SELL (which has sell_denominator=1). An accepted
+                # order is not proof that the account is now flat. Preserve
+                # protection unless a fresh aggregate holding check confirms
+                # zero shares; on an inquiry error, retain the tracker record.
+                configured_strategy = getattr(self.dispatcher, "strategy_config", None)
+                requires_flat_verification = (
+                    isinstance(configured_strategy, dict)
+                    and bool(str(configured_strategy.get("name", "")).strip())
                 )
-                self._last_trigger_attempt.pop(self.tracker._key(market, ticker), None)
+                may_remove = True
+                if requires_flat_verification:
+                    try:
+                        remaining_qty = trader.get_holding_quantity(ticker)
+                        may_remove = remaining_qty <= 0
+                        if not may_remove:
+                            logger.warning(
+                                "[Stop-Loss] Keeping protection for %s %s after "
+                                "strategy-controlled SELL (remaining=%s)",
+                                market, ticker, remaining_qty,
+                            )
+                    except Exception as exc:
+                        may_remove = False
+                        logger.warning(
+                            "[Stop-Loss] Keeping protection for %s %s: "
+                            "post-strategy SELL holdings cannot be verified: %s",
+                            market, ticker, exc,
+                        )
+                if may_remove:
+                    self.tracker.remove_position(
+                        market, ticker, expected_updated_at=pos.get("updated_at")
+                    )
+                    self._last_trigger_attempt.pop(self.tracker._key(market, ticker), None)
             elif result.status == "partial_success":
                 try:
                     remaining_qty = trader.get_holding_quantity(ticker)
