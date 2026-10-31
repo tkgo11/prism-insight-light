@@ -742,14 +742,15 @@ def test_update_stop_loss_tracking_leaves_watcher_owned_record(tmp_path):
     # The dispatch layer must not wipe the record; the watcher's CAS owns it.
     assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is not None
 
-    # A regular (non-watcher) fully-executed SELL still removes tracking.
+    # Even a non-watcher SELL with an "executed" dispatch outcome only
+    # proves broker acceptance; it must not clear stop-loss protection.
     manual_signal = parse_signal_payload(
         {"type": "SELL", "signal_type": "SELL", "market": "KR", "ticker": "005930", "price": 68000}
     )
     dispatcher._update_stop_loss_tracking(
-        manual_signal, DispatchResult("executed", "filled", "SELL", "KR")
+        manual_signal, DispatchResult("executed", "accepted", "SELL", "KR")
     )
-    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is None
+    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is not None
 
 
 def test_queue_load_tolerates_unknown_keys(tmp_path):

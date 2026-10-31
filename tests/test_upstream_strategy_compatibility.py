@@ -181,4 +181,6 @@ def test_upstream_and_strategy_partial_exits_preserve_stop_loss_protection(
     assert removed == []
     monkeypatch.setattr(dispatcher, "_resolve_strategy", lambda signal: None)
     dispatcher._update_stop_loss_tracking(make_signal("SELL"), result)
-    assert removed == [("US", "AAPL")]
+    # Broker acceptance is not a confirmed fill, even for full-size sells.
+    # The watcher must verify that aggregate holdings are flat before cleanup.
+    assert removed == []
