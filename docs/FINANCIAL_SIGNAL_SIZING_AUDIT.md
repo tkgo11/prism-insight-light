@@ -38,6 +38,7 @@
 
 ## Critical limitations and residual risks (not waived)
 
+- **Balance-split reservation safety:** a lower cash balance does not prove any particular accepted BUY filled; unrelated withdrawals/transfers/FX can cause the same decrease. Reservations now remain until authoritative per-order reconciliation and operator clearance. This may conservatively block additional BUYs; automatic retirement is intentionally disabled pending a safe broker order-status ledger.
 - **Order acceptance ≠ fill.** Broker `success=True` may not establish complete exchange execution. Position reconciliation, partial fills, pending orders, cancellation and amendments need a read-only KIS demo integration harness and account-level post-trade verification before live use.
 - **No complete live KIS or live GCP Pub/Sub run here.** Both domestic/overseas, regular/off-hours, real/demo, multi-account and auto-exchange need controlled integration tests with actual sandbox credentials and non-financial limits.
 - **Stop-loss partial liquidation:** tracking is retained for configured strategy exits, but ledger idempotency may suppress repeated watcher-generated signals after a previously accepted order. Remaining holdings require operator reconciliation; automatically issuing another order without confirming the first is filled would be unsafe.

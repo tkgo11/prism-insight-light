@@ -406,30 +406,27 @@ async def test_us_balance_split_does_not_treat_truthy_non_true_success_as_execut
     assert strategy._load_reservations() == []
 
 
-def test_pending_reservations_are_not_double_counted_after_cash_report_updates(balance_split_strategy):
+def test_cash_decrease_is_not_authoritative_buy_fill_confirmation(balance_split_strategy):
     strategy = balance_split_strategy(split_count=2)
-    strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=23871362, amount=11052000)
+    strategy._record_cash_reservation(
+        market="KR", ticker="012510", before_cash=23871362, amount=11052000
+    )
+    # This cash drop might be a withdrawal or another strategy's order.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=12819362) == 11052000
+    assert len(strategy._load_reservations()) == 1
+    # A later deposit or a repeated snapshot cannot release the unresolved BUY.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=25000000) == 11052000
 
-    assert strategy._pending_reserved_amount(market="KR", current_cash=12819362) == 0
-    assert strategy._load_reservations() == []
-
-    # A later cash increase within the TTL must not resurrect the already
-    # reflected buy reservation.
-    assert strategy._pending_reserved_amount(market="KR", current_cash=25000000) == 0
-
-
-def test_pending_reservations_only_keep_unreflected_remainder_after_partial_cash_update(balance_split_strategy):
+def test_partial_cash_drop_cannot_release_unfilled_buy_budget(balance_split_strategy):
     strategy = balance_split_strategy(split_count=2)
-    strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=10000000, amount=5000000)
-
-    assert strategy._pending_reserved_amount(market="KR", current_cash=7000000) == 2000000
-    assert strategy._load_reservations()[0]["before_cash"] == 7000000
-    assert strategy._load_reservations()[0]["amount"] == 2000000
-
-    # Cash can increase for unrelated reasons while the remainder is still
-    # unreflected; only the 2M remainder should be reserved, not the old 5M.
-    assert strategy._pending_reserved_amount(market="KR", current_cash=12000000) == 2000000
-
+    strategy._record_cash_reservation(
+        market="KR", ticker="012510", before_cash=10000000, amount=5000000
+    )
+    assert strategy._pending_reserved_amount(market="KR", current_cash=7000000) == 5000000
+    record = strategy._load_reservations()[0]
+    assert record["before_cash"] == 10000000
+    assert record["amount"] == 5000000
+    assert strategy._pending_reserved_amount(market="KR", current_cash=12000000) == 5000000
 
 def test_concurrent_reservation_records_do_not_lose_updates(balance_split_strategy):
     strategy = balance_split_strategy(split_count=2)
@@ -647,9 +644,9 @@ def test_expired_unreconciled_reservation_does_not_release_budget(balance_split_
     # A TTL alone is not evidence that the broker updated the balance.
     assert strategy._pending_reserved_amount(market="KR", current_cash=1000) == 400
     assert len(strategy._load_reservations()) == 1
-    # Actual broker cash reduction can reconcile the reservation.
-    assert strategy._pending_reserved_amount(market="KR", current_cash=600) == 0
-    assert strategy._load_reservations() == []
+    # A cash decrease is not evidence of this order's actual fill.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=600) == 400
+    assert len(strategy._load_reservations()) == 1
 
 
 def test_multiple_stale_cash_reservations_do_not_falsely_reconcile_each_other(
@@ -665,27 +662,18 @@ def test_multiple_stale_cash_reservations_do_not_falsely_reconcile_each_other(
     assert len(strategy._load_reservations()) == 2
 
 
-def test_cash_drop_is_not_double_credited_across_pending_buys(balance_split_strategy):
+def test_multiple_pending_buys_survive_unrelated_cash_withdrawal(balance_split_strategy):
     strategy = balance_split_strategy(split_count=2)
     for ticker in ("111111", "222222"):
         strategy._record_cash_reservation(
             market="KR", ticker=ticker, before_cash=1000, amount=300
         )
+    # Neither order's fill is known, even after cash falls below total reserved.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=700) == 600
+    assert strategy._pending_reserved_amount(market="KR", current_cash=400) == 600
+    assert len(strategy._load_reservations()) == 2
 
-    # Only one 300-unit cash decrease occurred. The other BUY may remain open.
-    assert strategy._pending_reserved_amount(market="KR", current_cash=700) == 300
-    remaining = strategy._load_reservations()
-    assert len(remaining) == 1
-    assert remaining[0]["amount"] == 300
-    assert remaining[0]["before_cash"] == 700
-
-    # Polling the same broker snapshot must not release the second commitment.
-    assert strategy._pending_reserved_amount(market="KR", current_cash=700) == 300
-    # A further independent 300-unit decrease can reconcile the remainder.
-    assert strategy._pending_reserved_amount(market="KR", current_cash=400) == 0
-
-
-def test_mixed_reservation_cash_anchors_cannot_reuse_one_drop(balance_split_strategy):
+def test_mixed_cash_anchors_do_not_authorize_implicit_reconciliation(balance_split_strategy):
     strategy = balance_split_strategy(split_count=2)
     strategy._record_cash_reservation(
         market="US", ticker="AAPL", before_cash=900, amount=450
@@ -693,13 +681,9 @@ def test_mixed_reservation_cash_anchors_cannot_reuse_one_drop(balance_split_stra
     strategy._record_cash_reservation(
         market="US", ticker="MSFT", before_cash=450, amount=225
     )
-
-    # Cash falling to 700 reflects at most 200 of the earlier commitment.
-    assert strategy._pending_reserved_amount(market="US", current_cash=700) == 475
-    # A repeat read of 700 must not consume any more of either reservation.
-    assert strategy._pending_reserved_amount(market="US", current_cash=700) == 475
-    assert sum(item["amount"] for item in strategy._load_reservations()) == 475
-
+    assert strategy._pending_reserved_amount(market="US", current_cash=700) == 675
+    assert strategy._pending_reserved_amount(market="US", current_cash=700) == 675
+    assert sum(item["amount"] for item in strategy._load_reservations()) == 675
 
 @pytest.mark.asyncio
 async def test_auto_exchange_buying_power_respects_pending_reservations(
