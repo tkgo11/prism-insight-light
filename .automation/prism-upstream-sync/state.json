@@ -439,7 +439,7 @@
       ],
       "ci_prior_head_run_id": 41214519214,
       "ci_new_head_run_id": 41219454375,
-      "notes": "Freshly confirmed upstream and fork default HEAD unchanged, PR 42 draft and open; 158 tracked PR blob files. Prior head CI passed Linux pytest and Windows smoke. Found fail-open corruption/read/write behavior in balance-split cash reservations and nonfinite cash/malformed reservation fields. Two atomic CAS-protected Git commits add fail-closed behavior and 9 new parametrized regression scenarios. New-head CI in progress; local pytest unavailable because github.com DNS resolution fails. Did not complete dependency-closure or per-file audit, no PASS, no merge."
+      "notes": "Freshly confirmed upstream and fork default HEAD unchanged, PR 42 draft and open; 158 tracked PR blob files. Prior head CI passed Linux pytest and Windows smoke. Found fail-open corruption/read/write behavior in balance-split cash reservations and nonfinite cash/malformed reservation fields. Two atomic CAS-protected Git commits add fail-closed behavior and 10 regression scenarios across 5 test functions. New-head CI in progress; local pytest unavailable because github.com DNS resolution fails. Did not complete dependency-closure or per-file audit, no PASS, no merge."
     }
   ],
   "last_merged_upstream_sha": null,
