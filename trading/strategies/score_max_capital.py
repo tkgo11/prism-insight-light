@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any
 
@@ -107,7 +108,11 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
         # is preserved for the parent's execution result contract.
         super().__init__(config=BalanceSplitStrategyConfig(split_count=1))
         self.config = config
-        self._active_buy_ratio = 1.0
+        # Per-task ratio: concurrent signals can await the same reservation lock.
+        # A shared mutable attribute lets one signal overwrite another's sizing.
+        self._active_buy_ratio: ContextVar[float] = ContextVar(
+            f"score_max_capital_buy_ratio_{id(self)}", default=1.0
+        )
 
     async def execute(
         self,
@@ -117,16 +122,20 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
         trader_kwargs: dict[str, Any] | None = None,
     ) -> BalanceSplitExecution | StrategyExecution:
         if signal.signal_type == "BUY":
-            self._active_buy_ratio = self._ratio_for(
+            ratio = self._ratio_for(
                 signal.buy_score,
                 bands=self.config.buy_score_bands or {0: 1.0},
                 missing_ratio=self.config.missing_buy_score_ratio,
             )
-            return await super().execute(
-                signal,
-                trading_mode=trading_mode,
-                trader_kwargs=trader_kwargs,
-            )
+            token = self._active_buy_ratio.set(ratio)
+            try:
+                return await super().execute(
+                    signal,
+                    trading_mode=trading_mode,
+                    trader_kwargs=trader_kwargs,
+                )
+            finally:
+                self._active_buy_ratio.reset(token)
 
         if signal.signal_type == "SELL":
             sell_fraction = self._ratio_for(
@@ -159,7 +168,7 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
         )
 
     def _buy_amount(self, available_amount: float) -> float:
-        return available_amount * self._active_buy_ratio
+        return available_amount * self._active_buy_ratio.get()
 
     def _no_balance(
         self,
@@ -200,7 +209,7 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
             cash_source=cash_source,
         )
         broker_message = str(result.get("message", ""))
-        effective_ratio = self._active_buy_ratio * signal.position_fraction
+        effective_ratio = self._active_buy_ratio.get() * signal.position_fraction
         message = (
             f"Score-max-capital buy {buy_amount:.2f} ({effective_ratio:.0%} of "
             f"{cash_source} {available_amount:.2f})"
