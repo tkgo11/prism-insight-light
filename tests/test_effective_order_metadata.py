@@ -43,7 +43,7 @@ def fake_broker(monkeypatch):
 def buy(**fields):
     return parse_signal_payload({
         "type": "BUY", "ticker": "AAPL", "market": "US", "price": 100,
-        "stop_loss": 90, "target_price": 120, **fields
+        "stop_loss": 90, "target_price": 120, "buy_score": 5, **fields
     })
 
 
@@ -51,6 +51,7 @@ def sell(**fields):
     return parse_signal_payload({
         "type": "SELL", "ticker": "AAPL", "market": "US", "price": 130,
         "stop_loss": 90, "target_price": 120, "sell_reason": "profit",
+        "buy_score": 5,
         **fields,
     })
 
