@@ -453,6 +453,17 @@ class BalanceSplitStrategy:
         fresh: list[dict[str, Any]] = []
         source_reservations = reservations if reservations is not None else self._load_reservations()
         for reservation in source_reservations:
+            # Validate *before* age pruning and market/account filtering.  An
+            # expired or foreign-market malformed entry is not proof that the
+            # broker never accepted its BUY; silently dropping it could reuse
+            # cash while the broker's balance is still stale.
+            try:
+                before_cash = float(reservation.get("before_cash"))
+                amount = float(reservation.get("amount"))
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise RuntimeError("Balance split reservation contains invalid amounts") from exc
+            if not all(math.isfinite(value) and value > 0 for value in (before_cash, amount)):
+                raise RuntimeError("Balance split reservation contains invalid amounts")
             try:
                 created_at = datetime.fromisoformat(str(reservation.get("created_at", "")))
             except (TypeError, ValueError, OverflowError) as exc:

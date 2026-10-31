@@ -616,6 +616,9 @@ async def test_balance_split_rejects_nonfinite_cash_before_order(
           "before_cash": 100, "created_at": "not-a-timestamp"}],
         [{"market": "US", "ticker": "AAPL", "amount": "nan",
           "before_cash": 100, "created_at": "2026-10-31T00:00:00+00:00"}],
+        # An expired record from a different market must not evade validation.
+        [{"market": "KR", "ticker": "005930", "amount": "inf",
+          "before_cash": 100, "created_at": "2000-01-01T00:00:00+00:00"}],
     ],
 )
 def test_balance_split_invalid_reservation_fields_fail_closed(
