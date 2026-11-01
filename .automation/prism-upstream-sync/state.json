@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T04:18+09:00",
-    "started_at": "2026-11-01T19:18:00Z",
-    "completed_at": "2026-11-01T19:25:32.497Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T05:24+09:00",
+    "started_at": "2026-11-01T20:24:20Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T05:24+09:00",
     "last_mutation_commit": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
     "last_mutation_at": "2026-11-01T19:25:32.497Z",
-    "result": "STRATEGY_ENTRY_AND_ACCEPTED_ORDER_FENCES_PATCHED_CI_SUCCESS_AUDIT_BLOCKED",
+    "result": "IN_PROGRESS",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -60,7 +60,8 @@
       "merged": false,
       "reason": "Code+mock tests passed; no KIS demo or full dependency audit; related/full 0/2."
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T03:17+09:00"
+    "prior_run_id": "prism-sync-hourly-2026-11-02T04:18+09:00",
+    "pr_head_at_start": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
