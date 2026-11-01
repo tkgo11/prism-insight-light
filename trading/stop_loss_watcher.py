@@ -339,6 +339,18 @@ class StopLossTracker:
 
     def get_positions(self, market: str | None = None) -> list[dict[str, Any]]:
         """Return valid tracked positions without discarding corrupt records on disk."""
+        def valid_stored_price(value: Any, *, positive: bool = False) -> bool:
+            # Legacy/manual JSON can contain booleans or NaN/Infinity. A bool
+            # becomes 1.0 under float(), and nonfinite stop levels could
+            # silently disable protection or trigger an unintended order.
+            if isinstance(value, bool):
+                return False
+            try:
+                number = float(value)
+            except (TypeError, ValueError, OverflowError):
+                return False
+            return math.isfinite(number) and (number > 0 if positive else number >= 0)
+
         with FileLock(self.lock_path):
             data = self._load()
             items = list(data.items())
@@ -376,6 +388,12 @@ class StopLossTracker:
                 or item["ticker"] != item["ticker"].strip()
                 or any(ord(ch) < 32 or ord(ch) == 127 for ch in item["market"] + item["ticker"])
                 or self._key(item["market"], item["ticker"]) != key
+                or not valid_stored_price(item.get("stop_loss"), positive=True)
+                or not valid_stored_price(item.get("entry_price", 0))
+                or (
+                    item.get("target_price") is not None
+                    and not valid_stored_price(item["target_price"])
+                )
             ):
                 # Never dispatch an order to a malformed or mismatched ticker.
                 # Preserve the raw record on disk for operator reconciliation.
