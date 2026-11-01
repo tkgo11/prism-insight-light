@@ -10,7 +10,7 @@
     "lock_owner": null,
     "last_mutation_commit": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
     "last_mutation_at": "2026-11-01T05:21:33.686Z",
-    "result": "FIX_COMMITTED_NEW_HEAD_CI_QUEUED_NO_AUDIT_PASS",
+    "result": "FIX_COMMITTED_NEW_HEAD_CI_IN_PROGRESS_NO_AUDIT_PASS",
     "pr_comment_id": 6553865349,
     "last_report": {
       "phase": "related_code_audit",
@@ -28,8 +28,16 @@
       "ci_runs": [
         {
           "id": 41276607805,
+          "event": "push",
           "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
-          "status": "queued",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 41276611432,
+          "event": "pull_request",
+          "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+          "status": "in_progress",
           "conclusion": null
         }
       ],
@@ -1512,18 +1520,29 @@
     },
     "2026-11-01T14:20+09:00": {
       "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
-      "status": "queued",
+      "status": "in_progress",
       "conclusion": null,
       "workflow_runs": [
         {
           "id": 41276607805,
           "event": "push",
-          "status": "queued",
-          "conclusion": null,
-          "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750"
+          "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 41276611432,
+          "event": "pull_request",
+          "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+          "status": "in_progress",
+          "conclusion": null
         }
       ],
-      "notes": "New-head tests not yet completed; prior green runs belong to old SHA"
+      "check_jobs": [
+        "Full pytest suite: in_progress",
+        "Windows runtime smoke: in_progress"
+      ],
+      "notes": "Verified both new-head workflow runs in progress; no success claimed"
     }
   },
   "upstream_changes": [
@@ -1995,9 +2014,10 @@
         "686dedaa8037385e7354dfaad97e9a4a1b9b5750"
       ],
       "ci_run_ids": [
-        41276607805
+        41276607805,
+        41276611432
       ],
-      "ci_status": "queued",
+      "ci_status": "in_progress",
       "pr_comment_id": 6553865349,
       "notes": "Reviewed legacy list migration and tracked-position mutation; found data loss and added quarantine preservation plus regression tests. CI pending. No local tests or complete dependency audit; no live/demo broker integration."
     }
@@ -2028,7 +2048,7 @@
     "Current head CI incomplete after malformed-record fixture repair",
     "Related dependency closure and KIS/GCP demo/authoritative fill reconciliation remain incomplete",
     "Stable stop-loss identity suppresses safe retry after accepted partial/unfilled SELL; authoritative order-id/fill reconciliation and demo evidence required",
-    "New-head CI run 41276607805 pending; invalid/duplicate legacy list quarantine fix not yet CI verified"
+    "New-head CI runs 41276607805 and 41276611432 in progress; stop-loss legacy quarantine fix not yet CI verified"
   ],
   "next_action": "Verify new-head CI and address failures; continue file-by-file dependency closure; authoritative broker order/fill/cancel reconciliation and safe demo validation required before any merge.",
   "audit_slots": [
