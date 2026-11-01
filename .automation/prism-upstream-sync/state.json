@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T17:20+09:00",
-    "started_at": "2026-11-01T08:20:28Z",
-    "completed_at": "2026-11-01T08:23:13.696Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-01T18:20+09:00",
+    "started_at": "2026-11-01T09:20:57Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-01T18:20+09:00",
     "last_mutation_commit": "1db54beebc5f43cb8462515d4b936265ab319e49",
     "last_mutation_at": "2026-11-01T08:23:13.696Z",
-    "result": "VERIFIED_OUTCOME_PRECEDENCE_FIX_COMMITTED_NEW_HEAD_CI_PENDING_NO_PASS",
+    "result": "IN_PROGRESS_REVIEWING_LEGACY_DUPLICATE_STOP_LOSS",
     "pr_comment_id": 6555485401,
     "last_report": {
       "phase": "related_code_audit",
@@ -116,7 +116,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "CODE_FIX_COMMITTED_CI_PENDING_RELATED_AUDIT_RESET"
+    "status": "REVIEWING_VERIFIED_DUPLICATE_LEGACY_STOP_LOSS_RISK"
   },
   "candidates": [
     {
