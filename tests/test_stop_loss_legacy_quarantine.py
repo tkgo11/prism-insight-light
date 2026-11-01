@@ -232,3 +232,29 @@ def test_corrupt_stop_price_does_not_block_unrelated_protection(tmp_path):
     path.write_text(json.dumps(saved), encoding="utf-8")
     assert [pos["ticker"] for pos in tracker.get_positions("US")] == ["MSFT"]
     assert tracker.get_position("US", "AAPL")["stop_loss"] is True
+
+
+def test_stop_loss_atomic_save_when_configured_filename_ends_in_tmp(tmp_path):
+    # The previous fixed sibling temp path was identical to the real ledger.
+    path = tmp_path / "positions.tmp"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    tracker.record_position("US", "MSFT", 80, entry_price=95)
+    assert {position["ticker"] for position in tracker.get_positions("US")} == {"AAPL", "MSFT"}
+    assert set(json.loads(path.read_text(encoding="utf-8"))) == {"US:AAPL", "US:MSFT"}
+
+
+def test_stop_loss_failed_atomic_replace_preserves_original_bytes(tmp_path, monkeypatch):
+    path = tmp_path / "positions.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    original = path.read_bytes()
+
+    def failed_replace(source, destination):
+        raise OSError("simulated filesystem replacement failure")
+
+    monkeypatch.setattr("trading.stop_loss_watcher.os.replace", failed_replace)
+    with pytest.raises(OSError, match="replacement failure"):
+        tracker.record_position("US", "MSFT", 80, entry_price=95)
+    assert path.read_bytes() == original
+    assert not list(tmp_path.glob(".positions.json.*.tmp"))
