@@ -4,19 +4,19 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T14:20+09:00",
-    "started_at": "2026-11-01T05:20:28.149Z",
-    "completed_at": "2026-11-01T05:21:33.686Z",
+    "id": "prism-sync-hourly-2026-11-01T15:20+09:00",
+    "started_at": "2026-11-01T06:24:23.795Z",
+    "completed_at": "2026-11-01T06:24:23.795Z",
     "lock_owner": null,
     "last_mutation_commit": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
     "last_mutation_at": "2026-11-01T05:21:33.686Z",
-    "result": "FIX_COMMITTED_NEW_HEAD_CI_IN_PROGRESS_NO_AUDIT_PASS",
+    "result": "CI_VERIFIED_UPSTREAM_DELTA_CLASSIFIED_RELATED_AUDIT_INCOMPLETE_NO_PASS",
     "pr_comment_id": 6553865349,
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
       "full": 0,
-      "source_head": "21bdb6e6b5a72891b31fd3b574f1fcdaffe5763f",
+      "source_head": "372af688a10294bbcdadac957eb081cfc7f31df2",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "pr_head": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
@@ -30,26 +30,52 @@
           "id": 41276607805,
           "event": "push",
           "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
-          "status": "in_progress",
-          "conclusion": null
+          "status": "completed",
+          "conclusion": "success"
         },
         {
           "id": 41276611432,
           "event": "pull_request",
           "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
-          "status": "in_progress",
-          "conclusion": null
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "ci_jobs": [
+        {
+          "name": "Full pytest suite",
+          "result": "success",
+          "observed_tests": "796 passed"
+        },
+        {
+          "name": "Windows runtime smoke",
+          "result": "success",
+          "observed_tests": "133 passed"
+        }
+      ],
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        },
+        {
+          "context": "qlty usage",
+          "state": "pending"
         }
       ],
       "local_tests_executed": false,
       "merged": false,
-      "reason": "Legacy stop-loss migration data-loss fix; new CI queued; full audit and authoritative fill reconciliation incomplete"
+      "reason": "Related dependency closure and broker order-id/partial-fill reconciliation remain unverified; external qlty usage pending; no complete audit evidence."
     }
   },
   "source": {
     "repository": "dragon1086/prism-insight",
     "default_branch": "main",
-    "latest_observed_sha": "21bdb6e6b5a72891b31fd3b574f1fcdaffe5763f",
+    "latest_observed_sha": "372af688a10294bbcdadac957eb081cfc7f31df2",
     "pinned_contract_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
     "last_integrated_upstream_sha": null,
     "checkpoint_status": "UNKNOWN_BASELINE"
@@ -67,7 +93,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "NEW_CODE_FIX_CI_PENDING_FULL_AUDIT_INCOMPLETE"
+    "status": "CURRENT_HEAD_ACTIONS_GREEN_EXTERNAL_PENDING_RELATED_AUDIT_INCOMPLETE"
   },
   "candidates": [
     {
@@ -1543,6 +1569,25 @@
         "Windows runtime smoke: in_progress"
       ],
       "notes": "Verified both new-head workflow runs in progress; no success claimed"
+    },
+    "2026-11-01T15:20+09:00": {
+      "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+      "run_ids": [
+        41276607805,
+        41276611432
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: 796 passed, Docker build succeeded",
+        "Windows runtime smoke: 133 passed"
+      ],
+      "additional_statuses": [
+        "security/snyk (tkgo11): success",
+        "qlty check: success",
+        "qlty usage: pending"
+      ],
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41276611432"
     }
   },
   "upstream_changes": [
@@ -1575,6 +1620,19 @@
       "category": "BTC scenario prompt/tests",
       "decision": "DEFER_EXCLUDE_FROM_LIGHT",
       "reason": "Changed files prism-btc/live/scenario_llm.py and BTC scenario prompt tests; no demonstrated light subscriber contract dependency. Keep pinned publisher contract SHA unchanged."
+    },
+    {
+      "scope": "2026-11-01 upstream new 8 commits 21bdb6e..372af688a",
+      "upstream_sha": "372af688a10294bbcdadac957eb081cfc7f31df2",
+      "category": "BTC incident monitor timing and US memory stale-principle cleanup",
+      "paths": [
+        "prism-btc/live/scenario_incident_epoch.py",
+        "prism-btc/tests/test_scenario_incident_epoch.py",
+        "prism-us/tracking/compression.py",
+        "prism-us/tests/test_us_compression_stale.py"
+      ],
+      "decision": "DEFER_EXCLUDE_FROM_LIGHT",
+      "reason": "Compared 8 commits and four changed paths; changes are upstream BTC incident analysis and US principle memory maintenance, not the light subscriber publisher message contract. Keep pinned contract SHA unchanged."
     }
   ],
   "risk_register": [
@@ -2048,9 +2106,10 @@
     "Current head CI incomplete after malformed-record fixture repair",
     "Related dependency closure and KIS/GCP demo/authoritative fill reconciliation remain incomplete",
     "Stable stop-loss identity suppresses safe retry after accepted partial/unfilled SELL; authoritative order-id/fill reconciliation and demo evidence required",
-    "New-head CI runs 41276607805 and 41276611432 in progress; stop-loss legacy quarantine fix not yet CI verified"
+    "New-head CI runs 41276607805 and 41276611432 in progress; stop-loss legacy quarantine fix not yet CI verified",
+    "2026-11-01 15:20 KST: current-head Actions successful but qlty usage pending; incomplete related dependency audit and no authoritative broker fill reconciliation or KIS/GCP demo evidence."
   ],
-  "next_action": "Verify new-head CI and address failures; continue file-by-file dependency closure; authoritative broker order/fill/cancel reconciliation and safe demo validation required before any merge.",
+  "next_action": "Continue file-by-file related dependency audit and mock broker reconciliation design; verify qlty usage final status; obtain safe demo KIS/GCP order/fill/cancel evidence before any audit PASS or merge.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -2166,6 +2225,18 @@
       "full_pass": false,
       "reason": "Code fix committed; CI pending; related dependency closure and authoritative broker fill reconciliation incomplete",
       "manifest_tree_sha": "d0dc40968b95e382b5af105f5ee08d6089636653"
+    },
+    {
+      "slot": "2026-11-01T15:20+09:00",
+      "run_id": "prism-sync-hourly-2026-11-01T15:20+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Actions green; external qlty usage pending, related dependency audit incomplete, authoritative broker fill reconciliation unverified",
+      "manifest_tree_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750"
     }
   ],
   "discovered_defects": [
