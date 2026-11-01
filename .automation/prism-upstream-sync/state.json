@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T22:20+09:00",
-    "started_at": "2026-11-01T13:23:41Z",
-    "completed_at": "2026-11-01T13:26:50.277Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-01T23:20+09:00",
+    "started_at": "2026-11-01T14:20:00Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-01T23:20+09:00",
     "last_mutation_commit": "234d6a280e350c0a4ffad1f127ccd9fdfaf28d79",
     "last_mutation_at": "2026-11-01T13:26:50.277Z",
-    "result": "LEGACY_STOP_LOSS_CAS_RACE_FIXES_COMMITTED_CI_PENDING_NO_AUDIT_PASS",
+    "result": "IN_PROGRESS_AUDIT_AND_FIX",
     "pr_comment_id": 6555485401,
     "last_report": {
       "phase": "related_code_audit",
