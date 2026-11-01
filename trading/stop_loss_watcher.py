@@ -152,6 +152,20 @@ class StopLossTracker:
     def _key(self, market: str, ticker: str) -> str:
         return f"{market.strip().upper()}:{ticker.strip()}"
 
+    def _lookup_key(self, positions: dict[str, Any], market: str, ticker: str) -> str:
+        """Find a canonical new US record without hiding legacy raw keys.
+
+        Preserve exact-key lookup for historical lowercase files. Only fall
+        back to uppercase when the exact key is absent; never rewrite a legacy
+        record or guess between multiple conflicting historical entries.
+        """
+        key = self._key(market, ticker)
+        if key not in positions and market.strip().upper() == "US":
+            canonical = self._key(market, ticker.upper())
+            if canonical in positions:
+                return canonical
+        return key
+
     def _load(self) -> dict[str, dict[str, Any]]:
         try:
             raw = self.path.read_text(encoding="utf-8")
@@ -353,9 +367,9 @@ class StopLossTracker:
         legacy records without ``updated_at``; otherwise a concurrent BUY
         could lose its newly registered stop-loss protection.
         """
-        key = self._key(market, ticker)
         with FileLock(self.lock_path):
             positions = self._load()
+            key = self._lookup_key(positions, market, ticker)
             record = positions.get(key)
             if record is None:
                 return False
@@ -444,10 +458,9 @@ class StopLossTracker:
         return valid
 
     def get_position(self, market: str, ticker: str) -> dict[str, Any] | None:
-        key = self._key(market, ticker)
         with FileLock(self.lock_path):
             data = self._load()
-            return data.get(key)
+            return data.get(self._lookup_key(data, market, ticker))
 
     def clear(self) -> None:
         with FileLock(self.lock_path):
