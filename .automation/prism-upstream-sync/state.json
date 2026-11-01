@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T06:22+09:00",
     "started_at": "2026-11-01T21:22:19Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T06:22+09:00",
-    "last_mutation_commit": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
-    "last_mutation_at": "2026-11-01T20:30:00Z",
-    "result": "RUNNING_READ_AUDIT",
+    "completed_at": "2026-11-01T21:27:00Z",
+    "lock_owner": null,
+    "last_mutation_commit": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+    "last_mutation_at": "2026-11-01T21:27:00Z",
+    "result": "QUEUED_TARGET_SCOPE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDITS_BLOCKED",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,19 +19,19 @@
       "source_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
+      "pr_head": "def37442fff6b2d059aaca663446f53f4ef47ea8",
       "pr_number": 42,
-      "pr_changed_files": 49,
+      "pr_changed_files": 50,
       "related_manifest_files": 57,
       "related_manifest_files_fully_audited": 0,
       "full_tree_files": 161,
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41347002844,
+          "id": 41351888612,
           "status": "completed",
           "conclusion": "success",
-          "linux": "939 passed",
+          "linux": "948 passed",
           "windows": "141 passed"
         }
       ],
@@ -42,27 +42,19 @@
         },
         {
           "context": "qlty check",
-          "state": "success"
-        },
-        {
-          "context": "qlty usage",
           "state": "pending"
         }
       ],
       "commits": [
-        "c8a69a53a2427be74467ceb314d58a3f776a5d11",
-        "304655ff22ef4e467cfcd320f16525332e11b073",
-        "d1a1996c9988ca436b297e98580e262a4be2a0a5",
-        "5bc2d2cde1cfbedffc6d3b11255745566a8d2646",
-        "04dcb6cf9c554e30cdd541a51d9ea7e3c1f8455a",
-        "d89ad593fd5c2a6edeedcc178b967f49b105e625"
+        "def37442fff6b2d059aaca663446f53f4ef47ea8"
       ],
       "merged": false,
-      "reason": "Confirmed and patched two constrained-sizing fallback bugs; current-head CI success. No KIS demo or independent 57/161 file audit, review absent; no PASS/merge."
+      "reason": "Confirmed and patched queued account target expansion/mode-switch defects; CI success but no KIS demo, full audits, quality finalization or independent approval."
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T05:24+09:00",
     "pr_head_at_start": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
-    "lock_acquired_at": "2026-11-01T21:22:19Z"
+    "lock_acquired_at": "2026-11-01T21:22:19Z",
+    "lock_released_at": "2026-11-01T21:27:00Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -81,11 +73,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
+    "head_sha": "def37442fff6b2d059aaca663446f53f4ef47ea8",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_NEW_HEAD_CI_PENDING_AUDITS_0_OF_2"
+    "status": "DRAFT_CURRENT_HEAD_CI_SUCCESS_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -118,9 +110,9 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "STRATEGY_CONSTRAINT_FALLBACK_PATCHED_FULL_AUDIT_REQUIRED",
+    "status": "QUEUED_MULTI_ACCOUNT_SCOPE_FIX_CI_SUCCESS_FULL_DEPENDENCY_AUDIT_REQUIRED",
     "checksum": null,
-    "scope_estimate": "57 known related files, dependency closure incomplete",
+    "scope_estimate": "57 known related files; transitive dependency closure and full file audit incomplete",
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
@@ -174,7 +166,7 @@
       },
       {
         "path": "tests/test_multi_account_dispatch.py",
-        "blob_sha": "a39c0f0257b278d81379adfb0284d974eac6a990",
+        "blob_sha": "04ef6834b1d4fa9656724255c8598a024e09ef67",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -274,7 +266,7 @@
       },
       {
         "path": "trading/dispatch.py",
-        "blob_sha": "e52ff898f25398744d214a184cc98efd777bdbc0",
+        "blob_sha": "5ffe87a56161796b333b89302171664e6d842706",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -415,11 +407,13 @@
       "tests/test_upstream_strategy_compatibility.py",
       "tests/test_signal_exit_strategies.py",
       "tests/test_cooldown_pending_reconciliation.py",
-      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
+      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "trading/dispatch.py",
+      "tests/test_multi_account_dispatch.py"
     ]
   },
   "full_manifest": {
-    "status": "RESET_AFTER_STRATEGY_CONSTRAINT_CODE_CHANGE_NOT_FULLY_AUDITED",
+    "status": "RESET_AFTER_QUEUE_TARGET_SCOPE_CODE_CHANGE_NOT_FULLY_AUDITED",
     "tracked_tree_entries_on_pr": 185,
     "tracked_blob_files_on_pr": 161,
     "sha": null,
@@ -664,7 +658,7 @@
       },
       {
         "path": "tests/test_multi_account_dispatch.py",
-        "blob_sha": "a39c0f0257b278d81379adfb0284d974eac6a990",
+        "blob_sha": "04ef6834b1d4fa9656724255c8598a024e09ef67",
         "status": "NOT_REVIEWED"
       },
       {
@@ -879,7 +873,7 @@
       },
       {
         "path": "trading/dispatch.py",
-        "blob_sha": "e52ff898f25398744d214a184cc98efd777bdbc0",
+        "blob_sha": "5ffe87a56161796b333b89302171664e6d842706",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1485,9 +1479,9 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41325576768"
     },
-    "latest_workflow_run_id": 41252260295,
-    "latest_workflow_run_status": "in_progress",
-    "latest_workflow_run_conclusion": null,
+    "latest_workflow_run_id": 41351888612,
+    "latest_workflow_run_status": "completed",
+    "latest_workflow_run_conclusion": "success",
     "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
     "automation-turn-11": {
       "run_id": 41243400167,
@@ -1930,7 +1924,7 @@
       "local_tests_executed": false,
       "broker_demo_executed": false
     },
-    "latest_head_sha": "645816c9c829f199979b745467030c833cb9adb9",
+    "latest_head_sha": "def37442fff6b2d059aaca663446f53f4ef47ea8",
     "latest_head_runs": [
       {
         "id": 41331411166,
@@ -1997,6 +1991,19 @@
           "state": "pending"
         }
       ]
+    },
+    "2026-11-02T06:22+09:00": {
+      "head_sha": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+      "run_id": 41351888612,
+      "status": "completed",
+      "conclusion": "success",
+      "linux": "948 passed",
+      "windows": "141 passed",
+      "docker": "success",
+      "snyk": "success",
+      "qlty_check": "pending",
+      "qlty_usage": "not confirmed",
+      "review": "none"
     }
   },
   "upstream_changes": [
@@ -2144,6 +2151,14 @@
       "paths": [],
       "decision": "NO_IMPORT",
       "reason": "Upstream HEAD unchanged; existing BTC research-only changes remain outside fork KIS subscriber contract."
+    },
+    {
+      "scope": "2026-11-02 06:22 KST recheck upstream",
+      "upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "category": "No new upstream commits since previous slot; prior BTC research and scenario changes",
+      "paths": [],
+      "decision": "NO_IMPORT",
+      "reason": "Live branch comparison showed upstream HEAD unchanged; no new safe light subscriber contract changes."
     }
   ],
   "risk_register": [
@@ -3504,18 +3519,71 @@
         }
       ],
       "notes": "No local full pytest (GitHub DNS unavailable); actual GitHub Actions passed on latest PR head. No KIS demo, no live trade, no independent full dependency audit; do not count PASS."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T06:22+09:00",
+      "kind": "ROOT_CAUSE_BATCH_FIX_AND_PARTIAL_DEPENDENCY_AUDIT",
+      "head_sha": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "related_pass": false,
+      "full_pass": false,
+      "root_cause_id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
+      "changed_file_blobs": {
+        "trading/dispatch.py": "5ffe87a56161796b333b89302171664e6d842706",
+        "tests/test_multi_account_dispatch.py": "04ef6834b1d4fa9656724255c8598a024e09ef67"
+      },
+      "partial_reviewed_paths": [
+        "trading/dispatch.py",
+        "trading/off_hours_queue.py",
+        "trading/execution_ledger.py",
+        "tests/test_multi_account_dispatch.py",
+        "tests/test_queue_and_account_sizing.py"
+      ],
+      "independent_file_audits_completed": 0,
+      "code_commits": [
+        "def37442fff6b2d059aaca663446f53f4ef47ea8"
+      ],
+      "reproduction": "Original explicit [] target expression selects all available accounts; queued mode switch fallback also broadens account set. No actual broker used.",
+      "tests_added": 9,
+      "ci": {
+        "run_id": 41351888612,
+        "status": "completed",
+        "conclusion": "success",
+        "linux": "948 passed",
+        "windows": "141 passed",
+        "static": "success",
+        "docker": "success"
+      },
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "pending"
+        },
+        {
+          "context": "qlty usage",
+          "state": "not confirmed"
+        }
+      ],
+      "kis_demo": "NOT_RUN",
+      "local_full_pytest": "NOT_RUN",
+      "notes": "No PASS: transitive 57/161-file audits and authorized KIS order-ID/fill/cancel reconciliation incomplete; reviews absent."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "57-file known dependency scope not fully audited; manifest closure incomplete; related PASS 0/2.",
+    "57-file known transitive dependency scope not fully audited; related PASS 0/2.",
     "Full 161-file repository audit not completed; full PASS 0/2.",
     "No authorized KIS demo credentials/environment for order-ID, partial-fill, cancel, remaining quantity and account-specific reconciliation; no live trading.",
-    "Current PR HEAD CI success; no submitted independent approval, branch-protection requiredness not independently verified; qlty usage remains pending.",
-    "Multi-account runtime-state partitioning and strategy order lifecycle paths need independent inspection."
+    "Current PR HEAD GitHub Actions success, but qlty check pending, qlty usage unverified and independent PR review absent.",
+    "Multi-account strategy state partitioning and authoritative order lifecycle reconciliation require further independent inspection."
   ],
-  "next_action": "Independently close and fully audit 57 related files (current blob SHA) in separate slots, then 161 full tree files; verify KIS demo order/fill/partial/cancel/remaining quantity and multi-account state partitioning. Do not merge while demo/approvals/CI policy blocked.",
+  "next_action": "Complete dependency-closure and independent full-file audit of 57 known related files, then 161 full tree files; validate account-scoped strategy state and KIS demo authoritative order-ID/fill/partial/cancel/remaining-quantity reconciliation; no PASS or merge without all gates.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -3807,6 +3875,19 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Six code/test/docs commits fixed two confirmed configured-constraint fallback paths; latest head CI passed; no full dependency audit or KIS demo, related/full 0/2."
+    },
+    {
+      "slot": "2026-11-02T06:22+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T06:22+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "One new root cause with two related queued-target/mode failure paths patched and 9 mock regression cases passed in CI; 57/161 full audits, KIS demo and independent review incomplete.",
+      "manifest_tree_sha": null
     }
   ],
   "discovered_defects": [
@@ -4426,6 +4507,54 @@
         "docker": "success",
         "related_full_audit": "NOT_DONE"
       }
+    },
+    {
+      "id": "queued-empty-account-ids-fans-out-2026-11-02",
+      "root_cause_id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "description": "MultiAccountTradeDispatcher._eligible_accounts used requested_ids or list(available), so explicitly empty queued account_ids selected every configured account. Recovered/edited queue could submit unrequested orders.",
+      "paths": [
+        "trading/dispatch.py",
+        "trading/off_hours_queue.py",
+        "tests/test_multi_account_dispatch.py"
+      ],
+      "reproduction": "Original expression requested_ids=[] or list(available) selected all accounts; isolated original expression reproduced locally. Mock broker regression now rejects empty targets without submitting.",
+      "fix_commit": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+      "validation": {
+        "github_actions": [
+          41351888612
+        ],
+        "linux": "948 passed",
+        "windows": "141 passed",
+        "mock_broker": "PASS_IN_LINUX_CI",
+        "kis_demo": "NOT_RUN",
+        "full_related_audit": "NOT_DONE"
+      }
+    },
+    {
+      "id": "queued-account-mode-mismatch-fans-out-2026-11-02",
+      "root_cause_id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Queued single-account entries with missing/legacy multi_account marker could fan out to all accounts after multi-account mode enabled; queued multi-account entries could also be dispatched after switching mode. Duplicate target lists could repeat account legs.",
+      "paths": [
+        "trading/dispatch.py",
+        "trading/off_hours_queue.py",
+        "tests/test_multi_account_dispatch.py"
+      ],
+      "reproduction": "Inspected queue drain context injection, execute_queued_signal fallback and multi-account dispatcher. Added 9 parameterized/direct mock-broker test cases across empty/duplicate/malformed targets and both mode transitions.",
+      "fix_commit": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+      "validation": {
+        "github_actions": [
+          41351888612
+        ],
+        "linux": "948 passed",
+        "windows": "141 passed",
+        "mock_broker": "PASS_IN_LINUX_CI",
+        "kis_demo": "NOT_RUN",
+        "full_related_audit": "NOT_DONE"
+      }
     }
   ],
   "risks": [
@@ -4629,11 +4758,22 @@
       "previous_root_cause_ids": [
         "RC-RISK-BRACKET-CONSTRAINT-FALLBACK"
       ]
+    },
+    {
+      "root_cause_id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
+      "description": "Queued multi-account execution must preserve the original explicit account target set and account-mode authorization; empty/invalid/duplicate/missing targets or changed mode must not fan out broker orders",
+      "defect_ids": [
+        "queued-empty-account-ids-fans-out-2026-11-02",
+        "queued-account-mode-mismatch-fans-out-2026-11-02"
+      ],
+      "classification": "CODE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+      "fix_commit": "def37442fff6b2d059aaca663446f53f4ef47ea8"
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
-    "scope": "Presubmit and accepted-not-filled strategy lifecycle: trailing BUY/tracked+untracked SELL, cooldown, restart/partial-fill; other strategies and KIS reconciliation still require audit.",
+    "head_sha": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+    "scope": "Presubmit and accepted-not-filled strategy lifecycle: trailing BUY/tracked+untracked SELL, cooldown, restart/partial-fill; other strategies and KIS reconciliation still require audit. Queue target authorization and replay mode transitions checked for new root cause; no independent full-file audit.",
     "entries": [
       {
         "contract": "Corrupt/duplicate/nonfinite runtime state cannot be silently cleared",
@@ -4718,6 +4858,18 @@
         "path": "score_weighted.execute -> common.execute_order -> KIS KR/US BUY",
         "evidence": "Source arithmetic reproducer, mock no-submit regression test added; current-head CI pending; GitHub Actions 41347002844: Linux 939, Windows 141 passed",
         "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Explicit empty queued target list must never expand to all configured accounts",
+        "path": "off_hours_queue.drain_due -> dispatch.execute_queued_signal -> MultiAccountTradeDispatcher._eligible_accounts",
+        "evidence": "Original requested_ids or list(available) isolated reproduction; new no-submit mock tests, CI 948/141 passed; changed blob SHA 5ffe87a56161796b333b89302171664e6d842706",
+        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Queued account target set and mode cannot silently change during replay",
+        "path": "off_hours_queue.enqueue/drain_due -> dispatch.execute_queued_signal -> multi_account_dispatcher.dispatch",
+        "evidence": "9 new mock-broker regression cases: empty/duplicate/blank targets, missing legacy context, malformed marker, single->multi and multi->single mode changes; current-head CI success",
+        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
       }
     ]
   },
@@ -4756,7 +4908,8 @@
     "2026-11-01 22:20 KST: legacy stop-loss CAS race fixes committed; latest-head CI and external checks incomplete, full related dependency audit and authoritative KIS order-id/fill/cancel demo reconciliation not performed.",
     "2026-11-01 23:20 KST: CI 41315903723 succeeded (854 Linux/135 Windows), but qlty usage pending, related dependency closure incomplete, no authoritative broker order-ID/fill/cancel demo validation, no full-repository audit.",
     "2026-11-02 00:20 KST: current-head CI pending; transitive related/full audits incomplete; KIS demo order-id/fill reconciliation not executed; new US stop-loss canonicalization and atomic-write fixes need verification.",
-    "2026-11-02 00:30 KST: latest-head CI 41321379720 and 41321384203 completed/success, Snyk and qlty check success, qlty usage pending; related/full file audits and authoritative KIS demo order-ID/fill/cancel reconciliation incomplete."
+    "2026-11-02 00:30 KST: latest-head CI 41321379720 and 41321384203 completed/success, Snyk and qlty check success, qlty usage pending; related/full file audits and authoritative KIS demo order-ID/fill/cancel reconciliation incomplete.",
+    "2026-11-02 06:22 KST: queued target fan-out/mode-switch defects patched and current-head Actions 41351888612 success (Linux 948, Windows 141); qlty check pending; 57/161 audits and KIS demo unresolved."
   ],
   "risk_register_current": [
     {
@@ -4813,6 +4966,13 @@
         "304655ff22ef4e467cfcd320f16525332e11b073",
         "5bc2d2cde1cfbedffc6d3b11255745566a8d2646"
       ]
+    },
+    {
+      "id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Empty/invalid/duplicate/missing queued account target context and mode switch now fail closed; live KIS demo and independent audit not performed",
+      "fix_commit": "def37442fff6b2d059aaca663446f53f4ef47ea8"
     }
   ]
 }
