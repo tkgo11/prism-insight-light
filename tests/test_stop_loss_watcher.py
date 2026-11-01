@@ -892,7 +892,7 @@ def test_stop_loss_watcher_config_oversized_interval_is_safe(field, expected):
 @pytest.mark.parametrize(
     ("market", "ticker"),
     [("", "005930"), ("  ", "005930"), ("KR", ""), ("KR", "   "),
-     ("KR\\n", "005930"), ("US", "AAPL\\n")],
+     ("KR\n", "005930"), ("US", "AAPL\n")],
 )
 def test_stop_loss_tracker_rejects_malformed_instrument_without_writing(
     tmp_path, market, ticker
@@ -923,7 +923,7 @@ def test_stop_loss_tracker_does_not_dispatch_legacy_untrimmed_ticker(tmp_path):
     path = tmp_path / "positions.json"
     tracker = StopLossTracker(path)
     valid = {"market": "US", "ticker": "MSFT", "stop_loss": 80}
-    malformed = {"market": "US", "ticker": "AAPL\\n", "stop_loss": 90}
+    malformed = {"market": "US", "ticker": "AAPL\n", "stop_loss": 90}
     path.write_text(json.dumps({"US:AAPL": malformed, "US:MSFT": valid}), encoding="utf-8")
     assert tracker.get_positions("US") == [valid]
     # Preserve the suspect record for manual reconciliation rather than
