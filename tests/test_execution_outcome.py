@@ -7,6 +7,17 @@ def test_explicit_broker_success_is_executed():
     assert classify_broker_result({"success": True, "order_no": "123"}) == "executed"
 
 
+def test_explicit_unknown_overrides_contradictory_success_flag():
+    # A wrapper can report success=True even when it cannot confirm the
+    # broker outcome. Never label that order executed or retry it automatically.
+    result = {"success": True, "outcome_unknown": True, "order_no": "KIS-123"}
+    assert classify_broker_result(result) == "unknown"
+    signal = parse_signal_payload({
+        "type": "SELL", "ticker": "AAPL", "market": "US", "price": 100
+    })
+    assert execution_from_result(signal, result, "ambiguous sell").status == "unknown"
+
+
 def test_explicit_broker_rejection_is_failed():
     assert classify_broker_result({"success": False, "message": "APBK0918 - market closed"}) == "failed"
 
