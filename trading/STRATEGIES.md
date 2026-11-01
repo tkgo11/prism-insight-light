@@ -262,6 +262,7 @@ Better score, bigger buy.
 - It reads `buy_score` from the signal.
 - A missing score receives full weight.
 - Scores below the first configured band use that band's weight instead of being skipped.
+- An explicitly selected `0.0` score-band weight rejects the BUY before broker submission, including when no base amount is configured; it never falls back to the broker's default order size.
 - With the default `0: 1.0` band, every score uses the full base amount.
 
 ### Main settings
