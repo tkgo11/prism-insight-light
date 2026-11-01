@@ -4,13 +4,14 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T12:17+09:00",
-    "started_at": "2026-11-01T12:17:25+09:00",
-    "completed_at": "2026-11-01T03:19:43.032Z",
+    "id": "prism-sync-hourly-2026-11-01T13:21+09:00",
+    "started_at": "2026-11-01T13:21:04+09:00",
+    "completed_at": "2026-11-01T04:22:38.941Z",
     "lock_owner": null,
     "last_mutation_commit": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
     "last_mutation_at": "2026-11-01T03:19:43.032Z",
-    "result": "FAILED_CI_FIX_COMMITTED_NEW_CI_IN_PROGRESS_NO_PASS",
+    "result": "HEAD_CI_VERIFIED_SUCCESS_RECONCILIATION_BLOCKER_NO_AUDIT_PASS",
+    "pr_comment_id": 6553357538,
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
@@ -26,30 +27,30 @@
       "full_tree_files_reviewed": 0,
       "ci_runs": [
         {
-          "id": 41264840101,
-          "head_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
-          "status": "completed",
-          "conclusion": "failure"
-        },
-        {
           "id": 41268676502,
           "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
-          "status": "in_progress",
-          "conclusion": null
+          "status": "completed",
+          "conclusion": "success",
+          "jobs": [
+            "Full pytest suite",
+            "Windows runtime smoke"
+          ]
         },
         {
           "id": 41268680081,
           "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
-          "status": "in_progress",
-          "conclusion": null
+          "status": "completed",
+          "conclusion": "success",
+          "jobs": [
+            "Full pytest suite",
+            "Windows runtime smoke"
+          ]
         }
       ],
       "local_tests_executed": false,
       "merged": false,
-      "reason": "CI regression in malformed stop-loss fixture fixed; new-head CI pending; full dependency and financial demo audits incomplete",
-      "pr_comment_id": 6552798964
-    },
-    "pr_comment_id": 6552798964
+      "reason": "Current-head CI passed twice; no complete dependency-closure audit, authoritative broker fill/order reconciliation, demo KIS/GCP validation or full-repository audit"
+    }
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -72,7 +73,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "CI_FIX_COMMITTED_NEW_HEAD_CI_PENDING_NO_AUDIT_PASS"
+    "status": "CI_GREEN_RECONCILIATION_RISK_BLOCKED_AUDIT_INCOMPLETE"
   },
   "candidates": [
     {
@@ -1339,6 +1340,21 @@
         "qlty usage: pending"
       ]
     },
+    "29": {
+      "run_ids": [
+        41268676502,
+        41268680081
+      ],
+      "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite",
+        "Windows runtime smoke"
+      ],
+      "evidence": "GitHub check-runs API and workflow job steps at current PR head",
+      "verification_run_id": "prism-sync-hourly-2026-11-01T13:21+09:00"
+    },
     "latest_workflow_run_id": 41252260295,
     "latest_workflow_run_status": "in_progress",
     "latest_workflow_run_conclusion": null,
@@ -1916,6 +1932,32 @@
       ],
       "pr_comment_id": 6552798964,
       "notes": "Actual CI 1 failed/793 passed: legacy test fixture stored valid KR 005930 position under mismatched key KR:good, so ticker-key safety check correctly skipped it. Updated valid key to KR:005930 and malformed-price key to KR:BAD. New CI in progress; no local pytest, no full audit or financial demo."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-01T13:21+09:00",
+      "kind": "CI_COMPLETION_VERIFICATION_AND_STOP_LOSS_RETRY_CONTRACT_TRACE_NOT_FULL_AUDIT",
+      "phase": "related_code_audit",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_observed_sha": "21bdb6e6b5a72891b31fd3b574f1fcdaffe5763f",
+      "ci_run_ids": [
+        41268676502,
+        41268680081
+      ],
+      "ci_status": "completed_success",
+      "reviewed_code_paths": [
+        "trading/stop_loss_watcher.py",
+        "trading/dispatch.py",
+        "trading/execution_ledger.py",
+        "trading/signal_sizing.py",
+        ".github/workflows/tests.yml",
+        "tests/test_partial_exit_stop_loss_safety.py"
+      ],
+      "pr_comment_id": 6553357538,
+      "notes": "Read targeted files and GitHub CI jobs; traced stable stop-loss signal-id and duplicate suppression; no code changes, local tests or complete file-by-file dependency audit; high-risk fill reconciliation remains blocked"
     }
   ],
   "last_merged_upstream_sha": null,
@@ -1942,9 +1984,10 @@
     "Real/demo KIS/GCP end-to-end and broker fill reconciliation absent",
     "Persisted ticker integrity fix needs new-head CI verification; related dependency closure and broker demo unresolved",
     "Current head CI incomplete after malformed-record fixture repair",
-    "Related dependency closure and KIS/GCP demo/authoritative fill reconciliation remain incomplete"
+    "Related dependency closure and KIS/GCP demo/authoritative fill reconciliation remain incomplete",
+    "Stable stop-loss identity suppresses safe retry after accepted partial/unfilled SELL; authoritative order-id/fill reconciliation and demo evidence required"
   ],
-  "next_action": "Check CI runs 41268676502/41268680081 for exact new head; then continue dependency-closure audit. Do not count PASS until all files and checks complete. Never merge without demo/approval gates.",
+  "next_action": "Design and safely test authoritative per-order stop-loss fill/cancel reconciliation and idempotent follow-up in demo; continue related dependency closure file-by-file; no PASS or merge until all gates are met.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -2036,6 +2079,18 @@
       "full_pass": false,
       "reason": "CI regression fixed in fixture; code changed; new-head CI pending; dependency closure and broker demo incomplete",
       "manifest_tree_sha": "09117d82dc2d87725636eb2680594915fcfc8957"
+    },
+    {
+      "slot": "2026-11-01T13:20+09:00",
+      "run_id": "prism-sync-hourly-2026-11-01T13:21+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Current-head CI success verified but stop-loss fill reconciliation unresolved and full related dependency audit incomplete",
+      "manifest_tree_sha": "09117d82dc2d87725636eb2680594915fcfc8957"
     }
   ],
   "discovered_defects": [
@@ -2121,6 +2176,19 @@
       "fix_commit": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
       "failed_run_id": 41264840101,
       "description": "Stale test fixture used inconsistent persisted ticker keys and was rejected by new fail-closed validation"
+    },
+    {
+      "id": "stop-loss-repeat-attempt-deduped-after-accepted-unfilled-order",
+      "severity": "HIGH",
+      "status": "UNRESOLVED_BLOCKS_MERGE_REQUIRES_AUTHORITATIVE_DEMO_RECONCILIATION",
+      "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "paths": [
+        "trading/stop_loss_watcher.py",
+        "trading/dispatch.py",
+        "trading/execution_ledger.py"
+      ],
+      "description": "Stable stop-loss signal_id per tracked position and permanently suppressing executed/unknown ledger claims mean remaining shares after accepted but partially/unfilled SELL cannot be safely retried; a new ID without broker reconciliation risks duplicate SELL.",
+      "evidence": "PR comment 6553357538; watcher lines 565-587/616-645, dispatch lines 405-424/721-746, ledger lines 26-30/175-196"
     }
   ],
   "risks": [
