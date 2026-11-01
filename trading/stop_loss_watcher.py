@@ -258,7 +258,10 @@ class StopLossTracker:
         if any(ord(ch) < 32 or ord(ch) == 127 for ch in market + ticker):
             raise ValueError("Stop-loss position identifiers contain control characters")
         market = market.strip().upper()
-        ticker = ticker.strip()
+        # US symbols are case-insensitive. New writes must use one canonical
+        # key, or a lowercase re-registration can create two active records
+        # and cause the watcher to quarantine both, losing protection.
+        ticker = ticker.strip().upper() if market == "US" else ticker.strip()
         # Invalid/non-finite prices must not overwrite a valid protection
         # record with JSON NaN/Infinity that the watcher later skips.
         try:
@@ -282,6 +285,21 @@ class StopLossTracker:
         key = self._key(market, ticker)
         with FileLock(self.lock_path):
             positions = self._load()
+            # Never silently overwrite or duplicate a legacy case-variant or
+            # quarantined instrument. Its original evidence must be reconciled
+            # by an operator before a new stop level can become actionable.
+            for stored_key, stored in positions.items():
+                if not isinstance(stored, dict):
+                    continue
+                stored_market, stored_ticker = stored.get("market"), stored.get("ticker")
+                if not isinstance(stored_market, str) or not isinstance(stored_ticker, str):
+                    continue
+                if (stored_market.strip().upper() == market
+                        and stored_ticker.strip().upper() == ticker.upper()
+                        and stored_key != key):
+                    raise ValueError(
+                        "Conflicting stop-loss instrument requires operator reconciliation"
+                    )
             existing = positions.get(key)
             created_at = existing.get("created_at") if isinstance(existing, dict) else now_iso
             pos = TrackedPosition(
