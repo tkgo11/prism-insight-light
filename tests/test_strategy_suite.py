@@ -76,6 +76,23 @@ async def test_score_weighted_buys_from_score_band():
 
 
 @pytest.mark.asyncio
+async def test_score_weighted_zero_band_never_uses_broker_default_without_base():
+    config = ScoreWeightedStrategyConfig.from_mapping({
+        "name": "score_weighted",
+        "score_bands": {0: 0.0},
+    })
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "buy_score": 50,
+    })
+    result = await ScoreWeightedStrategy(config=config).execute(
+        signal, trading_mode="demo"
+    )
+    assert result.status == "rejected"
+    assert FakeUSTrader.calls == []
+
+
+@pytest.mark.asyncio
 async def test_score_weighted_defaults_execute_without_score_or_base_amount():
     config = ScoreWeightedStrategyConfig.from_mapping({"name": "score_weighted"})
     signal = parse_signal_payload(
