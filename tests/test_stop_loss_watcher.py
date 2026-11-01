@@ -970,3 +970,98 @@ def test_stop_loss_watcher_does_not_sell_against_replaced_stop_level(tmp_path):
         assert watcher.check_stop_loss_once() == []
     dispatcher.dispatch.assert_not_called()
     assert tracker.get_position("US", "AAPL")["stop_loss"] == 70.0
+
+def test_legacy_zero_holding_rearm_cannot_erase_new_stop(tmp_path, monkeypatch):
+    """Legacy records lack updated_at: an in-flight balance check must not erase a new BUY."""
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    legacy = tracker.get_position("US", "AAPL")
+    legacy.pop("updated_at")
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 100}
+
+    def rearm_during_holding_check(_ticker):
+        tracker.record_position("US", "AAPL", 70, entry_price=100)
+        return 0
+
+    trader.get_holding_quantity.side_effect = rearm_during_holding_check
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, request_interval_seconds=0, storage_path=path),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "US")
+
+    assert watcher.check_stop_loss_once() == []
+    assert tracker.get_position("US", "AAPL")["stop_loss"] == 70
+    dispatcher.dispatch.assert_not_called()
+
+
+def test_legacy_post_sell_rearm_cannot_erase_new_stop(tmp_path):
+    """An accepted SELL plus a zero balance cannot delete a concurrent re-registration."""
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    legacy = tracker.get_position("US", "AAPL")
+    legacy.pop("updated_at")
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "demo"
+    dispatcher.dispatch = AsyncMock(
+        return_value=DispatchResult("executed", "order accepted", "SELL", "US")
+    )
+    trader = MagicMock()
+
+    def rearm_after_order(_ticker):
+        tracker.record_position("US", "AAPL", 70, entry_price=100)
+        return 0
+
+    trader.get_holding_quantity.side_effect = rearm_after_order
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, storage_path=path),
+        tracker=tracker,
+    )
+    watcher._get_cached_trader = MagicMock(return_value=trader)
+
+    result = watcher._trigger_sell("US", "AAPL", 85, legacy)
+    assert result["status"] == "executed"
+    assert tracker.get_position("US", "AAPL")["stop_loss"] == 70
+
+
+def test_remove_legacy_record_cas_accepts_unchanged_snapshot(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    legacy = {"market": "US", "ticker": "AAPL", "stop_loss": 90}
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+
+    assert tracker.remove_position("US", "AAPL", expected_record=legacy)
+    assert tracker.get_position("US", "AAPL") is None
+
+
+def test_remove_record_cas_detects_edit_even_with_same_timestamp(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    original = tracker.get_position("US", "AAPL")
+    edited = dict(original, stop_loss=70)
+    path.write_text(json.dumps({"US:AAPL": edited}), encoding="utf-8")
+
+    assert not tracker.remove_position("US", "AAPL", expected_record=original)
+    assert tracker.get_position("US", "AAPL") == edited
+
+
+def test_remove_malformed_record_does_not_crash_or_erase_evidence(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    path.write_text('{"US:AAPL":[]}', encoding="utf-8")
+
+    assert not tracker.remove_position("US", "AAPL", expected_updated_at="legacy")
+    assert path.read_text(encoding="utf-8") == '{"US:AAPL":[]}'
