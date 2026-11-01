@@ -115,7 +115,18 @@ class OffHoursOrderQueue:
             raise ValueError(
                 f"Off-hours queue exceeds the {MAX_QUEUE_BYTES}-byte safety limit"
             )
-        data = json.loads(raw.decode("utf-8"))
+        # A hand-edited/recovered queue with duplicate JSON keys can silently
+        # change a pending signal's ticker, side, or sizing. Never execute a
+        # queue whose persisted representation has ambiguous object fields.
+        def unique_object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+            obj: dict[str, Any] = {}
+            for key, value in pairs:
+                if key in obj:
+                    raise ValueError("Duplicate key in off-hours queue JSON")
+                obj[key] = value
+            return obj
+
+        data = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_object_pairs)
         if not isinstance(data, list):
             raise ValueError("Off-hours queue must contain a JSON list")
         # Tolerate unknown keys: a queue file written by a different version or
