@@ -8,60 +8,43 @@
     "started_at": "2026-11-01T15:20:27Z",
     "completed_at": null,
     "lock_owner": "prism-sync-hourly-2026-11-02T00:20+09:00",
-    "last_mutation_commit": "c24e5cd690b825b7601f28351330431c9f1cef46",
-    "last_mutation_at": "2026-11-01T15:20:27Z",
-    "result": "IN_PROGRESS_REVIEW",
+    "last_mutation_commit": "ba002751d0baa9ad42939de91f33a1db9efac553",
+    "last_mutation_at": "2026-11-01T15:27:00Z",
+    "result": "PATCHED_US_STOP_LOSS_CANONICALIZATION_AND_ATOMIC_WRITE_CI_PENDING",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
       "full": 0,
-      "source_head": "fe60724c38840cb92504132801714073001e24ef",
+      "source_head": "fa54d47b0d1c281ac09b8a13de7fddd833bec407",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "c24e5cd690b825b7601f28351330431c9f1cef46",
+      "pr_head": "ba002751d0baa9ad42939de91f33a1db9efac553",
       "pr_number": 42,
       "pr_changed_files": 43,
       "related_manifest_files": 43,
       "related_manifest_files_fully_audited": 0,
       "full_tree_files": 159,
       "full_tree_files_reviewed": 0,
+      "commits": [
+        "391296ccdaa3812af64afb808b0acc22bbc67dcc",
+        "89e3b503d714dd9e0e045ede942ceb01d70c2ea3",
+        "70220d449debe320a3e1ae35f6c436b826bd7360",
+        "84156d4f8c556904f13e9985e6cbe364a733dd83",
+        "ba002751d0baa9ad42939de91f33a1db9efac553"
+      ],
       "ci_workflow_runs": [
         {
-          "id": 41315763855,
-          "status": "completed",
-          "conclusion": "failure"
+          "id": 41321249687,
+          "status": "in_progress"
         },
         {
-          "id": 41315903723,
-          "status": "completed",
-          "conclusion": "success"
+          "id": 41321253666,
+          "status": "in_progress"
         }
-      ],
-      "external_statuses": [
-        {
-          "context": "security/snyk (tkgo11)",
-          "state": "success"
-        },
-        {
-          "context": "qlty check",
-          "state": "success"
-        },
-        {
-          "context": "qlty usage",
-          "state": "pending"
-        }
-      ],
-      "linux_pytest_passed": 854,
-      "windows_pytest_passed": 135,
-      "local_repo_pytest_executed": false,
-      "commits": [
-        "a9463c9076fd731cdd05b7830ee440fa2832307b",
-        "268c07d64aa17cda9ba2ec7d4a70dfbd25cd15ad",
-        "c24e5cd690b825b7601f28351330431c9f1cef46"
       ],
       "merged": false,
-      "reason": "Latest-head CI successful, but related dependency closure and KIS demo/order-id reconciliation incomplete; external qlty usage pending."
+      "reason": "New-head CI pending, related audit incomplete, broker demo and authoritative fill reconciliation missing."
     }
   },
   "source": {
@@ -81,11 +64,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "c24e5cd690b825b7601f28351330431c9f1cef46",
+    "head_sha": "ba002751d0baa9ad42939de91f33a1db9efac553",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "BROKER_OUTCOME_FAIL_CLOSED_FIX_CI_SUCCESS_AUDIT_RESET"
+    "status": "CODE_AND_TESTS_PATCHED_CI_PENDING_AUDIT_RESET"
   },
   "candidates": [
     {
@@ -94,12 +77,12 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "c24e5cd690b825b7601f28351330431c9f1cef46",
+      "head_sha": "ba002751d0baa9ad42939de91f33a1db9efac553",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
       "mutation_allowed": true,
-      "status": "ACTIVE_DRAFT_CI_SUCCESS_RELATED_AUDIT_INCOMPLETE"
+      "status": "DRAFT_CI_PENDING_AUDIT_RESET"
     },
     {
       "number": 40,
@@ -118,13 +101,13 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "RESET_AFTER_BROKER_OUTCOME_FIX_DEPENDENCY_CLOSURE_INCOMPLETE",
+    "status": "RESET_AFTER_STOP_LOSS_CANONICAL_AND_ATOMIC_WRITES_DEPENDENCY_CLOSURE_INCOMPLETE",
     "checksum": null,
     "scope_estimate": "43 PR changed files; transitive dependency closure incomplete",
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "a95eda484985da52b205c9611ea47f20b4e6f21b",
+        "blob_sha": "09a356e8bd429f479a646df596f53a177e8531a2",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -204,7 +187,7 @@
       },
       {
         "path": "tests/test_stop_loss_legacy_quarantine.py",
-        "blob_sha": "7f19683d6a6065b7310ef0e94b9519e4265c371e",
+        "blob_sha": "25f0911c087374fa7837b1fafb3fec602ecb79f8",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -274,7 +257,7 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "ae18d4158ce21152a38694f94177011940d1f50f",
+        "blob_sha": "b8c6fc5290e35ec3c3f5a2ca3f57dce25d8c6b87",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -340,18 +323,16 @@
     ],
     "checked_files": 0,
     "modified_files": [
-      "trading/execution_outcome.py",
-      "tests/test_execution_outcome.py",
-      "tests/test_balance_split_strategy.py",
-      "tests/test_multi_account_domestic.py",
-      "tests/test_multi_account_us.py"
+      "trading/stop_loss_watcher.py",
+      "tests/test_stop_loss_legacy_quarantine.py",
+      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
     ]
   },
   "full_manifest": {
     "status": "RESET_AFTER_CODE_CHANGES_NOT_AUDITED",
     "tracked_tree_entries_on_pr": 183,
     "tracked_blob_files_on_pr": 159,
-    "sha": null,
+    "sha": "48332fc4f5085a918e9a8a78039fff70ceb9921e",
     "files_checked": 0,
     "checksum": null,
     "checksum_kind": "NOT_VERIFIED_AT_NEW_HEAD",
@@ -468,7 +449,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "a95eda484985da52b205c9611ea47f20b4e6f21b",
+        "blob_sha": "09a356e8bd429f479a646df596f53a177e8531a2",
         "status": "NOT_REVIEWED"
       },
       {
@@ -663,7 +644,7 @@
       },
       {
         "path": "tests/test_stop_loss_legacy_quarantine.py",
-        "blob_sha": "7f19683d6a6065b7310ef0e94b9519e4265c371e",
+        "blob_sha": "25f0911c087374fa7837b1fafb3fec602ecb79f8",
         "status": "NOT_REVIEWED"
       },
       {
@@ -858,7 +839,7 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "ae18d4158ce21152a38694f94177011940d1f50f",
+        "blob_sha": "b8c6fc5290e35ec3c3f5a2ca3f57dce25d8c6b87",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1865,6 +1846,17 @@
       ],
       "decision": "DEFER_EXCLUDE_FROM_LIGHT",
       "reason": "All changed files are in the upstream BTC scenario execution/tests tree, not the light KIS subscriber or BUY/SELL signal schema. Pinned upstream contract SHA unchanged."
+    },
+    {
+      "scope": "2026-11-01 upstream fe60724..fa54d47 (3 commits)",
+      "upstream_sha": "fa54d47b0d1c281ac09b8a13de7fddd833bec407",
+      "category": "BTC scenario immediate reduce execution and tests",
+      "paths": [
+        "prism-btc/live/scenario_immediate_reduce.py",
+        "prism-btc/tests/test_scenario_immediate_reduce_execution.py"
+      ],
+      "decision": "EXCLUDE_FROM_LIGHT",
+      "reason": "Compared actual 3 commits and 2 changed paths: BTC-specific scenario execution and tests, no demonstrated light KIS subscriber signal contract change; pinned upstream contract remains unchanged."
     }
   ],
   "risk_register": [
@@ -2908,7 +2900,8 @@
     "2026-11-01 20:22 KST: latest-head CI and external checks incomplete after four duplicate-key trading-ledger fixes; KIS/GCP demo and order-id/fill reconciliation remain unverified.",
     "2026-11-01 21:20 KST: latest-head CI pending after five stop-loss safety/test commits; full related dependency audit and authoritative order-id/fill KIS demo reconciliation remain unverified.",
     "2026-11-01 22:20 KST: legacy stop-loss CAS race fixes committed; latest-head CI and external checks incomplete, full related dependency audit and authoritative KIS order-id/fill/cancel demo reconciliation not performed.",
-    "2026-11-01 23:20 KST: CI 41315903723 succeeded (854 Linux/135 Windows), but qlty usage pending, related dependency closure incomplete, no authoritative broker order-ID/fill/cancel demo validation, no full-repository audit."
+    "2026-11-01 23:20 KST: CI 41315903723 succeeded (854 Linux/135 Windows), but qlty usage pending, related dependency closure incomplete, no authoritative broker order-ID/fill/cancel demo validation, no full-repository audit.",
+    "2026-11-02 00:20 KST: current-head CI pending; transitive related/full audits incomplete; KIS demo order-id/fill reconciliation not executed; new US stop-loss canonicalization and atomic-write fixes need verification."
   ],
   "next_action": "Continue file-by-file related dependency closure; add authoritative order-ID/fill/cancel reconciliation using mock broker and KIS demo when available; preserve 0/2 counters until independent complete audits.",
   "audit_slots": [
@@ -3125,6 +3118,19 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Code changed; CI successful but qlty usage pending, full related audit and KIS demo broker reconciliation incomplete"
+    },
+    {
+      "slot": "2026-11-02T00:20+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T00:20+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "fa54d47b0d1c281ac09b8a13de7fddd833bec407",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "ba002751d0baa9ad42939de91f33a1db9efac553",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Two stop-loss defects patched; new-head CI running; dependency closure and KIS demo reconciliation incomplete.",
+      "manifest_tree_sha": "48332fc4f5085a918e9a8a78039fff70ceb9921e"
     }
   ],
   "discovered_defects": [
@@ -3388,6 +3394,34 @@
         "c24e5cd690b825b7601f28351330431c9f1cef46"
       ],
       "description": "Generic broker success=False without authoritative KIS rejection proof was classified failed and could be automatically replayed. Fail closed to unknown; verified business rejection still retryable. Six CI regressions discovered and corrected same run; latest CI successful."
+    },
+    {
+      "id": "new-us-stop-loss-case-variant-registration-2026-11-02",
+      "severity": "HIGH",
+      "status": "PATCHED_CI_PENDING",
+      "description": "New lowercase and uppercase US stop-loss registrations previously produced two active durable records and disabled watcher protection for the symbol. Canonicalize new writes, refuse overwrite of unresolved legacy case variants/quarantine.",
+      "paths": [
+        "trading/stop_loss_watcher.py",
+        "tests/test_stop_loss_legacy_quarantine.py"
+      ],
+      "fix_commits": [
+        "391296ccdaa3812af64afb808b0acc22bbc67dcc",
+        "89e3b503d714dd9e0e045ede942ceb01d70c2ea3"
+      ]
+    },
+    {
+      "id": "stop-loss-fixed-temp-name-atomicity-2026-11-02",
+      "severity": "HIGH",
+      "status": "PATCHED_CI_PENDING",
+      "description": "Configured stop-loss ledger filename ending .tmp collides with fixed temp sibling, allowing in-place truncate and crash corruption; unique same-directory temporary file with fsync and os.replace plus failure regression.",
+      "paths": [
+        "trading/stop_loss_watcher.py",
+        "tests/test_stop_loss_legacy_quarantine.py"
+      ],
+      "fix_commits": [
+        "70220d449debe320a3e1ae35f6c436b826bd7360",
+        "84156d4f8c556904f13e9985e6cbe364a733dd83"
+      ]
     }
   ],
   "risks": [
