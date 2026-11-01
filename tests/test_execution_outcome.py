@@ -68,3 +68,22 @@ def test_ambiguous_transport_overrides_false_rejection_flag():
         "success": False, "outcome_unknown": False,
         "message": "Gateway timeout after broker submission",
     }) == "unknown"
+
+
+def test_unverified_broker_failure_keeps_durable_duplicate_suppression(tmp_path):
+    from trading.execution_ledger import ExecutionLedger
+
+    ledger = ExecutionLedger(tmp_path / "orders.json")
+    assert ledger.claim("signal-account") == (True, None)
+    signal = parse_signal_payload({
+        "type": "SELL", "ticker": "AAPL", "market": "US", "price": 100
+    })
+    # The mocked broker wrapper lost the business rejection code. The order
+    # may have been submitted: an automatic replay must not double-sell.
+    outcome = execution_from_result(
+        signal, {"success": False, "message": "Broker response incomplete"},
+        "mock sell",
+    )
+    assert outcome.status == "unknown"
+    ledger.finalize("signal-account", outcome.status)
+    assert ledger.claim("signal-account") == (False, "unknown")
