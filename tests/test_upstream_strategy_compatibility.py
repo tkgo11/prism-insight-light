@@ -53,6 +53,14 @@ async def test_trailing_stop_retains_record_after_upstream_partial_sell(tmp_path
     })
     strategy = SignalTrailingStopStrategy(config=cfg)
     assert (await strategy.execute(make_signal("BUY"), trading_mode="demo")).status == "executed"
+    # Broker acceptance is not a fill: the fixture must explicitly simulate
+    # authoritative fill reconciliation before testing a later partial SELL.
+    accepted = json.loads(cfg.runtime_path.read_text(encoding="utf-8"))
+    assert accepted[0]["entry_pending"] is True
+    for field in ("entry_pending", "entry_requested_at", "entry_requested_price",
+                  "entry_broker_order_id"):
+        accepted[0].pop(field, None)
+    cfg.runtime_path.write_text(json.dumps(accepted), encoding="utf-8")
     partial = await strategy.execute(
         make_signal("SELL", price=80, sell_denominator=2), trading_mode="demo"
     )
@@ -300,3 +308,156 @@ async def test_trailing_sell_persistence_failure_prevents_broker_submission(
         await strategy.execute(make_signal("SELL", price=80), trading_mode="demo")
     assert calls == []
     assert "exit_pending" not in json.loads(path.read_text(encoding="utf-8"))[0]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("broker_result, expected_status", [
+    ({"success": True, "order_no": "MOCK-BUY-1"}, "executed"),
+    ({"success": False, "message": "read timed out"}, "unknown"),
+])
+async def test_trailing_buy_submission_is_fenced_until_verified_fill(
+    tmp_path, monkeypatch, broker_result, expected_status
+):
+    path = tmp_path / "trailing.json"
+    calls = []
+    async def fake_order(*args, **kwargs):
+        calls.append(kwargs)
+        return broker_result
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
+    config = SignalTrailingStopStrategyConfig(runtime_path=path)
+    result = await SignalTrailingStopStrategy(config=config).execute(
+        make_signal("BUY"), trading_mode="demo"
+    )
+    assert result.status == expected_status
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert len(saved) == 1
+    assert saved[0]["entry_pending"] is True
+    assert saved[0]["high_price"] == 100.0
+    if broker_result.get("order_no"):
+        assert saved[0]["entry_broker_order_id"] == "MOCK-BUY-1"
+    assert len(calls) == 1
+    restarted = SignalTrailingStopStrategy(config=config)
+    for side in ("BUY", "SELL"):
+        with pytest.raises(RuntimeError, match="operator reconciliation"):
+            await restarted.execute(make_signal(side, price=80), trading_mode="demo")
+    assert len(calls) == 1
+    assert json.loads(path.read_text(encoding="utf-8")) == saved
+
+
+@pytest.mark.asyncio
+async def test_trailing_buy_transport_exception_retains_pending_fence(tmp_path, monkeypatch):
+    path = tmp_path / "trailing.json"
+    calls = []
+    async def lost_response(*args, **kwargs):
+        calls.append(1)
+        raise TimeoutError("simulated broker response loss")
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", lost_response)
+    strategy = SignalTrailingStopStrategy(
+        config=SignalTrailingStopStrategyConfig(runtime_path=path)
+    )
+    with pytest.raises(TimeoutError):
+        await strategy.execute(make_signal("BUY"), trading_mode="demo")
+    assert json.loads(path.read_text(encoding="utf-8"))[0]["entry_pending"] is True
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await SignalTrailingStopStrategy(config=strategy.config).execute(
+            make_signal("BUY"), trading_mode="demo"
+        )
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("existing", [False, True])
+async def test_trailing_buy_verified_rejection_restores_prior_state(
+    tmp_path, monkeypatch, existing
+):
+    path = tmp_path / "trailing.json"
+    old = [{"key": "US:AAPL", "market": "US", "ticker": "AAPL",
+            "high_price": 120.0, "updated_at": "old"}]
+    if existing:
+        path.write_text(json.dumps(old), encoding="utf-8")
+    calls = []
+    async def rejected(*args, **kwargs):
+        calls.append(1)
+        return {"success": False, "outcome_unknown": False, "message": "APBK0918"}
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", rejected)
+    result = await SignalTrailingStopStrategy(
+        config=SignalTrailingStopStrategyConfig(runtime_path=path)
+    ).execute(make_signal("BUY"), trading_mode="demo")
+    assert result.status == "failed"
+    assert json.loads(path.read_text(encoding="utf-8")) == (old if existing else [])
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_trailing_buy_fence_write_failure_prevents_broker_call(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "trailing.json"
+    calls = []
+    async def fake_order(*args, **kwargs):
+        calls.append(1)
+        return {"success": True}
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
+    def fail_save(*args, **kwargs):
+        raise OSError("simulated disk full")
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.save_json", fail_save)
+    with pytest.raises(OSError, match="simulated disk full"):
+        await SignalTrailingStopStrategy(
+            config=SignalTrailingStopStrategyConfig(runtime_path=path)
+        ).execute(make_signal("BUY"), trading_mode="demo")
+    assert calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("broker_result, expected_status", [
+    ({"success": True, "order_no": "MOCK-SELL-1"}, "executed"),
+    ({"success": False, "message": "read timed out"}, "unknown"),
+])
+async def test_untracked_trailing_sell_fenced_across_restart(
+    tmp_path, monkeypatch, broker_result, expected_status
+):
+    path = tmp_path / "trailing.json"
+    calls = []
+    async def fake_order(*args, **kwargs):
+        calls.append(1)
+        return broker_result
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
+    cfg = SignalTrailingStopStrategyConfig(
+        runtime_path=path, require_tracked_entry=False
+    )
+    result = await SignalTrailingStopStrategy(config=cfg).execute(
+        make_signal("SELL", price=80), trading_mode="demo"
+    )
+    assert result.status == expected_status
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert saved[0]["exit_pending"] is True
+    assert saved[0]["untracked_exit"] is True
+    if broker_result.get("order_no"):
+        assert saved[0]["exit_broker_order_id"] == "MOCK-SELL-1"
+    restarted = SignalTrailingStopStrategy(config=cfg)
+    for side in ("BUY", "SELL"):
+        with pytest.raises(RuntimeError, match="operator reconciliation"):
+            await restarted.execute(make_signal(side, price=80), trading_mode="demo")
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_untracked_trailing_sell_verified_rejection_removes_fence(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "trailing.json"
+    calls = []
+    async def rejected(*args, **kwargs):
+        calls.append(1)
+        return {"success": False, "outcome_unknown": False, "message": "APBK0918"}
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", rejected)
+    cfg = SignalTrailingStopStrategyConfig(
+        runtime_path=path, require_tracked_entry=False
+    )
+    for _ in range(2):
+        result = await SignalTrailingStopStrategy(config=cfg).execute(
+            make_signal("SELL", price=80), trading_mode="demo"
+        )
+        assert result.status == "failed"
+        assert json.loads(path.read_text(encoding="utf-8")) == []
+    assert len(calls) == 2
