@@ -8,6 +8,7 @@ import json
 import logging
 import math
 import os
+import tempfile
 import threading
 import time
 from dataclasses import asdict, dataclass, field
@@ -227,14 +228,25 @@ class StopLossTracker:
         )
 
     def _save(self, data: dict[str, dict[str, Any]]) -> None:
-        temp_file = self.path.with_suffix(".tmp")
-        with temp_file.open("w", encoding="utf-8") as handle:
-            handle.write(json.dumps(data, indent=2, ensure_ascii=False))
-            handle.flush()
-            os.fsync(handle.fileno())
-        if os.name != "nt":
-            os.chmod(temp_file, 0o600)
-        temp_file.replace(self.path)
+        # A fixed sibling such as path.with_suffix(".tmp") can be the actual
+        # configured ledger path (or collide with another writer). Use a unique
+        # same-directory file so replacement stays atomic even for *.tmp paths.
+        temporary_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=self.path.parent,
+                prefix=f".{self.path.name}.", suffix=".tmp", delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                if os.name != "nt":
+                    os.chmod(temporary_path, 0o600)
+                json.dump(data, handle, indent=2, ensure_ascii=False)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.path)
+        finally:
+            if temporary_path is not None and temporary_path.exists():
+                temporary_path.unlink()
 
     def record_position(
         self,
