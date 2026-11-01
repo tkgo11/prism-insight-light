@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T11:20+09:00",
-    "started_at": "2026-11-01T11:19:50+09:00",
-    "completed_at": "2026-11-01T11:20:00+09:00",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-01T12:17+09:00",
+    "started_at": "2026-11-01T12:17:25+09:00",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-01T12:17+09:00",
     "last_mutation_commit": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
     "last_mutation_at": "2026-11-01T11:20:00+09:00",
-    "result": "CORRUPT_STOP_LOSS_TICKER_AND_REARM_FIXED_CI_PENDING_NO_PASS",
+    "result": "IN_PROGRESS_REPAIR_FAILED_CI",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
@@ -26,21 +26,15 @@
       "full_tree_files_reviewed": 0,
       "ci_runs": [
         {
-          "id": 41260633051,
-          "status": "completed",
-          "conclusion": "success",
-          "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142"
-        },
-        {
           "id": 41264840101,
-          "status": "in_progress",
-          "conclusion": null,
+          "status": "completed",
+          "conclusion": "failure",
           "head_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b"
         }
       ],
       "local_tests_executed": false,
       "merged": false,
-      "reason": "Persisted ticker mismatch and corrupt same-key rearm fixed; new-head CI pending, dependency closure and KIS/GCP demo unresolved",
+      "reason": "CI failed: stale test fixture key KR:good conflicts with strict ticker-key invariant",
       "pr_comment_id": 6552280405
     },
     "pr_comment_id": 6552280405
