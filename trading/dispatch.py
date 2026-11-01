@@ -258,7 +258,9 @@ class MultiAccountTradeDispatcher:
         available = {_account_id(account["account_key"]): account for account in accounts}
         eligible: list[dict[str, Any]] = []
         skipped: list[AccountDispatchResult] = []
-        target_ids = requested_ids or list(available)
+        # An explicitly empty target set is not permission to fan out to every
+        # configured account. This can occur in recovered or edited queues.
+        target_ids = list(available) if requested_ids is None else requested_ids
         for account_id in target_ids:
             account = available.get(account_id)
             if account is None:
@@ -792,11 +794,28 @@ class TradeDispatcher:
         queue_context = payload.pop(QUEUE_CONTEXT_KEY, None)
         signal = parse_signal_payload(payload)
         queued_context = queue_context if isinstance(queue_context, dict) else None
+        # Queue context is a durable authorization boundary: replay must never
+        # expand a pinned account set after an account-mode/configuration change.
+        # Old single-account queue entries have no multi_account marker; they
+        # are safe only while single-account mode remains active.
+        if queue_context is not None and not isinstance(queue_context, dict):
+            return DispatchResult("failed", "Queued execution context is malformed; operator reconciliation required", signal.signal_type, signal.market)
+        if self.multi_account_enabled and not (
+            isinstance(queue_context, dict) and queue_context.get("multi_account") is True
+        ):
+            return DispatchResult("failed", "Queued multi-account targets are missing; operator reconciliation required", signal.signal_type, signal.market)
         try:
             async with _serialized_broker_workflow():
-                if isinstance(queue_context, dict) and queue_context.get("multi_account"):
+                if isinstance(queue_context, dict) and queue_context.get("multi_account") is True:
+                    if not self.multi_account_enabled:
+                        return DispatchResult("failed", "Queued account mode changed; operator reconciliation required", signal.signal_type, signal.market)
                     requested_ids = queue_context.get("account_ids")
-                    if not isinstance(requested_ids, list) or not all(isinstance(item, str) for item in requested_ids):
+                    if (
+                        not isinstance(requested_ids, list)
+                        or not requested_ids
+                        or any(not isinstance(item, str) or not item.strip() for item in requested_ids)
+                        or len(set(requested_ids)) != len(requested_ids)
+                    ):
                         return DispatchResult("failed", "Queued multi-account targets are invalid", signal.signal_type, signal.market)
                     result = await self.multi_account_dispatcher.dispatch(
                         signal,
