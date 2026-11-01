@@ -8,6 +8,7 @@ the execution ledger.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 
@@ -90,7 +91,17 @@ def classify_broker_result(result: Any) -> str:
     ).casefold()
     if any(marker in text for marker in _AMBIGUOUS_MARKERS):
         return "unknown"
-    return "failed"
+    # A bare success=False flag is not proof that the order was rejected by
+    # KIS. Unless the wrapper explicitly verified a pre-submission/business
+    # rejection, an unclassified failure could conceal a submitted order.
+    # Keep its durable identity non-retryable pending broker reconciliation.
+    if result.get("outcome_unknown") is False:
+        return "failed"
+    # Compatibility for older KIS wrappers exposing the documented APBK
+    # business rejection code in their message without outcome_unknown.
+    if re.search(r"\bAPBK[0-9]{4}\b", text):
+        return "failed"
+    return "unknown"
 
 
 __all__ = ["PortfolioInquiryError", "classify_broker_result", "rejection_is_ambiguous"]

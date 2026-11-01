@@ -47,3 +47,24 @@ def test_strategy_execution_preserves_unknown_status():
         "test sell",
     )
     assert execution.status == "unknown"
+
+
+def test_generic_failure_without_broker_rejection_proof_is_unknown():
+    # A gateway/wrapper may set success=False after an accepted order.
+    # No business code or explicit pre-submission proof means no auto-retry.
+    assert classify_broker_result({"success": False, "message": "Order failed"}) == "unknown"
+    assert classify_broker_result({"success": False}) == "unknown"
+
+
+def test_verified_business_rejection_is_safe_to_retry():
+    assert classify_broker_result({
+        "success": False, "outcome_unknown": False,
+        "message": "Broker rejected the request before order acceptance",
+    }) == "failed"
+
+
+def test_ambiguous_transport_overrides_false_rejection_flag():
+    assert classify_broker_result({
+        "success": False, "outcome_unknown": False,
+        "message": "Gateway timeout after broker submission",
+    }) == "unknown"
