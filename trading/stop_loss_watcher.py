@@ -169,9 +169,15 @@ class StopLossTracker:
             return data
         if isinstance(data, list):
             result = {}
-            for item in data:
+            for index, item in enumerate(data):
+                # Legacy lists may contain malformed or duplicate entries.  Keep
+                # their original payload under a non-tradable key when the list
+                # is migrated to a dictionary by a later write.  Dropping them
+                # would destroy the operator's evidence for reconciliation.
+                quarantine_key = f"__legacy_unverified_{index}__"
                 if not isinstance(item, dict):
-                    logger.error("Skipping malformed legacy stop-loss record")
+                    logger.error("Quarantining malformed legacy stop-loss record at index %s", index)
+                    result[quarantine_key] = item
                     continue
                 market, ticker = item.get("market"), item.get("ticker")
                 if (
@@ -182,9 +188,17 @@ class StopLossTracker:
                 ):
                     # A single corrupt legacy record must not prevent checks
                     # for every other valid tracked position.
-                    logger.error("Skipping legacy stop-loss record with invalid market/ticker")
+                    logger.error("Quarantining legacy stop-loss record with invalid market/ticker at index %s", index)
+                    result[quarantine_key] = item
                     continue
-                result[self._key(market, ticker)] = item
+                key = self._key(market, ticker)
+                if key in result:
+                    # Two legacy entries for one instrument are ambiguous.
+                    # Never silently overwrite the first or auto-trade both.
+                    logger.error("Quarantining duplicate legacy stop-loss record at index %s", index)
+                    result[quarantine_key] = item
+                    continue
+                result[key] = item
             return result
         raise RuntimeError(
             "Stop-loss tracker has an invalid format; automated stop-loss actions are blocked"
