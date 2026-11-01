@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
     "started_at": "2026-11-01T23:18:56Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
-    "last_mutation_commit": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
-    "last_mutation_at": "2026-11-01T22:26:30.598Z",
-    "result": "IN_PROGRESS",
+    "completed_at": "2026-11-01T23:25:37.848Z",
+    "lock_owner": null,
+    "last_mutation_commit": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+    "last_mutation_at": "2026-11-01T23:25:37.848Z",
+    "result": "QUEUED_SINGLE_ACCOUNT_TOCTOU_PATCHED_CI_SUCCESS_AUDITS_BLOCKED",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,28 +19,31 @@
       "source_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
+      "pr_head": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
       "pr_number": 42,
-      "pr_changed_files": 53,
-      "related_manifest_files": 60,
+      "related_manifest_files": 61,
       "related_manifest_files_fully_audited": 0,
       "full_tree_files": 162,
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41356898329,
+          "id": 41361849358,
           "status": "completed",
-          "conclusion": "success",
-          "linux": "960 passed",
-          "windows": "141 passed",
-          "docker": "success"
+          "conclusion": "success"
+        },
+        {
+          "id": 41361853464,
+          "status": "completed",
+          "conclusion": "success"
         }
       ],
+      "linux": "963 passed",
+      "windows": "141 passed",
       "external_statuses": [
         {
           "context": "security/snyk (tkgo11)",
           "state": "success",
-          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/6d317df7-b11e-40c8-b88c-635b195d5737"
+          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/1ab8fee8-a693-4870-bf0a-d4059191e6d7"
         },
         {
           "context": "qlty check",
@@ -54,17 +57,16 @@
         }
       ],
       "commits": [
-        "46802b0958a05bfaad1a1129a96fd1c479d8a097",
-        "d9825f63410dcbd929b6cbdedcd5435685eacabc",
-        "c62e0593b64acc3c2a368662d3fd5c4219b5b198"
+        "5c51675486443eb8cf1355fa3227431024b353e8",
+        "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0"
       ],
       "merged": false,
-      "reason": "Queued authorization scope drift patched with mock regressions; full audit, demo integration, qlty usage and independent review incomplete."
+      "reason": "Queued single-account broker identity pinned with mock tests; demo integration, full audits, independent review and qlty usage unresolved."
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T06:22+09:00",
     "pr_head_at_start": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
     "lock_acquired_at": "2026-11-01T23:18:56Z",
-    "lock_released_at": "2026-11-01T22:26:30.598Z"
+    "lock_released_at": "2026-11-01T23:25:37.848Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -83,7 +85,7 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
+    "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
@@ -96,7 +98,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "a20bcb93959624471fdf641b30f46db83696e679",
+      "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -109,8 +111,60 @@
       "title": "chore(deps): update actions/setup-python action to v7",
       "author": "renovate[bot]",
       "head_ref": "renovate/actions-setup-python-7.x",
-      "head_sha": "0a99d432339915b4d3230ab194b76472bf807914",
-      "base_sha": "1f085616c63bd015ba48b93dc3485951422d615c",
+      "head_sha": "db266b9f62746d41a8ea338ccc515ac160b2f198",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "draft": false,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "mutation_allowed": true,
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE"
+    },
+    {
+      "number": 39,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/39",
+      "title": "chore(deps): update actions/checkout action to v7",
+      "author": "renovate[bot]",
+      "head_ref": "renovate/actions-checkout-7.x",
+      "head_sha": "e01753efec2a995f70e49e02e928f12b350d8647",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "draft": false,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "mutation_allowed": true,
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE"
+    },
+    {
+      "number": 37,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/37",
+      "title": "chore(deps): update dependency python",
+      "author": "renovate[bot]",
+      "head_ref": "renovate/python-3.x",
+      "head_sha": "3272c75afa5f9d43e89e86b47b2ff033f6968d21",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "draft": false,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "mutation_allowed": true,
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE"
+    },
+    {
+      "number": 36,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/36",
+      "title": "chore(deps): update actions/checkout action to v4.4.0",
+      "author": "renovate[bot]",
+      "head_ref": "renovate/actions-checkout-4.x",
+      "head_sha": "ae09f9899539baa14696fb0715b80da30206c96d",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "draft": false,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "mutation_allowed": true,
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE"
+    },
+    {
+      "number": 22,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/22",
+      "title": "Install autonomous-maintainer skill (tkgo11/codex-autonomous-maintainer v2.2.0) under .agents/skills",
+      "author": "tkgo11",
+      "head_ref": "codex/install-codex-autonomous-maintainer-skill",
+      "head_sha": "40511f7eab48f6c2ccf4e08f12b0e77d0dcf4829",
+      "base_sha": "bf8bf81db6607549ff6141bf4339c7997f4bef42",
       "draft": false,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
       "mutation_allowed": true,
@@ -120,13 +174,13 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "QUEUED_ENVIRONMENT_ACCOUNT_SCOPE_PATCH_CI_SUCCESS_FULL_DEPENDENCY_AUDIT_REQUIRED",
+    "status": "CURRENT_HEAD_CI_SUCCESS_FULL_DEPENDENCY_AUDIT_REQUIRED",
     "checksum": null,
     "scope_estimate": "60 known related files; transitive dependency closure and independent full-file audit incomplete",
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "cf225d7e7075b44f38e91239959671d550360962",
+        "blob_sha": "dd6ed6c3d8ae8075e531733e689b4581df79aa1d",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -217,7 +271,7 @@
       {
         "path": "tests/test_queue_execution_context.py",
         "status": "NOT_FULLY_AUDITED",
-        "blob_sha": "e9b19daa56038ff5babfd493cccc6b264e364feb"
+        "blob_sha": "1be12e40042b2423941df901ddb3c35ab26b8f55"
       },
       {
         "path": "tests/test_score_max_capital_strategy.py",
@@ -291,7 +345,7 @@
       },
       {
         "path": "trading/dispatch.py",
-        "blob_sha": "f006b21e30ae2646de0b877b7ae4ee10cc9b6dbd",
+        "blob_sha": "035846e0845133debe4b65524c16ed9ff1cb56f2",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -434,12 +488,13 @@
       "tests/test_cooldown_pending_reconciliation.py",
       "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
       "trading/dispatch.py",
-      "tests/test_multi_account_dispatch.py"
+      "tests/test_multi_account_dispatch.py",
+      "tests/test_queue_execution_context.py"
     ],
-    "tree_sha": "67cdb5c7e5f217289a31a7ddee8e6adba60f03d2"
+    "tree_sha": "6c6fbccdb95fcb89d03d1c683cfb4ba266a28b27"
   },
   "full_manifest": {
-    "status": "RESET_AFTER_QUEUED_SCOPE_CODE_CHANGE_NOT_FULLY_AUDITED",
+    "status": "RESET_AFTER_CURRENT_HEAD_CHANGE_NOT_FULLY_AUDITED",
     "tracked_tree_entries_on_pr": 186,
     "tracked_blob_files_on_pr": 162,
     "sha": null,
@@ -539,7 +594,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "cf225d7e7075b44f38e91239959671d550360962",
+        "blob_sha": "dd6ed6c3d8ae8075e531733e689b4581df79aa1d",
         "status": "NOT_REVIEWED"
       },
       {
@@ -729,7 +784,7 @@
       },
       {
         "path": "tests/test_queue_execution_context.py",
-        "blob_sha": "e9b19daa56038ff5babfd493cccc6b264e364feb",
+        "blob_sha": "1be12e40042b2423941df901ddb3c35ab26b8f55",
         "status": "NOT_REVIEWED"
       },
       {
@@ -899,7 +954,7 @@
       },
       {
         "path": "trading/dispatch.py",
-        "blob_sha": "f006b21e30ae2646de0b877b7ae4ee10cc9b6dbd",
+        "blob_sha": "035846e0845133debe4b65524c16ed9ff1cb56f2",
         "status": "NOT_REVIEWED"
       },
       {
@@ -3754,6 +3809,116 @@
       "related_pass": false,
       "full_pass": false,
       "independent_file_audits_completed": 0
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
+      "kind": "ROOT_CAUSE_RECURRENT_SUBCASE_PATCH_AND_PARTIAL_IMPACT_REVIEW",
+      "source_repository": "dragon1086/prism-insight",
+      "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "upstream_pinned_contract": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "upstream_new_commits": 0,
+      "target_repository": "tkgo11/prism-insight-light",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_before": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
+      "head_after": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+      "head_tree_sha": "6c6fbccdb95fcb89d03d1c683cfb4ba266a28b27",
+      "pr_number": 42,
+      "pr_draft": true,
+      "root_cause_id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
+      "root_cause_subcase": "Queued single-account replay precheck-to-broker TOCTOU: mutable account selector re-resolved by trader/strategy",
+      "reproduction": "Code path: execute_queued_signal checks _resolved_single_account_id before broker serialization; _dispatch_serialized originally called _execute_legacy_trade/strategy with account=None, allowing broker constructor to resolve mutable name/index/primary again. Added fake-resolver drift regression: first resolution original, second resolution changed; no broker submit. No real account used.",
+      "contract_matrix": [
+        {
+          "contract": "Queued single-account account identity is fixed at submission boundary",
+          "path": "execute_queued_signal -> dispatch -> _serialized_broker_workflow -> _dispatch_serialized -> ka.resolve_account -> _execute_legacy_trade / strategy.execute",
+          "failure_mode": "Config changes between precheck and trader construction",
+          "test": "test_queued_single_account_rechecks_identity_after_scope_check",
+          "result": "CI_PASS_MOCK_ONLY"
+        },
+        {
+          "contract": "Resolved account object is passed to KR/US trader and strategy, without disabling ledger claim",
+          "path": "_dispatch_serialized -> _strategy_trader_kwargs / _execute_legacy_trade / execution_ledger.claim+finalize",
+          "failure_mode": "Second account resolution or duplicate execution after bypassing ledger",
+          "test": "test_queued_single_account_pins_broker_account_without_losing_dedupe; test_queued_single_account_strategy_uses_pinned_account",
+          "result": "CI_PASS_MOCK_ONLY"
+        }
+      ],
+      "changed_files": [
+        {
+          "path": "trading/dispatch.py",
+          "blob_sha": "035846e0845133debe4b65524c16ed9ff1cb56f2"
+        },
+        {
+          "path": "tests/test_queue_execution_context.py",
+          "blob_sha": "1be12e40042b2423941df901ddb3c35ab26b8f55"
+        },
+        {
+          "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+          "blob_sha": "dd6ed6c3d8ae8075e531733e689b4581df79aa1d"
+        }
+      ],
+      "code_commits": [
+        "5c51675486443eb8cf1355fa3227431024b353e8",
+        "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0"
+      ],
+      "tests": {
+        "new_mock_cases": 3,
+        "linux": "963 passed",
+        "windows": "141 passed",
+        "compileall": "success",
+        "docker": "success",
+        "local_full_pytest": "NOT_RUN",
+        "authorized_kis_demo": "NOT_RUN",
+        "live_trading": "PROHIBITED"
+      },
+      "ci": {
+        "run_ids": [
+          41361849358,
+          41361853464
+        ],
+        "final_head": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+        "status": "completed",
+        "conclusion": "success",
+        "linux_job_id": 125013681827,
+        "windows_job_id": 125013681487
+      },
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success",
+          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/1ab8fee8-a693-4870-bf0a-d4059191e6d7"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
+        },
+        {
+          "context": "qlty usage",
+          "state": "pending",
+          "target_url": "https://qlty.sh/gh/tkgo11/settings/analysis-minutes"
+        }
+      ],
+      "independent_file_audits_completed": 0,
+      "related_pass": false,
+      "full_pass": false,
+      "partial_reviewed_paths": [
+        "trading/dispatch.py",
+        "trading/kis_auth.py",
+        "trading/off_hours_queue.py",
+        "trading/execution_ledger.py",
+        "tests/test_queue_execution_context.py",
+        "tests/test_multi_account_dispatch.py",
+        "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
+      ],
+      "limitations": [
+        "KIS demo order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation unverified",
+        "External configuration replacement and strategy state account isolation not exhaustively audited",
+        "No authorized demo credentials; no real trades",
+        "qlty usage pending; branch protection read 403; no independent PR approval",
+        "61 related files not independently audited; 162 tracked blob files not fully audited"
+      ],
+      "merge": "NOT_ATTEMPTED"
     }
   ],
   "last_merged_upstream_sha": null,
@@ -3762,10 +3927,10 @@
     "60 known related files not fully audited; related PASS 0/2.",
     "Full 162-file repository audit incomplete; full PASS 0/2.",
     "No authorized KIS demo credentials/environment for order-ID, partial-fill, cancel, remaining quantity and account-specific reconciliation; no live trading.",
-    "Current PR HEAD Actions/Snyk/qlty check success but qlty usage pending, no independent PR review, branch protection read 403.",
-    "Multi-account strategy state partitioning and account binding TOCTOU remain unverified."
+    "Current PR HEAD GitHub Actions/Snyk/qlty check success but qlty usage pending, no independent PR review, branch protection read 403.",
+    "External account configuration replacement and multi-account strategy state partitioning not independently verified."
   ],
-  "next_action": "Complete 60-file dependency-closure audit across independent slots and 162-file full-tree audit after Ready; validate KIS demo authoritative order-ID/fill/partial-fill/cancel/remaining-quantity and account identity; do not PASS or merge without gates.",
+  "next_action": "Complete full related-file dependency audit, then independent second-slot audit; validate broker order-ID/fill/cancel/remaining quantity in authorized demo; verify required branch checks and independent review; no live trading.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -4083,6 +4248,16 @@
       "full_pass": false,
       "reason": "Queue mode/account identity patches tested in latest-head CI; 60/162 file audits, KIS demo, qlty usage, independent approval incomplete",
       "manifest_tree_sha": "67cdb5c7e5f217289a31a7ddee8e6adba60f03d2"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
+      "phase": "related_code_audit",
+      "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Code changed; full 61-file related and 162-file independent audits incomplete; KIS demo, qlty usage, independent review and branch-protection read blocked",
+      "manifest_tree_sha": "6c6fbccdb95fcb89d03d1c683cfb4ba266a28b27"
     }
   ],
   "discovered_defects": [
@@ -4773,6 +4948,26 @@
       "head_sha": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
       "verification": "960 Linux pytest + 141 Windows smoke; no KIS demo",
       "unverified": "Live broker order-ID and actual account binding during broker construction"
+    },
+    {
+      "id": "queued-single-account-precheck-broker-toctou-2026-11-02-08",
+      "root_cause_id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Queued single-account replay precheck-to-broker TOCTOU: mutable account selector re-resolved by trader/strategy",
+      "subcases": [
+        "Recheck identity after serialized lock",
+        "Pass pinned account object into KR/US legacy and configured strategy trader",
+        "Retain durable single-account ledger claim and finalization"
+      ],
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
+      "fix_commits": [
+        "5c51675486443eb8cf1355fa3227431024b353e8",
+        "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0"
+      ],
+      "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+      "verification": "963 Linux pytest, 141 Windows smoke; three new mock tests; no KIS demo",
+      "unverified": "External config mutation, authoritative broker fill/cancel, full dependency audit"
     }
   ],
   "risks": [
@@ -4983,16 +5178,21 @@
       "defect_ids": [
         "queued-empty-account-ids-fans-out-2026-11-02",
         "queued-account-mode-mismatch-fans-out-2026-11-02",
-        "queued-environment-account-identity-drift-2026-11-02-07"
+        "queued-environment-account-identity-drift-2026-11-02-07",
+        "queued-single-account-precheck-broker-toctou-2026-11-02-08"
       ],
-      "classification": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "last_checked_head": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
-      "fix_commit": "def37442fff6b2d059aaca663446f53f4ef47ea8"
+      "classification": "CODE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+      "fix_commit": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+      "fix_commits": [
+        "5c51675486443eb8cf1355fa3227431024b353e8",
+        "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0"
+      ]
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
-    "scope": "Queued authorization: pinned multi-account targets, single-account actual identity, demo/real mode, replay, legacy quarantine and queue dedupe; other broker order lifecycle and full file-by-file audits remain blocked.",
+    "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+    "scope": "Queued account authorization TOCTOU pinned at broker boundary; broader order lifecycle and full-file audits remain blocked.",
     "entries": [
       {
         "contract": "Corrupt/duplicate/nonfinite runtime state cannot be silently cleared",
@@ -5103,6 +5303,26 @@
         "evidence": "Tested mode and selector changes, primary account reassignment, legacy missing scope, valid same-account replay, no broker call on mismatch",
         "status": "CODE_PATCHED_CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT",
         "head_sha": "c62e0593b64acc3c2a368662d3fd5c4219b5b198"
+      },
+      {
+        "contract": "Queued single-account account identity is fixed at submission boundary",
+        "path": "execute_queued_signal -> dispatch -> _serialized_broker_workflow -> _dispatch_serialized -> ka.resolve_account -> _execute_legacy_trade / strategy.execute",
+        "failure_mode": "Config changes between precheck and trader construction",
+        "test": "test_queued_single_account_rechecks_identity_after_scope_check",
+        "result": "CI_PASS_MOCK_ONLY",
+        "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+        "evidence": "test_queued_single_account_rechecks_identity_after_scope_check",
+        "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Resolved account object is passed to KR/US trader and strategy, without disabling ledger claim",
+        "path": "_dispatch_serialized -> _strategy_trader_kwargs / _execute_legacy_trade / execution_ledger.claim+finalize",
+        "failure_mode": "Second account resolution or duplicate execution after bypassing ledger",
+        "test": "test_queued_single_account_pins_broker_account_without_losing_dedupe; test_queued_single_account_strategy_uses_pinned_account",
+        "result": "CI_PASS_MOCK_ONLY",
+        "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+        "evidence": "test_queued_single_account_pins_broker_account_without_losing_dedupe; test_queued_single_account_strategy_uses_pinned_account",
+        "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
       }
     ]
   },
@@ -5205,8 +5425,12 @@
       "id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
       "severity": "HIGH",
       "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "description": "Queued account target/mode/actual identity drift fixed in mock-tested code; KIS integration and TOCTOU account binding remain unverified",
-      "fix_commit": "c62e0593b64acc3c2a368662d3fd5c4219b5b198"
+      "description": "Queued scope/mode/account identity drift and precheck-to-broker TOCTOU patched with mock tests; external config race, KIS integration and full audit remain unverified",
+      "fix_commit": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
+      "fix_commits": [
+        "5c51675486443eb8cf1355fa3227431024b353e8",
+        "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0"
+      ]
     }
   ]
 }

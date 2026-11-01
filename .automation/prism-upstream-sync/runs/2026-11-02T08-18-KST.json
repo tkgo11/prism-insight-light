@@ -1,0 +1,110 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
+  "kind": "ROOT_CAUSE_RECURRENT_SUBCASE_PATCH_AND_PARTIAL_IMPACT_REVIEW",
+  "source_repository": "dragon1086/prism-insight",
+  "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+  "upstream_pinned_contract": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "upstream_new_commits": 0,
+  "target_repository": "tkgo11/prism-insight-light",
+  "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+  "head_before": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
+  "head_after": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+  "head_tree_sha": "6c6fbccdb95fcb89d03d1c683cfb4ba266a28b27",
+  "pr_number": 42,
+  "pr_draft": true,
+  "root_cause_id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
+  "root_cause_subcase": "Queued single-account replay precheck-to-broker TOCTOU: mutable account selector re-resolved by trader/strategy",
+  "reproduction": "Code path: execute_queued_signal checks _resolved_single_account_id before broker serialization; _dispatch_serialized originally called _execute_legacy_trade/strategy with account=None, allowing broker constructor to resolve mutable name/index/primary again. Added fake-resolver drift regression: first resolution original, second resolution changed; no broker submit. No real account used.",
+  "contract_matrix": [
+    {
+      "contract": "Queued single-account account identity is fixed at submission boundary",
+      "path": "execute_queued_signal -> dispatch -> _serialized_broker_workflow -> _dispatch_serialized -> ka.resolve_account -> _execute_legacy_trade / strategy.execute",
+      "failure_mode": "Config changes between precheck and trader construction",
+      "test": "test_queued_single_account_rechecks_identity_after_scope_check",
+      "result": "CI_PASS_MOCK_ONLY"
+    },
+    {
+      "contract": "Resolved account object is passed to KR/US trader and strategy, without disabling ledger claim",
+      "path": "_dispatch_serialized -> _strategy_trader_kwargs / _execute_legacy_trade / execution_ledger.claim+finalize",
+      "failure_mode": "Second account resolution or duplicate execution after bypassing ledger",
+      "test": "test_queued_single_account_pins_broker_account_without_losing_dedupe; test_queued_single_account_strategy_uses_pinned_account",
+      "result": "CI_PASS_MOCK_ONLY"
+    }
+  ],
+  "changed_files": [
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "035846e0845133debe4b65524c16ed9ff1cb56f2"
+    },
+    {
+      "path": "tests/test_queue_execution_context.py",
+      "blob_sha": "1be12e40042b2423941df901ddb3c35ab26b8f55"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "dd6ed6c3d8ae8075e531733e689b4581df79aa1d"
+    }
+  ],
+  "code_commits": [
+    "5c51675486443eb8cf1355fa3227431024b353e8",
+    "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0"
+  ],
+  "tests": {
+    "new_mock_cases": 3,
+    "linux": "963 passed",
+    "windows": "141 passed",
+    "compileall": "success",
+    "docker": "success",
+    "local_full_pytest": "NOT_RUN",
+    "authorized_kis_demo": "NOT_RUN",
+    "live_trading": "PROHIBITED"
+  },
+  "ci": {
+    "run_ids": [
+      41361849358,
+      41361853464
+    ],
+    "final_head": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+    "status": "completed",
+    "conclusion": "success",
+    "linux_job_id": 125013681827,
+    "windows_job_id": 125013681487
+  },
+  "external_statuses": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success",
+      "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/1ab8fee8-a693-4870-bf0a-d4059191e6d7"
+    },
+    {
+      "context": "qlty check",
+      "state": "success",
+      "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
+    },
+    {
+      "context": "qlty usage",
+      "state": "pending",
+      "target_url": "https://qlty.sh/gh/tkgo11/settings/analysis-minutes"
+    }
+  ],
+  "independent_file_audits_completed": 0,
+  "related_pass": false,
+  "full_pass": false,
+  "partial_reviewed_paths": [
+    "trading/dispatch.py",
+    "trading/kis_auth.py",
+    "trading/off_hours_queue.py",
+    "trading/execution_ledger.py",
+    "tests/test_queue_execution_context.py",
+    "tests/test_multi_account_dispatch.py",
+    "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
+  ],
+  "limitations": [
+    "KIS demo order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation unverified",
+    "External configuration replacement and strategy state account isolation not exhaustively audited",
+    "No authorized demo credentials; no real trades",
+    "qlty usage pending; branch protection read 403; no independent PR approval",
+    "61 related files not independently audited; 162 tracked blob files not fully audited"
+  ],
+  "merge": "NOT_ATTEMPTED"
+}
