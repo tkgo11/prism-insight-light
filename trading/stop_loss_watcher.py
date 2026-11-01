@@ -361,10 +361,9 @@ class StopLossTracker:
                 or not isinstance(item.get("ticker"), str)
                 or not item["market"].strip()
                 or not item["ticker"].strip()
-                or item["market"] != item["market"].strip().upper()
-                or item["market"] not in {"KR", "US"}
+                or item["market"].strip().upper() not in {"KR", "US"}
                 or item["ticker"] != item["ticker"].strip()
-                or any(ord(ch) < 32 or ord(ch) == 127 for ch in item["ticker"])
+                or any(ord(ch) < 32 or ord(ch) == 127 for ch in item["market"] + item["ticker"])
                 or self._key(item["market"], item["ticker"]) != key
             ):
                 # Never dispatch an order to a malformed or mismatched ticker.

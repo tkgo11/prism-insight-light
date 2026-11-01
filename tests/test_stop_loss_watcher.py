@@ -929,3 +929,11 @@ def test_stop_loss_tracker_does_not_dispatch_legacy_untrimmed_ticker(tmp_path):
     # Preserve the suspect record for manual reconciliation rather than
     # silently normalizing an untrusted persisted broker-facing identifier.
     assert tracker.get_position("US", "AAPL") == malformed
+
+
+def test_stop_loss_tracker_retains_legacy_lowercase_market_record(tmp_path):
+    path = tmp_path / "positions.json"
+    tracker = StopLossTracker(path)
+    legacy = {"market": "us", "ticker": "AAPL", "stop_loss": 90}
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+    assert tracker.get_positions("US") == [legacy]
