@@ -72,3 +72,7 @@ Keep the PR unmerged until a human reviews all modified logic and a separate dem
 - Tests cover corrupt JSON, duplicate keys, nonfinite data, bad timestamps,
   failed atomic replace, and mock-broker no-submit on corrupted protection.
   KIS demo order-ID/fill/cancel reconciliation remains unverified.
+
+- Semantic trailing-stop records are also checked for a unique instrument key,
+  matching market/ticker, and a finite positive high-water mark. A string
+  `"nan"`/`"inf"` in otherwise valid JSON must not bypass the stop trigger.

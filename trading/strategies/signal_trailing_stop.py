@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -85,6 +87,10 @@ class SignalTrailingStopStrategy:
         lock = await acquire_file_lock(lock_path)
         try:
             records = load_json_list(self.config.runtime_path)
+            # The JSON may be syntactically valid but semantically unsafe:
+            # duplicate keys or a string "nan"/"inf" high watermark can
+            # otherwise trigger a SELL without crossing the trailing stop.
+            self._validate_records(records)
             key = self._key(signal)
             record = next((item for item in records if item.get("key") == key), None)
             if signal.signal_type == "BUY":
@@ -107,6 +113,40 @@ class SignalTrailingStopStrategy:
 
     def _key(self, signal: SignalMessage) -> str:
         return f"{signal.market}:{signal.ticker}"
+
+    @staticmethod
+    def _validate_records(records: list[dict[str, Any]]) -> None:
+        """Reject ambiguous/invalid persisted trailing protection before orders."""
+        seen: set[str] = set()
+        for item in records:
+            key = item.get("key")
+            market = item.get("market")
+            ticker = item.get("ticker")
+            price = item.get("high_price")
+            if (
+                not isinstance(key, str)
+                or not isinstance(market, str)
+                or not isinstance(ticker, str)
+                or not market
+                or not ticker
+                or key != f"{market}:{ticker}"
+                or key in seen
+                or isinstance(price, bool)
+            ):
+                raise RuntimeError(
+                    "Signal trailing-stop state is ambiguous; operator reconciliation required"
+                )
+            try:
+                high_price = float(price)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise RuntimeError(
+                    "Signal trailing-stop high price is invalid; operator reconciliation required"
+                ) from exc
+            if not math.isfinite(high_price) or high_price <= 0:
+                raise RuntimeError(
+                    "Signal trailing-stop high price is invalid; operator reconciliation required"
+                )
+            seen.add(key)
 
     async def _record_buy_and_execute(
         self,

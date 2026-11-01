@@ -117,3 +117,35 @@ async def test_corrupt_riskoff_state_never_reaches_mock_buy(tmp_path, monkeypatc
         await strategy.execute(signal, trading_mode="demo")
     assert broker_calls == []
     assert path.read_text(encoding="utf-8") == raw
+
+
+@pytest.mark.parametrize("raw", [
+    '[{"key":"US:AAPL","market":"US","ticker":"AAPL","high_price":"nan"}]',
+    '[{"key":"US:AAPL","market":"US","ticker":"AAPL","high_price":"inf"}]',
+    '[{"key":"US:AAPL","market":"US","ticker":"AAPL","high_price":true}]',
+    '[{"key":"US:AAPL","market":"US","ticker":"AAPL","high_price":-10}]',
+    '[{"key":"US:AAPL","market":"US","ticker":"AAPL","high_price":"not-a-price"}]',
+    '[{"key":"US:AAPL","market":"US","ticker":"MSFT","high_price":100}]',
+    '[{"key":"US:AAPL","market":"US","ticker":"AAPL","high_price":100},'
+    '{"key":"US:AAPL","market":"US","ticker":"AAPL","high_price":120}]',
+])
+@pytest.mark.parametrize("side", ["BUY", "SELL"])
+@pytest.mark.asyncio
+async def test_semantically_corrupt_trailing_state_blocks_all_mock_broker_orders(
+    tmp_path, monkeypatch, raw, side
+):
+    path = tmp_path / "trailing.json"
+    path.write_text(raw, encoding="utf-8")
+    calls = []
+    async def fake_order(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"success": True, "order_no": "mock"}
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
+    strategy = SignalTrailingStopStrategy(
+        config=SignalTrailingStopStrategyConfig(runtime_path=path)
+    )
+    signal = parse_signal_payload({"type": side, "market": "US", "ticker": "AAPL", "price": 80})
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await strategy.execute(signal, trading_mode="demo")
+    assert calls == []
+    assert path.read_text(encoding="utf-8") == raw
