@@ -6,18 +6,18 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-01T09:20+09:00",
     "started_at": "2026-11-01T09:23:36+09:00",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-01T09:20+09:00",
-    "last_mutation_commit": "532a0f8d451d64d1eb55edcc211e595abd701319",
-    "last_mutation_at": "2026-10-31T23:22:44.584Z",
-    "result": "IN_PROGRESS",
+    "completed_at": "2026-11-01T00:26:08.620Z",
+    "lock_owner": null,
+    "last_mutation_commit": "3212414ac25dd308614c4356221600d383b7f495",
+    "last_mutation_at": "2026-11-01T00:26:08.620Z",
+    "result": "STOP_LOSS_VALIDATION_AND_OVERFLOW_FIXED_CI_PENDING_NO_PASS",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
       "full": 0,
       "source_head": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "532a0f8d451d64d1eb55edcc211e595abd701319",
+      "pr_head": "3212414ac25dd308614c4356221600d383b7f495",
       "pr_number": 42,
       "pr_changed_files": 36,
       "related_review_complete": false,
@@ -25,29 +25,29 @@
       "full_tree_files_reviewed": 0,
       "ci_runs": [
         {
-          "id": 41252260295,
-          "event": "pull_request",
-          "status": "in_progress",
-          "conclusion": null,
-          "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319"
-        },
-        {
-          "id": 41252257251,
+          "id": 41256684434,
           "event": "push",
           "status": "in_progress",
           "conclusion": null,
-          "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319"
+          "head_sha": "3212414ac25dd308614c4356221600d383b7f495"
+        },
+        {
+          "id": 41256688205,
+          "event": "pull_request",
+          "status": "queued",
+          "conclusion": null,
+          "head_sha": "3212414ac25dd308614c4356221600d383b7f495"
         }
       ],
-      "local_tests_executed": false,
-      "merged": false,
-      "reason": "Overflow parser fix committed; all PASS reset; GitHub Actions not yet complete; demo brokerage unresolved",
       "external_checks": {
         "snyk": "success",
         "qlty_check": "pending"
-      }
+      },
+      "local_tests_executed": false,
+      "merged": false,
+      "reason": "Stop-loss persisted price validation and oversized corrupt record isolation fixed; new-head CI incomplete, dependency closure and KIS/GCP demo unresolved"
     },
-    "pr_comment_id": 6550532026
+    "pr_comment_id": 6551146793
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -66,7 +66,7 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
+    "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
@@ -79,7 +79,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
+      "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -156,8 +156,8 @@
       },
       {
         "path": "tests/test_stop_loss_watcher.py",
-        "blob_sha": "bf0290fbee4224fc8bf167816ed4c07f9de65d72",
-        "status": "NOT_FULLY_AUDITED"
+        "blob_sha": "e35a0a28404ba847afcb17f7c7d86c30bfe5e10c",
+        "status": "TARGETED_FIX_REVIEWED_CI_PENDING_NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_strategy_partial_matrix.py",
@@ -211,8 +211,8 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "1128a6ce8ea281208e7ec6463abe702ad3446a13",
-        "status": "NOT_FULLY_AUDITED"
+        "blob_sha": "2d5e28a341a24102e6f5b0d9c93373ae5d6fa944",
+        "status": "TARGETED_FIX_REVIEWED_CI_PENDING_NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/balance_split.py",
@@ -285,20 +285,32 @@
         "path": "tests/test_signal_schema.py",
         "blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9",
         "status": "REGRESSION_ADDED_NOT_YET_EXECUTED"
+      },
+      {
+        "path": "trading/stop_loss_watcher.py",
+        "blob_sha": "2d5e28a341a24102e6f5b0d9c93373ae5d6fa944",
+        "status": "TARGETED_REVIEW_ONLY_NEW_HEAD_CI_PENDING"
+      },
+      {
+        "path": "tests/test_stop_loss_watcher.py",
+        "blob_sha": "e35a0a28404ba847afcb17f7c7d86c30bfe5e10c",
+        "status": "TARGETED_REVIEW_ONLY_NEW_HEAD_CI_PENDING"
       }
     ],
     "modified_files": [
       "trading/schema.py",
-      "tests/test_signal_schema.py"
+      "tests/test_signal_schema.py",
+      "trading/stop_loss_watcher.py",
+      "tests/test_stop_loss_watcher.py"
     ]
   },
   "full_manifest": {
     "status": "INDEXED_NOT_AUDITED",
     "tracked_tree_entries_on_pr": 182,
     "tracked_blob_files_on_pr": 158,
-    "sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
+    "sha": "3212414ac25dd308614c4356221600d383b7f495",
     "files_checked": 0,
-    "checksum": "98a69503a953fce2a4581b15525e95d1110ebe51",
+    "checksum": "d4f78e76e4901e4d3bd6a93d9caf248473ea9041",
     "checksum_kind": "git_tree_sha",
     "files": [
       {
@@ -608,7 +620,7 @@
       },
       {
         "path": "tests/test_stop_loss_watcher.py",
-        "blob_sha": "bf0290fbee4224fc8bf167816ed4c07f9de65d72",
+        "blob_sha": "e35a0a28404ba847afcb17f7c7d86c30bfe5e10c",
         "status": "NOT_REVIEWED"
       },
       {
@@ -798,7 +810,7 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "1128a6ce8ea281208e7ec6463abe702ad3446a13",
+        "blob_sha": "2d5e28a341a24102e6f5b0d9c93373ae5d6fa944",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1616,6 +1628,38 @@
         "tests/test_balance_split_strategy.py"
       ],
       "notes": "Read targeted portions, verified PR 35 changed files and prior 158-blob full-tree manifest; no complete dependency-closure file-by-file audit or local execution. PR head 75170f89 CI 41243400167 completed/success; Full pytest suite and Windows runtime smoke completed/success. Additional check-run 41243396451 also success; qlty usage commit status pending; security/snyk and qlty check success. No review submitted; branch-protection read returned integration 403. No KIS/GCP demo evidence; no merge."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-01T09:20+09:00",
+      "kind": "TARGETED_STOP_LOSS_VALIDATION_FIX_NOT_FULL_AUDIT",
+      "phase": "related_code_audit",
+      "related_pass": false,
+      "full_pass": false,
+      "previous_head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
+      "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "changed_files": [
+        "trading/stop_loss_watcher.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "commit_shas": [
+        "3212414ac25dd308614c4356221600d383b7f495"
+      ],
+      "ci_previous_head_run_ids": [
+        41252260295,
+        41252257251
+      ],
+      "ci_previous_head_conclusions": [
+        "success",
+        "success"
+      ],
+      "ci_new_head_run_ids": [
+        41256684434,
+        41256688205
+      ],
+      "pr_comment_id": 6551146793,
+      "notes": "Verified previous head GitHub Actions Linux and Windows checks succeeded, qlty usage pending. Found nonfinite stop-loss price could overwrite durable protection; malformed oversized legacy stop-loss could abort entire market watcher cycle. Added finite validation and OverflowError isolation with regression tests, CAS committed to PR. No local tests run; new-head CI pending; no full dependency closure, KIS/GCP demo, or PASS."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -1633,9 +1677,11 @@
     "No verified broker fill/order-id reconciliation and KIS/GCP demo integration",
     "Branch protection read forbidden by integration (403); reviews absent",
     "Latest PR head CI incomplete after overflow fix",
-    "Dependency closure and broker demo reconciliation still incomplete"
+    "Dependency closure and broker demo reconciliation still incomplete",
+    "New-head CI incomplete after stop-loss validation fix",
+    "Stop-loss accepted-order vs fill/partial-fill reconciliation remains unresolved; demo KIS/GCP evidence required"
   ],
-  "next_action": "Verify CI for commit 532a0f8d451d64d1eb55edcc211e595abd701319; continue related dependency closure; inspect broker fill/partial-fill safety with mocks/demo. No merge.",
+  "next_action": "Verify CI runs 41256684434/41256688205 for head 3212414ac25dd308614c4356221600d383b7f495; continue related dependency closure; assess broker fill/partial-fill stop-loss reconciliation in safe mock/demo environment. No merge.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -1679,6 +1725,18 @@
       "full_pass": false,
       "reason": "Verified parser overflow fixed; code changed, CI pending and dependency closure incomplete",
       "manifest_tree_sha": "98a69503a953fce2a4581b15525e95d1110ebe51"
+    },
+    {
+      "slot": "2026-11-01T09:20+09:00",
+      "run_id": "prism-sync-hourly-2026-11-01T09:20+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Code changed; new-head CI pending; related dependency closure incomplete; demo brokerage unresolved",
+      "manifest_tree_sha": "d4f78e76e4901e4d3bd6a93d9caf248473ea9041"
     }
   ],
   "discovered_defects": [
@@ -1715,6 +1773,24 @@
       "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
       "fix_commit": "532a0f8d451d64d1eb55edcc211e595abd701319",
       "description": "float(10**400) raised uncaught OverflowError during inbound signal parsing instead of SignalValidationError; numeric-field and raw-byte regressions added"
+    },
+    {
+      "id": "stop-loss-nonfinite-tracker-persistence",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_PENDING_FULL_AUDIT_PENDING",
+      "file": "trading/stop_loss_watcher.py",
+      "test": "tests/test_stop_loss_watcher.py",
+      "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
+      "description": "Nonfinite stop-loss/entry/target could overwrite a valid tracked position with JSON NaN/Infinity, silently disabling stop-loss checks."
+    },
+    {
+      "id": "stop-loss-oversized-corrupt-record-aborts-market-cycle",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_PENDING_FULL_AUDIT_PENDING",
+      "file": "trading/stop_loss_watcher.py",
+      "test": "tests/test_stop_loss_watcher.py",
+      "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
+      "description": "OverflowError from malformed legacy stop-loss value aborted entire market cycle and skipped subsequent positions."
     }
   ],
   "risks": [
