@@ -756,3 +756,63 @@ def test_stop_loss_watcher_oversized_persisted_price_does_not_abort_other_positi
     assert tracker.get_position("KR", "111111") is not None
     assert tracker.get_position("KR", "222222") is None
     dispatcher.dispatch.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "corrupt_record",
+    [
+        None,
+        [],
+        {"market": None, "ticker": "111111", "stop_loss": 90},
+        {"market": 123, "ticker": "111111", "stop_loss": 90},
+    ],
+)
+def test_malformed_persisted_market_record_does_not_block_other_stop_losses(
+    tmp_path, monkeypatch, corrupt_record
+):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+    valid = tracker.get_position("KR", "222222")
+    tracker_path.write_text(
+        json.dumps({"KR:111111": corrupt_record, "KR:222222": valid}),
+        encoding="utf-8",
+    )
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 80}
+    trader.get_holding_quantity.return_value = 0
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True, request_interval_seconds=0, storage_path=tracker_path
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "KR")
+
+    assert watcher.check_stop_loss_once() == []
+    assert tracker.get_position("KR", "222222") is None
+    assert json.loads(tracker_path.read_text(encoding="utf-8"))["KR:111111"] == corrupt_record
+    dispatcher.dispatch.assert_not_called()
+
+
+@pytest.mark.parametrize("invalid_market", [None, 123, []])
+def test_malformed_legacy_list_market_does_not_hide_valid_positions(
+    tmp_path, invalid_market
+):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+    valid = tracker.get_position("KR", "222222")
+    tracker_path.write_text(
+        json.dumps([
+            {"market": invalid_market, "ticker": "111111", "stop_loss": 90},
+            valid,
+        ]),
+        encoding="utf-8",
+    )
+    assert tracker.get_positions("KR") == [valid]
+    assert tracker.get_positions() == [valid]

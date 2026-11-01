@@ -170,8 +170,21 @@ class StopLossTracker:
         if isinstance(data, list):
             result = {}
             for item in data:
-                if isinstance(item, dict) and "market" in item and "ticker" in item:
-                    result[self._key(item["market"], item["ticker"])] = item
+                if not isinstance(item, dict):
+                    logger.error("Skipping malformed legacy stop-loss record")
+                    continue
+                market, ticker = item.get("market"), item.get("ticker")
+                if (
+                    not isinstance(market, str)
+                    or not isinstance(ticker, str)
+                    or not market.strip()
+                    or not ticker.strip()
+                ):
+                    # A single corrupt legacy record must not prevent checks
+                    # for every other valid tracked position.
+                    logger.error("Skipping legacy stop-loss record with invalid market/ticker")
+                    continue
+                result[self._key(market, ticker)] = item
             return result
         raise RuntimeError(
             "Stop-loss tracker has an invalid format; automated stop-loss actions are blocked"
@@ -277,14 +290,21 @@ class StopLossTracker:
             return True
 
     def get_positions(self, market: str | None = None) -> list[dict[str, Any]]:
-        """Return all tracked positions, optionally filtered by market."""
+        """Return valid tracked positions without discarding corrupt records on disk."""
         with FileLock(self.lock_path):
             data = self._load()
-            items = list(data.values())
-        if market:
-            target_market = market.strip().upper()
-            return [item for item in items if item.get("market", "").upper() == target_market]
-        return items
+            items = list(data.items())
+        target_market = market.strip().upper() if market else None
+        valid: list[dict[str, Any]] = []
+        for key, item in items:
+            if not isinstance(item, dict) or not isinstance(item.get("market"), str):
+                # Preserve the raw record for operator reconciliation, but do
+                # not let it abort the entire stop-loss watcher market cycle.
+                logger.error("Skipping malformed stop-loss record at key %s", key)
+                continue
+            if target_market is None or item["market"].strip().upper() == target_market:
+                valid.append(item)
+        return valid
 
     def get_position(self, market: str, ticker: str) -> dict[str, Any] | None:
         key = self._key(market, ticker)
