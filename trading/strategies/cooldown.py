@@ -61,11 +61,17 @@ class CooldownStrategy:
                 # Only a verified pre-acceptance rejection permits retry.
                 items.remove(pending_entry)
                 save_json(self.config.runtime_path, items)
-            elif execution.status == "executed":
-                # Accepted orders count toward cooldown but do not prove fills.
-                # Unknown outcomes retain pending=True indefinitely.
-                pending_entry["pending"] = False
-                save_json(self.config.runtime_path, items)
+            else:
+                # Accepted != filled. Keep both accepted and ambiguous orders
+                # pending across cooldown expiry until authoritative broker
+                # fill/cancel/remaining-quantity reconciliation. Otherwise a
+                # distinct signal ID can submit a duplicate unfilled order.
+                order_id = str(
+                    result.get("order_no") or result.get("broker_order_id") or ""
+                ).strip()
+                if order_id:
+                    pending_entry["broker_order_id"] = order_id
+                    save_json(self.config.runtime_path, items)
             return execution
         finally:
             lock.__exit__(None, None, None)
