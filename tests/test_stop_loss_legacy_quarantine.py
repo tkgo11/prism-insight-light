@@ -135,3 +135,46 @@ def test_normal_json_without_duplicate_keys_remains_actionable(tmp_path):
     tracker.record_position("US", "AAPL", 90, entry_price=100)
     tracker.record_position("US", "MSFT", 80, entry_price=100)
     assert {p["ticker"] for p in tracker.get_positions("US")} == {"AAPL", "MSFT"}
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("stop_loss", True),
+        ("stop_loss", False),
+        ("stop_loss", "NaN"),
+        ("stop_loss", "Infinity"),
+        ("stop_loss", "-Infinity"),
+        ("stop_loss", 0),
+        ("stop_loss", -1),
+        ("stop_loss", "not-a-price"),
+        ("stop_loss", None),
+        ("entry_price", True),
+        ("entry_price", "NaN"),
+        ("target_price", "Infinity"),
+        ("target_price", -1),
+    ],
+)
+def test_invalid_persisted_stop_loss_prices_are_never_actionable(tmp_path, field, value):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    original = json.loads(path.read_text(encoding="utf-8"))
+    original["US:AAPL"][field] = value
+    raw = json.dumps(original)
+    path.write_text(raw, encoding="utf-8")
+
+    # Do not turn corrupt legacy/manual prices into a broker SELL, or erase
+    # the original evidence required for operator reconciliation.
+    assert tracker.get_positions("US") == []
+    assert path.read_text(encoding="utf-8") == raw
+
+
+def test_numeric_string_legacy_stop_loss_remains_actionable(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    saved["US:AAPL"]["stop_loss"] = "90.0"
+    path.write_text(json.dumps(saved), encoding="utf-8")
+    assert [p["ticker"] for p in tracker.get_positions("US")] == ["AAPL"]
