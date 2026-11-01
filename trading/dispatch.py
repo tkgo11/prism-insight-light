@@ -731,6 +731,45 @@ class TradeDispatcher:
                 safety_decision.price_deviation or 0.0,
             )
 
+        # A queued single-account order was checked before entering the broker
+        # lock, but the account configuration may change while waiting for it.
+        # Resolve again at the execution boundary and pass the resolved account
+        # key into the trader. Otherwise a mutable primary/name/index selector
+        # can be resolved a second time to a DIFFERENT account by the broker.
+        # Keep the original 'account is None' ledger condition below: queued
+        # single-account orders must still acquire their durable dedupe claim.
+        order_account = account
+        if account is None and queued_context is not None and queued_context.get("multi_account") is False:
+            expected_scope = hashlib.sha256(
+                self._single_account_execution_selector(signal).encode("utf-8")
+            ).hexdigest()
+            if (
+                queued_context.get("trading_mode") != self.trading_mode
+                or queued_context.get("account_scope") != expected_scope
+            ):
+                return DispatchResult(
+                    "failed", "Queued account scope changed before submission; operator reconciliation required",
+                    signal.signal_type, signal.market,
+                )
+            try:
+                order_account = ka.resolve_account(
+                    svr="vps" if self.trading_mode == "demo" else "prod",
+                    product="01",
+                    market=signal.market.lower(),
+                    account_name=self.account_name,
+                    account_index=self.account_index,
+                )
+                if _account_id(order_account["account_key"]) != queued_context.get("account_id"):
+                    return DispatchResult(
+                        "failed", "Queued KIS account changed before submission; operator reconciliation required",
+                        signal.signal_type, signal.market,
+                    )
+            except Exception:
+                return DispatchResult(
+                    "failed", "Queued KIS account could not be resolved before submission; operator reconciliation required",
+                    signal.signal_type, signal.market,
+                )
+
         identity = None
         if account is None and self.execution_dedupe:
             identity, aliases = execution_identities(
@@ -767,7 +806,7 @@ class TradeDispatcher:
                     strategy.execute(
                         signal,
                         trading_mode=self.trading_mode,
-                        trader_kwargs=self._strategy_trader_kwargs(account),
+                        trader_kwargs=self._strategy_trader_kwargs(order_account),
                     ),
                 )
                 result = DispatchResult(
@@ -776,10 +815,10 @@ class TradeDispatcher:
                     signal.signal_type,
                     signal.market,
                 )
-            elif account is None:
+            elif order_account is None:
                 result = await self._execute_legacy_trade(signal)
             else:
-                result = await self._execute_legacy_trade(signal, account=account)
+                result = await self._execute_legacy_trade(signal, account=order_account)
         except SignalSizingError as exc:
             # Sizing was rejected before broker submission. Never classify it as
             # an ambiguous order (or leave a ledger claim stuck as "unknown").

@@ -213,3 +213,95 @@ async def test_unresolvable_original_account_cannot_be_queued(monkeypatch, tmp_p
     with pytest.raises(ValueError, match="no account configured"):
         await first.dispatch(signal())
     assert first.queue.pending_count() == 0
+
+
+@pytest.mark.asyncio
+async def test_queued_single_account_rechecks_identity_after_scope_check(
+    monkeypatch, tmp_path,
+):
+    """A config change between precheck and order creation cannot redirect an order."""
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+    replay = dispatcher(monkeypatch, tmp_path)
+    assert (await replay.dispatch(signal())).status == "queued"
+    persisted = replay.queue._load()[0]
+    calls = []
+    original = {"account_key": "vps:primary:01", "name": "primary", "product": "01"}
+    changed = {"account_key": "vps:other:01", "name": "other", "product": "01"}
+    resolutions = iter([original, changed])
+    monkeypatch.setattr(
+        "trading.dispatch.ka.resolve_account", lambda **kwargs: next(resolutions),
+    )
+    async def fake_trade(self, order, *, account=None):
+        calls.append(account)
+        return DispatchResult("executed", "mock accepted", order.signal_type, order.market)
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", fake_trade)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    result = await replay.execute_queued_signal({
+        **persisted.signal, "__prism_queue_context": persisted.execution_context,
+    })
+    assert result.status == "failed"
+    assert calls == []
+
+
+@pytest.mark.asyncio
+async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
+    monkeypatch, tmp_path,
+):
+    """A validated account object is forwarded to the broker and ledger still claims."""
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+    replay = dispatcher(monkeypatch, tmp_path)
+    assert (await replay.dispatch(signal())).status == "queued"
+    persisted = replay.queue._load()[0]
+    resolved = {"account_key": "vps:primary:01", "name": "primary", "product": "01"}
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: resolved)
+    calls = []
+    claims = []
+    finals = []
+    replay.execution_dedupe = True
+    monkeypatch.setattr(
+        replay.execution_ledger, "claim",
+        lambda identity, *, aliases=(): (claims.append(identity) or True, None),
+    )
+    monkeypatch.setattr(
+        replay.execution_ledger, "finalize",
+        lambda identity, status: finals.append((identity, status)),
+    )
+    async def fake_trade(self, order, *, account=None):
+        calls.append(account)
+        return DispatchResult("executed", "mock accepted", order.signal_type, order.market)
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", fake_trade)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    result = await replay.execute_queued_signal({
+        **persisted.signal, "__prism_queue_context": persisted.execution_context,
+    })
+    assert result.status == "executed"
+    assert calls == [resolved]
+    assert len(claims) == 1
+    assert finals == [(claims[0], "executed")]
+
+
+@pytest.mark.asyncio
+async def test_queued_single_account_strategy_uses_pinned_account(
+    monkeypatch, tmp_path,
+):
+    """Strategy broker kwargs must also use the verified KIS account key."""
+    from types import SimpleNamespace
+
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+    replay = dispatcher(monkeypatch, tmp_path)
+    assert (await replay.dispatch(signal())).status == "queued"
+    persisted = replay.queue._load()[0]
+    resolved = {"account_key": "vps:primary:01", "name": "primary", "product": "01"}
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: resolved)
+    captured = []
+    class FakeStrategy:
+        async def execute(self, order, *, trading_mode, trader_kwargs):
+            captured.append((trading_mode, trader_kwargs))
+            return SimpleNamespace(status="executed", message="mock accepted")
+    monkeypatch.setattr(replay, "_resolve_strategy", lambda order: FakeStrategy())
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    result = await replay.execute_queued_signal({
+        **persisted.signal, "__prism_queue_context": persisted.execution_context,
+    })
+    assert result.status == "executed"
+    assert captured == [("demo", {"account_key": resolved["account_key"], "product_code": "01"})]
