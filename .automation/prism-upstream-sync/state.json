@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T04:18+09:00",
     "started_at": "2026-11-01T19:18:00Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T04:18+09:00",
-    "last_mutation_commit": "b0994ba01bfffa13ad2b7d58456201e0ad79305e",
-    "last_mutation_at": "2026-11-01T18:24:31.772Z",
-    "result": "IN_PROGRESS",
+    "completed_at": "2026-11-01T19:25:32.497Z",
+    "lock_owner": null,
+    "last_mutation_commit": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
+    "last_mutation_at": "2026-11-01T19:25:32.497Z",
+    "result": "STRATEGY_ENTRY_AND_ACCEPTED_ORDER_FENCES_PATCHED_CI_SUCCESS_AUDIT_BLOCKED",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,7 +19,7 @@
       "source_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "b0994ba01bfffa13ad2b7d58456201e0ad79305e",
+      "pr_head": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
       "pr_number": 42,
       "pr_changed_files": 47,
       "related_manifest_files": 56,
@@ -28,12 +28,7 @@
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41336248665,
-          "status": "completed",
-          "conclusion": "success"
-        },
-        {
-          "id": 41336253111,
+          "id": 41341467447,
           "status": "completed",
           "conclusion": "success"
         }
@@ -53,13 +48,17 @@
         }
       ],
       "commits": [
-        "21bea9e35519dd35e75520255e29bc44a9de4670",
-        "59ed2972eded314f40c16975b37da3a6ca197ad8",
-        "5fa740ed408787bdd2cf6155d0cfc5292543a496",
-        "b0994ba01bfffa13ad2b7d58456201e0ad79305e"
+        "6c1cf8be0d80c0193a826d716d79dbcb42bde29e",
+        "06410c9a444c02bd209a2050b61c6914456a15ef",
+        "330cef1d76ed3df8c8195dc3a43ba0de98249a99",
+        "3b017498a29181c527a4d98760b950c0ab2499c9",
+        "aaaf5fdc8e9120c74c64701ac3574f2734d43f9d",
+        "66bdb6eb6c3db4d09fada8ef94fa0bdd4cba151c",
+        "4001e1568652c573bf8c6a5b6376da28fbc827af",
+        "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
       ],
       "merged": false,
-      "reason": "Pending order fences code+mock tests pass latest-head CI; authoritative KIS fills/cancels and full independent audits remain unverified."
+      "reason": "Code+mock tests passed; no KIS demo or full dependency audit; related/full 0/2."
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T03:17+09:00"
   },
@@ -80,11 +79,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "b0994ba01bfffa13ad2b7d58456201e0ad79305e",
+    "head_sha": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_LATEST_HEAD_CI_SUCCESS_AUDITS_0_OF_2"
+    "status": "DRAFT_CI_SUCCESS_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -117,13 +116,13 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "EXPANDED_STRATEGY_ORDER_LIFECYCLE_DEPENDENCIES_NOT_FULLY_AUDITED",
+    "status": "UPDATED_STRATEGY_ORDER_FENCES_REQUIRES_FULL_DEPENDENCY_AUDIT",
     "checksum": null,
-    "scope_estimate": "56 identified related files; full dependency closure incomplete",
+    "scope_estimate": "56 known related files; closure not yet proved, 0 fully audited",
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "03c806fe90b4d9809ddd2027e118cdc4379fb40f",
+        "blob_sha": "d8f28701329b8f8b7f43a55c03cc7ed85c880366",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -208,7 +207,7 @@
       },
       {
         "path": "tests/test_signal_exit_strategies.py",
-        "blob_sha": "8769cf34f10d812343fa6fd686cc181c3a049e12",
+        "blob_sha": "4cdca879c4a765dfe824809a7ef5f21203626cf0",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -253,7 +252,7 @@
       },
       {
         "path": "tests/test_upstream_strategy_compatibility.py",
-        "blob_sha": "03d918ab7bb8939dc3179dc07df9299eaec51850",
+        "blob_sha": "745d50e17615021045371f5e7fb694c7c8997fe8",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -338,7 +337,7 @@
       },
       {
         "path": "trading/strategies/cooldown.py",
-        "blob_sha": "89b7e0d0898fbc0fb4f234aa01e233265984fca3",
+        "blob_sha": "303e24aa9a561580058e91d0e82b894df57955c8",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -378,7 +377,7 @@
       },
       {
         "path": "trading/strategies/signal_trailing_stop.py",
-        "blob_sha": "f315e386ef3bd99591f55ce1067c628d448aee00",
+        "blob_sha": "796593dc47c9202b5c0b0e429006265fb5de0157",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -398,7 +397,7 @@
       },
       {
         "path": "tests/test_cooldown_pending_reconciliation.py",
-        "blob_sha": "136949e7405c403ef2f45ef8e9acefcb2eb9f595",
+        "blob_sha": "24afa924da611e2ccdcb14cb0dd24087669a75d0",
         "status": "NOT_FULLY_AUDITED"
       }
     ],
@@ -408,16 +407,17 @@
       "trading/strategies/cooldown.py",
       "tests/test_upstream_strategy_compatibility.py",
       "tests/test_signal_exit_strategies.py",
-      "tests/test_cooldown_pending_reconciliation.py"
+      "tests/test_cooldown_pending_reconciliation.py",
+      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
     ]
   },
   "full_manifest": {
-    "status": "RESET_AFTER_CODE_CHANGE_NOT_FULLY_AUDITED",
+    "status": "RESET_AFTER_LATEST_CODE_CHANGE_NOT_FULLY_AUDITED",
     "tracked_tree_entries_on_pr": 185,
     "tracked_blob_files_on_pr": 161,
-    "sha": "064ba948490f04c42dd31465d89a0c114316b7b2",
+    "sha": null,
     "files_checked": 0,
-    "checksum": "064ba948490f04c42dd31465d89a0c114316b7b2",
+    "checksum": null,
     "checksum_kind": "git-tree-sha1",
     "files": [
       {
@@ -532,7 +532,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "03c806fe90b4d9809ddd2027e118cdc4379fb40f",
+        "blob_sha": "d8f28701329b8f8b7f43a55c03cc7ed85c880366",
         "status": "NOT_REVIEWED"
       },
       {
@@ -607,7 +607,7 @@
       },
       {
         "path": "tests/test_cooldown_pending_reconciliation.py",
-        "blob_sha": "136949e7405c403ef2f45ef8e9acefcb2eb9f595",
+        "blob_sha": "24afa924da611e2ccdcb14cb0dd24087669a75d0",
         "status": "NOT_REVIEWED"
       },
       {
@@ -717,7 +717,7 @@
       },
       {
         "path": "tests/test_signal_exit_strategies.py",
-        "blob_sha": "8769cf34f10d812343fa6fd686cc181c3a049e12",
+        "blob_sha": "4cdca879c4a765dfe824809a7ef5f21203626cf0",
         "status": "NOT_REVIEWED"
       },
       {
@@ -777,7 +777,7 @@
       },
       {
         "path": "tests/test_upstream_strategy_compatibility.py",
-        "blob_sha": "03d918ab7bb8939dc3179dc07df9299eaec51850",
+        "blob_sha": "745d50e17615021045371f5e7fb694c7c8997fe8",
         "status": "NOT_REVIEWED"
       },
       {
@@ -967,7 +967,7 @@
       },
       {
         "path": "trading/strategies/cooldown.py",
-        "blob_sha": "89b7e0d0898fbc0fb4f234aa01e233265984fca3",
+        "blob_sha": "303e24aa9a561580058e91d0e82b894df57955c8",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1012,7 +1012,7 @@
       },
       {
         "path": "trading/strategies/signal_trailing_stop.py",
-        "blob_sha": "f315e386ef3bd99591f55ce1067c628d448aee00",
+        "blob_sha": "796593dc47c9202b5c0b0e429006265fb5de0157",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1937,7 +1937,36 @@
         "status": "completed",
         "conclusion": "success"
       }
-    ]
+    ],
+    "2026-11-02T04:18+09:00": {
+      "head_sha": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow_runs": [
+        {
+          "id": 41341467447,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "linux_pytest": "933 passed",
+      "windows_pytest": "135 passed",
+      "docker": "success",
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        },
+        {
+          "context": "qlty usage",
+          "state": "pending"
+        }
+      ]
+    }
   },
   "upstream_changes": [
     {
@@ -3319,18 +3348,71 @@
         }
       ],
       "notes": "Prior intermediate CI failed due to outdated expectation of full SELL acceptance clearing trailing state; same-slot regression test corrected. Full repository/local KIS demo tests not run; related/full audits 0/2."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T04:18+09:00",
+      "kind": "ROOT_CAUSE_BUNDLE_PATCHED_CI_SUCCESS_NO_AUDIT_PASS",
+      "head_sha": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
+      "related_pass": false,
+      "full_pass": false,
+      "root_cause_id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
+      "commits": [
+        "6c1cf8be0d80c0193a826d716d79dbcb42bde29e",
+        "06410c9a444c02bd209a2050b61c6914456a15ef",
+        "330cef1d76ed3df8c8195dc3a43ba0de98249a99",
+        "3b017498a29181c527a4d98760b950c0ab2499c9",
+        "aaaf5fdc8e9120c74c64701ac3574f2734d43f9d",
+        "66bdb6eb6c3db4d09fada8ef94fa0bdd4cba151c",
+        "4001e1568652c573bf8c6a5b6376da28fbc827af",
+        "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
+      ],
+      "changed_file_blobs": {
+        "trading/strategies/signal_trailing_stop.py": "796593dc47c9202b5c0b0e429006265fb5de0157",
+        "trading/strategies/cooldown.py": "303e24aa9a561580058e91d0e82b894df57955c8",
+        "tests/test_signal_exit_strategies.py": "4cdca879c4a765dfe824809a7ef5f21203626cf0",
+        "tests/test_upstream_strategy_compatibility.py": "745d50e17615021045371f5e7fb694c7c8997fe8",
+        "tests/test_cooldown_pending_reconciliation.py": "24afa924da611e2ccdcb14cb0dd24087669a75d0",
+        "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md": "d8f28701329b8f8b7f43a55c03cc7ed85c880366"
+      },
+      "workflow_runs": [
+        {
+          "id": 41341467447,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "linux_pytest_passed": 933,
+      "windows_pytest_passed": 135,
+      "docker_build": "success",
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        },
+        {
+          "context": "qlty usage",
+          "state": "pending"
+        }
+      ],
+      "local_full_pytest": "NOT_RUN",
+      "kis_demo": "NOT_RUN",
+      "notes": "Pre-submit BUY/untracked SELL and accepted cooldown pending protections fixed in same slot; related/full manifest coverage incomplete; no PASS."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Related 56-file dependency closure and file-by-file audit incomplete (0/2)",
-    "Full 161-file repository audit incomplete (0/2)",
-    "Authoritative KIS demo order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation not executed (no authorized demo credentials/environment)",
-    "Strategy runtime pending exit/cooldown reconciliation requires verified broker status; multi-account state partitioning remains unverified",
-    "No independent submitted reviews; branch protection API returned 403; qlty usage pending (requiredness unverified)"
+    "Related 56-file known dependency scope not fully closed or audited (0/2); changed files have current blob SHAs but are not independently fully audited.",
+    "Full 161-file tracked repository audit not completed (0/2); final tree SHA/checksum not independently rederived.",
+    "No authorized KIS demo credentials/environment for order-ID, partial-fill, cancel, remaining quantity, account-specific reconciliation; no live trading.",
+    "Additional strategy order lifecycle paths and multi-account runtime-state partitioning require independent inspection; pending flags need verified operator/broker reconciliation.",
+    "No submitted independent approval; branch-protection requiredness not independently verified; qlty usage status pending."
   ],
-  "next_action": "Complete strategy/dispatcher/KIS broker order-ID and fill/cancel reconciliation dependency closure, verify multi-account pending state separation with mocks, then independent related and full file-by-file audits. Keep Draft and PASS 0/2·0/2.",
+  "next_action": "Audit all strategy presubmit paths and KIS KR/US broker order-ID/fill/cancel state machine and multi-account partitioning with mock tests; secure authorized demo environment for non-live integration; then independently complete 56-file related and 161-file full audits across distinct slots. Keep Draft, PASS 0/2·0/2.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -3597,6 +3679,19 @@
       "full_pass": false,
       "reason": "Two strategy-order-fence subcases patched across four commits, latest-head Linux 920/Windows/Docker CI success, but dependency audits and KIS demo blocked. PASS 0/2 and 0/2.",
       "manifest_tree_sha": "064ba948490f04c42dd31465d89a0c114316b7b2"
+    },
+    {
+      "slot": "2026-11-02T04:18+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T04:18+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Same root cause expanded across trailing BUY, untracked SELL and cooldown accepted orders; mock tests, Linux 933/Windows 135 and Docker CI success; KIS demo and full independent audits not run. PASS 0/2·0/2.",
+      "manifest_tree_sha": null
     }
   ],
   "discovered_defects": [
@@ -4056,6 +4151,103 @@
         "kis_demo": "NOT_RUN",
         "local_full_pytest": "NOT_RUN"
       }
+    },
+    {
+      "id": "trailing-buy-accepted-or-unknown-unfenced-2026-11-02",
+      "description": "Signal-trailing-stop BUY submitted before durable state, allowing lost-response/accepted-but-unfilled distinct-signal BUY and unsafe SELL follow-up. Now persist entry_pending before broker call, retain until verified fill reconciliation, preserve previous high watermark, store order ID, restore on proven rejection.",
+      "paths": [
+        "trading/strategies/signal_trailing_stop.py",
+        "tests/test_upstream_strategy_compatibility.py",
+        "tests/test_signal_exit_strategies.py"
+      ],
+      "reproduction": "Source execute_order preceded _save_record and wrote only on status=executed; mock accepted/unknown/timeout/restart/partial-fill tests now assert pending fence.",
+      "root_cause_id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "fix_commits": [
+        "6c1cf8be0d80c0193a826d716d79dbcb42bde29e",
+        "06410c9a444c02bd209a2050b61c6914456a15ef",
+        "330cef1d76ed3df8c8195dc3a43ba0de98249a99",
+        "3b017498a29181c527a4d98760b950c0ab2499c9",
+        "aaaf5fdc8e9120c74c64701ac3574f2734d43f9d",
+        "66bdb6eb6c3db4d09fada8ef94fa0bdd4cba151c",
+        "4001e1568652c573bf8c6a5b6376da28fbc827af",
+        "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
+      ],
+      "validation": {
+        "github_actions": [
+          41341467447
+        ],
+        "linux": "933 passed",
+        "windows": "135 passed",
+        "docker": "success",
+        "local_full_pytest": "NOT_RUN",
+        "kis_demo": "NOT_RUN"
+      }
+    },
+    {
+      "id": "trailing-untracked-sell-unfenced-2026-11-02",
+      "description": "Signal-trailing-stop require_tracked_entry=False SELL previously passed directly to broker without any durable pending fence; a new signal could repeat an unfilled exit. Now persist synthetic exit_pending, block across restart, remove only after proven rejection.",
+      "paths": [
+        "trading/strategies/signal_trailing_stop.py",
+        "tests/test_upstream_strategy_compatibility.py"
+      ],
+      "reproduction": "Source untracked SELL branch invoked execute_order without state mutation; mock accepted/unknown/timeout/rejection/disk-failure tests verify safe block.",
+      "root_cause_id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "fix_commits": [
+        "6c1cf8be0d80c0193a826d716d79dbcb42bde29e",
+        "06410c9a444c02bd209a2050b61c6914456a15ef",
+        "330cef1d76ed3df8c8195dc3a43ba0de98249a99",
+        "3b017498a29181c527a4d98760b950c0ab2499c9",
+        "aaaf5fdc8e9120c74c64701ac3574f2734d43f9d",
+        "66bdb6eb6c3db4d09fada8ef94fa0bdd4cba151c",
+        "4001e1568652c573bf8c6a5b6376da28fbc827af",
+        "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
+      ],
+      "validation": {
+        "github_actions": [
+          41341467447
+        ],
+        "linux": "933 passed",
+        "windows": "135 passed",
+        "docker": "success",
+        "local_full_pytest": "NOT_RUN",
+        "kis_demo": "NOT_RUN"
+      }
+    },
+    {
+      "id": "cooldown-accepted-order-expired-before-fill-2026-11-02",
+      "description": "Cooldown previously changed pending=False immediately after success=True, so time expiry allowed a distinct signal while the first accepted order might remain unfilled. Now keep pending=True for accepted and unknown outcomes until independent order/fill/cancel reconciliation; preserve broker order ID.",
+      "paths": [
+        "trading/strategies/cooldown.py",
+        "tests/test_cooldown_pending_reconciliation.py"
+      ],
+      "reproduction": "Source success branch set pending=False without fill inquiry; mock accepted order after 10/30 days remains blocked, with manual simulated reconciliation enabling later order.",
+      "root_cause_id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "fix_commits": [
+        "6c1cf8be0d80c0193a826d716d79dbcb42bde29e",
+        "06410c9a444c02bd209a2050b61c6914456a15ef",
+        "330cef1d76ed3df8c8195dc3a43ba0de98249a99",
+        "3b017498a29181c527a4d98760b950c0ab2499c9",
+        "aaaf5fdc8e9120c74c64701ac3574f2734d43f9d",
+        "66bdb6eb6c3db4d09fada8ef94fa0bdd4cba151c",
+        "4001e1568652c573bf8c6a5b6376da28fbc827af",
+        "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
+      ],
+      "validation": {
+        "github_actions": [
+          41341467447
+        ],
+        "linux": "933 passed",
+        "windows": "135 passed",
+        "docker": "success",
+        "local_full_pytest": "NOT_RUN",
+        "kis_demo": "NOT_RUN"
+      }
     }
   ],
   "risks": [
@@ -4236,18 +4428,21 @@
     },
     {
       "root_cause_id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
-      "description": "Strategy runtime protections must be durable before a broker request, and broker acceptance/unknown outcome cannot be treated as a confirmed fill or safe retry.",
+      "description": "Durable per-instrument strategy fences before broker submission for trailing BUY, tracked/untracked SELL and cooldown BUY; accepted/unknown orders remain pending until verified fill/cancel reconciliation.",
       "defect_ids": [
         "trailing-exit-acceptance-cleared-protection-2026-11-02",
-        "cooldown-ambiguous-order-unfenced-2026-11-02"
+        "cooldown-ambiguous-order-unfenced-2026-11-02",
+        "trailing-buy-accepted-or-unknown-unfenced-2026-11-02",
+        "trailing-untracked-sell-unfenced-2026-11-02",
+        "cooldown-accepted-order-expired-before-fill-2026-11-02"
       ],
       "classification": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "last_checked_head": "b0994ba01bfffa13ad2b7d58456201e0ad79305e"
+      "last_checked_head": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "b0994ba01bfffa13ad2b7d58456201e0ad79305e",
-    "scope": "Strategy pending-order fences across trailing-stop and cooldown; broader broker fill/cancel lifecycle still unresolved",
+    "head_sha": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
+    "scope": "Presubmit and accepted-not-filled strategy lifecycle: trailing BUY/tracked+untracked SELL, cooldown, restart/partial-fill; other strategies and KIS reconciliation still require audit.",
     "entries": [
       {
         "contract": "Corrupt/duplicate/nonfinite runtime state cannot be silently cleared",
@@ -4302,6 +4497,24 @@
         "path": "KR/US KIS order query and all strategy/dispatcher/stop-loss state transitions",
         "evidence": "No authorized demo credentials or integration test environment; not proven",
         "status": "BLOCKED_DEMO_AND_FULL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Trailing BUY accepted/unknown/partial fill != confirmed position; do not permit new BUY/SELL",
+        "path": "signal_trailing_stop.execute -> _mark_entry_pending -> common.execute_order -> _record_entry_order_id/_restore_entry_after_rejection",
+        "evidence": "Pre-fix source ordering; mock accepted, timeout, unknown, partial-fill, verified rejection, restart and disk-full tests; latest CI 933 Linux/135 Windows",
+        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Untracked trailing SELL must be idempotently fenced before broker call",
+        "path": "signal_trailing_stop._handle_sell(require_tracked_entry=False) -> _mark_untracked_exit_pending -> broker -> reconciliation",
+        "evidence": "Mock accepted/unknown/timeout/rejection/write-failure/restart tests; CI passed",
+        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Cooldown accepted order cannot expire before authoritative fill/cancel verification",
+        "path": "cooldown.execute -> pending ledger -> broker accepted/unknown -> expiry/restart -> operator reconciliation",
+        "evidence": "Mock accepted order with/without order ID, 10/30-day expiry, verified rejection and simulated manual reconciliation; CI passed",
+        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
       }
     ]
   },
@@ -4371,12 +4584,20 @@
       "id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
       "severity": "HIGH",
       "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "description": "Durable pending fences added to trailing-stop and cooldown, but authoritative KIS fill/cancel reconciliation and multi-account strategy state partitioning remain unverified",
+      "description": "Trailing BUY/untracked SELL and cooldown accepted-order fences patched; other strategy paths, authoritative KIS fill/cancel/remaining quantity and account-scoped state remain unverified.",
       "fix_commits": [
         "21bea9e35519dd35e75520255e29bc44a9de4670",
         "59ed2972eded314f40c16975b37da3a6ca197ad8",
         "5fa740ed408787bdd2cf6155d0cfc5292543a496",
-        "b0994ba01bfffa13ad2b7d58456201e0ad79305e"
+        "b0994ba01bfffa13ad2b7d58456201e0ad79305e",
+        "6c1cf8be0d80c0193a826d716d79dbcb42bde29e",
+        "06410c9a444c02bd209a2050b61c6914456a15ef",
+        "330cef1d76ed3df8c8195dc3a43ba0de98249a99",
+        "3b017498a29181c527a4d98760b950c0ab2499c9",
+        "aaaf5fdc8e9120c74c64701ac3574f2734d43f9d",
+        "66bdb6eb6c3db4d09fada8ef94fa0bdd4cba151c",
+        "4001e1568652c573bf8c6a5b6376da28fbc827af",
+        "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
       ]
     }
   ]
