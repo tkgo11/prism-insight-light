@@ -39,6 +39,7 @@ class FakeDomesticTrader:
             "quantity": quantity,
             "estimated_amount": quantity * 50000,
             "message": "ok" if success else "rejected",
+            "outcome_unknown": False,
         }
 
     async def async_sell_stock(self, stock_code, timeout=30.0, limit_price=None):
@@ -115,6 +116,7 @@ async def test_multi_account_aggregate_counts_only_executed_quantities(monkeypat
             if self.account_key == "vps:kr-bad:01":
                 return {
                     "success": False,
+                    "outcome_unknown": False,
                     "stock_code": stock_code,
                     "quantity": 7,
                     "estimated_amount": 350000,

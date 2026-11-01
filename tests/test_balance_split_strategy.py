@@ -394,7 +394,7 @@ async def test_us_balance_split_does_not_treat_truthy_non_true_success_as_execut
     class DeceptiveUSTrader(FakeUSTrader):
         async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
             self.buy_calls.append((ticker, buy_amount, limit_price))
-            return {"success": "false", "message": "broker rejected the order"}
+            return {"success": "false", "outcome_unknown": False, "message": "broker rejected the order"}
 
     trader = DeceptiveUSTrader(available_amount=900.0)
     strategy = balance_split_strategy(split_count=2)

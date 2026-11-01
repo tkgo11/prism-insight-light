@@ -99,7 +99,7 @@ def classify_broker_result(result: Any) -> str:
         return "failed"
     # Compatibility for older KIS wrappers exposing the documented APBK
     # business rejection code in their message without outcome_unknown.
-    if re.search(r"\bAPBK[0-9]{4}\b", text):
+    if re.search(r"\bapbk[0-9]{4}\b", text):
         return "failed"
     return "unknown"
 
