@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T02:20+09:00",
-    "started_at": "2026-11-01T17:20:31Z",
-    "completed_at": "2026-11-01T17:27:49.188Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T03:17+09:00",
+    "started_at": "2026-11-01T18:17:33Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T03:17+09:00",
     "last_mutation_commit": "645816c9c829f199979b745467030c833cb9adb9",
     "last_mutation_at": "2026-11-01T17:27:49.188Z",
-    "result": "TWO_STRATEGY_STATE_SUBCASES_PATCHED_LATEST_HEAD_CI_SUCCESS_NO_AUDIT_PASS",
+    "result": "RUNNING_PREAUDIT",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -59,7 +59,7 @@
       "merged": false,
       "reason": "Strategy state corruption fail-closed fixes validated in CI, but KIS order/fill reconciliation and independent full audits not completed."
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T01:15+09:00"
+    "prior_run_id": "prism-sync-hourly-2026-11-02T02:20+09:00"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
