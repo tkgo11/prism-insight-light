@@ -71,10 +71,13 @@ def classify_broker_result(result: Any) -> str:
 
     if not isinstance(result, dict):
         return "unknown"
-    if result.get("success") is True:
-        return "executed"
+    # A broker outcome explicitly marked ambiguous must never be promoted to
+    # executed, even if an upstream wrapper also set a contradictory success flag.
+    # The durable ledger must preserve the unresolved state for reconciliation.
     if result.get("outcome_unknown") is True:
         return "unknown"
+    if result.get("success") is True:
+        return "executed"
 
     # A broker order id means the request may have been accepted even when a
     # downstream parsing/status flag says otherwise. Never auto-retry it.
