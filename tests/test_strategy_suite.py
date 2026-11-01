@@ -277,6 +277,54 @@ def test_limit_buffer_uses_automatic_krx_tick_rounding():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("risk_budget", "max_position", "stop_loss"),
+    [
+        (25, 50, 101),  # Unusable stop cannot bypass an explicit position cap.
+        (1, 0, 90),     # Usable risk budget is too small for one whole share.
+        (25, 50, 99),  # Position cap is below the entry share price.
+        (0, 50, 99),   # A cap without calculable risk sizing is not a default.
+    ],
+)
+async def test_risk_bracket_constraints_never_fall_back_to_broker_default(
+    tmp_path, risk_budget, max_position, stop_loss
+):
+    config = RiskBracketStrategyConfig.from_mapping({
+        "name": "risk_bracket",
+        "risk_amount_usd": risk_budget,
+        "max_position_amount_usd": max_position,
+    })
+    strategy = RiskBracketStrategy(config=config)
+    strategy.metadata_path = tmp_path / "risk.json"
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "stop_loss": stop_loss,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "rejected"
+    assert FakeUSTrader.calls == []
+    assert not strategy.metadata_path.exists()
+
+
+@pytest.mark.asyncio
+async def test_risk_bracket_valid_cap_and_upstream_fraction_still_execute(tmp_path):
+    config = RiskBracketStrategyConfig.from_mapping({
+        "name": "risk_bracket",
+        "risk_amount_usd": 20,
+        "max_position_amount_usd": 250,
+    })
+    strategy = RiskBracketStrategy(config=config)
+    strategy.metadata_path = tmp_path / "risk.json"
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "stop_loss": 90, "position_fraction": 0.5,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "executed"
+    assert FakeUSTrader.calls == [("buy", "AAPL", 100.0, 100.0)]
+
+
+@pytest.mark.asyncio
 async def test_risk_bracket_falls_back_when_stop_is_not_usable(tmp_path):
     config = RiskBracketStrategyConfig.from_mapping({"name": "risk_bracket", "risk_amount_usd": 25})
     strategy = RiskBracketStrategy(config=config)
