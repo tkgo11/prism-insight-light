@@ -8,8 +8,8 @@
     "started_at": "2026-11-01T20:24:20Z",
     "completed_at": null,
     "lock_owner": "prism-sync-hourly-2026-11-02T05:24+09:00",
-    "last_mutation_commit": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
-    "last_mutation_at": "2026-11-01T19:25:32.497Z",
+    "last_mutation_commit": "d1a1996c9988ca436b297e98580e262a4be2a0a5",
+    "last_mutation_at": "2026-11-01T20:24:20Z",
     "result": "IN_PROGRESS",
     "pr_comment_id": 6559241549,
     "last_report": {
@@ -80,11 +80,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
+    "head_sha": "d1a1996c9988ca436b297e98580e262a4be2a0a5",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_CI_SUCCESS_AUDITS_0_OF_2"
+    "status": "DRAFT_NEW_HEAD_CI_PENDING_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -117,9 +117,9 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "UPDATED_STRATEGY_ORDER_FENCES_REQUIRES_FULL_DEPENDENCY_AUDIT",
+    "status": "EXPANDED_RISK_BRACKET_CAP_DEPENDENCY_SCOPE_NOT_FULLY_AUDITED",
     "checksum": null,
-    "scope_estimate": "56 known related files; closure not yet proved, 0 fully audited",
+    "scope_estimate": "57 identified related files; full dependency closure incomplete",
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
@@ -144,6 +144,11 @@
       {
         "path": "tests/test_balance_split_strategy.py",
         "blob_sha": "6e3c9b1bbd2c6def62a222cb2f9328c6d4e50a2d",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "tests/test_cooldown_pending_reconciliation.py",
+        "blob_sha": "24afa924da611e2ccdcb14cb0dd24087669a75d0",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -238,7 +243,7 @@
       },
       {
         "path": "tests/test_strategy_suite.py",
-        "blob_sha": "845820ae164d18ae872ef40dbecdef4f45eba315",
+        "blob_sha": "0ee5366fad4d403429458cace958ed4473d6c134",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -322,6 +327,11 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "trading/STRATEGIES.md",
+        "blob_sha": "6cf6f7c6166a71b07644851e38e524b0074a80fd",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
         "path": "trading/strategies/balance_split.py",
         "blob_sha": "a3e3c7375f17788325451b45e4212866930d3596",
         "status": "NOT_FULLY_AUDITED"
@@ -358,7 +368,7 @@
       },
       {
         "path": "trading/strategies/risk_bracket.py",
-        "blob_sha": "0776ccc1aacb927fce2f7a8360ff48d41ba2a326",
+        "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -395,11 +405,6 @@
         "path": "webui/services/trade_service.py",
         "blob_sha": "fc70caf328b37cca66b47c7024bb7b9cf2524de6",
         "status": "NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "tests/test_cooldown_pending_reconciliation.py",
-        "blob_sha": "24afa924da611e2ccdcb14cb0dd24087669a75d0",
-        "status": "NOT_FULLY_AUDITED"
       }
     ],
     "checked_files": 0,
@@ -413,7 +418,7 @@
     ]
   },
   "full_manifest": {
-    "status": "RESET_AFTER_LATEST_CODE_CHANGE_NOT_FULLY_AUDITED",
+    "status": "RESET_AFTER_RISK_BRACKET_CODE_CHANGE_NOT_FULLY_AUDITED",
     "tracked_tree_entries_on_pr": 185,
     "tracked_blob_files_on_pr": 161,
     "sha": null,
@@ -753,7 +758,7 @@
       },
       {
         "path": "tests/test_strategy_suite.py",
-        "blob_sha": "845820ae164d18ae872ef40dbecdef4f45eba315",
+        "blob_sha": "0ee5366fad4d403429458cace958ed4473d6c134",
         "status": "NOT_REVIEWED"
       },
       {
@@ -848,7 +853,7 @@
       },
       {
         "path": "trading/STRATEGIES.md",
-        "blob_sha": "d10272c87f13f3a42fd199ed1de5f4e9b898279d",
+        "blob_sha": "6cf6f7c6166a71b07644851e38e524b0074a80fd",
         "status": "NOT_REVIEWED"
       },
       {
@@ -993,7 +998,7 @@
       },
       {
         "path": "trading/strategies/risk_bracket.py",
-        "blob_sha": "0776ccc1aacb927fce2f7a8360ff48d41ba2a326",
+        "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf",
         "status": "NOT_REVIEWED"
       },
       {
@@ -3407,13 +3412,13 @@
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Related 56-file known dependency scope not fully closed or audited (0/2); changed files have current blob SHAs but are not independently fully audited.",
-    "Full 161-file tracked repository audit not completed (0/2); final tree SHA/checksum not independently rederived.",
-    "No authorized KIS demo credentials/environment for order-ID, partial-fill, cancel, remaining quantity, account-specific reconciliation; no live trading.",
-    "Additional strategy order lifecycle paths and multi-account runtime-state partitioning require independent inspection; pending flags need verified operator/broker reconciliation.",
-    "No submitted independent approval; branch-protection requiredness not independently verified; qlty usage status pending."
+    "57-file known dependency scope not fully audited; manifest closure incomplete; related PASS 0/2.",
+    "Full 161-file repository audit not completed; full PASS 0/2.",
+    "No authorized KIS demo credentials/environment for order-ID, partial-fill, cancel, remaining quantity and account-specific reconciliation; no live trading.",
+    "Current PR HEAD CI in progress; independent review/branch-protection requirements not fully verified; qlty usage pending.",
+    "Multi-account runtime-state partitioning and strategy order lifecycle paths need independent inspection."
   ],
-  "next_action": "Audit all strategy presubmit paths and KIS KR/US broker order-ID/fill/cancel state machine and multi-account partitioning with mock tests; secure authorized demo environment for non-live integration; then independently complete 56-file related and 161-file full audits across distinct slots. Keep Draft, PASS 0/2·0/2.",
+  "next_action": "Verify latest HEAD CI and inspect risk-bracket call graph plus all configured strategy cap paths; complete authoritative mock broker lifecycle and 57-file related/161-file full audits across distinct slots. Keep Draft and 0/2·0/2.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -3693,6 +3698,18 @@
       "full_pass": false,
       "reason": "Same root cause expanded across trailing BUY, untracked SELL and cooldown accepted orders; mock tests, Linux 933/Windows 135 and Docker CI success; KIS demo and full independent audits not run. PASS 0/2·0/2.",
       "manifest_tree_sha": null
+    },
+    {
+      "slot": "2026-11-02T05:24+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T05:24+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "d1a1996c9988ca436b297e98580e262a4be2a0a5",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Verified hard-cap fallback corrected; current-head CI pending; dependency closure and KIS demo missing; code changed, reset both counters"
     }
   ],
   "discovered_defects": [
@@ -4249,6 +4266,33 @@
         "local_full_pytest": "NOT_RUN",
         "kis_demo": "NOT_RUN"
       }
+    },
+    {
+      "id": "risk-bracket-hard-cap-and-subshare-bypass-2026-11-02",
+      "root_cause_id": "RC-RISK-BRACKET-CONSTRAINT-FALLBACK",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_PENDING_AUDIT_PENDING",
+      "description": "When risk budget/stop did not yield positive whole-share notional, RiskBracketStrategy passed buy_amount=None despite explicit max_position cap or valid but insufficient risk budget; broker default could bypass limits. Now reject before broker call.",
+      "paths": [
+        "trading/strategies/risk_bracket.py",
+        "tests/test_strategy_suite.py",
+        "trading/STRATEGIES.md"
+      ],
+      "reproduction": "Verified original source arithmetic: price=100, stop=101, risk=25, max_position=50 -> submitted_amount=None; price=100, stop=90, risk=1 -> None. Four parameterized no-submit regressions and one valid upstream-fraction case added.",
+      "fix_commits": [
+        "c8a69a53a2427be74467ceb314d58a3f776a5d11",
+        "304655ff22ef4e467cfcd320f16525332e11b073",
+        "d1a1996c9988ca436b297e98580e262a4be2a0a5"
+      ],
+      "validation": {
+        "local_isolated_arithmetic": "PASS",
+        "github_actions": [
+          41346890459
+        ],
+        "latest_head_ci": "IN_PROGRESS",
+        "kis_demo": "NOT_RUN",
+        "full_related_audit": "NOT_DONE"
+      }
     }
   ],
   "risks": [
@@ -4439,10 +4483,19 @@
       ],
       "classification": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
       "last_checked_head": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
+    },
+    {
+      "root_cause_id": "RC-RISK-BRACKET-CONSTRAINT-FALLBACK",
+      "description": "Risk-bracket hard position caps and usable per-share risk budgets silently fell back to unconstrained broker defaults or sub-share orders",
+      "defect_ids": [
+        "risk-bracket-hard-cap-and-subshare-bypass-2026-11-02"
+      ],
+      "classification": "CODE_PATCHED_CI_PENDING_AUDIT_PENDING",
+      "last_checked_head": "d1a1996c9988ca436b297e98580e262a4be2a0a5"
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
+    "head_sha": "d1a1996c9988ca436b297e98580e262a4be2a0a5",
     "scope": "Presubmit and accepted-not-filled strategy lifecycle: trailing BUY/tracked+untracked SELL, cooldown, restart/partial-fill; other strategies and KIS reconciliation still require audit.",
     "entries": [
       {
@@ -4516,6 +4569,12 @@
         "path": "cooldown.execute -> pending ledger -> broker accepted/unknown -> expiry/restart -> operator reconciliation",
         "evidence": "Mock accepted order with/without order ID, 10/30-day expiry, verified rejection and simulated manual reconciliation; CI passed",
         "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Configured risk-bracket hard cap or usable positive risk budget cannot become broker-default BUY when less than one whole share can be funded",
+        "path": "risk_bracket.execute -> common.execute_order -> KIS KR/US BUY",
+        "evidence": "Original arithmetic reproducer: cap=50, price=100, invalid stop -> buy_amount=None; four mock-trader no-submit tests plus valid fractional case committed; CI pending",
+        "status": "CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE"
       }
     ]
   },
@@ -4599,6 +4658,16 @@
         "66bdb6eb6c3db4d09fada8ef94fa0bdd4cba151c",
         "4001e1568652c573bf8c6a5b6376da28fbc827af",
         "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
+      ]
+    },
+    {
+      "id": "RC-RISK-BRACKET-CONSTRAINT-FALLBACK",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_PENDING_AUDIT_PENDING",
+      "description": "Risk-bracket hard caps and positive per-unit risk budgets cannot silently fall back to unconstrained broker default",
+      "fix_commits": [
+        "c8a69a53a2427be74467ceb314d58a3f776a5d11",
+        "304655ff22ef4e467cfcd320f16525332e11b073"
       ]
     }
   ]
