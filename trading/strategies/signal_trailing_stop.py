@@ -96,9 +96,12 @@ class SignalTrailingStopStrategy:
             # A broker-accepted SELL is not a fill. Until an operator or an
             # authoritative fill/remaining-quantity reconciliation resolves it,
             # no new BUY or SELL may rely on this stale high-watermark state.
-            if record is not None and record.get("exit_pending") is True:
+            if record is not None and (
+                record.get("exit_pending") is True
+                or record.get("entry_pending") is True
+            ):
                 raise RuntimeError(
-                    "Signal trailing-stop has an unresolved broker exit; "
+                    "Signal trailing-stop has an unresolved broker entry or exit; "
                     "operator reconciliation required before new orders"
                 )
             if signal.signal_type == "BUY":
@@ -141,6 +144,8 @@ class SignalTrailingStopStrategy:
                 or key in seen
                 or isinstance(price, bool)
                 or ("exit_pending" in item and item["exit_pending"] is not True)
+                or ("entry_pending" in item and item["entry_pending"] is not True)
+                or (item.get("entry_pending") is True and item.get("exit_pending") is True)
             ):
                 raise RuntimeError(
                     "Signal trailing-stop state is ambiguous; operator reconciliation required"
@@ -166,6 +171,15 @@ class SignalTrailingStopStrategy:
         trading_mode: str,
         trader_kwargs: dict[str, Any] | None,
     ) -> StrategyExecution:
+        # An accepted BUY is not a fill. Fence the *instrument*, not only the
+        # signal ID, before the broker call. Otherwise a lost response or a
+        # process crash permits a second BUY with a different signal ID.
+        previous = dict(record) if record is not None else None
+        high_price = max(
+            float(signal.price),
+            float(record["high_price"]) if record is not None else 0.0,
+        )
+        self._mark_entry_pending(records, signal)
         result = await execute_order(
             signal,
             trading_mode=trading_mode,
@@ -177,13 +191,21 @@ class SignalTrailingStopStrategy:
             result,
             "Signal-trailing-stop entry",
         )
-        if execution.status == "executed":
-            high_price = max(float(signal.price), float(record.get("high_price", 0)) if record else 0)
-            self._save_record(records, signal, high_price)
-            execution.details = {
-                "high_price": high_price,
-                "trailing_stop": self._trailing_stop(high_price),
-            }
+        if execution.status == "failed":
+            # Only a verified broker rejection can undo the pre-submit fence.
+            # Restore the *entire* previous record, not an invented fill.
+            self._restore_entry_after_rejection(records, self._key(signal), previous)
+        else:
+            # Even a successful submission remains pending until an
+            # authoritative fill/remaining-quantity reconciliation.
+            order_id = str(result.get("order_no") or result.get("broker_order_id") or "").strip()
+            if order_id:
+                self._record_entry_order_id(records, self._key(signal), order_id)
+        execution.details = {
+            "high_price": high_price,
+            "trailing_stop": self._trailing_stop(high_price),
+            "entry_pending": execution.status != "failed",
+        }
         return execution
 
     async def _handle_sell(
@@ -203,6 +225,11 @@ class SignalTrailingStopStrategy:
                     signal.market,
                     signal.ticker,
                 )
+            # Even an untracked exit can be accepted but unfilled. Persist a
+            # fence before submission so a new signal ID cannot sell twice.
+            self._mark_untracked_exit_pending(
+                records, signal, adjusted_sell_fraction(signal, self.config.sell_fraction)
+            )
             result = await execute_order(
                 signal,
                 trading_mode=trading_mode,
@@ -210,13 +237,20 @@ class SignalTrailingStopStrategy:
                 limit_price=float(signal.price),
                 sell_fraction=self.config.sell_fraction,
             )
-            return execution_from_result(
+            execution = execution_from_result(
                 signal,
                 result,
                 "Signal-trailing-stop untracked SELL pass-through",
                 sell_fraction=adjusted_sell_fraction(signal, self.config.sell_fraction),
                 strategy_sell_fraction=self.config.sell_fraction,
             )
+            if execution.status == "failed":
+                self._remove_record(records, self._key(signal))
+            else:
+                order_id = str(result.get("order_no") or result.get("broker_order_id") or "").strip()
+                if order_id:
+                    self._record_exit_order_id(records, self._key(signal), order_id)
+            return execution
 
         high_price = max(float(record.get("high_price", 0)), float(signal.price))
         if high_price > float(record.get("high_price", 0)):
@@ -280,6 +314,65 @@ class SignalTrailingStopStrategy:
         }
         updated = [item for item in records if item.get("key") != key]
         updated.append(record)
+        save_json(self.config.runtime_path, updated)
+        records[:] = updated
+
+    def _mark_entry_pending(
+        self, records: list[dict[str, Any]], signal: SignalMessage
+    ) -> None:
+        key = self._key(signal)
+        previous = next((item for item in records if item.get("key") == key), None)
+        pending = dict(previous) if previous is not None else {
+            "key": key,
+            "market": signal.market,
+            "ticker": signal.ticker,
+            "high_price": float(signal.price),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        pending.update({
+            "entry_pending": True,
+            "entry_requested_at": datetime.now(timezone.utc).isoformat(),
+            "entry_requested_price": float(signal.price),
+        })
+        updated = [item for item in records if item.get("key") != key]
+        updated.append(pending)
+        save_json(self.config.runtime_path, updated)
+        records[:] = updated
+
+    def _restore_entry_after_rejection(
+        self, records: list[dict[str, Any]], key: str, previous: dict[str, Any] | None
+    ) -> None:
+        updated = [item for item in records if item.get("key") != key]
+        if previous is not None:
+            updated.append(previous)
+        save_json(self.config.runtime_path, updated)
+        records[:] = updated
+
+    def _record_entry_order_id(
+        self, records: list[dict[str, Any]], key: str, order_id: str
+    ) -> None:
+        updated = [
+            {**item, "entry_broker_order_id": order_id}
+            if item.get("key") == key else item
+            for item in records
+        ]
+        save_json(self.config.runtime_path, updated)
+        records[:] = updated
+
+    def _mark_untracked_exit_pending(
+        self, records: list[dict[str, Any]], signal: SignalMessage, fraction: float
+    ) -> None:
+        pending = {
+            "key": self._key(signal),
+            "market": signal.market,
+            "ticker": signal.ticker,
+            "high_price": float(signal.price),
+            "untracked_exit": True,
+            "exit_pending": True,
+            "exit_requested_at": datetime.now(timezone.utc).isoformat(),
+            "exit_requested_fraction": fraction,
+        }
+        updated = [*records, pending]
         save_json(self.config.runtime_path, updated)
         records[:] = updated
 
