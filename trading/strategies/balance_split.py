@@ -402,10 +402,24 @@ class BalanceSplitStrategy:
 
     def _load_reservations(self) -> list[dict[str, Any]]:
         try:
-            payload = json.loads(self.reservation_path.read_text(encoding="utf-8"))
+            # Duplicate persisted reservation keys (especially amount/status)
+            # must not silently overwrite an outstanding broker commitment.
+            # Otherwise a recovered ledger could understate reserved cash.
+            def unique_object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+                obj: dict[str, Any] = {}
+                for key, value in pairs:
+                    if key in obj:
+                        raise ValueError("Duplicate key in balance split reservation JSON")
+                    obj[key] = value
+                return obj
+
+            payload = json.loads(
+                self.reservation_path.read_text(encoding="utf-8"),
+                object_pairs_hook=unique_object_pairs,
+            )
         except FileNotFoundError:
             return []
-        except (json.JSONDecodeError, OSError) as exc:
+        except (json.JSONDecodeError, UnicodeError, OSError, ValueError) as exc:
             # Lost reservations can make a second BUY reuse cash already
             # committed to an accepted broker order. Never treat corruption
             # or a read failure as an empty reservation ledger.
