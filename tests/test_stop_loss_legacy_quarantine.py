@@ -178,3 +178,15 @@ def test_numeric_string_legacy_stop_loss_remains_actionable(tmp_path):
     saved["US:AAPL"]["stop_loss"] = "90.0"
     path.write_text(json.dumps(saved), encoding="utf-8")
     assert [p["ticker"] for p in tracker.get_positions("US")] == ["AAPL"]
+
+
+def test_corrupt_stop_price_does_not_block_unrelated_protection(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    tracker.record_position("US", "MSFT", 80, entry_price=95)
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    saved["US:AAPL"]["stop_loss"] = True
+    path.write_text(json.dumps(saved), encoding="utf-8")
+    assert [pos["ticker"] for pos in tracker.get_positions("US")] == ["MSFT"]
+    assert tracker.get_position("US", "AAPL")["stop_loss"] is True
