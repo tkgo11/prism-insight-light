@@ -2,6 +2,8 @@
 
 import json
 
+import pytest
+
 from trading.stop_loss_watcher import StopLossTracker
 
 
@@ -101,3 +103,35 @@ def test_case_variant_active_dict_records_block_duplicate_automatic_sells(tmp_pa
     tracker.record_position("US", "AAPL", 85)
     assert tracker.get_positions("US") == []
     assert set(json.loads(path.read_text(encoding="utf-8"))) == {"US:aapl", "US:AAPL"}
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        # Duplicate top-level instrument identity: choosing the last value
+        # could silently change the stop price used for an automatic SELL.
+        '{"US:AAPL":{"market":"US","ticker":"AAPL","stop_loss":90},'
+        '"US:AAPL":{"market":"US","ticker":"AAPL","stop_loss":70}}',
+        # Duplicate nested price field: the on-disk record itself is ambiguous.
+        '{"US:AAPL":{"market":"US","ticker":"AAPL","stop_loss":90,'
+        '"stop_loss":70}}',
+    ],
+)
+def test_duplicate_json_keys_block_orders_and_preserve_original_file(tmp_path, raw):
+    path = tmp_path / "stop_loss.json"
+    path.write_text(raw, encoding="utf-8")
+    tracker = StopLossTracker(path)
+
+    with pytest.raises(RuntimeError, match="unreadable"):
+        tracker.get_positions("US")
+    with pytest.raises(RuntimeError, match="unreadable"):
+        tracker.record_position("US", "MSFT", 80, entry_price=100)
+    with pytest.raises(RuntimeError, match="unreadable"):
+        tracker.remove_position("US", "AAPL")
+    assert path.read_text(encoding="utf-8") == raw
+
+
+def test_normal_json_without_duplicate_keys_remains_actionable(tmp_path):
+    tracker = StopLossTracker(tmp_path / "stop_loss.json")
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    tracker.record_position("US", "MSFT", 80, entry_price=100)
+    assert {p["ticker"] for p in tracker.get_positions("US")} == {"AAPL", "MSFT"}
