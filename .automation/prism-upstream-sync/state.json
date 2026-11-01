@@ -8,9 +8,9 @@
     "started_at": "2026-11-01T17:20:31Z",
     "completed_at": null,
     "lock_owner": "prism-sync-hourly-2026-11-02T02:20+09:00",
-    "last_mutation_commit": "08496832eda9fd0bd74b588d6a1039f73159b925",
+    "last_mutation_commit": "645816c9c829f199979b745467030c833cb9adb9",
     "last_mutation_at": "2026-11-01T17:20:31Z",
-    "result": "STRATEGY_RUNTIME_FAIL_CLOSED_PATCH_CI_PENDING",
+    "result": "TWO_STRATEGY_STATE_SUBCASES_PATCHED_FINAL_HEAD_CI_PENDING",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -68,11 +68,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+    "head_sha": "645816c9c829f199979b745467030c833cb9adb9",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_NEW_STRATEGY_STATE_FAIL_CLOSED_FIX_CI_RUNNING_AUDITS_RESET"
+    "status": "DRAFT_TWO_ROOT_CAUSE_SUBCASES_PATCHED_CI_RUNNING_AUDIT_0_OF_2"
   },
   "candidates": [
     {
@@ -111,7 +111,7 @@
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "e1ff0f2e91a3f58fb540ba0d5a9c2f9eba61dc7a",
+        "blob_sha": "03c806fe90b4d9809ddd2027e118cdc4379fb40f",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -222,7 +222,7 @@
       {
         "path": "tests/test_strategy_runtime_fail_closed.py",
         "status": "NOT_FULLY_AUDITED",
-        "blob_sha": "21a9a9ab50cd1e6eb001fe9e956bf993e8b5c6e4"
+        "blob_sha": "cb4120f4c6cb765de42765655773166f0c909f75"
       },
       {
         "path": "tests/test_strategy_suite.py",
@@ -366,7 +366,7 @@
       },
       {
         "path": "trading/strategies/signal_trailing_stop.py",
-        "blob_sha": "def7ff82b708f008210f98a301511e9afeb52e9b",
+        "blob_sha": "a590789ed3ecb4c616a636cf08a88f7a05771959",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -388,6 +388,7 @@
     "checked_files": 0,
     "modified_files": [
       "trading/strategies/common.py",
+      "trading/strategies/signal_trailing_stop.py",
       "tests/test_strategy_runtime_fail_closed.py",
       "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
     ]
@@ -396,9 +397,9 @@
     "status": "RESET_AFTER_CODE_CHANGE_NOT_FULLY_AUDITED",
     "tracked_tree_entries_on_pr": 184,
     "tracked_blob_files_on_pr": 160,
-    "sha": "9c628b4b8c0c91d81b2fe685e6c8177a97ad72c5",
+    "sha": "15d168c56e6ed5ef6799cd5ae229dee76b62e6da",
     "files_checked": 0,
-    "checksum": "9c628b4b8c0c91d81b2fe685e6c8177a97ad72c5",
+    "checksum": "15d168c56e6ed5ef6799cd5ae229dee76b62e6da",
     "checksum_kind": "git-tree-sha1",
     "files": [
       {
@@ -493,7 +494,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "e1ff0f2e91a3f58fb540ba0d5a9c2f9eba61dc7a",
+        "blob_sha": "03c806fe90b4d9809ddd2027e118cdc4379fb40f",
         "status": "NOT_REVIEWED"
       },
       {
@@ -723,7 +724,7 @@
       },
       {
         "path": "tests/test_strategy_runtime_fail_closed.py",
-        "blob_sha": "21a9a9ab50cd1e6eb001fe9e956bf993e8b5c6e4",
+        "blob_sha": "cb4120f4c6cb765de42765655773166f0c909f75",
         "status": "NOT_REVIEWED"
       },
       {
@@ -988,7 +989,7 @@
       },
       {
         "path": "trading/strategies/signal_trailing_stop.py",
-        "blob_sha": "def7ff82b708f008210f98a301511e9afeb52e9b",
+        "blob_sha": "a590789ed3ecb4c616a636cf08a88f7a05771959",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1871,17 +1872,23 @@
       "source": "GitHub check-runs API"
     },
     "2026-11-02T02:20+09:00": {
-      "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+      "head_sha": "645816c9c829f199979b745467030c833cb9adb9",
       "status": "in_progress",
       "conclusion": null,
       "run_ids": [
-        41331250351,
-        41331245541
+        41331411166,
+        41331407812
       ],
-      "external_statuses": [
-        "Snyk pending",
-        "qlty check pending"
-      ],
+      "previous_head": {
+        "sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+        "run_ids": [
+          41331250351,
+          41331245541
+        ],
+        "conclusion": "success",
+        "linux_passed": 896,
+        "windows_passed": 135
+      },
       "local_tests_executed": false
     }
   },
@@ -3125,15 +3132,60 @@
       "related_manifest_files": 55,
       "full_manifest_files": 160,
       "notes": "No real broker call; no PASS; merge blocked."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T02:20+09:00",
+      "kind": "SAME_RUN_SECOND_PASS_SEMANTIC_TRAILING_STATE_FIX",
+      "head_sha": "645816c9c829f199979b745467030c833cb9adb9",
+      "tree_sha": "15d168c56e6ed5ef6799cd5ae229dee76b62e6da",
+      "related_pass": false,
+      "full_pass": false,
+      "commits": [
+        "08496832eda9fd0bd74b588d6a1039f73159b925",
+        "645816c9c829f199979b745467030c833cb9adb9"
+      ],
+      "files": [
+        {
+          "path": "trading/strategies/common.py",
+          "blob_sha": "6515bfa0de4944c59470c17c19b19589b0ce42c4"
+        },
+        {
+          "path": "trading/strategies/signal_trailing_stop.py",
+          "blob_sha": "a590789ed3ecb4c616a636cf08a88f7a05771959"
+        },
+        {
+          "path": "tests/test_strategy_runtime_fail_closed.py",
+          "blob_sha": "cb4120f4c6cb765de42765655773166f0c909f75"
+        }
+      ],
+      "reproduction": "Pre-fix string 'nan'/'inf' high-water mark leads to no threshold rejection, allowing unwanted SELL. Added pre-order semantic validation for all stored records and duplicate-key guard.",
+      "ci_prior_head": {
+        "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+        "run_ids": [
+          41331250351,
+          41331245541
+        ],
+        "linux": "896 passed",
+        "windows": "135 passed",
+        "docker": "success"
+      },
+      "ci_current_head": {
+        "run_ids": [
+          41331411166,
+          41331407812
+        ],
+        "status": "in_progress"
+      },
+      "notes": "Second defect found during same-turn impact-path reinspection, not counted as separate root cause. No audit PASS or merge."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Related dependency closure and file-by-file audit incomplete (0/2)",
+    "Related 55-file dependency closure and file-by-file audit incomplete (0/2)",
     "Full 160-file repository audit not complete (0/2)",
-    "KIS demo order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation not performed",
-    "Latest-head GitHub Actions and external security/quality checks not yet completed; branch protection read 403 and no submitted reviews"
+    "Authoritative KIS demo order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation not performed",
+    "Latest-head CI and external Snyk/qlty statuses pending; branch protection read 403 and no submitted reviews"
   ],
   "next_action": "Complete expanded dependency closure, root-cause matrix and mock-broker order-ID/fill/cancel reconciliation without duplicating historical fixes; keep Draft 0/2 0/2 until independent full audits.",
   "audit_slots": [
@@ -3384,11 +3436,11 @@
       "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "latest_upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+      "head_sha": "645816c9c829f199979b745467030c833cb9adb9",
       "related_pass": false,
       "full_pass": false,
-      "reason": "One new confirmed strategy state fail-open root cause patched; latest-head CI in progress; related/full file audit incomplete and broker demo blocked",
-      "manifest_tree_sha": "9c628b4b8c0c91d81b2fe685e6c8177a97ad72c5"
+      "reason": "Two related strategy-state failure modes patched in same slot; latest CI pending, 55 related/160 total file audits incomplete, broker demo unavailable.",
+      "manifest_tree_sha": "15d168c56e6ed5ef6799cd5ae229dee76b62e6da"
     }
   ],
   "discovered_defects": [
@@ -3762,6 +3814,24 @@
         "github_actions": "41331250351 and 41331245541 in_progress",
         "kis_demo": "NOT_RUN"
       }
+    },
+    {
+      "id": "trailing-stop-semantic-high-watermark-2026-11-02",
+      "root_cause_id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
+      "severity": "HIGH",
+      "status": "PATCHED_LATEST_HEAD_CI_RUNNING_AUDIT_PENDING",
+      "description": "Syntactically valid persisted high_price strings nan/inf bypassed trailing threshold check (max(float('nan'), price) yields nan, price > nan false), and duplicate semantic key records silently selected first. Added validation before any BUY/SELL broker call.",
+      "paths": [
+        "trading/strategies/signal_trailing_stop.py",
+        "tests/test_strategy_runtime_fail_closed.py"
+      ],
+      "fix_commit": "645816c9c829f199979b745467030c833cb9adb9",
+      "reproduction": "Isolated Python expression max(float('nan'), 80) -> nan, trailing_stop nan, guard 80 > nan is false, permitting SELL; source used float(record['high_price']) without finite check.",
+      "validation": {
+        "github_actions": "41331411166 and 41331407812 in_progress",
+        "local": "isolated arithmetic reproduction",
+        "kis_demo": "NOT_RUN"
+      }
     }
   ],
   "risks": [
@@ -3934,14 +4004,15 @@
       "root_cause_id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
       "description": "Corrupt or unwritable strategy runtime JSON was treated as empty/successful, bypassing cooldown, trailing stop, and event risk-off protections",
       "defect_ids": [
-        "strategy-state-corruption-silently-cleared-2026-11-02"
+        "strategy-state-corruption-silently-cleared-2026-11-02",
+        "trailing-stop-semantic-high-watermark-2026-11-02"
       ],
-      "classification": "PATCHED_CI_RUNNING_AUDIT_PENDING",
-      "last_checked_head": "08496832eda9fd0bd74b588d6a1039f73159b925"
+      "classification": "PATCHED_LATEST_HEAD_CI_RUNNING_AUDIT_PENDING",
+      "last_checked_head": "645816c9c829f199979b745467030c833cb9adb9"
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+    "head_sha": "645816c9c829f199979b745467030c833cb9adb9",
     "scope": "Strategy runtime persistence and fail-closed broker gating",
     "entries": [
       {
@@ -3973,6 +4044,12 @@
         "path": "TradeDispatcher -> ExecutionLedger -> KIS KR/US",
         "evidence": "Current code retains unknown/executed identities; authoritative KIS demo order-ID/fill/partial-fill/cancel missing",
         "status": "BLOCKED_DEMO_AND_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Trailing-stop persisted high-watermark must be finite, positive and unique per instrument",
+        "path": "trading/strategies/signal_trailing_stop.py execute -> _validate_records -> _handle_sell/_record_buy_and_execute",
+        "evidence": "Isolated NaN/Infinity trigger-bypass reproduction; 7 malformed record variants × BUY/SELL mock-broker no-submit tests",
+        "status": "CODE_PATCHED_CI_PENDING"
       }
     ]
   },
@@ -4032,7 +4109,11 @@
       "severity": "HIGH",
       "status": "CODE_PATCHED_CI_RUNNING_AUDIT_PENDING",
       "description": "Corrupted/unwritable strategy runtime state previously allowed bypass or invisible persistence failure",
-      "fix_commit": "08496832eda9fd0bd74b588d6a1039f73159b925"
+      "fix_commit": "08496832eda9fd0bd74b588d6a1039f73159b925",
+      "fix_commits": [
+        "08496832eda9fd0bd74b588d6a1039f73159b925",
+        "645816c9c829f199979b745467030c833cb9adb9"
+      ]
     }
   ]
 }
