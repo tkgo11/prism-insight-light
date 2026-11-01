@@ -304,6 +304,7 @@ The strategy checks the entry price and stop-loss price, then decides how many s
 - `risk_amount_usd`: how many U.S. dollars you are willing to risk.
 - `max_position_amount_krw`: biggest Korean-stock position allowed by this strategy.
 - `max_position_amount_usd`: biggest U.S.-stock position allowed by this strategy.
+- A configured maximum-position cap is a hard limit: if no valid capped whole-share order can be sized, the signal is rejected before broker submission. A usable stop-loss risk budget smaller than one share's risk is also rejected, rather than falling back to an unconstrained broker default. When no hard cap is set and stop-loss data is unusable, the documented optional-stop broker fallback remains available.
 - `require_stop_loss`: whether the signal must include `stop_loss`; even when this is `false`, include a meaningful `stop_loss` if you want normal stop-loss-based sizing.
 - `require_target_price`: whether the signal must include `target_price`.
 
