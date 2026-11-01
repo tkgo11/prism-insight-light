@@ -164,14 +164,36 @@ def execution_from_result(signal: SignalMessage, result: dict[str, Any], message
 
 
 def load_json_list(path: Path) -> list[dict[str, Any]]:
+    """Load strategy protection state; never erase evidence of corruption.
+
+    Cooldown, trailing-stop and event-risk state may prevent a broker order.
+    Treating damaged JSON as an empty list can bypass those protections and
+    the next write can destroy the original recovery evidence.
+    """
+    def unique_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate key in strategy runtime JSON")
+            result[key] = value
+        return result
+
+    def reject_constant(value: str) -> None:
+        raise ValueError(f"Non-finite strategy runtime JSON value: {value}")
+
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=unique_pairs,
+            parse_constant=reject_constant,
+        )
     except FileNotFoundError:
         return []
-    except (json.JSONDecodeError, OSError) as exc:
-        logger.warning("Ignoring unreadable strategy runtime file %s: %s", path, exc)
-        return []
-    return [item for item in payload if isinstance(item, dict)] if isinstance(payload, list) else []
+    except (json.JSONDecodeError, UnicodeError, OSError, ValueError) as exc:
+        raise RuntimeError("Strategy runtime state is unreadable; operator reconciliation required") from exc
+    if not isinstance(payload, list) or any(not isinstance(item, dict) for item in payload):
+        raise RuntimeError("Strategy runtime state has an invalid structure; operator reconciliation required")
+    return payload
 
 
 def save_json(path: Path, payload: Any) -> None:
@@ -187,12 +209,16 @@ def save_json(path: Path, payload: Any) -> None:
             delete=False,
         ) as handle:
             temporary_path = Path(handle.name)
-            json.dump(payload, handle, ensure_ascii=False, indent=2)
+            json.dump(payload, handle, ensure_ascii=False, indent=2, allow_nan=False)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary_path, path)
-    except OSError as exc:
-        logger.warning("Unable to save strategy runtime file %s: %s", path, exc)
+    except OSError:
+        # A silently lost write after broker acceptance makes later strategy
+        # decisions appear durable when they are not. Propagate to the
+        # dispatcher so its execution claim stays protected as UNKNOWN.
+        logger.exception("Strategy runtime state write failed; operator reconciliation required")
+        raise
     finally:
         if temporary_path is not None and temporary_path.exists():
             temporary_path.unlink()
@@ -236,9 +262,11 @@ def fresh_items(items: list[dict[str, Any]], *, window: timedelta) -> list[dict[
     fresh: list[dict[str, Any]] = []
     for item in items:
         try:
-            created_at = datetime.fromisoformat(str(item.get("created_at", "")))
-        except ValueError:
-            continue
+            created_at = datetime.fromisoformat(str(item["created_at"]))
+        except (KeyError, TypeError, ValueError, OverflowError) as exc:
+            # Discarding an unreadable cooldown/risk-off entry could allow a
+            # duplicate or oversized order. Block instead of guessing age.
+            raise RuntimeError("Strategy runtime state has an invalid timestamp") from exc
         if created_at.tzinfo is None:
             created_at = created_at.replace(tzinfo=timezone.utc)
         if created_at >= cutoff:

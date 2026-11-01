@@ -55,3 +55,20 @@
 ## Deployment gate
 
 Keep the PR unmerged until a human reviews all modified logic and a separate demo-environment integration test verifies no unexpected trade, no account mix-up, idempotency across restarts, price-limit checks, filled vs accepted status handling, residual holdings after partial sells and all stop-loss watcher transitions. Use a manual kill switch and small demo positions in all testing.
+
+
+### Strategy runtime-state integrity (2026-11-02)
+- Cooldown, signal-trailing-stop, risk-bracket metadata, and event-risk-off
+  share strategy-state JSON helpers. A malformed, duplicate-key, nonfinite,
+  structurally invalid, or unreadable existing file must **fail closed**:
+  it cannot be treated as an empty state or overwritten by a later write.
+- A failed atomic state write must propagate to the dispatcher. If an order
+  might already have been accepted, the execution ledger must retain an
+  unresolved identity for manual broker reconciliation; a green unit test is
+  not proof of an exchange fill.
+- Operators must preserve the original file, inspect the broker's order/fill
+  history and position holdings, and restore verified state before restarting
+  affected automated strategies. Do not simply delete the state to resume.
+- Tests cover corrupt JSON, duplicate keys, nonfinite data, bad timestamps,
+  failed atomic replace, and mock-broker no-submit on corrupted protection.
+  KIS demo order-ID/fill/cancel reconciliation remains unverified.
