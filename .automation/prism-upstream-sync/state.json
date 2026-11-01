@@ -8,9 +8,9 @@
     "started_at": "2026-11-01T17:20:31Z",
     "completed_at": null,
     "lock_owner": "prism-sync-hourly-2026-11-02T02:20+09:00",
-    "last_mutation_commit": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
-    "last_mutation_at": "2026-11-01T16:19:51.888Z",
-    "result": "IN_PROGRESS",
+    "last_mutation_commit": "08496832eda9fd0bd74b588d6a1039f73159b925",
+    "last_mutation_at": "2026-11-01T17:20:31Z",
+    "result": "STRATEGY_RUNTIME_FAIL_CLOSED_PATCH_CI_PENDING",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -54,7 +54,7 @@
   "source": {
     "repository": "dragon1086/prism-insight",
     "default_branch": "main",
-    "latest_observed_sha": "fa54d47b0d1c281ac09b8a13de7fddd833bec407",
+    "latest_observed_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
     "pinned_contract_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
     "last_integrated_upstream_sha": null,
     "checkpoint_status": "UNKNOWN_BASELINE"
@@ -68,11 +68,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
+    "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_LATEST_HEAD_CI_SUCCESS_RELATED_AUDIT_0_OF_2"
+    "status": "DRAFT_NEW_STRATEGY_STATE_FAIL_CLOSED_FIX_CI_RUNNING_AUDITS_RESET"
   },
   "candidates": [
     {
@@ -105,13 +105,13 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "EXPANDED_DEPENDENCY_SCOPE_NOT_FULLY_AUDITED",
+    "status": "EXPANDED_STRATEGY_RUNTIME_DEPENDENCIES_NOT_FULLY_AUDITED",
     "checksum": null,
-    "scope_estimate": "51 identified related files, transitive closure still incomplete",
+    "scope_estimate": "55 identified related files; dependency closure incomplete",
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "09a356e8bd429f479a646df596f53a177e8531a2",
+        "blob_sha": "e1ff0f2e91a3f58fb540ba0d5a9c2f9eba61dc7a",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -122,6 +122,11 @@
       {
         "path": "README.ko.md",
         "blob_sha": "b0d37c4c45dd12373b6ed2780b0f2cec3da362c1",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "subscriber.py",
+        "blob_sha": "479a0a1ffb3e2ab17404171db47bcbf847a30bdd",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -147,6 +152,11 @@
       {
         "path": "tests/test_financial_sizing_audit.py",
         "blob_sha": "9a99d908fdee529f92d10b5602b2082d696e611c",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "tests/test_multi_account_dispatch.py",
+        "blob_sha": "a39c0f0257b278d81379adfb0284d974eac6a990",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -185,6 +195,11 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "tests/test_signal_exit_strategies.py",
+        "status": "NOT_FULLY_AUDITED",
+        "blob_sha": "c1b1d31e12b233022d119d684d32abee32507f30"
+      },
+      {
         "path": "tests/test_signal_schema.py",
         "blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9",
         "status": "NOT_FULLY_AUDITED"
@@ -205,6 +220,16 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "tests/test_strategy_runtime_fail_closed.py",
+        "status": "NOT_FULLY_AUDITED",
+        "blob_sha": "21a9a9ab50cd1e6eb001fe9e956bf993e8b5c6e4"
+      },
+      {
+        "path": "tests/test_strategy_suite.py",
+        "status": "NOT_FULLY_AUDITED",
+        "blob_sha": "845820ae164d18ae872ef40dbecdef4f45eba315"
+      },
+      {
         "path": "tests/test_telegram_signal_worker.py",
         "blob_sha": "0acfab8090d6b2bb62634eb1b724659dd04c9398",
         "status": "NOT_FULLY_AUDITED"
@@ -222,6 +247,11 @@
       {
         "path": "tests/test_wave4_execution_safety.py",
         "blob_sha": "130b72afc1a51538540a94c880d3d73c5e24cd99",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/buy_sizing.py",
+        "blob_sha": "3db2b3f1ea40ad54a38b32a4d4bbf95c2d8b1d19",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -245,6 +275,16 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "trading/file_lock.py",
+        "blob_sha": "3b643eb5e2dc1e0c4d775dcf0b18b5d8aea65fbc",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/kis_auth.py",
+        "blob_sha": "9a6fb623276e357a41c21eb25d5f3fa5de2243f0",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
         "path": "trading/off_hours_queue.py",
         "blob_sha": "f79bd6f4e4f32531029a63a1c7e18d36539ead2f",
         "status": "NOT_FULLY_AUDITED"
@@ -252,6 +292,11 @@
       {
         "path": "trading/schema.py",
         "blob_sha": "2c9e5d3ed20155f329cbc36e9a8b581c3fdc3c56",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/signal_safety.py",
+        "blob_sha": "2a30edf46e86b295c8e1f1b599511f28146884fb",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -276,8 +321,13 @@
       },
       {
         "path": "trading/strategies/common.py",
-        "blob_sha": "c6265d3aa5b80cec4e1b1e712cb8a87c16d17b80",
+        "blob_sha": "6515bfa0de4944c59470c17c19b19589b0ce42c4",
         "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/strategies/cooldown.py",
+        "status": "NOT_FULLY_AUDITED",
+        "blob_sha": "70dc5e714942fa21ef9bb6c0aeb09f831b30d59d"
       },
       {
         "path": "trading/strategies/event_risk_off.py",
@@ -325,69 +375,40 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
-        "path": "subscriber.py",
-        "blob_sha": "479a0a1ffb3e2ab17404171db47bcbf847a30bdd",
-        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "trading/file_lock.py",
-        "blob_sha": "3b643eb5e2dc1e0c4d775dcf0b18b5d8aea65fbc",
-        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "trading/signal_safety.py",
-        "blob_sha": "2a30edf46e86b295c8e1f1b599511f28146884fb",
-        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "trading/kis_auth.py",
-        "blob_sha": "9a6fb623276e357a41c21eb25d5f3fa5de2243f0",
-        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "trading/buy_sizing.py",
-        "blob_sha": "3db2b3f1ea40ad54a38b32a4d4bbf95c2d8b1d19",
-        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
+        "path": "webui/routes/trading.py",
+        "blob_sha": "1c7aefddb3bc1b5a893942d47a68c054c99f7b43",
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "webui/services/trade_service.py",
         "blob_sha": "fc70caf328b37cca66b47c7024bb7b9cf2524de6",
-        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "webui/routes/trading.py",
-        "blob_sha": "1c7aefddb3bc1b5a893942d47a68c054c99f7b43",
-        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "tests/test_multi_account_dispatch.py",
-        "blob_sha": "a39c0f0257b278d81379adfb0284d974eac6a990",
-        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
+        "status": "NOT_FULLY_AUDITED"
       }
     ],
     "checked_files": 0,
     "modified_files": [
-      "trading/execution_ledger.py",
-      "tests/test_execution_ledger_retention.py"
+      "trading/strategies/common.py",
+      "tests/test_strategy_runtime_fail_closed.py",
+      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
     ]
   },
   "full_manifest": {
     "status": "RESET_AFTER_CODE_CHANGE_NOT_FULLY_AUDITED",
-    "tracked_tree_entries_on_pr": 183,
-    "tracked_blob_files_on_pr": 159,
-    "sha": "5275f27fe4aed643d37f29df0a611aa6c2b98740",
+    "tracked_tree_entries_on_pr": 184,
+    "tracked_blob_files_on_pr": 160,
+    "sha": "9c628b4b8c0c91d81b2fe685e6c8177a97ad72c5",
     "files_checked": 0,
-    "checksum": null,
-    "checksum_kind": "NOT_VERIFIED_AT_NEW_HEAD",
+    "checksum": "9c628b4b8c0c91d81b2fe685e6c8177a97ad72c5",
+    "checksum_kind": "git-tree-sha1",
     "files": [
-      {
-        "path": ".agents/skills/prism-insight-light/SKILL.md",
-        "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
-        "status": "NOT_REVIEWED"
-      },
       {
         "path": ".agents/skills/prism-insight-light/agents/openai.yaml",
         "blob_sha": "5b0f9ea241f62d302b5839f4036482bf034780ba",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": ".agents/skills/prism-insight-light/SKILL.md",
+        "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
         "status": "NOT_REVIEWED"
       },
       {
@@ -461,13 +482,38 @@
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "check_pubsub_readiness.py",
+        "blob_sha": "2ce8388379013b3bac9c792fb4425080cd18892f",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "Dockerfile",
         "blob_sha": "3b0dead05078f0e16e37b53aa0c4d16d0a8e7733",
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+        "blob_sha": "e1ff0f2e91a3f58fb540ba0d5a9c2f9eba61dc7a",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "install_prism_docker.sh",
+        "blob_sha": "c4461aed3bf4358f7fbe2fdda7f13d6a3d87c8ce",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "LICENSE",
         "blob_sha": "be3f7b28e564e7dd05eaf59d64adba1a4065ac0e",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "pubsub_readiness.py",
+        "blob_sha": "41e5e02faf1b5a57a10407ec8075f8dc71f2f129",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "pytest.ini",
+        "blob_sha": "fd7e79a47a073d76514c770332b0258e63fc0045",
         "status": "NOT_REVIEWED"
       },
       {
@@ -483,31 +529,6 @@
       {
         "path": "README.md",
         "blob_sha": "125dcddda02de2d1e1e377d38bb54ab0764f1156",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "check_pubsub_readiness.py",
-        "blob_sha": "2ce8388379013b3bac9c792fb4425080cd18892f",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "09a356e8bd429f479a646df596f53a177e8531a2",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "install_prism_docker.sh",
-        "blob_sha": "c4461aed3bf4358f7fbe2fdda7f13d6a3d87c8ce",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "pubsub_readiness.py",
-        "blob_sha": "41e5e02faf1b5a57a10407ec8075f8dc71f2f129",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "pytest.ini",
-        "blob_sha": "fd7e79a47a073d76514c770332b0258e63fc0045",
         "status": "NOT_REVIEWED"
       },
       {
@@ -701,6 +722,11 @@
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "tests/test_strategy_runtime_fail_closed.py",
+        "blob_sha": "21a9a9ab50cd1e6eb001fe9e956bf993e8b5c6e4",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "tests/test_strategy_suite.py",
         "blob_sha": "845820ae164d18ae872ef40dbecdef4f45eba315",
         "status": "NOT_REVIEWED"
@@ -796,11 +822,6 @@
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/STRATEGIES.md",
-        "blob_sha": "d10272c87f13f3a42fd199ed1de5f4e9b898279d",
-        "status": "NOT_REVIEWED"
-      },
-      {
         "path": "trading/__init__.py",
         "blob_sha": "a0326b8406920998e8dbe830d120148840ddfe01",
         "status": "NOT_REVIEWED"
@@ -811,13 +832,13 @@
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/config/kis_devlp.yaml.example",
-        "blob_sha": "1379c70fefdcb41ede63ff0bbd00eb4d9ef417e9",
+        "path": "trading/config_paths.py",
+        "blob_sha": "578fec77b343c894898937dda04d8819e215d1a6",
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/config_paths.py",
-        "blob_sha": "578fec77b343c894898937dda04d8819e215d1a6",
+        "path": "trading/config/kis_devlp.yaml.example",
+        "blob_sha": "1379c70fefdcb41ede63ff0bbd00eb4d9ef417e9",
         "status": "NOT_REVIEWED"
       },
       {
@@ -886,8 +907,8 @@
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/strategies/README.md",
-        "blob_sha": "7754488932f5a26c315065be6f04db93d2398e8e",
+        "path": "trading/STRATEGIES.md",
+        "blob_sha": "d10272c87f13f3a42fd199ed1de5f4e9b898279d",
         "status": "NOT_REVIEWED"
       },
       {
@@ -912,7 +933,7 @@
       },
       {
         "path": "trading/strategies/common.py",
-        "blob_sha": "c6265d3aa5b80cec4e1b1e712cb8a87c16d17b80",
+        "blob_sha": "6515bfa0de4944c59470c17c19b19589b0ce42c4",
         "status": "NOT_REVIEWED"
       },
       {
@@ -938,6 +959,11 @@
       {
         "path": "trading/strategies/protective_exit.py",
         "blob_sha": "664ecac2459a25ca3c122c1b8d69026912443e60",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "trading/strategies/README.md",
+        "blob_sha": "7754488932f5a26c315065be6f04db93d2398e8e",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1843,6 +1869,20 @@
       ],
       "local_tests_executed": false,
       "source": "GitHub check-runs API"
+    },
+    "2026-11-02T02:20+09:00": {
+      "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+      "status": "in_progress",
+      "conclusion": null,
+      "run_ids": [
+        41331250351,
+        41331245541
+      ],
+      "external_statuses": [
+        "Snyk pending",
+        "qlty check pending"
+      ],
+      "local_tests_executed": false
     }
   },
   "upstream_changes": [
@@ -1965,6 +2005,23 @@
       ],
       "decision": "EXCLUDE_FROM_LIGHT",
       "reason": "Compared actual 3 commits and 2 changed paths: BTC-specific scenario execution and tests, no demonstrated light KIS subscriber signal contract change; pinned upstream contract remains unchanged."
+    },
+    {
+      "scope": "2026-11-02 upstream fa54d47..9655b4b (3 commits)",
+      "upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "category": "BTC research runtime guard, model-call and calculated-economic-study tests",
+      "paths": [
+        "docs/BTC_RESEARCH_WORKFLOW_ko.md",
+        "prism-btc/tests/test_calculated_economic_study.py",
+        "prism-btc/tests/test_research_call_guard.py",
+        "prism-btc/tests/test_research_model_call.py",
+        "prism-btc/tests/test_research_runtime_guard.py",
+        "tools/btc_calculated_economic_study.py",
+        "tools/btc_research_call_guard.py",
+        "tools/btc_research_model_call.py"
+      ],
+      "decision": "EXCLUDE_FROM_LIGHT",
+      "reason": "Compared 3 upstream commits and 8 changed paths; BTC research-only runtime/model-call code has no demonstrated subscriber/KIS BUY-SELL signal contract dependency. Pinned contract SHA unchanged."
     }
   ],
   "risk_register": [
@@ -3001,15 +3058,82 @@
       "related_pass": false,
       "full_pass": false,
       "ci": "https://github.com/tkgo11/prism-insight-light/actions/runs/41325576768"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T02:20+09:00",
+      "kind": "TARGETED_STRATEGY_STATE_FAIL_CLOSED_FIX_NOT_AUDIT_PASS",
+      "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+      "tree_sha": "9c628b4b8c0c91d81b2fe685e6c8177a97ad72c5",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_latest_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "related_pass": false,
+      "full_pass": false,
+      "modified_files": [
+        "trading/strategies/common.py",
+        "tests/test_strategy_runtime_fail_closed.py",
+        "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
+      ],
+      "source_inspected": [
+        {
+          "path": "trading/strategies/common.py",
+          "blob_sha": "6515bfa0de4944c59470c17c19b19589b0ce42c4",
+          "scope": "full helper source and all runtime JSON helpers"
+        },
+        {
+          "path": "trading/strategies/event_risk_off.py",
+          "blob_sha": "90349df3846babe84c1f96bbfa882d5ce2eb9071",
+          "scope": "full file"
+        },
+        {
+          "path": "trading/strategies/signal_trailing_stop.py",
+          "blob_sha": "def7ff82b708f008210f98a301511e9afeb52e9b",
+          "scope": "state load, broker execution, save/delete paths"
+        },
+        {
+          "path": "trading/strategies/cooldown.py",
+          "blob_sha": "70dc5e714942fa21ef9bb6c0aeb09f831b30d59d",
+          "scope": "load/fresh_items/execute/save path"
+        },
+        {
+          "path": "trading/strategies/risk_bracket.py",
+          "blob_sha": "0776ccc1aacb927fce2f7a8360ff48d41ba2a326",
+          "scope": "post-broker append metadata path"
+        },
+        {
+          "path": "trading/execution_ledger.py",
+          "blob_sha": "d5e37f9b5bb8101d83eea9d81c901a706430f9b6",
+          "scope": "full ledger claim/finalize/release/retention"
+        },
+        {
+          "path": "trading/dispatch.py",
+          "blob_sha": "e52ff898f25398744d214a184cc98efd777bdbc0",
+          "scope": "single and multi-account ledger state transitions, partial queue handling"
+        }
+      ],
+      "isolated_reproduction": "Prior loader returned [] on malformed JSON, wrong-root dict and silently dropped non-dict elements; no full repository local test run",
+      "ci_runs": [
+        {
+          "id": 41331250351,
+          "status": "in_progress"
+        },
+        {
+          "id": 41331245541,
+          "status": "in_progress"
+        }
+      ],
+      "related_manifest_files": 55,
+      "full_manifest_files": 160,
+      "notes": "No real broker call; no PASS; merge blocked."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Related transitive dependency closure and file-by-file audit incomplete (0/2)",
-    "Full 159-file repository audit not started (0/2)",
-    "Authoritative KIS demo order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation not executed",
-    "External qlty check pending on latest HEAD; branch protection API returned 403; no submitted reviews"
+    "Related dependency closure and file-by-file audit incomplete (0/2)",
+    "Full 160-file repository audit not complete (0/2)",
+    "KIS demo order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation not performed",
+    "Latest-head GitHub Actions and external security/quality checks not yet completed; branch protection read 403 and no submitted reviews"
   ],
   "next_action": "Complete expanded dependency closure, root-cause matrix and mock-broker order-ID/fill/cancel reconciliation without duplicating historical fixes; keep Draft 0/2 0/2 until independent full audits.",
   "audit_slots": [
@@ -3252,6 +3376,19 @@
       "full_pass": false,
       "reason": "One confirmed terminal-status downgrade patched; latest-head Linux and Windows CI succeeded; related dependency audit and KIS demo unresolved; external qlty pending.",
       "manifest_tree_sha": "5275f27fe4aed643d37f29df0a611aa6c2b98740"
+    },
+    {
+      "slot": "2026-11-02T02:20+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T02:20+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "One new confirmed strategy state fail-open root cause patched; latest-head CI in progress; related/full file audit incomplete and broker demo blocked",
+      "manifest_tree_sha": "9c628b4b8c0c91d81b2fe685e6c8177a97ad72c5"
     }
   ],
   "discovered_defects": [
@@ -3603,6 +3740,28 @@
         "local_full_pytest": "NOT_RUN",
         "kis_demo": "NOT_RUN"
       }
+    },
+    {
+      "id": "strategy-state-corruption-silently-cleared-2026-11-02",
+      "root_cause_id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
+      "severity": "HIGH",
+      "status": "PATCHED_CI_RUNNING_AUDIT_PENDING",
+      "description": "load_json_list returned [] for invalid JSON/object/non-object list entries, allowing trailing-stop and risk-off bypass and later destructive rewrite; save_json swallowed OSError, hiding failed persistence. fresh_items skipped invalid timestamps.",
+      "paths": [
+        "trading/strategies/common.py",
+        "trading/strategies/signal_trailing_stop.py",
+        "trading/strategies/cooldown.py",
+        "trading/strategies/event_risk_off.py",
+        "trading/strategies/risk_bracket.py",
+        "tests/test_strategy_runtime_fail_closed.py"
+      ],
+      "fix_commit": "08496832eda9fd0bd74b588d6a1039f73159b925",
+      "reproduction": "Isolated exact prior helper logic returned [] for truncated JSON, wrong root object, and silently filtered invalid list elements. Source call paths confirmed strategy BUY/SELL/event state decisions use this loader.",
+      "validation": {
+        "local": "isolated pre-fix helper reproduction only; full local pytest unavailable (container github.com DNS fails)",
+        "github_actions": "41331250351 and 41331245541 in_progress",
+        "kis_demo": "NOT_RUN"
+      }
     }
   ],
   "risks": [
@@ -3770,41 +3929,50 @@
       ],
       "classification": "PATCHED_LATEST_HEAD_CI_SUCCESS_AUDIT_PENDING",
       "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
+      "description": "Corrupt or unwritable strategy runtime JSON was treated as empty/successful, bypassing cooldown, trailing stop, and event risk-off protections",
+      "defect_ids": [
+        "strategy-state-corruption-silently-cleared-2026-11-02"
+      ],
+      "classification": "PATCHED_CI_RUNNING_AUDIT_PENDING",
+      "last_checked_head": "08496832eda9fd0bd74b588d6a1039f73159b925"
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
-    "scope": "ExecutionLedger.finalize terminal-state monotonicity",
+    "head_sha": "08496832eda9fd0bd74b588d6a1039f73159b925",
+    "scope": "Strategy runtime persistence and fail-closed broker gating",
     "entries": [
       {
-        "contract": "Accepted/ambiguous ledger status must never become retryable",
-        "path": "trading/execution_ledger.py finalize -> claim -> disk recovery",
-        "evidence": "Current-head regression parametrizes executed/unknown/partial_success against all retryable statuses; persistence verified after restart",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+        "contract": "Corrupt/duplicate/nonfinite runtime state cannot be silently cleared",
+        "path": "trading/strategies/common.py load_json_list -> cooldown, signal_trailing_stop, event_risk_off, risk_bracket metadata",
+        "evidence": "Exact pre-fix loader isolated reproduction; updated strict parse + 6 corrupt-input tests",
+        "status": "CODE_PATCHED_CI_PENDING"
       },
       {
-        "contract": "Single-account dispatch status and exception paths",
-        "path": "trading/dispatch.py lines 719-789",
-        "evidence": "Source inspection of claim/finalize, pre-submission rejection, cancellation and exception handling",
-        "status": "SOURCE_INSPECTED_NOT_FULLY_AUDITED"
+        "contract": "Failed atomic write cannot report success",
+        "path": "common.save_json -> append_json_item/update_json_list -> risk_bracket, cooldown, signal_trailing_stop, event_risk_off",
+        "evidence": "Propagate OSError; tests mock os.replace failure, verify original bytes and temp cleanup",
+        "status": "CODE_PATCHED_CI_PENDING"
       },
       {
-        "contract": "Multi-account per-leg ledger outcomes",
-        "path": "trading/dispatch.py lines 403-484",
-        "evidence": "Source inspection of claim/finalize, deferred release and unknown cancellation",
-        "status": "SOURCE_INSPECTED_NOT_FULLY_AUDITED"
+        "contract": "Invalid cooldown/risk-off timestamps cannot disappear",
+        "path": "common.fresh_items -> cooldown/event_risk_off",
+        "evidence": "3 timestamp boundary cases fail closed",
+        "status": "CODE_PATCHED_CI_PENDING"
       },
       {
-        "contract": "Watcher and queue duplicate suppression",
-        "path": "trading/stop_loss_watcher.py -> trading/dispatch.py -> trading/off_hours_queue.py",
-        "evidence": "Call-path inspection; authoritative broker order/fill reconciliation absent",
-        "status": "PARTIAL_BLOCKED_DEMO"
+        "contract": "Corrupt protection must block broker submit",
+        "path": "signal_trailing_stop SELL, event_risk_off BUY -> execute_order",
+        "evidence": "2 async fake-broker no-submit regression tests",
+        "status": "CODE_PATCHED_CI_PENDING"
       },
       {
-        "contract": "External receiver and WebUI entrypoints",
-        "path": "subscriber.py and webui/services/trade_service.py -> TradeDispatcher",
-        "evidence": "Import and callsite inspection",
-        "status": "SOURCE_INSPECTED_NOT_FULLY_AUDITED"
+        "contract": "Unknown broker acceptance not proof of fill",
+        "path": "TradeDispatcher -> ExecutionLedger -> KIS KR/US",
+        "evidence": "Current code retains unknown/executed identities; authoritative KIS demo order-ID/fill/partial-fill/cancel missing",
+        "status": "BLOCKED_DEMO_AND_DEPENDENCY_AUDIT"
       }
     ]
   },
@@ -3858,6 +4026,13 @@
       "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
       "description": "Protected order ledger statuses now monotonic under repeated finalization",
       "fix_commit": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_RUNNING_AUDIT_PENDING",
+      "description": "Corrupted/unwritable strategy runtime state previously allowed bypass or invisible persistence failure",
+      "fix_commit": "08496832eda9fd0bd74b588d6a1039f73159b925"
     }
   ]
 }
