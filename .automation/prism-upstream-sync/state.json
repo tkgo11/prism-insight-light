@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T06:22+09:00",
-    "started_at": "2026-11-01T21:22:19Z",
-    "completed_at": "2026-11-01T21:27:00Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T07:16:44+09:00",
+    "started_at": "2026-11-01T22:16:44Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T07:16:44+09:00",
     "last_mutation_commit": "def37442fff6b2d059aaca663446f53f4ef47ea8",
     "last_mutation_at": "2026-11-01T21:27:00Z",
-    "result": "QUEUED_TARGET_SCOPE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDITS_BLOCKED",
+    "result": "IN_PROGRESS",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -55,9 +55,9 @@
       "merged": false,
       "reason": "Confirmed and patched queued account target expansion/mode-switch defects; CI success but no KIS demo, full audits, quality finalization or independent approval."
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T05:24+09:00",
-    "pr_head_at_start": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
-    "lock_acquired_at": "2026-11-01T21:22:19Z",
+    "prior_run_id": "prism-sync-hourly-2026-11-02T06:22+09:00",
+    "pr_head_at_start": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+    "lock_acquired_at": "2026-11-01T22:16:44Z",
     "lock_released_at": "2026-11-01T21:27:00Z"
   },
   "source": {
