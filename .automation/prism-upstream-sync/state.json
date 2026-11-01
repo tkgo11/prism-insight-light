@@ -40,9 +40,10 @@
       ],
       "local_tests_executed": false,
       "merged": false,
-      "reason": "Persisted ticker mismatch and corrupt same-key rearm fixed; new-head CI pending, dependency closure and KIS/GCP demo unresolved"
+      "reason": "Persisted ticker mismatch and corrupt same-key rearm fixed; new-head CI pending, dependency closure and KIS/GCP demo unresolved",
+      "pr_comment_id": 6552280405
     },
-    "pr_comment_id": 6551146793
+    "pr_comment_id": 6552280405
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -88,10 +89,63 @@
       "author": "renovate[bot]",
       "head_ref": "renovate/actions-setup-python-7.x",
       "head_sha": "0a99d432339915b4d3230ab194b76472bf807914",
+      "base_sha": "1f085616c63bd015ba48b93dc3485951422d615c",
       "draft": false,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
-      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE",
-      "mutation_allowed": true
+      "mutation_allowed": true,
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE"
+    },
+    {
+      "number": 39,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/39",
+      "title": "chore(deps): update actions/checkout action to v7",
+      "author": "renovate[bot]",
+      "head_ref": "renovate/actions-checkout-7.x",
+      "head_sha": "75998c6da94152f966ae094402fae14e9b056811",
+      "base_sha": "1f085616c63bd015ba48b93dc3485951422d615c",
+      "draft": false,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "mutation_allowed": true,
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE"
+    },
+    {
+      "number": 37,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/37",
+      "title": "chore(deps): update dependency python",
+      "author": "renovate[bot]",
+      "head_ref": "renovate/python-3.x",
+      "head_sha": "e592fac40b91f00c412b9d72b26d9f3525f42ada",
+      "base_sha": "1f085616c63bd015ba48b93dc3485951422d615c",
+      "draft": false,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "mutation_allowed": true,
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE"
+    },
+    {
+      "number": 36,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/36",
+      "title": "chore(deps): update actions/checkout action to v4.4.0",
+      "author": "renovate[bot]",
+      "head_ref": "renovate/actions-checkout-4.x",
+      "head_sha": "0aa12529be423a0e79d12d60dc6d96f363a418de",
+      "base_sha": "1f085616c63bd015ba48b93dc3485951422d615c",
+      "draft": false,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "mutation_allowed": true,
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE"
+    },
+    {
+      "number": 22,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/22",
+      "title": "Install autonomous-maintainer skill (tkgo11/codex-autonomous-maintainer v2.2.0) under .agents/skills",
+      "author": "tkgo11",
+      "head_ref": "codex/install-codex-autonomous-maintainer-skill",
+      "head_sha": "40511f7eab48f6c2ccf4e08f12b0e77d0dcf4829",
+      "base_sha": "bf8bf81db6607549ff6141bf4339c7997f4bef42",
+      "draft": false,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "mutation_allowed": true,
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE"
     }
   ],
   "related_consecutive_passes": 0,
@@ -1397,7 +1451,17 @@
           "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142"
         }
       ],
-      "local_tests_executed": false
+      "local_tests_executed": false,
+      "external_statuses": [
+        {
+          "context": "qlty check",
+          "state": "pending"
+        },
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        }
+      ]
     }
   },
   "upstream_changes": [
@@ -1788,7 +1852,8 @@
       "ci_new_head_run_ids": [
         41264840101
       ],
-      "notes": "Inspected StopLossTracker record_position/get_positions and watcher dispatch. Malformed stored ticker type/key mismatch could cause wrong-ticker quote/order; corrupt same-key entry could block rearming. Fail-closed filtering and recovery plus 4 new parameterized regression cases committed with expected-head lease. GitHub CI running; local tests not executed; no full audit/PASS/demo."
+      "notes": "Inspected StopLossTracker record_position/get_positions and watcher dispatch. Malformed stored ticker type/key mismatch could cause wrong-ticker quote/order; corrupt same-key entry could block rearming. Fail-closed filtering and recovery plus 4 new parameterized regression cases committed with expected-head lease. GitHub CI running; local tests not executed; no full audit/PASS/demo.",
+      "pr_comment_id": 6552280405
     }
   ],
   "last_merged_upstream_sha": null,
@@ -1815,7 +1880,7 @@
     "Real/demo KIS/GCP end-to-end and broker fill reconciliation absent",
     "Persisted ticker integrity fix needs new-head CI verification; related dependency closure and broker demo unresolved"
   ],
-  "next_action": "Verify Actions 41264840101 for new head, inspect stop-loss multi-account fill reconciliation and remaining related dependencies, complete manifest and demo tests; no PASS/merge until gates met.",
+  "next_action": "Verify Actions 41264840101 for new head, inspect stop-loss multi-account fill reconciliation and remaining related dependencies, complete manifest and demo tests; no PASS/merge until gates met. Also evaluate five queued PRs (including competing checkout version updates) against current main before any change.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
