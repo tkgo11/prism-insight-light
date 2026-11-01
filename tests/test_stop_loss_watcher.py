@@ -937,3 +937,36 @@ def test_stop_loss_tracker_retains_legacy_lowercase_market_record(tmp_path):
     legacy = {"market": "us", "ticker": "AAPL", "stop_loss": 90}
     path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
     assert tracker.get_positions("US") == [legacy]
+
+
+def test_stop_loss_watcher_does_not_sell_against_replaced_stop_level(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 85}
+
+    def concurrent_stop_edit(_ticker):
+        # The original stop is hit, but the operator changes the threshold
+        # while the broker holding inquiry is in flight. A stale snapshot
+        # must not submit an automatic SELL.
+        tracker.record_position("US", "AAPL", 70, entry_price=100)
+        return 10
+
+    trader.get_holding_quantity.side_effect = concurrent_stop_edit
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "demo"
+    dispatcher.multi_account_enabled = False
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, request_interval_seconds=0, storage_path=path),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        assert watcher.check_stop_loss_once() == []
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position("US", "AAPL")["stop_loss"] == 70.0
