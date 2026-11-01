@@ -615,12 +615,11 @@ class StopLossWatcher:
                     # while those broker calls are running. Do not liquidate
                     # against a stale threshold or an invalidated record.
                     latest = self.tracker.get_positions(market=market)
-                    if not any(
-                        current.get("ticker") == ticker
-                        and current.get("updated_at") == pos.get("updated_at")
-                        and current.get("stop_loss") == pos.get("stop_loss")
-                        for current in latest
-                    ):
+                    # Compare the full persisted snapshot, not only the
+                    # threshold and updated_at. Legacy records can lack
+                    # updated_at; a concurrent edit must invalidate the
+                    # in-flight quote/holdings decision before broker submit.
+                    if not any(current == pos for current in latest):
                         logger.warning(
                             "[Stop-Loss] Skipping stale or quarantined protection for %s %s",
                             market, ticker,
