@@ -816,3 +816,59 @@ def test_malformed_legacy_list_market_does_not_hide_valid_positions(
     )
     assert tracker.get_positions("KR") == [valid]
     assert tracker.get_positions() == [valid]
+
+
+@pytest.mark.parametrize(
+    "corrupt_record",
+    [
+        {"market": "KR", "ticker": 123, "stop_loss": 90},
+        {"market": "KR", "ticker": "999999", "stop_loss": 90},
+        {"market": "KR", "ticker": "", "stop_loss": 90},
+    ],
+)
+def test_corrupt_stop_loss_ticker_cannot_redirect_order_or_block_valid_position(
+    tmp_path, monkeypatch, corrupt_record
+):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+    valid = tracker.get_position("KR", "222222")
+    tracker_path.write_text(
+        json.dumps({"KR:111111": corrupt_record, "KR:222222": valid}),
+        encoding="utf-8",
+    )
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 80}
+    trader.get_holding_quantity.return_value = 0
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True, request_interval_seconds=0, storage_path=tracker_path
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "KR")
+
+    assert tracker.get_positions("KR") == [valid]
+    assert watcher.check_stop_loss_once() == []
+    trader.get_current_price.assert_called_once_with("222222")
+    assert tracker.get_position("KR", "222222") is None
+    assert tracker.get_position("KR", "111111") == corrupt_record
+    dispatcher.dispatch.assert_not_called()
+
+
+def test_rearming_stop_loss_replaces_corrupt_same_key_record(tmp_path):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker_path.write_text(json.dumps({"KR:111111": None}), encoding="utf-8")
+
+    tracker.record_position("KR", "111111", 90, entry_price=100)
+
+    repaired = tracker.get_position("KR", "111111")
+    assert repaired["market"] == "KR"
+    assert repaired["ticker"] == "111111"
+    assert repaired["stop_loss"] == 90
+    assert repaired["created_at"]

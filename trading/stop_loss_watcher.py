@@ -235,7 +235,7 @@ class StopLossTracker:
         with FileLock(self.lock_path):
             positions = self._load()
             existing = positions.get(key)
-            created_at = existing.get("created_at") if existing else now_iso
+            created_at = existing.get("created_at") if isinstance(existing, dict) else now_iso
             pos = TrackedPosition(
                 market=market.upper(),
                 ticker=ticker,
@@ -297,9 +297,16 @@ class StopLossTracker:
         target_market = market.strip().upper() if market else None
         valid: list[dict[str, Any]] = []
         for key, item in items:
-            if not isinstance(item, dict) or not isinstance(item.get("market"), str):
-                # Preserve the raw record for operator reconciliation, but do
-                # not let it abort the entire stop-loss watcher market cycle.
+            if (
+                not isinstance(item, dict)
+                or not isinstance(item.get("market"), str)
+                or not isinstance(item.get("ticker"), str)
+                or not item["market"].strip()
+                or not item["ticker"].strip()
+                or self._key(item["market"], item["ticker"]) != key
+            ):
+                # Never dispatch an order to a malformed or mismatched ticker.
+                # Preserve the raw record on disk for operator reconciliation.
                 logger.error("Skipping malformed stop-loss record at key %s", key)
                 continue
             if target_market is None or item["market"].strip().upper() == target_market:
