@@ -96,13 +96,55 @@ def test_case_variant_legacy_tickers_are_quarantined_as_one_instrument(tmp_path)
     assert [p["ticker"] for p in tracker.get_positions("US")] == ["MSFT"]
 
 
-def test_case_variant_active_dict_records_block_duplicate_automatic_sells(tmp_path):
+def test_new_us_case_variants_update_one_canonical_protection(tmp_path):
     path = tmp_path / "stop_loss.json"
     tracker = StopLossTracker(path)
     tracker.record_position("US", "aapl", 90)
     tracker.record_position("US", "AAPL", 85)
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert set(saved) == {"US:AAPL"}
+    assert saved["US:AAPL"]["ticker"] == "AAPL"
+    assert [position["stop_loss"] for position in tracker.get_positions("US")] == [85]
+
+
+def test_case_variant_active_dict_records_block_duplicate_automatic_sells(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    # An old persisted dictionary may already contain case-variant entries.
+    # They remain quarantined even though new writes now use canonical keys.
+    first = {"market": "US", "ticker": "aapl", "stop_loss": 90}
+    second = {"market": "US", "ticker": "AAPL", "stop_loss": 85}
+    path.write_text(json.dumps({"US:aapl": first, "US:AAPL": second}), encoding="utf-8")
     assert tracker.get_positions("US") == []
-    assert set(json.loads(path.read_text(encoding="utf-8"))) == {"US:aapl", "US:AAPL"}
+    original = path.read_bytes()
+    with pytest.raises(ValueError, match="operator reconciliation"):
+        tracker.record_position("US", "aapl", 80)
+    assert path.read_bytes() == original
+
+
+def test_legacy_lowercase_us_record_cannot_be_silently_overwritten(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    legacy = {"market": "US", "ticker": "aapl", "stop_loss": 90}
+    path.write_text(json.dumps({"US:aapl": legacy}), encoding="utf-8")
+    original = path.read_bytes()
+    with pytest.raises(ValueError, match="operator reconciliation"):
+        tracker.record_position("US", "AAPL", 80)
+    assert path.read_bytes() == original
+    assert tracker.get_positions("US") == [legacy]
+    tracker.record_position("US", "MSFT", 75)
+    assert {p["ticker"] for p in tracker.get_positions("US")} == {"aapl", "MSFT"}
+
+
+def test_quarantined_us_record_blocks_rearming_same_instrument(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    suspect = {"market": "US", "ticker": "aapl", "stop_loss": 90}
+    path.write_text(json.dumps({"__legacy_unverified_0__": suspect}), encoding="utf-8")
+    original = path.read_bytes()
+    with pytest.raises(ValueError, match="operator reconciliation"):
+        tracker.record_position("US", "AAPL", 80)
+    assert path.read_bytes() == original
 
 @pytest.mark.parametrize(
     "raw",
