@@ -310,6 +310,7 @@ class StopLossTracker:
         ticker: str,
         *,
         expected_updated_at: Any = None,
+        expected_record: dict[str, Any] | None = None,
     ) -> bool:
         """Remove a position from stop-loss tracking.
 
@@ -317,13 +318,22 @@ class StopLossTracker:
         is still the same tracked record the caller inspected — a position that
         was re-registered by a concurrent BUY must not be silently wiped.
         ``updated_at`` (not ``created_at``) is the discriminator because
-        re-registration preserves the original ``created_at``.
+        re-registration preserves the original ``created_at``. Pass
+        ``expected_record`` for an exact compare-and-swap check, including
+        legacy records without ``updated_at``; otherwise a concurrent BUY
+        could lose its newly registered stop-loss protection.
         """
         key = self._key(market, ticker)
         with FileLock(self.lock_path):
             positions = self._load()
             record = positions.get(key)
             if record is None:
+                return False
+            if not isinstance(record, dict):
+                logger.error("[StopLossTracker] Refusing to delete malformed record for %s %s", market, ticker)
+                return False
+            if expected_record is not None and record != expected_record:
+                logger.info("[StopLossTracker] Keeping %s %s: record changed since inspection", market, ticker)
                 return False
             if expected_updated_at is not None and record.get("updated_at") != expected_updated_at:
                 logger.info(
@@ -594,7 +604,8 @@ class StopLossWatcher:
                         ticker,
                     )
                     self.tracker.remove_position(
-                        market, ticker, expected_updated_at=pos.get("updated_at")
+                        market, ticker, expected_updated_at=pos.get("updated_at"),
+                        expected_record=pos,
                     )
                     continue
 
@@ -737,7 +748,8 @@ class StopLossWatcher:
                 else:
                     if remaining_qty == 0:
                         self.tracker.remove_position(
-                            market, ticker, expected_updated_at=pos.get("updated_at")
+                            market, ticker, expected_updated_at=pos.get("updated_at"),
+                            expected_record=pos,
                         )
                         self._last_trigger_attempt.pop(
                             self.tracker._key(market, ticker), None
