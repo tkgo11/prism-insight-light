@@ -198,7 +198,24 @@ class StopLossTracker:
         target_price: float | None = None,
     ) -> None:
         """Register or update a position's stop-loss price."""
-        if stop_loss <= 0:
+        # Invalid/non-finite prices must not overwrite a valid protection
+        # record with JSON NaN/Infinity that the watcher later skips.
+        try:
+            if any(isinstance(value, bool) for value in (stop_loss, entry_price, target_price)):
+                raise ValueError("Boolean price is not valid")
+            stop_loss_value = float(stop_loss)
+            entry_price_value = float(entry_price)
+            target_price_value = float(target_price) if target_price is not None else None
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Stop-loss position contains invalid prices") from exc
+        prices = (stop_loss_value, entry_price_value)
+        if target_price_value is not None:
+            prices += (target_price_value,)
+        if not all(math.isfinite(value) for value in prices):
+            raise ValueError("Stop-loss position prices must be finite")
+        if entry_price_value < 0 or (target_price_value is not None and target_price_value < 0):
+            raise ValueError("Stop-loss position prices must be nonnegative")
+        if stop_loss_value <= 0:
             return
         now_iso = datetime.now(timezone.utc).isoformat()
         key = self._key(market, ticker)
@@ -209,10 +226,10 @@ class StopLossTracker:
             pos = TrackedPosition(
                 market=market.upper(),
                 ticker=ticker,
-                stop_loss=float(stop_loss),
-                entry_price=float(entry_price),
+                stop_loss=stop_loss_value,
+                entry_price=entry_price_value,
                 company_name=company_name or ticker,
-                target_price=float(target_price) if target_price is not None else None,
+                target_price=target_price_value,
                 created_at=created_at or now_iso,
                 updated_at=now_iso,
             )
@@ -391,7 +408,7 @@ class StopLossWatcher:
                 try:
                     ticker = str(pos.get("ticker", "") or "")
                     stop_loss = float(pos.get("stop_loss", 0.0))
-                except (AttributeError, TypeError, ValueError):
+                except (AttributeError, TypeError, ValueError, OverflowError):
                     # One malformed persisted record must not abort the cycle
                     # and leave every later position unchecked.
                     logger.error("[Stop-Loss] Skipping malformed tracked record: %r", pos)

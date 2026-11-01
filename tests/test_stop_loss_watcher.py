@@ -1,6 +1,7 @@
 """Unit tests for StopLossTracker and StopLossWatcher."""
 
 import asyncio
+import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -686,6 +687,65 @@ def test_invalid_quote_does_not_abort_other_stop_loss_positions(
             enabled=True,
             request_interval_seconds=0,
             storage_path=tmp_path / "tracker.json",
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "KR")
+
+    assert watcher.check_stop_loss_once() == []
+    assert tracker.get_position("KR", "111111") is not None
+    assert tracker.get_position("KR", "222222") is None
+    dispatcher.dispatch.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid"),
+    [
+        ("stop_loss", float("nan")),
+        ("stop_loss", float("inf")),
+        ("stop_loss", 10 ** 400),
+        ("entry_price", float("nan")),
+        ("entry_price", -1),
+        ("target_price", float("-inf")),
+        ("target_price", 10 ** 400),
+    ],
+)
+def test_stop_loss_tracker_rejects_invalid_prices_without_losing_existing_protection(
+    tmp_path, field, invalid
+):
+    tracker = StopLossTracker(tmp_path / "tracker.json")
+    tracker.record_position("KR", "005930", 70000, entry_price=73000, target_price=80000)
+    before = tracker.get_position("KR", "005930")
+    kwargs = {"stop_loss": 69000, "entry_price": 73000, "target_price": 80000}
+    kwargs[field] = invalid
+    with pytest.raises(ValueError, match="price"):
+        tracker.record_position("KR", "005930", **kwargs)
+    assert tracker.get_position("KR", "005930") == before
+
+
+def test_stop_loss_watcher_oversized_persisted_price_does_not_abort_other_positions(
+    tmp_path, monkeypatch
+):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+    valid = tracker.get_position("KR", "222222")
+    # Simulate a corrupted legacy record that overflows float conversion.
+    malformed = {"market": "KR", "ticker": "111111", "stop_loss": 10 ** 400}
+    tracker_path.write_text(
+        json.dumps({"KR:111111": malformed, "KR:222222": valid}),
+        encoding="utf-8",
+    )
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 80}
+    trader.get_holding_quantity.return_value = 0
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True, request_interval_seconds=0, storage_path=tracker_path
         ),
         tracker=tracker,
     )
