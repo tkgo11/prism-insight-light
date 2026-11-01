@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T01:15+09:00",
     "started_at": "2026-11-01T16:15:33Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T01:15+09:00",
-    "last_mutation_commit": "a20bcb93959624471fdf641b30f46db83696e679",
-    "last_mutation_at": "2026-11-01T15:30:00Z",
-    "result": "RUNNING_ROOT_CAUSE_CLOSURE",
+    "completed_at": "2026-11-01T16:19:51.888Z",
+    "lock_owner": null,
+    "last_mutation_commit": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
+    "last_mutation_at": "2026-11-01T16:19:51.888Z",
+    "result": "LEDGER_TERMINAL_MONOTONICITY_FIXED_CI_SUCCESS_NO_AUDIT_PASS",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,21 +19,16 @@
       "source_head": "fa54d47b0d1c281ac09b8a13de7fddd833bec407",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "a20bcb93959624471fdf641b30f46db83696e679",
+      "pr_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
       "pr_number": 42,
       "pr_changed_files": 43,
-      "related_manifest_files": 43,
+      "related_manifest_files": 51,
       "related_manifest_files_fully_audited": 0,
       "full_tree_files": 159,
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41321379720,
-          "status": "completed",
-          "conclusion": "success"
-        },
-        {
-          "id": 41321384203,
+          "id": 41325576768,
           "status": "completed",
           "conclusion": "success"
         }
@@ -41,31 +36,18 @@
       "external_statuses": [
         {
           "context": "security/snyk (tkgo11)",
-          "state": "success",
-          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/a5b46e87-5ea0-49f1-9c6a-870a7e6076d4"
+          "state": "success"
         },
         {
           "context": "qlty check",
-          "state": "success",
-          "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
-        },
-        {
-          "context": "qlty usage",
-          "state": "pending",
-          "target_url": "https://qlty.sh/gh/tkgo11/settings/analysis-minutes"
+          "state": "pending"
         }
       ],
       "commits": [
-        "391296ccdaa3812af64afb808b0acc22bbc67dcc",
-        "89e3b503d714dd9e0e045ede942ceb01d70c2ea3",
-        "70220d449debe320a3e1ae35f6c436b826bd7360",
-        "84156d4f8c556904f13e9985e6cbe364a733dd83",
-        "ba002751d0baa9ad42939de91f33a1db9efac553",
-        "ec2ad835db2e070ef29118154a69792c312c9bb1",
-        "a20bcb93959624471fdf641b30f46db83696e679"
+        "083296fcf272f23d32be0e63434b0b0d7e5a1578"
       ],
       "merged": false,
-      "reason": "Current-head CI success but qlty usage pending; related closure, whole-repo audit and KIS demo authoritative order reconciliation incomplete."
+      "reason": "Latest-head CI success; related/full audits incomplete, broker order/fill reconciliation absent; qlty pending."
     }
   },
   "source": {
@@ -85,11 +67,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "a20bcb93959624471fdf641b30f46db83696e679",
+    "head_sha": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_CURRENT_HEAD_CI_SUCCESS_AUDIT_RESET"
+    "status": "DRAFT_LATEST_HEAD_CI_SUCCESS_RELATED_AUDIT_0_OF_2"
   },
   "candidates": [
     {
@@ -122,9 +104,9 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "RESET_AFTER_US_STOP_LOSS_KEY_LOOKUP_FIX_DEPENDENCY_CLOSURE_INCOMPLETE",
+    "status": "EXPANDED_DEPENDENCY_SCOPE_NOT_FULLY_AUDITED",
     "checksum": null,
-    "scope_estimate": "43 PR changed files; transitive dependency closure incomplete",
+    "scope_estimate": "51 identified related files, transitive closure still incomplete",
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
@@ -153,7 +135,7 @@
       },
       {
         "path": "tests/test_execution_ledger_retention.py",
-        "blob_sha": "10b6da9638f2a71b0f9cf484cf08dbb2a71494de",
+        "blob_sha": "99b832e1f58f98c4b90eb20cdc2dd965f713211f",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -253,7 +235,7 @@
       },
       {
         "path": "trading/execution_ledger.py",
-        "blob_sha": "8660882130214203ae0247de3e31bdfc61e20884",
+        "blob_sha": "d5e37f9b5bb8101d83eea9d81c901a706430f9b6",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -340,20 +322,59 @@
         "path": "trading/us.py",
         "blob_sha": "7d0a8bd786997573913d44d35b70e7e3217588ea",
         "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "subscriber.py",
+        "blob_sha": "479a0a1ffb3e2ab17404171db47bcbf847a30bdd",
+        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/file_lock.py",
+        "blob_sha": "3b643eb5e2dc1e0c4d775dcf0b18b5d8aea65fbc",
+        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/signal_safety.py",
+        "blob_sha": "2a30edf46e86b295c8e1f1b599511f28146884fb",
+        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/kis_auth.py",
+        "blob_sha": "9a6fb623276e357a41c21eb25d5f3fa5de2243f0",
+        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/buy_sizing.py",
+        "blob_sha": "3db2b3f1ea40ad54a38b32a4d4bbf95c2d8b1d19",
+        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "webui/services/trade_service.py",
+        "blob_sha": "fc70caf328b37cca66b47c7024bb7b9cf2524de6",
+        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "webui/routes/trading.py",
+        "blob_sha": "1c7aefddb3bc1b5a893942d47a68c054c99f7b43",
+        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "tests/test_multi_account_dispatch.py",
+        "blob_sha": "a39c0f0257b278d81379adfb0284d974eac6a990",
+        "status": "DEPENDENCY_IDENTIFIED_NOT_FULLY_AUDITED"
       }
     ],
     "checked_files": 0,
     "modified_files": [
-      "trading/stop_loss_watcher.py",
-      "tests/test_stop_loss_legacy_quarantine.py",
-      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
+      "trading/execution_ledger.py",
+      "tests/test_execution_ledger_retention.py"
     ]
   },
   "full_manifest": {
-    "status": "RESET_AFTER_CODE_CHANGES_NOT_AUDITED",
+    "status": "RESET_AFTER_CODE_CHANGE_NOT_FULLY_AUDITED",
     "tracked_tree_entries_on_pr": 183,
     "tracked_blob_files_on_pr": 159,
-    "sha": "884f3e9c8b7e2c5bc973bc7e443f7872ed2007dc",
+    "sha": "5275f27fe4aed643d37f29df0a611aa6c2b98740",
     "files_checked": 0,
     "checksum": null,
     "checksum_kind": "NOT_VERIFIED_AT_NEW_HEAD",
@@ -565,7 +586,7 @@
       },
       {
         "path": "tests/test_execution_ledger_retention.py",
-        "blob_sha": "10b6da9638f2a71b0f9cf484cf08dbb2a71494de",
+        "blob_sha": "99b832e1f58f98c4b90eb20cdc2dd965f713211f",
         "status": "NOT_REVIEWED"
       },
       {
@@ -810,7 +831,7 @@
       },
       {
         "path": "trading/execution_ledger.py",
-        "blob_sha": "8660882130214203ae0247de3e31bdfc61e20884",
+        "blob_sha": "d5e37f9b5bb8101d83eea9d81c901a706430f9b6",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1394,6 +1415,17 @@
           "state": "success"
         }
       ]
+    },
+    "39": {
+      "run_id": 41325576768,
+      "head_sha": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite",
+        "Windows runtime smoke"
+      ],
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41325576768"
     },
     "latest_workflow_run_id": 41252260295,
     "latest_workflow_run_status": "in_progress",
@@ -2938,48 +2970,47 @@
       ],
       "local_tests_executed": false,
       "notes": "Unverified success=False classified as failed/retryable; fixed to unknown unless explicit verified broker rejection or APBK business code. Fixed APBK casefold bug and four mock-fixture failures found by CI. Final CI green. No full dependency audit, no broker demo, no PASS, no merge."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T01:15+09:00",
+      "head_sha": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
+      "kind": "PARTIAL_ROOT_CAUSE_AND_CALL_PATH_REVIEW_NOT_AUDIT_PASS",
+      "files": [
+        {
+          "path": "trading/execution_ledger.py",
+          "blob_sha": "d5e37f9b5bb8101d83eea9d81c901a706430f9b6",
+          "scope": "load, save, prune, claim, finalize, release"
+        },
+        {
+          "path": "trading/execution_outcome.py",
+          "blob_sha": "0e594fe7d67e8ed5f50ceb9311911ba68563ac0c",
+          "scope": "full source inspected"
+        },
+        {
+          "path": "trading/file_lock.py",
+          "blob_sha": "3b643eb5e2dc1e0c4d775dcf0b18b5d8aea65fbc",
+          "scope": "full source inspected"
+        },
+        {
+          "path": "tests/test_execution_ledger_retention.py",
+          "blob_sha": "99b832e1f58f98c4b90eb20cdc2dd965f713211f",
+          "scope": "regressions verified by latest-head CI"
+        }
+      ],
+      "related_pass": false,
+      "full_pass": false,
+      "ci": "https://github.com/tkgo11/prism-insight-light/actions/runs/41325576768"
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Full related dependency closure and file-by-file audit incomplete",
-    "Broker fill/partial-fill and order-id reconciliation require safe demo evidence",
-    "Full repository audit not started",
-    "Full related dependency audit incomplete",
-    "Real/demo KIS and GCP integration not performed",
-    "Broker fill/stop-loss reconciliation unresolved",
-    "Required approvals and branch protection not fully verified",
-    "Related dependency-closure file-by-file audit incomplete",
-    "External qlty usage status pending",
-    "No verified broker fill/order-id reconciliation and KIS/GCP demo integration",
-    "Branch protection read forbidden by integration (403); reviews absent",
-    "Latest PR head CI incomplete after overflow fix",
-    "Dependency closure and broker demo reconciliation still incomplete",
-    "New-head CI incomplete after stop-loss validation fix",
-    "Stop-loss accepted-order vs fill/partial-fill reconciliation remains unresolved; demo KIS/GCP evidence required",
-    "New-head GitHub Actions and security/quality checks incomplete",
-    "Malformed-record regression not executed locally",
-    "Full related dependency closure incomplete",
-    "Real/demo KIS/GCP end-to-end and broker fill reconciliation absent",
-    "Persisted ticker integrity fix needs new-head CI verification; related dependency closure and broker demo unresolved",
-    "Current head CI incomplete after malformed-record fixture repair",
-    "Related dependency closure and KIS/GCP demo/authoritative fill reconciliation remain incomplete",
-    "Stable stop-loss identity suppresses safe retry after accepted partial/unfilled SELL; authoritative order-id/fill reconciliation and demo evidence required",
-    "New-head CI runs 41276607805 and 41276611432 in progress; stop-loss legacy quarantine fix not yet CI verified",
-    "2026-11-01 15:20 KST: current-head Actions successful but qlty usage pending; incomplete related dependency audit and no authoritative broker fill reconciliation or KIS/GCP demo evidence.",
-    "2026-11-01 16:20 KST: qlty usage pending; no authoritative order-id/fill reconciliation, KIS/GCP demo, or full related audit.",
-    "2026-11-01T17:20+09:00: new-head CI incomplete; related dependency closure not fully audited; authoritative broker fill/cancel and KIS/GCP demo reconciliation remain unverified.",
-    "2026-11-01 18:20 KST: latest-head CI incomplete; related closure/whole-repo audits incomplete; manual quarantine reconciliation and authoritative broker order/fill KIS demo validation absent; external qlty status pending.",
-    "2026-11-01 19:18 KST: new-head Actions still running; external checks pending; related/full file-by-file audits and KIS/GCP authoritative broker order reconciliation incomplete.",
-    "2026-11-01 20:22 KST: latest-head CI and external checks incomplete after four duplicate-key trading-ledger fixes; KIS/GCP demo and order-id/fill reconciliation remain unverified.",
-    "2026-11-01 21:20 KST: latest-head CI pending after five stop-loss safety/test commits; full related dependency audit and authoritative order-id/fill KIS demo reconciliation remain unverified.",
-    "2026-11-01 22:20 KST: legacy stop-loss CAS race fixes committed; latest-head CI and external checks incomplete, full related dependency audit and authoritative KIS order-id/fill/cancel demo reconciliation not performed.",
-    "2026-11-01 23:20 KST: CI 41315903723 succeeded (854 Linux/135 Windows), but qlty usage pending, related dependency closure incomplete, no authoritative broker order-ID/fill/cancel demo validation, no full-repository audit.",
-    "2026-11-02 00:20 KST: current-head CI pending; transitive related/full audits incomplete; KIS demo order-id/fill reconciliation not executed; new US stop-loss canonicalization and atomic-write fixes need verification.",
-    "2026-11-02 00:30 KST: latest-head CI 41321379720 and 41321384203 completed/success, Snyk and qlty check success, qlty usage pending; related/full file audits and authoritative KIS demo order-ID/fill/cancel reconciliation incomplete."
+    "Related transitive dependency closure and file-by-file audit incomplete (0/2)",
+    "Full 159-file repository audit not started (0/2)",
+    "Authoritative KIS demo order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation not executed",
+    "External qlty check pending on latest HEAD; branch protection API returned 403; no submitted reviews"
   ],
-  "next_action": "Continue related dependency closure and authoritative broker order-id/fill/cancel mock+demo reconciliation; preserve draft 0/2 and 0/2 until two independent complete audits and strict merge gates.",
+  "next_action": "Complete expanded dependency closure, root-cause matrix and mock-broker order-ID/fill/cancel reconciliation without duplicating historical fixes; keep Draft 0/2 0/2 until independent full audits.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -3207,6 +3238,19 @@
       "full_pass": false,
       "reason": "Seven code/test/docs commits; latest-head GitHub Actions completed/success; qlty usage pending; related/full audit and broker demo reconciliation incomplete.",
       "manifest_tree_sha": "884f3e9c8b7e2c5bc973bc7e443f7872ed2007dc"
+    },
+    {
+      "slot": "2026-11-02T01:15+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T01:15+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "fa54d47b0d1c281ac09b8a13de7fddd833bec407",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "One confirmed terminal-status downgrade patched; latest-head Linux and Windows CI succeeded; related dependency audit and KIS demo unresolved; external qlty pending.",
+      "manifest_tree_sha": "5275f27fe4aed643d37f29df0a611aa6c2b98740"
     }
   ],
   "discovered_defects": [
@@ -3215,14 +3259,16 @@
       "severity": "high",
       "fixed_in": "27f828e7c2ce95f58b51ce2a08611214eae1eae9",
       "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "description": "One broker cash drop was credited independently to multiple pending BUY reservations."
+      "description": "One broker cash drop was credited independently to multiple pending BUY reservations.",
+      "root_cause_id": "RC-CASH-RESERVATION-RECONCILIATION"
     },
     {
       "id": "score-max-concurrent-ratio",
       "severity": "high",
       "fixed_in": "3c47cbca447215dbf18c3e82cb59f8049295f330",
       "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "description": "Concurrent score-max-capital BUYs shared a mutable score ratio across async tasks."
+      "description": "Concurrent score-max-capital BUYs shared a mutable score ratio across async tasks.",
+      "root_cause_id": "RC-STRATEGY-SCORE-RACE"
     },
     {
       "id": "cash-drop-not-proof-of-fill",
@@ -3232,7 +3278,8 @@
       "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
       "description": "Cash-only decreases (withdrawals/FX/unrelated trades) previously released accepted BUY reservations without broker fill evidence",
       "fix_commit": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
-      "validation": "CI queued; not executed locally"
+      "validation": "CI queued; not executed locally",
+      "root_cause_id": "RC-CASH-RESERVATION-RECONCILIATION"
     },
     {
       "id": "oversized-json-integer-unhandled-overflow",
@@ -3242,7 +3289,8 @@
       "test": "tests/test_signal_schema.py",
       "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
       "fix_commit": "532a0f8d451d64d1eb55edcc211e595abd701319",
-      "description": "float(10**400) raised uncaught OverflowError during inbound signal parsing instead of SignalValidationError; numeric-field and raw-byte regressions added"
+      "description": "float(10**400) raised uncaught OverflowError during inbound signal parsing instead of SignalValidationError; numeric-field and raw-byte regressions added",
+      "root_cause_id": "RC-SIGNAL-NUMERIC-OVERFLOW"
     },
     {
       "id": "stop-loss-nonfinite-tracker-persistence",
@@ -3251,7 +3299,8 @@
       "file": "trading/stop_loss_watcher.py",
       "test": "tests/test_stop_loss_watcher.py",
       "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
-      "description": "Nonfinite stop-loss/entry/target could overwrite a valid tracked position with JSON NaN/Infinity, silently disabling stop-loss checks."
+      "description": "Nonfinite stop-loss/entry/target could overwrite a valid tracked position with JSON NaN/Infinity, silently disabling stop-loss checks.",
+      "root_cause_id": "RC-STOPLOSS-RECORD-VALIDATION"
     },
     {
       "id": "stop-loss-oversized-corrupt-record-aborts-market-cycle",
@@ -3260,7 +3309,8 @@
       "file": "trading/stop_loss_watcher.py",
       "test": "tests/test_stop_loss_watcher.py",
       "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
-      "description": "OverflowError from malformed legacy stop-loss value aborted entire market cycle and skipped subsequent positions."
+      "description": "OverflowError from malformed legacy stop-loss value aborted entire market cycle and skipped subsequent positions.",
+      "root_cause_id": "RC-STOPLOSS-RECORD-VALIDATION"
     },
     {
       "id": "stop-loss-invalid-market-record-aborts-cycle",
@@ -3271,7 +3321,8 @@
       "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
       "fix_commit": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
       "description": "Malformed persisted dictionary/legacy-list record could raise AttributeError and stop monitoring other protected positions",
-      "validation": "Seven parametrized regression cases committed; CI in progress; local pytest not executed"
+      "validation": "Seven parametrized regression cases committed; CI in progress; local pytest not executed",
+      "root_cause_id": "RC-STOPLOSS-RECORD-VALIDATION"
     },
     {
       "id": "stop-loss-corrupt-ticker-rearm-2026-11-01",
@@ -3282,7 +3333,8 @@
         "tests/test_stop_loss_watcher.py"
       ],
       "commit_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
-      "summary": "Malformed persisted ticker can redirect quote/order to wrong instrument; non-dict same-key record can block stop-loss rearm"
+      "summary": "Malformed persisted ticker can redirect quote/order to wrong instrument; non-dict same-key record can block stop-loss rearm",
+      "root_cause_id": "RC-STOPLOSS-RECORD-VALIDATION"
     },
     {
       "id": "stop-loss-malformed-record-test-fixture-regression-2026-11-01",
@@ -3291,7 +3343,8 @@
       "file": "tests/test_wave4_execution_safety.py",
       "fix_commit": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
       "failed_run_id": 41264840101,
-      "description": "Stale test fixture used inconsistent persisted ticker keys and was rejected by new fail-closed validation"
+      "description": "Stale test fixture used inconsistent persisted ticker keys and was rejected by new fail-closed validation",
+      "root_cause_id": "RC-TEST-FIXTURE-REGRESSION"
     },
     {
       "id": "stop-loss-repeat-attempt-deduped-after-accepted-unfilled-order",
@@ -3304,7 +3357,8 @@
         "trading/execution_ledger.py"
       ],
       "description": "Stable stop-loss signal_id per tracked position and permanently suppressing executed/unknown ledger claims mean remaining shares after accepted but partially/unfilled SELL cannot be safely retried; a new ID without broker reconciliation risks duplicate SELL.",
-      "evidence": "PR comment 6553357538; watcher lines 565-587/616-645, dispatch lines 405-424/721-746, ledger lines 26-30/175-196"
+      "evidence": "PR comment 6553357538; watcher lines 565-587/616-645, dispatch lines 405-424/721-746, ledger lines 26-30/175-196",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION"
     },
     {
       "id": "legacy-stop-loss-invalid-records-lost-on-migration-2026-11-01",
@@ -3313,7 +3367,8 @@
       "file": "trading/stop_loss_watcher.py",
       "fix_commit": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
       "description": "Legacy JSON-list stop-loss records with malformed market/ticker or duplicate instrument were silently dropped by _load; subsequent record_position/remove_position rewrote list as dict and destroyed reconciliation evidence. Quarantine preserves raw payload under non-tradable keys.",
-      "test_path": "tests/test_stop_loss_legacy_quarantine.py"
+      "test_path": "tests/test_stop_loss_legacy_quarantine.py",
+      "root_cause_id": "RC-STOPLOSS-LEGACY-QUARANTINE"
     },
     {
       "id": "explicit-outcome-unknown-overridden-by-success",
@@ -3328,7 +3383,8 @@
       "fix_commits": [
         "5e89d9cf882f81fa15edbbe2fce8baf65aec5a31",
         "1db54beebc5f43cb8462515d4b936265ab319e49"
-      ]
+      ],
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY"
     },
     {
       "id": "stop-loss-legacy-conflicting-first-actionable-2026-11-01-18",
@@ -3340,7 +3396,8 @@
         "tests/test_stop_loss_legacy_quarantine.py"
       ],
       "fix_commit": "f66a85888c20832c5bbf36112df0378bf7b32456",
-      "regression": "tests/test_stop_loss_legacy_quarantine.py"
+      "regression": "tests/test_stop_loss_legacy_quarantine.py",
+      "root_cause_id": "RC-STOPLOSS-LEGACY-QUARANTINE"
     },
     {
       "id": "stop-loss-us-ticker-case-variant-double-sell-2026-11-01-18",
@@ -3352,7 +3409,8 @@
         "tests/test_stop_loss_legacy_quarantine.py"
       ],
       "fix_commit": "b47311e5b120482ea084693c7fecc8d991fc7ab7",
-      "regression": "tests/test_stop_loss_legacy_quarantine.py"
+      "regression": "tests/test_stop_loss_legacy_quarantine.py",
+      "root_cause_id": "RC-STOPLOSS-US-SYMBOL-IDENTITY"
     },
     {
       "id": "stop-loss-config-overflow-and-invalid-identifiers-2026-11-01-19",
@@ -3369,7 +3427,8 @@
         "6fc2fa1e96cc67a1378b4f6cdb2723a97a22b485",
         "a8d10e87cc771961389919f8f8d19146f3946b24"
       ],
-      "regression": "tests/test_stop_loss_watcher.py; prior intermediate CI 41297054321 failed due escaped newline fixture and was corrected; latest CI pending"
+      "regression": "tests/test_stop_loss_watcher.py; prior intermediate CI 41297054321 failed due escaped newline fixture and was corrected; latest CI pending",
+      "root_cause_id": "RC-STOPLOSS-CONFIG-IDENTIFIERS"
     },
     {
       "id": "duplicate-json-stop-loss-keys",
@@ -3378,7 +3437,8 @@
       "file": "trading/stop_loss_watcher.py",
       "test": "tests/test_stop_loss_legacy_quarantine.py",
       "status": "PATCHED_CI_PENDING",
-      "fix_commit": "a0ad882957df2690b2f31470d4ae2c54ea1f8f42"
+      "fix_commit": "a0ad882957df2690b2f31470d4ae2c54ea1f8f42",
+      "root_cause_id": "RC-STOPLOSS-LEGACY-QUARANTINE"
     },
     {
       "id": "duplicate-json-execution-ledger-keys",
@@ -3387,7 +3447,8 @@
       "file": "trading/execution_ledger.py",
       "test": "tests/test_execution_ledger_retention.py",
       "status": "PATCHED_CI_PENDING",
-      "fix_commit": "ee0cb816b10363969a5e0fa4e0ee925d840f48dd"
+      "fix_commit": "ee0cb816b10363969a5e0fa4e0ee925d840f48dd",
+      "root_cause_id": "RC-LEDGER-JSON-INTEGRITY"
     },
     {
       "id": "duplicate-json-queued-order-fields",
@@ -3396,7 +3457,8 @@
       "file": "trading/off_hours_queue.py",
       "test": "tests/test_off_hours_policy.py",
       "status": "PATCHED_CI_PENDING",
-      "fix_commit": "5e57ea0900b3b00482701a57f10d02736aef6a62"
+      "fix_commit": "5e57ea0900b3b00482701a57f10d02736aef6a62",
+      "root_cause_id": "RC-QUEUE-JSON-INTEGRITY"
     },
     {
       "id": "duplicate-json-reservation-keys",
@@ -3405,7 +3467,8 @@
       "file": "trading/strategies/balance_split.py",
       "test": "tests/test_balance_split_strategy.py",
       "status": "PATCHED_CI_PENDING",
-      "fix_commit": "5af98cf0ad3b814b93258a20d8cdd9d4492d5312"
+      "fix_commit": "5af98cf0ad3b814b93258a20d8cdd9d4492d5312",
+      "root_cause_id": "RC-RESERVATION-JSON-INTEGRITY"
     },
     {
       "id": "stop-loss-legacy-price-and-stale-threshold-2026-11-01T21:20",
@@ -3423,7 +3486,8 @@
         "75f13a7ade032d434e675c051feb1c90e43a5035",
         "498ee1447970380ddb72fcfcbff1329495e54b27"
       ],
-      "description": "Persisted boolean/nonfinite/malformed stop-loss/entry/target prices could be actionable or silently disable protection; an in-flight operator stop-level change could leave a stale watcher snapshot able to submit a SELL. Filter malformed persisted prices and revalidate active record after broker inquiry; preserve raw records. Revalidation reduces but cannot eliminate the race without broker-side idempotent reconciliation."
+      "description": "Persisted boolean/nonfinite/malformed stop-loss/entry/target prices could be actionable or silently disable protection; an in-flight operator stop-level change could leave a stale watcher snapshot able to submit a SELL. Filter malformed persisted prices and revalidate active record after broker inquiry; preserve raw records. Revalidation reduces but cannot eliminate the race without broker-side idempotent reconciliation.",
+      "root_cause_id": "RC-STOPLOSS-RECORD-VALIDATION"
     },
     {
       "id": "legacy-stop-loss-zero-holding-rearm-deletes-new-protection-2026-11-01-22",
@@ -3437,7 +3501,8 @@
         "1915e555f06d94799970c1785443bd1bed656de9",
         "25c39ef9e78d5360125e34a15a31edbd5bcd30ae"
       ],
-      "description": "Legacy stop-loss entries without updated_at could be removed by watcher after an in-flight zero-holdings check even if a concurrent BUY had re-registered a new protection. Added expected_record CAS and two watcher race regressions, plus malformed-record fail-closed removal."
+      "description": "Legacy stop-loss entries without updated_at could be removed by watcher after an in-flight zero-holdings check even if a concurrent BUY had re-registered a new protection. Added expected_record CAS and two watcher race regressions, plus malformed-record fail-closed removal.",
+      "root_cause_id": "RC-STOPLOSS-CONCURRENT-STATE"
     },
     {
       "id": "legacy-stop-loss-stale-inflight-edit-2026-11-01-22",
@@ -3451,7 +3516,8 @@
         "63b10603db84a716b6fc850eb3888f922f1cc623",
         "234d6a280e350c0a4ffad1f127ccd9fdfaf28d79"
       ],
-      "description": "Legacy stop-loss record could be modified in-flight without changing stop_loss or absent updated_at; stale snapshot passed pre-submit check. Now compare full tracked record; regression added."
+      "description": "Legacy stop-loss record could be modified in-flight without changing stop_loss or absent updated_at; stale snapshot passed pre-submit check. Now compare full tracked record; regression added.",
+      "root_cause_id": "RC-STOPLOSS-CONCURRENT-STATE"
     },
     {
       "id": "unverified-broker-failure-retryable-2026-11-01-23",
@@ -3469,7 +3535,8 @@
         "268c07d64aa17cda9ba2ec7d4a70dfbd25cd15ad",
         "c24e5cd690b825b7601f28351330431c9f1cef46"
       ],
-      "description": "Generic broker success=False without authoritative KIS rejection proof was classified failed and could be automatically replayed. Fail closed to unknown; verified business rejection still retryable. Six CI regressions discovered and corrected same run; latest CI successful."
+      "description": "Generic broker success=False without authoritative KIS rejection proof was classified failed and could be automatically replayed. Fail closed to unknown; verified business rejection still retryable. Six CI regressions discovered and corrected same run; latest CI successful.",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY"
     },
     {
       "id": "new-us-stop-loss-case-variant-registration-2026-11-02",
@@ -3483,7 +3550,8 @@
       "fix_commits": [
         "391296ccdaa3812af64afb808b0acc22bbc67dcc",
         "89e3b503d714dd9e0e045ede942ceb01d70c2ea3"
-      ]
+      ],
+      "root_cause_id": "RC-STOPLOSS-US-SYMBOL-IDENTITY"
     },
     {
       "id": "stop-loss-fixed-temp-name-atomicity-2026-11-02",
@@ -3497,7 +3565,8 @@
       "fix_commits": [
         "70220d449debe320a3e1ae35f6c436b826bd7360",
         "84156d4f8c556904f13e9985e6cbe364a733dd83"
-      ]
+      ],
+      "root_cause_id": "RC-STOPLOSS-ATOMIC-WRITE"
     },
     {
       "id": "us-canonical-stop-loss-lowercase-lookup-mismatch-2026-11-02",
@@ -3511,7 +3580,28 @@
       "fix_commits": [
         "ec2ad835db2e070ef29118154a69792c312c9bb1",
         "a20bcb93959624471fdf641b30f46db83696e679"
-      ]
+      ],
+      "root_cause_id": "RC-STOPLOSS-US-SYMBOL-IDENTITY"
+    },
+    {
+      "id": "ledger-protected-finalize-downgrade-2026-11-02",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "root_cause_id": "RC-LEDGER-TERMINAL-MONOTONICITY",
+      "description": "ExecutionLedger.finalize unconditionally rewrote an already protected executed/unknown status as failed/rejected/deferred; claim() would then allow duplicate submission.",
+      "paths": [
+        "trading/execution_ledger.py",
+        "tests/test_execution_ledger_retention.py"
+      ],
+      "fix_commit": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
+      "reproduction": "Pre-fix finalize unconditional assignment and claim retryable predicate inspected; isolated transition model reproduced; actual repository regression tests executed on latest-head GitHub Actions 41325576768.",
+      "validation": {
+        "ci_run_id": 41325576768,
+        "linux": "success",
+        "windows": "success",
+        "local_full_pytest": "NOT_RUN",
+        "kis_demo": "NOT_RUN"
+      }
     }
   ],
   "risks": [
@@ -3522,6 +3612,251 @@
       "status": "mitigated-conservatively",
       "impact": "Unresolved BUY reservations persist until manual authoritative reconciliation; could block new orders",
       "sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff"
+    }
+  ],
+  "root_cause_groups": [
+    {
+      "root_cause_id": "RC-CASH-RESERVATION-RECONCILIATION",
+      "description": "Cash reservation cannot be released from unrelated balance changes",
+      "defect_ids": [
+        "cash-drop-double-reconciliation",
+        "cash-drop-not-proof-of-fill"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-STRATEGY-SCORE-RACE",
+      "description": "Mutable score ratio across concurrent tasks",
+      "defect_ids": [
+        "score-max-concurrent-ratio"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-SIGNAL-NUMERIC-OVERFLOW",
+      "description": "Oversized numeric input validation",
+      "defect_ids": [
+        "oversized-json-integer-unhandled-overflow"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-STOPLOSS-RECORD-VALIDATION",
+      "description": "Malformed persisted watcher records and nonfinite prices",
+      "defect_ids": [
+        "stop-loss-nonfinite-tracker-persistence",
+        "stop-loss-oversized-corrupt-record-aborts-market-cycle",
+        "stop-loss-invalid-market-record-aborts-cycle",
+        "stop-loss-corrupt-ticker-rearm-2026-11-01",
+        "stop-loss-legacy-price-and-stale-threshold-2026-11-01T21:20"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-TEST-FIXTURE-REGRESSION",
+      "description": "Stale persisted fixture assumptions",
+      "defect_ids": [
+        "stop-loss-malformed-record-test-fixture-regression-2026-11-01"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "description": "Accepted stop-loss orders lack authoritative fill/cancel/remaining-quantity reconciliation",
+      "defect_ids": [
+        "stop-loss-repeat-attempt-deduped-after-accepted-unfilled-order"
+      ],
+      "classification": "BLOCKED_AUTHORITATIVE_BROKER_DEMO",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-STOPLOSS-LEGACY-QUARANTINE",
+      "description": "Legacy ambiguous and duplicate watcher records",
+      "defect_ids": [
+        "legacy-stop-loss-invalid-records-lost-on-migration-2026-11-01",
+        "stop-loss-legacy-conflicting-first-actionable-2026-11-01-18",
+        "duplicate-json-stop-loss-keys"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "description": "Uncertain broker outcomes must not be retryable",
+      "defect_ids": [
+        "explicit-outcome-unknown-overridden-by-success",
+        "unverified-broker-failure-retryable-2026-11-01-23"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-STOPLOSS-US-SYMBOL-IDENTITY",
+      "description": "US symbol case canonicalization across write/read/delete",
+      "defect_ids": [
+        "stop-loss-us-ticker-case-variant-double-sell-2026-11-01-18",
+        "new-us-stop-loss-case-variant-registration-2026-11-02",
+        "us-canonical-stop-loss-lowercase-lookup-mismatch-2026-11-02"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-STOPLOSS-CONFIG-IDENTIFIERS",
+      "description": "Watcher config overflow and invalid identifiers",
+      "defect_ids": [
+        "stop-loss-config-overflow-and-invalid-identifiers-2026-11-01-19"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-LEDGER-JSON-INTEGRITY",
+      "description": "Duplicate keys in execution ledger",
+      "defect_ids": [
+        "duplicate-json-execution-ledger-keys"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-QUEUE-JSON-INTEGRITY",
+      "description": "Duplicate keys in off-hours queue",
+      "defect_ids": [
+        "duplicate-json-queued-order-fields"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-RESERVATION-JSON-INTEGRITY",
+      "description": "Duplicate keys in reservation ledger",
+      "defect_ids": [
+        "duplicate-json-reservation-keys"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-STOPLOSS-CONCURRENT-STATE",
+      "description": "Stale watcher snapshots and CAS removal",
+      "defect_ids": [
+        "legacy-stop-loss-zero-holding-rearm-deletes-new-protection-2026-11-01-22",
+        "legacy-stop-loss-stale-inflight-edit-2026-11-01-22"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-STOPLOSS-ATOMIC-WRITE",
+      "description": "Stop-loss ledger temporary-file collision",
+      "defect_ids": [
+        "stop-loss-fixed-temp-name-atomicity-2026-11-02"
+      ],
+      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    },
+    {
+      "root_cause_id": "RC-LEDGER-TERMINAL-MONOTONICITY",
+      "description": "Late finalizer must not demote protected order outcome",
+      "defect_ids": [
+        "ledger-protected-finalize-downgrade-2026-11-02"
+      ],
+      "classification": "PATCHED_LATEST_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+    }
+  ],
+  "root_cause_matrix": {
+    "head_sha": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
+    "scope": "ExecutionLedger.finalize terminal-state monotonicity",
+    "entries": [
+      {
+        "contract": "Accepted/ambiguous ledger status must never become retryable",
+        "path": "trading/execution_ledger.py finalize -> claim -> disk recovery",
+        "evidence": "Current-head regression parametrizes executed/unknown/partial_success against all retryable statuses; persistence verified after restart",
+        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Single-account dispatch status and exception paths",
+        "path": "trading/dispatch.py lines 719-789",
+        "evidence": "Source inspection of claim/finalize, pre-submission rejection, cancellation and exception handling",
+        "status": "SOURCE_INSPECTED_NOT_FULLY_AUDITED"
+      },
+      {
+        "contract": "Multi-account per-leg ledger outcomes",
+        "path": "trading/dispatch.py lines 403-484",
+        "evidence": "Source inspection of claim/finalize, deferred release and unknown cancellation",
+        "status": "SOURCE_INSPECTED_NOT_FULLY_AUDITED"
+      },
+      {
+        "contract": "Watcher and queue duplicate suppression",
+        "path": "trading/stop_loss_watcher.py -> trading/dispatch.py -> trading/off_hours_queue.py",
+        "evidence": "Call-path inspection; authoritative broker order/fill reconciliation absent",
+        "status": "PARTIAL_BLOCKED_DEMO"
+      },
+      {
+        "contract": "External receiver and WebUI entrypoints",
+        "path": "subscriber.py and webui/services/trade_service.py -> TradeDispatcher",
+        "evidence": "Import and callsite inspection",
+        "status": "SOURCE_INSPECTED_NOT_FULLY_AUDITED"
+      }
+    ]
+  },
+  "blocker_history": [
+    "Full related dependency closure and file-by-file audit incomplete",
+    "Broker fill/partial-fill and order-id reconciliation require safe demo evidence",
+    "Full repository audit not started",
+    "Full related dependency audit incomplete",
+    "Real/demo KIS and GCP integration not performed",
+    "Broker fill/stop-loss reconciliation unresolved",
+    "Required approvals and branch protection not fully verified",
+    "Related dependency-closure file-by-file audit incomplete",
+    "External qlty usage status pending",
+    "No verified broker fill/order-id reconciliation and KIS/GCP demo integration",
+    "Branch protection read forbidden by integration (403); reviews absent",
+    "Latest PR head CI incomplete after overflow fix",
+    "Dependency closure and broker demo reconciliation still incomplete",
+    "New-head CI incomplete after stop-loss validation fix",
+    "Stop-loss accepted-order vs fill/partial-fill reconciliation remains unresolved; demo KIS/GCP evidence required",
+    "New-head GitHub Actions and security/quality checks incomplete",
+    "Malformed-record regression not executed locally",
+    "Full related dependency closure incomplete",
+    "Real/demo KIS/GCP end-to-end and broker fill reconciliation absent",
+    "Persisted ticker integrity fix needs new-head CI verification; related dependency closure and broker demo unresolved",
+    "Current head CI incomplete after malformed-record fixture repair",
+    "Related dependency closure and KIS/GCP demo/authoritative fill reconciliation remain incomplete",
+    "Stable stop-loss identity suppresses safe retry after accepted partial/unfilled SELL; authoritative order-id/fill reconciliation and demo evidence required",
+    "New-head CI runs 41276607805 and 41276611432 in progress; stop-loss legacy quarantine fix not yet CI verified",
+    "2026-11-01 15:20 KST: current-head Actions successful but qlty usage pending; incomplete related dependency audit and no authoritative broker fill reconciliation or KIS/GCP demo evidence.",
+    "2026-11-01 16:20 KST: qlty usage pending; no authoritative order-id/fill reconciliation, KIS/GCP demo, or full related audit.",
+    "2026-11-01T17:20+09:00: new-head CI incomplete; related dependency closure not fully audited; authoritative broker fill/cancel and KIS/GCP demo reconciliation remain unverified.",
+    "2026-11-01 18:20 KST: latest-head CI incomplete; related closure/whole-repo audits incomplete; manual quarantine reconciliation and authoritative broker order/fill KIS demo validation absent; external qlty status pending.",
+    "2026-11-01 19:18 KST: new-head Actions still running; external checks pending; related/full file-by-file audits and KIS/GCP authoritative broker order reconciliation incomplete.",
+    "2026-11-01 20:22 KST: latest-head CI and external checks incomplete after four duplicate-key trading-ledger fixes; KIS/GCP demo and order-id/fill reconciliation remain unverified.",
+    "2026-11-01 21:20 KST: latest-head CI pending after five stop-loss safety/test commits; full related dependency audit and authoritative order-id/fill KIS demo reconciliation remain unverified.",
+    "2026-11-01 22:20 KST: legacy stop-loss CAS race fixes committed; latest-head CI and external checks incomplete, full related dependency audit and authoritative KIS order-id/fill/cancel demo reconciliation not performed.",
+    "2026-11-01 23:20 KST: CI 41315903723 succeeded (854 Linux/135 Windows), but qlty usage pending, related dependency closure incomplete, no authoritative broker order-ID/fill/cancel demo validation, no full-repository audit.",
+    "2026-11-02 00:20 KST: current-head CI pending; transitive related/full audits incomplete; KIS demo order-id/fill reconciliation not executed; new US stop-loss canonicalization and atomic-write fixes need verification.",
+    "2026-11-02 00:30 KST: latest-head CI 41321379720 and 41321384203 completed/success, Snyk and qlty check success, qlty usage pending; related/full file audits and authoritative KIS demo order-ID/fill/cancel reconciliation incomplete."
+  ],
+  "risk_register_current": [
+    {
+      "id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "severity": "HIGH",
+      "status": "BLOCKS_MERGE",
+      "description": "Accepted broker order is not confirmed fill; partial fills/cancels and remaining quantities lack authoritative reconciliation"
+    },
+    {
+      "id": "RC-LEDGER-TERMINAL-MONOTONICITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Protected order ledger statuses now monotonic under repeated finalization",
+      "fix_commit": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
     }
   ]
 }
