@@ -2078,6 +2078,52 @@
       "ci_status": "in_progress",
       "pr_comment_id": 6553865349,
       "notes": "Reviewed legacy list migration and tracked-position mutation; found data loss and added quarantine preservation plus regression tests. CI pending. No local tests or complete dependency audit; no live/demo broker integration."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-01T15:20+09:00",
+      "phase": "related_code_audit",
+      "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "manifest_tree_sha": "d0dc40968b95e382b5af105f5ee08d6089636653",
+      "pass": false,
+      "reviewed_samples": [
+        {
+          "path": "trading/stop_loss_watcher.py",
+          "scope": "legacy quarantine, holding validation and trigger path; partial review only"
+        },
+        {
+          "path": "trading/execution_ledger.py",
+          "scope": "durable dedupe and retryable status; partial review only"
+        },
+        {
+          "path": "trading/dispatch.py",
+          "scope": "accepted SELL watcher retention and queue behavior; partial review only"
+        },
+        {
+          "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+          "scope": "explicit deployment gate and unresolved fill reconciliation"
+        }
+      ],
+      "review_scope_complete": false,
+      "ci_evidence": {
+        "run_ids": [
+          41276607805,
+          41276611432
+        ],
+        "conclusion": "success",
+        "tests": [
+          "Linux pytest 796 passed",
+          "Windows runtime smoke 133 passed"
+        ],
+        "external_status": "qlty usage pending"
+      },
+      "unresolved": [
+        "Full related dependency audit incomplete",
+        "Broker order-id/partial-fill/cancel reconciliation unverified",
+        "KIS/GCP demo integration unverified"
+      ],
+      "reason": "No audit PASS; green CI does not substitute for full source review."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -2236,7 +2282,7 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Actions green; external qlty usage pending, related dependency audit incomplete, authoritative broker fill reconciliation unverified",
-      "manifest_tree_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750"
+      "manifest_tree_sha": "d0dc40968b95e382b5af105f5ee08d6089636653"
     }
   ],
   "discovered_defects": [
