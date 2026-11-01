@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T23:20+09:00",
-    "started_at": "2026-11-01T14:20:00Z",
-    "completed_at": "2026-11-01T14:25:09.646Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T00:20+09:00",
+    "started_at": "2026-11-01T15:20:27Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T00:20+09:00",
     "last_mutation_commit": "c24e5cd690b825b7601f28351330431c9f1cef46",
-    "last_mutation_at": "2026-11-01T14:25:09.646Z",
-    "result": "UNVERIFIED_BROKER_FAILURE_FAIL_CLOSED_FIXED_CI_SUCCESS_NO_AUDIT_PASS",
+    "last_mutation_at": "2026-11-01T15:20:27Z",
+    "result": "IN_PROGRESS_REVIEW",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -67,7 +67,7 @@
   "source": {
     "repository": "dragon1086/prism-insight",
     "default_branch": "main",
-    "latest_observed_sha": "fe60724c38840cb92504132801714073001e24ef",
+    "latest_observed_sha": "fa54d47b0d1c281ac09b8a13de7fddd833bec407",
     "pinned_contract_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
     "last_integrated_upstream_sha": null,
     "checkpoint_status": "UNKNOWN_BASELINE"
