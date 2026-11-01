@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-01T12:17+09:00",
     "started_at": "2026-11-01T12:17:25+09:00",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-01T12:17+09:00",
-    "last_mutation_commit": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
-    "last_mutation_at": "2026-11-01T11:20:00+09:00",
-    "result": "IN_PROGRESS_REPAIR_FAILED_CI",
+    "completed_at": "2026-11-01T03:19:43.032Z",
+    "lock_owner": null,
+    "last_mutation_commit": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+    "last_mutation_at": "2026-11-01T03:19:43.032Z",
+    "result": "FAILED_CI_FIX_COMMITTED_NEW_CI_IN_PROGRESS_NO_PASS",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
@@ -18,7 +18,7 @@
       "source_head": "21bdb6e6b5a72891b31fd3b574f1fcdaffe5763f",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
+      "pr_head": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
       "pr_number": 42,
       "pr_changed_files": 36,
       "related_review_complete": false,
@@ -27,17 +27,29 @@
       "ci_runs": [
         {
           "id": 41264840101,
+          "head_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
           "status": "completed",
-          "conclusion": "failure",
-          "head_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b"
+          "conclusion": "failure"
+        },
+        {
+          "id": 41268676502,
+          "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 41268680081,
+          "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+          "status": "in_progress",
+          "conclusion": null
         }
       ],
       "local_tests_executed": false,
       "merged": false,
-      "reason": "CI failed: stale test fixture key KR:good conflicts with strict ticker-key invariant",
-      "pr_comment_id": 6552280405
+      "reason": "CI regression in malformed stop-loss fixture fixed; new-head CI pending; full dependency and financial demo audits incomplete",
+      "pr_comment_id": 6552798964
     },
-    "pr_comment_id": 6552280405
+    "pr_comment_id": 6552798964
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -56,11 +68,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
+    "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "TARGETED_TICKER_INTEGRITY_AND_REARM_PATCHED_CI_PENDING_NO_AUDIT_PASS"
+    "status": "CI_FIX_COMMITTED_NEW_HEAD_CI_PENDING_NO_AUDIT_PASS"
   },
   "candidates": [
     {
@@ -69,7 +81,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
+      "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -145,7 +157,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "TARGETED_TICKER_INTEGRITY_FIX_DEPENDENCY_CLOSURE_INCOMPLETE_NO_PASS",
+    "status": "PARTIAL_TARGETED_TEST_FIX_DEPENDENCY_CLOSURE_INCOMPLETE_NO_PASS",
     "checksum": null,
     "scope_estimate": "36 changed paths; dependency closure not yet verified",
     "files": [
@@ -236,7 +248,7 @@
       },
       {
         "path": "tests/test_wave4_execution_safety.py",
-        "blob_sha": "7fb7fddaa279b6114765695f2b213391c636088a",
+        "blob_sha": "130b72afc1a51538540a94c880d3d73c5e24cd99",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -333,16 +345,17 @@
     "checked_files": [],
     "modified_files": [
       "trading/stop_loss_watcher.py",
-      "tests/test_stop_loss_watcher.py"
+      "tests/test_stop_loss_watcher.py",
+      "tests/test_wave4_execution_safety.py"
     ]
   },
   "full_manifest": {
     "status": "INDEXED_NOT_AUDITED",
     "tracked_tree_entries_on_pr": 182,
     "tracked_blob_files_on_pr": 158,
-    "sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
+    "sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
     "files_checked": 0,
-    "checksum": "adee02aac9c01ebb1d6a1940dcf7dacb6fb3d59e",
+    "checksum": "09117d82dc2d87725636eb2680594915fcfc8957",
     "checksum_kind": "git_tree_sha",
     "files": [
       {
@@ -692,7 +705,7 @@
       },
       {
         "path": "tests/test_wave4_execution_safety.py",
-        "blob_sha": "7fb7fddaa279b6114765695f2b213391c636088a",
+        "blob_sha": "130b72afc1a51538540a94c880d3d73c5e24cd99",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1456,6 +1469,35 @@
           "state": "success"
         }
       ]
+    },
+    "2026-11-01T12:17+09:00": {
+      "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "status": "in_progress",
+      "conclusion": null,
+      "workflow_runs": [
+        {
+          "id": 41268676502,
+          "event": "push",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30"
+        },
+        {
+          "id": 41268680081,
+          "event": "pull_request",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30"
+        }
+      ],
+      "previous_failed_run": {
+        "id": 41264840101,
+        "head_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
+        "conclusion": "failure",
+        "failed_test": "tests/test_wave4_execution_safety.py::test_watcher_cycle_skips_malformed_record_and_checks_rest",
+        "summary": "1 failed, 793 passed"
+      },
+      "local_tests_executed": false
     }
   },
   "upstream_changes": [
@@ -1848,6 +1890,32 @@
       ],
       "notes": "Inspected StopLossTracker record_position/get_positions and watcher dispatch. Malformed stored ticker type/key mismatch could cause wrong-ticker quote/order; corrupt same-key entry could block rearming. Fail-closed filtering and recovery plus 4 new parameterized regression cases committed with expected-head lease. GitHub CI running; local tests not executed; no full audit/PASS/demo.",
       "pr_comment_id": 6552280405
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-01T12:17+09:00",
+      "kind": "TARGETED_CI_REGRESSION_FIX_NOT_FULL_AUDIT",
+      "phase": "related_code_audit",
+      "related_pass": false,
+      "full_pass": false,
+      "previous_head_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
+      "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_observed_sha": "21bdb6e6b5a72891b31fd3b574f1fcdaffe5763f",
+      "changed_files": [
+        "tests/test_wave4_execution_safety.py"
+      ],
+      "commit_shas": [
+        "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30"
+      ],
+      "failed_ci_run_id": 41264840101,
+      "failed_test": "tests/test_wave4_execution_safety.py::test_watcher_cycle_skips_malformed_record_and_checks_rest",
+      "new_ci_run_ids": [
+        41268676502,
+        41268680081
+      ],
+      "pr_comment_id": 6552798964,
+      "notes": "Actual CI 1 failed/793 passed: legacy test fixture stored valid KR 005930 position under mismatched key KR:good, so ticker-key safety check correctly skipped it. Updated valid key to KR:005930 and malformed-price key to KR:BAD. New CI in progress; no local pytest, no full audit or financial demo."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -1872,9 +1940,11 @@
     "Malformed-record regression not executed locally",
     "Full related dependency closure incomplete",
     "Real/demo KIS/GCP end-to-end and broker fill reconciliation absent",
-    "Persisted ticker integrity fix needs new-head CI verification; related dependency closure and broker demo unresolved"
+    "Persisted ticker integrity fix needs new-head CI verification; related dependency closure and broker demo unresolved",
+    "Current head CI incomplete after malformed-record fixture repair",
+    "Related dependency closure and KIS/GCP demo/authoritative fill reconciliation remain incomplete"
   ],
-  "next_action": "Verify Actions 41264840101 for new head, inspect stop-loss multi-account fill reconciliation and remaining related dependencies, complete manifest and demo tests; no PASS/merge until gates met. Also evaluate five queued PRs (including competing checkout version updates) against current main before any change.",
+  "next_action": "Check CI runs 41268676502/41268680081 for exact new head; then continue dependency-closure audit. Do not count PASS until all files and checks complete. Never merge without demo/approval gates.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -1954,6 +2024,18 @@
       "full_pass": false,
       "reason": "Targeted code fix invalidates counters; CI in progress; dependency closure and broker demo missing",
       "manifest_tree_sha": "adee02aac9c01ebb1d6a1940dcf7dacb6fb3d59e"
+    },
+    {
+      "slot": "2026-11-01T12:17+09:00",
+      "run_id": "prism-sync-hourly-2026-11-01T12:17+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "CI regression fixed in fixture; code changed; new-head CI pending; dependency closure and broker demo incomplete",
+      "manifest_tree_sha": "09117d82dc2d87725636eb2680594915fcfc8957"
     }
   ],
   "discovered_defects": [
@@ -2030,6 +2112,15 @@
       ],
       "commit_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
       "summary": "Malformed persisted ticker can redirect quote/order to wrong instrument; non-dict same-key record can block stop-loss rearm"
+    },
+    {
+      "id": "stop-loss-malformed-record-test-fixture-regression-2026-11-01",
+      "severity": "CI_BLOCKER",
+      "status": "FIX_COMMITTED_NEW_HEAD_CI_PENDING",
+      "file": "tests/test_wave4_execution_safety.py",
+      "fix_commit": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "failed_run_id": 41264840101,
+      "description": "Stale test fixture used inconsistent persisted ticker keys and was rejected by new fail-closed validation"
     }
   ],
   "risks": [
