@@ -461,3 +461,79 @@ async def test_untracked_trailing_sell_verified_rejection_removes_fence(
         assert result.status == "failed"
         assert json.loads(path.read_text(encoding="utf-8")) == []
     assert len(calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_trailing_buy_partial_fill_does_not_overwrite_existing_high(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "trailing.json"
+    path.write_text(json.dumps([{
+        "key": "US:AAPL", "market": "US", "ticker": "AAPL",
+        "high_price": 120.0, "updated_at": "prior-protection",
+    }]), encoding="utf-8")
+    calls = []
+    async def partially_filled(*args, **kwargs):
+        calls.append(1)
+        return {"success": True, "order_no": "MOCK-PARTIAL",
+                "filled_qty": 2, "remaining_qty": 8}
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", partially_filled)
+    cfg = SignalTrailingStopStrategyConfig(runtime_path=path)
+    assert (await SignalTrailingStopStrategy(config=cfg).execute(
+        make_signal("BUY"), trading_mode="demo"
+    )).status == "executed"
+    state = json.loads(path.read_text(encoding="utf-8"))[0]
+    assert state["high_price"] == 120.0
+    assert state["entry_pending"] is True
+    assert state["entry_broker_order_id"] == "MOCK-PARTIAL"
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await SignalTrailingStopStrategy(config=cfg).execute(
+            make_signal("SELL", price=80), trading_mode="demo"
+        )
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_untracked_trailing_sell_timeout_keeps_fence(tmp_path, monkeypatch):
+    path = tmp_path / "trailing.json"
+    calls = []
+    async def timed_out(*args, **kwargs):
+        calls.append(1)
+        raise TimeoutError("broker response lost")
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", timed_out)
+    cfg = SignalTrailingStopStrategyConfig(
+        runtime_path=path, require_tracked_entry=False
+    )
+    with pytest.raises(TimeoutError):
+        await SignalTrailingStopStrategy(config=cfg).execute(
+            make_signal("SELL", price=80), trading_mode="demo"
+        )
+    assert json.loads(path.read_text(encoding="utf-8"))[0]["exit_pending"] is True
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await SignalTrailingStopStrategy(config=cfg).execute(
+            make_signal("SELL", price=80), trading_mode="demo"
+        )
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_untracked_trailing_sell_fence_write_failure_prevents_order(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "trailing.json"
+    calls = []
+    async def fake_order(*args, **kwargs):
+        calls.append(1)
+        return {"success": True}
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
+    def fail_save(*args, **kwargs):
+        raise OSError("simulated disk full")
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.save_json", fail_save)
+    cfg = SignalTrailingStopStrategyConfig(
+        runtime_path=path, require_tracked_entry=False
+    )
+    with pytest.raises(OSError, match="simulated disk full"):
+        await SignalTrailingStopStrategy(config=cfg).execute(
+            make_signal("SELL", price=80), trading_mode="demo"
+        )
+    assert calls == []
