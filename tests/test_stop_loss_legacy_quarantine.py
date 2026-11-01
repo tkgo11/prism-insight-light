@@ -107,6 +107,15 @@ def test_new_us_case_variants_update_one_canonical_protection(tmp_path):
     assert [position["stop_loss"] for position in tracker.get_positions("US")] == [85]
 
 
+def test_lowercase_lookup_and_removal_find_new_canonical_us_record(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "aapl", 90)
+    assert tracker.get_position("US", "aapl") == tracker.get_position("US", "AAPL")
+    assert tracker.remove_position("US", "aapl")
+    assert tracker.get_positions("US") == []
+
+
 def test_case_variant_active_dict_records_block_duplicate_automatic_sells(tmp_path):
     path = tmp_path / "stop_loss.json"
     tracker = StopLossTracker(path)
