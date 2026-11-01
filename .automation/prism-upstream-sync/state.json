@@ -10,7 +10,7 @@
     "lock_owner": null,
     "last_mutation_commit": "a2b3925450dfef8937fb68a7413e4efe2e77061c",
     "last_mutation_at": "2026-11-01T11:27:37.495Z",
-    "result": "FOUR_DURABLE_JSON_DUPLICATE_KEY_SAFETY_FIXES_NINE_COMMITS_CI_IN_PROGRESS_NO_PASS",
+    "result": "FOUR_DURABLE_JSON_DUPLICATE_KEY_SAFETY_FIXES_NINE_COMMITS_ACTIONS_SUCCESS_EXTERNAL_PENDING_NO_PASS",
     "pr_comment_id": 6555485401,
     "last_report": {
       "phase": "related_code_audit",
@@ -29,8 +29,8 @@
       "ci_workflow_runs": [
         {
           "id": 41301916820,
-          "status": "in_progress",
-          "conclusion": null,
+          "status": "completed",
+          "conclusion": "success",
           "event": "pull_request"
         }
       ],
@@ -60,7 +60,7 @@
         "a2b3925450dfef8937fb68a7413e4efe2e77061c"
       ],
       "merged": false,
-      "reason": "New-head CI pending, full related audit incomplete, broker order-id/fill reconciliation and KIS/GCP demo unavailable."
+      "reason": "Latest PR-head GitHub Actions completed success (Linux pytest, Docker build, Windows smoke), but qlty check pending, dependency closure audit incomplete, and broker fill/KIS/GCP demo evidence absent."
     }
   },
   "source": {
@@ -1375,6 +1375,26 @@
         }
       ]
     },
+    "35": {
+      "run_id": 41301916820,
+      "head_sha": "a2b3925450dfef8937fb68a7413e4efe2e77061c",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite",
+        "Windows runtime smoke"
+      ],
+      "external_statuses": [
+        {
+          "context": "qlty check",
+          "state": "pending"
+        },
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        }
+      ]
+    },
     "latest_workflow_run_id": 41252260295,
     "latest_workflow_run_status": "in_progress",
     "latest_workflow_run_conclusion": null,
@@ -2588,7 +2608,27 @@
           "state": "success"
         }
       ],
-      "notes": "Inspected stop-loss, execution ledger, queue, balance-split persisted JSON read paths and existing tests. Found four last-key-wins ambiguity classes, fixed all four with duplicate-key fail-closed parsing and added focused tests. Isolated local Python JSON parser behavior verified; full repository pytest not run locally. GitHub Actions for latest head not yet complete. Related dependency closure and full-tree audits incomplete; KIS/GCP demo not exercised."
+      "notes": "Inspected stop-loss, execution ledger, queue, balance-split persisted JSON read paths and existing tests. Found four last-key-wins ambiguity classes, fixed all four with duplicate-key fail-closed parsing and added focused tests. Isolated local Python JSON parser behavior verified; full repository pytest not run locally. GitHub Actions for latest head not yet complete. Related dependency closure and full-tree audits incomplete; KIS/GCP demo not exercised. Later in same execution: latest-head GitHub Actions Tests run 41301916820 completed success, including Linux pytest, Docker image build, Windows runtime smoke; external qlty check still pending; no audit PASS.",
+      "ci_final_observed": [
+        {
+          "id": 41301916820,
+          "status": "completed",
+          "conclusion": "success",
+          "event": "pull_request"
+        }
+      ],
+      "external_final_observed": [
+        {
+          "context": "qlty check",
+          "state": "pending",
+          "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/builds/01a196dc-b39a-7798-a059-5ddaf391bbdb"
+        },
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success",
+          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/cec6f9b3-544c-4f16-ada5-ff7044b430e8"
+        }
+      ]
     }
   ],
   "last_merged_upstream_sha": null,
@@ -2625,7 +2665,7 @@
     "2026-11-01 19:18 KST: new-head Actions still running; external checks pending; related/full file-by-file audits and KIS/GCP authoritative broker order reconciliation incomplete.",
     "2026-11-01 20:22 KST: latest-head CI and external checks incomplete after four duplicate-key trading-ledger fixes; KIS/GCP demo and order-id/fill reconciliation remain unverified."
   ],
-  "next_action": "Recheck final-head CI, fix any failures immediately; audit complete transitive related file closure; mock broker order-id/fill/partial/cancel reconciliation and require demo evidence before any PASS.",
+  "next_action": "Wait for qlty check and verify full latest-head required checks; continue related dependency closure and order-id/partial-fill/cancel broker mock/demo integration; no PASS before all gates.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
