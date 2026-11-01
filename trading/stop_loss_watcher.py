@@ -599,6 +599,22 @@ class StopLossWatcher:
                     continue
 
                 if stop_hit:
+                    # Price/holdings inquiries can take seconds. A concurrent
+                    # BUY or operator stop-level edit may replace the snapshot
+                    # while those broker calls are running. Do not liquidate
+                    # against a stale threshold or an invalidated record.
+                    latest = self.tracker.get_positions(market=market)
+                    if not any(
+                        current.get("ticker") == ticker
+                        and current.get("updated_at") == pos.get("updated_at")
+                        and current.get("stop_loss") == pos.get("stop_loss")
+                        for current in latest
+                    ):
+                        logger.warning(
+                            "[Stop-Loss] Skipping stale or quarantined protection for %s %s",
+                            market, ticker,
+                        )
+                        continue
                     key = self.tracker._key(market, ticker)
                     now_mono = time.monotonic()
                     last_attempt = self._last_trigger_attempt.get(key, 0.0)
