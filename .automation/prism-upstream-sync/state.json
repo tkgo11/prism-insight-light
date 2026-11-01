@@ -75,7 +75,8 @@
       ],
       "local_tests_executed": false,
       "merged": false,
-      "reason": "Two code commits reset all audit counts; current CI not fully successful; broker reconciliation unverified."
+      "reason": "Two code commits reset all audit counts; current CI not fully successful; broker reconciliation unverified.",
+      "full_tree_checksum": "76d2b50913bfb844be1c227001e307a00ed65b4a"
     }
   },
   "source": {
@@ -344,7 +345,7 @@
     "tracked_blob_files_on_pr": 159,
     "sha": "1db54beebc5f43cb8462515d4b936265ab319e49",
     "files_checked": 0,
-    "checksum": "1db54beebc5f43cb8462515d4b936265ab319e49",
+    "checksum": "76d2b50913bfb844be1c227001e307a00ed65b4a",
     "checksum_kind": "git_tree_sha",
     "files": [
       {
@@ -2351,7 +2352,7 @@
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "latest_upstream_observed_sha": "dec5b008340a9b81347f3cda436302bce98def75",
-      "manifest_tree_sha": "1db54beebc5f43cb8462515d4b936265ab319e49",
+      "manifest_tree_sha": "76d2b50913bfb844be1c227001e307a00ed65b4a",
       "pass": false,
       "review_scope_complete": false,
       "fully_audited_paths": [],
@@ -2595,7 +2596,7 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Verified broker outcome precedence fix committed; new-head CI pending and full related audit incomplete",
-      "manifest_tree_sha": "1db54beebc5f43cb8462515d4b936265ab319e49"
+      "manifest_tree_sha": "76d2b50913bfb844be1c227001e307a00ed65b4a"
     }
   ],
   "discovered_defects": [
