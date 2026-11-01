@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T05:24+09:00",
     "started_at": "2026-11-01T20:24:20Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T05:24+09:00",
+    "completed_at": "2026-11-01T20:30:00Z",
+    "lock_owner": null,
     "last_mutation_commit": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
-    "last_mutation_at": "2026-11-01T20:24:20Z",
-    "result": "IN_PROGRESS",
+    "last_mutation_at": "2026-11-01T20:30:00Z",
+    "result": "SIZING_CONSTRAINT_DEFAULT_BYPASS_PATCHED_CI_SUCCESS_AUDITS_BLOCKED",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,18 +19,20 @@
       "source_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
+      "pr_head": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
       "pr_number": 42,
-      "pr_changed_files": 47,
-      "related_manifest_files": 56,
+      "pr_changed_files": 49,
+      "related_manifest_files": 57,
       "related_manifest_files_fully_audited": 0,
       "full_tree_files": 161,
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41341467447,
+          "id": 41347002844,
           "status": "completed",
-          "conclusion": "success"
+          "conclusion": "success",
+          "linux": "939 passed",
+          "windows": "141 passed"
         }
       ],
       "external_statuses": [
@@ -48,17 +50,15 @@
         }
       ],
       "commits": [
-        "6c1cf8be0d80c0193a826d716d79dbcb42bde29e",
-        "06410c9a444c02bd209a2050b61c6914456a15ef",
-        "330cef1d76ed3df8c8195dc3a43ba0de98249a99",
-        "3b017498a29181c527a4d98760b950c0ab2499c9",
-        "aaaf5fdc8e9120c74c64701ac3574f2734d43f9d",
-        "66bdb6eb6c3db4d09fada8ef94fa0bdd4cba151c",
-        "4001e1568652c573bf8c6a5b6376da28fbc827af",
-        "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
+        "c8a69a53a2427be74467ceb314d58a3f776a5d11",
+        "304655ff22ef4e467cfcd320f16525332e11b073",
+        "d1a1996c9988ca436b297e98580e262a4be2a0a5",
+        "5bc2d2cde1cfbedffc6d3b11255745566a8d2646",
+        "04dcb6cf9c554e30cdd541a51d9ea7e3c1f8455a",
+        "d89ad593fd5c2a6edeedcc178b967f49b105e625"
       ],
       "merged": false,
-      "reason": "Code+mock tests passed; no KIS demo or full dependency audit; related/full 0/2."
+      "reason": "Confirmed and patched two constrained-sizing fallback bugs; current-head CI success. No KIS demo or independent 57/161 file audit, review absent; no PASS/merge."
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T04:18+09:00",
     "pr_head_at_start": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
@@ -1972,6 +1972,30 @@
           "state": "pending"
         }
       ]
+    },
+    "2026-11-02T05:24+09:00": {
+      "run_id": 41347002844,
+      "head_sha": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: 939 passed, static smoke and Docker build success",
+        "Windows runtime smoke: 141 passed"
+      ],
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        },
+        {
+          "context": "qlty usage",
+          "state": "pending"
+        }
+      ]
     }
   },
   "upstream_changes": [
@@ -3407,6 +3431,78 @@
       "local_full_pytest": "NOT_RUN",
       "kis_demo": "NOT_RUN",
       "notes": "Pre-submit BUY/untracked SELL and accepted cooldown pending protections fixed in same slot; related/full manifest coverage incomplete; no PASS."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T05:24+09:00",
+      "kind": "ROOT_CAUSE_BATCH_FIX_AND_PARTIAL_DEPENDENCY_AUDIT",
+      "head_sha": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "related_pass": false,
+      "full_pass": false,
+      "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
+      "changed_files": [
+        {
+          "path": "trading/strategies/risk_bracket.py",
+          "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf"
+        },
+        {
+          "path": "trading/strategies/score_weighted.py",
+          "blob_sha": "2227d2ba06c9f1125272b2e37f0a2b71f5de0207"
+        },
+        {
+          "path": "tests/test_strategy_suite.py",
+          "blob_sha": "67106033be4fd2e63eecc8dd90458c5940d08665"
+        },
+        {
+          "path": "trading/STRATEGIES.md",
+          "blob_sha": "338e7e13f9ff3dacebfb663ed9f052681948df3b"
+        }
+      ],
+      "partial_reviewed_paths": [
+        "trading/strategies/risk_bracket.py",
+        "trading/strategies/score_weighted.py",
+        "trading/strategies/score_risk.py",
+        "trading/strategies/balanced_risk.py",
+        "trading/strategies/common.py",
+        "trading/signal_sizing.py",
+        "trading/STRATEGIES.md",
+        "tests/test_strategy_suite.py"
+      ],
+      "independent_file_audits_completed": 0,
+      "code_commits": [
+        "c8a69a53a2427be74467ceb314d58a3f776a5d11",
+        "304655ff22ef4e467cfcd320f16525332e11b073",
+        "d1a1996c9988ca436b297e98580e262a4be2a0a5",
+        "5bc2d2cde1cfbedffc6d3b11255745566a8d2646",
+        "04dcb6cf9c554e30cdd541a51d9ea7e3c1f8455a",
+        "d89ad593fd5c2a6edeedcc178b967f49b105e625"
+      ],
+      "reproduction": "Two distinct strategy paths fell back to buy_amount=None when explicit limits selected. Reproduced old arithmetic locally. Added 5 risk-bracket cases and 1 score-weighted case to mock-trader suite.",
+      "ci": {
+        "run_id": 41347002844,
+        "status": "completed",
+        "conclusion": "success",
+        "linux": "939 passed",
+        "windows": "141 passed",
+        "docker": "success",
+        "static": "success"
+      },
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        },
+        {
+          "context": "qlty usage",
+          "state": "pending"
+        }
+      ],
+      "notes": "No local full pytest (GitHub DNS unavailable); actual GitHub Actions passed on latest PR head. No KIS demo, no live trade, no independent full dependency audit; do not count PASS."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -3415,10 +3511,10 @@
     "57-file known dependency scope not fully audited; manifest closure incomplete; related PASS 0/2.",
     "Full 161-file repository audit not completed; full PASS 0/2.",
     "No authorized KIS demo credentials/environment for order-ID, partial-fill, cancel, remaining quantity and account-specific reconciliation; no live trading.",
-    "Current PR HEAD CI not yet verified; independent review/branch protection and qlty usage requiredness not fully verified.",
+    "Current PR HEAD CI success; no submitted independent approval, branch-protection requiredness not independently verified; qlty usage remains pending.",
     "Multi-account runtime-state partitioning and strategy order lifecycle paths need independent inspection."
   ],
-  "next_action": "Confirm latest PR HEAD CI; inspect other strategy broker-default fallback/whole-share/cap paths; complete 57-file related and 161-file full independent audits; broker order/fill/cancel/remaining quantity demo integration blocked. No live trading.",
+  "next_action": "Independently close and fully audit 57 related files (current blob SHA) in separate slots, then 161 full tree files; verify KIS demo order/fill/partial/cancel/remaining quantity and multi-account state partitioning. Do not merge while demo/approvals/CI policy blocked.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -3709,7 +3805,7 @@
       "head_sha": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
       "related_pass": false,
       "full_pass": false,
-      "reason": "Two verified same-family configured-constraint broker-default bypasses patched in six code/test/docs commits; latest-head CI pending; full dependency audit incomplete; related/full PASS reset 0/2."
+      "reason": "Six code/test/docs commits fixed two confirmed configured-constraint fallback paths; latest head CI passed; no full dependency audit or KIS demo, related/full 0/2."
     }
   ],
   "discovered_defects": [
@@ -4271,7 +4367,7 @@
       "id": "risk-bracket-hard-cap-and-subshare-bypass-2026-11-02",
       "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_NEW_HEAD_CI_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_LATEST_HEAD_CI_SUCCESS_AUDIT_PENDING",
       "description": "When risk budget/stop did not yield positive whole-share notional, RiskBracketStrategy passed buy_amount=None despite explicit max_position cap or valid but insufficient risk budget; broker default could bypass limits. Now reject before broker call.",
       "paths": [
         "trading/strategies/risk_bracket.py",
@@ -4287,18 +4383,23 @@
       "validation": {
         "local_isolated_arithmetic": "PASS",
         "github_actions": [
-          41346890459
+          41347002844
         ],
         "latest_head_ci": "IN_PROGRESS",
         "kis_demo": "NOT_RUN",
-        "full_related_audit": "NOT_DONE"
+        "full_related_audit": "NOT_DONE",
+        "linux": "939 passed",
+        "windows": "141 passed",
+        "static": "success",
+        "docker": "success",
+        "related_full_audit": "NOT_DONE"
       }
     },
     {
       "id": "score-weighted-zero-band-broker-default-bypass-2026-11-02",
       "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_LATEST_CI_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_LATEST_HEAD_CI_SUCCESS_AUDIT_PENDING",
       "description": "ScoreWeightedStrategy with zero selected band weight and unset base_amount passed buy_amount=None to broker, bypassing the explicit no-trade weight. Added unconditional zero-weight pre-submit rejection.",
       "paths": [
         "trading/strategies/score_weighted.py",
@@ -4313,9 +4414,16 @@
       ],
       "validation": {
         "local_isolated_arithmetic": "PASS",
-        "github_actions": "PENDING_NEW_HEAD",
+        "github_actions": [
+          41347002844
+        ],
         "kis_demo": "NOT_RUN",
-        "full_related_audit": "NOT_DONE"
+        "full_related_audit": "NOT_DONE",
+        "linux": "939 passed",
+        "windows": "141 passed",
+        "static": "success",
+        "docker": "success",
+        "related_full_audit": "NOT_DONE"
       }
     }
   ],
@@ -4515,7 +4623,7 @@
         "risk-bracket-hard-cap-and-subshare-bypass-2026-11-02",
         "score-weighted-zero-band-broker-default-bypass-2026-11-02"
       ],
-      "classification": "CODE_PATCHED_LATEST_CI_PENDING_AUDIT_INCOMPLETE",
+      "classification": "CODE_PATCHED_LATEST_HEAD_CI_SUCCESS_AUDIT_PENDING",
       "last_checked_head": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
       "previous_root_cause_ids": [
         "RC-RISK-BRACKET-CONSTRAINT-FALLBACK"
@@ -4601,14 +4709,14 @@
       {
         "contract": "Configured risk-bracket hard cap or usable positive risk budget cannot become broker-default BUY when less than one whole share can be funded",
         "path": "risk_bracket.execute -> common.execute_order -> KIS KR/US BUY",
-        "evidence": "Original arithmetic reproducer: cap=50, price=100, invalid stop -> buy_amount=None; four mock-trader no-submit tests plus valid fractional case committed; CI pending",
-        "status": "CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE"
+        "evidence": "Original arithmetic reproducer: cap=50, price=100, invalid stop -> buy_amount=None; four mock-trader no-submit tests plus valid fractional case committed; CI pending; GitHub Actions 41347002844: Linux 939, Windows 141 passed",
+        "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
       },
       {
         "contract": "Explicit score-band zero weight must never fall back to broker default when base amount is unspecified",
         "path": "score_weighted.execute -> common.execute_order -> KIS KR/US BUY",
-        "evidence": "Source arithmetic reproducer, mock no-submit regression test added; current-head CI pending",
-        "status": "CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE"
+        "evidence": "Source arithmetic reproducer, mock no-submit regression test added; current-head CI pending; GitHub Actions 41347002844: Linux 939, Windows 141 passed",
+        "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
       }
     ]
   },
@@ -4697,7 +4805,7 @@
     {
       "id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_LATEST_CI_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_LATEST_HEAD_CI_SUCCESS_AUDIT_PENDING",
       "description": "Risk-bracket caps/zero-share risk and score-weighted zero bands could bypass configured constraints via buy_amount=None broker default",
       "fix_commits": [
         "c8a69a53a2427be74467ceb314d58a3f776a5d11",
