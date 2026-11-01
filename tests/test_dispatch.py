@@ -99,6 +99,7 @@ async def test_demo_off_hours_enqueues(monkeypatch):
 
     dispatcher = TradeDispatcher(trading_mode="demo")
     dispatcher.queue = queue
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:fixture:01"})
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
     result = await dispatcher.dispatch(signal)
 
@@ -125,12 +126,14 @@ def test_due_demo_order_remains_queued_when_market_still_closed(monkeypatch, tmp
     monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda market: datetime.now(timezone.utc) - timedelta(minutes=1))
 
     dispatcher = TradeDispatcher(trading_mode="demo", queue_path=tmp_path / "queue.json")
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:fixture:01"})
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
     dispatcher.queue.enqueue(signal, {
         "version": 2, "multi_account": False, "trading_mode": "demo",
         "account_scope": __import__("hashlib").sha256(
             dispatcher._single_account_execution_selector(signal).encode("utf-8")
         ).hexdigest(),
+        "account_id": dispatcher._resolved_single_account_id(signal),
     })
 
     drained = dispatcher.drain_due_orders()

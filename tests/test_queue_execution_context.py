@@ -20,6 +20,10 @@ def signal():
 
 def dispatcher(monkeypatch, tmp_path, *, mode="demo", account_name=None, multi=False):
     monkeypatch.setattr(
+        "trading.dispatch.ka.resolve_account",
+        lambda **kwargs: {"account_key": f"{kwargs['svr']}:{kwargs.get('account_name') or ('index-' + str(kwargs['account_index']) if kwargs.get('account_index') is not None else 'primary')}:01"},
+    )
+    monkeypatch.setattr(
         TradeDispatcher, "_load_runtime_config",
         staticmethod(lambda: {"multi_account_trading": {"enabled": multi}}),
     )
@@ -115,6 +119,7 @@ async def test_valid_pinned_single_account_queue_still_executes_mock(
     assert persisted.execution_context["account_scope"] == hashlib.sha256(
         first._single_account_execution_selector(signal()).encode("utf-8")
     ).hexdigest()
+    assert persisted.execution_context["account_id"] == first._resolved_single_account_id(signal())
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
     calls = []
     async def fake_trade(self, order, *, account=None):
@@ -170,3 +175,41 @@ async def test_queued_multi_account_cannot_switch_demo_to_real(monkeypatch, tmp_
     })
     assert result.status == "failed"
     assert calls == []
+
+
+@pytest.mark.asyncio
+async def test_primary_account_reassignment_never_replays_to_new_account(
+    monkeypatch, tmp_path,
+):
+    """Even unchanged 'primary' selector must pin the underlying account key."""
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+    first = dispatcher(monkeypatch, tmp_path)
+    assert (await first.dispatch(signal())).status == "queued"
+    persisted = first.queue._load()[0]
+    monkeypatch.setattr(
+        "trading.dispatch.ka.resolve_account",
+        lambda **kwargs: {"account_key": "vps:changed-primary:01"},
+    )
+    calls = []
+    async def fake_trade(self, order, *, account=None):
+        calls.append(1)
+        return DispatchResult("executed", "mock accepted", order.signal_type, order.market)
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", fake_trade)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    result = await first.execute_queued_signal({
+        **persisted.signal, "__prism_queue_context": persisted.execution_context,
+    })
+    assert result.status == "failed"
+    assert calls == []
+
+
+@pytest.mark.asyncio
+async def test_unresolvable_original_account_cannot_be_queued(monkeypatch, tmp_path):
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
+    first = dispatcher(monkeypatch, tmp_path)
+    def missing(**kwargs):
+        raise ValueError("no account configured")
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", missing)
+    with pytest.raises(ValueError, match="no account configured"):
+        await first.dispatch(signal())
+    assert first.queue.pending_count() == 0

@@ -657,6 +657,7 @@ class TradeDispatcher:
                         "account_scope": hashlib.sha256(
                             self._single_account_execution_selector(signal).encode("utf-8")
                         ).hexdigest(),
+                        "account_id": self._resolved_single_account_id(signal),
                     },
                 )
                 logger.info(
@@ -832,6 +833,14 @@ class TradeDispatcher:
                 or "account_ids" in queue_context
             ):
                 return DispatchResult("failed", "Queued single-account scope is missing or changed; operator reconciliation required", signal.signal_type, signal.market)
+            try:
+                resolved_account_id = self._resolved_single_account_id(signal)
+            except Exception:
+                # Unavailable/ambiguous account configuration is not permission
+                # to replay a queued order into a different KIS account.
+                return DispatchResult("failed", "Queued account cannot be resolved; operator reconciliation required", signal.signal_type, signal.market)
+            if queue_context.get("account_id") != resolved_account_id:
+                return DispatchResult("failed", "Queued KIS account identity changed; operator reconciliation required", signal.signal_type, signal.market)
         try:
             async with _serialized_broker_workflow():
                 if isinstance(queue_context, dict) and queue_context.get("multi_account") is True:
@@ -1034,6 +1043,21 @@ class TradeDispatcher:
             if self.protective_exit_config is not None:
                 return ProtectiveExitStrategy(config=self.protective_exit_config)
         return None
+
+    def _resolved_single_account_id(self, signal: SignalMessage) -> str:
+        """Pin the actual KIS account, not merely a mutable name/index/primary.
+
+        resolve_account uses the same server, product and market contract as
+        DomesticStockTrading and USStockTrading. Store only its opaque hash.
+        """
+        account = ka.resolve_account(
+            svr="vps" if self.trading_mode == "demo" else "prod",
+            product="01",
+            market=signal.market.lower(),
+            account_name=self.account_name,
+            account_index=self.account_index,
+        )
+        return _account_id(account["account_key"])
 
     def _single_account_execution_selector(self, signal: SignalMessage) -> str:
         if self.account_name:

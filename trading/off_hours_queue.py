@@ -46,6 +46,7 @@ def _queue_identity(signal: dict[str, Any], execution_context: dict[str, Any]) -
             "multi_account": execution_context.get("multi_account"),
             "trading_mode": execution_context.get("trading_mode"),
             "account_scope": execution_context.get("account_scope"),
+            "account_id": execution_context.get("account_id"),
         },
         ensure_ascii=False,
         sort_keys=True,

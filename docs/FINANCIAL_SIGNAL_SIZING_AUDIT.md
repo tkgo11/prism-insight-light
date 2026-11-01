@@ -121,3 +121,9 @@ same underlying account after a configuration edit: account-configuration
 identity reconciliation remains a separate deployment gate. Broker order
 acceptance still does not prove fill; KIS demo order-ID, partial-fill, cancel
 and remaining-quantity checks are still required. No live trading was tested.
+
+The actual KIS account key is also resolved at enqueue time and stored only as
+an opaque hash. Replay resolves it again and quarantines an item when the
+primary account or named/indexed account now points at a different KIS key.
+Missing account configuration prevents enqueue; legacy entries without this
+pin require manual reconciliation. This does not authorize real trading.
