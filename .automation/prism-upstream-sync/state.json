@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T18:20+09:00",
-    "started_at": "2026-11-01T09:20:57Z",
-    "completed_at": "2026-11-01T09:25:03.158Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-01T19:18+09:00",
+    "started_at": "2026-11-01T10:18:27Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-01T19:18+09:00",
     "last_mutation_commit": "b47311e5b120482ea084693c7fecc8d991fc7ab7",
     "last_mutation_at": "2026-11-01T09:25:03.158Z",
-    "result": "LEGACY_STOP_LOSS_DUPLICATE_AND_CASE_VARIANT_SAFETY_PATCHED_CI_PENDING_NO_PASS",
+    "result": "IN_PROGRESS_REVIEWING_CURRENT_HEAD",
     "pr_comment_id": 6555485401,
     "last_report": {
       "phase": "related_code_audit",
