@@ -136,10 +136,25 @@ class ExecutionLedger:
 
     def _load(self) -> dict[str, dict[str, Any]]:
         try:
-            data = json.loads(self.path.read_text(encoding="utf-8"))
+            # A duplicate execution identity in hand-edited/recovered JSON
+            # could overwrite an "executed" claim with a retryable "failed"
+            # claim. The default JSON decoder silently keeps the last entry,
+            # risking a second broker submission. Fail closed on duplicates.
+            def unique_object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+                obj: dict[str, Any] = {}
+                for key, value in pairs:
+                    if key in obj:
+                        raise ValueError("Duplicate execution ledger JSON key")
+                    obj[key] = value
+                return obj
+
+            data = json.loads(
+                self.path.read_text(encoding="utf-8"),
+                object_pairs_hook=unique_object_pairs,
+            )
         except FileNotFoundError:
             return {}
-        except (OSError, json.JSONDecodeError):
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
             # Fail closed.  A corrupted ledger must not be silently discarded because
             # doing so could duplicate orders after recovery.
             raise RuntimeError("Automatic-trading execution ledger is unreadable")
