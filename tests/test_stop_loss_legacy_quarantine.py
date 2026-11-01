@@ -76,3 +76,28 @@ def test_already_migrated_conflicting_quarantine_blocks_automatic_sell(tmp_path)
     assert tracker.get_positions("KR") == [independent]
     # No records are discarded or rewritten by the read-only safety check.
     assert json.loads(path.read_text(encoding="utf-8"))["KR:005930"] == first
+
+
+def test_case_variant_legacy_tickers_are_quarantined_as_one_instrument(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    first = {"market": "US", "ticker": "aapl", "stop_loss": 90}
+    second = {"market": "us", "ticker": "AAPL", "stop_loss": 85}
+    path.write_text(json.dumps([first, second]), encoding="utf-8")
+    assert tracker.get_positions("US") == []
+    tracker.record_position("US", "MSFT", 80)
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert "US:aapl" not in saved
+    assert "US:AAPL" not in saved
+    assert saved["__legacy_unverified_0__"] == first
+    assert saved["__legacy_unverified_1__"] == second
+    assert [p["ticker"] for p in tracker.get_positions("US")] == ["MSFT"]
+
+
+def test_case_variant_active_dict_records_block_duplicate_automatic_sells(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "aapl", 90)
+    tracker.record_position("US", "AAPL", 85)
+    assert tracker.get_positions("US") == []
+    assert set(json.loads(path.read_text(encoding="utf-8"))) == {"US:aapl", "US:AAPL"}

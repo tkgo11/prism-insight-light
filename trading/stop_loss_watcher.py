@@ -169,7 +169,7 @@ class StopLossTracker:
             return data
         if isinstance(data, list):
             result = {}
-            first_indices: dict[str, int] = {}
+            first_records: dict[str, tuple[str, int]] = {}
             ambiguous_keys: set[str] = set()
             for index, item in enumerate(data):
                 # Legacy lists may contain malformed or duplicate entries.  Keep
@@ -194,21 +194,22 @@ class StopLossTracker:
                     result[quarantine_key] = item
                     continue
                 key = self._key(market, ticker)
-                if key in ambiguous_keys:
+                # Case variants of a US ticker refer to the same instrument.
+                canonical_key = f"{market.strip().upper()}:{ticker.strip().upper()}"
+                if canonical_key in ambiguous_keys:
                     logger.error("Quarantining additional duplicate legacy stop-loss record at index %s", index)
                     result[quarantine_key] = item
                     continue
-                if key in result:
-                    # A duplicate makes BOTH entries untrustworthy. Selecting
-                    # the first stop price could trigger an unintended SELL.
-                    first_index = first_indices.pop(key)
-                    result[f"__legacy_unverified_{first_index}__"] = result.pop(key)
-                    ambiguous_keys.add(key)
-                    logger.error("Quarantining conflicting legacy stop-loss records for %s", key)
+                if canonical_key in first_records:
+                    # Quarantine both conflicting records, including case variants.
+                    first_key, first_index = first_records.pop(canonical_key)
+                    result[f"__legacy_unverified_{first_index}__"] = result.pop(first_key)
+                    ambiguous_keys.add(canonical_key)
+                    logger.error("Quarantining conflicting legacy stop-loss records for %s", canonical_key)
                     result[quarantine_key] = item
                     continue
                 result[key] = item
-                first_indices[key] = index
+                first_records[canonical_key] = (key, index)
             return result
         raise RuntimeError(
             "Stop-loss tracker has an invalid format; automated stop-loss actions are blocked"
@@ -323,17 +324,25 @@ class StopLossTracker:
         # dictionary while leaving the first conflicting entry actionable.
         # Block that entry too until the operator reconciles the quarantine.
         quarantined_instruments: set[str] = set()
+        active_instrument_counts: dict[str, int] = {}
         for key, item in items:
-            if not key.startswith("__legacy_unverified_") or not isinstance(item, dict):
+            if not isinstance(item, dict):
                 continue
             q_market, q_ticker = item.get("market"), item.get("ticker")
-            if isinstance(q_market, str) and isinstance(q_ticker, str) and q_market.strip() and q_ticker.strip():
-                quarantined_instruments.add(self._key(q_market, q_ticker))
+            if not isinstance(q_market, str) or not isinstance(q_ticker, str) or not q_market.strip() or not q_ticker.strip():
+                continue
+            canonical_key = f"{q_market.strip().upper()}:{q_ticker.strip().upper()}"
+            if key.startswith("__legacy_unverified_"):
+                quarantined_instruments.add(canonical_key)
+            elif self._key(q_market, q_ticker) == key:
+                active_instrument_counts[canonical_key] = active_instrument_counts.get(canonical_key, 0) + 1
         valid: list[dict[str, Any]] = []
         for key, item in items:
-            if key in quarantined_instruments:
-                logger.error("Blocking ambiguous legacy stop-loss instrument %s pending reconciliation", key)
-                continue
+            if isinstance(item, dict) and isinstance(item.get("market"), str) and isinstance(item.get("ticker"), str):
+                canonical_key = f"{item['market'].strip().upper()}:{item['ticker'].strip().upper()}"
+                if canonical_key in quarantined_instruments or active_instrument_counts.get(canonical_key, 0) > 1:
+                    logger.error("Blocking ambiguous stop-loss instrument %s pending reconciliation", canonical_key)
+                    continue
             if (
                 not isinstance(item, dict)
                 or not isinstance(item.get("market"), str)
