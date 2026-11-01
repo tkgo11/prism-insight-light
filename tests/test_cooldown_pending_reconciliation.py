@@ -97,7 +97,7 @@ async def test_cooldown_state_write_failure_prevents_broker_submission(
 
 
 @pytest.mark.asyncio
-async def test_successful_cooldown_order_remains_time_bounded(tmp_path, monkeypatch):
+async def test_accepted_cooldown_order_stays_pending_until_verified_fill(tmp_path, monkeypatch):
     path = tmp_path / "cooldown.json"
     calls = []
     async def accepted(*args, **kwargs):
@@ -106,9 +106,36 @@ async def test_successful_cooldown_order_remains_time_bounded(tmp_path, monkeypa
     monkeypatch.setattr("trading.strategies.cooldown.execute_order", accepted)
     assert (await _strategy(path).execute(_signal(), trading_mode="demo")).status == "executed"
     state = json.loads(path.read_text(encoding="utf-8"))
-    assert state[0]["pending"] is False
+    assert state[0]["pending"] is True
+    assert state[0]["broker_order_id"] == "MOCK-1"
     assert (await _strategy(path).execute(_signal(), trading_mode="demo")).status == "rejected"
+    # A ten-day-old *accepted but unfilled* order must not auto-expire.
     state[0]["created_at"] = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+    path.write_text(json.dumps(state), encoding="utf-8")
+    assert (await _strategy(path).execute(_signal(), trading_mode="demo")).status == "rejected"
+    assert len(calls) == 1
+    # Only after the mock broker has independently confirmed final fill or
+    # zero outstanding quantity may an operator reconcile this record.
+    state[0]["pending"] = False
     path.write_text(json.dumps(state), encoding="utf-8")
     assert (await _strategy(path).execute(_signal(), trading_mode="demo")).status == "executed"
     assert len(calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_accepted_cooldown_without_order_id_still_blocks_retry(tmp_path, monkeypatch):
+    path = tmp_path / "cooldown.json"
+    calls = []
+    async def accepted_without_id(*args, **kwargs):
+        calls.append(1)
+        return {"success": True, "message": "accepted without order ID"}
+    monkeypatch.setattr("trading.strategies.cooldown.execute_order", accepted_without_id)
+    first = await _strategy(path).execute(_signal(), trading_mode="demo")
+    assert first.status == "executed"
+    state = json.loads(path.read_text(encoding="utf-8"))
+    assert state[0]["pending"] is True
+    assert "broker_order_id" not in state[0]
+    state[0]["created_at"] = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    path.write_text(json.dumps(state), encoding="utf-8")
+    assert (await _strategy(path).execute(_signal(), trading_mode="demo")).status == "rejected"
+    assert len(calls) == 1
