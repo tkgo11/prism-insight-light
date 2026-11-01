@@ -262,6 +262,14 @@ class ExecutionLedger:
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
             if identity in entries:
+                existing_status = str(entries[identity].get("status") or "in_progress")
+                # A terminal claim that could have reached the broker must
+                # never be rewritten as a retryable status by a late callback,
+                # duplicate finalizer, or contradictory error handler. Such a
+                # downgrade would let claim() submit the same order again.
+                # Only open or provably pre-submission claims may transition.
+                if existing_status != "in_progress" and existing_status not in _RETRYABLE_STATUSES:
+                    return
                 entries[identity]["status"] = str(status)
                 entries[identity]["finished_at"] = now.isoformat()
                 self._save(entries)

@@ -107,3 +107,40 @@ def test_valid_execution_ledger_json_still_claims_and_suppresses(tmp_path):
     assert ledger.claim("same") == (True, None)
     ledger.finalize("same", "executed")
     assert ledger.claim("same") == (False, "executed")
+
+
+@pytest.mark.parametrize("protected_status", ["executed", "unknown", "partial_success"])
+@pytest.mark.parametrize("late_status", sorted(ledger_module._RETRYABLE_STATUSES))
+def test_late_retryable_finalize_cannot_downgrade_protected_order(
+    tmp_path, protected_status, late_status
+):
+    """A stale callback must never re-enable an accepted/ambiguous order."""
+    path = tmp_path / "ledger.json"
+    ledger = ExecutionLedger(path)
+    assert ledger.claim("same-order") == (True, None)
+    ledger.finalize("same-order", protected_status)
+    before = json.loads(path.read_text(encoding="utf-8"))["same-order"]
+    ledger.finalize("same-order", late_status)
+
+    # Verify persisted state after restart, not only an in-memory result.
+    recovered = ExecutionLedger(path)
+    assert recovered.claim("same-order") == (False, protected_status)
+    after = json.loads(path.read_text(encoding="utf-8"))["same-order"]
+    assert after == before
+
+
+def test_late_conflicting_protected_finalize_preserves_original_evidence(tmp_path):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    assert ledger.claim("same-order") == (True, None)
+    ledger.finalize("same-order", "unknown")
+    ledger.finalize("same-order", "executed")
+    assert ledger.claim("same-order") == (False, "unknown")
+
+
+def test_pre_submission_failure_remains_retryable_and_can_be_promoted(tmp_path):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    assert ledger.claim("same-order") == (True, None)
+    ledger.finalize("same-order", "failed")
+    assert ledger.claim("same-order") == (True, "failed")
+    ledger.finalize("same-order", "executed")
+    assert ledger.claim("same-order") == (False, "executed")
