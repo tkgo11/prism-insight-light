@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T19:18+09:00",
-    "started_at": "2026-11-01T10:18:27Z",
-    "completed_at": "2026-11-01T10:22:24.982Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-01T20:22+09:00",
+    "started_at": "2026-11-01T11:22:56Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-01T20:22+09:00",
     "last_mutation_commit": "a8d10e87cc771961389919f8f8d19146f3946b24",
     "last_mutation_at": "2026-11-01T10:22:24.982Z",
-    "result": "STOP_LOSS_CONFIG_AND_IDENTIFIER_SAFETY_PATCHED_NEW_HEAD_CI_IN_PROGRESS_NO_PASS",
+    "result": "IN_PROGRESS_AUDITING_BROKER_STOP_LOSS_AND_LEDGER",
     "pr_comment_id": 6555485401,
     "last_report": {
       "phase": "related_code_audit",
