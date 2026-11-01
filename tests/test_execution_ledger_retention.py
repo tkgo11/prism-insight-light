@@ -76,3 +76,34 @@ def test_unparseable_timestamp_cannot_remove_a_claim(tmp_path):
         encoding="utf-8",
     )
     assert ledger.claim("malformed") == (False, "in_progress")
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        # If the last duplicate wins, an already accepted order becomes
+        # retryable and a second live order could be submitted.
+        '{"same":{"status":"executed","claimed_at":"2026-10-31T00:00:00+00:00"},'
+        '"same":{"status":"failed","claimed_at":"2026-10-31T00:00:00+00:00"}}',
+        # Nested duplicate status fields are equally ambiguous.
+        '{"same":{"status":"executed","status":"failed",'
+        '"claimed_at":"2026-10-31T00:00:00+00:00"}}',
+    ],
+)
+def test_duplicate_ledger_keys_fail_closed_without_rewriting(tmp_path, raw):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    ledger.path.write_text(raw, encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="unreadable"):
+        ledger.claim("same")
+    with pytest.raises(RuntimeError, match="unreadable"):
+        ledger.claim("different")
+    with pytest.raises(RuntimeError, match="unreadable"):
+        ledger.finalize("same", "failed")
+    assert ledger.path.read_text(encoding="utf-8") == raw
+
+
+def test_valid_execution_ledger_json_still_claims_and_suppresses(tmp_path):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    assert ledger.claim("same") == (True, None)
+    ledger.finalize("same", "executed")
+    assert ledger.claim("same") == (False, "executed")
