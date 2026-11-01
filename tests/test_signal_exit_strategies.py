@@ -120,7 +120,17 @@ async def test_signal_trailing_stop_tracks_high_then_executes_after_drawdown(tmp
         ("buy", "AAPL", None, 100.0),
         ("sell", "AAPL", 1.0, 94.0),
     ]
-    assert json.loads(config.runtime_path.read_text(encoding="utf-8")) == []
+    # The broker accepted the full-size order, but the shares may not have
+    # filled. Keep the high watermark and block new orders until reconciliation.
+    records = json.loads(config.runtime_path.read_text(encoding="utf-8"))
+    assert len(records) == 1
+    assert records[0]["high_price"] == 105.0
+    assert records[0]["exit_pending"] is True
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await SignalTrailingStopStrategy(config=config).execute(
+            exit_sell, trading_mode="demo"
+        )
+    assert len(FakeUSTrader.calls) == 2
 
 
 @pytest.mark.asyncio
