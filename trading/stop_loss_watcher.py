@@ -240,8 +240,8 @@ class StopLossTracker:
         # Whitespace-only instruments otherwise create unreachable ledger
         # entries that the watcher silently skips; normalize outer whitespace
         # so the persisted key and the broker-facing ticker agree.
-        if not isinstance(market, str) or not market.strip():
-            raise ValueError("Stop-loss position market must be nonempty")
+        if not isinstance(market, str) or market.strip().upper() not in {"KR", "US"}:
+            raise ValueError("Stop-loss position market must be KR or US")
         if not isinstance(ticker, str) or not ticker.strip():
             raise ValueError("Stop-loss position ticker must be nonempty")
         if any(ord(ch) < 32 or ord(ch) == 127 for ch in market + ticker):
@@ -361,6 +361,10 @@ class StopLossTracker:
                 or not isinstance(item.get("ticker"), str)
                 or not item["market"].strip()
                 or not item["ticker"].strip()
+                or item["market"] != item["market"].strip().upper()
+                or item["market"] not in {"KR", "US"}
+                or item["ticker"] != item["ticker"].strip()
+                or any(ord(ch) < 32 or ord(ch) == 127 for ch in item["ticker"])
                 or self._key(item["market"], item["ticker"]) != key
             ):
                 # Never dispatch an order to a malformed or mismatched ticker.

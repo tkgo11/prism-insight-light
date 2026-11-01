@@ -909,3 +909,23 @@ def test_stop_loss_tracker_normalizes_instrument_before_persisting(tmp_path):
     tracker.record_position(" us ", " AAPL ", 90, entry_price=100)
     assert tracker.get_position("US", "AAPL")["ticker"] == "AAPL"
     assert [p["ticker"] for p in tracker.get_positions("US")] == ["AAPL"]
+
+
+@pytest.mark.parametrize("market", ["BTC", "XX", "us-east", "KRW"])
+def test_stop_loss_tracker_rejects_unmonitored_market(tmp_path, market):
+    tracker = StopLossTracker(tmp_path / "positions.json")
+    with pytest.raises(ValueError, match="market"):
+        tracker.record_position(market, "AAPL", 90)
+    assert not (tmp_path / "positions.json").exists()
+
+
+def test_stop_loss_tracker_does_not_dispatch_legacy_untrimmed_ticker(tmp_path):
+    path = tmp_path / "positions.json"
+    tracker = StopLossTracker(path)
+    valid = {"market": "US", "ticker": "MSFT", "stop_loss": 80}
+    malformed = {"market": "US", "ticker": "AAPL\\n", "stop_loss": 90}
+    path.write_text(json.dumps({"US:AAPL": malformed, "US:MSFT": valid}), encoding="utf-8")
+    assert tracker.get_positions("US") == [valid]
+    # Preserve the suspect record for manual reconciliation rather than
+    # silently normalizing an untrusted persisted broker-facing identifier.
+    assert tracker.get_position("US", "AAPL") == malformed
