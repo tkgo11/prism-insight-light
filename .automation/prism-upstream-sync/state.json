@@ -76,7 +76,23 @@
       "local_tests_executed": false,
       "merged": false,
       "reason": "Two code commits reset all audit counts; current CI not fully successful; broker reconciliation unverified.",
-      "full_tree_checksum": "76d2b50913bfb844be1c227001e307a00ed65b4a"
+      "full_tree_checksum": "76d2b50913bfb844be1c227001e307a00ed65b4a",
+      "ci_workflow_runs": [
+        {
+          "id": 41288586779,
+          "event": "push",
+          "head_sha": "1db54beebc5f43cb8462515d4b936265ab319e49",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 41288590440,
+          "event": "pull_request",
+          "head_sha": "1db54beebc5f43cb8462515d4b936265ab319e49",
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
     }
   },
   "source": {
@@ -1658,7 +1674,16 @@
       ],
       "workflow_runs": [
         {
+          "id": 41288586779,
+          "event": "push",
+          "head_sha": "1db54beebc5f43cb8462515d4b936265ab319e49",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
           "id": 41288590440,
+          "event": "pull_request",
+          "head_sha": "1db54beebc5f43cb8462515d4b936265ab319e49",
           "status": "in_progress",
           "conclusion": null
         }
@@ -2422,7 +2447,23 @@
         "Full related dependency closure not reviewed",
         "KIS/GCP demo and authoritative broker order-id/partial-fill reconciliation not verified"
       ],
-      "reason": "Code modified in this run; counters reset. No complete file-by-file audit or local test performed."
+      "reason": "Code modified in this run; counters reset. No complete file-by-file audit or local test performed.",
+      "ci_workflow_runs": [
+        {
+          "id": 41288586779,
+          "event": "push",
+          "head_sha": "1db54beebc5f43cb8462515d4b936265ab319e49",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 41288590440,
+          "event": "pull_request",
+          "head_sha": "1db54beebc5f43cb8462515d4b936265ab319e49",
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
     }
   ],
   "last_merged_upstream_sha": null,
