@@ -79,6 +79,11 @@ Keep the PR unmerged until a human reviews all modified logic and a separate dem
 
 ### Pending-order fences for signal-trailing-stop (2026-11-02)
 
+- The cooldown strategy also retains **accepted** broker orders as
+  `pending=True` beyond the nominal cooldown window, not only timeouts and
+  unknown results. Its broker order ID is retained when available. The normal
+  time window applies only after an independently verified final fill/cancel
+  reconciliation clears pending; no automatic expiry proves a fill.
 - A BUY broker submission is **not** evidence of a filled position. Before
   submission the strategy writes an instrument-scoped `entry_pending` record.
   Accepted, ambiguous and transport-error results keep the fence across process
