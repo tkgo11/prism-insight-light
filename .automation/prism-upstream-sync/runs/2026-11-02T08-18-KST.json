@@ -104,7 +104,7 @@
     "External configuration replacement and strategy state account isolation not exhaustively audited",
     "No authorized demo credentials; no real trades",
     "qlty usage pending; branch protection read 403; no independent PR approval",
-    "61 related files not independently audited; 162 tracked blob files not fully audited"
+    "60 related files not independently audited; 162 tracked blob files not fully audited"
   ],
   "merge": "NOT_ATTEMPTED"
 }

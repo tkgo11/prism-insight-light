@@ -21,7 +21,7 @@
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "pr_head": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
       "pr_number": 42,
-      "related_manifest_files": 61,
+      "related_manifest_files": 60,
       "related_manifest_files_fully_audited": 0,
       "full_tree_files": 162,
       "full_tree_files_reviewed": 0,
@@ -3916,7 +3916,7 @@
         "External configuration replacement and strategy state account isolation not exhaustively audited",
         "No authorized demo credentials; no real trades",
         "qlty usage pending; branch protection read 403; no independent PR approval",
-        "61 related files not independently audited; 162 tracked blob files not fully audited"
+        "60 related files not independently audited; 162 tracked blob files not fully audited"
       ],
       "merge": "NOT_ATTEMPTED"
     }
@@ -4256,7 +4256,7 @@
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "related_pass": false,
       "full_pass": false,
-      "reason": "Code changed; full 61-file related and 162-file independent audits incomplete; KIS demo, qlty usage, independent review and branch-protection read blocked",
+      "reason": "Code changed; full 60-file related and 162-file independent audits incomplete; KIS demo, qlty usage, independent review and branch-protection read blocked",
       "manifest_tree_sha": "6c6fbccdb95fcb89d03d1c683cfb4ba266a28b27"
     }
   ],
