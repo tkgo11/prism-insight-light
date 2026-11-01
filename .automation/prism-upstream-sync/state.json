@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-01T09:20+09:00",
-    "started_at": "2026-11-01T09:23:36+09:00",
-    "completed_at": "2026-11-01T00:26:08.620Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-01T10:17+09:00",
+    "started_at": "2026-11-01T10:17:43+09:00",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-01T10:17+09:00",
     "last_mutation_commit": "3212414ac25dd308614c4356221600d383b7f495",
     "last_mutation_at": "2026-11-01T00:26:08.620Z",
-    "result": "STOP_LOSS_VALIDATION_AND_OVERFLOW_FIXED_CI_PENDING_NO_PASS",
+    "result": "IN_PROGRESS",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
