@@ -35,12 +35,37 @@ class CooldownStrategy:
         lock_path.parent.mkdir(parents=True, exist_ok=True)
         lock = await acquire_file_lock(lock_path)
         try:
-            items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.window_minutes))
-            if any(item.get("key") == key for item in items): return StrategyExecution("rejected", f"Cooldown active for {key}", signal.market, signal.ticker)
+            loaded = load_json_list(self.config.runtime_path)
+            # An unresolved order remains protected even after the configured
+            # cooldown expires. Unknown broker outcomes are not clean failures.
+            if any("pending" in item and not isinstance(item["pending"], bool) for item in loaded):
+                raise RuntimeError("Cooldown state is ambiguous; operator reconciliation required")
+            recent = fresh_items(loaded, window=timedelta(minutes=self.config.window_minutes))
+            pending = [item for item in loaded if item.get("pending") is True]
+            items = pending + [item for item in recent if item.get("pending") is not True]
+            if any(item.get("key") == key for item in items):
+                return StrategyExecution("rejected", f"Cooldown active or pending reconciliation for {key}", signal.market, signal.ticker)
+            # Write before submission, so a crash/timeout cannot leave an
+            # unprotected gap for a distinct signal ID on the same instrument.
+            pending_entry = {
+                "key": key, "market": signal.market, "ticker": signal.ticker,
+                "signal_type": signal.signal_type,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "pending": True,
+            }
+            items.append(pending_entry)
+            save_json(self.config.runtime_path, items)
             result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, limit_price=signal.price)
             execution = execution_from_result(signal, result, "Cooldown guarded execution")
-            if execution.status == "executed":
-                items.append({"key": key, "market": signal.market, "ticker": signal.ticker, "signal_type": signal.signal_type, "created_at": datetime.now(timezone.utc).isoformat()}); save_json(self.config.runtime_path, items)
+            if execution.status == "failed":
+                # Only a verified pre-acceptance rejection permits retry.
+                items.remove(pending_entry)
+                save_json(self.config.runtime_path, items)
+            elif execution.status == "executed":
+                # Accepted orders count toward cooldown but do not prove fills.
+                # Unknown outcomes retain pending=True indefinitely.
+                pending_entry["pending"] = False
+                save_json(self.config.runtime_path, items)
             return execution
         finally:
             lock.__exit__(None, None, None)
