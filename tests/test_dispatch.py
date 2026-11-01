@@ -178,6 +178,8 @@ async def test_real_off_hours_without_broker_window_enqueues(monkeypatch):
     monkeypatch.setattr("trading.dispatch.is_off_hours_order_available", lambda market: False)
 
     dispatcher = TradeDispatcher(trading_mode="real", queue=queue)
+    # This fixture exercises queueing, not live KIS account discovery.
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "prod:fixture:01"})
     signal = parse_signal_payload({"type": "SELL", "ticker": "AAPL", "market": "US", "price": 200})
     result = await dispatcher.dispatch(signal)
 
