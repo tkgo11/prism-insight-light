@@ -169,6 +169,8 @@ class StopLossTracker:
             return data
         if isinstance(data, list):
             result = {}
+            first_indices: dict[str, int] = {}
+            ambiguous_keys: set[str] = set()
             for index, item in enumerate(data):
                 # Legacy lists may contain malformed or duplicate entries.  Keep
                 # their original payload under a non-tradable key when the list
@@ -192,13 +194,21 @@ class StopLossTracker:
                     result[quarantine_key] = item
                     continue
                 key = self._key(market, ticker)
+                if key in ambiguous_keys:
+                    logger.error("Quarantining additional duplicate legacy stop-loss record at index %s", index)
+                    result[quarantine_key] = item
+                    continue
                 if key in result:
-                    # Two legacy entries for one instrument are ambiguous.
-                    # Never silently overwrite the first or auto-trade both.
-                    logger.error("Quarantining duplicate legacy stop-loss record at index %s", index)
+                    # A duplicate makes BOTH entries untrustworthy. Selecting
+                    # the first stop price could trigger an unintended SELL.
+                    first_index = first_indices.pop(key)
+                    result[f"__legacy_unverified_{first_index}__"] = result.pop(key)
+                    ambiguous_keys.add(key)
+                    logger.error("Quarantining conflicting legacy stop-loss records for %s", key)
                     result[quarantine_key] = item
                     continue
                 result[key] = item
+                first_indices[key] = index
             return result
         raise RuntimeError(
             "Stop-loss tracker has an invalid format; automated stop-loss actions are blocked"
@@ -309,8 +319,21 @@ class StopLossTracker:
             data = self._load()
             items = list(data.items())
         target_market = market.strip().upper() if market else None
+        # Older versions may already have migrated a duplicate list into a
+        # dictionary while leaving the first conflicting entry actionable.
+        # Block that entry too until the operator reconciles the quarantine.
+        quarantined_instruments: set[str] = set()
+        for key, item in items:
+            if not key.startswith("__legacy_unverified_") or not isinstance(item, dict):
+                continue
+            q_market, q_ticker = item.get("market"), item.get("ticker")
+            if isinstance(q_market, str) and isinstance(q_ticker, str) and q_market.strip() and q_ticker.strip():
+                quarantined_instruments.add(self._key(q_market, q_ticker))
         valid: list[dict[str, Any]] = []
         for key, item in items:
+            if key in quarantined_instruments:
+                logger.error("Blocking ambiguous legacy stop-loss instrument %s pending reconciliation", key)
+                continue
             if (
                 not isinstance(item, dict)
                 or not isinstance(item.get("market"), str)
