@@ -42,6 +42,10 @@
         },
         {
           "context": "qlty check",
+          "state": "success"
+        },
+        {
+          "context": "qlty usage",
           "state": "pending"
         }
       ],
@@ -2001,8 +2005,8 @@
       "windows": "141 passed",
       "docker": "success",
       "snyk": "success",
-      "qlty_check": "pending",
-      "qlty_usage": "not confirmed",
+      "qlty_check": "success",
+      "qlty_usage": "pending",
       "review": "none"
     }
   },
@@ -3562,11 +3566,11 @@
         },
         {
           "context": "qlty check",
-          "state": "pending"
+          "state": "success"
         },
         {
           "context": "qlty usage",
-          "state": "not confirmed"
+          "state": "pending"
         }
       ],
       "kis_demo": "NOT_RUN",
@@ -3580,7 +3584,7 @@
     "57-file known transitive dependency scope not fully audited; related PASS 0/2.",
     "Full 161-file repository audit not completed; full PASS 0/2.",
     "No authorized KIS demo credentials/environment for order-ID, partial-fill, cancel, remaining quantity and account-specific reconciliation; no live trading.",
-    "Current PR HEAD GitHub Actions success, but qlty check pending, qlty usage unverified and independent PR review absent.",
+    "Current PR HEAD GitHub Actions, Snyk and qlty check success; qlty usage pending, independent PR review absent and branch policy not independently confirmed.",
     "Multi-account strategy state partitioning and authoritative order lifecycle reconciliation require further independent inspection."
   ],
   "next_action": "Complete dependency-closure and independent full-file audit of 57 known related files, then 161 full tree files; validate account-scoped strategy state and KIS demo authoritative order-ID/fill/partial/cancel/remaining-quantity reconciliation; no PASS or merge without all gates.",
