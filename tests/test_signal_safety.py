@@ -707,7 +707,7 @@ def test_queued_signal_expiring_before_execution_is_quarantined(monkeypatch, tmp
          "timestamp": old_timestamp}
     )
     queue = dispatcher.queue
-    item = queue.enqueue(signal)
+    item = queue.enqueue(signal, {"version": 2, "multi_account": False, "trading_mode": "demo", "account_scope": __import__("hashlib").sha256(dispatcher._single_account_execution_selector(signal).encode("utf-8")).hexdigest()})
     assert queue.pending_count() == 1
 
     broker_calls = []
@@ -750,7 +750,7 @@ def test_fresh_queued_signal_still_executes(monkeypatch, tmp_path):
         {"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000}
     )
     queue = dispatcher.queue
-    queue.enqueue(signal)
+    queue.enqueue(signal, {"version": 2, "multi_account": False, "trading_mode": "demo", "account_scope": __import__("hashlib").sha256(dispatcher._single_account_execution_selector(signal).encode("utf-8")).hexdigest()})
 
     broker_calls = []
 

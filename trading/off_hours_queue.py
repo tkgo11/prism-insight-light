@@ -40,7 +40,13 @@ def _queue_identity(signal: dict[str, Any], execution_context: dict[str, Any]) -
     if supplied:
         return supplied
     material = json.dumps(
-        {"signal": signal, "accounts": execution_context.get("account_ids", [])},
+        {
+            "signal": signal,
+            "accounts": execution_context.get("account_ids", []),
+            "multi_account": execution_context.get("multi_account"),
+            "trading_mode": execution_context.get("trading_mode"),
+            "account_scope": execution_context.get("account_scope"),
+        },
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),

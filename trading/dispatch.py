@@ -372,8 +372,9 @@ class MultiAccountTradeDispatcher:
         if not market_open and not can_submit_off_hours:
             if allow_queue:
                 context = {
-                    "version": 1,
+                    "version": 2,
                     "multi_account": True,
+                    "trading_mode": self.dispatcher.trading_mode,
                     "account_ids": [_account_id(account["account_key"]) for account in accounts],
                 }
                 queued = self.dispatcher.queue.enqueue(signal, context)
@@ -646,7 +647,18 @@ class TradeDispatcher:
                     signal.signal_type, signal.company_name, signal.ticker, signal.market,
                 )
             elif allow_queue:
-                queued_signal = await asyncio.to_thread(self.queue.enqueue, signal)
+                queued_signal = await asyncio.to_thread(
+                    self.queue.enqueue, signal,
+                    {
+                        "version": 2,
+                        "multi_account": False,
+                        "trading_mode": self.trading_mode,
+                        # Never persist the configured account name in plaintext.
+                        "account_scope": hashlib.sha256(
+                            self._single_account_execution_selector(signal).encode("utf-8")
+                        ).hexdigest(),
+                    },
+                )
                 logger.info(
                     "Queued %s-mode %s %s(%s) for %s",
                     self.trading_mode, signal.signal_type, signal.company_name,
@@ -800,10 +812,26 @@ class TradeDispatcher:
         # are safe only while single-account mode remains active.
         if queue_context is not None and not isinstance(queue_context, dict):
             return DispatchResult("failed", "Queued execution context is malformed; operator reconciliation required", signal.signal_type, signal.market)
-        if self.multi_account_enabled and not (
-            isinstance(queue_context, dict) and queue_context.get("multi_account") is True
-        ):
-            return DispatchResult("failed", "Queued multi-account targets are missing; operator reconciliation required", signal.signal_type, signal.market)
+        # The original trading environment is an authorization boundary.
+        # A demo order must never become a real order after a configuration
+        # switch; similarly a single-account order cannot silently move to
+        # a different named/indexed account. Legacy unpinned queue entries
+        # require manual reconciliation instead of guessing their origin.
+        if not isinstance(queue_context, dict) or queue_context.get("trading_mode") != self.trading_mode:
+            return DispatchResult("failed", "Queued trading mode is missing or changed; operator reconciliation required", signal.signal_type, signal.market)
+        if self.multi_account_enabled:
+            if queue_context.get("multi_account") is not True:
+                return DispatchResult("failed", "Queued multi-account targets are missing; operator reconciliation required", signal.signal_type, signal.market)
+        else:
+            expected_scope = hashlib.sha256(
+                self._single_account_execution_selector(signal).encode("utf-8")
+            ).hexdigest()
+            if (
+                queue_context.get("multi_account") is not False
+                or queue_context.get("account_scope") != expected_scope
+                or "account_ids" in queue_context
+            ):
+                return DispatchResult("failed", "Queued single-account scope is missing or changed; operator reconciliation required", signal.signal_type, signal.market)
         try:
             async with _serialized_broker_workflow():
                 if isinstance(queue_context, dict) and queue_context.get("multi_account") is True:

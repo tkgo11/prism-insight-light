@@ -11,7 +11,7 @@ class DummyQueue:
     def __init__(self):
         self.enqueued = []
 
-    def enqueue(self, signal):
+    def enqueue(self, signal, execution_context=None):
         self.enqueued.append(signal)
         return type("QueuedSignal", (), {"execute_at": "2030-01-01T00:00:00+00:00"})()
 
@@ -126,7 +126,12 @@ def test_due_demo_order_remains_queued_when_market_still_closed(monkeypatch, tmp
 
     dispatcher = TradeDispatcher(trading_mode="demo", queue_path=tmp_path / "queue.json")
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
-    dispatcher.queue.enqueue(signal)
+    dispatcher.queue.enqueue(signal, {
+        "version": 2, "multi_account": False, "trading_mode": "demo",
+        "account_scope": __import__("hashlib").sha256(
+            dispatcher._single_account_execution_selector(signal).encode("utf-8")
+        ).hexdigest(),
+    })
 
     drained = dispatcher.drain_due_orders()
 

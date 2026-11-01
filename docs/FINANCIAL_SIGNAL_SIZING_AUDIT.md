@@ -106,3 +106,18 @@ Keep the PR unmerged until a human reviews all modified logic and a separate dem
 - Remaining limits: account-scoped identities, automatic order-ID/fill/cancel
   reconciliation, durable recovery across every filesystem, and end-to-end
   KIS demo validation are not yet established.
+
+
+### Queued execution authorization scope (2026-11-02)
+
+Queue replay now pins the original demo/real trading mode and the original
+single-account selector (stored as a SHA-256 digest, not an account label), or
+the explicit multi-account target set. The queue identity includes these
+execution-scope fields so distinct authorized contexts do not collapse into one
+entry. Missing legacy context, changed trading mode, and changed single-account
+selector are quarantined for operator reconciliation **before any broker call**.
+This does not prove that an unchanged primary selector still resolves to the
+same underlying account after a configuration edit: account-configuration
+identity reconciliation remains a separate deployment gate. Broker order
+acceptance still does not prove fill; KIS demo order-ID, partial-fill, cancel
+and remaining-quantity checks are still required. No live trading was tested.
