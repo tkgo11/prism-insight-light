@@ -76,3 +76,28 @@ Keep the PR unmerged until a human reviews all modified logic and a separate dem
 - Semantic trailing-stop records are also checked for a unique instrument key,
   matching market/ticker, and a finite positive high-water mark. A string
   `"nan"`/`"inf"` in otherwise valid JSON must not bypass the stop trigger.
+
+### Pending-order fences for signal-trailing-stop (2026-11-02)
+
+- A BUY broker submission is **not** evidence of a filled position. Before
+  submission the strategy writes an instrument-scoped `entry_pending` record.
+  Accepted, ambiguous and transport-error results keep the fence across process
+  restarts; a verified pre-acceptance rejection restores the exact previous
+  protection record (or removes a newly created pending record).
+- A SELL with `require_tracked_entry=False` also writes a durable
+  `exit_pending` record **before** broker submission. Otherwise untracked
+  pass-through could submit multiple exits with distinct signal IDs. Both
+  pending directions block later BUY and SELL for the same instrument until
+  verified broker order/fill/remaining-quantity reconciliation.
+- An order ID stored as `entry_broker_order_id` or `exit_broker_order_id`
+  proves at most submission/acceptance, **not** exchange execution. Do not
+  automatically remove pending markers after `success=True`, after a timer,
+  or because an unrelated cash/holdings snapshot changed.
+- This is deliberately conservative and may suspend a strategy until an
+  operator reconciles the KIS demo order history and account-specific fills.
+  A test that clears pending after a *simulated verified fill* is a mock, not
+  evidence of real KIS integration. Manual reconciliation must preserve
+  backups and outstanding-order evidence; no live trading is authorized.
+- Remaining limits: account-scoped identities, automatic order-ID/fill/cancel
+  reconciliation, durable recovery across every filesystem, and end-to-end
+  KIS demo validation are not yet established.
