@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T00:20+09:00",
-    "started_at": "2026-11-01T15:20:27Z",
-    "completed_at": "2026-11-01T15:30:00Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T01:15+09:00",
+    "started_at": "2026-11-01T16:15:33Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T01:15+09:00",
     "last_mutation_commit": "a20bcb93959624471fdf641b30f46db83696e679",
     "last_mutation_at": "2026-11-01T15:30:00Z",
-    "result": "THREE_STOP_LOSS_SAFETY_DEFECTS_PATCHED_CI_SUCCESS_NO_AUDIT_PASS",
+    "result": "RUNNING_ROOT_CAUSE_CLOSURE",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
