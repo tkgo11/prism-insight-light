@@ -127,3 +127,15 @@ an opaque hash. Replay resolves it again and quarantines an item when the
 primary account or named/indexed account now points at a different KIS key.
 Missing account configuration prevents enqueue; legacy entries without this
 pin require manual reconciliation. This does not authorize real trading.
+
+The queued single-account identity is **re-resolved inside the serialized
+broker execution path**, after the earlier replay precheck. The exact resolved
+account object is passed to both legacy KR/US trader construction and strategy
+trader kwargs; a mutable primary/name/index selector is never resolved again
+by those order constructors. The existing single-account execution ledger
+claim remains active despite passing an explicit account object. Tests cover
+identity drift between the two checks, pinned legacy/strategy execution, and
+continued dedupe finalization using a fake broker only. This does not establish
+atomicity against external configuration-file replacement, actual KIS order
+fills, or cross-account strategy-state partitioning; these remain audit/demo
+gates. Do not treat CI success as live-trading authorization.
