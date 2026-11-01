@@ -154,10 +154,21 @@ class StopLossTracker:
     def _load(self) -> dict[str, dict[str, Any]]:
         try:
             raw = self.path.read_text(encoding="utf-8")
-            data = json.loads(raw)
+            # Duplicate JSON keys silently overwrite an earlier stop price with
+            # Python's default decoder. Treat the entire ledger as ambiguous
+            # rather than trading against an arbitrary surviving record.
+            def unique_object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+                obj: dict[str, Any] = {}
+                for key, value in pairs:
+                    if key in obj:
+                        raise ValueError("Duplicate key in stop-loss ledger JSON")
+                    obj[key] = value
+                return obj
+
+            data = json.loads(raw, object_pairs_hook=unique_object_pairs)
         except FileNotFoundError:
             return {}
-        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
             logger.error(
                 "Stop-loss positions file is unreadable (%s): %s", self.path, exc
             )
