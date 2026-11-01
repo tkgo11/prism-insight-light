@@ -215,6 +215,10 @@ async def test_trailing_sell_pending_exit_blocks_new_signals_across_restart(
     assert persisted[0]["exit_pending"] is True
     assert persisted[0]["high_price"] == 100.0
     assert persisted[0]["exit_requested_fraction"] == 1.0
+    if broker_result.get("order_no"):
+        assert persisted[0]["exit_broker_order_id"] == broker_result["order_no"]
+    else:
+        assert "exit_broker_order_id" not in persisted[0]
     assert len(calls) == 1
     restarted = SignalTrailingStopStrategy(config=config)
     for side in ("SELL", "BUY"):

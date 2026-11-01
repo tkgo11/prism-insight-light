@@ -256,6 +256,12 @@ class SignalTrailingStopStrategy:
             # Only an explicitly verified pre-acceptance/business rejection
             # proves that this order never entered the broker's order book.
             self._clear_exit_pending(records, self._key(signal))
+        else:
+            # Retain the broker's order identifier for manual reconciliation.
+            # An order ID confirms acceptance at most, never a fill.
+            order_id = str(result.get("order_no") or result.get("broker_order_id") or "").strip()
+            if order_id:
+                self._record_exit_order_id(records, self._key(signal), order_id)
         return execution
 
     def _trailing_stop(self, high_price: float) -> float:
@@ -308,5 +314,16 @@ class SignalTrailingStopStrategy:
             for field in ("exit_pending", "exit_requested_at", "exit_requested_fraction"):
                 clean.pop(field, None)
             updated.append(clean)
+        save_json(self.config.runtime_path, updated)
+        records[:] = updated
+
+    def _record_exit_order_id(
+        self, records: list[dict[str, Any]], key: str, order_id: str
+    ) -> None:
+        updated = [
+            {**item, "exit_broker_order_id": order_id}
+            if item.get("key") == key else item
+            for item in records
+        ]
         save_json(self.config.runtime_path, updated)
         records[:] = updated
