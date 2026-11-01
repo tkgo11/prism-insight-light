@@ -26,7 +26,7 @@ def test_legacy_list_quarantine_survives_remove_and_new_position(tmp_path):
     assert migrated["__legacy_unverified_0__"] is None
     assert migrated["__legacy_unverified_1__"] == invalid
     assert migrated["__legacy_unverified_3__"] == duplicate
-    assert tracker.get_positions("KR") == []
+    assert [p["ticker"] for p in tracker.get_positions("KR")] == ["333333"]
 
     persisted = json.loads(path.read_text(encoding="utf-8"))
     assert persisted["__legacy_unverified_0__"] is None
