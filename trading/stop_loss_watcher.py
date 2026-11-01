@@ -72,21 +72,21 @@ class StopLossWatcherConfig:
             poll_seconds = float(payload.get("poll_seconds", 5.0))
             if poll_seconds <= 0:
                 poll_seconds = 5.0
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             poll_seconds = 5.0
 
         try:
             request_interval = float(payload.get("request_interval_seconds", 0.2))
             if request_interval < 0:
                 request_interval = 0.2
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             request_interval = 0.2
 
         try:
             holding_check_interval = float(payload.get("holding_check_interval_seconds", 60.0))
             if holding_check_interval < 0:
                 holding_check_interval = 60.0
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             holding_check_interval = 60.0
 
         storage_raw = payload.get("storage_path")
@@ -236,6 +236,18 @@ class StopLossTracker:
         target_price: float | None = None,
     ) -> None:
         """Register or update a position's stop-loss price."""
+        # Reject malformed identifiers before touching durable protection.
+        # Whitespace-only instruments otherwise create unreachable ledger
+        # entries that the watcher silently skips; normalize outer whitespace
+        # so the persisted key and the broker-facing ticker agree.
+        if not isinstance(market, str) or not market.strip():
+            raise ValueError("Stop-loss position market must be nonempty")
+        if not isinstance(ticker, str) or not ticker.strip():
+            raise ValueError("Stop-loss position ticker must be nonempty")
+        if any(ord(ch) < 32 or ord(ch) == 127 for ch in market + ticker):
+            raise ValueError("Stop-loss position identifiers contain control characters")
+        market = market.strip().upper()
+        ticker = ticker.strip()
         # Invalid/non-finite prices must not overwrite a valid protection
         # record with JSON NaN/Infinity that the watcher later skips.
         try:

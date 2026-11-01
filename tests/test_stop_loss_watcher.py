@@ -872,3 +872,40 @@ def test_rearming_stop_loss_replaces_corrupt_same_key_record(tmp_path):
     assert repaired["ticker"] == "111111"
     assert repaired["stop_loss"] == 90
     assert repaired["created_at"]
+
+
+@pytest.mark.parametrize(
+    ("field", "expected"),
+    [
+        ("poll_seconds", 5.0),
+        ("request_interval_seconds", 0.2),
+        ("holding_check_interval_seconds", 60.0),
+    ],
+)
+def test_stop_loss_watcher_config_oversized_interval_is_safe(field, expected):
+    # float(10**400) raises OverflowError; a corrupt config must not crash
+    # watcher construction or leave its background safety thread unstarted.
+    config = StopLossWatcherConfig.from_mapping({field: 10 ** 400})
+    assert getattr(config, field) == expected
+
+
+@pytest.mark.parametrize(
+    ("market", "ticker"),
+    [("", "005930"), ("  ", "005930"), ("KR", ""), ("KR", "   "),
+     ("KR\\n", "005930"), ("US", "AAPL\\n")],
+)
+def test_stop_loss_tracker_rejects_malformed_instrument_without_writing(
+    tmp_path, market, ticker
+):
+    path = tmp_path / "positions.json"
+    tracker = StopLossTracker(path)
+    with pytest.raises(ValueError, match="Stop-loss position"):
+        tracker.record_position(market, ticker, 90, entry_price=100)
+    assert not path.exists()
+
+
+def test_stop_loss_tracker_normalizes_instrument_before_persisting(tmp_path):
+    tracker = StopLossTracker(tmp_path / "positions.json")
+    tracker.record_position(" us ", " AAPL ", 90, entry_price=100)
+    assert tracker.get_position("US", "AAPL")["ticker"] == "AAPL"
+    assert [p["ticker"] for p in tracker.get_positions("US")] == ["AAPL"]
