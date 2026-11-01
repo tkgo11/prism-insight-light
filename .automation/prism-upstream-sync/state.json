@@ -6,18 +6,19 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-01T10:17+09:00",
     "started_at": "2026-11-01T10:17:43+09:00",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-01T10:17+09:00",
-    "last_mutation_commit": "3212414ac25dd308614c4356221600d383b7f495",
-    "last_mutation_at": "2026-11-01T00:26:08.620Z",
-    "result": "IN_PROGRESS",
+    "completed_at": "2026-11-01T01:20:50.682Z",
+    "lock_owner": null,
+    "last_mutation_commit": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
+    "last_mutation_at": "2026-11-01T01:20:50.682Z",
+    "result": "MALFORMED_STOP_LOSS_MARKET_RECORD_FIXED_CI_PENDING_NO_PASS",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
       "full": 0,
-      "source_head": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "source_head": "66df7f010b18d198b2d5ddfa6a35d821cac13ea6",
+      "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "3212414ac25dd308614c4356221600d383b7f495",
+      "pr_head": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
       "pr_number": 42,
       "pr_changed_files": 36,
       "related_review_complete": false,
@@ -25,34 +26,31 @@
       "full_tree_files_reviewed": 0,
       "ci_runs": [
         {
-          "id": 41256684434,
+          "id": 41260633051,
+          "event": "pull_request",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142"
+        },
+        {
+          "id": 41260627633,
           "event": "push",
           "status": "in_progress",
           "conclusion": null,
-          "head_sha": "3212414ac25dd308614c4356221600d383b7f495"
-        },
-        {
-          "id": 41256688205,
-          "event": "pull_request",
-          "status": "queued",
-          "conclusion": null,
-          "head_sha": "3212414ac25dd308614c4356221600d383b7f495"
+          "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142"
         }
       ],
-      "external_checks": {
-        "snyk": "success",
-        "qlty_check": "pending"
-      },
       "local_tests_executed": false,
       "merged": false,
-      "reason": "Stop-loss persisted price validation and oversized corrupt record isolation fixed; new-head CI incomplete, dependency closure and KIS/GCP demo unresolved"
+      "reason": "Malformed stop-loss record isolation fixed; new-head CI pending, dependency closure and KIS/GCP demo unresolved",
+      "pr_comment_id": 6551696060
     },
     "pr_comment_id": 6551146793
   },
   "source": {
     "repository": "dragon1086/prism-insight",
     "default_branch": "main",
-    "latest_observed_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "latest_observed_sha": "66df7f010b18d198b2d5ddfa6a35d821cac13ea6",
     "pinned_contract_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
     "last_integrated_upstream_sha": null,
     "checkpoint_status": "UNKNOWN_BASELINE"
@@ -66,11 +64,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
+    "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "CODE_PATCHED_CI_PENDING_RELATED_AUDIT_INCOMPLETE"
+    "status": "TARGETED_STOP_LOSS_RECORD_ISOLATION_PATCHED_CI_PENDING_NO_AUDIT_PASS"
   },
   "candidates": [
     {
@@ -79,18 +77,30 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
+      "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
       "mutation_allowed": true,
       "changed_files": 36
+    },
+    {
+      "number": 40,
+      "url": "https://github.com/tkgo11/prism-insight-light/pull/40",
+      "title": "chore(deps): update actions/setup-python action to v7",
+      "author": "renovate[bot]",
+      "head_ref": "renovate/actions-setup-python-7.x",
+      "head_sha": "0a99d432339915b4d3230ab194b76472bf807914",
+      "draft": false,
+      "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
+      "status": "QUEUED_UNAUDITED_DO_NOT_MERGE",
+      "mutation_allowed": true
     }
   ],
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PR_CHANGED_FILES_INDEXED_DEPENDENCY_CLOSURE_INCOMPLETE_NO_PASS",
+    "status": "TARGETED_RECORD_FIX_REVIEWED_DEPENDENCY_CLOSURE_INCOMPLETE_NO_PASS",
     "checksum": null,
     "scope_estimate": "36 changed paths; dependency closure not yet verified",
     "files": [
@@ -152,12 +162,12 @@
       {
         "path": "tests/test_signal_schema.py",
         "blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9",
-        "status": "TARGETED_FIX_REVIEWED_CI_PENDING"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_stop_loss_watcher.py",
-        "blob_sha": "e35a0a28404ba847afcb17f7c7d86c30bfe5e10c",
-        "status": "TARGETED_FIX_REVIEWED_CI_PENDING_NOT_FULLY_AUDITED"
+        "blob_sha": "b0a1f631e92236ad74fa2110ce48c7b86019b444",
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_strategy_partial_matrix.py",
@@ -202,7 +212,7 @@
       {
         "path": "trading/schema.py",
         "blob_sha": "2c9e5d3ed20155f329cbc36e9a8b581c3fdc3c56",
-        "status": "TARGETED_FIX_REVIEWED_CI_PENDING"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/signal_sizing.py",
@@ -211,8 +221,8 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "2d5e28a341a24102e6f5b0d9c93373ae5d6fa944",
-        "status": "TARGETED_FIX_REVIEWED_CI_PENDING_NOT_FULLY_AUDITED"
+        "blob_sha": "daa35ce7860efe6f59612a6fb80d6b371aeeb2d1",
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/balance_split.py",
@@ -277,29 +287,17 @@
     ],
     "checked_files": [
       {
-        "path": "trading/schema.py",
-        "blob_sha": "2c9e5d3ed20155f329cbc36e9a8b581c3fdc3c56",
-        "status": "TARGETED_OVERFLOW_FIX_REVIEWED_NO_FULL_AUDIT"
-      },
-      {
-        "path": "tests/test_signal_schema.py",
-        "blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9",
-        "status": "REGRESSION_ADDED_NOT_YET_EXECUTED"
-      },
-      {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "2d5e28a341a24102e6f5b0d9c93373ae5d6fa944",
-        "status": "TARGETED_REVIEW_ONLY_NEW_HEAD_CI_PENDING"
+        "blob_sha": "daa35ce7860efe6f59612a6fb80d6b371aeeb2d1",
+        "status": "TARGETED_RECORD_ISOLATION_REVIEWED_NOT_FULL_AUDIT"
       },
       {
         "path": "tests/test_stop_loss_watcher.py",
-        "blob_sha": "e35a0a28404ba847afcb17f7c7d86c30bfe5e10c",
-        "status": "TARGETED_REVIEW_ONLY_NEW_HEAD_CI_PENDING"
+        "blob_sha": "b0a1f631e92236ad74fa2110ce48c7b86019b444",
+        "status": "SEVEN_REGRESSION_CASES_ADDED_CI_IN_PROGRESS"
       }
     ],
     "modified_files": [
-      "trading/schema.py",
-      "tests/test_signal_schema.py",
       "trading/stop_loss_watcher.py",
       "tests/test_stop_loss_watcher.py"
     ]
@@ -308,9 +306,9 @@
     "status": "INDEXED_NOT_AUDITED",
     "tracked_tree_entries_on_pr": 182,
     "tracked_blob_files_on_pr": 158,
-    "sha": "3212414ac25dd308614c4356221600d383b7f495",
+    "sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
     "files_checked": 0,
-    "checksum": "d4f78e76e4901e4d3bd6a93d9caf248473ea9041",
+    "checksum": "c06c3e1d801688e22e4e3e9a46c26a0cba4b3fac",
     "checksum_kind": "git_tree_sha",
     "files": [
       {
@@ -620,7 +618,7 @@
       },
       {
         "path": "tests/test_stop_loss_watcher.py",
-        "blob_sha": "e35a0a28404ba847afcb17f7c7d86c30bfe5e10c",
+        "blob_sha": "b0a1f631e92236ad74fa2110ce48c7b86019b444",
         "status": "NOT_REVIEWED"
       },
       {
@@ -810,7 +808,7 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "2d5e28a341a24102e6f5b0d9c93373ae5d6fa944",
+        "blob_sha": "daa35ce7860efe6f59612a6fb80d6b371aeeb2d1",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1352,6 +1350,46 @@
         "qlty check: pending"
       ],
       "note": "No local tests executed; no PASS until full audit and all required checks complete"
+    },
+    "2026-11-01T10:17+09:00": {
+      "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
+      "status": "in_progress",
+      "conclusion": null,
+      "workflow_runs": [
+        {
+          "id": 41260633051,
+          "event": "pull_request",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142"
+        },
+        {
+          "id": 41260627633,
+          "event": "push",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142"
+        }
+      ],
+      "previous_head_runs": [
+        {
+          "id": 41256688205,
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "3212414ac25dd308614c4356221600d383b7f495"
+        },
+        {
+          "id": 41256684434,
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "3212414ac25dd308614c4356221600d383b7f495"
+        }
+      ],
+      "external_statuses": [
+        "security/snyk: pending",
+        "qlty check: pending"
+      ],
+      "local_tests_executed": false
     }
   },
   "upstream_changes": [
@@ -1370,6 +1408,13 @@
       "scope": "ADD delta_fraction allocation caps and durable signal ledger",
       "decision": "DEFER",
       "reason": "Current light schema explicitly rejects ADD; new order path requires independent holdings, budget, idempotency and demo verification"
+    },
+    {
+      "scope": "2026-11-01 upstream merge 66df7f0 / BTC closed-history lock",
+      "category": "BTC scenario runtime / closed-history review",
+      "upstream_sha": "66df7f010b18d198b2d5ddfa6a35d821cac13ea6",
+      "decision": "DEFER_EXCLUDE_FROM_LIGHT",
+      "reason": "Inspected changed paths confined to prism-btc/live/scenario_runtime.py and prism-btc/tests; no matching independent light subscriber runtime; upstream pinned contract remains unchanged"
     }
   ],
   "risk_register": [
@@ -1454,6 +1499,13 @@
       "description": "A partial fill/estimated broker amount smaller than the accepted order budget previously reduced the reservation and could re-spend an unfilled commitment. Reservation now uses max(submitted budget, reported positive amount), with regression for successive US buys; CI and full dependency audit pending.",
       "status": "FIX_COMMITTED_CI_PASSED_AUDIT_PENDING",
       "evidence": "https://github.com/tkgo11/prism-insight-light/commit/17e622d232a015e10b2507d8713b025a4d34a238"
+    },
+    {
+      "severity": "HIGH",
+      "area": "malformed stop-loss persisted market records",
+      "description": "Non-dict/non-string market persisted entries could abort get_positions and prevent valid market positions from being checked; now skipped in memory and retained on disk for reconciliation, including legacy list format",
+      "status": "FIX_COMMITTED_CI_PENDING_FULL_AUDIT_PENDING",
+      "evidence": "https://github.com/tkgo11/prism-insight-light/commit/fee9a3c6594d6bbcbccdd0798ab7a43e3078f142"
     }
   ],
   "audit_evidence": [
@@ -1660,6 +1712,39 @@
       ],
       "pr_comment_id": 6551146793,
       "notes": "Verified previous head GitHub Actions Linux and Windows checks succeeded, qlty usage pending. Found nonfinite stop-loss price could overwrite durable protection; malformed oversized legacy stop-loss could abort entire market watcher cycle. Added finite validation and OverflowError isolation with regression tests, CAS committed to PR. No local tests run; new-head CI pending; no full dependency closure, KIS/GCP demo, or PASS."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-01T10:17+09:00",
+      "kind": "TARGETED_STOP_LOSS_MALFORMED_MARKET_RECORD_FIX_NOT_FULL_AUDIT",
+      "phase": "related_code_audit",
+      "related_pass": false,
+      "full_pass": false,
+      "previous_head_sha": "3212414ac25dd308614c4356221600d383b7f495",
+      "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_observed_sha": "66df7f010b18d198b2d5ddfa6a35d821cac13ea6",
+      "changed_files": [
+        "trading/stop_loss_watcher.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "commit_shas": [
+        "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142"
+      ],
+      "ci_previous_head_run_ids": [
+        41256688205,
+        41256684434
+      ],
+      "ci_previous_head_conclusions": [
+        "success",
+        "success"
+      ],
+      "ci_new_head_run_ids": [
+        41260633051,
+        41260627633
+      ],
+      "pr_comment_id": 6551696060,
+      "notes": "Found malformed market/type records in durable stop-loss storage can abort watcher market cycle; isolated corrupt records in memory without deleting persisted evidence; added 4+3 parametrized regression cases. Local pytest unavailable (container github.com DNS fails). New-head CI in progress, no full dependency closure, no KIS/GCP demo, no PASS."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -1679,9 +1764,13 @@
     "Latest PR head CI incomplete after overflow fix",
     "Dependency closure and broker demo reconciliation still incomplete",
     "New-head CI incomplete after stop-loss validation fix",
-    "Stop-loss accepted-order vs fill/partial-fill reconciliation remains unresolved; demo KIS/GCP evidence required"
+    "Stop-loss accepted-order vs fill/partial-fill reconciliation remains unresolved; demo KIS/GCP evidence required",
+    "New-head GitHub Actions and security/quality checks incomplete",
+    "Malformed-record regression not executed locally",
+    "Full related dependency closure incomplete",
+    "Real/demo KIS/GCP end-to-end and broker fill reconciliation absent"
   ],
-  "next_action": "Verify CI runs 41256684434/41256688205 for head 3212414ac25dd308614c4356221600d383b7f495; continue related dependency closure; assess broker fill/partial-fill stop-loss reconciliation in safe mock/demo environment. No merge.",
+  "next_action": "Verify new-head GitHub Actions runs 41260633051/41260627633 for fee9a3c6594d6bbcbccdd0798ab7a43e3078f142; inspect remaining dependency closure and stop-loss fill reconciliation; do not count PASS or merge until all gates verified.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -1737,6 +1826,18 @@
       "full_pass": false,
       "reason": "Code changed; new-head CI pending; related dependency closure incomplete; demo brokerage unresolved",
       "manifest_tree_sha": "d4f78e76e4901e4d3bd6a93d9caf248473ea9041"
+    },
+    {
+      "slot": "2026-11-01T10:17+09:00",
+      "run_id": "prism-sync-hourly-2026-11-01T10:17+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "New targeted code fix invalidates counters; CI pending; dependency closure and KIS demo incomplete",
+      "manifest_tree_sha": "c06c3e1d801688e22e4e3e9a46c26a0cba4b3fac"
     }
   ],
   "discovered_defects": [
@@ -1791,6 +1892,17 @@
       "test": "tests/test_stop_loss_watcher.py",
       "head_sha": "3212414ac25dd308614c4356221600d383b7f495",
       "description": "OverflowError from malformed legacy stop-loss value aborted entire market cycle and skipped subsequent positions."
+    },
+    {
+      "id": "stop-loss-invalid-market-record-aborts-cycle",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_PENDING",
+      "file": "trading/stop_loss_watcher.py",
+      "test": "tests/test_stop_loss_watcher.py",
+      "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
+      "fix_commit": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
+      "description": "Malformed persisted dictionary/legacy-list record could raise AttributeError and stop monitoring other protected positions",
+      "validation": "Seven parametrized regression cases committed; CI in progress; local pytest not executed"
     }
   ],
   "risks": [
