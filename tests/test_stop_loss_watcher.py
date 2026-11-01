@@ -1065,3 +1065,37 @@ def test_remove_malformed_record_does_not_crash_or_erase_evidence(tmp_path):
 
     assert not tracker.remove_position("US", "AAPL", expected_updated_at="legacy")
     assert path.read_text(encoding="utf-8") == '{"US:AAPL":[]}'
+
+def test_legacy_inflight_record_edit_blocks_stale_stop_loss_sell(tmp_path, monkeypatch):
+    """A legacy record with no updated_at must be compared by full snapshot."""
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    legacy = tracker.get_position("US", "AAPL")
+    legacy.pop("updated_at")
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 85}
+
+    def edit_during_balance_check(_ticker):
+        # Stop threshold and updated_at stay identical; other persisted
+        # order context changes while broker inquiry is in flight.
+        edited = dict(legacy, entry_price=101)
+        path.write_text(json.dumps({"US:AAPL": edited}), encoding="utf-8")
+        return 10
+
+    trader.get_holding_quantity.side_effect = edit_during_balance_check
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, request_interval_seconds=0, storage_path=path),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "US")
+
+    assert watcher.check_stop_loss_once() == []
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position("US", "AAPL")["entry_price"] == 101
