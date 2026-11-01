@@ -6,12 +6,12 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-01T14:20+09:00",
     "started_at": "2026-11-01T05:20:28.149Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-01T14:20+09:00",
-    "last_mutation_commit": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
-    "last_mutation_at": "2026-11-01T03:19:43.032Z",
-    "result": "IN_PROGRESS_REVIEW_LEGACY_TRACKER_MIGRATION",
-    "pr_comment_id": 6553357538,
+    "completed_at": "2026-11-01T05:21:33.686Z",
+    "lock_owner": null,
+    "last_mutation_commit": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+    "last_mutation_at": "2026-11-01T05:21:33.686Z",
+    "result": "FIX_COMMITTED_NEW_HEAD_CI_QUEUED_NO_AUDIT_PASS",
+    "pr_comment_id": 6553865349,
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
@@ -19,37 +19,23 @@
       "source_head": "21bdb6e6b5a72891b31fd3b574f1fcdaffe5763f",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "pr_head": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
       "pr_number": 42,
-      "pr_changed_files": 36,
+      "pr_changed_files": 37,
       "related_review_complete": false,
-      "full_tree_files": 158,
+      "full_tree_files": 159,
       "full_tree_files_reviewed": 0,
       "ci_runs": [
         {
-          "id": 41268676502,
-          "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
-          "status": "completed",
-          "conclusion": "success",
-          "jobs": [
-            "Full pytest suite",
-            "Windows runtime smoke"
-          ]
-        },
-        {
-          "id": 41268680081,
-          "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
-          "status": "completed",
-          "conclusion": "success",
-          "jobs": [
-            "Full pytest suite",
-            "Windows runtime smoke"
-          ]
+          "id": 41276607805,
+          "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+          "status": "queued",
+          "conclusion": null
         }
       ],
       "local_tests_executed": false,
       "merged": false,
-      "reason": "Current-head CI passed twice; no complete dependency-closure audit, authoritative broker fill/order reconciliation, demo KIS/GCP validation or full-repository audit"
+      "reason": "Legacy stop-loss migration data-loss fix; new CI queued; full audit and authoritative fill reconciliation incomplete"
     }
   },
   "source": {
@@ -69,11 +55,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+    "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "CI_GREEN_RECONCILIATION_RISK_BLOCKED_AUDIT_INCOMPLETE"
+    "status": "NEW_CODE_FIX_CI_PENDING_FULL_AUDIT_INCOMPLETE"
   },
   "candidates": [
     {
@@ -158,9 +144,9 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "PARTIAL_TARGETED_TEST_FIX_DEPENDENCY_CLOSURE_INCOMPLETE_NO_PASS",
+    "status": "PARTIAL_NEW_LEGACY_MIGRATION_FIX_DEPENDENCY_CLOSURE_INCOMPLETE_NO_PASS",
     "checksum": null,
-    "scope_estimate": "36 changed paths; dependency closure not yet verified",
+    "scope_estimate": "37 PR-changed paths; dependency closure not yet verified",
     "files": [
       {
         "path": "README.en.md",
@@ -279,7 +265,7 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "2c8351b3f3181283651be4f74707771ceb13d1d9",
+        "blob_sha": "1da56eb74a16f387cc23357bfe38d8b56b408afb",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -341,22 +327,26 @@
         "path": "trading/us.py",
         "blob_sha": "7d0a8bd786997573913d44d35b70e7e3217588ea",
         "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "tests/test_stop_loss_legacy_quarantine.py",
+        "blob_sha": "88b95872ff58355bddcdf6213376812758e250eb",
+        "status": "NOT_FULLY_AUDITED"
       }
     ],
     "checked_files": [],
     "modified_files": [
       "trading/stop_loss_watcher.py",
-      "tests/test_stop_loss_watcher.py",
-      "tests/test_wave4_execution_safety.py"
+      "tests/test_stop_loss_legacy_quarantine.py"
     ]
   },
   "full_manifest": {
     "status": "INDEXED_NOT_AUDITED",
-    "tracked_tree_entries_on_pr": 182,
-    "tracked_blob_files_on_pr": 158,
-    "sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+    "tracked_tree_entries_on_pr": 183,
+    "tracked_blob_files_on_pr": 159,
+    "sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
     "files_checked": 0,
-    "checksum": "09117d82dc2d87725636eb2680594915fcfc8957",
+    "checksum": "d0dc40968b95e382b5af105f5ee08d6089636653",
     "checksum_kind": "git_tree_sha",
     "files": [
       {
@@ -665,6 +655,11 @@
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "tests/test_stop_loss_legacy_quarantine.py",
+        "blob_sha": "88b95872ff58355bddcdf6213376812758e250eb",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "tests/test_stop_loss_watcher.py",
         "blob_sha": "dc5712b57bd16f36bef9e0c01deed97b2258a0c7",
         "status": "NOT_REVIEWED"
@@ -856,7 +851,7 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "2c8351b3f3181283651be4f74707771ceb13d1d9",
+        "blob_sha": "1da56eb74a16f387cc23357bfe38d8b56b408afb",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1514,6 +1509,21 @@
         "summary": "1 failed, 793 passed"
       },
       "local_tests_executed": false
+    },
+    "2026-11-01T14:20+09:00": {
+      "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+      "status": "queued",
+      "conclusion": null,
+      "workflow_runs": [
+        {
+          "id": 41276607805,
+          "event": "push",
+          "status": "queued",
+          "conclusion": null,
+          "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750"
+        }
+      ],
+      "notes": "New-head tests not yet completed; prior green runs belong to old SHA"
     }
   },
   "upstream_changes": [
@@ -1637,6 +1647,13 @@
       "description": "Non-dict/non-string market persisted entries could abort get_positions and prevent valid market positions from being checked; now skipped in memory and retained on disk for reconciliation, including legacy list format",
       "status": "FIX_COMMITTED_CI_PENDING_FULL_AUDIT_PENDING",
       "evidence": "https://github.com/tkgo11/prism-insight-light/commit/fee9a3c6594d6bbcbccdd0798ab7a43e3078f142"
+    },
+    {
+      "severity": "HIGH",
+      "area": "legacy stop-loss migration evidence loss",
+      "description": "Malformed and duplicate legacy list entries could be lost on mutation. Preserve quarantined original payload for manual reconciliation.",
+      "status": "FIX_COMMITTED_CI_PENDING_AUDIT_PENDING",
+      "evidence": "https://github.com/tkgo11/prism-insight-light/commit/686dedaa8037385e7354dfaad97e9a4a1b9b5750"
     }
   ],
   "audit_evidence": [
@@ -1958,6 +1975,31 @@
       ],
       "pr_comment_id": 6553357538,
       "notes": "Read targeted files and GitHub CI jobs; traced stable stop-loss signal-id and duplicate suppression; no code changes, local tests or complete file-by-file dependency audit; high-risk fill reconciliation remains blocked"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-01T14:20+09:00",
+      "kind": "TARGETED_STOP_LOSS_LEGACY_DATA_LOSS_FIX_NOT_FULL_AUDIT",
+      "phase": "related_code_audit",
+      "related_pass": false,
+      "full_pass": false,
+      "previous_head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
+      "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_observed_sha": "21bdb6e6b5a72891b31fd3b574f1fcdaffe5763f",
+      "changed_files": [
+        "trading/stop_loss_watcher.py",
+        "tests/test_stop_loss_legacy_quarantine.py"
+      ],
+      "commit_shas": [
+        "686dedaa8037385e7354dfaad97e9a4a1b9b5750"
+      ],
+      "ci_run_ids": [
+        41276607805
+      ],
+      "ci_status": "queued",
+      "pr_comment_id": 6553865349,
+      "notes": "Reviewed legacy list migration and tracked-position mutation; found data loss and added quarantine preservation plus regression tests. CI pending. No local tests or complete dependency audit; no live/demo broker integration."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -1985,9 +2027,10 @@
     "Persisted ticker integrity fix needs new-head CI verification; related dependency closure and broker demo unresolved",
     "Current head CI incomplete after malformed-record fixture repair",
     "Related dependency closure and KIS/GCP demo/authoritative fill reconciliation remain incomplete",
-    "Stable stop-loss identity suppresses safe retry after accepted partial/unfilled SELL; authoritative order-id/fill reconciliation and demo evidence required"
+    "Stable stop-loss identity suppresses safe retry after accepted partial/unfilled SELL; authoritative order-id/fill reconciliation and demo evidence required",
+    "New-head CI run 41276607805 pending; invalid/duplicate legacy list quarantine fix not yet CI verified"
   ],
-  "next_action": "Design and safely test authoritative per-order stop-loss fill/cancel reconciliation and idempotent follow-up in demo; continue related dependency closure file-by-file; no PASS or merge until all gates are met.",
+  "next_action": "Verify new-head CI and address failures; continue file-by-file dependency closure; authoritative broker order/fill/cancel reconciliation and safe demo validation required before any merge.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -2091,6 +2134,18 @@
       "full_pass": false,
       "reason": "Current-head CI success verified but stop-loss fill reconciliation unresolved and full related dependency audit incomplete",
       "manifest_tree_sha": "09117d82dc2d87725636eb2680594915fcfc8957"
+    },
+    {
+      "slot": "2026-11-01T14:20+09:00",
+      "run_id": "prism-sync-hourly-2026-11-01T14:20+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Code fix committed; CI pending; related dependency closure and authoritative broker fill reconciliation incomplete",
+      "manifest_tree_sha": "d0dc40968b95e382b5af105f5ee08d6089636653"
     }
   ],
   "discovered_defects": [
@@ -2189,6 +2244,15 @@
       ],
       "description": "Stable stop-loss signal_id per tracked position and permanently suppressing executed/unknown ledger claims mean remaining shares after accepted but partially/unfilled SELL cannot be safely retried; a new ID without broker reconciliation risks duplicate SELL.",
       "evidence": "PR comment 6553357538; watcher lines 565-587/616-645, dispatch lines 405-424/721-746, ledger lines 26-30/175-196"
+    },
+    {
+      "id": "legacy-stop-loss-invalid-records-lost-on-migration-2026-11-01",
+      "severity": "HIGH",
+      "status": "FIX_COMMITTED_CI_PENDING_FULL_AUDIT_PENDING",
+      "file": "trading/stop_loss_watcher.py",
+      "fix_commit": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
+      "description": "Legacy JSON-list stop-loss records with malformed market/ticker or duplicate instrument were silently dropped by _load; subsequent record_position/remove_position rewrote list as dict and destroyed reconciliation evidence. Quarantine preserves raw payload under non-tradable keys.",
+      "test_path": "tests/test_stop_loss_legacy_quarantine.py"
     }
   ],
   "risks": [
