@@ -979,8 +979,8 @@ def test_watcher_cycle_skips_malformed_record_and_checks_rest(tmp_path):
     tracker_file.write_text(
         _json.dumps(
             {
-                "KR:bad": {"market": "KR", "ticker": "BAD", "stop_loss": "not-a-number"},
-                "KR:good": {
+                "KR:BAD": {"market": "KR", "ticker": "BAD", "stop_loss": "not-a-number"},
+                "KR:005930": {
                     "market": "KR",
                     "ticker": "005930",
                     "stop_loss": 70000.0,
