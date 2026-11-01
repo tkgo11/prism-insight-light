@@ -751,3 +751,28 @@ def test_reservation_uses_larger_broker_amount_when_above_submitted_budget():
     assert BalanceSplitStrategy._safe_reservation_amount(
         {"estimated_amount": 10.0}, 100.0
     ) == 100.0
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        # The last value must not silently replace a reserved 1000 with 0.
+        '[{"market":"KR","ticker":"005930","amount":1000,"amount":0}]',
+        # A duplicate status could mark an unresolved order as settled.
+        '[{"market":"KR","ticker":"005930",'
+        '"status":"pending","status":"settled","amount":1000}]',
+    ],
+)
+def test_duplicate_reservation_json_keys_fail_closed(balance_split_strategy, raw):
+    strategy = balance_split_strategy(split_count=2)
+    strategy.reservation_path.write_text(raw, encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="unreadable"):
+        strategy._load_reservations()
+    assert strategy.reservation_path.read_text(encoding="utf-8") == raw
+
+
+def test_normal_reservation_json_remains_readable(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
+    reservations = [{"market": "KR", "ticker": "005930", "amount": 1000}]
+    strategy.reservation_path.write_text(json.dumps(reservations), encoding="utf-8")
+    assert strategy._load_reservations() == reservations
