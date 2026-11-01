@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T01:15+09:00",
-    "started_at": "2026-11-01T16:15:33Z",
-    "completed_at": "2026-11-01T16:19:51.888Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T02:20+09:00",
+    "started_at": "2026-11-01T17:20:31Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T02:20+09:00",
     "last_mutation_commit": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
     "last_mutation_at": "2026-11-01T16:19:51.888Z",
-    "result": "LEDGER_TERMINAL_MONOTONICITY_FIXED_CI_SUCCESS_NO_AUDIT_PASS",
+    "result": "IN_PROGRESS",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -48,7 +48,8 @@
       ],
       "merged": false,
       "reason": "Latest-head CI success; related/full audits incomplete, broker order/fill reconciliation absent; qlty pending."
-    }
+    },
+    "prior_run_id": "prism-sync-hourly-2026-11-02T01:15+09:00"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
