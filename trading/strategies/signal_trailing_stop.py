@@ -93,6 +93,14 @@ class SignalTrailingStopStrategy:
             self._validate_records(records)
             key = self._key(signal)
             record = next((item for item in records if item.get("key") == key), None)
+            # A broker-accepted SELL is not a fill. Until an operator or an
+            # authoritative fill/remaining-quantity reconciliation resolves it,
+            # no new BUY or SELL may rely on this stale high-watermark state.
+            if record is not None and record.get("exit_pending") is True:
+                raise RuntimeError(
+                    "Signal trailing-stop has an unresolved broker exit; "
+                    "operator reconciliation required before new orders"
+                )
             if signal.signal_type == "BUY":
                 return await self._record_buy_and_execute(
                     signal,
@@ -132,6 +140,7 @@ class SignalTrailingStopStrategy:
                 or key != f"{market}:{ticker}"
                 or key in seen
                 or isinstance(price, bool)
+                or ("exit_pending" in item and item["exit_pending"] is not True)
             ):
                 raise RuntimeError(
                     "Signal trailing-stop state is ambiguous; operator reconciliation required"
@@ -222,6 +231,11 @@ class SignalTrailingStopStrategy:
                 {"high_price": high_price, "trailing_stop": trailing_stop},
             )
 
+        # Persist the pending exit *before* broker submission. A timeout,
+        # process crash, partial fill or merely accepted order cannot prove
+        # that the position is flat. The durable marker blocks another signal
+        # (including a different signal ID) until explicit reconciliation.
+        self._mark_exit_pending(records, signal, adjusted_sell_fraction(signal, self.config.sell_fraction))
         result = await execute_order(
             signal,
             trading_mode=trading_mode,
@@ -238,11 +252,10 @@ class SignalTrailingStopStrategy:
             sell_fraction=adjusted_sell_fraction(signal, self.config.sell_fraction),
             strategy_sell_fraction=self.config.sell_fraction,
         )
-        effective_fraction = adjusted_sell_fraction(signal, self.config.sell_fraction)
-        if execution.status == "executed" and effective_fraction >= 1:
-            # Upstream sell_denominator>1 means the position still has shares.
-            # Never remove trailing-stop protection after a partial exit.
-            self._remove_record(records, self._key(signal))
+        if execution.status == "failed":
+            # Only an explicitly verified pre-acceptance/business rejection
+            # proves that this order never entered the broker's order book.
+            self._clear_exit_pending(records, self._key(signal))
         return execution
 
     def _trailing_stop(self, high_price: float) -> float:
@@ -266,5 +279,34 @@ class SignalTrailingStopStrategy:
 
     def _remove_record(self, records: list[dict[str, Any]], key: str) -> None:
         updated = [item for item in records if item.get("key") != key]
+        save_json(self.config.runtime_path, updated)
+        records[:] = updated
+
+    def _mark_exit_pending(
+        self, records: list[dict[str, Any]], signal: SignalMessage, fraction: float
+    ) -> None:
+        key = self._key(signal)
+        updated = [
+            {
+                **item,
+                "exit_pending": True,
+                "exit_requested_at": datetime.now(timezone.utc).isoformat(),
+                "exit_requested_fraction": fraction,
+            } if item.get("key") == key else item
+            for item in records
+        ]
+        save_json(self.config.runtime_path, updated)
+        records[:] = updated
+
+    def _clear_exit_pending(self, records: list[dict[str, Any]], key: str) -> None:
+        updated = []
+        for item in records:
+            if item.get("key") != key:
+                updated.append(item)
+                continue
+            clean = dict(item)
+            for field in ("exit_pending", "exit_requested_at", "exit_requested_fraction"):
+                clean.pop(field, None)
+            updated.append(clean)
         save_json(self.config.runtime_path, updated)
         records[:] = updated

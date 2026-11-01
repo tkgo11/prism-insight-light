@@ -59,11 +59,14 @@ async def test_trailing_stop_retains_record_after_upstream_partial_sell(tmp_path
     assert partial.status == "executed"
     assert calls[-1][1]["sell_fraction"] == 0.5
     # 50% liquidation must not drop the remaining 50%'s protection.
-    assert len(json.loads(cfg.runtime_path.read_text(encoding="utf-8"))) == 1
-    full = await strategy.execute(make_signal("SELL", price=80), trading_mode="demo")
-    assert full.status == "executed"
-    assert calls[-1][1]["sell_fraction"] == 1.0
-    assert json.loads(cfg.runtime_path.read_text(encoding="utf-8")) == []
+    state = json.loads(cfg.runtime_path.read_text(encoding="utf-8"))
+    assert len(state) == 1 and state[0]["exit_pending"] is True
+    # The accepted partial order may be entirely unfilled. A later full SELL
+    # must not submit again without broker/order-ID reconciliation.
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await strategy.execute(make_signal("SELL", price=80), trading_mode="demo")
+    assert len(calls) == 2
+    assert json.loads(cfg.runtime_path.read_text(encoding="utf-8")) == state
 
 
 @pytest.mark.asyncio
@@ -184,3 +187,112 @@ def test_upstream_and_strategy_partial_exits_preserve_stop_loss_protection(
     # Broker acceptance is not a confirmed fill, even for full-size sells.
     # The watcher must verify that aggregate holdings are flat before cleanup.
     assert removed == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("broker_result, expected_status", [
+    ({"success": True, "order_no": "MOCK-ACCEPTED"}, "executed"),
+    ({"success": False, "message": "read timed out"}, "unknown"),
+])
+async def test_trailing_sell_pending_exit_blocks_new_signals_across_restart(
+    tmp_path, monkeypatch, broker_result, expected_status
+):
+    path = tmp_path / "trailing.json"
+    path.write_text(json.dumps([{
+        "key": "US:AAPL", "market": "US", "ticker": "AAPL",
+        "high_price": 100.0,
+    }]), encoding="utf-8")
+    calls = []
+    async def fake_order(*args, **kwargs):
+        calls.append((args, kwargs))
+        return broker_result
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
+    config = SignalTrailingStopStrategyConfig(runtime_path=path, trail_percent=10)
+    first = SignalTrailingStopStrategy(config=config)
+    result = await first.execute(make_signal("SELL", price=80), trading_mode="demo")
+    assert result.status == expected_status
+    persisted = json.loads(path.read_text(encoding="utf-8"))
+    assert persisted[0]["exit_pending"] is True
+    assert persisted[0]["high_price"] == 100.0
+    assert persisted[0]["exit_requested_fraction"] == 1.0
+    assert len(calls) == 1
+    restarted = SignalTrailingStopStrategy(config=config)
+    for side in ("SELL", "BUY"):
+        with pytest.raises(RuntimeError, match="operator reconciliation"):
+            await restarted.execute(make_signal(side, price=80), trading_mode="demo")
+    assert len(calls) == 1
+    assert json.loads(path.read_text(encoding="utf-8")) == persisted
+
+
+@pytest.mark.asyncio
+async def test_trailing_sell_verified_rejection_unblocks_without_losing_high_watermark(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "trailing.json"
+    path.write_text(json.dumps([{
+        "key": "US:AAPL", "market": "US", "ticker": "AAPL",
+        "high_price": 100.0,
+    }]), encoding="utf-8")
+    calls = []
+    async def fake_order(*args, **kwargs):
+        calls.append(1)
+        return {"success": False, "outcome_unknown": False, "message": "APBK0918 rejected"}
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
+    strategy = SignalTrailingStopStrategy(config=SignalTrailingStopStrategyConfig(runtime_path=path))
+    for _ in range(2):
+        result = await strategy.execute(make_signal("SELL", price=80), trading_mode="demo")
+        assert result.status == "failed"
+        state = json.loads(path.read_text(encoding="utf-8"))
+        assert len(state) == 1
+        assert state[0]["high_price"] == 100.0
+        assert "exit_pending" not in state[0]
+    assert len(calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_trailing_sell_exception_preserves_pending_exit_for_recovery(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "trailing.json"
+    path.write_text(json.dumps([{
+        "key": "US:AAPL", "market": "US", "ticker": "AAPL",
+        "high_price": 100.0,
+    }]), encoding="utf-8")
+    calls = []
+    async def timed_out(*args, **kwargs):
+        calls.append(1)
+        raise TimeoutError("simulated response loss after broker acceptance")
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", timed_out)
+    strategy = SignalTrailingStopStrategy(config=SignalTrailingStopStrategyConfig(runtime_path=path))
+    with pytest.raises(TimeoutError):
+        await strategy.execute(make_signal("SELL", price=80), trading_mode="demo")
+    assert json.loads(path.read_text(encoding="utf-8"))[0]["exit_pending"] is True
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await SignalTrailingStopStrategy(config=strategy.config).execute(
+            make_signal("SELL", price=80), trading_mode="demo"
+        )
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_trailing_sell_persistence_failure_prevents_broker_submission(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "trailing.json"
+    path.write_text(json.dumps([{
+        "key": "US:AAPL", "market": "US", "ticker": "AAPL",
+        "high_price": 100.0,
+    }]), encoding="utf-8")
+    calls = []
+    async def fake_order(*args, **kwargs):
+        calls.append(1)
+        return {"success": True}
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
+    def fail_save(*args, **kwargs):
+        raise OSError("simulated disk full before broker submit")
+    monkeypatch.setattr("trading.strategies.signal_trailing_stop.save_json", fail_save)
+    strategy = SignalTrailingStopStrategy(config=SignalTrailingStopStrategyConfig(runtime_path=path))
+    with pytest.raises(OSError, match="simulated disk full"):
+        await strategy.execute(make_signal("SELL", price=80), trading_mode="demo")
+    assert calls == []
+    assert "exit_pending" not in json.loads(path.read_text(encoding="utf-8"))[0]
