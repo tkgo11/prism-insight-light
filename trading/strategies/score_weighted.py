@@ -41,6 +41,10 @@ class ScoreWeightedStrategy:
         weight = 1.0 if signal.buy_score is None else min(bands.values())
         for score, band_weight in sorted(bands.items()):
             if signal.buy_score is not None and signal.buy_score >= score: weight = band_weight
+        if weight <= 0:
+            # A zero-weight band is an explicit no-trade decision even when
+            # base_amount is unset. Never pass None to the broker default.
+            return StrategyExecution("rejected", "Score band weight produced a zero buy amount", signal.market, signal.ticker)
         base_amount = market_base_amount(signal, krw=self.config.base_amount_krw, usd=self.config.base_amount_usd)
         buy_amount = base_amount * weight if base_amount > 0 else None
         if buy_amount is not None and buy_amount <= 0:
