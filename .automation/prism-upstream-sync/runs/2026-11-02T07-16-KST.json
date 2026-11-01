@@ -1,0 +1,118 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T07:16:44+09:00",
+  "kind": "ROOT_CAUSE_SCOPE_BATCH_FIX_AND_PARTIAL_DEPENDENCY_REVIEW",
+  "source_repository": "dragon1086/prism-insight",
+  "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+  "upstream_contract_pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "upstream_decision": "NO_NEW_UPSTREAM_COMMITS_SINCE_PREVIOUS_RUN; retain independent light subscriber",
+  "target_repository": "tkgo11/prism-insight-light",
+  "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+  "head_before": "def37442fff6b2d059aaca663446f53f4ef47ea8",
+  "head_after": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
+  "head_tree_sha": "67cdb5c7e5f217289a31a7ddee8e6adba60f03d2",
+  "pr_number": 42,
+  "pr_draft": true,
+  "root_cause_id": "RC-QUEUED-MULTIACCOUNT-TARGET-SCOPE",
+  "root_cause_subcases": [
+    "Queued demo->real and real->demo mode drift",
+    "Queued single-account name/index selector drift",
+    "Queued primary selector resolving to a different underlying KIS account",
+    "Legacy/malformed unpinned queue must quarantine",
+    "Distinct queue authorization scopes must not collapse into one queue identity"
+  ],
+  "reproduction": "Inspected old queue context: single-account enqueue persisted no trading mode/account identity; multi-account context omitted trading mode; execute_queued_signal previously checked multi-account mode only. New mocked broker tests cover environment changes and actual account reassignment; no real KIS credentials used.",
+  "code_commits": [
+    "46802b0958a05bfaad1a1129a96fd1c479d8a097",
+    "d9825f63410dcbd929b6cbdedcd5435685eacabc",
+    "c62e0593b64acc3c2a368662d3fd5c4219b5b198"
+  ],
+  "changed_files": [
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "f006b21e30ae2646de0b877b7ae4ee10cc9b6dbd",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    },
+    {
+      "path": "trading/off_hours_queue.py",
+      "blob_sha": "66cd4f7b227494b4b2f00c73941f2f95d000df89",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    },
+    {
+      "path": "tests/test_dispatch.py",
+      "blob_sha": "9a77b231c259003b3e0acd89d51c5537df644b8a",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    },
+    {
+      "path": "tests/test_signal_safety.py",
+      "blob_sha": "69ba1c69862cbe67ee6f740245dcb27b8669a322",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    },
+    {
+      "path": "tests/test_queue_execution_context.py",
+      "blob_sha": "e9b19daa56038ff5babfd493cccc6b264e364feb",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "cf225d7e7075b44f38e91239959671d550360962",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    }
+  ],
+  "tests": {
+    "new_mock_cases": 12,
+    "linux": "960 passed",
+    "windows": "141 passed",
+    "static": "success",
+    "docker": "success",
+    "local_full_pytest": "NOT_RUN",
+    "broker_demo": "NOT_RUN",
+    "actual_live_trading": "PROHIBITED"
+  },
+  "ci": {
+    "final_run_id": 41356898329,
+    "final_head": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
+    "status": "completed",
+    "conclusion": "success",
+    "superseded_success_run": 41356579716,
+    "superseded_failed_run": 41356787727,
+    "failed_reason": "One existing real-mode queue fixture lacked a fake account resolver; fixed same run in c62e0593"
+  },
+  "external_statuses": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success",
+      "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/6d317df7-b11e-40c8-b88c-635b195d5737"
+    },
+    {
+      "context": "qlty check",
+      "state": "success",
+      "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
+    },
+    {
+      "context": "qlty usage",
+      "state": "pending",
+      "target_url": "https://qlty.sh/gh/tkgo11/settings/analysis-minutes"
+    }
+  ],
+  "review": {
+    "independent_pr_reviews": 0,
+    "branch_protection": "READ_FORBIDDEN_403",
+    "rulesets": "empty from accessible API"
+  },
+  "audit": {
+    "related_files_known": 60,
+    "full_blob_files": 162,
+    "related_independent_passes": 0,
+    "full_independent_passes": 0,
+    "full_file_audit_complete": false
+  },
+  "risks": [
+    "KIS authoritative order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation unverified",
+    "No authorized demo credentials or GCP integration evidence",
+    "Account configuration could change between pre-submit verification and broker construction; TOCTOU residual risk, needs demo and independent audit",
+    "Strategy state isolation across accounts still requires verification",
+    "qlty usage pending; required-ness unverified due branch protection 403",
+    "No independent reviewer approval"
+  ],
+  "merge": "NOT_ATTEMPTED"
+}
