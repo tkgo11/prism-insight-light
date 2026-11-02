@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
-    "started_at": "2026-11-02T01:16:41Z",
-    "completed_at": "2026-11-02T01:23:30.742Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
+    "started_at": "2026-11-02T02:16:28Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
     "last_mutation_commit": "343cb16bb7013c985fcdd91aac508a13e4ef181a",
     "last_mutation_at": "2026-11-02T01:23:30.742Z",
-    "result": "SCORE_AND_REWARD_RISK_GATES_PATCHED_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDITS_BLOCKED",
+    "result": "IN_PROGRESS_OVERFLOW_BOUNDARY_REVIEW",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -63,9 +63,9 @@
       "merged": false,
       "reason": "14 missing-input gate regression/boundary tests; GitHub Actions pass; qlty success, KIS demo and independent audits blocked"
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
+    "prior_run_id": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
     "pr_head_at_start": "8e90304a1c45d981995484e18ab8e5a1faebb461",
-    "lock_acquired_at": "2026-11-02T01:16:41Z",
+    "lock_acquired_at": "2026-11-02T02:18:00Z",
     "lock_released_at": "2026-11-02T01:23:30.742Z"
   },
   "source": {
