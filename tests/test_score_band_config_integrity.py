@@ -54,3 +54,9 @@ def test_dispatcher_rejects_ambiguous_score_band_config_before_broker(config_typ
             trading_mode="demo",
             strategy_config={"name": name, field: {"05": 0.2, "5": 0.8}},
         )
+
+
+@pytest.mark.parametrize("config_type,name,field", CONFIG_PATHS)
+def test_boolean_score_threshold_is_not_a_numeric_band(config_type, name, field):
+    with pytest.raises(ValueError, match=field):
+        config_type.from_mapping({"name": name, field: {True: 0.5}})

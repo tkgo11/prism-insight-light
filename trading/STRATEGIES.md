@@ -106,7 +106,7 @@ account.
 - `risk_amount_krw` / `risk_amount_usd`: maximum configured loss budget before score weighting. Finite inputs that overflow during risk-unit, position-cap, or order-notional calculations are rejected before broker submission.
 - `max_position_amount_krw` / `max_position_amount_usd`: position notional caps.
 - `min_score`: lowest accepted `buy_score` (0–100); default `0`. A positive minimum rejects a missing score before any broker call.
-- `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
+- `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier. Omitted or null mappings use the documented default `{0: 1.0}`; explicitly empty/non-mapping values and thresholds that collide after numeric normalization (such as `"05"` and `"5"`) are rejected before broker submission.
 - A non-unit score weight requires usable risk-derived sizing; otherwise the BUY is rejected rather than ignoring the configured weight and using the broker default.
 - `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter. A positive minimum requires both a usable stop-loss and a target price even if `require_target_price` is `false`; missing data rejects before broker submission.
 - `require_stop_loss` / `require_target_price`: both default to `false`.
@@ -215,7 +215,7 @@ Use this when you do not want one BUY signal to spend all your cash.
 ### Main settings
 
 - `buy_score_bands`: score thresholds mapped to a **strictly positive** `0–1` fraction of available cash.
-- `sell_score_bands`: score thresholds mapped to a **strictly positive** `0–1` fraction of the current holding.
+- `sell_score_bands`: score thresholds mapped to a **strictly positive** `0–1` fraction of the current holding. Both score-band maps reject explicit empty/non-mapping values, boolean thresholds, and duplicate normalized numeric keys; omitted/null maps retain the `{0: 1.0}` default.
 - `missing_buy_score_ratio`: strictly positive cash fraction for a BUY without `buy_score`; default `1.0`.
 - `missing_sell_score_ratio`: strictly positive holding fraction for a SELL without `buy_score`; default `1.0`.
 
@@ -272,7 +272,7 @@ Better score, bigger buy.
 - `base_amount_krw`: base buy amount for Korean stocks.
 - `base_amount_usd`: base buy amount for U.S. stocks.
 - `min_score`: minimum accepted score (0–100); default `0`. When positive, missing and lower scores reject before broker submission.
-- `score_bands`: score levels and their weights.
+- `score_bands`: score levels and their weights. An omitted/null mapping uses `{0: 1.0}`; an explicit empty/non-mapping value, boolean threshold, or duplicate normalized numeric key is invalid and never silently falls back to full-size BUY.
   - Example: `60: 0.25` means buy 25% of the base amount when the score is at least 60.
   - Example: `90: 1.0` means buy 100% of the base amount when the score is at least 90.
 

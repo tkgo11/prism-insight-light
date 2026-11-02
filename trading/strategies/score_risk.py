@@ -23,9 +23,15 @@ SCORE_RISK = "score_risk"
 
 
 def _score_bands(payload: dict[str, Any]) -> dict[int, float]:
-    raw_bands = payload.get("score_bands") or {0: 1.0}
+    raw_bands = payload.get("score_bands")
+    if raw_bands is None:
+        raw_bands = {0: 1.0}
+    if not isinstance(raw_bands, dict):
+        raise ValueError("signal_strategy.score_bands must be a mapping")
     parsed: dict[int, float] = {}
-    for raw_score, raw_weight in dict(raw_bands).items():
+    for raw_score, raw_weight in raw_bands.items():
+        if isinstance(raw_score, bool):
+            raise ValueError("signal_strategy.score_bands keys must be integers between 0 and 100")
         score = float(raw_score)
         weight = float(raw_weight)
         if (
@@ -41,7 +47,10 @@ def _score_bands(payload: dict[str, Any]) -> dict[int, float]:
             raise ValueError(
                 "signal_strategy.score_bands weights must be between 0 and 1"
             )
-        parsed[int(score)] = weight
+        normalized_score = int(score)
+        if normalized_score in parsed:
+            raise ValueError("signal_strategy.score_bands contains duplicate normalized score threshold")
+        parsed[normalized_score] = weight
     if not parsed:
         raise ValueError("signal_strategy.score_bands must not be empty")
     return parsed

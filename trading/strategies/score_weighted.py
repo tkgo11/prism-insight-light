@@ -19,13 +19,22 @@ class ScoreWeightedStrategyConfig:
     def from_mapping(cls, payload: dict[str, Any] | None) -> "ScoreWeightedStrategyConfig | None":
         if not payload or strategy_name(payload) != SCORE_WEIGHTED:
             return None
-        bands = payload.get("score_bands") or {0: 1.0}
+        bands = payload.get("score_bands")
+        if bands is None:
+            bands = {0: 1.0}
+        if not isinstance(bands, dict):
+            raise ValueError("signal_strategy.score_bands must be a mapping")
         parsed: dict[int, float] = {}
-        for raw_score, raw_weight in dict(bands).items():
+        for raw_score, raw_weight in bands.items():
+            if isinstance(raw_score, bool):
+                raise ValueError("signal_strategy.score_bands keys must be integers")
             score = float(raw_score)
             if not math.isfinite(score) or not score.is_integer():
                 raise ValueError("signal_strategy.score_bands keys must be integers")
-            parsed[int(score)] = float(raw_weight)
+            normalized_score = int(score)
+            if normalized_score in parsed:
+                raise ValueError("signal_strategy.score_bands contains duplicate normalized score threshold")
+            parsed[normalized_score] = float(raw_weight)
         if not parsed or any(not math.isfinite(v) or v < 0 for v in parsed.values()):
             raise ValueError("signal_strategy.score_bands must contain non-negative weights")
         return cls(positive_number(payload, "base_amount_krw"), positive_number(payload, "base_amount_usd"), integer_value(payload, "min_score", 0, minimum=0, maximum=100), parsed)

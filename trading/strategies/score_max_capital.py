@@ -35,12 +35,16 @@ def _score_bands(payload: dict[str, Any], key: str) -> dict[int, float]:
     which conflicts with this strategy's always-act contract.
     """
 
-    raw_bands = payload.get(key) or {0: 1.0}
+    raw_bands = payload.get(key)
+    if raw_bands is None:
+        raw_bands = {0: 1.0}
     if not isinstance(raw_bands, dict):
         raise ValueError(f"signal_strategy.{key} must be a mapping")
 
     parsed: dict[int, float] = {}
     for raw_score, raw_ratio in raw_bands.items():
+        if isinstance(raw_score, bool):
+            raise ValueError(f"signal_strategy.{key} score thresholds must be integers between 0 and 10")
         score = float(raw_score)
         ratio = float(raw_ratio)
         if not math.isfinite(score) or not score.is_integer() or score < 0 or score > 10:
@@ -51,7 +55,10 @@ def _score_bands(payload: dict[str, Any], key: str) -> dict[int, float]:
             raise ValueError(
                 f"signal_strategy.{key} ratios must be greater than 0 and at most 1"
             )
-        parsed[int(score)] = ratio
+        normalized_score = int(score)
+        if normalized_score in parsed:
+            raise ValueError(f"signal_strategy.{key} contains duplicate normalized score threshold")
+        parsed[normalized_score] = ratio
 
     if not parsed:
         raise ValueError(f"signal_strategy.{key} must not be empty")
