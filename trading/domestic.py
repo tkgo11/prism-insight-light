@@ -28,8 +28,8 @@ from .kis_auth import (
     TokenRequestError
 )
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
-from .execution_outcome import (
 from .portfolio_pagination import next_balance_cursor
+from .execution_outcome import (
     PortfolioInquiryError,
     classify_broker_result,
     rejection_is_ambiguous,
