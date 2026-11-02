@@ -402,3 +402,36 @@ async def test_enabled_score_and_reward_risk_floors_accept_complete_boundary(str
     assert len(FakeUSTrader.calls) == 1
 
 
+
+
+@pytest.mark.parametrize("strategy_name", ["score_risk", "balanced_risk"])
+@pytest.mark.parametrize(
+    ("price", "stop_loss", "risk_amount_usd", "max_position_amount_usd"),
+    [
+        (1e-300, 5e-301, 1e308, 0.0),  # finite inputs -> infinite risk units
+        (1e150, 5e149, 1e308, 0.0),   # finite units -> infinite notional
+        (1e-300, 5e-301, 1.0, 1e308), # finite inputs -> infinite cap units
+    ],
+)
+@pytest.mark.asyncio
+async def test_score_risk_overflow_never_reaches_broker(
+    strategy_name, price, stop_loss, risk_amount_usd, max_position_amount_usd
+):
+    config_payload = {
+        "name": strategy_name,
+        "risk_amount_usd": risk_amount_usd,
+        "max_position_amount_usd": max_position_amount_usd,
+    }
+    strategy = (
+        BalancedRiskStrategy(config=BalancedRiskStrategyConfig.from_mapping(config_payload))
+        if strategy_name == "balanced_risk"
+        else ScoreRiskStrategy(config=ScoreRiskStrategyConfig.from_mapping(config_payload))
+    )
+    signal = parse_signal_payload({
+        "type": "BUY", "market": "US", "ticker": "AAPL",
+        "price": price, "stop_loss": stop_loss,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "rejected"
+    assert "overflow" in result.message.lower()
+    assert FakeUSTrader.calls == []

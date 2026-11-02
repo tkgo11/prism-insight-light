@@ -103,7 +103,7 @@ account.
 
 ### Main settings
 
-- `risk_amount_krw` / `risk_amount_usd`: maximum configured loss budget before score weighting.
+- `risk_amount_krw` / `risk_amount_usd`: maximum configured loss budget before score weighting. Finite inputs that overflow during risk-unit, position-cap, or order-notional calculations are rejected before broker submission.
 - `max_position_amount_krw` / `max_position_amount_usd`: position notional caps.
 - `min_score`: lowest accepted `buy_score` (0–100); default `0`. A positive minimum rejects a missing score before any broker call.
 - `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.

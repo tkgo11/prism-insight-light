@@ -47,6 +47,10 @@ class ScoreWeightedStrategy:
             return StrategyExecution("rejected", "Score band weight produced a zero buy amount", signal.market, signal.ticker)
         base_amount = market_base_amount(signal, krw=self.config.base_amount_krw, usd=self.config.base_amount_usd)
         buy_amount = base_amount * weight if base_amount > 0 else None
+        if buy_amount is not None and not math.isfinite(buy_amount):
+            # Finite configuration fields can still multiply to infinity.
+            # Never pass an unbounded BUY budget to the broker.
+            return StrategyExecution("rejected", "Score weighted order amount overflow", signal.market, signal.ticker)
         if buy_amount is not None and buy_amount <= 0:
             # A zero-weight band suppresses the order; reject it honestly instead of
             # surfacing a broker-layer "invalid amount" error as an unknown outcome.

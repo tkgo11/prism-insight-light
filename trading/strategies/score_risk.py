@@ -123,18 +123,29 @@ class ScoreRiskStrategy:
             if signal.stop_loss is not None
             else 0.0
         )
-        units = (
-            int(risk_budget / per_unit_risk)
-            if risk_budget > 0 and per_unit_risk > 0
-            else 0
-        )
+        if risk_budget > 0 and per_unit_risk > 0:
+            risk_units = risk_budget / per_unit_risk
+            if not math.isfinite(risk_units):
+                return StrategyExecution(
+                    "rejected", "Score-risk sizing overflow",
+                    signal.market, signal.ticker,
+                )
+            units = int(risk_units)
+        else:
+            units = 0
         max_position = market_base_amount(
             signal,
             krw=self.config.max_position_amount_krw,
             usd=self.config.max_position_amount_usd,
         )
         if max_position > 0:
-            units = min(units, int(max_position / entry_price))
+            cap_units = max_position / entry_price
+            if not math.isfinite(cap_units):
+                return StrategyExecution(
+                    "rejected", "Score-risk position cap overflow",
+                    signal.market, signal.ticker,
+                )
+            units = min(units, int(cap_units))
 
         constrained_sizing = (
             score_weight <= 0
@@ -155,7 +166,18 @@ class ScoreRiskStrategy:
                 },
             )
 
-        buy_amount = units * entry_price if units > 0 else None
+        try:
+            buy_amount = units * entry_price if units > 0 else None
+        except OverflowError:
+            return StrategyExecution(
+                "rejected", "Score-risk order notional overflow",
+                signal.market, signal.ticker,
+            )
+        if buy_amount is not None and not math.isfinite(buy_amount):
+            return StrategyExecution(
+                "rejected", "Score-risk order notional overflow",
+                signal.market, signal.ticker,
+            )
         result = await execute_order(
             signal,
             trading_mode=trading_mode,

@@ -656,3 +656,27 @@ async def test_event_risk_off_defaults_never_block_or_shrink_buy(tmp_path):
     assert event_result.status == "acknowledged"
     assert buy_result.status == "executed"
     assert FakeUSTrader.calls == [("buy", "AAPL", None, 100.0)]
+
+
+@pytest.mark.asyncio
+async def test_score_weighted_finite_fields_multiplication_overflow_rejects_before_broker(monkeypatch):
+    async def forbidden_broker_call(*args, **kwargs):
+        raise AssertionError("Overflow must be rejected before broker submission")
+
+    monkeypatch.setattr(
+        "trading.strategies.score_weighted.execute_order", forbidden_broker_call
+    )
+    config = ScoreWeightedStrategyConfig.from_mapping({
+        "name": "score_weighted",
+        "base_amount_usd": 1e308,
+        "score_bands": {0: 1e308},
+    })
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 10, "buy_score": 5,
+    })
+    result = await ScoreWeightedStrategy(config=config).execute(
+        signal, trading_mode="demo"
+    )
+    assert result.status == "rejected"
+    assert "overflow" in result.message.lower()
