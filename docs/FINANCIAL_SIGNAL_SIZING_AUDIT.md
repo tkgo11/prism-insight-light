@@ -244,3 +244,16 @@ remain mandatory before any merge or live deployment.
 A KIS wrapper can report `success=True` while the explicit `order_no`/`broker_order_id` field is empty, whitespace, null, boolean, or otherwise unusable. Such a response is now classified as `unknown`, **not** `executed`; the execution ledger keeps the signal/account identity non-retryable pending authoritative broker reconciliation. A valid alternate receipt field is honored. This change does not assert a fill: `executed` remains the legacy submission/acceptance label, not proof of broker execution. Legacy custom/mock wrappers that omit receipt fields entirely retain their previous classification for compatibility and remain a separate integration-audit risk. KIS demo order/fill reconciliation remains blocked until a safe demo account and order-status APIs are available.
 
 Additional receipt-boundary cases reject zero-only order numbers and textual null sentinels; these cannot identify a KIS order for reconciliation. Tests preserve acceptance of nonempty, reconcilable order IDs.
+
+
+### Non-reconcilable broker receipt strings (2026-11-02)
+
+A KIS wrapper returning `success=True` with a stringified boolean, JSON
+placeholder, non-canonical numeric value (for example `0.0`, `0e0`, or
+`-1`), nonfinite sentinel, or escaped/control-character order identifier
+does **not** provide a usable order receipt. Both `order_no` and
+`broker_order_id` are checked by the shared outcome classifier. Such
+responses are `unknown` and retain the execution ledger replay fence,
+including after restart. Positive zero-padded and alphanumeric mock IDs
+remain supported. A valid receipt still proves only acceptance, **not fill**;
+KIS demo reconciliation of fills/cancels/residual quantities remains blocked.

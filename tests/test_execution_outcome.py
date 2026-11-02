@@ -152,10 +152,11 @@ def test_missing_receipt_field_does_not_release_ledger_after_restart(tmp_path):
         "-1", "inf", "Infinity", "KIS\\n123",
     ],
 )
-def test_unusable_textual_broker_receipts_remain_unknown(unusable_receipt):
+@pytest.mark.parametrize("receipt_field", ["order_no", "broker_order_id"])
+def test_unusable_textual_broker_receipts_remain_unknown(unusable_receipt, receipt_field):
     # A stringified sentinel or malformed identifier cannot be reconciled
     # with a broker order; acceptance without a usable ID is UNKNOWN.
-    result = {"success": True, "order_no": unusable_receipt}
+    result = {"success": True, receipt_field: unusable_receipt}
     assert classify_broker_result(result) == "unknown"
 
 
@@ -167,3 +168,9 @@ def test_unusable_textual_receipt_keeps_replay_fence_after_restart(tmp_path):
     assert status == "unknown"
     ledger.finalize("textual-invalid-receipt", status)
     assert ExecutionLedger(ledger_path).claim("textual-invalid-receipt") == (False, "unknown")
+
+
+@pytest.mark.parametrize("receipt", ["0000123", "KIS-123", 123])
+def test_reconcilable_broker_receipt_remains_accepted(receipt):
+    # Do not accidentally reject valid zero-padded or mock alphanumeric IDs.
+    assert classify_broker_result({"success": True, "order_no": receipt}) == "executed"

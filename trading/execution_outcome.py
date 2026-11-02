@@ -86,9 +86,27 @@ def classify_broker_result(result: Any) -> str:
                 return False
             if isinstance(value, str):
                 receipt = value.strip()
-                if not receipt or receipt.casefold() in {"none", "null", "nan", "undefined"}:
+                # A stringified bool, JSON placeholder, non-canonical
+                # number, or control/escape sequence is not a reconcilable KIS
+                # receipt. Treat acceptance without an actual order identifier
+                # as UNKNOWN so the durable ledger prevents automatic replay.
+                if not receipt or any(
+                    char.isspace() or ord(char) < 32 or ord(char) == 127 or char == "\\"
+                    for char in receipt
+                ):
                     return False
-                if receipt.isdecimal() and not any(char != "0" for char in receipt):
+                if receipt.casefold() in {
+                    "none", "null", "nan", "undefined", "true", "false",
+                    "inf", "infinity", "+inf", "-inf",
+                }:
+                    return False
+                if receipt[0] in "[{" or receipt[-1] in "]}":
+                    return False
+                # KIS numeric order numbers are positive integers, not
+                # decimal/exponent/negative representations from coercion.
+                if re.fullmatch(r"[+-]?\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?", receipt, re.IGNORECASE):
+                    return receipt.isdecimal() and any(char != "0" for char in receipt)
+                if re.fullmatch(r"0[xX]0+", receipt):
                     return False
                 return True
             return isinstance(value, int) and value > 0
