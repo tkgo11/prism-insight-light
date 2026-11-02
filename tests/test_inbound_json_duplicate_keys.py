@@ -34,3 +34,13 @@ def test_pubsub_rejects_duplicate_json_keys(extra):
 def test_telegram_rejects_ambiguous_json_before_labeled_fallback(text):
     with pytest.raises(SignalValidationError, match="[Dd]uplicate"):
         parse_signal_text(text)
+
+
+def test_webui_json_input_rejects_duplicate_sizing_keys():
+    from webui.services.signal_service import parse_signal_input, parse_signal_text
+
+    ambiguous = '{"type":"BUY","ticker":"AAPL","price":100,"position_fraction":0.1,"position_fraction":1}'
+    for parse in (parse_signal_input, parse_signal_text):
+        result = parse(ambiguous)
+        assert result["ok"] is False
+        assert "Duplicate" in result["error"]
