@@ -7,8 +7,8 @@
     "id": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
     "lock_owner": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
     "previous_run_id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
-    "result": "BROKER_ERROR_PROVENANCE_PATCHED_CI_RUNNING_AUDITS_INCOMPLETE",
-    "last_mutation_commit": "97779c4558fddc15115cf53a2d07506872da2ebf",
+    "result": "THREE_VERIFIED_SUBCASES_PATCHED_FINAL_CI_PENDING_AUDITS_INCOMPLETE",
+    "last_mutation_commit": "727d8d1b7cef9783e4d76677386b676d5c868e85",
     "previous_state_branch_sha": "40525585c853e8d4f864d47f65a643651401a057",
     "lock_started_at": "2026-11-02T12:19:01Z"
   },
@@ -29,11 +29,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "97779c4558fddc15115cf53a2d07506872da2ebf",
+    "head_sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_PATCHED_CI_PENDING_AUDITS_0_OF_2"
+    "status": "DRAFT_FINAL_CI_PENDING_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -119,22 +119,22 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "1d05086f8a5519202067f1a7626dbef52e971f8a",
+    "checksum": "7284a615eaa27796b603d90b29742d9c09cc58b7",
     "scope_estimate": 74,
     "files_fully_audited": 0,
-    "head_sha": "97779c4558fddc15115cf53a2d07506872da2ebf",
-    "source_head_sha": "97779c4558fddc15115cf53a2d07506872da2ebf",
-    "git_tree_sha": "f3628882c120e3e1718fc48b895efe36654dc2d4",
+    "head_sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
+    "source_head_sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
+    "git_tree_sha": "66c8bce4907db7317476fc9f6b4bcd71e915fea8",
     "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T21-19-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "4143d08867d52fd77ab16950e6804a93df128e0e",
-    "sha": "97779c4558fddc15115cf53a2d07506872da2ebf",
+    "checksum": "aa5cbf8fe5454579aaf45460f1a5dac22394f42b",
+    "sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
     "files_checked": 0,
     "fully_audited_files": 0,
     "file_count": 168,
-    "git_tree_sha": "f3628882c120e3e1718fc48b895efe36654dc2d4",
+    "git_tree_sha": "66c8bce4907db7317476fc9f6b4bcd71e915fea8",
     "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T21-19-KST-full.json"
   },
   "checks": {
@@ -1196,6 +1196,20 @@
         }
       ],
       "notes": "Workflow and external statuses checked for exact new PR head. Does not imply file-by-file audit or broker demo validation."
+    },
+    "prism-sync-hourly-2026-11-02T21-19-KST-turn1": {
+      "head_sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
+      "status": "in_progress",
+      "conclusion": null,
+      "run_ids": [
+        41444581957,
+        41444589149
+      ],
+      "test_first_failures": [
+        14,
+        4,
+        15
+      ]
     }
   },
   "upstream_changes": [
@@ -4290,6 +4304,15 @@
         "qlty check: success"
       ],
       "notes": "No KIS demo integration, independent related/whole-repo audits, or approvals completed."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
+      "head_sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
+      "level": "TARGETED_SOURCE_AND_TEST_FIRST_CI_NOT_FILE_BY_FILE_AUDIT",
+      "related_manifest_blob": "7284a615eaa27796b603d90b29742d9c09cc58b7",
+      "full_manifest_blob": "aa5cbf8fe5454579aaf45460f1a5dac22394f42b",
+      "run_evidence_blob": "3f8081e390a399509a6fa82b8c7d2ac997df1705",
+      "fully_audited_files": 0
     }
   ],
   "last_merged_upstream_sha": null,
@@ -4317,7 +4340,7 @@
     "Independent review/any applicable policy requirements for new PR not yet verified",
     "Prior PR #42 merged at user's request without earlier full financial gate; do not deploy to live trading until verified"
   ],
-  "next_action": "Verify final PR43 HEAD CI, inspect test-first failure evidence, expand transitive audit, broker read-only demo fill/cancel reconciliation, independent 2+2 audits and branch protection",
+  "next_action": "Verify final SHA CI and external checks, independently audit full related and all files across 2+2 future slots, obtain authorized read-only KIS demo fill/cancel/remaining-quantity evidence, independent review and branch policy",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -4815,6 +4838,14 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Manual migration after explicit user-directed merge; new code and new base, no independent audit completed"
+    },
+    {
+      "slot": "2026-11-02T21-19-KST",
+      "run_id": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
+      "head_sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Incomplete related/whole-tree audits and no broker demo evidence"
     }
   ],
   "discovered_defects": [
@@ -6137,10 +6168,12 @@
       "description": "Uncertain broker outcomes must not be retryable",
       "defect_ids": [
         "explicit-outcome-unknown-overridden-by-success",
-        "unverified-broker-failure-retryable-2026-11-01-23"
+        "unverified-broker-failure-retryable-2026-11-01-23",
+        "noncanonical-kis-error-code-20261102",
+        "contradictory-success-timeout-20261102"
       ],
-      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
-      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+      "classification": "CODE_PATCHED_FINAL_CI_PENDING_AUDIT_INCOMPLETE",
+      "last_checked_head": "727d8d1b7cef9783e4d76677386b676d5c868e85"
     },
     {
       "root_cause_id": "RC-STOPLOSS-US-SYMBOL-IDENTITY",
@@ -6407,11 +6440,12 @@
       "defect_ids": [
         "kis-accepted-without-reconcilable-order-receipt-20261102",
         "kis-success-omits-all-order-id-fields-20261102",
-        "kis-stringified-sentinel-or-noncanonical-order-id-20261102"
+        "kis-stringified-sentinel-or-noncanonical-order-id-20261102",
+        "unicode-confusable-receipt-20261102"
       ],
-      "classification": "CODE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "classification": "RECURRENCE_CODE_PATCHED_FINAL_CI_PENDING_AUDIT_INCOMPLETE",
       "first_detected_run": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
-      "last_checked_head": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+      "last_checked_head": "727d8d1b7cef9783e4d76677386b676d5c868e85",
       "fix_commits": [
         "433aa9b8956086e0c3ba22b46c3ecc82b4c4d0f6",
         "796f8767c910858446ca8b5f39e734a163dd73d7",
@@ -6419,302 +6453,71 @@
         "f9dcc4e0f682378aca644fe723e91a4c48960b76",
         "786e032f564d44660c3e52d5a5a0973182cb113a",
         "4f7b0faa863c77c97e85a8e8c4bd8b88eedac9f5",
-        "79850e818bed7758eb11f0e2b024fb8bc1ee5c96"
+        "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+        "727d8d1b7cef9783e4d76677386b676d5c868e85"
       ],
-      "recurrence_count": 2
+      "recurrence_count": 3
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
-    "scope": "KR/US shared broker outcome receipt -> dispatcher/strategies -> execution ledger replay fence; full transitive closure and KIS demo incomplete",
+    "head_sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
+    "scope": "KR/US broker outcome classifier and receipt -> dispatcher/strategies -> durable ledger; full transitive and KIS demo incomplete",
     "entries": [
       {
-        "contract": "Corrupt/duplicate/nonfinite runtime state cannot be silently cleared",
-        "path": "trading/strategies/common.py load_json_list -> cooldown, signal_trailing_stop, event_risk_off, risk_bracket metadata",
-        "evidence": "Exact pre-fix loader isolated reproduction; updated strict parse + 6 corrupt-input tests",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+        "invariant": "Unverified rejection code or redirect must not release claim",
+        "paths": [
+          "trading/execution_outcome.py",
+          "trading/domestic.py",
+          "trading/us.py",
+          "trading/execution_ledger.py"
+        ],
+        "failure_modes": [
+          "nonbusiness code",
+          "redirect"
+        ],
+        "test": "tests/test_wave4_execution_safety.py KR/US mocked order calls",
+        "status": "TEST_FIRST_REPRODUCED_PATCHED_FINAL_CI_PENDING"
       },
       {
-        "contract": "Failed atomic write cannot report success",
-        "path": "common.save_json -> append_json_item/update_json_list -> risk_bracket, cooldown, signal_trailing_stop, event_risk_off",
-        "evidence": "Propagate OSError; tests mock os.replace failure, verify original bytes and temp cleanup",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+        "invariant": "Contradictory success with transport ambiguity is UNKNOWN",
+        "paths": [
+          "trading/execution_outcome.py",
+          "trading/dispatch.py",
+          "trading/strategies/common.py",
+          "trading/execution_ledger.py"
+        ],
+        "failure_modes": [
+          "timeout",
+          "connection reset"
+        ],
+        "test": "tests/test_execution_outcome.py mock and restart ledger",
+        "status": "TEST_FIRST_REPRODUCED_PATCHED_FINAL_CI_PENDING"
       },
       {
-        "contract": "Invalid cooldown/risk-off timestamps cannot disappear",
-        "path": "common.fresh_items -> cooldown/event_risk_off",
-        "evidence": "3 timestamp boundary cases fail closed",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+        "invariant": "Order receipt must be ASCII and reconcilable",
+        "paths": [
+          "trading/execution_outcome.py",
+          "trading/execution_ledger.py"
+        ],
+        "failure_modes": [
+          "fullwidth zero",
+          "Arabic digits",
+          "emoji",
+          "punctuation"
+        ],
+        "test": "tests/test_execution_outcome.py Unicode, punctuation and restart",
+        "status": "TEST_FIRST_REPRODUCED_PATCHED_FINAL_CI_PENDING"
       },
       {
-        "contract": "Corrupt protection must block broker submit",
-        "path": "signal_trailing_stop SELL, event_risk_off BUY -> execute_order",
-        "evidence": "2 async fake-broker no-submit regression tests",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Unknown broker acceptance not proof of fill",
-        "path": "TradeDispatcher -> ExecutionLedger -> KIS KR/US",
-        "evidence": "Current code retains unknown/executed identities; authoritative KIS demo order-ID/fill/partial-fill/cancel missing",
-        "status": "BLOCKED_DEMO_AND_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Trailing-stop persisted high-watermark must be finite, positive and unique per instrument",
-        "path": "trading/strategies/signal_trailing_stop.py execute -> _validate_records -> _handle_sell/_record_buy_and_execute",
-        "evidence": "Isolated NaN/Infinity trigger-bypass reproduction; 7 malformed record variants × BUY/SELL mock-broker no-submit tests",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Broker accepted SELL is not a fill; never drop trailing protection or re-submit on new signal",
-        "path": "signal_trailing_stop execute/_handle_sell -> common.execute_order -> broker -> durable pending record",
-        "evidence": "Source prior deletion on accepted full SELL; new mock accepted/unknown/timeout/restart/rejection/disk failure tests; CI 920 passed",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Unknown/crashed cooldown order cannot expire into an automatic duplicate",
-        "path": "cooldown.execute -> pre-submit atomic save -> mock broker -> restart/fresh_items expiry",
-        "evidence": "5 new mock-broker/expiry/write-failure tests; latest head CI 920 passed",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Authoritative order-ID/fill/cancel/remaining quantity reconciliation",
-        "path": "KR/US KIS order query and all strategy/dispatcher/stop-loss state transitions",
-        "evidence": "No authorized demo credentials or integration test environment; not proven",
-        "status": "BLOCKED_DEMO_AND_FULL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Trailing BUY accepted/unknown/partial fill != confirmed position; do not permit new BUY/SELL",
-        "path": "signal_trailing_stop.execute -> _mark_entry_pending -> common.execute_order -> _record_entry_order_id/_restore_entry_after_rejection",
-        "evidence": "Pre-fix source ordering; mock accepted, timeout, unknown, partial-fill, verified rejection, restart and disk-full tests; latest CI 933 Linux/135 Windows",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Untracked trailing SELL must be idempotently fenced before broker call",
-        "path": "signal_trailing_stop._handle_sell(require_tracked_entry=False) -> _mark_untracked_exit_pending -> broker -> reconciliation",
-        "evidence": "Mock accepted/unknown/timeout/rejection/write-failure/restart tests; CI passed",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Cooldown accepted order cannot expire before authoritative fill/cancel verification",
-        "path": "cooldown.execute -> pending ledger -> broker accepted/unknown -> expiry/restart -> operator reconciliation",
-        "evidence": "Mock accepted order with/without order ID, 10/30-day expiry, verified rejection and simulated manual reconciliation; CI passed",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Configured risk-bracket hard cap or usable positive risk budget cannot become broker-default BUY when less than one whole share can be funded",
-        "path": "risk_bracket.execute -> common.execute_order -> KIS KR/US BUY",
-        "evidence": "Original arithmetic reproducer: cap=50, price=100, invalid stop -> buy_amount=None; four mock-trader no-submit tests plus valid fractional case committed; CI pending; GitHub Actions 41347002844: Linux 939, Windows 141 passed",
-        "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Explicit score-band zero weight must never fall back to broker default when base amount is unspecified",
-        "path": "score_weighted.execute -> common.execute_order -> KIS KR/US BUY",
-        "evidence": "Source arithmetic reproducer, mock no-submit regression test added; current-head CI pending; GitHub Actions 41347002844: Linux 939, Windows 141 passed",
-        "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Explicit empty queued target list must never expand to all configured accounts",
-        "path": "off_hours_queue.drain_due -> dispatch.execute_queued_signal -> MultiAccountTradeDispatcher._eligible_accounts",
-        "evidence": "Original requested_ids or list(available) isolated reproduction; new no-submit mock tests, CI 948/141 passed; changed blob SHA 5ffe87a56161796b333b89302171664e6d842706",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Queued account target set and mode cannot silently change during replay",
-        "path": "off_hours_queue.enqueue/drain_due -> dispatch.execute_queued_signal -> multi_account_dispatcher.dispatch",
-        "evidence": "9 new mock-broker regression cases: empty/duplicate/blank targets, missing legacy context, malformed marker, single->multi and multi->single mode changes; current-head CI success",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Queued orders never escalate from demo to real or change single-account identity",
-        "path": "TradeDispatcher._dispatch_serialized -> OffHoursOrderQueue.enqueue/_queue_identity -> execute_queued_signal -> KIS resolve_account -> broker",
-        "evidence": "12 new mock-only tests, existing queue/safety fixtures updated; final Linux 960 passed, Windows 141 passed, CI #41356898329",
-        "status": "CODE_PATCHED_CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT",
-        "head_sha": "c62e0593b64acc3c2a368662d3fd5c4219b5b198"
-      },
-      {
-        "contract": "Queue identity differentiates authorized execution scopes; unpinned legacy work quarantines",
-        "path": "trading/off_hours_queue.py _queue_identity -> _load/_save -> trading/dispatch.py execute_queued_signal",
-        "evidence": "Tested mode and selector changes, primary account reassignment, legacy missing scope, valid same-account replay, no broker call on mismatch",
-        "status": "CODE_PATCHED_CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT",
-        "head_sha": "c62e0593b64acc3c2a368662d3fd5c4219b5b198"
-      },
-      {
-        "contract": "Queued single-account account identity is fixed at submission boundary",
-        "path": "execute_queued_signal -> dispatch -> _serialized_broker_workflow -> _dispatch_serialized -> ka.resolve_account -> _execute_legacy_trade / strategy.execute",
-        "failure_mode": "Config changes between precheck and trader construction",
-        "test": "test_queued_single_account_rechecks_identity_after_scope_check",
-        "result": "CI_PASS_MOCK_ONLY",
-        "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
-        "evidence": "test_queued_single_account_rechecks_identity_after_scope_check",
-        "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Resolved account object is passed to KR/US trader and strategy, without disabling ledger claim",
-        "path": "_dispatch_serialized -> _strategy_trader_kwargs / _execute_legacy_trade / execution_ledger.claim+finalize",
-        "failure_mode": "Second account resolution or duplicate execution after bypassing ledger",
-        "test": "test_queued_single_account_pins_broker_account_without_losing_dedupe; test_queued_single_account_strategy_uses_pinned_account",
-        "result": "CI_PASS_MOCK_ONLY",
-        "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
-        "evidence": "test_queued_single_account_pins_broker_account_without_losing_dedupe; test_queued_single_account_strategy_uses_pinned_account",
-        "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Every persisted cooldown pending fence must be unambiguously associated with a canonical market/ticker/side key",
-        "path": "cooldown.execute -> load_json_list -> _validate_records -> fresh_items -> pre-submit save_json -> execute_order",
-        "evidence": "test_cooldown_semantically_invalid_pending_fence_never_calls_broker (8 cases); latest HEAD CI 980 Linux/141 Windows passed",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Persisted risk-off events must have unambiguous market/ticker/event scope before a BUY or event rewrite",
-        "path": "event_risk_off.execute BUY/EVENT -> load_json_list/update_json_list -> _validate_records -> fresh_items -> execute_order",
-        "evidence": "test_corrupt_riskoff_record_cannot_enable_buy (7 cases); test_corrupt_riskoff_record_cannot_be_overwritten_by_event; latest HEAD CI 980 Linux/141 Windows passed",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Invalid cooldown scope configuration must not silently fall back to another policy",
-        "path": "CooldownStrategyConfig.from_mapping -> CooldownStrategy._key",
-        "evidence": "test_cooldown_invalid_scope_does_not_silently_use_default; latest HEAD CI 980 Linux/141 Windows passed",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
-      },
-      {
-        "contract": "Positive min_score requires a present buy_score >= threshold",
-        "path": "schema -> dispatch -> score_weighted/score_risk/balanced_risk -> execute_order -> broker",
-        "failure_mode": "Missing score bypassed enabled minimum",
-        "evidence": "tests/test_strategy_suite.py and tests/test_balanced_risk_strategy.py; Actions 994 Linux/149 Windows",
-        "status": "ACTIONS_PASS_MOCK_ONLY_AUDIT_INCOMPLETE"
-      },
-      {
-        "contract": "Positive min_reward_risk requires a usable stop and target regardless of require_target_price",
-        "path": "schema -> score_risk/balanced_risk -> common.execute_order",
-        "failure_mode": "Early missing-target return bypassed reward/risk floor",
-        "evidence": "tests/test_balanced_risk_strategy.py; Actions 994 Linux/149 Windows",
-        "status": "ACTIONS_PASS_MOCK_ONLY_AUDIT_INCOMPLETE"
-      },
-      {
-        "contract": "Derived finite input arithmetic must remain finite before broker submission",
-        "path": "trading/strategies/score_weighted.py -> common.execute_order -> US/KR broker",
-        "evidence": "Source branch SHA 811b6bef6d380622773065a9a08cf0b006b2cbfd and 7 new regression/boundary cases; CI pending",
-        "status": "CI_SUCCESS_PARTIAL_REVIEW_NOT_FULL_AUDIT"
-      },
-      {
-        "contract": "Score-risk units, position caps, and submitted notional must not overflow",
-        "path": "trading/strategies/score_risk.py -> balanced_risk.py -> common.execute_order -> US/KR broker",
-        "evidence": "Source branch SHA 811b6bef6d380622773065a9a08cf0b006b2cbfd and 7 new regression/boundary cases; CI pending",
-        "status": "CI_SUCCESS_PARTIAL_REVIEW_NOT_FULL_AUDIT"
-      },
-      {
-        "contract": "Configured fractional score weights must never silently fall back to unweighted broker default",
-        "path": "score_weighted/score_risk -> balanced_risk -> common.execute_order -> US/KR broker",
-        "evidence": "5 new mock broker non-submission tests at d238ac092189c7a472e2cfa2a25589eb752c0411",
-        "status": "CI_SUCCESS_PARTIAL_REVIEW_NOT_FULL_AUDIT"
-      },
-      {
-        "contract": "Below-first score band lookup uses first threshold's weight, not global minimum weight",
-        "path": "score_weighted.py and score_risk.py via balanced_risk.py",
-        "evidence": "3 broker-mock boundary tests at e1ed9915f03d48a4798e76221d2dc0f354db4863",
-        "status": "CI_SUCCESS_PARTIAL_REVIEW_NOT_FULL_AUDIT"
-      },
-      {
-        "contract": "Below-first score_max_capital score uses first configured threshold ratio for both BUY and SELL",
-        "path": "score_max_capital._ratio_for -> balance_split BUY cash reservation / common.execute_order SELL -> mock KIS",
-        "failure_mode": "Global minimum from unrelated higher band",
-        "test": "test_buy_score_below_first_threshold_uses_first_ratio_not_smallest; test_sell_score_below_first_threshold_uses_first_ratio_not_smallest",
-        "code_blob_sha": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
-        "test_blob_sha": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9",
-        "status": "TARGETED_MOCK_CI_SUCCESS_NOT_FULL_AUDIT",
-        "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
-      },
-      {
-        "contract": "Explicit empty score band cannot become full-size order",
-        "path": "operator config -> ScoreWeighted/ScoreRisk/BalancedRisk/ScoreMaxCapital -> TradeDispatcher -> KR/US",
-        "evidence": "Pre-fix 33 failed; final 1086 Linux passed",
-        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
-      },
-      {
-        "contract": "Numeric aliases cannot silently overwrite BUY/SELL threshold ratios",
-        "path": "score/profit bands -> normalized parsers -> strategy -> broker",
-        "evidence": "Pre-fix 33+15 failed; final CI passed",
-        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
-      },
-      {
-        "contract": "Invalid mapping shape, boolean or score threshold range cannot reach broker",
-        "path": "strategy config -> dispatcher init -> execution",
-        "evidence": "Pre-fix 2 range failures; final CI passed",
-        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
-      },
-      {
-        "contract": "Broker acceptance is not confirmed fill",
-        "path": "KR/US broker -> ledger -> stop-loss -> partial fill/cancel/recovery",
-        "evidence": "No authoritative KIS demo credentials, not validated by configuration tests",
-        "status": "BLOCKED_DEMO"
-      },
-      {
-        "contract": "Duplicate JSON object keys must not override financial signal fields",
-        "path": "Pub/Sub bytes -> schema -> safety gate -> ledger -> broker",
-        "evidence": "6 pre-fix failing cases Actions 41394133853; latest Linux 1099 passed",
-        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
-      },
-      {
-        "contract": "Telegram JSON must reject duplicate keys before labeled fallback",
-        "path": "Telegram fetch -> JSON extraction -> signal parser -> dispatcher",
-        "evidence": "3 pre-fix failures Actions 41394133853; polling mock and final CI passed",
-        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
-      },
-      {
-        "contract": "WebUI raw JSON API must not lose duplicate keys in FastAPI body decoding",
-        "path": "WebUI validate route -> raw JSON -> Pydantic -> schema",
-        "evidence": "1 pre-fix failure Actions 41394345742; latest CI passed",
-        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
-      },
-      {
-        "contract": "Accepted broker order is not confirmed fill",
-        "path": "KR/US -> execution ledger -> stop-loss -> partial fill/cancel/recovery",
-        "evidence": "No KIS demo credentials; untouched by inbound JSON fix",
-        "status": "BLOCKED_DEMO"
-      },
-      {
-        "contract": "Integer-valued financial fields must not round at JSON/string boundaries",
-        "path": "Pub/Sub -> schema; Telegram JSON/labeled -> schema; WebUI string/raw -> schema; strategy sizing",
-        "failure_mode": "2**53+1 -> 2**53; 8.0000000000000001 -> 8",
-        "tests": "tests/test_signal_integer_precision.py; tests/test_webui_routes.py",
-        "evidence": "Test-first CI 41399231415 failed; final 41399805037/41399810968 succeeded",
-        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
-      },
-      {
-        "contract": "YAML booleans must not become numeric buy amount or asset-percent orders",
-        "path": "kis_auth legacy/default -> account normalization -> KR/US trader constructor -> buy_sizing -> broker",
-        "failure_mode": "True -> 1 or 1%",
-        "tests": "tests/test_buy_sizing.py",
-        "evidence": "1143 Linux and 167 Windows targeted tests on final head",
-        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
-      },
-      {
-        "contract": "Broker accepted != filled; remaining quantities and durable recovery need authoritative reconciliation",
-        "path": "KR/US -> ledger -> stop-loss -> partial fill/cancel/restart",
-        "failure_mode": "pending accepted order could fill later",
-        "tests": "Mock tests only; no KIS demo credential",
-        "status": "BLOCKED_KIS_DEMO"
-      },
-      {
-        "contract": "Successful broker response with explicit missing/invalid receipt is UNKNOWN, not a confirmed order",
-        "path": "KR/US KIS .isOK -> order_no -> trading/execution_outcome.classify_broker_result -> strategy/dispatch -> execution_ledger",
-        "evidence": "Pre-fix 6 failed/1172 passed Actions 41421360389; post-fix 1184 Linux/167 Windows, 2 mock KR/US paths, durable ledger restart no-retry test",
-        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT",
-        "head_sha": "796f8767c910858446ca8b5f39e734a163dd73d7"
-      },
-      {
-        "contract": "Broker accepted order != filled order; partial fill/cancel/remainder requires authoritative reconciliation",
-        "path": "KR/US order IDs and fill IDs -> execution ledger -> stop-loss watcher/strategy -> recovery",
-        "evidence": "No KIS demo credentials or authoritative order/fill/cancel API exercise; mock-only evidence does not prove fills",
-        "status": "BLOCKED_DEMO_AND_FULL_DEPENDENCY_AUDIT",
-        "head_sha": "796f8767c910858446ca8b5f39e734a163dd73d7"
-      },
-      {
-        "contract": "A broker acceptance requires a reconcilable order ID, not stringified sentinels",
-        "path": "trading/execution_outcome.py -> trading/dispatch.py, trading/strategies/common.py -> trading/execution_ledger.py",
-        "failure_mode": "success=True with false/true/[]/{}/0.0/0e0/-1/Infinity/escaped order number",
-        "evidence": "CI 41436194579: 11 test-first failures; final 41436466613/41436457542: 1210 Linux and 167 Windows pass",
-        "status": "MOCK_VERIFIED_NOT_BROKER_FILL"
+        "invariant": "Order acceptance != fill; partial/cancel/remaining quantities need authoritative order and fill IDs",
+        "paths": [
+          "trading/domestic.py",
+          "trading/us.py",
+          "trading/dispatch.py",
+          "trading/stop_loss_watcher.py",
+          "trading/execution_ledger.py"
+        ],
+        "status": "BLOCKED_AUTHORITATIVE_READ_ONLY_KIS_DEMO_RECONCILIATION"
       }
     ]
   },
