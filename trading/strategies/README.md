@@ -9,7 +9,7 @@ strategy.
 
 - `balance_split`: BUY with available cash (all of it by default).
 - `balanced_risk`: recommended aggressive BUY/SELL strategy that never filters valid trade signals by default.
-- `score_weighted`: BUY with score weighting; missing/low scores still execute.
+- `score_weighted`: BUY with score weighting; missing scores are allowed only at the default `min_score: 0`, while positive minimums reject missing/below-threshold scores.
 - `score_risk`: use stop-loss risk sizing when available, otherwise use the broker default BUY size.
 - `risk_bracket`: BUY from a risk budget derived from `price` and `stop_loss`, with optional bracket metadata persistence.
 - `bracket_exit`: SELL only when the signal price crosses its supplied target or stop-loss bracket.

@@ -23,7 +23,7 @@ order when the account has no cash/position or the order itself is invalid.
 | `balance_split` | Split the cash into equal pieces and buy with one piece. | BUY |
 | `balanced_risk` | Execute every trade signal, using risk data when available. | BUY and SELL |
 | `score_max_capital` | Always act on valid BUY and SELL signals, using score-selected fractions of available cash or current holdings. | BUY and SELL |
-| `score_weighted` | Weight BUY size by score without dropping scoreless signals. | BUY |
+| `score_weighted` | Weight BUY size by score; accept scoreless signals only when `min_score` is zero. | BUY |
 | `score_risk` | Size from stop-loss risk when possible, otherwise use the broker default. | BUY |
 | `risk_bracket` | Decide the buy size by how much money you are willing to risk. | BUY |
 | `bracket_exit` | Sell only when an incoming signal reaches its target or stop-loss bracket. | SELL |
@@ -105,7 +105,7 @@ account.
 
 - `risk_amount_krw` / `risk_amount_usd`: maximum configured loss budget before score weighting.
 - `max_position_amount_krw` / `max_position_amount_usd`: position notional caps.
-- `min_score`: lowest accepted `buy_score`; default `0`.
+- `min_score`: lowest accepted `buy_score` (0–100); default `0`. A positive minimum rejects a missing score before any broker call.
 - `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
 - `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter.
 - `require_stop_loss` / `require_target_price`: both default to `false`.
@@ -260,7 +260,7 @@ Better score, bigger buy.
 
 - It only handles **BUY** signals.
 - It reads `buy_score` from the signal.
-- A missing score receives full weight.
+- A missing score receives full weight **only when `min_score` is `0`**; a positive minimum rejects it before broker submission.
 - Scores below the first configured band use that band's weight instead of being skipped.
 - An explicitly selected `0.0` score-band weight rejects the BUY before broker submission, including when no base amount is configured; it never falls back to the broker's default order size.
 - With the default `0: 1.0` band, every score uses the full base amount.
@@ -269,7 +269,7 @@ Better score, bigger buy.
 
 - `base_amount_krw`: base buy amount for Korean stocks.
 - `base_amount_usd`: base buy amount for U.S. stocks.
-- `min_score`: the minimum score needed before buying.
+- `min_score`: minimum accepted score (0–100); default `0`. When positive, missing and lower scores reject before broker submission.
 - `score_bands`: score levels and their weights.
   - Example: `60: 0.25` means buy 25% of the base amount when the score is at least 60.
   - Example: `90: 1.0` means buy 100% of the base amount when the score is at least 90.
