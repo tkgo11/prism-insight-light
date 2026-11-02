@@ -148,3 +148,33 @@ def test_terminal_single_page_balance_remains_usable(monkeypatch, cls, symbol):
     if cls is USStockTrading:
         monkeypatch.setattr("trading.us.time.sleep", lambda _: None)
     assert trader.get_holding_quantity(symbol) == 3
+
+
+@pytest.mark.parametrize("cls, qty_field, symbol", [
+    (DomesticStockTrading, "hldg_qty", "005930"),
+    (USStockTrading, "ovrs_cblc_qty", "AAPL"),
+])
+@pytest.mark.parametrize("invalid_quantity", [
+    "NaN", "Infinity", "invalid", "-1", "1.5", "1e999999", True,
+])
+def test_malformed_balance_quantity_must_not_prove_zero(
+    monkeypatch, cls, qty_field, symbol, invalid_quantity
+):
+    """Malformed/non-integral KIS holdings are UNKNOWN, never absent."""
+    trader = _trader(cls)
+    row = {qty_field: invalid_quantity}
+    if cls is DomesticStockTrading:
+        row["pdno"] = "OTHER"
+    else:
+        row.update(ovrs_pdno="OTHER", ovrs_excg_cd="NASD")
+
+    def fake_request(api_url, tr_id, params, **kwargs):
+        return _Response([row])
+
+    monkeypatch.setattr(trader, "_request", fake_request)
+    if cls is USStockTrading:
+        monkeypatch.setattr("trading.us.time.sleep", lambda _: None)
+    with pytest.raises(PortfolioInquiryError):
+        trader.get_holding_quantity(symbol)
+    assert trader._last_portfolio_inquiry_error
+    assert trader.get_portfolio() == []
