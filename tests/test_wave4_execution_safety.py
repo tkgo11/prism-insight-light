@@ -1117,3 +1117,23 @@ def test_intermediary_http_code_cannot_prove_kr_us_order_rejection(market, http_
     assert result["success"] is False
     assert result["outcome_unknown"] is True
     assert classify_broker_result(result) == "unknown"
+
+
+# Regression: a non-200 2xx status does not prove KIS rejected a BUY.
+# 201/202 can mean accepted; 204 has no response body; 206/207/226 are
+# partial/multi/extension responses. A proxy may attach a KIS-looking code.
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("http_status", [201, 202, 204, 205, 206, 207, 226])
+def test_nonstandard_2xx_cannot_prove_kis_order_rejection(market, http_status):
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=http_status, error_code="APBK0918",
+        error_message="intermediary 2xx after order forwarding",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"
