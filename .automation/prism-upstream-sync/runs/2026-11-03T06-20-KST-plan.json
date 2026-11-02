@@ -1,0 +1,24 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T06-20-KST-turn9",
+  "slot": "2026-11-03T06-20-KST",
+  "pr": 43,
+  "starting_head": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+  "base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "upstream": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+  "subcase": "nonstandard-2xx-unverified-business-code",
+  "test_first_head": "f8582ed049346617dc44b584e9cc240c03582a70",
+  "test_path": "tests/test_wave4_execution_safety.py",
+  "test_count_added": 14,
+  "status": "TEST_FIRST_COMMITTED_CI_PENDING",
+  "invariants": [
+    "HTTP non-200 2xx is not authoritative KIS business rejection",
+    "KIS-looking code from intermediary cannot authorize automatic retry",
+    "KR and US BUY wrapper must return outcome_unknown=True",
+    "200 and verified 400 business-code controls remain unchanged"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "related_passes": 0,
+  "full_passes": 0
+}
