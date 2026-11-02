@@ -28,6 +28,27 @@ logger = logging.getLogger("trading.stop_loss_watcher")
 DEFAULT_STOP_LOSS_POSITIONS_PATH = Path("runtime") / "stop_loss_positions.json"
 
 
+def _legacy_stop_loss_signal_id(market: str, ticker: str, record: dict[str, Any]) -> str:
+    """Exact pre-upgrade signal identity, retained for already-submitted SELLs."""
+    material = "|".join((
+        market, ticker, str(record.get("created_at") or ""),
+        str(record.get("entry_price") or ""), str(record.get("stop_loss") or ""),
+    ))
+    digest = hashlib.sha256(material.encode("utf-8")).hexdigest()[:20]
+    return f"stop_loss_{market}_{ticker}_{digest}"
+
+
+def _valid_stop_loss_signal_id(value: Any, market: str, ticker: str) -> bool:
+    if not isinstance(value, str):
+        return False
+    prefix = f"stop_loss_{market}_{ticker}_"
+    if not value.startswith(prefix):
+        return False
+    suffix = value[len(prefix):]
+    return len(suffix) == 20 and all(ch in "0123456789abcdef" for ch in suffix)
+
+
+
 def default_stop_loss_positions_path() -> Path:
     return runtime_file_path(DEFAULT_STOP_LOSS_POSITIONS_PATH)
 
@@ -114,6 +135,8 @@ class TrackedPosition:
     updated_at: str = ""
     # An accepted BUY may fill after an initial zero-balance inquiry.
     pending_buy: bool = False
+    # Stable across stop/entry edits; preserves legacy accepted SELL identity.
+    stop_loss_signal_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -137,6 +160,7 @@ class TrackedPosition:
             created_at=str(data.get("created_at", "")),
             updated_at=str(data.get("updated_at", "")),
             pending_buy=pending_buy,
+            stop_loss_signal_id=str(data.get("stop_loss_signal_id") or ""),
         )
 
 
@@ -345,6 +369,17 @@ class StopLossTracker:
                     raise ValueError("Invalid existing pending BUY provenance")
                 pending_buy = pending_buy or old_pending
             created_at = existing.get("created_at") if isinstance(existing, dict) else now_iso
+            # A threshold or entry-price edit must not create a new automatic
+            # SELL identity while an earlier SELL may still be at the broker.
+            # For pre-upgrade records, derive the exact legacy ID BEFORE
+            # overwriting the old price/threshold (migration compatibility).
+            stable_id = None
+            if isinstance(existing, dict):
+                stable_id = existing.get("stop_loss_signal_id")
+                if stable_id is None:
+                    stable_id = _legacy_stop_loss_signal_id(market, ticker, existing)
+                elif not _valid_stop_loss_signal_id(stable_id, market, ticker):
+                    raise ValueError("Invalid persisted stop-loss signal identity")
             pos = TrackedPosition(
                 market=market.upper(),
                 ticker=ticker,
@@ -355,7 +390,12 @@ class StopLossTracker:
                 created_at=created_at or now_iso,
                 updated_at=now_iso,
                 pending_buy=pending_buy,
+                stop_loss_signal_id=stable_id or "",
             )
+            if stable_id is None:
+                pos.stop_loss_signal_id = _legacy_stop_loss_signal_id(
+                    market, ticker, pos.to_dict()
+                )
             positions[key] = pos.to_dict()
             self._save(positions)
             logger.info(
@@ -461,6 +501,9 @@ class StopLossTracker:
                 or any(ord(ch) < 32 or ord(ch) == 127 for ch in item["market"] + item["ticker"])
                 or self._key(item["market"], item["ticker"]) != key
                 or ("pending_buy" in item and not isinstance(item["pending_buy"], bool))
+                or ("stop_loss_signal_id" in item and not _valid_stop_loss_signal_id(
+                    item["stop_loss_signal_id"], item["market"].strip().upper(), item["ticker"]
+                ))
                 or not valid_stored_price(item.get("stop_loss"), positive=True)
                 or not valid_stored_price(item.get("entry_price", 0))
                 or (
@@ -746,17 +789,20 @@ class StopLossWatcher:
         self, market: str, ticker: str, current_price: float, pos: dict[str, Any]
     ) -> dict[str, Any]:
         """Dispatch an automated stop-loss SELL signal."""
-        identity_material = "|".join(
-            (
-                market,
-                ticker,
-                str(pos.get("created_at") or ""),
-                str(pos.get("entry_price") or ""),
-                str(pos.get("stop_loss") or ""),
+        signal_id = pos.get("stop_loss_signal_id")
+        if signal_id is None:
+            # Legacy persisted records retain the same identity they used
+            # before migration, even if they already have a pending SELL.
+            signal_id = _legacy_stop_loss_signal_id(market, ticker, pos)
+        elif not _valid_stop_loss_signal_id(signal_id, market, ticker):
+            logger.error(
+                "[Stop-Loss] Blocking %s %s: invalid persisted SELL identity",
+                market, ticker,
             )
-        )
-        signal_digest = hashlib.sha256(identity_material.encode("utf-8")).hexdigest()[:20]
-        signal_id = f"stop_loss_{market}_{ticker}_{signal_digest}"
+            return {
+                "market": market, "ticker": ticker, "status": "blocked",
+                "message": "Invalid stop-loss execution identity; operator reconciliation required",
+            }
         signal_payload = {
             "signal_id": signal_id,
             "type": "SELL",

@@ -290,3 +290,11 @@ cause; it does not create a new independent financial defect category.
 - A stop-loss can still submit against positive, verified holdings; the pending flag is not an assertion of a fill. Invalid pending metadata is quarantined from automated trading.
 - The pending flag is intentionally not auto-cleared without authoritative broker order/fill/cancel reconciliation. This may retain stale records requiring manual reconciliation; it is a fail-closed trade-off, not proof of end-to-end safety. No KIS demo/live transactions were performed.
 - Tests: `tests/test_pending_buy_stop_loss_safety.py`. Independent file-by-file audits and actual KIS demo reconciliation remain blocked; keep PR Draft and audit counters 0/2 + 0/2.
+
+
+## Stop-loss stable execution identity across edits (2026-11-02)
+
+- Root cause `RC-STOP-LOSS-IDENTITY-ROTATION`: previously the automatic SELL `signal_id` hashed the mutable entry price and stop threshold. An edit to either field while an accepted SELL was pending produced a different dedupe identity and could allow a second SELL.
+- The tracker now stores the first stop-loss signal identity and preserves it across later edits and process restarts. Existing records without the field derive their *pre-upgrade* identity from the original persisted fields before overwriting them, preserving prior ledger claims. Invalid stored IDs are quarantined rather than used to submit orders.
+- This deliberately blocks fresh automatic stop-loss SELLs for a symbol until the prior broker order is authoritatively reconciled. Legitimate subsequent positions may require manual reconciliation and explicit reset. No broker demo fills/cancels were executed; tests only use mocked dispatch.
+- Regression: `tests/test_stop_loss_signal_identity.py`. Related/full independent audits remain 0/2 + 0/2, PR Draft.
