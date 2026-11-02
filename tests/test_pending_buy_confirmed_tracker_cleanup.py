@@ -109,3 +109,20 @@ def test_verified_no_submission_intent_does_not_block_zero_cleanup(tmp_path, sta
     assert _cycle(watcher, "US") == []
     dispatcher.dispatch.assert_not_called()
     assert tracker.get_position("US", "AAPL") is None
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+def test_post_sell_zero_preserves_tracker_with_another_unresolved_buy(
+    tmp_path, market, ticker
+):
+    from trading.dispatch import DispatchResult
+
+    ledger, tracker, watcher, dispatcher = _setup(tmp_path, market, ticker)
+    _claim(ledger, market, ticker, "unknown", scope="b" * 64)
+    dispatcher.dispatch.return_value = DispatchResult(
+        "executed", "SELL accepted", "SELL", market
+    )
+    before = tracker.get_position(market, ticker)
+    result = watcher._trigger_sell(market, ticker, 85, before)
+    assert result["status"] == "executed"
+    dispatcher.dispatch.assert_awaited_once()
+    assert tracker.get_position(market, ticker) == before
