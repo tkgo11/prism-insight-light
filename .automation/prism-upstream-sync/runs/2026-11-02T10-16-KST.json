@@ -1,0 +1,196 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
+  "kind": "STRATEGY_CONSTRAINT_GATE_BATCH_FIX",
+  "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+  "upstream_pinned_contract": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "upstream_commits_since_pinned": 45,
+  "upstream_decision": "No new upstream head; exclude BTC and micro-split ADD observability",
+  "target_repository": "tkgo11/prism-insight-light",
+  "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+  "head_before": "8e90304a1c45d981995484e18ab8e5a1faebb461",
+  "head_after": "343cb16bb7013c985fcdd91aac508a13e4ef181a",
+  "head_tree_sha": "87d84dce07fd0b67429e00c11495a444f1573878",
+  "pr_number": 42,
+  "draft": true,
+  "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
+  "defects": [
+    {
+      "id": "score-minimum-missing-score-bypass-2026-11-02-10",
+      "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_PENDING_AUDIT_INCOMPLETE",
+      "description": "Missing BUY score bypassed positive min_score in score_weighted, score_risk and balanced_risk.",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
+      "paths": [
+        "trading/strategies/score_weighted.py",
+        "trading/strategies/score_risk.py",
+        "trading/strategies/balanced_risk.py"
+      ],
+      "reproduction": "Pre-fix condition `buy_score is not None and buy_score < min_score` is false for None, allowing broker path at min_score=60.",
+      "fix_commits": [
+        "bb7ca0307855b7157abd0226ff3aa47d2c80819e"
+      ],
+      "test_evidence": "Mock broker missing/below/exact threshold; 994 Linux and 149 Windows Actions pass; no KIS demo",
+      "head_sha": "343cb16bb7013c985fcdd91aac508a13e4ef181a"
+    },
+    {
+      "id": "reward-risk-floor-missing-target-bypass-2026-11-02-10",
+      "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_PENDING_AUDIT_INCOMPLETE",
+      "description": "Missing target_price bypassed positive min_reward_risk when require_target_price=false.",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
+      "paths": [
+        "trading/strategies/score_risk.py",
+        "trading/strategies/balanced_risk.py"
+      ],
+      "reproduction": "Pre-fix target_price=None branch returned None before checking positive min_reward_risk.",
+      "fix_commits": [
+        "343cb16bb7013c985fcdd91aac508a13e4ef181a"
+      ],
+      "test_evidence": "Mock broker missing target and exact 2.0 reward/risk boundary; 994 Linux and 149 Windows Actions pass; no KIS demo",
+      "head_sha": "343cb16bb7013c985fcdd91aac508a13e4ef181a"
+    }
+  ],
+  "changed_files": [
+    {
+      "path": "trading/strategies/score_weighted.py",
+      "blob_sha": "5d113c1678dc687b57861744c7eaf13954296d4c"
+    },
+    {
+      "path": "trading/strategies/score_risk.py",
+      "blob_sha": "f1788ab302acf309aef907349fb576362c69aa39"
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "blob_sha": "13e1999f2a03dd58d3fd6714899f58639ccbe7a3"
+    },
+    {
+      "path": "trading/STRATEGIES.md",
+      "blob_sha": "9b519f807288079725fb2b2177ba9b7b81cefebb"
+    },
+    {
+      "path": "trading/strategies/README.md",
+      "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a"
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "blob_sha": "305180fbcee5b6c041e7900b8660fc707ebb7bdd"
+    }
+  ],
+  "related_manifest_files": 64,
+  "full_manifest_files": 163,
+  "related_pass": 0,
+  "full_pass": 0,
+  "code_commits": [
+    "bb7ca0307855b7157abd0226ff3aa47d2c80819e",
+    "e448c9e4e5a163d1def91229c5ca24a7fd73d1bd",
+    "343cb16bb7013c985fcdd91aac508a13e4ef181a"
+  ],
+  "new_mock_boundary_cases": 14,
+  "tests": {
+    "linux": "994 passed",
+    "windows": "149 passed",
+    "static_and_docker": "SUCCESS_IN_ACTIONS",
+    "local_full_pytest": "NOT_RUN",
+    "kis_demo": "NOT_RUN",
+    "live_trading": "PROHIBITED"
+  },
+  "ci": {
+    "runs": [
+      {
+        "id": 41371985237,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 41371980585,
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "external_statuses": [
+      {
+        "context": "security/snyk (tkgo11)",
+        "state": "success"
+      },
+      {
+        "context": "qlty check",
+        "state": "success"
+      }
+    ],
+    "qlty_usage": "NOT_REPORTED_REQUIREDNESS_UNVERIFIED"
+  },
+  "review": {
+    "independent_approvals": 0,
+    "branch_protection": "READ_FORBIDDEN_403"
+  },
+  "impact_review": [
+    {
+      "path": "trading/strategies/score_weighted.py",
+      "blob_sha": "5d113c1678dc687b57861744c7eaf13954296d4c",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "trading/strategies/score_risk.py",
+      "blob_sha": "f1788ab302acf309aef907349fb576362c69aa39",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "blob_sha": "13e1999f2a03dd58d3fd6714899f58639ccbe7a3",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "trading/STRATEGIES.md",
+      "blob_sha": "9b519f807288079725fb2b2177ba9b7b81cefebb",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "trading/strategies/README.md",
+      "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "blob_sha": "305180fbcee5b6c041e7900b8660fc707ebb7bdd",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "trading/strategies/balanced_risk.py",
+      "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "035846e0845133debe4b65524c16ed9ff1cb56f2",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "trading/schema.py",
+      "blob_sha": "2c9e5d3ed20155f329cbc36e9a8b581c3fdc3c56",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "6515bfa0de4944c59470c17c19b19589b0ce42c4",
+      "status": "PARTIAL_REVIEW"
+    },
+    {
+      "path": "trading/strategies/__init__.py",
+      "blob_sha": "f5ce41bce6f6c9fc314ebcd401df0df376e79232",
+      "status": "PARTIAL_REVIEW"
+    }
+  ],
+  "remaining_risks": [
+    "64 related files not independently fully audited; PASS 0/2.",
+    "163 total files not independently fully audited; PASS 0/2.",
+    "KIS authoritative order ID/fill/partial-fill/cancel/remaining-quantity and account isolation demo tests unavailable; live trading prohibited.",
+    "Independent review approval missing; branch protection 403; qlty usage requiredness unverified.",
+    "Latest head qlty check pending; cannot count as required pass."
+  ],
+  "merge": "NOT_ATTEMPTED",
+  "recorded_at": "2026-11-02T01:23:30.742Z"
+}
