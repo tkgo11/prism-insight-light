@@ -19,6 +19,9 @@ def _now():
     {"market": "US", "ticker": "AAPL", "signal_type": "BUY", "pending": True},
     {"key": "US:MSFT:BUY", "market": "US", "ticker": "AAPL", "signal_type": "BUY", "pending": True},
     {"key": 17, "market": "US", "ticker": "AAPL", "signal_type": "BUY", "pending": True},
+    {"key": "US:aapl:BUY", "market": "US", "ticker": "aapl", "signal_type": "BUY", "pending": True},
+    {"key": "US: AAPL :BUY", "market": "US", "ticker": " AAPL ", "signal_type": "BUY", "pending": True},
+    {"key": "US:AAPL:BUY", "market": [], "ticker": "AAPL", "signal_type": "BUY", "pending": True},
     {"key": "US:AAPL:BUY", "market": "US", "ticker": "AAPL", "signal_type": "BUY", "pending": "false"},
     {"key": "US:AAPL:BUY", "market": "US", "ticker": "AAPL", "signal_type": "BUY", "pending": True, "duplicate": True},
 ])
@@ -54,6 +57,9 @@ async def test_cooldown_semantically_invalid_pending_fence_never_calls_broker(
     {"market": "US", "ticker": None, "event_type": "RISK_OFF"},
     {"market": "INVALID", "ticker": "AAPL", "event_type": "RISK_OFF"},
     {"market": "US", "ticker": "AAPL", "event_type": ""},
+    {"market": "US", "ticker": "aapl", "event_type": "RISK_OFF"},
+    {"market": "US", "ticker": " AAPL ", "event_type": "RISK_OFF"},
+    {"market": [], "ticker": "AAPL", "event_type": "RISK_OFF"},
 ])
 @pytest.mark.asyncio
 async def test_corrupt_riskoff_record_cannot_enable_buy(tmp_path, monkeypatch, broken):

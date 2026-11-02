@@ -41,6 +41,7 @@ class EventRiskOffStrategy:
             if (
                 not isinstance(market, str) or market not in {"", "KR", "US"}
                 or not isinstance(ticker, str)
+                or ticker != ticker.strip().upper()
                 or not isinstance(event_type, str) or not event_type.strip()
             ):
                 raise RuntimeError(

@@ -42,9 +42,10 @@ class CooldownStrategy:
                 else f"{market}:{ticker}:{side}"
             )
             if (
-                market not in {"KR", "US"}
+                not isinstance(market, str) or market not in {"KR", "US"}
                 or not isinstance(ticker, str) or not ticker
-                or side not in {"BUY", "SELL"}
+                or ticker != ticker.strip().upper()
+                or not isinstance(side, str) or side not in {"BUY", "SELL"}
                 or not isinstance(key, str) or key != expected_key
                 or key in seen
                 or ("pending" in item and not isinstance(item["pending"], bool))
