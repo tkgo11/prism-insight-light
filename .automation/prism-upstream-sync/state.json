@@ -4,12 +4,13 @@
   "state": "ACTIVE_DRAFT_REMEDIATION_AFTER_USER_DIRECTED_EARLY_MERGE",
   "phase": "related_code_audit",
   "run": {
-    "id": "manual-user-merge-remediation-2026-11-02",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
+    "lock_owner": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
     "previous_run_id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
-    "result": "PR42_MERGED_USER_DIRECTION_PR43_DRAFT_CI_SUCCESS_AUDITS_RESET",
+    "result": "IN_PROGRESS_CAS_LOCKED",
     "last_mutation_commit": "a624f91d4e976fd23e21b08ae5152e84cf11522f",
-    "previous_state_branch_sha": "db4a12a8071e0b3676562089a2b07a3d57fd7b52"
+    "previous_state_branch_sha": "40525585c853e8d4f864d47f65a643651401a057",
+    "lock_started_at": "2026-11-02T12:19:01Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
