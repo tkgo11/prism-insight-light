@@ -199,8 +199,11 @@ class ScoreRiskStrategy:
         if (signal.buy_score is None and self.config.min_score > 0) or (signal.buy_score is not None and signal.buy_score < self.config.min_score):
             return "BUY score is missing or below the configured threshold"
         if signal.target_price is None:
-            if self.config.require_target_price:
-                return "Score-risk strategy requires target_price"
+            # A configured reward/risk floor cannot be verified without a
+            # target. Do not silently bypass it when require_target_price is
+            # false; both paths must reject before any broker submission.
+            if self.config.require_target_price or self.config.min_reward_risk > 0:
+                return "Score-risk strategy requires target_price for enabled constraints"
             return None
         if (
             self.config.require_target_price

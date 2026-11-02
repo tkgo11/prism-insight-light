@@ -107,7 +107,7 @@ account.
 - `max_position_amount_krw` / `max_position_amount_usd`: position notional caps.
 - `min_score`: lowest accepted `buy_score` (0–100); default `0`. A positive minimum rejects a missing score before any broker call.
 - `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
-- `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter.
+- `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter. A positive minimum requires both a usable stop-loss and a target price even if `require_target_price` is `false`; missing data rejects before broker submission.
 - `require_stop_loss` / `require_target_price`: both default to `false`.
 - A risk budget constrains size only when the signal supplies a usable stop
   below the entry price. If the stop is absent or unusable and is not required,
