@@ -1,3 +1,5 @@
+import pytest
+
 from trading.execution_outcome import classify_broker_result
 from trading.schema import parse_signal_payload
 from trading.strategies.common import execution_from_result
@@ -87,3 +89,36 @@ def test_unverified_broker_failure_keeps_durable_duplicate_suppression(tmp_path)
     assert outcome.status == "unknown"
     ledger.finalize("signal-account", outcome.status)
     assert ledger.claim("signal-account") == (False, "unknown")
+
+@pytest.mark.parametrize(
+    "receipt",
+    [
+        {"order_no": ""},
+        {"order_no": None},
+        {"order_no": "   "},
+        {"order_no": False},
+        {"broker_order_id": ""},
+    ],
+)
+def test_success_without_usable_broker_receipt_is_unknown(receipt):
+    # KIS may accept an order without a parseable receipt. A success flag
+    # alone cannot prove which broker order exists or whether it filled.
+    assert classify_broker_result({"success": True, **receipt}) == "unknown"
+
+
+def test_missing_broker_receipt_remains_nonretryable_across_restart(tmp_path):
+    from trading.execution_ledger import ExecutionLedger
+
+    ledger_path = tmp_path / "accepted_no_receipt.json"
+    ledger = ExecutionLedger(ledger_path)
+    assert ledger.claim("receipt-missing") == (True, None)
+    outcome = classify_broker_result({"success": True, "order_no": ""})
+    assert outcome == "unknown"
+    ledger.finalize("receipt-missing", outcome)
+    assert ExecutionLedger(ledger_path).claim("receipt-missing") == (False, "unknown")
+
+
+def test_alternate_valid_broker_receipt_is_not_discarded():
+    assert classify_broker_result({
+        "success": True, "order_no": "", "broker_order_id": "KIS-123"
+    }) == "executed"
