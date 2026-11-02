@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T19-23-KST-turn11",
-    "started_at": "2026-11-02T10:23:38Z",
-    "completed_at": "2026-11-02T10:33:24.670Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
+    "started_at": "2026-11-02T11:20:00Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
     "last_mutation_commit": "786e032f564d44660c3e52d5a5a0973182cb113a",
     "last_mutation_at": "2026-11-02T10:33:24.670Z",
-    "result": "ONE_EXISTING_ROOT_CAUSE_SUBCASE_PATCHED_LATEST_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE",
+    "result": "IN_PROGRESS",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
@@ -65,11 +65,11 @@
       "review_approvals": 0,
       "reason": "Receipt omission subcase fixed with 1186 Linux and 167 Windows tests; independent audits, KIS demo and protection policy remain blocked"
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
-    "pr_head_at_start": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
-    "lock_acquired_at": "2026-11-02T10:23:38Z",
+    "prior_run_id": "prism-sync-hourly-2026-11-02T19-23-KST-turn11",
+    "pr_head_at_start": "786e032f564d44660c3e52d5a5a0973182cb113a",
+    "lock_acquired_at": "2026-11-02T11:20:00Z",
     "lock_released_at": "2026-11-02T10:33:24.670Z",
-    "state_head_before_lock": "9334d0bd5700da211279745ff4cabfe98f7f021e"
+    "state_head_before_lock": "bb257886dc3875686c6b22113d88532827daf03f"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
