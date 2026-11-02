@@ -1099,3 +1099,21 @@ def test_us_cfg_float_validators_reject_non_finite():
     assert ust._cfg_positive_float(float("nan"), 3.0) == 3.0
     assert ust._cfg_nonnegative_float(float("inf"), 2.0) == 2.0
     assert ust._cfg_positive_float("5.5") == 5.5
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("http_status", [408, 409, 425, 429, 499])
+def test_intermediary_http_code_cannot_prove_kr_us_order_rejection(market, http_status):
+    """Actual KR/US adapter paths, with a mock KIS response and zero orders."""
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=http_status, error_code="APBK0918",
+        error_message="intermediary status after order forwarding",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"

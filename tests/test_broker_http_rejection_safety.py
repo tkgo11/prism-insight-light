@@ -23,7 +23,7 @@ class MockKISResponse:
         return self.code
 
 
-@pytest.mark.parametrize("http_status", [408, 409, 425, 429])
+@pytest.mark.parametrize("http_status", [408, 409, 425, 429, 499])
 def test_ambiguous_http_response_cannot_release_order_replay_fence(tmp_path, http_status):
     """Mock transport response; neither a KIS demo fill nor a live order."""
     response = MockKISResponse(http_status)
