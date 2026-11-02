@@ -57,3 +57,9 @@ def test_valid_business_rejection_control_remains_retryable(http_status):
         "outcome_unknown": False,
         "message": "APBK0918 - verified business rejection",
     }) == "failed"
+
+
+@pytest.mark.parametrize("malformed_status", [200.9, 400.9, "４００", "400.0"])
+def test_noncanonical_http_status_cannot_prove_business_rejection(malformed_status):
+    """Only exact ASCII 3-digit HTTP statuses are authoritative syntax."""
+    assert rejection_is_ambiguous(MockKISResponse(malformed_status)) is True
