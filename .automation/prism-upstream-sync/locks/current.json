@@ -1,13 +1,10 @@
 {
-  "run_id": "prism-sync-hourly-2026-11-02T22-45-KST-turn2",
-  "started_at": "2026-11-02T13:45:03Z",
-  "expected_state_head": "68ba28a7c574e1a79c0024df9eb226f9d42468d4",
-  "expected_pr_head": "727d8d1b7cef9783e4d76677386b676d5c868e85",
+  "run_id": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+  "started_at": "2026-11-02T14:29:03Z",
+  "expected_state_head": "4f7339ee734e5640c20e561a0adcb03d606facb8",
+  "expected_pr_head": "d3bdebc12292a76677cee921abe78754ce089111",
   "expected_base_head": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
   "expected_upstream_head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-  "status": "RELEASED",
-  "real_orders": 0,
-  "released_at": "2026-11-02T13:51:10.581Z",
-  "release_parent_sha": "dfe6c84b9819f02a229f935aca580f10646b492b",
-  "latest_pr_head": "d3bdebc12292a76677cee921abe78754ce089111"
+  "status": "ACTIVE",
+  "real_orders": 0
 }
