@@ -1,6 +1,6 @@
 """Profit-ladder SELL strategy."""
 from __future__ import annotations
- from dataclasses import dataclass, field
+from dataclasses import dataclass, field
 from typing import Any
 from ..schema import SignalMessage
 from ..signal_sizing import adjusted_sell_fraction
