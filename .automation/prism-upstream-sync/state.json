@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
     "started_at": "2026-11-02T11:20:00Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
-    "last_mutation_commit": "786e032f564d44660c3e52d5a5a0973182cb113a",
-    "last_mutation_at": "2026-11-02T10:33:24.670Z",
-    "result": "IN_PROGRESS",
+    "completed_at": "2026-11-02T11:26:29.359Z",
+    "lock_owner": null,
+    "last_mutation_commit": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+    "last_mutation_at": "2026-11-02T11:26:29.359Z",
+    "result": "EXISTING_RECEIPT_ROOT_CAUSE_SUBCASE_PATCHED_LATEST_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE",
     "last_report": {
       "phase": "related_code_audit",
       "related": 0,
@@ -18,25 +18,25 @@
       "source_head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "786e032f564d44660c3e52d5a5a0973182cb113a",
+      "pr_head": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
       "pr_number": 42,
       "related_manifest_files": 74,
       "related_manifest_files_fully_audited": 0,
       "full_tree_files": 168,
       "full_tree_files_reviewed": 0,
-      "git_tree_sha": "443d960c793255e7dea87595b40feecfe60ffc0d",
+      "git_tree_sha": "8bfce3e49ab40c0c1ba8dd8fa5d9fcf117acc0c9",
       "ci_workflow_runs": [
         {
-          "id": 41429317502,
+          "id": 41436466613,
           "event": "pull_request",
-          "head_sha": "786e032f564d44660c3e52d5a5a0973182cb113a",
+          "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
           "status": "completed",
           "conclusion": "success"
         },
         {
-          "id": 41429310617,
+          "id": 41436457542,
           "event": "push",
-          "head_sha": "786e032f564d44660c3e52d5a5a0973182cb113a",
+          "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
           "status": "completed",
           "conclusion": "success"
         }
@@ -44,31 +44,31 @@
       "external_statuses": [
         {
           "context": "security/snyk (tkgo11)",
-          "state": "success"
+          "state": "success",
+          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/92b6d963-6efb-4b3f-86b6-ccd92a88c6df"
         },
         {
           "context": "qlty check",
-          "state": "success"
+          "state": "success",
+          "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
         }
       ],
       "new_code_commits": [
-        "c58afdda79ce2d8c5dad0cbc361f96fd6a8f76ef",
-        "c8dee3859ea97562716c4d6bf71597bebbcbd9c0",
-        "bf38bff3ca3354d9ecf214643dfdc32072fb0f7c",
-        "f9dcc4e0f682378aca644fe723e91a4c48960b76",
-        "786e032f564d44660c3e52d5a5a0973182cb113a"
+        "b3a2d8f3ab321ee5fc3dc815b2e3c177282f6ccf",
+        "4f7b0faa863c77c97e85a8e8c4bd8b88eedac9f5",
+        "79850e818bed7758eb11f0e2b024fb8bc1ee5c96"
       ],
       "root_causes": [
         "RC-BROKER-RECEIPT-INTEGRITY"
       ],
       "merged": false,
       "review_approvals": 0,
-      "reason": "Receipt omission subcase fixed with 1186 Linux and 167 Windows tests; independent audits, KIS demo and protection policy remain blocked"
+      "reason": "Stringified non-reconcilable receipt subcase fixed; Linux 1210/Windows 167 passed; independent audits, KIS demo and branch policy remain blocked"
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T19-23-KST-turn11",
     "pr_head_at_start": "786e032f564d44660c3e52d5a5a0973182cb113a",
     "lock_acquired_at": "2026-11-02T11:20:00Z",
-    "lock_released_at": "2026-11-02T10:33:24.670Z",
+    "lock_released_at": "2026-11-02T11:26:29.359Z",
     "state_head_before_lock": "bb257886dc3875686c6b22113d88532827daf03f"
   },
   "source": {
@@ -88,11 +88,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "786e032f564d44660c3e52d5a5a0973182cb113a",
+    "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_LATEST_CI_SUCCESS_AUDITS_0_OF_2"
+    "status": "DRAFT_CI_SUCCESS_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -177,8 +177,8 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "RESET_AFTER_RECEIPT_OMISSION_FIX_NOT_FULLY_AUDITED",
-    "checksum": "git-blob-sha1:738ffdf8a3b6f7ac3b0dba994c4d8399554ab978",
+    "status": "RESET_AFTER_RECEIPT_SENTINEL_FIX_NOT_FULLY_AUDITED",
+    "checksum": "git-blob-sha1:2be05b1727b7cb5489134c5a5aeb599066ed8d23",
     "scope_estimate": 74,
     "files": [
       {
@@ -193,7 +193,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "db28fdc00dbac8a68f19a3d8005adcfd9ba5c1c5",
+        "blob_sha": "559f043e84f10edba36f10c5cc6c02797e3a7cb6",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -243,7 +243,7 @@
       },
       {
         "path": "tests/test_execution_outcome.py",
-        "blob_sha": "cb379a9cfe64b08694096d95933385fd8974224d",
+        "blob_sha": "e3e219f0b9a4b878f3f9c10f544a39b1ea09fe76",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -413,7 +413,7 @@
       },
       {
         "path": "trading/execution_outcome.py",
-        "blob_sha": "7e6a35e36e02a5162d292544dd47b859d0a6e23c",
+        "blob_sha": "fc2557c747768108c195b8bcdb76f00d6bffdf1d",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -566,22 +566,22 @@
       "tests/test_execution_outcome.py",
       "tests/test_wave4_execution_safety.py"
     ],
-    "tree_sha": "4b57ddefe43bea8b2ad437fd8eb30dee58df2024",
+    "tree_sha": "8bfce3e49ab40c0c1ba8dd8fa5d9fcf117acc0c9",
     "files_fully_audited": 0,
-    "head_sha": "796f8767c910858446ca8b5f39e734a163dd73d7",
-    "source_head_sha": "786e032f564d44660c3e52d5a5a0973182cb113a",
-    "git_tree_sha": "443d960c793255e7dea87595b40feecfe60ffc0d",
+    "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+    "source_head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+    "git_tree_sha": "8bfce3e49ab40c0c1ba8dd8fa5d9fcf117acc0c9",
     "fully_audited_files": 0,
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T19-23-KST-related.json"
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T20-20-KST-related.json"
   },
   "full_manifest": {
-    "status": "RESET_AFTER_RECEIPT_OMISSION_FIX_NOT_FULLY_AUDITED",
+    "status": "RESET_AFTER_RECEIPT_SENTINEL_FIX_NOT_FULLY_AUDITED",
     "tracked_tree_entries_on_pr": 192,
     "tracked_blob_files_on_pr": 168,
-    "sha": "796f8767c910858446ca8b5f39e734a163dd73d7",
+    "sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
     "files_checked": 0,
-    "checksum": "git-blob-sha1:0a9df6234ef368f15b08a91adee4b9e88a1cb25e",
-    "checksum_kind": "git-tree-sha1",
+    "checksum": "git-blob-sha1:52924ebe9709e5663e7235abad9b3015da899438",
+    "checksum_kind": "git-blob-sha1",
     "files": [
       {
         "path": ".agents/skills/prism-insight-light/SKILL.md",
@@ -695,7 +695,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "db28fdc00dbac8a68f19a3d8005adcfd9ba5c1c5",
+        "blob_sha": "559f043e84f10edba36f10c5cc6c02797e3a7cb6",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -805,7 +805,7 @@
       },
       {
         "path": "tests/test_execution_outcome.py",
-        "blob_sha": "cb379a9cfe64b08694096d95933385fd8974224d",
+        "blob_sha": "e3e219f0b9a4b878f3f9c10f544a39b1ea09fe76",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -1085,7 +1085,7 @@
       },
       {
         "path": "trading/execution_outcome.py",
-        "blob_sha": "7e6a35e36e02a5162d292544dd47b859d0a6e23c",
+        "blob_sha": "fc2557c747768108c195b8bcdb76f00d6bffdf1d",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -1424,11 +1424,11 @@
         "status": "NOT_FULLY_AUDITED"
       }
     ],
-    "tree_sha": "4b57ddefe43bea8b2ad437fd8eb30dee58df2024",
-    "git_tree_sha": "443d960c793255e7dea87595b40feecfe60ffc0d",
-    "source_head_sha": "786e032f564d44660c3e52d5a5a0973182cb113a",
+    "tree_sha": "8bfce3e49ab40c0c1ba8dd8fa5d9fcf117acc0c9",
+    "git_tree_sha": "8bfce3e49ab40c0c1ba8dd8fa5d9fcf117acc0c9",
+    "source_head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
     "fully_audited_files": 0,
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T19-23-KST-full.json"
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T20-20-KST-full.json"
   },
   "checks": {
     "0": {
@@ -2428,6 +2428,29 @@
       "jobs": [
         "Full pytest suite: 1186 passed",
         "Windows runtime smoke: 167 passed"
+      ],
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        }
+      ]
+    },
+    "2026-11-02T20-20-KST": {
+      "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+      "status": "completed",
+      "conclusion": "success",
+      "run_ids": [
+        41436466613,
+        41436457542
+      ],
+      "jobs": [
+        "Full pytest suite 1210 passed, Docker build success",
+        "Windows runtime smoke 167 passed"
       ],
       "external_statuses": [
         {
@@ -5434,6 +5457,77 @@
         "No independent review",
         "Branch protection API 403; cannot prove required gate policy"
       ]
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
+      "kind": "REPRODUCED_RECEIPT_SENTINEL_SUBCASE_PATCHED_CI_SUCCESS_NOT_FULL_AUDIT",
+      "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "related_pass": false,
+      "full_pass": false,
+      "git_tree_sha": "8bfce3e49ab40c0c1ba8dd8fa5d9fcf117acc0c9",
+      "changed_files": [
+        {
+          "path": "trading/execution_outcome.py",
+          "blob_sha": "fc2557c747768108c195b8bcdb76f00d6bffdf1d",
+          "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+        },
+        {
+          "path": "tests/test_execution_outcome.py",
+          "blob_sha": "e3e219f0b9a4b878f3f9c10f544a39b1ea09fe76",
+          "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+        },
+        {
+          "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+          "blob_sha": "559f043e84f10edba36f10c5cc6c02797e3a7cb6",
+          "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+        }
+      ],
+      "test_first": {
+        "head_sha": "b3a2d8f3ab321ee5fc3dc815b2e3c177282f6ccf",
+        "ci_run_id": 41436194579,
+        "passed": 1186,
+        "failed": 11
+      },
+      "fix_commits": [
+        "4f7b0faa863c77c97e85a8e8c4bd8b88eedac9f5",
+        "79850e818bed7758eb11f0e2b024fb8bc1ee5c96"
+      ],
+      "final_ci": [
+        {
+          "id": 41436466613,
+          "event": "pull_request",
+          "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 41436457542,
+          "event": "push",
+          "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "tests": {
+        "linux_passed": 1210,
+        "windows_passed": 167
+      },
+      "manifest": {
+        "related_files": 74,
+        "full_files": 168,
+        "related_checksum": "2be05b1727b7cb5489134c5a5aeb599066ed8d23",
+        "full_checksum": "52924ebe9709e5663e7235abad9b3015da899438"
+      },
+      "blockers": [
+        "KIS demo authoritative fill/partial/cancel/remaining-quantity/restart integration unavailable",
+        "Related 74-file and full 168-file audits incomplete",
+        "No independent review",
+        "Branch protection API 403; cannot verify policy"
+      ],
+      "merged": false,
+      "real_orders": 0
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5452,7 +5546,7 @@
     "No independent review",
     "Branch protection API 403; cannot prove required gate policy"
   ],
-  "next_action": "At next independent slot, recheck CAS and both HEADs; audit all 74 transitive files against current blob SHA; require KIS demo fill/cancel/remaining-quantity reconciliation and branch protection/review before PASS or merge.",
+  "next_action": "Recheck CAS and both HEADs; inspect full transitive 74-file manifest and all 168 tracked files in independent slots; reconcile KIS demo fill/partial/cancel/remaining-quantity/restart; obtain independent review and branch protection evidence before any PASS or merge.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -5929,6 +6023,18 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Code changed; independent transitive/full file audits and KIS demo fill reconciliation incomplete"
+    },
+    {
+      "slot": "2026-11-02T20:20+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Receipt integrity code changed; related/full file audits incomplete; KIS demo unavailable",
+      "manifest_tree_sha": "8bfce3e49ab40c0c1ba8dd8fa5d9fcf117acc0c9"
     }
   ],
   "discovered_defects": [
@@ -7120,7 +7226,8 @@
       "reproduction": "Pre-fix test-only HEAD cf94fa48982327870704480df8d7140643023724, Actions 41421360389: 6 failed/1172 passed",
       "related_code_blob_sha": {
         "before": "0e594fe7d67e8ed5f50ceb9311911ba68563ac0c",
-        "after": "086eb4458dee7c5e96383095b91b80c0878562c7"
+        "after": "086eb4458dee7c5e96383095b91b80c0878562c7",
+        "latest": "fc2557c747768108c195b8bcdb76f00d6bffdf1d"
       },
       "fix_commits": [
         "433aa9b8956086e0c3ba22b46c3ecc82b4c4d0f6",
@@ -7128,30 +7235,37 @@
         "796f8767c910858446ca8b5f39e734a163dd73d7",
         "c8dee3859ea97562716c4d6bf71597bebbcbd9c0",
         "f9dcc4e0f682378aca644fe723e91a4c48960b76",
-        "786e032f564d44660c3e52d5a5a0973182cb113a"
+        "786e032f564d44660c3e52d5a5a0973182cb113a",
+        "4f7b0faa863c77c97e85a8e8c4bd8b88eedac9f5",
+        "79850e818bed7758eb11f0e2b024fb8bc1ee5c96"
       ],
       "test_evidence": [
         "tests/test_execution_outcome.py: 11 missing/placeholder receipt cases, restart ledger, alternate valid receipt",
         "tests/test_wave4_execution_safety.py: KR and US mocked KIS success with missing receipt",
         "latest HEAD 1184 Linux / 167 Windows passed",
-        "receipt-less success previously classified executed; test-first CI 41428720506 (1 actual assertion failure + 1 missing-import test harness failure); latest CI 1186 Linux/167 Windows passed"
+        "receipt-less success previously classified executed; test-first CI 41428720506 (1 actual assertion failure + 1 missing-import test harness failure); latest CI 1186 Linux/167 Windows passed",
+        "Test-first CI 41436194579: 11 failed, 1186 passed; final CI 41436466613/41436457542: Linux 1210, Windows 167 passed; both receipt fields and restart fence"
       ],
       "repro_ci": [
-        41421360389
+        41421360389,
+        41436194579
       ],
       "verification_ci": [
         41429317502,
-        41429310617
+        41429310617,
+        41436466613,
+        41436457542
       ],
       "unverified": [
         "AUTHORITATIVE_KIS_DEMO_ORDER_FILL_PARTIAL_CANCEL",
         "FULL_TRANSITIVE_AUDIT",
         "BRANCH_PROTECTION_POLICY_403"
       ],
-      "recurrence_count": 1,
-      "last_checked_head": "786e032f564d44660c3e52d5a5a0973182cb113a",
+      "recurrence_count": 2,
+      "last_checked_head": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
       "subcases": [
-        "kis-success-omits-all-order-id-fields-20261102"
+        "kis-success-omits-all-order-id-fields-20261102",
+        "kis-stringified-sentinel-or-noncanonical-order-id-20261102"
       ]
     }
   ],
@@ -7512,24 +7626,27 @@
       "description": "KIS success with absent, blank, placeholder or invalid broker receipt must remain UNKNOWN and non-retryable pending reconciliation",
       "defect_ids": [
         "kis-accepted-without-reconcilable-order-receipt-20261102",
-        "kis-success-omits-all-order-id-fields-20261102"
+        "kis-success-omits-all-order-id-fields-20261102",
+        "kis-stringified-sentinel-or-noncanonical-order-id-20261102"
       ],
       "classification": "CODE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDIT_PENDING",
       "first_detected_run": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
-      "last_checked_head": "786e032f564d44660c3e52d5a5a0973182cb113a",
+      "last_checked_head": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
       "fix_commits": [
         "433aa9b8956086e0c3ba22b46c3ecc82b4c4d0f6",
         "796f8767c910858446ca8b5f39e734a163dd73d7",
         "c8dee3859ea97562716c4d6bf71597bebbcbd9c0",
         "f9dcc4e0f682378aca644fe723e91a4c48960b76",
-        "786e032f564d44660c3e52d5a5a0973182cb113a"
+        "786e032f564d44660c3e52d5a5a0973182cb113a",
+        "4f7b0faa863c77c97e85a8e8c4bd8b88eedac9f5",
+        "79850e818bed7758eb11f0e2b024fb8bc1ee5c96"
       ],
-      "recurrence_count": 1
+      "recurrence_count": 2
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "796f8767c910858446ca8b5f39e734a163dd73d7",
-    "scope": "Receipt integrity across KR/US KIS wrappers, shared classifier, execution ledger, strategies, watcher; prior root causes retained; full transitive closure incomplete",
+    "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+    "scope": "KR/US shared broker outcome receipt -> dispatcher/strategies -> execution ledger replay fence; full transitive closure and KIS demo incomplete",
     "entries": [
       {
         "contract": "Corrupt/duplicate/nonfinite runtime state cannot be silently cleared",
@@ -7811,6 +7928,13 @@
         "evidence": "No KIS demo credentials or authoritative order/fill/cancel API exercise; mock-only evidence does not prove fills",
         "status": "BLOCKED_DEMO_AND_FULL_DEPENDENCY_AUDIT",
         "head_sha": "796f8767c910858446ca8b5f39e734a163dd73d7"
+      },
+      {
+        "contract": "A broker acceptance requires a reconcilable order ID, not stringified sentinels",
+        "path": "trading/execution_outcome.py -> trading/dispatch.py, trading/strategies/common.py -> trading/execution_ledger.py",
+        "failure_mode": "success=True with false/true/[]/{}/0.0/0e0/-1/Infinity/escaped order number",
+        "evidence": "CI 41436194579: 11 test-first failures; final 41436466613/41436457542: 1210 Linux and 167 Windows pass",
+        "status": "MOCK_VERIFIED_NOT_BROKER_FILL"
       }
     ]
   },
@@ -7998,8 +8122,8 @@
       "id": "RC-BROKER-RECEIPT-INTEGRITY",
       "severity": "HIGH",
       "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "description": "Explicit blank/invalid broker order receipt now classified UNKNOWN; real KIS order fill/partial/cancel reconciliation remains blocked. Legacy custom wrapper with no receipt field remains compatible and needs integration review.",
-      "last_checked_head": "786e032f564d44660c3e52d5a5a0973182cb113a"
+      "description": "Non-reconcilable stringified sentinel/JSON/invalid numeric/escaped broker receipt now UNKNOWN in shared classifier; accepted orders still not proven filled; KIS demo partial/cancel/recovery blocked.",
+      "last_checked_head": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96"
     }
   ]
 }

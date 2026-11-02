@@ -1,0 +1,115 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
+  "slot": "2026-11-02T20-20-KST",
+  "completed_at": "2026-11-02T11:26:29.359Z",
+  "stage": "RECEIPT_SENTINEL_SUBCASE_PATCHED_CI_SUCCESS_AUDITS_INCOMPLETE",
+  "concurrency": {
+    "state_head_before_lock": "bb257886dc3875686c6b22113d88532827daf03f",
+    "lock_commit": "54aae38407b0ab093e2fcb715fd105aaa21a4c12",
+    "lock_owner": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
+    "cas_required": true
+  },
+  "upstream": {
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "ahead_commits": 47,
+    "changed_files": 41,
+    "decision": "NO_IMPORT"
+  },
+  "fork": {
+    "base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+    "pr_number": 42,
+    "head": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+    "draft": true,
+    "tree_sha": "8bfce3e49ab40c0c1ba8dd8fa5d9fcf117acc0c9"
+  },
+  "root_cause": "RC-BROKER-RECEIPT-INTEGRITY",
+  "subcase": "kis-stringified-sentinel-or-noncanonical-order-id-20261102",
+  "recurrence_count": 2,
+  "pre_fix_ci": {
+    "id": 41436194579,
+    "passed": 1186,
+    "failed": 11
+  },
+  "code_commits": [
+    "b3a2d8f3ab321ee5fc3dc815b2e3c177282f6ccf",
+    "4f7b0faa863c77c97e85a8e8c4bd8b88eedac9f5",
+    "79850e818bed7758eb11f0e2b024fb8bc1ee5c96"
+  ],
+  "changed_files": [
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "fc2557c747768108c195b8bcdb76f00d6bffdf1d",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_execution_outcome.py",
+      "blob_sha": "e3e219f0b9a4b878f3f9c10f544a39b1ea09fe76",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "559f043e84f10edba36f10c5cc6c02797e3a7cb6",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    }
+  ],
+  "contract_matrix": [
+    {
+      "contract": "A broker acceptance requires a reconcilable order ID, not stringified sentinels",
+      "path": "trading/execution_outcome.py -> trading/dispatch.py, trading/strategies/common.py -> trading/execution_ledger.py",
+      "failure_mode": "success=True with false/true/[]/{}/0.0/0e0/-1/Infinity/escaped order number",
+      "evidence": "CI 41436194579: 11 test-first failures; final 41436466613/41436457542: 1210 Linux and 167 Windows pass",
+      "status": "MOCK_VERIFIED_NOT_BROKER_FILL"
+    }
+  ],
+  "final_ci": [
+    {
+      "id": 41436466613,
+      "event": "pull_request",
+      "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41436457542,
+      "event": "push",
+      "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "tests": {
+    "linux_passed": 1210,
+    "windows_passed": 167
+  },
+  "external_statuses": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success",
+      "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/92b6d963-6efb-4b3f-86b6-ccd92a88c6df"
+    },
+    {
+      "context": "qlty check",
+      "state": "success",
+      "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
+    }
+  ],
+  "audit": {
+    "related_manifest_files": 74,
+    "full_tree_files": 168,
+    "related_pass": 0,
+    "full_pass": 0,
+    "related_fully_audited": 0,
+    "full_fully_audited": 0,
+    "related_manifest_checksum": "2be05b1727b7cb5489134c5a5aeb599066ed8d23",
+    "full_manifest_checksum": "52924ebe9709e5663e7235abad9b3015da899438"
+  },
+  "blockers": [
+    "KIS demo authoritative fill/partial/cancel/remaining-quantity/restart integration unavailable",
+    "Related 74-file and full 168-file audits incomplete",
+    "No independent review",
+    "Branch protection API 403; cannot verify policy"
+  ],
+  "merged": false,
+  "real_orders": 0
+}
