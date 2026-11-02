@@ -90,7 +90,7 @@ async def test_multi_account_dispatch_uses_each_us_account_key_for_orders(monkey
             broker_account_keys.append(account_key)
 
         async def async_buy_stock(self, ticker, limit_price=None):
-            return {"success": True, "message": f"order for {ticker}"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": f"order for {ticker}"}
 
     monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
     dispatcher = make_dispatcher(monkeypatch, tmp_path)

@@ -88,7 +88,7 @@ class FakeKRTrader:
 
     async def async_buy_stock(self, stock_code, buy_amount=None, limit_price=None):
         self.buy_calls.append((stock_code, buy_amount, limit_price))
-        return {"success": True, "message": "kr-buy", "total_amount": self.total_amount}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-buy", "total_amount": self.total_amount}
 
 
 def test_balance_split_config_ignores_disabled_or_other_strategy():
@@ -464,7 +464,7 @@ async def test_concurrent_kr_buys_serialize_cash_sizing(balance_split_strategy):
             submitted_amounts.append(buy_amount)
             await asyncio.sleep(0.05)
             active -= 1
-            return {"success": True, "message": "ok", "total_amount": buy_amount}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "ok", "total_amount": buy_amount}
 
     strategy = balance_split_strategy(split_count=2)
     signal = parse_signal_payload(
@@ -492,7 +492,7 @@ async def test_concurrent_us_buys_reserve_stale_cash(balance_split_strategy):
         async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
             submitted_amounts.append(buy_amount)
             await asyncio.sleep(0.03)
-            return {"success": True, "message": "ok", "estimated_amount": buy_amount}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "ok", "estimated_amount": buy_amount}
 
     strategy = balance_split_strategy(split_count=3)
     signal = parse_signal_payload(
@@ -726,7 +726,7 @@ async def test_partial_broker_report_cannot_release_unfilled_buy_budget(balance_
         async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
             self.buy_calls.append((ticker, buy_amount, limit_price))
             # This can be a partial fill while the rest remains open at KIS.
-            return {"success": True, "estimated_amount": 50.0, "message": "accepted"}
+            return {"success": True, "order_no": "MOCK-ORDER", "estimated_amount": 50.0, "message": "accepted"}
 
     trader = PartialReportUSTrader(available_amount=900.0)
     strategy = balance_split_strategy(split_count=2)

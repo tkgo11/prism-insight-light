@@ -39,11 +39,11 @@ async def test_trailing_stop_retains_record_after_upstream_partial_sell(tmp_path
 
         async def async_buy_stock(self, **kwargs):
             calls.append(("BUY", kwargs))
-            return {"success": True}
+            return {"success": True, "order_no": "MOCK-ORDER"}
 
         async def async_sell_stock(self, **kwargs):
             calls.append(("SELL", kwargs))
-            return {"success": True}
+            return {"success": True, "order_no": "MOCK-ORDER"}
 
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUS)
     cfg = SignalTrailingStopStrategyConfig.from_mapping({
@@ -116,11 +116,11 @@ async def test_score_max_capital_multiplies_upstream_fraction_once(tmp_path, mon
 
         async def async_buy_stock(self, **kwargs):
             trades.append(("BUY", kwargs))
-            return {"success": True, "estimated_amount": kwargs["buy_amount"]}
+            return {"success": True, "order_no": "MOCK-ORDER", "estimated_amount": kwargs["buy_amount"]}
 
         async def async_sell_stock(self, **kwargs):
             trades.append(("SELL", kwargs))
-            return {"success": True}
+            return {"success": True, "order_no": "MOCK-ORDER"}
 
     monkeypatch.setattr("trading.strategies.balance_split.USStockTrading", FakeUS)
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUS)
@@ -298,7 +298,7 @@ async def test_trailing_sell_persistence_failure_prevents_broker_submission(
     calls = []
     async def fake_order(*args, **kwargs):
         calls.append(1)
-        return {"success": True}
+        return {"success": True, "order_no": "MOCK-ORDER"}
     monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
     def fail_save(*args, **kwargs):
         raise OSError("simulated disk full before broker submit")
@@ -396,7 +396,7 @@ async def test_trailing_buy_fence_write_failure_prevents_broker_call(
     calls = []
     async def fake_order(*args, **kwargs):
         calls.append(1)
-        return {"success": True}
+        return {"success": True, "order_no": "MOCK-ORDER"}
     monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
     def fail_save(*args, **kwargs):
         raise OSError("simulated disk full")
@@ -524,7 +524,7 @@ async def test_untracked_trailing_sell_fence_write_failure_prevents_order(
     calls = []
     async def fake_order(*args, **kwargs):
         calls.append(1)
-        return {"success": True}
+        return {"success": True, "order_no": "MOCK-ORDER"}
     monkeypatch.setattr("trading.strategies.signal_trailing_stop.execute_order", fake_order)
     def fail_save(*args, **kwargs):
         raise OSError("simulated disk full")

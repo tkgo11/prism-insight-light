@@ -131,7 +131,7 @@ async def test_accepted_cooldown_without_order_id_still_blocks_retry(tmp_path, m
         return {"success": True, "message": "accepted without order ID"}
     monkeypatch.setattr("trading.strategies.cooldown.execute_order", accepted_without_id)
     first = await _strategy(path).execute(_signal(), trading_mode="demo")
-    assert first.status == "executed"
+    assert first.status == "unknown"
     state = json.loads(path.read_text(encoding="utf-8"))
     assert state[0]["pending"] is True
     assert "broker_order_id" not in state[0]

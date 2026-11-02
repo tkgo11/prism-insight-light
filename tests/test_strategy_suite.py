@@ -119,9 +119,9 @@ class FakeUSTrader:
     calls = []
     def __init__(self, mode, account_name=None, account_index=None): self.mode = mode; self.account_name = account_name; self.account_index = account_index
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
-        self.calls.append(("buy", ticker, buy_amount, limit_price)); return {"success": True, "message": "buy-ok"}
+        self.calls.append(("buy", ticker, buy_amount, limit_price)); return {"success": True, "order_no": "MOCK-ORDER", "message": "buy-ok"}
     async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
-        self.calls.append(("sell", ticker, sell_fraction, limit_price)); return {"success": True, "message": "sell-ok"}
+        self.calls.append(("sell", ticker, sell_fraction, limit_price)); return {"success": True, "order_no": "MOCK-ORDER", "message": "sell-ok"}
 
 
 @pytest.fixture(autouse=True)
@@ -464,7 +464,7 @@ async def test_cooldown_serializes_concurrent_duplicate_execution(monkeypatch, t
         max_active = max(max_active, active)
         await asyncio.sleep(0.05)
         active -= 1
-        return {"success": True, "message": "ok"}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "ok"}
 
     monkeypatch.setattr("trading.strategies.cooldown.execute_order", delayed_execute)
     config = CooldownStrategyConfig.from_mapping(
@@ -707,7 +707,7 @@ async def test_score_weighted_below_first_band_uses_first_threshold_not_minimum_
     submitted = []
     async def fake_order(signal, **kwargs):
         submitted.append(kwargs["buy_amount"])
-        return {"success": True, "message": "accepted"}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "accepted"}
     monkeypatch.setattr("trading.strategies.score_weighted.execute_order", fake_order)
     config = ScoreWeightedStrategyConfig.from_mapping({
         "name": "score_weighted",

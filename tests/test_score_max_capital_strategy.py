@@ -28,11 +28,11 @@ class FakeUSTrader:
 
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
         self.calls.append(("buy", ticker, buy_amount, limit_price))
-        return {"success": True, "message": "buy-ok", "estimated_amount": buy_amount}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "buy-ok", "estimated_amount": buy_amount}
 
     async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
         self.calls.append(("sell", ticker, sell_fraction, limit_price))
-        return {"success": True, "message": "sell-ok"}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "sell-ok"}
 
 
 @pytest.fixture(autouse=True)

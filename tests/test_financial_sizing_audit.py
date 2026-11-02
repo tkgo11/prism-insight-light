@@ -41,7 +41,7 @@ class PercentSizedTrader:
 
     async def async_buy_stock(self, **kwargs):
         self.calls.append(kwargs)
-        return {"success": True}
+        return {"success": True, "order_no": "MOCK-ORDER"}
 
 
 @pytest.mark.asyncio
@@ -108,7 +108,7 @@ async def test_risk_off_multiplies_upstream_fraction_without_raw_budget(monkeypa
             pass
         async def async_buy_stock(self, **kwargs):
             self.calls.append(kwargs)
-            return {"success": True}
+            return {"success": True, "order_no": "MOCK-ORDER"}
     FixedTrader.calls = []
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FixedTrader)
     cfg = EventRiskOffStrategyConfig.from_mapping({
@@ -142,7 +142,7 @@ async def test_risk_off_no_active_event_retains_default_broker_order(monkeypatch
             pass
         async def async_buy_stock(self, **kwargs):
             self.calls.append(kwargs)
-            return {"success": True}
+            return {"success": True, "order_no": "MOCK-ORDER"}
     FixedTrader.calls = []
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FixedTrader)
     cfg = EventRiskOffStrategyConfig.from_mapping({

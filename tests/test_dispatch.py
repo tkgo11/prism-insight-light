@@ -33,7 +33,7 @@ async def test_dispatch_kr_buy(monkeypatch):
         async def async_buy_stock(self, stock_code, limit_price=None):
             results["ticker"] = stock_code
             results["limit_price"] = limit_price
-            return {"success": True, "message": "kr-buy"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-buy"}
 
     class FakeContext:
         def __init__(self, mode):
@@ -68,7 +68,7 @@ async def test_dispatch_us_sell(monkeypatch):
         async def async_sell_stock(self, ticker, limit_price=None):
             results["ticker"] = ticker
             results["limit_price"] = limit_price
-            return {"success": True, "message": "us-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "us-sell"}
 
     monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
@@ -199,7 +199,7 @@ async def test_real_off_hours_uses_supported_reserved_order_window(monkeypatch):
         async def async_sell_stock(self, ticker, limit_price=None):
             results["ticker"] = ticker
             results["limit_price"] = limit_price
-            return {"success": True, "message": "reserved-us-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "reserved-us-sell"}
 
     monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
@@ -243,7 +243,7 @@ async def test_balance_split_buy_routes_with_fractional_buy_amount(monkeypatch, 
             results["ticker"] = ticker
             results["buy_amount"] = buy_amount
             results["limit_price"] = limit_price
-            return {"success": True, "message": "split-buy"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "split-buy"}
 
     monkeypatch.setattr("trading.strategies.balance_split.USStockTrading", FakeUSTrader)
     monkeypatch.setattr(
@@ -274,7 +274,7 @@ async def test_disabled_strategy_buy_uses_legacy_path(monkeypatch):
         async def async_buy_stock(self, ticker, limit_price=None):
             results["ticker"] = ticker
             results["limit_price"] = limit_price
-            return {"success": True, "message": "legacy-buy"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "legacy-buy"}
 
     monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
@@ -299,7 +299,7 @@ async def test_stop_loss_sell_strategy_uses_stop_loss_limit_above_signal_price(m
             results["ticker"] = ticker
             results["limit_price"] = limit_price
             results["sell_fraction"] = sell_fraction
-            return {"success": True, "message": "stop-loss-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "stop-loss-sell"}
 
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
@@ -324,7 +324,7 @@ async def test_stop_loss_sell_strategy_uses_marketable_signal_price_below_stop_l
             results["ticker"] = ticker
             results["limit_price"] = limit_price
             results["sell_fraction"] = sell_fraction
-            return {"success": True, "message": "triggered-stop-loss-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "triggered-stop-loss-sell"}
 
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
@@ -348,7 +348,7 @@ async def test_stop_loss_sell_strategy_falls_back_to_signal_price(monkeypatch):
         async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
             results["ticker"] = ticker
             results["limit_price"] = limit_price
-            return {"success": True, "message": "fallback-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "fallback-sell"}
 
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)

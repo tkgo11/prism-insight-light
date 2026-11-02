@@ -81,11 +81,11 @@ async def test_strategy_us_scaled_default_and_partial_exit(monkeypatch):
 
         async def async_buy_stock(self, **kwargs):
             orders.append(("BUY", kwargs))
-            return {"success": True}
+            return {"success": True, "order_no": "MOCK-ORDER"}
 
         async def async_sell_stock(self, **kwargs):
             orders.append(("SELL", kwargs))
-            return {"success": True}
+            return {"success": True, "order_no": "MOCK-ORDER"}
 
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUS)
     await execute_order(signal(market="US", position_fraction=0.25), trading_mode="demo")
@@ -111,7 +111,7 @@ async def test_strategy_domestic_scales_broker_default(monkeypatch):
 
         async def async_buy_stock(self, **kwargs):
             orders.append(kwargs)
-            return {"success": True}
+            return {"success": True, "order_no": "MOCK-ORDER"}
 
     monkeypatch.setattr("trading.strategies.common.AsyncTradingContext", FakeContext)
     await execute_order(signal(position_fraction=0.3), trading_mode="demo")

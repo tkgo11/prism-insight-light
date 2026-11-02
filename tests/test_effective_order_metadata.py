@@ -26,11 +26,11 @@ class FakeUS:
 
     async def async_buy_stock(self, **kwargs):
         self.calls.append(("BUY", kwargs))
-        return {"success": True}
+        return {"success": True, "order_no": "MOCK-ORDER"}
 
     async def async_sell_stock(self, **kwargs):
         self.calls.append(("SELL", kwargs))
-        return {"success": True}
+        return {"success": True, "order_no": "MOCK-ORDER"}
 
 
 @pytest.fixture(autouse=True)
