@@ -74,3 +74,29 @@ def test_conflict_blocks_rearm_without_touching_unrelated_position(tmp_path):
         tracker.record_position("US", "aapl", 75)
     assert path.read_bytes() == before
     assert tracker.get_position("US", "MSFT") == msft
+
+
+def test_direct_trigger_cannot_bypass_mismatched_key_quarantine(tmp_path):
+    tracker, path, aapl, _msft = _conflicting_tracker(tmp_path)
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, storage_path=path),
+        tracker=tracker,
+    )
+    result = watcher._trigger_sell("US", "AAPL", 70, aapl)
+    assert result["status"] == "blocked"
+    dispatcher.dispatch.assert_not_awaited()
+
+
+def test_case_variant_mismatched_key_quarantines_same_instrument(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    original = tracker.get_position("US", "AAPL")
+    path.write_text(json.dumps({
+        "US:AAPL": original,
+        "US:aapl": dict(original, ticker="AAPL", stop_loss=60),
+    }), encoding="utf-8")
+    assert tracker.get_positions("US") == []
