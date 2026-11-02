@@ -104,7 +104,7 @@ def classify_broker_result(result: Any) -> str:
                     return False
                 # KIS numeric order numbers are positive integers, not
                 # decimal/exponent/negative representations from coercion.
-                if re.fullmatch(r"[+-]?\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?", receipt, re.IGNORECASE):
+                if re.fullmatch(r"[+-]?\d+(?:\.\d+)?(?:e[+-]?\d+)?", receipt, re.IGNORECASE):
                     return receipt.isdecimal() and any(char != "0" for char in receipt)
                 if re.fullmatch(r"0[xX]0+", receipt):
                     return False
