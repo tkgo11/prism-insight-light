@@ -219,6 +219,40 @@ def test_rejection_is_ambiguous_discriminates_business_code():
     assert rejection_is_ambiguous(object()) is True
 
 
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("error_code", ["0", "401", "unknown", "None", "GatewayTimeout", "EGW00123\\nproxy"])
+def test_unverified_error_code_does_not_authorize_order_replay(market, error_code):
+    # These are not canonical KIS business codes. A proxy may return them
+    # after forwarding the order, so no automatic second submission is safe.
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=400, error_code=error_code,
+        error_message="upstream response incomplete",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_http_redirect_cannot_prove_kis_business_rejection(market):
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=302, error_code="EGW00123",
+        error_message="intermediary redirected order request",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"
+
+
 # ---------------------------------------------------------------------------
 # us.py numeric coercion: non-finite broker values fall back to defaults
 # ---------------------------------------------------------------------------
