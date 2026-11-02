@@ -58,13 +58,27 @@ def rejection_is_ambiguous(res: Any) -> bool:
         error_code = str(get_error() or "").strip()
     except Exception:
         return True
-    try:
-        http_status = int(status)
-    except (TypeError, ValueError, OverflowError):
+    # Never truncate floats (e.g. 400.9 -> 400), coerce Unicode digits, or
+    # trust arbitrary objects implementing __int__ as a real HTTP status.
+    # KIS responses use a numeric code or its canonical ASCII representation.
+    if type(status) is int:
+        http_status = status
+    elif isinstance(status, str) and re.fullmatch(r"[0-9]{3}", status.strip()):
+        http_status = int(status.strip())
+    else:
         return True
-    # A redirect, informational response or gateway/server error cannot
-    # establish that KIS rejected the order before it entered the book.
-    if http_status < 200 or 300 <= http_status < 400 or http_status >= 500:
+    # Intermediary timeouts, conflicts, retry/too-early and rate-limit
+    # responses may arrive after an order reached KIS. A business-code-like
+    # string in their body does NOT prove that submission was rejected.
+    # 499 is the common reverse-proxy "client closed request" sentinel.
+    # A redirect, informational response or gateway/server error is likewise
+    # not authoritative rejection evidence.
+    if (
+        http_status < 200
+        or 300 <= http_status < 400
+        or http_status >= 500
+        or http_status in {408, 409, 425, 429, 499}
+    ):
         return True
     # getErrorCode() is not necessarily a KIS business code. A proxy may
     # return a numeric HTTP code, placeholder, or arbitrary diagnostic. Only
