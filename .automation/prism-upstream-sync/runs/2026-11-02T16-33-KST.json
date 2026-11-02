@@ -68,5 +68,52 @@
   "related_audit": false,
   "related_passes": 0,
   "full_passes": 0,
-  "actions": []
+  "actions": [],
+  "additional_root_causes": [
+    {
+      "root_cause_id": "RC-DURABLE-STATE-DIRECTORY-SYNC",
+      "classification": "CODE_AUDIT_REPRODUCTION_PENDING",
+      "description": "Atomic replace writers fsync file bytes but do not fsync the parent directory on POSIX; rename may be lost on abrupt power failure, allowing an order claim or protection state to disappear",
+      "files": {
+        "trading/file_lock.py": "3b643eb5e2dc1e0c4d775dcf0b18b5d8aea65fbc",
+        "trading/execution_ledger.py": "9dda6791d558c9756a9d102b2e85f31d3b8d455b",
+        "trading/off_hours_queue.py": "66cd4f7b227494b4b2f00c73941f2f95d000df89",
+        "trading/stop_loss_watcher.py": "b1a888b8134f6a9b2896933dc27cc954c412e76f",
+        "trading/strategies/common.py": "1d121f9c589f4f37e080fb9a30b4d40e94c30ee5"
+      },
+      "contract_matrix": [
+        {
+          "invariant": "Execution claim survives crash after rename",
+          "path": "ExecutionLedger._save",
+          "failure": "directory entry not fsynced",
+          "test": "spy on os.fsync directory FD; failure propagation"
+        },
+        {
+          "invariant": "Queue item and disposition survive crash",
+          "path": "OffHoursOrderQueue._save",
+          "failure": "rename metadata not durable",
+          "test": "directory FD fsync"
+        },
+        {
+          "invariant": "Stop-loss tracker protection survives crash",
+          "path": "StopLossTracker._save",
+          "failure": "rename metadata not durable",
+          "test": "directory FD fsync"
+        },
+        {
+          "invariant": "Strategy cooldown/risk-off/trailing state survives crash",
+          "path": "strategies.common.save_json",
+          "failure": "rename metadata not durable",
+          "test": "directory FD fsync"
+        },
+        {
+          "invariant": "Windows remains supported and errors are not swallowed",
+          "path": "file_lock.fsync_parent_directory",
+          "failure": "unsupported dir fsync on Windows",
+          "test": "POSIX-only FD assertions; Windows no-op; forced failure test"
+        }
+      ],
+      "limitations": "POSIX fsync(directory) reduces crash-loss window but does not prove disk/controller guarantees; new directory creation and external broker reconciliation remain unverified"
+    }
+  ]
 }
