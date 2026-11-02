@@ -126,3 +126,19 @@ def test_alternate_valid_broker_receipt_is_not_discarded():
     assert classify_broker_result({
         "success": True, "order_no": "", "broker_order_id": "KIS-123"
     }) == "executed"
+
+def test_success_without_any_receipt_fields_remains_unknown():
+    # A wrapper that omits the receipt altogether is no safer than one that
+    # explicitly returns a blank KIS order number.
+    assert classify_broker_result({"success": True}) == "unknown"
+    assert classify_broker_result({"success": True, "message": "accepted"}) == "unknown"
+
+
+def test_missing_receipt_field_does_not_release_ledger_after_restart(tmp_path):
+    ledger_path = tmp_path / "ledger.json"
+    ledger = ExecutionLedger(ledger_path)
+    assert ledger.claim("no-receipt-fields") == (True, None)
+    outcome = classify_broker_result({"success": True, "message": "accepted"})
+    assert outcome == "unknown"
+    ledger.finalize("no-receipt-fields", outcome)
+    assert ExecutionLedger(ledger_path).claim("no-receipt-fields") == (False, "unknown")
