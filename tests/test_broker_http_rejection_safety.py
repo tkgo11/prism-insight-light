@@ -63,3 +63,21 @@ def test_valid_business_rejection_control_remains_retryable(http_status):
 def test_noncanonical_http_status_cannot_prove_business_rejection(malformed_status):
     """Only exact ASCII 3-digit HTTP statuses are authoritative syntax."""
     assert rejection_is_ambiguous(MockKISResponse(malformed_status)) is True
+
+
+@pytest.mark.parametrize("http_status", [201, 202, 204, 205, 206, 207, 226])
+def test_nonstandard_2xx_cannot_release_durable_replay_fence(tmp_path, http_status):
+    """A mock 2xx intermediary response is not proof of KIS rejection."""
+    ambiguous = rejection_is_ambiguous(MockKISResponse(http_status))
+    assert ambiguous is True
+    outcome = classify_broker_result({
+        "success": False,
+        "outcome_unknown": ambiguous,
+        "message": "unverified KIS-looking business code",
+    })
+    assert outcome == "unknown"
+    path = tmp_path / f"2xx-{http_status}.json"
+    ledger = ExecutionLedger(path)
+    assert ledger.claim("account-specific-signal") == (True, None)
+    ledger.finalize("account-specific-signal", outcome)
+    assert ExecutionLedger(path).claim("account-specific-signal") == (False, "unknown")
