@@ -24,7 +24,9 @@ def _make_parsed_signal(post_id: str, ticker: str = "005930", price: float = 700
         channel="test_channel",
         message_id=post_id,
         url=f"https://t.me/test_channel/{post_id}",
-        published_at="2026-10-17T01:00:00+09:00",
+        # Keep test BUYs within the receiver's freshness TTL irrespective of
+        # the date this suite runs; tests of historical timestamps set their own.
+        published_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
         text=f"BUY: Test({ticker})\nPrice: {price}",
     )
     payload = {

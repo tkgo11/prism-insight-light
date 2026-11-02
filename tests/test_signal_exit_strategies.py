@@ -25,11 +25,11 @@ class FakeUSTrader:
 
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
         self.calls.append(("buy", ticker, buy_amount, limit_price))
-        return {"success": True, "message": "buy-ok"}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "buy-ok"}
 
     async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
         self.calls.append(("sell", ticker, sell_fraction, limit_price))
-        return {"success": True, "message": "sell-ok"}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "sell-ok"}
 
 
 @pytest.fixture(autouse=True)
@@ -108,6 +108,17 @@ async def test_signal_trailing_stop_tracks_high_then_executes_after_drawdown(tmp
     exit_sell = sell_signal(price=94)
 
     buy_result = await strategy.execute(buy, trading_mode="demo")
+    # A successful submission is only an accepted order. The strategy cannot
+    # infer a fill; simulate an independently verified broker fill before
+    # allowing the trailing SELL sequence in this legacy behavior test.
+    pending = json.loads(config.runtime_path.read_text(encoding="utf-8"))
+    assert pending[0]["entry_pending"] is True
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await strategy.execute(rising_sell, trading_mode="demo")
+    for field in ("entry_pending", "entry_requested_at", "entry_requested_price",
+                  "entry_broker_order_id"):
+        pending[0].pop(field, None)
+    config.runtime_path.write_text(json.dumps(pending), encoding="utf-8")
     rising_result = await strategy.execute(rising_sell, trading_mode="demo")
     protected_result = await strategy.execute(protected_sell, trading_mode="demo")
     exit_result = await strategy.execute(exit_sell, trading_mode="demo")
@@ -120,7 +131,17 @@ async def test_signal_trailing_stop_tracks_high_then_executes_after_drawdown(tmp
         ("buy", "AAPL", None, 100.0),
         ("sell", "AAPL", 1.0, 94.0),
     ]
-    assert json.loads(config.runtime_path.read_text(encoding="utf-8")) == []
+    # The broker accepted the full-size order, but the shares may not have
+    # filled. Keep the high watermark and block new orders until reconciliation.
+    records = json.loads(config.runtime_path.read_text(encoding="utf-8"))
+    assert len(records) == 1
+    assert records[0]["high_price"] == 105.0
+    assert records[0]["exit_pending"] is True
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await SignalTrailingStopStrategy(config=config).execute(
+            exit_sell, trading_mode="demo"
+        )
+    assert len(FakeUSTrader.calls) == 2
 
 
 @pytest.mark.asyncio

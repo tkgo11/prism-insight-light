@@ -27,22 +27,26 @@ class BuySizingConfig:
 
 
 def normalize_amount(value: Any) -> float | None:
+    if isinstance(value, bool):
+        raise ValueError("buy amount must be a numeric value, not a boolean")
     if value is None or value == "":
         return None
     try:
         amount = float(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
     return amount if math.isfinite(amount) and amount > 0 else None
 
 
 def normalize_percent(value: Any) -> float | None:
+    if isinstance(value, bool):
+        raise ValueError("buy percent must be numeric, not a boolean")
     if value is None or value == "":
         return None
     try:
         percent = float(value)
-    except (TypeError, ValueError):
-        return None
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("buy percent must be a finite number") from exc
     if not math.isfinite(percent) or percent <= 0 or percent > 100:
         raise ValueError("buy percent must be greater than 0 and less than or equal to 100")
     return percent

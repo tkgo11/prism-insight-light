@@ -28,11 +28,11 @@ class FakeUSTrader:
 
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
         self.calls.append(("buy", ticker, buy_amount, limit_price))
-        return {"success": True, "message": "buy-ok", "estimated_amount": buy_amount}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "buy-ok", "estimated_amount": buy_amount}
 
     async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
         self.calls.append(("sell", ticker, sell_fraction, limit_price))
-        return {"success": True, "message": "sell-ok"}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "sell-ok"}
 
 
 @pytest.fixture(autouse=True)
@@ -141,3 +141,78 @@ def test_dispatcher_routes_both_trade_sides_to_score_max_capital():
 
     assert isinstance(dispatcher._resolve_strategy(buy), ScoreMaxCapitalStrategy)
     assert isinstance(dispatcher._resolve_strategy(sell), ScoreMaxCapitalStrategy)
+
+
+@pytest.mark.asyncio
+async def test_concurrent_buy_scores_keep_independent_ratios(tmp_path, monkeypatch):
+    import asyncio
+
+    first_submitted = asyncio.Event()
+    release_first = asyncio.Event()
+
+    class CoordinatedUSTrader(FakeUSTrader):
+        async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
+            if not first_submitted.is_set():
+                first_submitted.set()
+                await release_first.wait()
+            return await super().async_buy_stock(
+                ticker, buy_amount=buy_amount, limit_price=limit_price
+            )
+
+    monkeypatch.setattr(
+        "trading.strategies.balance_split.USStockTrading", CoordinatedUSTrader
+    )
+    strategy = ScoreMaxCapitalStrategy(config=make_config())
+    strategy.reservation_path = tmp_path / "concurrent-score-reservations.json"
+    low = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100, "buy_score": 2}
+    )
+    high = parse_signal_payload(
+        {"type": "BUY", "ticker": "MSFT", "market": "US", "price": 100, "buy_score": 10}
+    )
+
+    first = asyncio.create_task(strategy.execute(low, trading_mode="demo"))
+    await asyncio.wait_for(first_submitted.wait(), timeout=2)
+    second = asyncio.create_task(strategy.execute(high, trading_mode="demo"))
+    # Allow the second task to set its ratio while waiting on the execution lock.
+    await asyncio.sleep(0.02)
+    release_first.set()
+    first_result, second_result = await asyncio.gather(first, second)
+
+    assert first_result.status == second_result.status == "executed"
+    assert first_result.buy_amount == pytest.approx(600.0)
+    assert second_result.buy_amount == pytest.approx(400.0)
+    assert "(60% of " in first_result.message
+    assert "(100% of " in second_result.message
+
+@pytest.mark.asyncio
+async def test_buy_score_below_first_threshold_uses_first_ratio_not_smallest(tmp_path):
+    strategy = ScoreMaxCapitalStrategy(
+        config=make_config(buy_score_bands={5: 0.90, 8: 0.20})
+    )
+    strategy.reservation_path = tmp_path / "below-first-buy-reservations.json"
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100, "buy_score": 2}
+    )
+
+    result = await strategy.execute(signal, trading_mode="demo")
+
+    assert result.status == "executed"
+    assert result.buy_amount == pytest.approx(900.0)
+    assert FakeUSTrader.calls == [("buy", "AAPL", 900.0, 100.0)]
+
+
+@pytest.mark.asyncio
+async def test_sell_score_below_first_threshold_uses_first_ratio_not_smallest():
+    strategy = ScoreMaxCapitalStrategy(
+        config=make_config(sell_score_bands={5: 0.80, 8: 0.25})
+    )
+    signal = parse_signal_payload(
+        {"type": "SELL", "ticker": "AAPL", "market": "US", "price": 120, "buy_score": 2}
+    )
+
+    result = await strategy.execute(signal, trading_mode="demo")
+
+    assert result.status == "executed"
+    assert result.details["sell_fraction"] == pytest.approx(0.80)
+    assert FakeUSTrader.calls == [("sell", "AAPL", 0.80, 120.0)]

@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from typing import Any
 
 from ..schema import SignalMessage
+from ..signal_sizing import adjusted_sell_fraction
 from .common import (
     StrategyExecution,
     boolean_value,
     execute_order,
     execution_from_result,
     fraction_value,
+    profit_bands_value,
     strategy_name,
 )
 
@@ -35,21 +36,7 @@ class ProtectiveExitStrategyConfig:
     ) -> "ProtectiveExitStrategyConfig | None":
         if not payload or strategy_name(payload) != PROTECTIVE_EXIT:
             return None
-        bands = {
-            float(raw_profit): float(raw_fraction)
-            for raw_profit, raw_fraction in dict(
-                payload.get("profit_bands", {})
-            ).items()
-        }
-        if any(not math.isfinite(profit) for profit in bands):
-            raise ValueError("signal_strategy.profit_bands keys must be finite")
-        if any(
-            not math.isfinite(fraction) or fraction < 0 or fraction > 1
-            for fraction in bands.values()
-        ):
-            raise ValueError(
-                "signal_strategy.profit_bands values must be between 0 and 1"
-            )
+        bands = profit_bands_value(payload)
         raw_reasons = payload.get(
             "full_exit_reasons", ["stop_loss", "risk_off", "manual_exit"]
         )
@@ -112,11 +99,13 @@ class ProtectiveExitStrategy:
             limit_price=limit_price,
             sell_fraction=sell_fraction,
         )
+        effective_fraction = adjusted_sell_fraction(signal, sell_fraction)
         return execution_from_result(
             signal,
             result,
-            f"Protective exit fraction {sell_fraction:.2f}",
-            sell_fraction=sell_fraction,
+            f"Protective exit fraction {effective_fraction:.2f}",
+            sell_fraction=effective_fraction,
+            strategy_sell_fraction=sell_fraction,
             limit_price=limit_price,
             price_source=price_source,
         )

@@ -24,6 +24,7 @@ from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_a
 from .modes import normalize_trading_mode
 from .off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue, QueueExecutionResult
 from .schema import SignalMessage, parse_signal_payload
+from .signal_sizing import SignalSizingError, adjusted_sell_fraction, configured_buy_budget, scaled_buy_amount
 from .signal_safety import (
     OUTCOME_REJECT,
     REASON_DUPLICATE,
@@ -257,7 +258,9 @@ class MultiAccountTradeDispatcher:
         available = {_account_id(account["account_key"]): account for account in accounts}
         eligible: list[dict[str, Any]] = []
         skipped: list[AccountDispatchResult] = []
-        target_ids = requested_ids or list(available)
+        # An explicitly empty target set is not permission to fan out to every
+        # configured account. This can occur in recovered or edited queues.
+        target_ids = list(available) if requested_ids is None else requested_ids
         for account_id in target_ids:
             account = available.get(account_id)
             if account is None:
@@ -369,8 +372,9 @@ class MultiAccountTradeDispatcher:
         if not market_open and not can_submit_off_hours:
             if allow_queue:
                 context = {
-                    "version": 1,
+                    "version": 2,
                     "multi_account": True,
+                    "trading_mode": self.dispatcher.trading_mode,
                     "account_ids": [_account_id(account["account_key"]) for account in accounts],
                 }
                 queued = self.dispatcher.queue.enqueue(signal, context)
@@ -643,7 +647,19 @@ class TradeDispatcher:
                     signal.signal_type, signal.company_name, signal.ticker, signal.market,
                 )
             elif allow_queue:
-                queued_signal = await asyncio.to_thread(self.queue.enqueue, signal)
+                queued_signal = await asyncio.to_thread(
+                    self.queue.enqueue, signal,
+                    {
+                        "version": 2,
+                        "multi_account": False,
+                        "trading_mode": self.trading_mode,
+                        # Never persist the configured account name in plaintext.
+                        "account_scope": hashlib.sha256(
+                            self._single_account_execution_selector(signal).encode("utf-8")
+                        ).hexdigest(),
+                        "account_id": self._resolved_single_account_id(signal),
+                    },
+                )
                 logger.info(
                     "Queued %s-mode %s %s(%s) for %s",
                     self.trading_mode, signal.signal_type, signal.company_name,
@@ -715,6 +731,45 @@ class TradeDispatcher:
                 safety_decision.price_deviation or 0.0,
             )
 
+        # A queued single-account order was checked before entering the broker
+        # lock, but the account configuration may change while waiting for it.
+        # Resolve again at the execution boundary and pass the resolved account
+        # key into the trader. Otherwise a mutable primary/name/index selector
+        # can be resolved a second time to a DIFFERENT account by the broker.
+        # Keep the original 'account is None' ledger condition below: queued
+        # single-account orders must still acquire their durable dedupe claim.
+        order_account = account
+        if account is None and queued_context is not None and queued_context.get("multi_account") is False:
+            expected_scope = hashlib.sha256(
+                self._single_account_execution_selector(signal).encode("utf-8")
+            ).hexdigest()
+            if (
+                queued_context.get("trading_mode") != self.trading_mode
+                or queued_context.get("account_scope") != expected_scope
+            ):
+                return DispatchResult(
+                    "failed", "Queued account scope changed before submission; operator reconciliation required",
+                    signal.signal_type, signal.market,
+                )
+            try:
+                order_account = ka.resolve_account(
+                    svr="vps" if self.trading_mode == "demo" else "prod",
+                    product="01",
+                    market=signal.market.lower(),
+                    account_name=self.account_name,
+                    account_index=self.account_index,
+                )
+                if _account_id(order_account["account_key"]) != queued_context.get("account_id"):
+                    return DispatchResult(
+                        "failed", "Queued KIS account changed before submission; operator reconciliation required",
+                        signal.signal_type, signal.market,
+                    )
+            except Exception:
+                return DispatchResult(
+                    "failed", "Queued KIS account could not be resolved before submission; operator reconciliation required",
+                    signal.signal_type, signal.market,
+                )
+
         identity = None
         if account is None and self.execution_dedupe:
             identity, aliases = execution_identities(
@@ -751,7 +806,7 @@ class TradeDispatcher:
                     strategy.execute(
                         signal,
                         trading_mode=self.trading_mode,
-                        trader_kwargs=self._strategy_trader_kwargs(account),
+                        trader_kwargs=self._strategy_trader_kwargs(order_account),
                     ),
                 )
                 result = DispatchResult(
@@ -760,10 +815,18 @@ class TradeDispatcher:
                     signal.signal_type,
                     signal.market,
                 )
-            elif account is None:
+            elif order_account is None:
                 result = await self._execute_legacy_trade(signal)
             else:
-                result = await self._execute_legacy_trade(signal, account=account)
+                result = await self._execute_legacy_trade(signal, account=order_account)
+        except SignalSizingError as exc:
+            # Sizing was rejected before broker submission. Never classify it as
+            # an ambiguous order (or leave a ledger claim stuck as "unknown").
+            if identity is not None:
+                await asyncio.to_thread(self.execution_ledger.finalize, identity, "rejected")
+            logger.warning("Rejected %s %s(%s) sizing: %s",
+                           signal.signal_type, signal.company_name, signal.ticker, exc)
+            return DispatchResult("rejected", str(exc), signal.signal_type, signal.market)
         except asyncio.CancelledError:
             if identity is not None:
                 self.execution_ledger.finalize(identity, "unknown")
@@ -783,11 +846,52 @@ class TradeDispatcher:
         queue_context = payload.pop(QUEUE_CONTEXT_KEY, None)
         signal = parse_signal_payload(payload)
         queued_context = queue_context if isinstance(queue_context, dict) else None
+        # Queue context is a durable authorization boundary: replay must never
+        # expand a pinned account set after an account-mode/configuration change.
+        # Old single-account queue entries have no multi_account marker; they
+        # are safe only while single-account mode remains active.
+        if queue_context is not None and not isinstance(queue_context, dict):
+            return DispatchResult("failed", "Queued execution context is malformed; operator reconciliation required", signal.signal_type, signal.market)
+        # The original trading environment is an authorization boundary.
+        # A demo order must never become a real order after a configuration
+        # switch; similarly a single-account order cannot silently move to
+        # a different named/indexed account. Legacy unpinned queue entries
+        # require manual reconciliation instead of guessing their origin.
+        if not isinstance(queue_context, dict) or queue_context.get("trading_mode") != self.trading_mode:
+            return DispatchResult("failed", "Queued trading mode is missing or changed; operator reconciliation required", signal.signal_type, signal.market)
+        if self.multi_account_enabled:
+            if queue_context.get("multi_account") is not True:
+                return DispatchResult("failed", "Queued multi-account targets are missing; operator reconciliation required", signal.signal_type, signal.market)
+        else:
+            expected_scope = hashlib.sha256(
+                self._single_account_execution_selector(signal).encode("utf-8")
+            ).hexdigest()
+            if (
+                queue_context.get("multi_account") is not False
+                or queue_context.get("account_scope") != expected_scope
+                or "account_ids" in queue_context
+            ):
+                return DispatchResult("failed", "Queued single-account scope is missing or changed; operator reconciliation required", signal.signal_type, signal.market)
+            try:
+                resolved_account_id = self._resolved_single_account_id(signal)
+            except Exception:
+                # Unavailable/ambiguous account configuration is not permission
+                # to replay a queued order into a different KIS account.
+                return DispatchResult("failed", "Queued account cannot be resolved; operator reconciliation required", signal.signal_type, signal.market)
+            if queue_context.get("account_id") != resolved_account_id:
+                return DispatchResult("failed", "Queued KIS account identity changed; operator reconciliation required", signal.signal_type, signal.market)
         try:
             async with _serialized_broker_workflow():
-                if isinstance(queue_context, dict) and queue_context.get("multi_account"):
+                if isinstance(queue_context, dict) and queue_context.get("multi_account") is True:
+                    if not self.multi_account_enabled:
+                        return DispatchResult("failed", "Queued account mode changed; operator reconciliation required", signal.signal_type, signal.market)
                     requested_ids = queue_context.get("account_ids")
-                    if not isinstance(requested_ids, list) or not all(isinstance(item, str) for item in requested_ids):
+                    if (
+                        not isinstance(requested_ids, list)
+                        or not requested_ids
+                        or any(not isinstance(item, str) or not item.strip() for item in requested_ids)
+                        or len(set(requested_ids)) != len(requested_ids)
+                    ):
                         return DispatchResult("failed", "Queued multi-account targets are invalid", signal.signal_type, signal.market)
                     result = await self.multi_account_dispatcher.dispatch(
                         signal,
@@ -855,12 +959,17 @@ class TradeDispatcher:
                     target_price=signal.target_price,
                 )
             elif signal.signal_type == "SELL" and signal.sell_reason != "stop_loss":
-                # Watcher-generated stop-loss sells own removal via a
-                # compare-and-delete keyed on the record the watcher observed.
-                # Removing unconditionally here would delete a record that was
-                # re-registered after the watcher's snapshot, leaving the new
-                # position unprotected.
-                self.stop_loss_tracker.remove_position(signal.market, signal.ticker)
+                # An accepted broker order (including a full-size SELL) is not
+                # evidence that the shares were filled. Do not drop durable
+                # protection based on an order-acceptance status or an account
+                # summary; the watcher must independently confirm a fresh,
+                # aggregate zero balance before removing the tracked position.
+                # This also covers partial fills and strategy-specific exits.
+                logger.info(
+                    "Keeping stop-loss tracking after SELL %s(%s) pending "
+                    "verified flat holdings",
+                    signal.company_name, signal.ticker,
+                )
         except Exception:
             # The broker outcome is already known at this point. Do not turn a
             # successful order into a retryable subscriber failure merely
@@ -974,6 +1083,21 @@ class TradeDispatcher:
                 return ProtectiveExitStrategy(config=self.protective_exit_config)
         return None
 
+    def _resolved_single_account_id(self, signal: SignalMessage) -> str:
+        """Pin the actual KIS account, not merely a mutable name/index/primary.
+
+        resolve_account uses the same server, product and market contract as
+        DomesticStockTrading and USStockTrading. Store only its opaque hash.
+        """
+        account = ka.resolve_account(
+            svr="vps" if self.trading_mode == "demo" else "prod",
+            product="01",
+            market=signal.market.lower(),
+            account_name=self.account_name,
+            account_index=self.account_index,
+        )
+        return _account_id(account["account_key"])
+
     def _single_account_execution_selector(self, signal: SignalMessage) -> str:
         if self.account_name:
             selector = f"name:{self.account_name}"
@@ -1017,15 +1141,33 @@ class TradeDispatcher:
                 USStockTrading, **self._trader_kwargs(account)
             )
             if signal.signal_type == "BUY":
-                trade_result = await trader.async_buy_stock(ticker=signal.ticker, limit_price=limit_price)
+                buy_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
+                if signal.position_fraction != 1.0:
+                    buy_kwargs["buy_amount"] = scaled_buy_amount(signal, configured_buy_budget(trader, market=signal.market))
+                trade_result = await trader.async_buy_stock(**buy_kwargs)
             else:
-                trade_result = await trader.async_sell_stock(ticker=signal.ticker, limit_price=limit_price)
+                sell_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
+                if signal.sell_denominator != 1:
+                    sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
+                trade_result = await trader.async_sell_stock(**sell_kwargs)
         else:
             async with AsyncTradingContext(**self._trader_kwargs(account)) as trader:
                 if signal.signal_type == "BUY":
-                    trade_result = await trader.async_buy_stock(stock_code=signal.ticker, limit_price=None if limit_price is None else int(limit_price))
+                    buy_kwargs = {
+                        "stock_code": signal.ticker,
+                        "limit_price": None if limit_price is None else int(limit_price),
+                    }
+                    if signal.position_fraction != 1.0:
+                        buy_kwargs["buy_amount"] = scaled_buy_amount(signal, configured_buy_budget(trader, market=signal.market))
+                    trade_result = await trader.async_buy_stock(**buy_kwargs)
                 else:
-                    trade_result = await trader.async_sell_stock(stock_code=signal.ticker, limit_price=None if limit_price is None else int(limit_price))
+                    sell_kwargs = {
+                        "stock_code": signal.ticker,
+                        "limit_price": None if limit_price is None else int(limit_price),
+                    }
+                    if signal.sell_denominator != 1:
+                        sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
+                    trade_result = await trader.async_sell_stock(**sell_kwargs)
         status = classify_broker_result(trade_result)
         message = str(trade_result.get("message", ""))
         account_prefix = f"[Account: {account['name']}] " if account else ""

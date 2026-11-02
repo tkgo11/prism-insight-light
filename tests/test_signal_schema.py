@@ -110,3 +110,27 @@ def test_optional_buy_amount_must_be_finite_and_positive(value):
                 "buy_amount": value,
             }
         )
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "price", "buy_amount", "position_fraction", "sell_denominator",
+        "target_price", "stop_loss", "buy_price", "buy_score", "profit_rate",
+    ],
+)
+def test_oversized_json_integer_is_a_validation_error_not_overflow(field):
+    # 400 digits fit Python's JSON integer parser but overflow float().
+    # Inbound malformed numeric fields must never escape the validation gate.
+    payload = {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100}
+    payload[field] = 10 ** 400
+    with pytest.raises(SignalValidationError, match=field):
+        parse_signal_payload(payload)
+
+
+def test_oversized_json_integer_in_raw_signal_bytes_is_rejected():
+    import json
+
+    payload = {"type": "BUY", "ticker": "AAPL", "price": 10 ** 400}
+    with pytest.raises(SignalValidationError, match="price"):
+        parse_signal_bytes(json.dumps(payload).encode("utf-8"))

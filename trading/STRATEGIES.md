@@ -23,7 +23,7 @@ order when the account has no cash/position or the order itself is invalid.
 | `balance_split` | Split the cash into equal pieces and buy with one piece. | BUY |
 | `balanced_risk` | Execute every trade signal, using risk data when available. | BUY and SELL |
 | `score_max_capital` | Always act on valid BUY and SELL signals, using score-selected fractions of available cash or current holdings. | BUY and SELL |
-| `score_weighted` | Weight BUY size by score without dropping scoreless signals. | BUY |
+| `score_weighted` | Weight BUY size by score; accept scoreless signals only when `min_score` is zero. | BUY |
 | `score_risk` | Size from stop-loss risk when possible, otherwise use the broker default. | BUY |
 | `risk_bracket` | Decide the buy size by how much money you are willing to risk. | BUY |
 | `bracket_exit` | Sell only when an incoming signal reaches its target or stop-loss bracket. | SELL |
@@ -103,11 +103,12 @@ account.
 
 ### Main settings
 
-- `risk_amount_krw` / `risk_amount_usd`: maximum configured loss budget before score weighting.
+- `risk_amount_krw` / `risk_amount_usd`: maximum configured loss budget before score weighting. Finite inputs that overflow during risk-unit, position-cap, or order-notional calculations are rejected before broker submission.
 - `max_position_amount_krw` / `max_position_amount_usd`: position notional caps.
-- `min_score`: lowest accepted `buy_score`; default `0`.
-- `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
-- `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter.
+- `min_score`: lowest accepted `buy_score` (0–100); default `0`. A positive minimum rejects a missing score before any broker call.
+- `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier. Omitted or null mappings use the documented default `{0: 1.0}`; explicitly empty/non-mapping values and thresholds that collide after numeric normalization (such as `"05"` and `"5"`) are rejected before broker submission.
+- A non-unit score weight requires usable risk-derived sizing; otherwise the BUY is rejected rather than ignoring the configured weight and using the broker default.
+- `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter. A positive minimum requires both a usable stop-loss and a target price even if `require_target_price` is `false`; missing data rejects before broker submission.
 - `require_stop_loss` / `require_target_price`: both default to `false`.
 - A risk budget constrains size only when the signal supplies a usable stop
   below the entry price. If the stop is absent or unusable and is not required,
@@ -130,7 +131,7 @@ Use it when BUY signals sometimes contain useful risk fields and configured cons
 
 - `full_exit_reasons`: reasons that immediately sell the full position.
 - `stop_loss_sell_percent`: stop-loss fraction when `stop_loss` is not listed as a full-exit reason.
-- `profit_bands`: optional profit thresholds; empty by default.
+- `profit_bands`: optional profit thresholds; empty by default. The mapping may be empty but cannot be a list, have boolean thresholds, or contain numeric aliases (such as `"5"` and `"5.0"`) that would overwrite a SELL fraction.
 - `default_sell_percent`: fallback fraction when no band or urgent reason matches.
 - `use_stop_loss_price`: prefer the lower of `price` and `stop_loss` for a triggered stop-loss SELL.
 
@@ -214,7 +215,7 @@ Use this when you do not want one BUY signal to spend all your cash.
 ### Main settings
 
 - `buy_score_bands`: score thresholds mapped to a **strictly positive** `0–1` fraction of available cash.
-- `sell_score_bands`: score thresholds mapped to a **strictly positive** `0–1` fraction of the current holding.
+- `sell_score_bands`: score thresholds mapped to a **strictly positive** `0–1` fraction of the current holding. Both score-band maps reject explicit empty/non-mapping values, boolean thresholds, and duplicate normalized numeric keys; omitted/null maps retain the `{0: 1.0}` default.
 - `missing_buy_score_ratio`: strictly positive cash fraction for a BUY without `buy_score`; default `1.0`.
 - `missing_sell_score_ratio`: strictly positive holding fraction for a SELL without `buy_score`; default `1.0`.
 
@@ -260,16 +261,18 @@ Better score, bigger buy.
 
 - It only handles **BUY** signals.
 - It reads `buy_score` from the signal.
-- A missing score receives full weight.
+- A missing score receives full weight **only when `min_score` is `0`**; a positive minimum rejects it before broker submission.
 - Scores below the first configured band use that band's weight instead of being skipped.
+- An explicitly selected `0.0` score-band weight rejects the BUY before broker submission, including when no base amount is configured; it never falls back to the broker's default order size.
 - With the default `0: 1.0` band, every score uses the full base amount.
+- A non-unit score weight without a configured positive base amount is rejected rather than silently using the unweighted broker default.
 
 ### Main settings
 
 - `base_amount_krw`: base buy amount for Korean stocks.
 - `base_amount_usd`: base buy amount for U.S. stocks.
-- `min_score`: the minimum score needed before buying.
-- `score_bands`: score levels and their weights.
+- `min_score`: minimum accepted score (0–100); default `0`. When positive, missing and lower scores reject before broker submission.
+- `score_bands`: score levels (integer thresholds from 0 to 100) and their weights. An omitted/null mapping uses `{0: 1.0}`; an explicit empty/non-mapping value, out-of-range/boolean threshold, or duplicate normalized numeric key is invalid and never silently falls back to full-size BUY.
   - Example: `60: 0.25` means buy 25% of the base amount when the score is at least 60.
   - Example: `90: 1.0` means buy 100% of the base amount when the score is at least 90.
 
@@ -304,6 +307,7 @@ The strategy checks the entry price and stop-loss price, then decides how many s
 - `risk_amount_usd`: how many U.S. dollars you are willing to risk.
 - `max_position_amount_krw`: biggest Korean-stock position allowed by this strategy.
 - `max_position_amount_usd`: biggest U.S.-stock position allowed by this strategy.
+- A configured maximum-position cap is a hard limit: if no valid capped whole-share order can be sized, the signal is rejected before broker submission. A usable stop-loss risk budget smaller than one share's risk is also rejected, rather than falling back to an unconstrained broker default. When no hard cap is set and stop-loss data is unusable, the documented optional-stop broker fallback remains available.
 - `require_stop_loss`: whether the signal must include `stop_loss`; even when this is `false`, include a meaningful `stop_loss` if you want normal stop-loss-based sizing.
 - `require_target_price`: whether the signal must include `target_price`.
 
@@ -407,7 +411,7 @@ At the top stair, you may sell all.
 
 ### Main settings
 
-- `profit_bands`: profit levels and how much to sell.
+- `profit_bands`: profit levels and how much to sell. Empty mappings remain valid; malformed non-mappings, boolean keys, and duplicate normalized numeric thresholds are rejected rather than silently choosing a different SELL fraction.
   - Example: `5: 0.25` means sell 25% when profit is at least 5%.
   - Example: `20: 1.0` means sell 100% when profit is at least 20%.
 - `stop_loss_sell_percent`: how much to sell when the reason is `stop_loss`.

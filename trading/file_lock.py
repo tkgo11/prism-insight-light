@@ -81,3 +81,25 @@ class FileLock:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
         finally:
             handle.close()
+
+
+def fsync_parent_directory(path: Path) -> None:
+    """Persist an atomic rename's directory entry on POSIX.
+
+    A file fsync before os.replace() protects the new bytes, but the rename
+    itself may be lost across a sudden power failure without syncing the
+    containing directory. Propagate failures: a durable trading claim must
+    never be reported as committed if its metadata sync failed.
+
+    Windows does not expose the same directory-fsync interface; it retains
+    the existing atomic replace behavior without a POSIX durability claim.
+    """
+    if os.name == "nt":
+        return
+    directory = Path(path).parent
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    fd = os.open(directory, flags)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)

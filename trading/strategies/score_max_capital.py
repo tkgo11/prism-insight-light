@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import math
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any
 
 from ..schema import SignalMessage
+from ..signal_sizing import adjusted_sell_fraction
 from .balance_split import BalanceSplitExecution, BalanceSplitStrategy, BalanceSplitStrategyConfig
 from .common import (
     StrategyExecution,
@@ -33,12 +35,16 @@ def _score_bands(payload: dict[str, Any], key: str) -> dict[int, float]:
     which conflicts with this strategy's always-act contract.
     """
 
-    raw_bands = payload.get(key) or {0: 1.0}
+    raw_bands = payload.get(key)
+    if raw_bands is None:
+        raw_bands = {0: 1.0}
     if not isinstance(raw_bands, dict):
         raise ValueError(f"signal_strategy.{key} must be a mapping")
 
     parsed: dict[int, float] = {}
     for raw_score, raw_ratio in raw_bands.items():
+        if isinstance(raw_score, bool):
+            raise ValueError(f"signal_strategy.{key} score thresholds must be integers between 0 and 10")
         score = float(raw_score)
         ratio = float(raw_ratio)
         if not math.isfinite(score) or not score.is_integer() or score < 0 or score > 10:
@@ -49,7 +55,10 @@ def _score_bands(payload: dict[str, Any], key: str) -> dict[int, float]:
             raise ValueError(
                 f"signal_strategy.{key} ratios must be greater than 0 and at most 1"
             )
-        parsed[int(score)] = ratio
+        normalized_score = int(score)
+        if normalized_score in parsed:
+            raise ValueError(f"signal_strategy.{key} contains duplicate normalized score threshold")
+        parsed[normalized_score] = ratio
 
     if not parsed:
         raise ValueError(f"signal_strategy.{key} must not be empty")
@@ -106,7 +115,11 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
         # is preserved for the parent's execution result contract.
         super().__init__(config=BalanceSplitStrategyConfig(split_count=1))
         self.config = config
-        self._active_buy_ratio = 1.0
+        # Per-task ratio: concurrent signals can await the same reservation lock.
+        # A shared mutable attribute lets one signal overwrite another's sizing.
+        self._active_buy_ratio: ContextVar[float] = ContextVar(
+            f"score_max_capital_buy_ratio_{id(self)}", default=1.0
+        )
 
     async def execute(
         self,
@@ -116,16 +129,20 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
         trader_kwargs: dict[str, Any] | None = None,
     ) -> BalanceSplitExecution | StrategyExecution:
         if signal.signal_type == "BUY":
-            self._active_buy_ratio = self._ratio_for(
+            ratio = self._ratio_for(
                 signal.buy_score,
                 bands=self.config.buy_score_bands or {0: 1.0},
                 missing_ratio=self.config.missing_buy_score_ratio,
             )
-            return await super().execute(
-                signal,
-                trading_mode=trading_mode,
-                trader_kwargs=trader_kwargs,
-            )
+            token = self._active_buy_ratio.set(ratio)
+            try:
+                return await super().execute(
+                    signal,
+                    trading_mode=trading_mode,
+                    trader_kwargs=trader_kwargs,
+                )
+            finally:
+                self._active_buy_ratio.reset(token)
 
         if signal.signal_type == "SELL":
             sell_fraction = self._ratio_for(
@@ -140,11 +157,13 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
                 limit_price=float(signal.price),
                 sell_fraction=sell_fraction,
             )
+            effective_sell_fraction = adjusted_sell_fraction(signal, sell_fraction)
             return execution_from_result(
                 signal,
                 result,
-                f"Score-max-capital sell {sell_fraction:.0%}",
-                sell_fraction=sell_fraction,
+                f"Score-max-capital sell {effective_sell_fraction:.0%}",
+                sell_fraction=effective_sell_fraction,
+                strategy_sell_fraction=sell_fraction,
                 score=signal.buy_score,
             )
 
@@ -156,7 +175,7 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
         )
 
     def _buy_amount(self, available_amount: float) -> float:
-        return available_amount * self._active_buy_ratio
+        return available_amount * self._active_buy_ratio.get()
 
     def _no_balance(
         self,
@@ -197,8 +216,9 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
             cash_source=cash_source,
         )
         broker_message = str(result.get("message", ""))
+        effective_ratio = self._active_buy_ratio.get() * signal.position_fraction
         message = (
-            f"Score-max-capital buy {buy_amount:.2f} ({self._active_buy_ratio:.0%} of "
+            f"Score-max-capital buy {buy_amount:.2f} ({effective_ratio:.0%} of "
             f"{cash_source} {available_amount:.2f})"
         )
         execution.message = f"{message}: {broker_message}" if broker_message else message
@@ -213,7 +233,9 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
     ) -> float:
         if score is None:
             return missing_ratio
-        ratio = min(bands.values())
+        # Below the lowest threshold, use that threshold's configured ratio.
+        # The smallest ratio may belong to an unrelated higher score band.
+        ratio = bands[min(bands)]
         for threshold, band_ratio in sorted(bands.items()):
             if score >= threshold:
                 ratio = band_ratio

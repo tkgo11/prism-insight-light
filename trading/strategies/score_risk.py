@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..schema import SignalMessage
+from ..signal_sizing import scaled_buy_amount
 from .common import (
     StrategyExecution,
     boolean_value,
@@ -22,9 +23,15 @@ SCORE_RISK = "score_risk"
 
 
 def _score_bands(payload: dict[str, Any]) -> dict[int, float]:
-    raw_bands = payload.get("score_bands") or {0: 1.0}
+    raw_bands = payload.get("score_bands")
+    if raw_bands is None:
+        raw_bands = {0: 1.0}
+    if not isinstance(raw_bands, dict):
+        raise ValueError("signal_strategy.score_bands must be a mapping")
     parsed: dict[int, float] = {}
-    for raw_score, raw_weight in dict(raw_bands).items():
+    for raw_score, raw_weight in raw_bands.items():
+        if isinstance(raw_score, bool):
+            raise ValueError("signal_strategy.score_bands keys must be integers between 0 and 100")
         score = float(raw_score)
         weight = float(raw_weight)
         if (
@@ -40,7 +47,10 @@ def _score_bands(payload: dict[str, Any]) -> dict[int, float]:
             raise ValueError(
                 "signal_strategy.score_bands weights must be between 0 and 1"
             )
-        parsed[int(score)] = weight
+        normalized_score = int(score)
+        if normalized_score in parsed:
+            raise ValueError("signal_strategy.score_bands contains duplicate normalized score threshold")
+        parsed[normalized_score] = weight
     if not parsed:
         raise ValueError("signal_strategy.score_bands must not be empty")
     return parsed
@@ -122,18 +132,29 @@ class ScoreRiskStrategy:
             if signal.stop_loss is not None
             else 0.0
         )
-        units = (
-            int(risk_budget / per_unit_risk)
-            if risk_budget > 0 and per_unit_risk > 0
-            else 0
-        )
+        if risk_budget > 0 and per_unit_risk > 0:
+            risk_units = risk_budget / per_unit_risk
+            if not math.isfinite(risk_units):
+                return StrategyExecution(
+                    "rejected", "Score-risk sizing overflow",
+                    signal.market, signal.ticker,
+                )
+            units = int(risk_units)
+        else:
+            units = 0
         max_position = market_base_amount(
             signal,
             krw=self.config.max_position_amount_krw,
             usd=self.config.max_position_amount_usd,
         )
         if max_position > 0:
-            units = min(units, int(max_position / entry_price))
+            cap_units = max_position / entry_price
+            if not math.isfinite(cap_units):
+                return StrategyExecution(
+                    "rejected", "Score-risk position cap overflow",
+                    signal.market, signal.ticker,
+                )
+            units = min(units, int(cap_units))
 
         constrained_sizing = (
             score_weight <= 0
@@ -154,7 +175,26 @@ class ScoreRiskStrategy:
                 },
             )
 
-        buy_amount = units * entry_price if units > 0 else None
+        if score_weight != 1.0 and units <= 0:
+            # Without usable risk-derived units, the broker default would
+            # silently discard the configured fractional score weight.
+            return StrategyExecution(
+                "rejected", "Score-risk weighting requires a usable risk budget and stop-loss distance",
+                signal.market, signal.ticker,
+            )
+
+        try:
+            buy_amount = units * entry_price if units > 0 else None
+        except OverflowError:
+            return StrategyExecution(
+                "rejected", "Score-risk order notional overflow",
+                signal.market, signal.ticker,
+            )
+        if buy_amount is not None and not math.isfinite(buy_amount):
+            return StrategyExecution(
+                "rejected", "Score-risk order notional overflow",
+                signal.market, signal.ticker,
+            )
         result = await execute_order(
             signal,
             trading_mode=trading_mode,
@@ -163,12 +203,19 @@ class ScoreRiskStrategy:
             limit_price=entry_price,
         )
         reward_risk = self._reward_risk(signal)
-        amount_label = f"{buy_amount:.2f}" if buy_amount is not None else "broker default"
+        submitted_amount = scaled_buy_amount(signal, buy_amount) if buy_amount is not None else None
+        amount_label = (
+            f"{submitted_amount:.2f}" if submitted_amount is not None
+            else "broker-derived fraction" if signal.position_fraction != 1
+            else "broker default"
+        )
         return execution_from_result(
             signal,
             result,
             f"Score-risk buy {amount_label} at weight {score_weight:.2f}",
-            buy_amount=buy_amount,
+            buy_amount=submitted_amount,
+            strategy_base_amount=buy_amount,
+            position_fraction=signal.position_fraction,
             units=units,
             risk_budget=risk_budget,
             score_weight=score_weight,
@@ -188,11 +235,14 @@ class ScoreRiskStrategy:
             and float(signal.stop_loss) >= float(signal.price)
         ):
             return "stop_loss must be below entry price"
-        if signal.buy_score is not None and signal.buy_score < self.config.min_score:
+        if (signal.buy_score is None and self.config.min_score > 0) or (signal.buy_score is not None and signal.buy_score < self.config.min_score):
             return "BUY score is missing or below the configured threshold"
         if signal.target_price is None:
-            if self.config.require_target_price:
-                return "Score-risk strategy requires target_price"
+            # A configured reward/risk floor cannot be verified without a
+            # target. Do not silently bypass it when require_target_price is
+            # false; both paths must reject before any broker submission.
+            if self.config.require_target_price or self.config.min_reward_risk > 0:
+                return "Score-risk strategy requires target_price for enabled constraints"
             return None
         if (
             self.config.require_target_price
@@ -211,8 +261,9 @@ class ScoreRiskStrategy:
         weight = 1.0
         if score is None:
             return weight
-        weight = min((self.config.score_bands or {0: 1.0}).values())
-        for threshold, band_weight in sorted((self.config.score_bands or {}).items()):
+        bands = self.config.score_bands or {0: 1.0}
+        weight = bands[min(bands)]
+        for threshold, band_weight in sorted(bands.items()):
             if score >= threshold:
                 weight = band_weight
         return weight

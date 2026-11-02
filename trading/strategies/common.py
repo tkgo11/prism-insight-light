@@ -16,8 +16,9 @@ from typing import Any, Callable
 from ..config_paths import configured_runtime_dir
 from ..domestic import AsyncTradingContext
 from ..execution_outcome import classify_broker_result
-from ..file_lock import FileLock
+from ..file_lock import FileLock, fsync_parent_directory
 from ..schema import SignalMessage
+from ..signal_sizing import adjusted_sell_fraction, configured_buy_budget, scaled_buy_amount
 from ..us import USStockTrading
 
 logger = logging.getLogger(__name__)
@@ -94,6 +95,32 @@ def fraction_value(payload: dict[str, Any], key: str, default: float) -> float:
     return value
 
 
+
+def profit_bands_value(payload: dict[str, Any]) -> dict[float, float]:
+    """Parse optional SELL profit bands without silently overwriting numeric aliases.
+
+    An empty mapping is a valid default for profit strategies; malformed shapes,
+    boolean thresholds and duplicate keys after float normalization are not.
+    """
+    raw_bands = payload.get("profit_bands", {})
+    if not isinstance(raw_bands, dict):
+        raise ValueError("signal_strategy.profit_bands must be a mapping")
+    bands: dict[float, float] = {}
+    for raw_profit, raw_fraction in raw_bands.items():
+        if isinstance(raw_profit, bool):
+            raise ValueError("signal_strategy.profit_bands keys must be finite numbers")
+        profit = float(raw_profit)
+        fraction = float(raw_fraction)
+        if not math.isfinite(profit):
+            raise ValueError("signal_strategy.profit_bands keys must be finite")
+        if not math.isfinite(fraction) or fraction < 0 or fraction > 1:
+            raise ValueError("signal_strategy.profit_bands values must be finite and between 0 and 1")
+        if profit in bands:
+            raise ValueError("signal_strategy.profit_bands contains duplicate normalized profit threshold")
+        bands[profit] = fraction
+    return bands
+
+
 def integer_value(
     payload: dict[str, Any],
     key: str,
@@ -125,24 +152,28 @@ async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount:
     if signal.market == "US":
         trader = USStockTrading(**kwargs)
         if signal.signal_type == "BUY":
-            return await trader.async_buy_stock(ticker=signal.ticker, buy_amount=buy_amount, limit_price=limit_price)
+            base = buy_amount if buy_amount is not None else configured_buy_budget(trader, market=signal.market)
+            sized = scaled_buy_amount(signal, base) if signal.position_fraction != 1.0 else buy_amount
+            return await trader.async_buy_stock(ticker=signal.ticker, buy_amount=sized, limit_price=limit_price)
         return await trader.async_sell_stock(
             ticker=signal.ticker,
             limit_price=limit_price,
-            sell_fraction=sell_fraction,
+            sell_fraction=adjusted_sell_fraction(signal, sell_fraction),
         )
 
     async with AsyncTradingContext(**kwargs) as trader:
         if signal.signal_type == "BUY":
+            base = buy_amount if buy_amount is not None else configured_buy_budget(trader, market=signal.market)
+            sized = scaled_buy_amount(signal, base) if signal.position_fraction != 1.0 else buy_amount
             return await trader.async_buy_stock(
                 stock_code=signal.ticker,
-                buy_amount=None if buy_amount is None else int(buy_amount),
+                buy_amount=None if sized is None else int(sized),
                 limit_price=None if limit_price is None else int(limit_price),
             )
         return await trader.async_sell_stock(
             stock_code=signal.ticker,
             limit_price=None if limit_price is None else int(limit_price),
-            sell_fraction=sell_fraction,
+            sell_fraction=adjusted_sell_fraction(signal, sell_fraction),
         )
 
 
@@ -159,14 +190,36 @@ def execution_from_result(signal: SignalMessage, result: dict[str, Any], message
 
 
 def load_json_list(path: Path) -> list[dict[str, Any]]:
+    """Load strategy protection state; never erase evidence of corruption.
+
+    Cooldown, trailing-stop and event-risk state may prevent a broker order.
+    Treating damaged JSON as an empty list can bypass those protections and
+    the next write can destroy the original recovery evidence.
+    """
+    def unique_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate key in strategy runtime JSON")
+            result[key] = value
+        return result
+
+    def reject_constant(value: str) -> None:
+        raise ValueError(f"Non-finite strategy runtime JSON value: {value}")
+
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=unique_pairs,
+            parse_constant=reject_constant,
+        )
     except FileNotFoundError:
         return []
-    except (json.JSONDecodeError, OSError) as exc:
-        logger.warning("Ignoring unreadable strategy runtime file %s: %s", path, exc)
-        return []
-    return [item for item in payload if isinstance(item, dict)] if isinstance(payload, list) else []
+    except (json.JSONDecodeError, UnicodeError, OSError, ValueError) as exc:
+        raise RuntimeError("Strategy runtime state is unreadable; operator reconciliation required") from exc
+    if not isinstance(payload, list) or any(not isinstance(item, dict) for item in payload):
+        raise RuntimeError("Strategy runtime state has an invalid structure; operator reconciliation required")
+    return payload
 
 
 def save_json(path: Path, payload: Any) -> None:
@@ -182,12 +235,17 @@ def save_json(path: Path, payload: Any) -> None:
             delete=False,
         ) as handle:
             temporary_path = Path(handle.name)
-            json.dump(payload, handle, ensure_ascii=False, indent=2)
+            json.dump(payload, handle, ensure_ascii=False, indent=2, allow_nan=False)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary_path, path)
-    except OSError as exc:
-        logger.warning("Unable to save strategy runtime file %s: %s", path, exc)
+        fsync_parent_directory(path)
+    except OSError:
+        # A silently lost write after broker acceptance makes later strategy
+        # decisions appear durable when they are not. Propagate to the
+        # dispatcher so its execution claim stays protected as UNKNOWN.
+        logger.exception("Strategy runtime state write failed; operator reconciliation required")
+        raise
     finally:
         if temporary_path is not None and temporary_path.exists():
             temporary_path.unlink()
@@ -231,9 +289,11 @@ def fresh_items(items: list[dict[str, Any]], *, window: timedelta) -> list[dict[
     fresh: list[dict[str, Any]] = []
     for item in items:
         try:
-            created_at = datetime.fromisoformat(str(item.get("created_at", "")))
-        except ValueError:
-            continue
+            created_at = datetime.fromisoformat(str(item["created_at"]))
+        except (KeyError, TypeError, ValueError, OverflowError) as exc:
+            # Discarding an unreadable cooldown/risk-off entry could allow a
+            # duplicate or oversized order. Block instead of guessing age.
+            raise RuntimeError("Strategy runtime state has an invalid timestamp") from exc
         if created_at.tzinfo is None:
             created_at = created_at.replace(tzinfo=timezone.utc)
         if created_at >= cutoff:

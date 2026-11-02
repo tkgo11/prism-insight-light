@@ -1,6 +1,7 @@
 """Unit tests for StopLossTracker and StopLossWatcher."""
 
 import asyncio
+import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -155,11 +156,11 @@ async def test_dispatcher_registers_stop_loss_on_buy(tmp_path, monkeypatch):
     # Dry-run SELL must not drop protection for a real position.
     assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is not None
 
-    # An executed SELL removes it.
+    # An accepted SELL is not proof of a fill; watcher must confirm flat.
     dispatcher._update_stop_loss_tracking(
-        sell_signal, DispatchResult("executed", "Order executed", "SELL", "KR")
+        sell_signal, DispatchResult("executed", "Order accepted", "SELL", "KR")
     )
-    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is None
+    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is not None
 
 
 def test_stop_loss_watcher_skips_when_market_closed(tmp_path, monkeypatch):
@@ -217,8 +218,8 @@ def test_stop_loss_watcher_triggers_sell_when_price_crosses_stop_loss(tmp_path, 
     assert call_signal.price == 69500.0
     assert call_signal.sell_reason == "stop_loss"
 
-    # Tracker should have removed the position after successful execution
-    assert tracker.get_position("KR", "005930") is None
+    # An accepted order does not prove a fill: 10 shares remain.
+    assert tracker.get_position("KR", "005930") is not None
 
 
 def test_stop_loss_watcher_clears_zero_holding_position(tmp_path, monkeypatch):
@@ -364,10 +365,10 @@ def test_stop_loss_watcher_skips_balance_inquiry_until_stop_hit_or_interval(tmp_
         results = watcher.check_stop_loss_once()
 
     assert len(results) == 1
-    assert mock_trader.get_holding_quantity.call_count == 2
+    assert mock_trader.get_holding_quantity.call_count == 3
 
 
-def test_multi_account_stop_loss_clears_tracking_when_non_holding_account_fails(tmp_path):
+def test_multi_account_stop_loss_retains_tracking_when_non_holding_account_fails(tmp_path):
     tracker_file = tmp_path / "stop_loss_test.json"
     tracker = StopLossTracker(tracker_file)
     tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0, company_name="샘씨엔에스")
@@ -418,11 +419,11 @@ def test_multi_account_stop_loss_clears_tracking_when_non_holding_account_fails(
 
     assert len(results) == 1
     assert results[0]["status"] == "partial_success"
-    # The tracked position MUST be cleared since the holding account executed and the failed account had no holdings
-    assert tracker.get_position("KR", "252990") is None
+    # The order was accepted, but aggregate holdings still show 695 shares.
+    assert tracker.get_position("KR", "252990") is not None
 
 
-def test_multi_account_stop_loss_clears_tracking_when_duplicate_suppressed_behind_executed(tmp_path):
+def test_multi_account_stop_loss_retains_tracking_when_duplicate_suppressed_behind_executed(tmp_path):
     tracker_file = tmp_path / "stop_loss_test.json"
     tracker = StopLossTracker(tracker_file)
     tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0, company_name="샘씨엔에스")
@@ -473,8 +474,8 @@ def test_multi_account_stop_loss_clears_tracking_when_duplicate_suppressed_behin
         results = watcher.check_stop_loss_once()
 
     assert len(results) == 1
-    # Tracking must be cleared to break the infinite trigger storm
-    assert tracker.get_position("KR", "252990") is None
+    # A deduplicated accepted order is not proof of liquidation.
+    assert tracker.get_position("KR", "252990") is not None
 
 
 @pytest.mark.asyncio
@@ -528,7 +529,7 @@ async def test_dispatcher_stop_loss_sell_signal_uses_market_order_in_legacy_trad
     assert captured_limit_prices == [None]
 
 
-def test_dispatcher_update_stop_loss_tracking_clears_with_non_holding_accounts(tmp_path):
+def test_dispatcher_update_stop_loss_tracking_retains_with_non_holding_accounts(tmp_path):
     tracker_file = tmp_path / "stop_loss_test.json"
     tracker = StopLossTracker(tracker_file)
     tracker.record_position("KR", "252990", 15000.0, entry_price=15780.0)
@@ -566,7 +567,7 @@ def test_dispatcher_update_stop_loss_tracking_clears_with_non_holding_accounts(t
     )
 
     dispatcher._update_stop_loss_tracking(sell_signal, dispatch_result)
-    assert tracker.get_position("KR", "252990") is None
+    assert tracker.get_position("KR", "252990") is not None
 
 
 def test_stop_loss_watcher_cooldown_prevents_immediate_retrigger_storm(tmp_path):
@@ -606,3 +607,495 @@ def test_stop_loss_watcher_cooldown_prevents_immediate_retrigger_storm(tmp_path)
         assert len(res2) == 0
         assert dispatcher.dispatch.call_count == 1
 
+
+
+@pytest.mark.parametrize("remaining", [0, 2, None, float("nan"), -1])
+def test_stop_loss_watcher_requires_valid_post_order_flat_balance(
+    tmp_path, remaining
+):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("KR", "005930", 70000.0, entry_price=73000.0)
+    pos = tracker.get_position("KR", "005930")
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "demo"
+    dispatcher.strategy_config = None
+    dispatcher.dispatch = AsyncMock(
+        return_value=DispatchResult("executed", "order accepted", "SELL", "KR")
+    )
+    trader = MagicMock()
+    trader.get_holding_quantity.return_value = remaining
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, storage_path=tracker_file),
+        tracker=tracker,
+    )
+    watcher._get_cached_trader = MagicMock(return_value=trader)
+
+    result = watcher._trigger_sell("KR", "005930", 69000.0, pos)
+    assert result["status"] == "executed"
+    assert (tracker.get_position("KR", "005930") is None) is (remaining == 0)
+
+
+@pytest.mark.parametrize("quantity", [None, float("nan"), float("inf"), -1])
+def test_stop_loss_watcher_invalid_pre_order_holdings_block_sell(
+    tmp_path, quantity
+):
+    tracker_file = tmp_path / "stop_loss_test.json"
+    tracker = StopLossTracker(tracker_file)
+    tracker.record_position("US", "AAPL", 170.0, entry_price=180.0)
+
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 165.0}
+    trader.get_holding_quantity.return_value = quantity
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True, request_interval_seconds=0.0, storage_path=tracker_file
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        assert watcher.check_stop_loss_once() == []
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position("US", "AAPL") is not None
+
+
+@pytest.mark.parametrize("invalid_price", [None, "", "NaN", "inf", "not-a-number"])
+def test_invalid_quote_does_not_abort_other_stop_loss_positions(
+    tmp_path, monkeypatch, invalid_price
+):
+    tracker = StopLossTracker(tmp_path / "tracker.json")
+    tracker.record_position("KR", "111111", 90, entry_price=100)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+
+    trader = MagicMock()
+    trader.get_current_price.side_effect = lambda ticker: {
+        "current_price": invalid_price if ticker == "111111" else 80
+    }
+    trader.get_holding_quantity.return_value = 0
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True,
+            request_interval_seconds=0,
+            storage_path=tmp_path / "tracker.json",
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "KR")
+
+    assert watcher.check_stop_loss_once() == []
+    assert tracker.get_position("KR", "111111") is not None
+    assert tracker.get_position("KR", "222222") is None
+    dispatcher.dispatch.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid"),
+    [
+        ("stop_loss", float("nan")),
+        ("stop_loss", float("inf")),
+        ("stop_loss", 10 ** 400),
+        ("entry_price", float("nan")),
+        ("entry_price", -1),
+        ("target_price", float("-inf")),
+        ("target_price", 10 ** 400),
+    ],
+)
+def test_stop_loss_tracker_rejects_invalid_prices_without_losing_existing_protection(
+    tmp_path, field, invalid
+):
+    tracker = StopLossTracker(tmp_path / "tracker.json")
+    tracker.record_position("KR", "005930", 70000, entry_price=73000, target_price=80000)
+    before = tracker.get_position("KR", "005930")
+    kwargs = {"stop_loss": 69000, "entry_price": 73000, "target_price": 80000}
+    kwargs[field] = invalid
+    with pytest.raises(ValueError, match="price"):
+        tracker.record_position("KR", "005930", **kwargs)
+    assert tracker.get_position("KR", "005930") == before
+
+
+def test_stop_loss_watcher_oversized_persisted_price_does_not_abort_other_positions(
+    tmp_path, monkeypatch
+):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+    valid = tracker.get_position("KR", "222222")
+    # Simulate a corrupted legacy record that overflows float conversion.
+    malformed = {"market": "KR", "ticker": "111111", "stop_loss": 10 ** 400}
+    tracker_path.write_text(
+        json.dumps({"KR:111111": malformed, "KR:222222": valid}),
+        encoding="utf-8",
+    )
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 80}
+    trader.get_holding_quantity.return_value = 0
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True, request_interval_seconds=0, storage_path=tracker_path
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "KR")
+
+    assert watcher.check_stop_loss_once() == []
+    assert tracker.get_position("KR", "111111") is not None
+    assert tracker.get_position("KR", "222222") is None
+    dispatcher.dispatch.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "corrupt_record",
+    [
+        None,
+        [],
+        {"market": None, "ticker": "111111", "stop_loss": 90},
+        {"market": 123, "ticker": "111111", "stop_loss": 90},
+    ],
+)
+def test_malformed_persisted_market_record_does_not_block_other_stop_losses(
+    tmp_path, monkeypatch, corrupt_record
+):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+    valid = tracker.get_position("KR", "222222")
+    tracker_path.write_text(
+        json.dumps({"KR:111111": corrupt_record, "KR:222222": valid}),
+        encoding="utf-8",
+    )
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 80}
+    trader.get_holding_quantity.return_value = 0
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True, request_interval_seconds=0, storage_path=tracker_path
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "KR")
+
+    assert watcher.check_stop_loss_once() == []
+    assert tracker.get_position("KR", "222222") is None
+    assert json.loads(tracker_path.read_text(encoding="utf-8"))["KR:111111"] == corrupt_record
+    dispatcher.dispatch.assert_not_called()
+
+
+@pytest.mark.parametrize("invalid_market", [None, 123, []])
+def test_malformed_legacy_list_market_does_not_hide_valid_positions(
+    tmp_path, invalid_market
+):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+    valid = tracker.get_position("KR", "222222")
+    tracker_path.write_text(
+        json.dumps([
+            {"market": invalid_market, "ticker": "111111", "stop_loss": 90},
+            valid,
+        ]),
+        encoding="utf-8",
+    )
+    assert tracker.get_positions("KR") == [valid]
+    assert tracker.get_positions() == [valid]
+
+
+@pytest.mark.parametrize(
+    "corrupt_record",
+    [
+        {"market": "KR", "ticker": 123, "stop_loss": 90},
+        {"market": "KR", "ticker": "999999", "stop_loss": 90},
+        {"market": "KR", "ticker": "", "stop_loss": 90},
+    ],
+)
+def test_corrupt_stop_loss_ticker_cannot_redirect_order_or_block_valid_position(
+    tmp_path, monkeypatch, corrupt_record
+):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker.record_position("KR", "222222", 90, entry_price=100)
+    valid = tracker.get_position("KR", "222222")
+    tracker_path.write_text(
+        json.dumps({"KR:111111": corrupt_record, "KR:222222": valid}),
+        encoding="utf-8",
+    )
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 80}
+    trader.get_holding_quantity.return_value = 0
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(
+            enabled=True, request_interval_seconds=0, storage_path=tracker_path
+        ),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "KR")
+
+    assert tracker.get_positions("KR") == [valid]
+    assert watcher.check_stop_loss_once() == []
+    trader.get_current_price.assert_called_once_with("222222")
+    assert tracker.get_position("KR", "222222") is None
+    assert tracker.get_position("KR", "111111") == corrupt_record
+    dispatcher.dispatch.assert_not_called()
+
+
+def test_rearming_stop_loss_replaces_corrupt_same_key_record(tmp_path):
+    tracker_path = tmp_path / "tracker.json"
+    tracker = StopLossTracker(tracker_path)
+    tracker_path.write_text(json.dumps({"KR:111111": None}), encoding="utf-8")
+
+    tracker.record_position("KR", "111111", 90, entry_price=100)
+
+    repaired = tracker.get_position("KR", "111111")
+    assert repaired["market"] == "KR"
+    assert repaired["ticker"] == "111111"
+    assert repaired["stop_loss"] == 90
+    assert repaired["created_at"]
+
+
+@pytest.mark.parametrize(
+    ("field", "expected"),
+    [
+        ("poll_seconds", 5.0),
+        ("request_interval_seconds", 0.2),
+        ("holding_check_interval_seconds", 60.0),
+    ],
+)
+def test_stop_loss_watcher_config_oversized_interval_is_safe(field, expected):
+    # float(10**400) raises OverflowError; a corrupt config must not crash
+    # watcher construction or leave its background safety thread unstarted.
+    config = StopLossWatcherConfig.from_mapping({field: 10 ** 400})
+    assert getattr(config, field) == expected
+
+
+@pytest.mark.parametrize(
+    ("market", "ticker"),
+    [("", "005930"), ("  ", "005930"), ("KR", ""), ("KR", "   "),
+     ("KR\n", "005930"), ("US", "AAPL\n")],
+)
+def test_stop_loss_tracker_rejects_malformed_instrument_without_writing(
+    tmp_path, market, ticker
+):
+    path = tmp_path / "positions.json"
+    tracker = StopLossTracker(path)
+    with pytest.raises(ValueError, match="Stop-loss position"):
+        tracker.record_position(market, ticker, 90, entry_price=100)
+    assert not path.exists()
+
+
+def test_stop_loss_tracker_normalizes_instrument_before_persisting(tmp_path):
+    tracker = StopLossTracker(tmp_path / "positions.json")
+    tracker.record_position(" us ", " AAPL ", 90, entry_price=100)
+    assert tracker.get_position("US", "AAPL")["ticker"] == "AAPL"
+    assert [p["ticker"] for p in tracker.get_positions("US")] == ["AAPL"]
+
+
+@pytest.mark.parametrize("market", ["BTC", "XX", "us-east", "KRW"])
+def test_stop_loss_tracker_rejects_unmonitored_market(tmp_path, market):
+    tracker = StopLossTracker(tmp_path / "positions.json")
+    with pytest.raises(ValueError, match="market"):
+        tracker.record_position(market, "AAPL", 90)
+    assert not (tmp_path / "positions.json").exists()
+
+
+def test_stop_loss_tracker_does_not_dispatch_legacy_untrimmed_ticker(tmp_path):
+    path = tmp_path / "positions.json"
+    tracker = StopLossTracker(path)
+    valid = {"market": "US", "ticker": "MSFT", "stop_loss": 80}
+    malformed = {"market": "US", "ticker": "AAPL\n", "stop_loss": 90}
+    path.write_text(json.dumps({"US:AAPL": malformed, "US:MSFT": valid}), encoding="utf-8")
+    assert tracker.get_positions("US") == [valid]
+    # Preserve the suspect record for manual reconciliation rather than
+    # silently normalizing an untrusted persisted broker-facing identifier.
+    assert tracker.get_position("US", "AAPL") == malformed
+
+
+def test_stop_loss_tracker_retains_legacy_lowercase_market_record(tmp_path):
+    path = tmp_path / "positions.json"
+    tracker = StopLossTracker(path)
+    legacy = {"market": "us", "ticker": "AAPL", "stop_loss": 90}
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+    assert tracker.get_positions("US") == [legacy]
+
+
+def test_stop_loss_watcher_does_not_sell_against_replaced_stop_level(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 85}
+
+    def concurrent_stop_edit(_ticker):
+        # The original stop is hit, but the operator changes the threshold
+        # while the broker holding inquiry is in flight. A stale snapshot
+        # must not submit an automatic SELL.
+        tracker.record_position("US", "AAPL", 70, entry_price=100)
+        return 10
+
+    trader.get_holding_quantity.side_effect = concurrent_stop_edit
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "demo"
+    dispatcher.multi_account_enabled = False
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, request_interval_seconds=0, storage_path=path),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+
+    with patch("trading.stop_loss_watcher.is_market_open", return_value=True):
+        assert watcher.check_stop_loss_once() == []
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position("US", "AAPL")["stop_loss"] == 70.0
+
+def test_legacy_zero_holding_rearm_cannot_erase_new_stop(tmp_path, monkeypatch):
+    """Legacy records lack updated_at: an in-flight balance check must not erase a new BUY."""
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    legacy = tracker.get_position("US", "AAPL")
+    legacy.pop("updated_at")
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 100}
+
+    def rearm_during_holding_check(_ticker):
+        tracker.record_position("US", "AAPL", 70, entry_price=100)
+        return 0
+
+    trader.get_holding_quantity.side_effect = rearm_during_holding_check
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, request_interval_seconds=0, storage_path=path),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "US")
+
+    assert watcher.check_stop_loss_once() == []
+    assert tracker.get_position("US", "AAPL")["stop_loss"] == 70
+    dispatcher.dispatch.assert_not_called()
+
+
+def test_legacy_post_sell_rearm_cannot_erase_new_stop(tmp_path):
+    """An accepted SELL plus a zero balance cannot delete a concurrent re-registration."""
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    legacy = tracker.get_position("US", "AAPL")
+    legacy.pop("updated_at")
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "demo"
+    dispatcher.dispatch = AsyncMock(
+        return_value=DispatchResult("executed", "order accepted", "SELL", "US")
+    )
+    trader = MagicMock()
+
+    def rearm_after_order(_ticker):
+        tracker.record_position("US", "AAPL", 70, entry_price=100)
+        return 0
+
+    trader.get_holding_quantity.side_effect = rearm_after_order
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, storage_path=path),
+        tracker=tracker,
+    )
+    watcher._get_cached_trader = MagicMock(return_value=trader)
+
+    result = watcher._trigger_sell("US", "AAPL", 85, legacy)
+    assert result["status"] == "executed"
+    assert tracker.get_position("US", "AAPL")["stop_loss"] == 70
+
+
+def test_remove_legacy_record_cas_accepts_unchanged_snapshot(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    legacy = {"market": "US", "ticker": "AAPL", "stop_loss": 90}
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+
+    assert tracker.remove_position("US", "AAPL", expected_record=legacy)
+    assert tracker.get_position("US", "AAPL") is None
+
+
+def test_remove_record_cas_detects_edit_even_with_same_timestamp(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    original = tracker.get_position("US", "AAPL")
+    edited = dict(original, stop_loss=70)
+    path.write_text(json.dumps({"US:AAPL": edited}), encoding="utf-8")
+
+    assert not tracker.remove_position("US", "AAPL", expected_record=original)
+    assert tracker.get_position("US", "AAPL") == edited
+
+
+def test_remove_malformed_record_does_not_crash_or_erase_evidence(tmp_path):
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    path.write_text('{"US:AAPL":[]}', encoding="utf-8")
+
+    assert not tracker.remove_position("US", "AAPL", expected_updated_at="legacy")
+    assert path.read_text(encoding="utf-8") == '{"US:AAPL":[]}'
+
+def test_legacy_inflight_record_edit_blocks_stale_stop_loss_sell(tmp_path, monkeypatch):
+    """A legacy record with no updated_at must be compared by full snapshot."""
+    path = tmp_path / "stop_loss.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position("US", "AAPL", 90, entry_price=100)
+    legacy = tracker.get_position("US", "AAPL")
+    legacy.pop("updated_at")
+    path.write_text(json.dumps({"US:AAPL": legacy}), encoding="utf-8")
+
+    trader = MagicMock()
+    trader.get_current_price.return_value = {"current_price": 85}
+
+    def edit_during_balance_check(_ticker):
+        # Stop threshold and updated_at stay identical; other persisted
+        # order context changes while broker inquiry is in flight.
+        edited = dict(legacy, entry_price=101)
+        path.write_text(json.dumps({"US:AAPL": edited}), encoding="utf-8")
+        return 10
+
+    trader.get_holding_quantity.side_effect = edit_during_balance_check
+    dispatcher = MagicMock()
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, request_interval_seconds=0, storage_path=path),
+        tracker=tracker,
+    )
+    watcher._get_trader = MagicMock(return_value=trader)
+    monkeypatch.setattr("trading.stop_loss_watcher.is_market_open", lambda m: m == "US")
+
+    assert watcher.check_stop_loss_once() == []
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position("US", "AAPL")["entry_price"] == 101

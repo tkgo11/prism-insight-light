@@ -981,3 +981,33 @@ def test_telegram_preview_form_rejects_oversized_channel_override(monkeypatch):
     assert response.status_code == 200
     assert "must not exceed 256 characters" in response.text
     assert calls == []
+
+
+def test_validation_api_rejects_duplicate_keys_in_raw_json_body():
+    # FastAPI's normal JSON body parser silently keeps the final key value.
+    # The validation endpoint must inspect raw bytes before accepting sizing.
+    raw = b'{"payload":{"type":"BUY","ticker":"AAPL","price":100,"position_fraction":0.1,"position_fraction":1}}'
+    response = client().post(
+        "/signals/validate",
+        content=raw,
+        headers={"content-type": "application/json", "X-WebUI-CSRF": "local-webui"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is False
+    assert "Duplicate" in data["error"]
+
+
+def test_validation_api_rejects_rounded_integer_literal_in_raw_body():
+    # Pydantic's parsed request has already lost decimal precision.
+    # The endpoint must inspect the original JSON before accepting it.
+    raw = b'{"payload":{"type":"SELL","ticker":"AAPL","price":100,"sell_denominator":8.0000000000000001}}'
+    response = client().post(
+        "/signals/validate",
+        content=raw,
+        headers={"content-type": "application/json", "X-WebUI-CSRF": "local-webui"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is False
+    assert "sell_denominator" in data["error"]

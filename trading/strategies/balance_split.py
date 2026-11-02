@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import tempfile
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -16,13 +17,13 @@ from ..domestic import AsyncTradingContext
 from ..execution_outcome import classify_broker_result
 from ..file_lock import FileLock
 from ..schema import SignalMessage
+from ..signal_sizing import SignalSizingError, scaled_buy_amount
 from ..us import USStockTrading
 from .common import acquire_file_lock, integer_value
 
 logger = logging.getLogger(__name__)
 
 BALANCE_SPLIT = "balance_split"
-RESERVATION_TTL = timedelta(minutes=30)
 RESERVATION_PATH = (
     Path(__file__).resolve().parents[2] / "runtime" / "balance_split_reservations.json"
 )
@@ -105,7 +106,22 @@ class BalanceSplitStrategy:
                 available_amount, cash_source = self._after_exchange_buying_power(
                     signal, trader=trader, summary=summary
                 )
-            buy_amount = self._buy_amount(available_amount)
+                if available_amount > 0:
+                    reserved = self._pending_reserved_amount(
+                        market="US",
+                        current_cash=available_amount,
+                        account_key=self._reservation_account_key(summary),
+                    )
+                    available_amount = max(0.0, available_amount - reserved)
+                    if reserved > 0:
+                        cash_source += "-after-reservations"
+            base_amount = self._buy_amount(available_amount)
+            if base_amount <= 0:
+                # Preserve the no-balance result for fractional upstream BUYs.
+                # Throwing a sizing exception here would label a definitely
+                # unsubmitted order as unknown during dispatch.
+                return self._no_balance(signal, available_amount, base_amount, cash_source=cash_source)
+            buy_amount = scaled_buy_amount(signal, base_amount)
             if buy_amount <= 0:
                 return self._no_balance(signal, available_amount, buy_amount, cash_source=cash_source)
 
@@ -121,12 +137,12 @@ class BalanceSplitStrategy:
                 buy_amount=buy_amount,
                 cash_source=cash_source,
             )
-            if execution.status == "executed":
+            if execution.status in {"executed", "unknown"}:
                 self._record_cash_reservation(
                     market=signal.market,
                     ticker=signal.ticker,
                     before_cash=available_amount,
-                    amount=self._executed_amount(result) or buy_amount,
+                    amount=self._safe_reservation_amount(result, buy_amount),
                     account_key=self._reservation_account_key(summary),
                 )
             return execution
@@ -180,11 +196,13 @@ class BalanceSplitStrategy:
             return 0.0, "after_exchange_buying_power_unavailable"
 
         def positive_number(value: Any) -> float:
+            # A malformed KIS response must never turn infinite buying power
+            # into an order amount (especially for full-size BUY signals).
             try:
                 parsed = float(value)
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, OverflowError):
                 return 0.0
-            return parsed if parsed > 0 else 0.0
+            return parsed if math.isfinite(parsed) and parsed > 0 else 0.0
 
         current_orderable = positive_number(buyable.get("ord_psbl_frcr_amt"))
         reported_after_exchange = positive_number(buyable.get("echm_af_ord_psbl_amt"))
@@ -241,7 +259,13 @@ class BalanceSplitStrategy:
         execution_lock = await acquire_file_lock(self.execution_lock_path)
         try:
             available_amount, cash_source, summary = self._available_amount(trader, market="KR")
-            buy_amount = self._buy_amount(available_amount)
+            base_amount = self._buy_amount(available_amount)
+            if base_amount <= 0:
+                # Preserve the no-balance result for fractional upstream BUYs.
+                # Throwing a sizing exception here would label a definitely
+                # unsubmitted order as unknown during dispatch.
+                return self._no_balance(signal, available_amount, base_amount, cash_source=cash_source)
+            buy_amount = scaled_buy_amount(signal, base_amount)
             buy_amount, cash_source = self._cap_buy_amount_for_orderability(
                 buy_amount=buy_amount,
                 cash_source=cash_source,
@@ -262,12 +286,12 @@ class BalanceSplitStrategy:
                 buy_amount=float(int(buy_amount)),
                 cash_source=cash_source,
             )
-            if execution.status == "executed":
+            if execution.status in {"executed", "unknown"}:
                 self._record_cash_reservation(
                     market=signal.market,
                     ticker=signal.ticker,
                     before_cash=available_amount,
-                    amount=self._executed_amount(result) or float(int(buy_amount)),
+                    amount=self._safe_reservation_amount(result, float(int(buy_amount))),
                     account_key=self._reservation_account_key(summary),
                 )
             return execution
@@ -279,8 +303,26 @@ class BalanceSplitStrategy:
 
     def _available_amount(self, trader: _BuyTrader, *, market: str) -> tuple[float, str, dict[str, Any]]:
         summary = trader.get_account_summary() or {}
-        available_amount = float(summary.get("available_amount", 0) or 0)
-        cash_balance = float(summary.get("cash_balance", summary.get("total_cash", 0)) or 0)
+        if not isinstance(summary, dict):
+            raise SignalSizingError("Balance split account summary is invalid")
+
+        def verified_cash(value: Any, name: str) -> float:
+            if value is None or value == "":
+                return 0.0
+            if isinstance(value, bool):
+                raise SignalSizingError(f"Balance split {name} is not a valid cash amount")
+            try:
+                cash = float(value)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise SignalSizingError(f"Balance split {name} is not numeric") from exc
+            if not math.isfinite(cash) or cash < 0:
+                raise SignalSizingError(f"Balance split {name} must be finite and nonnegative")
+            return cash
+
+        available_amount = verified_cash(summary.get("available_amount", 0), "available_amount")
+        cash_balance = verified_cash(
+            summary.get("cash_balance", summary.get("total_cash", 0)), "cash_balance"
+        )
         account_key = self._reservation_account_key(summary)
 
         # For domestic accounts, cash_balance/total_cash is the cash portion of
@@ -320,7 +362,7 @@ class BalanceSplitStrategy:
         # Last-resort compatibility fallback for account summaries that do not
         # expose cash_balance/total_cash. Domestic KIS dnca_tot_amt (deposit) can
         # remain stale after same-day buys, so it must not override cash_balance.
-        deposit = float(summary.get("deposit", 0) or 0)
+        deposit = verified_cash(summary.get("deposit", 0), "deposit")
         if deposit > 0:
             logger.info(
                 "Using deposit %.2f as balance split cash base because cash_balance and available_amount are zero",
@@ -360,19 +402,42 @@ class BalanceSplitStrategy:
 
     def _load_reservations(self) -> list[dict[str, Any]]:
         try:
-            payload = json.loads(self.reservation_path.read_text(encoding="utf-8"))
+            # Duplicate persisted reservation keys (especially amount/status)
+            # must not silently overwrite an outstanding broker commitment.
+            # Otherwise a recovered ledger could understate reserved cash.
+            def unique_object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+                obj: dict[str, Any] = {}
+                for key, value in pairs:
+                    if key in obj:
+                        raise ValueError("Duplicate key in balance split reservation JSON")
+                    obj[key] = value
+                return obj
+
+            payload = json.loads(
+                self.reservation_path.read_text(encoding="utf-8"),
+                object_pairs_hook=unique_object_pairs,
+            )
         except FileNotFoundError:
             return []
-        except (json.JSONDecodeError, OSError) as exc:
-            logger.warning(
-                "Ignoring unreadable balance split reservation file %s: %s",
+        except (json.JSONDecodeError, UnicodeError, OSError, ValueError) as exc:
+            # Lost reservations can make a second BUY reuse cash already
+            # committed to an accepted broker order. Never treat corruption
+            # or a read failure as an empty reservation ledger.
+            logger.error(
+                "Cannot read balance split reservation file %s: %s",
                 self.reservation_path,
                 exc,
             )
-            return []
-        if not isinstance(payload, list):
-            return []
-        return [item for item in payload if isinstance(item, dict)]
+            raise RuntimeError(
+                "Balance split reservation ledger is unreadable; refusing new BUY"
+            ) from exc
+        if not isinstance(payload, list) or not all(
+            isinstance(item, dict) for item in payload
+        ):
+            raise RuntimeError(
+                "Balance split reservation ledger has an invalid format; refusing new BUY"
+            )
+        return payload
 
     def _save_reservations(self, reservations: list[dict[str, Any]]) -> None:
         temporary_path: Path | None = None
@@ -392,7 +457,13 @@ class BalanceSplitStrategy:
                 os.fsync(handle.fileno())
             os.replace(temporary_path, self.reservation_path)
         except OSError as exc:
-            logger.warning("Unable to save balance split reservation file %s: %s", self.reservation_path, exc)
+            # A broker may already have accepted the BUY. Reporting success
+            # without persisting its reservation would permit overspending
+            # on the next signal while broker balances are stale.
+            logger.error("Unable to save balance split reservation file %s: %s", self.reservation_path, exc)
+            raise RuntimeError(
+                "Balance split reservation ledger write failed; broker order requires reconciliation"
+            ) from exc
         finally:
             if temporary_path is not None and temporary_path.exists():
                 temporary_path.unlink()
@@ -400,18 +471,32 @@ class BalanceSplitStrategy:
     def _fresh_reservations(
         self, reservations: list[dict[str, Any]] | None = None
     ) -> list[dict[str, Any]]:
-        cutoff = datetime.now(timezone.utc) - RESERVATION_TTL
         fresh: list[dict[str, Any]] = []
         source_reservations = reservations if reservations is not None else self._load_reservations()
         for reservation in source_reservations:
+            # Validate *before* age pruning and market/account filtering.  An
+            # expired or foreign-market malformed entry is not proof that the
+            # broker never accepted its BUY; silently dropping it could reuse
+            # cash while the broker's balance is still stale.
+            try:
+                before_cash = float(reservation.get("before_cash"))
+                amount = float(reservation.get("amount"))
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise RuntimeError("Balance split reservation contains invalid amounts") from exc
+            if not all(math.isfinite(value) and value > 0 for value in (before_cash, amount)):
+                raise RuntimeError("Balance split reservation contains invalid amounts")
             try:
                 created_at = datetime.fromisoformat(str(reservation.get("created_at", "")))
-            except ValueError:
-                continue
+            except (TypeError, ValueError, OverflowError) as exc:
+                # An unparseable timestamp must not silently expire a pending
+                # accepted-order reservation and allow its cash to be reused.
+                raise RuntimeError("Balance split reservation has an invalid timestamp") from exc
             if created_at.tzinfo is None:
                 created_at = created_at.replace(tzinfo=timezone.utc)
-            if created_at >= cutoff:
-                fresh.append(reservation)
+            # Age alone cannot prove broker settlement or cancellation. Retain
+            # unresolved BUY commitments until observed cash reconciliation;
+            # otherwise a delayed balance refresh can re-spend the same funds.
+            fresh.append(reservation)
         return fresh
 
     def _pending_reserved_amount(
@@ -428,59 +513,27 @@ class BalanceSplitStrategy:
     def _pending_reserved_amount_locked(
         self, *, market: str, current_cash: float, account_key: str
     ) -> float:
-        loaded_reservations = self._load_reservations()
-        reservations = self._fresh_reservations(loaded_reservations)
-        reservations_changed = len(reservations) != len(loaded_reservations)
-
-        reserved_amount = 0.0
-        adjusted_cash = current_cash
-        retained_reservations: list[dict[str, Any]] = []
-        for reservation in reservations:
-            if str(reservation.get("market", "")).upper() != market.upper():
-                retained_reservations.append(reservation)
-                continue
-            if str(reservation.get("account_key", "default")) != account_key:
-                retained_reservations.append(reservation)
-                continue
-            try:
-                before_cash = float(reservation.get("before_cash", 0) or 0)
-                amount = float(reservation.get("amount", 0) or 0)
-            except (TypeError, ValueError):
-                retained_reservations.append(reservation)
-                continue
-            if before_cash <= 0 or amount <= 0:
-                retained_reservations.append(reservation)
-                continue
-
-            # Once the broker-reported cash drops, persist that observation so a
-            # later cash rebound (sell proceeds, deposits, or canceled orders)
-            # cannot make already-reflected buys look unreflected again.  Partial
-            # broker updates keep only the still-unreflected remainder.
-            reflected_amount = max(0.0, before_cash - adjusted_cash)
-            unreflected_amount = max(0.0, amount - reflected_amount)
-            if unreflected_amount <= 0:
-                reservations_changed = True
-                continue
-            if reflected_amount > 0:
-                reservation = {
-                    **reservation,
-                    "before_cash": float(adjusted_cash),
-                    "amount": float(unreflected_amount),
-                }
-                reservations_changed = True
-            retained_reservations.append(reservation)
-            reserved_amount += unreflected_amount
-            adjusted_cash = max(0.0, adjusted_cash - unreflected_amount)
-
-        if reservations_changed:
-            self._save_reservations(retained_reservations)
-
+        # Cash changes alone cannot identify the fate of a particular BUY:
+        # withdrawals, other strategies, transfers, FX conversion, and fills
+        # all affect the same balance. Releasing an accepted or unknown order's
+        # reservation from a cash decrease could re-spend its unfilled budget.
+        #
+        # Until an authoritative per-order fill/cancel reconciliation exists,
+        # retain every outstanding reservation. Operators must reconcile and
+        # explicitly clear settled entries; this conservative policy can
+        # under-allocate cash but must not silently over-allocate it.
+        reservations = self._fresh_reservations()
+        reserved_amount = sum(
+            float(item["amount"])
+            for item in reservations
+            if str(item.get("market", "")).upper() == market.upper()
+            and str(item.get("account_key", "default")) == account_key
+        )
         if reserved_amount > 0:
             logger.info(
-                "Deducting %.2f in recent balance_split %s buys from broker cash %.2f",
-                reserved_amount,
-                market.upper(),
-                current_cash,
+                "Conservatively reserving %.2f for unresolved %s BUYs "
+                "(broker cash %.2f; cash movement is not proof of fill)",
+                reserved_amount, market.upper(), current_cash,
             )
         return reserved_amount
 
@@ -493,8 +546,10 @@ class BalanceSplitStrategy:
         amount: float,
         account_key: str = "default",
     ) -> None:
-        if market.upper() not in {"KR", "US"} or before_cash <= 0 or amount <= 0:
+        if market.upper() not in {"KR", "US"}:
             return
+        if not all(math.isfinite(x) and x > 0 for x in (before_cash, amount)):
+            raise RuntimeError("Balance split reservation contains invalid amounts")
         with FileLock(self.reservation_lock_path):
             reservations = self._fresh_reservations()
             reservations.append(
@@ -533,6 +588,15 @@ class BalanceSplitStrategy:
         except (TypeError, ValueError):
             total_amount = 0.0
         return total_amount
+
+    @staticmethod
+    def _safe_reservation_amount(result: dict[str, Any], budget: float) -> float:
+        reported = BalanceSplitStrategy._executed_amount(result)
+        # A broker-reported amount can describe a partial fill or an estimate,
+        # not the maximum amount still committed by an accepted BUY. Reserving
+        # less than the submitted budget can re-spend the unfilled remainder.
+        # Retain the larger positive amount until authoritative reconciliation.
+        return max(budget, reported) if math.isfinite(reported) and reported > 0 else budget
 
     def _no_balance(
         self,

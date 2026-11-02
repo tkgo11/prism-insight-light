@@ -95,6 +95,34 @@ class _FakeResp:
         return self._error_message
 
 
+
+
+class _AcceptedWithoutOrderReceipt(_FakeResp):
+    """Broker response is OK, but its output lacks a usable KIS order number."""
+
+    def __init__(self):
+        super().__init__(True)
+
+    def getBody(self):
+        return SimpleNamespace(output={})
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_broker_accepted_without_receipt_is_unknown_in_kr_and_us(market):
+    # Exercise the actual broker wrapper, not only the shared classifier.
+    # The KIS mock must never reach a live broker or a real account.
+    if market == "KR":
+        trader = _domestic_trader()
+        trader._request = lambda *args, **kwargs: _AcceptedWithoutOrderReceipt()
+        result = trader.buy_market_price("005930", 100000)
+    else:
+        trader = _us_trader()
+        trader._request = lambda *args, **kwargs: _AcceptedWithoutOrderReceipt()
+        result = trader.buy_market_price("AAPL", 200.0)
+    assert result["success"] is True
+    assert result["order_no"] == ""
+    assert classify_broker_result(result) == "unknown"
+
 def test_domestic_order_exception_marks_outcome_unknown():
     trader = _domestic_trader()
 
@@ -742,14 +770,15 @@ def test_update_stop_loss_tracking_leaves_watcher_owned_record(tmp_path):
     # The dispatch layer must not wipe the record; the watcher's CAS owns it.
     assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is not None
 
-    # A regular (non-watcher) fully-executed SELL still removes tracking.
+    # Even a non-watcher SELL with an "executed" dispatch outcome only
+    # proves broker acceptance; it must not clear stop-loss protection.
     manual_signal = parse_signal_payload(
         {"type": "SELL", "signal_type": "SELL", "market": "KR", "ticker": "005930", "price": 68000}
     )
     dispatcher._update_stop_loss_tracking(
-        manual_signal, DispatchResult("executed", "filled", "SELL", "KR")
+        manual_signal, DispatchResult("executed", "accepted", "SELL", "KR")
     )
-    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is None
+    assert dispatcher.stop_loss_tracker.get_position("KR", "005930") is not None
 
 
 def test_queue_load_tolerates_unknown_keys(tmp_path):
@@ -978,8 +1007,8 @@ def test_watcher_cycle_skips_malformed_record_and_checks_rest(tmp_path):
     tracker_file.write_text(
         _json.dumps(
             {
-                "KR:bad": {"market": "KR", "ticker": "BAD", "stop_loss": "not-a-number"},
-                "KR:good": {
+                "KR:BAD": {"market": "KR", "ticker": "BAD", "stop_loss": "not-a-number"},
+                "KR:005930": {
                     "market": "KR",
                     "ticker": "005930",
                     "stop_loss": 70000.0,

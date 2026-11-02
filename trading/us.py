@@ -331,7 +331,10 @@ class USStockTrading:
         self.account_key = self.account_config["account_key"]
         self.account_index = account_index
         self.product_code = self.account_config["product"]
-        default_buy_amount = float(self.account_config.get("buy_amount_usd") or self.DEFAULT_BUY_AMOUNT)
+        configured_buy_amount = self.account_config.get("buy_amount_usd")
+        if isinstance(configured_buy_amount, bool) or isinstance(buy_amount, bool):
+            raise ValueError("US buy amount must be numeric, not a boolean")
+        default_buy_amount = float(configured_buy_amount or self.DEFAULT_BUY_AMOUNT)
         self.buy_amount = buy_amount if buy_amount is not None else default_buy_amount
         self.buy_sizing = build_buy_sizing(
             fixed_amount=self.buy_amount,
@@ -2195,8 +2198,12 @@ class MultiAccountUSStockTrading:
     def get_holding_quantity(self, ticker: str) -> int:
         # Holdings may live on any configured account; checking only the
         # primary trader would report a secondary-account position as 0.
+        # No configured accounts is an UNKNOWN balance, not a confirmed zero.
+        # Returning 0 here would silently remove stop-loss protection.
         if not self.account_configs:
-            return 0
+            raise RuntimeError(
+                "Cannot verify aggregate holdings: no accounts configured"
+            )
         return sum(
             self._get_trader(account).get_holding_quantity(ticker)
             for account in self.account_configs

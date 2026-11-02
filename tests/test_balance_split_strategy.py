@@ -35,7 +35,7 @@ class FakeUSTrader:
 
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
         self.buy_calls.append((ticker, buy_amount, limit_price))
-        return {"success": self.success, "message": "us-buy"}
+        return {"success": self.success, "order_no": "MOCK-ORDER" if self.success else None, "message": "us-buy"}
 
 
 class FakeAutoExchangeUSTrader(FakeUSTrader):
@@ -88,7 +88,7 @@ class FakeKRTrader:
 
     async def async_buy_stock(self, stock_code, buy_amount=None, limit_price=None):
         self.buy_calls.append((stock_code, buy_amount, limit_price))
-        return {"success": True, "message": "kr-buy", "total_amount": self.total_amount}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-buy", "total_amount": self.total_amount}
 
 
 def test_balance_split_config_ignores_disabled_or_other_strategy():
@@ -183,6 +183,38 @@ async def test_us_balance_split_uses_kis_integrated_buying_power_when_exchange_f
     assert result.buy_amount == pytest.approx((172 * 127.79) / 2)
     assert result.cash_source == "after_exchange_buying_power"
     assert trader.buy_calls == [("NOW", pytest.approx((172 * 127.79) / 2), 127.79)]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "buying_power_fields",
+    [
+        {"after_exchange_amount": float("inf")},
+        {"after_exchange_amount": float("nan")},
+        {
+            "after_exchange_amount": 0.0,
+            "integrated_orderable_amount": float("inf"),
+            "integrated_max_quantity": float("inf"),
+        },
+    ],
+)
+async def test_us_balance_split_rejects_nonfinite_after_exchange_buying_power(
+    balance_split_strategy, buying_power_fields
+):
+    # KIS numeric fields may arrive as strings such as 'inf' or 'nan'.
+    # Never pass these through to the broker as an unbounded BUY budget.
+    trader = FakeAutoExchangeUSTrader(**buying_power_fields)
+    strategy = balance_split_strategy(split_count=1)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200}
+    )
+
+    result = await strategy._execute_us(signal, trader=trader)
+
+    assert result.status == "failed"
+    assert result.buy_amount == 0.0
+    assert result.cash_source == "after_exchange_buying_power_unavailable"
+    assert trader.buy_calls == []
 
 
 @pytest.mark.asyncio
@@ -322,10 +354,12 @@ async def test_kr_balance_split_deducts_recent_successful_buys_when_broker_cash_
     second_result = await strategy._execute_kr(signal, trader=second_trader)
 
     assert second_result.status == "executed"
-    assert second_result.available_amount == 12819362
-    assert second_result.buy_amount == 6409681.0
+    # The broker's 11,052,000 KRW report can be a partial fill; the accepted
+    # 11,935,681 KRW commitment must remain reserved until reconciliation.
+    assert second_result.available_amount == 11935681.0
+    assert second_result.buy_amount == 5967840.0
     assert second_result.cash_source == "cash_balance-after-reservations"
-    assert second_trader.buy_calls == [("012510", 6409681, 119400)]
+    assert second_trader.buy_calls == [("012510", 5967840, 119400)]
 
 
 @pytest.mark.asyncio
@@ -345,10 +379,12 @@ async def test_us_balance_split_marks_ambiguous_broker_result_unknown(balance_sp
 
     result = await strategy._execute_us(signal, trader=trader)
 
-    # An ambiguous broker outcome must not be reported as a clean failure, and
-    # must not reserve cash — the order may already be live at the broker.
+    # An ambiguous broker outcome may already be live. Reserve the budget
+    # pessimistically until broker cash reconciliation prevents overspending.
     assert result.status == "unknown"
-    assert strategy._load_reservations() == []
+    reservations = strategy._load_reservations()
+    assert len(reservations) == 1
+    assert reservations[0]["amount"] == 450.0
 
 
 @pytest.mark.asyncio
@@ -358,7 +394,7 @@ async def test_us_balance_split_does_not_treat_truthy_non_true_success_as_execut
     class DeceptiveUSTrader(FakeUSTrader):
         async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
             self.buy_calls.append((ticker, buy_amount, limit_price))
-            return {"success": "false", "message": "broker rejected the order"}
+            return {"success": "false", "outcome_unknown": False, "message": "broker rejected the order"}
 
     trader = DeceptiveUSTrader(available_amount=900.0)
     strategy = balance_split_strategy(split_count=2)
@@ -370,30 +406,27 @@ async def test_us_balance_split_does_not_treat_truthy_non_true_success_as_execut
     assert strategy._load_reservations() == []
 
 
-def test_pending_reservations_are_not_double_counted_after_cash_report_updates(balance_split_strategy):
+def test_cash_decrease_is_not_authoritative_buy_fill_confirmation(balance_split_strategy):
     strategy = balance_split_strategy(split_count=2)
-    strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=23871362, amount=11052000)
+    strategy._record_cash_reservation(
+        market="KR", ticker="012510", before_cash=23871362, amount=11052000
+    )
+    # This cash drop might be a withdrawal or another strategy's order.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=12819362) == 11052000
+    assert len(strategy._load_reservations()) == 1
+    # A later deposit or a repeated snapshot cannot release the unresolved BUY.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=25000000) == 11052000
 
-    assert strategy._pending_reserved_amount(market="KR", current_cash=12819362) == 0
-    assert strategy._load_reservations() == []
-
-    # A later cash increase within the TTL must not resurrect the already
-    # reflected buy reservation.
-    assert strategy._pending_reserved_amount(market="KR", current_cash=25000000) == 0
-
-
-def test_pending_reservations_only_keep_unreflected_remainder_after_partial_cash_update(balance_split_strategy):
+def test_partial_cash_drop_cannot_release_unfilled_buy_budget(balance_split_strategy):
     strategy = balance_split_strategy(split_count=2)
-    strategy._record_cash_reservation(market="KR", ticker="012510", before_cash=10000000, amount=5000000)
-
-    assert strategy._pending_reserved_amount(market="KR", current_cash=7000000) == 2000000
-    assert strategy._load_reservations()[0]["before_cash"] == 7000000
-    assert strategy._load_reservations()[0]["amount"] == 2000000
-
-    # Cash can increase for unrelated reasons while the remainder is still
-    # unreflected; only the 2M remainder should be reserved, not the old 5M.
-    assert strategy._pending_reserved_amount(market="KR", current_cash=12000000) == 2000000
-
+    strategy._record_cash_reservation(
+        market="KR", ticker="012510", before_cash=10000000, amount=5000000
+    )
+    assert strategy._pending_reserved_amount(market="KR", current_cash=7000000) == 5000000
+    record = strategy._load_reservations()[0]
+    assert record["before_cash"] == 10000000
+    assert record["amount"] == 5000000
+    assert strategy._pending_reserved_amount(market="KR", current_cash=12000000) == 5000000
 
 def test_concurrent_reservation_records_do_not_lose_updates(balance_split_strategy):
     strategy = balance_split_strategy(split_count=2)
@@ -431,7 +464,7 @@ async def test_concurrent_kr_buys_serialize_cash_sizing(balance_split_strategy):
             submitted_amounts.append(buy_amount)
             await asyncio.sleep(0.05)
             active -= 1
-            return {"success": True, "message": "ok", "total_amount": buy_amount}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "ok", "total_amount": buy_amount}
 
     strategy = balance_split_strategy(split_count=2)
     signal = parse_signal_payload(
@@ -459,7 +492,7 @@ async def test_concurrent_us_buys_reserve_stale_cash(balance_split_strategy):
         async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
             submitted_amounts.append(buy_amount)
             await asyncio.sleep(0.03)
-            return {"success": True, "message": "ok", "estimated_amount": buy_amount}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "ok", "estimated_amount": buy_amount}
 
     strategy = balance_split_strategy(split_count=3)
     signal = parse_signal_payload(
@@ -498,3 +531,248 @@ def test_us_reservations_are_isolated_by_account(balance_split_strategy):
         )
         == 0
     )
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market", ["KR", "US"])
+async def test_balance_split_corrupt_reservations_block_buy_before_broker_call(
+    balance_split_strategy, market
+):
+    strategy = balance_split_strategy(split_count=2)
+    strategy.reservation_path.write_text("{invalid json", encoding="utf-8")
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "005930" if market == "KR" else "AAPL",
+         "market": market, "price": 100}
+    )
+    trader = FakeKRTrader(available_amount=10000) if market == "KR" else FakeUSTrader(available_amount=900)
+
+    with pytest.raises(RuntimeError, match="reservation ledger is unreadable"):
+        if market == "KR":
+            await strategy._execute_kr(signal, trader=trader)
+        else:
+            await strategy._execute_us(signal, trader=trader)
+    assert trader.buy_calls == []
+
+
+def test_balance_split_malformed_reservation_structure_blocks_budget(
+    balance_split_strategy
+):
+    strategy = balance_split_strategy(split_count=2)
+    strategy.reservation_path.write_text('{"unexpected": "object"}', encoding="utf-8")
+    with pytest.raises(RuntimeError, match="invalid format"):
+        strategy._pending_reserved_amount(market="US", current_cash=900)
+    
+
+def test_balance_split_reservation_write_failure_is_not_silenced(
+    balance_split_strategy, monkeypatch
+):
+    strategy = balance_split_strategy(split_count=2)
+
+    def deny_replace(*_args, **_kwargs):
+        raise OSError("simulated storage failure")
+
+    monkeypatch.setattr("trading.strategies.balance_split.os.replace", deny_replace)
+    with pytest.raises(RuntimeError, match="reservation ledger write failed"):
+        strategy._record_cash_reservation(
+            market="KR", ticker="005930", before_cash=10000, amount=5000
+        )
+    assert not strategy.reservation_path.exists()
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "market,available,total_cash,deposit",
+    [
+        ("US", float("inf"), None, None),
+        ("US", float("nan"), None, None),
+        ("KR", 0, float("inf"), None),
+        ("KR", 0, None, float("nan")),
+    ],
+)
+async def test_balance_split_rejects_nonfinite_cash_before_order(
+    balance_split_strategy, market, available, total_cash, deposit
+):
+    from trading.signal_sizing import SignalSizingError
+
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL" if market == "US" else "005930",
+         "market": market, "price": 100}
+    )
+    trader = (
+        FakeUSTrader(available_amount=available)
+        if market == "US"
+        else FakeKRTrader(available_amount=available, total_cash=total_cash, deposit=deposit)
+    )
+    with pytest.raises(SignalSizingError, match="finite and nonnegative"):
+        if market == "US":
+            await strategy._execute_us(signal, trader=trader)
+        else:
+            await strategy._execute_kr(signal, trader=trader)
+    assert trader.buy_calls == []
+
+
+@pytest.mark.parametrize(
+    "reservations",
+    [
+        [{"market": "US", "ticker": "AAPL", "amount": 50,
+          "before_cash": 100, "created_at": "not-a-timestamp"}],
+        [{"market": "US", "ticker": "AAPL", "amount": "nan",
+          "before_cash": 100, "created_at": "2026-10-31T00:00:00+00:00"}],
+        # An expired record from a different market must not evade validation.
+        [{"market": "KR", "ticker": "005930", "amount": "inf",
+          "before_cash": 100, "created_at": "2000-01-01T00:00:00+00:00"}],
+    ],
+)
+def test_balance_split_invalid_reservation_fields_fail_closed(
+    balance_split_strategy, reservations
+):
+    strategy = balance_split_strategy(split_count=2)
+    strategy.reservation_path.write_text(json.dumps(reservations), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="invalid timestamp|invalid amounts"):
+        strategy._pending_reserved_amount(market="US", current_cash=100)
+
+
+def test_expired_unreconciled_reservation_does_not_release_budget(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
+    strategy.reservation_path.write_text(
+        json.dumps([{
+            "market": "KR", "ticker": "005930", "account_key": "default",
+            "amount": 400, "before_cash": 1000,
+            "created_at": "2000-01-01T00:00:00+00:00",
+        }]),
+        encoding="utf-8",
+    )
+    # A TTL alone is not evidence that the broker updated the balance.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=1000) == 400
+    assert len(strategy._load_reservations()) == 1
+    # A cash decrease is not evidence of this order's actual fill.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=600) == 400
+    assert len(strategy._load_reservations()) == 1
+
+
+def test_multiple_stale_cash_reservations_do_not_falsely_reconcile_each_other(
+    balance_split_strategy,
+):
+    strategy = balance_split_strategy(split_count=2)
+    for ticker in ("111111", "222222"):
+        strategy._record_cash_reservation(
+            market="KR", ticker=ticker, before_cash=1000, amount=300
+        )
+    # The broker still reports the same cash. Neither order is confirmed reflected.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=1000) == 600
+    assert len(strategy._load_reservations()) == 2
+
+
+def test_multiple_pending_buys_survive_unrelated_cash_withdrawal(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
+    for ticker in ("111111", "222222"):
+        strategy._record_cash_reservation(
+            market="KR", ticker=ticker, before_cash=1000, amount=300
+        )
+    # Neither order's fill is known, even after cash falls below total reserved.
+    assert strategy._pending_reserved_amount(market="KR", current_cash=700) == 600
+    assert strategy._pending_reserved_amount(market="KR", current_cash=400) == 600
+    assert len(strategy._load_reservations()) == 2
+
+def test_mixed_cash_anchors_do_not_authorize_implicit_reconciliation(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
+    strategy._record_cash_reservation(
+        market="US", ticker="AAPL", before_cash=900, amount=450
+    )
+    strategy._record_cash_reservation(
+        market="US", ticker="MSFT", before_cash=450, amount=225
+    )
+    assert strategy._pending_reserved_amount(market="US", current_cash=700) == 675
+    assert strategy._pending_reserved_amount(market="US", current_cash=700) == 675
+    assert sum(item["amount"] for item in strategy._load_reservations()) == 675
+
+@pytest.mark.asyncio
+async def test_auto_exchange_buying_power_respects_pending_reservations(
+    balance_split_strategy,
+):
+    trader = FakeAutoExchangeUSTrader(after_exchange_amount=1000)
+    strategy = balance_split_strategy(split_count=1)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200}
+    )
+    first = await strategy._execute_us(signal, trader=trader)
+    second = await strategy._execute_us(signal, trader=trader)
+    assert first.status == "executed"
+    assert second.status == "failed"
+    assert len(trader.buy_calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_unknown_buy_reserves_cash_against_next_signal(balance_split_strategy):
+    class UnknownUSTrader(FakeUSTrader):
+        async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
+            self.buy_calls.append((ticker, buy_amount, limit_price))
+            return {"success": False, "order_no": "pending", "message": "timeout"}
+
+    trader = UnknownUSTrader(available_amount=900)
+    strategy = balance_split_strategy(split_count=1)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200}
+    )
+    first = await strategy._execute_us(signal, trader=trader)
+    second = await strategy._execute_us(signal, trader=trader)
+    assert first.status == "unknown"
+    assert second.status == "failed"
+    assert len(trader.buy_calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_partial_broker_report_cannot_release_unfilled_buy_budget(balance_split_strategy):
+    class PartialReportUSTrader(FakeUSTrader):
+        async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
+            self.buy_calls.append((ticker, buy_amount, limit_price))
+            # This can be a partial fill while the rest remains open at KIS.
+            return {"success": True, "order_no": "MOCK-ORDER", "estimated_amount": 50.0, "message": "accepted"}
+
+    trader = PartialReportUSTrader(available_amount=900.0)
+    strategy = balance_split_strategy(split_count=2)
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 200}
+    )
+
+    first = await strategy._execute_us(signal, trader=trader)
+    second = await strategy._execute_us(signal, trader=trader)
+
+    assert first.status == second.status == "executed"
+    # Reserve the entire accepted 450 USD commitment, not the reported 50 USD.
+    assert trader.buy_calls[0][1] == 450.0
+    assert trader.buy_calls[1][1] == 225.0
+    assert sum(item["amount"] for item in strategy._load_reservations()) == 675.0
+
+
+def test_reservation_uses_larger_broker_amount_when_above_submitted_budget():
+    assert BalanceSplitStrategy._safe_reservation_amount(
+        {"total_amount": 150.0}, 100.0
+    ) == 150.0
+    assert BalanceSplitStrategy._safe_reservation_amount(
+        {"estimated_amount": 10.0}, 100.0
+    ) == 100.0
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        # The last value must not silently replace a reserved 1000 with 0.
+        '[{"market":"KR","ticker":"005930","amount":1000,"amount":0}]',
+        # A duplicate status could mark an unresolved order as settled.
+        '[{"market":"KR","ticker":"005930",'
+        '"status":"pending","status":"settled","amount":1000}]',
+    ],
+)
+def test_duplicate_reservation_json_keys_fail_closed(balance_split_strategy, raw):
+    strategy = balance_split_strategy(split_count=2)
+    strategy.reservation_path.write_text(raw, encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="unreadable"):
+        strategy._load_reservations()
+    assert strategy.reservation_path.read_text(encoding="utf-8") == raw
+
+
+def test_normal_reservation_json_remains_readable(balance_split_strategy):
+    strategy = balance_split_strategy(split_count=2)
+    reservations = [{"market": "KR", "ticker": "005930", "amount": 1000}]
+    strategy.reservation_path.write_text(json.dumps(reservations), encoding="utf-8")
+    assert strategy._load_reservations() == reservations

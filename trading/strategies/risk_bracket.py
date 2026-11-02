@@ -1,9 +1,11 @@
 """Risk-based bracket BUY strategy."""
 from __future__ import annotations
+import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 from ..schema import SignalMessage
+from ..signal_sizing import scaled_buy_amount
 from .common import StrategyExecution, append_json_item, boolean_value, execute_order, execution_from_result, market_base_amount, positive_number, runtime_dir, strategy_name
 
 RISK_BRACKET = "risk_bracket"
@@ -25,14 +27,38 @@ class RiskBracketStrategy:
         if self.config.require_stop_loss and signal.stop_loss is None: return StrategyExecution("rejected", "Risk bracket strategy requires stop_loss", signal.market, signal.ticker)
         if self.config.require_target_price and signal.target_price is None: return StrategyExecution("rejected", "Risk bracket strategy requires target_price", signal.market, signal.ticker)
         risk_budget = market_base_amount(signal, krw=self.config.risk_amount_krw, usd=self.config.risk_amount_usd)
-        per_unit_risk = float(signal.price) - float(signal.stop_loss or signal.price)
-        units_notional = int(risk_budget / per_unit_risk) * float(signal.price) if risk_budget > 0 and per_unit_risk > 0 else 0.0
+        entry_price = float(signal.price)
+        per_unit_risk = entry_price - float(signal.stop_loss or signal.price)
+        usable_risk = risk_budget > 0 and per_unit_risk > 0
+        units_notional = 0.0
+        if usable_risk:
+            risk_units = risk_budget / per_unit_risk
+            if not math.isfinite(risk_units) or risk_units < 1:
+                # A positive, enforceable loss budget that cannot buy one
+                # whole share must not silently fall back to broker defaults.
+                return StrategyExecution("rejected", "Risk bracket budget cannot fund one share", signal.market, signal.ticker)
+            try:
+                units_notional = int(risk_units) * entry_price
+            except OverflowError:
+                return StrategyExecution("rejected", "Risk bracket sizing overflow", signal.market, signal.ticker)
+            if not math.isfinite(units_notional):
+                return StrategyExecution("rejected", "Risk bracket sizing overflow", signal.market, signal.ticker)
         max_position = market_base_amount(signal, krw=self.config.max_position_amount_krw, usd=self.config.max_position_amount_usd)
         buy_amount = min(units_notional, max_position) if max_position > 0 else units_notional
+        if max_position > 0 and buy_amount < entry_price:
+            # A configured hard position cap must never be bypassed by
+            # passing buy_amount=None to the broker's unconstrained default.
+            # A cap below one share is likewise not a valid order budget.
+            return StrategyExecution("rejected", "Risk bracket position cap cannot fund one share", signal.market, signal.ticker)
         submitted_amount = buy_amount if buy_amount > 0 else None
         result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, buy_amount=submitted_amount, limit_price=signal.price)
-        amount_label = f"{buy_amount:.2f}" if submitted_amount is not None else "broker default"
-        execution = execution_from_result(signal, result, f"Risk bracket buy {amount_label} with risk {risk_budget:.2f}", buy_amount=submitted_amount, risk_budget=risk_budget)
+        effective_amount = scaled_buy_amount(signal, submitted_amount) if submitted_amount is not None else None
+        amount_label = (
+            f"{effective_amount:.2f}" if effective_amount is not None
+            else "broker-derived fraction" if signal.position_fraction != 1
+            else "broker default"
+        )
+        execution = execution_from_result(signal, result, f"Risk bracket buy {amount_label} with risk {risk_budget:.2f}", buy_amount=effective_amount, strategy_base_amount=submitted_amount, position_fraction=signal.position_fraction, risk_budget=risk_budget)
         if execution.status == "executed":
             append_json_item(self.metadata_path or runtime_dir() / "risk_brackets.json", {"market": signal.market, "ticker": signal.ticker, "entry_price": signal.price, "stop_loss": signal.stop_loss, "target_price": signal.target_price, "risk_budget": risk_budget, "created_at": datetime.now(timezone.utc).isoformat()})
         return execution

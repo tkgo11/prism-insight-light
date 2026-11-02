@@ -11,7 +11,7 @@ class DummyQueue:
     def __init__(self):
         self.enqueued = []
 
-    def enqueue(self, signal):
+    def enqueue(self, signal, execution_context=None):
         self.enqueued.append(signal)
         return type("QueuedSignal", (), {"execute_at": "2030-01-01T00:00:00+00:00"})()
 
@@ -33,7 +33,7 @@ async def test_dispatch_kr_buy(monkeypatch):
         async def async_buy_stock(self, stock_code, limit_price=None):
             results["ticker"] = stock_code
             results["limit_price"] = limit_price
-            return {"success": True, "message": "kr-buy"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-buy"}
 
     class FakeContext:
         def __init__(self, mode):
@@ -68,7 +68,7 @@ async def test_dispatch_us_sell(monkeypatch):
         async def async_sell_stock(self, ticker, limit_price=None):
             results["ticker"] = ticker
             results["limit_price"] = limit_price
-            return {"success": True, "message": "us-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "us-sell"}
 
     monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
@@ -99,6 +99,7 @@ async def test_demo_off_hours_enqueues(monkeypatch):
 
     dispatcher = TradeDispatcher(trading_mode="demo")
     dispatcher.queue = queue
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:fixture:01"})
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
     result = await dispatcher.dispatch(signal)
 
@@ -125,8 +126,15 @@ def test_due_demo_order_remains_queued_when_market_still_closed(monkeypatch, tmp
     monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda market: datetime.now(timezone.utc) - timedelta(minutes=1))
 
     dispatcher = TradeDispatcher(trading_mode="demo", queue_path=tmp_path / "queue.json")
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:fixture:01"})
     signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
-    dispatcher.queue.enqueue(signal)
+    dispatcher.queue.enqueue(signal, {
+        "version": 2, "multi_account": False, "trading_mode": "demo",
+        "account_scope": __import__("hashlib").sha256(
+            dispatcher._single_account_execution_selector(signal).encode("utf-8")
+        ).hexdigest(),
+        "account_id": dispatcher._resolved_single_account_id(signal),
+    })
 
     drained = dispatcher.drain_due_orders()
 
@@ -170,6 +178,8 @@ async def test_real_off_hours_without_broker_window_enqueues(monkeypatch):
     monkeypatch.setattr("trading.dispatch.is_off_hours_order_available", lambda market: False)
 
     dispatcher = TradeDispatcher(trading_mode="real", queue=queue)
+    # This fixture exercises queueing, not live KIS account discovery.
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "prod:fixture:01"})
     signal = parse_signal_payload({"type": "SELL", "ticker": "AAPL", "market": "US", "price": 200})
     result = await dispatcher.dispatch(signal)
 
@@ -189,7 +199,7 @@ async def test_real_off_hours_uses_supported_reserved_order_window(monkeypatch):
         async def async_sell_stock(self, ticker, limit_price=None):
             results["ticker"] = ticker
             results["limit_price"] = limit_price
-            return {"success": True, "message": "reserved-us-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "reserved-us-sell"}
 
     monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
@@ -233,7 +243,7 @@ async def test_balance_split_buy_routes_with_fractional_buy_amount(monkeypatch, 
             results["ticker"] = ticker
             results["buy_amount"] = buy_amount
             results["limit_price"] = limit_price
-            return {"success": True, "message": "split-buy"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "split-buy"}
 
     monkeypatch.setattr("trading.strategies.balance_split.USStockTrading", FakeUSTrader)
     monkeypatch.setattr(
@@ -264,7 +274,7 @@ async def test_disabled_strategy_buy_uses_legacy_path(monkeypatch):
         async def async_buy_stock(self, ticker, limit_price=None):
             results["ticker"] = ticker
             results["limit_price"] = limit_price
-            return {"success": True, "message": "legacy-buy"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "legacy-buy"}
 
     monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
@@ -289,7 +299,7 @@ async def test_stop_loss_sell_strategy_uses_stop_loss_limit_above_signal_price(m
             results["ticker"] = ticker
             results["limit_price"] = limit_price
             results["sell_fraction"] = sell_fraction
-            return {"success": True, "message": "stop-loss-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "stop-loss-sell"}
 
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
@@ -314,7 +324,7 @@ async def test_stop_loss_sell_strategy_uses_marketable_signal_price_below_stop_l
             results["ticker"] = ticker
             results["limit_price"] = limit_price
             results["sell_fraction"] = sell_fraction
-            return {"success": True, "message": "triggered-stop-loss-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "triggered-stop-loss-sell"}
 
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
@@ -338,7 +348,7 @@ async def test_stop_loss_sell_strategy_falls_back_to_signal_price(monkeypatch):
         async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
             results["ticker"] = ticker
             results["limit_price"] = limit_price
-            return {"success": True, "message": "fallback-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "fallback-sell"}
 
     monkeypatch.setattr("trading.strategies.common.USStockTrading", FakeUSTrader)
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)

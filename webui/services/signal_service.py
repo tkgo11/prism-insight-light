@@ -16,11 +16,11 @@ def _signal_to_dto(signal) -> dict[str, Any]:
 
 
 def parse_signal_input(payload: dict[str, Any] | str) -> dict[str, Any]:
-    from trading.schema import SignalValidationError, parse_signal_payload
+    from trading.schema import SignalValidationError, load_signal_json, parse_signal_payload
 
     try:
         if isinstance(payload, str):
-            parsed_payload = json.loads(payload)
+            parsed_payload = load_signal_json(payload)
         else:
             parsed_payload = payload
         if not isinstance(parsed_payload, dict):

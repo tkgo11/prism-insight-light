@@ -49,13 +49,79 @@ def test_strategy_list_fields_reject_invalid_entries(
         config_type.from_mapping({"name": name, field: value})
 
 
+
+# A positive score floor is a broker pre-submission gate. Missing scores
+# cannot be interpreted as the default weight (1.0) and bypass that floor.
+@pytest.mark.parametrize("name", ["score_weighted", "score_risk"])
+@pytest.mark.parametrize("score", [None, 59])
+@pytest.mark.asyncio
+async def test_positive_min_score_rejects_missing_or_low_score_before_broker(name, score):
+    from trading.strategies.score_risk import ScoreRiskStrategy, ScoreRiskStrategyConfig
+
+    config_payload = {"name": name, "min_score": 60}
+    if name == "score_weighted":
+        config_payload["base_amount_usd"] = 100
+        strategy = ScoreWeightedStrategy(
+            config=ScoreWeightedStrategyConfig.from_mapping(config_payload)
+        )
+    else:
+        config_payload["risk_amount_usd"] = 10
+        strategy = ScoreRiskStrategy(
+            config=ScoreRiskStrategyConfig.from_mapping(config_payload)
+        )
+    signal_payload = {
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "stop_loss": 90,
+    }
+    if score is not None:
+        signal_payload["buy_score"] = score
+    result = await strategy.execute(parse_signal_payload(signal_payload), trading_mode="demo")
+    assert result.status == "rejected"
+    assert "score" in result.message.lower()
+    assert FakeUSTrader.calls == []
+
+
+@pytest.mark.parametrize("name", ["score_weighted", "score_risk"])
+@pytest.mark.asyncio
+async def test_positive_min_score_accepts_exact_threshold(name):
+    from trading.strategies.score_risk import ScoreRiskStrategy, ScoreRiskStrategyConfig
+
+    if name == "score_weighted":
+        strategy = ScoreWeightedStrategy(
+            config=ScoreWeightedStrategyConfig.from_mapping({
+                "name": name, "min_score": 60, "base_amount_usd": 100,
+            })
+        )
+    else:
+        strategy = ScoreRiskStrategy(
+            config=ScoreRiskStrategyConfig.from_mapping({
+                "name": name, "min_score": 60, "risk_amount_usd": 10,
+            })
+        )
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "stop_loss": 90, "buy_score": 60,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "executed"
+    assert len(FakeUSTrader.calls) == 1
+    assert FakeUSTrader.calls[0][0:2] == ("buy", "AAPL")
+
+
+@pytest.mark.parametrize("min_score", [-1, 101])
+def test_score_weighted_rejects_out_of_range_minimum_score(min_score):
+    with pytest.raises(ValueError, match="min_score"):
+        ScoreWeightedStrategyConfig.from_mapping({
+            "name": "score_weighted", "min_score": min_score,
+        })
+
 class FakeUSTrader:
     calls = []
     def __init__(self, mode, account_name=None, account_index=None): self.mode = mode; self.account_name = account_name; self.account_index = account_index
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
-        self.calls.append(("buy", ticker, buy_amount, limit_price)); return {"success": True, "message": "buy-ok"}
+        self.calls.append(("buy", ticker, buy_amount, limit_price)); return {"success": True, "order_no": "MOCK-ORDER", "message": "buy-ok"}
     async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
-        self.calls.append(("sell", ticker, sell_fraction, limit_price)); return {"success": True, "message": "sell-ok"}
+        self.calls.append(("sell", ticker, sell_fraction, limit_price)); return {"success": True, "order_no": "MOCK-ORDER", "message": "sell-ok"}
 
 
 @pytest.fixture(autouse=True)
@@ -73,6 +139,23 @@ async def test_score_weighted_buys_from_score_band():
 
     assert result.status == "executed"
     assert FakeUSTrader.calls == [("buy", "AAPL", 100.0, 10.0)]
+
+
+@pytest.mark.asyncio
+async def test_score_weighted_zero_band_never_uses_broker_default_without_base():
+    config = ScoreWeightedStrategyConfig.from_mapping({
+        "name": "score_weighted",
+        "score_bands": {0: 0.0},
+    })
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "buy_score": 50,
+    })
+    result = await ScoreWeightedStrategy(config=config).execute(
+        signal, trading_mode="demo"
+    )
+    assert result.status == "rejected"
+    assert FakeUSTrader.calls == []
 
 
 @pytest.mark.asyncio
@@ -277,6 +360,54 @@ def test_limit_buffer_uses_automatic_krx_tick_rounding():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("risk_budget", "max_position", "stop_loss"),
+    [
+        (25, 50, 101),  # Unusable stop cannot bypass an explicit position cap.
+        (1, 0, 90),     # Usable risk budget is too small for one whole share.
+        (25, 50, 99),  # Position cap is below the entry share price.
+        (0, 50, 99),   # A cap without calculable risk sizing is not a default.
+    ],
+)
+async def test_risk_bracket_constraints_never_fall_back_to_broker_default(
+    tmp_path, risk_budget, max_position, stop_loss
+):
+    config = RiskBracketStrategyConfig.from_mapping({
+        "name": "risk_bracket",
+        "risk_amount_usd": risk_budget,
+        "max_position_amount_usd": max_position,
+    })
+    strategy = RiskBracketStrategy(config=config)
+    strategy.metadata_path = tmp_path / "risk.json"
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "stop_loss": stop_loss,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "rejected"
+    assert FakeUSTrader.calls == []
+    assert not strategy.metadata_path.exists()
+
+
+@pytest.mark.asyncio
+async def test_risk_bracket_valid_cap_and_upstream_fraction_still_execute(tmp_path):
+    config = RiskBracketStrategyConfig.from_mapping({
+        "name": "risk_bracket",
+        "risk_amount_usd": 20,
+        "max_position_amount_usd": 250,
+    })
+    strategy = RiskBracketStrategy(config=config)
+    strategy.metadata_path = tmp_path / "risk.json"
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "stop_loss": 90, "position_fraction": 0.5,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "executed"
+    assert FakeUSTrader.calls == [("buy", "AAPL", 100.0, 100.0)]
+
+
+@pytest.mark.asyncio
 async def test_risk_bracket_falls_back_when_stop_is_not_usable(tmp_path):
     config = RiskBracketStrategyConfig.from_mapping({"name": "risk_bracket", "risk_amount_usd": 25})
     strategy = RiskBracketStrategy(config=config)
@@ -333,7 +464,7 @@ async def test_cooldown_serializes_concurrent_duplicate_execution(monkeypatch, t
         max_active = max(max_active, active)
         await asyncio.sleep(0.05)
         active -= 1
-        return {"success": True, "message": "ok"}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "ok"}
 
     monkeypatch.setattr("trading.strategies.cooldown.execute_order", delayed_execute)
     config = CooldownStrategyConfig.from_mapping(
@@ -525,3 +656,68 @@ async def test_event_risk_off_defaults_never_block_or_shrink_buy(tmp_path):
     assert event_result.status == "acknowledged"
     assert buy_result.status == "executed"
     assert FakeUSTrader.calls == [("buy", "AAPL", None, 100.0)]
+
+
+@pytest.mark.asyncio
+async def test_score_weighted_finite_fields_multiplication_overflow_rejects_before_broker(monkeypatch):
+    async def forbidden_broker_call(*args, **kwargs):
+        raise AssertionError("Overflow must be rejected before broker submission")
+
+    monkeypatch.setattr(
+        "trading.strategies.score_weighted.execute_order", forbidden_broker_call
+    )
+    config = ScoreWeightedStrategyConfig.from_mapping({
+        "name": "score_weighted",
+        "base_amount_usd": 1e308,
+        "score_bands": {0: 1e308},
+    })
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 10, "buy_score": 5,
+    })
+    result = await ScoreWeightedStrategy(config=config).execute(
+        signal, trading_mode="demo"
+    )
+    assert result.status == "rejected"
+    assert "overflow" in result.message.lower()
+
+
+@pytest.mark.asyncio
+async def test_score_weighted_fractional_band_without_base_rejects_broker_default(monkeypatch):
+    async def forbidden_broker_call(*args, **kwargs):
+        raise AssertionError("Fractional score band must not submit full broker default")
+
+    monkeypatch.setattr(
+        "trading.strategies.score_weighted.execute_order", forbidden_broker_call
+    )
+    config = ScoreWeightedStrategyConfig.from_mapping({
+        "name": "score_weighted", "score_bands": {0: 0.5},
+    })
+    signal = parse_signal_payload({
+        "type": "BUY", "market": "US", "ticker": "AAPL",
+        "price": 100, "buy_score": 5,
+    })
+    result = await ScoreWeightedStrategy(config=config).execute(signal, trading_mode="demo")
+    assert result.status == "rejected"
+    assert "base amount" in result.message.lower()
+
+
+@pytest.mark.asyncio
+async def test_score_weighted_below_first_band_uses_first_threshold_not_minimum_weight(monkeypatch):
+    submitted = []
+    async def fake_order(signal, **kwargs):
+        submitted.append(kwargs["buy_amount"])
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "accepted"}
+    monkeypatch.setattr("trading.strategies.score_weighted.execute_order", fake_order)
+    config = ScoreWeightedStrategyConfig.from_mapping({
+        "name": "score_weighted",
+        "base_amount_usd": 100,
+        "score_bands": {60: 1.0, 90: 0.25},
+    })
+    signal = parse_signal_payload({
+        "type": "BUY", "market": "US", "ticker": "AAPL",
+        "price": 10, "buy_score": 50,
+    })
+    result = await ScoreWeightedStrategy(config=config).execute(signal, trading_mode="demo")
+    assert result.status == "executed"
+    assert submitted == [100.0]

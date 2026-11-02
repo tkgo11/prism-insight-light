@@ -28,13 +28,13 @@ class FakeUSTrader:
 
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
         self.calls.append(("buy", ticker, buy_amount, limit_price))
-        return {"success": True, "message": "buy-ok"}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "buy-ok"}
 
     async def async_sell_stock(
         self, ticker, limit_price=None, sell_fraction=None
     ):
         self.calls.append(("sell", ticker, sell_fraction, limit_price))
-        return {"success": True, "message": "sell-ok"}
+        return {"success": True, "order_no": "MOCK-ORDER", "message": "sell-ok"}
 
 
 @pytest.fixture(autouse=True)
@@ -333,3 +333,152 @@ def test_example_config_uses_requested_execution_defaults():
     assert payload["max_auto_exchange_krw"] is None
     assert payload["default_product_code"] == "01"
     assert payload["signal_strategy"] == {"name": "balanced_risk"}
+
+
+@pytest.mark.parametrize("strategy_name", ["score_risk", "balanced_risk"])
+@pytest.mark.parametrize("missing_field", ["buy_score", "target_price"])
+@pytest.mark.asyncio
+async def test_enabled_score_and_reward_risk_floors_reject_missing_data(
+    strategy_name, missing_field
+):
+    from trading.strategies.balanced_risk import (
+        BalancedRiskStrategy, BalancedRiskStrategyConfig,
+    )
+
+    payload = {
+        "name": strategy_name,
+        "risk_amount_usd": 10,
+        "min_score": 60,
+        "min_reward_risk": 1.5,
+        "require_target_price": False,
+    }
+    if strategy_name == "balanced_risk":
+        strategy = BalancedRiskStrategy(
+            config=BalancedRiskStrategyConfig.from_mapping(payload)
+        )
+    else:
+        strategy = ScoreRiskStrategy(
+            config=ScoreRiskStrategyConfig.from_mapping(payload)
+        )
+    signal_payload = {
+        "type": "BUY", "market": "US", "ticker": "AAPL",
+        "price": 100, "stop_loss": 90,
+        "buy_score": 60, "target_price": 120,
+    }
+    del signal_payload[missing_field]
+    result = await strategy.execute(
+        parse_signal_payload(signal_payload), trading_mode="demo"
+    )
+    assert result.status == "rejected"
+    assert FakeUSTrader.calls == []
+
+
+@pytest.mark.parametrize("strategy_name", ["score_risk", "balanced_risk"])
+@pytest.mark.asyncio
+async def test_enabled_score_and_reward_risk_floors_accept_complete_boundary(strategy_name):
+    from trading.strategies.balanced_risk import (
+        BalancedRiskStrategy, BalancedRiskStrategyConfig,
+    )
+
+    payload = {
+        "name": strategy_name, "risk_amount_usd": 10,
+        "min_score": 60, "min_reward_risk": 2.0,
+        "require_target_price": False,
+    }
+    strategy = (
+        BalancedRiskStrategy(config=BalancedRiskStrategyConfig.from_mapping(payload))
+        if strategy_name == "balanced_risk"
+        else ScoreRiskStrategy(config=ScoreRiskStrategyConfig.from_mapping(payload))
+    )
+    result = await strategy.execute(
+        parse_signal_payload({
+            "type": "BUY", "market": "US", "ticker": "AAPL",
+            "price": 100, "stop_loss": 90,
+            "buy_score": 60, "target_price": 120,
+        }),
+        trading_mode="demo",
+    )
+    assert result.status == "executed"
+    assert len(FakeUSTrader.calls) == 1
+
+
+
+
+@pytest.mark.parametrize("strategy_name", ["score_risk", "balanced_risk"])
+@pytest.mark.parametrize(
+    ("price", "stop_loss", "risk_amount_usd", "max_position_amount_usd"),
+    [
+        (1e-300, 5e-301, 1e308, 0.0),  # finite inputs -> infinite risk units
+        (1e150, 5e149, 1e308, 0.0),   # finite units -> infinite notional
+        (1e-300, 5e-301, 1.0, 1e308), # finite inputs -> infinite cap units
+    ],
+)
+@pytest.mark.asyncio
+async def test_score_risk_overflow_never_reaches_broker(
+    strategy_name, price, stop_loss, risk_amount_usd, max_position_amount_usd
+):
+    config_payload = {
+        "name": strategy_name,
+        "risk_amount_usd": risk_amount_usd,
+        "max_position_amount_usd": max_position_amount_usd,
+    }
+    strategy = (
+        BalancedRiskStrategy(config=BalancedRiskStrategyConfig.from_mapping(config_payload))
+        if strategy_name == "balanced_risk"
+        else ScoreRiskStrategy(config=ScoreRiskStrategyConfig.from_mapping(config_payload))
+    )
+    signal = parse_signal_payload({
+        "type": "BUY", "market": "US", "ticker": "AAPL",
+        "price": price, "stop_loss": stop_loss,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "rejected"
+    assert "overflow" in result.message.lower()
+    assert FakeUSTrader.calls == []
+
+
+@pytest.mark.parametrize("strategy_name", ["score_risk", "balanced_risk"])
+@pytest.mark.parametrize("risk_amount_usd,stop_loss", [(0.0, 90.0), (100.0, None)])
+@pytest.mark.asyncio
+async def test_fractional_score_risk_weight_requires_usable_budget_before_broker(
+    strategy_name, risk_amount_usd, stop_loss
+):
+    payload = {
+        "name": strategy_name,
+        "risk_amount_usd": risk_amount_usd,
+        "score_bands": {0: 0.5},
+    }
+    strategy = (
+        BalancedRiskStrategy(config=BalancedRiskStrategyConfig.from_mapping(payload))
+        if strategy_name == "balanced_risk"
+        else ScoreRiskStrategy(config=ScoreRiskStrategyConfig.from_mapping(payload))
+    )
+    raw = {"type": "BUY", "market": "US", "ticker": "AAPL", "price": 100, "buy_score": 5}
+    if stop_loss is not None:
+        raw["stop_loss"] = stop_loss
+    result = await strategy.execute(parse_signal_payload(raw), trading_mode="demo")
+    assert result.status == "rejected"
+    assert "weight" in result.message.lower()
+    assert FakeUSTrader.calls == []
+
+
+@pytest.mark.parametrize("strategy_name", ["score_risk", "balanced_risk"])
+@pytest.mark.asyncio
+async def test_score_risk_below_first_band_uses_first_threshold_not_minimum_weight(strategy_name):
+    payload = {
+        "name": strategy_name,
+        "risk_amount_usd": 100,
+        "score_bands": {60: 1.0, 90: 0.25},
+    }
+    strategy = (
+        BalancedRiskStrategy(config=BalancedRiskStrategyConfig.from_mapping(payload))
+        if strategy_name == "balanced_risk"
+        else ScoreRiskStrategy(config=ScoreRiskStrategyConfig.from_mapping(payload))
+    )
+    signal = parse_signal_payload({
+        "type": "BUY", "market": "US", "ticker": "AAPL",
+        "price": 100, "stop_loss": 90, "buy_score": 50,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "executed"
+    assert FakeUSTrader.calls == [("buy", "AAPL", 1000.0, 100.0)]

@@ -8,6 +8,7 @@ import json
 import logging
 import math
 import os
+import tempfile
 import threading
 import time
 from dataclasses import asdict, dataclass, field
@@ -17,7 +18,7 @@ from typing import Any
 
 from .config_paths import runtime_file_path
 from .domestic import DomesticStockTrading, MultiAccountDomesticStockTrading
-from .file_lock import FileLock
+from .file_lock import FileLock, fsync_parent_directory
 from .market_hours import is_market_open
 from .schema import SignalMessage, parse_signal_payload
 from .us import MultiAccountUSStockTrading, USStockTrading
@@ -72,21 +73,21 @@ class StopLossWatcherConfig:
             poll_seconds = float(payload.get("poll_seconds", 5.0))
             if poll_seconds <= 0:
                 poll_seconds = 5.0
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             poll_seconds = 5.0
 
         try:
             request_interval = float(payload.get("request_interval_seconds", 0.2))
             if request_interval < 0:
                 request_interval = 0.2
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             request_interval = 0.2
 
         try:
             holding_check_interval = float(payload.get("holding_check_interval_seconds", 60.0))
             if holding_check_interval < 0:
                 holding_check_interval = 60.0
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             holding_check_interval = 60.0
 
         storage_raw = payload.get("storage_path")
@@ -151,13 +152,38 @@ class StopLossTracker:
     def _key(self, market: str, ticker: str) -> str:
         return f"{market.strip().upper()}:{ticker.strip()}"
 
+    def _lookup_key(self, positions: dict[str, Any], market: str, ticker: str) -> str:
+        """Find a canonical new US record without hiding legacy raw keys.
+
+        Preserve exact-key lookup for historical lowercase files. Only fall
+        back to uppercase when the exact key is absent; never rewrite a legacy
+        record or guess between multiple conflicting historical entries.
+        """
+        key = self._key(market, ticker)
+        if key not in positions and market.strip().upper() == "US":
+            canonical = self._key(market, ticker.upper())
+            if canonical in positions:
+                return canonical
+        return key
+
     def _load(self) -> dict[str, dict[str, Any]]:
         try:
             raw = self.path.read_text(encoding="utf-8")
-            data = json.loads(raw)
+            # Duplicate JSON keys silently overwrite an earlier stop price with
+            # Python's default decoder. Treat the entire ledger as ambiguous
+            # rather than trading against an arbitrary surviving record.
+            def unique_object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+                obj: dict[str, Any] = {}
+                for key, value in pairs:
+                    if key in obj:
+                        raise ValueError("Duplicate key in stop-loss ledger JSON")
+                    obj[key] = value
+                return obj
+
+            data = json.loads(raw, object_pairs_hook=unique_object_pairs)
         except FileNotFoundError:
             return {}
-        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
             logger.error(
                 "Stop-loss positions file is unreadable (%s): %s", self.path, exc
             )
@@ -169,23 +195,73 @@ class StopLossTracker:
             return data
         if isinstance(data, list):
             result = {}
-            for item in data:
-                if isinstance(item, dict) and "market" in item and "ticker" in item:
-                    result[self._key(item["market"], item["ticker"])] = item
+            first_records: dict[str, tuple[str, int]] = {}
+            ambiguous_keys: set[str] = set()
+            for index, item in enumerate(data):
+                # Legacy lists may contain malformed or duplicate entries.  Keep
+                # their original payload under a non-tradable key when the list
+                # is migrated to a dictionary by a later write.  Dropping them
+                # would destroy the operator's evidence for reconciliation.
+                quarantine_key = f"__legacy_unverified_{index}__"
+                if not isinstance(item, dict):
+                    logger.error("Quarantining malformed legacy stop-loss record at index %s", index)
+                    result[quarantine_key] = item
+                    continue
+                market, ticker = item.get("market"), item.get("ticker")
+                if (
+                    not isinstance(market, str)
+                    or not isinstance(ticker, str)
+                    or not market.strip()
+                    or not ticker.strip()
+                ):
+                    # A single corrupt legacy record must not prevent checks
+                    # for every other valid tracked position.
+                    logger.error("Quarantining legacy stop-loss record with invalid market/ticker at index %s", index)
+                    result[quarantine_key] = item
+                    continue
+                key = self._key(market, ticker)
+                # Case variants of a US ticker refer to the same instrument.
+                canonical_key = f"{market.strip().upper()}:{ticker.strip().upper()}"
+                if canonical_key in ambiguous_keys:
+                    logger.error("Quarantining additional duplicate legacy stop-loss record at index %s", index)
+                    result[quarantine_key] = item
+                    continue
+                if canonical_key in first_records:
+                    # Quarantine both conflicting records, including case variants.
+                    first_key, first_index = first_records.pop(canonical_key)
+                    result[f"__legacy_unverified_{first_index}__"] = result.pop(first_key)
+                    ambiguous_keys.add(canonical_key)
+                    logger.error("Quarantining conflicting legacy stop-loss records for %s", canonical_key)
+                    result[quarantine_key] = item
+                    continue
+                result[key] = item
+                first_records[canonical_key] = (key, index)
             return result
         raise RuntimeError(
             "Stop-loss tracker has an invalid format; automated stop-loss actions are blocked"
         )
 
     def _save(self, data: dict[str, dict[str, Any]]) -> None:
-        temp_file = self.path.with_suffix(".tmp")
-        with temp_file.open("w", encoding="utf-8") as handle:
-            handle.write(json.dumps(data, indent=2, ensure_ascii=False))
-            handle.flush()
-            os.fsync(handle.fileno())
-        if os.name != "nt":
-            os.chmod(temp_file, 0o600)
-        temp_file.replace(self.path)
+        # A fixed sibling such as path.with_suffix(".tmp") can be the actual
+        # configured ledger path (or collide with another writer). Use a unique
+        # same-directory file so replacement stays atomic even for *.tmp paths.
+        temporary_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=self.path.parent,
+                prefix=f".{self.path.name}.", suffix=".tmp", delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                if os.name != "nt":
+                    os.chmod(temporary_path, 0o600)
+                json.dump(data, handle, indent=2, ensure_ascii=False)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.path)
+            fsync_parent_directory(self.path)
+        finally:
+            if temporary_path is not None and temporary_path.exists():
+                temporary_path.unlink()
 
     def record_position(
         self,
@@ -198,21 +274,68 @@ class StopLossTracker:
         target_price: float | None = None,
     ) -> None:
         """Register or update a position's stop-loss price."""
-        if stop_loss <= 0:
+        # Reject malformed identifiers before touching durable protection.
+        # Whitespace-only instruments otherwise create unreachable ledger
+        # entries that the watcher silently skips; normalize outer whitespace
+        # so the persisted key and the broker-facing ticker agree.
+        if not isinstance(market, str) or market.strip().upper() not in {"KR", "US"}:
+            raise ValueError("Stop-loss position market must be KR or US")
+        if not isinstance(ticker, str) or not ticker.strip():
+            raise ValueError("Stop-loss position ticker must be nonempty")
+        if any(ord(ch) < 32 or ord(ch) == 127 for ch in market + ticker):
+            raise ValueError("Stop-loss position identifiers contain control characters")
+        market = market.strip().upper()
+        # US symbols are case-insensitive. New writes must use one canonical
+        # key, or a lowercase re-registration can create two active records
+        # and cause the watcher to quarantine both, losing protection.
+        ticker = ticker.strip().upper() if market == "US" else ticker.strip()
+        # Invalid/non-finite prices must not overwrite a valid protection
+        # record with JSON NaN/Infinity that the watcher later skips.
+        try:
+            if any(isinstance(value, bool) for value in (stop_loss, entry_price, target_price)):
+                raise ValueError("Boolean price is not valid")
+            stop_loss_value = float(stop_loss)
+            entry_price_value = float(entry_price)
+            target_price_value = float(target_price) if target_price is not None else None
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Stop-loss position contains invalid prices") from exc
+        prices = (stop_loss_value, entry_price_value)
+        if target_price_value is not None:
+            prices += (target_price_value,)
+        if not all(math.isfinite(value) for value in prices):
+            raise ValueError("Stop-loss position prices must be finite")
+        if entry_price_value < 0 or (target_price_value is not None and target_price_value < 0):
+            raise ValueError("Stop-loss position prices must be nonnegative")
+        if stop_loss_value <= 0:
             return
         now_iso = datetime.now(timezone.utc).isoformat()
         key = self._key(market, ticker)
         with FileLock(self.lock_path):
             positions = self._load()
+            # Never silently overwrite or duplicate a legacy case-variant or
+            # quarantined instrument. Its original evidence must be reconciled
+            # by an operator before a new stop level can become actionable.
+            for stored_key, stored in positions.items():
+                if not isinstance(stored, dict):
+                    continue
+                stored_market, stored_ticker = stored.get("market"), stored.get("ticker")
+                if not isinstance(stored_market, str) or not isinstance(stored_ticker, str):
+                    continue
+                if (stored_market.strip().upper() == market
+                        and stored_ticker.strip().upper() == ticker.upper()
+                        and stored_key != key):
+                    raise ValueError(
+                        "Conflicting stop-loss instrument requires operator reconciliation"
+                    )
             existing = positions.get(key)
-            created_at = existing.get("created_at") if existing else now_iso
+            created_at = existing.get("created_at") if isinstance(existing, dict) else now_iso
             pos = TrackedPosition(
                 market=market.upper(),
                 ticker=ticker,
-                stop_loss=float(stop_loss),
-                entry_price=float(entry_price),
+                stop_loss=stop_loss_value,
+                entry_price=entry_price_value,
                 company_name=company_name or ticker,
-                target_price=float(target_price) if target_price is not None else None,
+                target_price=target_price_value,
                 created_at=created_at or now_iso,
                 updated_at=now_iso,
             )
@@ -232,6 +355,7 @@ class StopLossTracker:
         ticker: str,
         *,
         expected_updated_at: Any = None,
+        expected_record: dict[str, Any] | None = None,
     ) -> bool:
         """Remove a position from stop-loss tracking.
 
@@ -239,13 +363,22 @@ class StopLossTracker:
         is still the same tracked record the caller inspected — a position that
         was re-registered by a concurrent BUY must not be silently wiped.
         ``updated_at`` (not ``created_at``) is the discriminator because
-        re-registration preserves the original ``created_at``.
+        re-registration preserves the original ``created_at``. Pass
+        ``expected_record`` for an exact compare-and-swap check, including
+        legacy records without ``updated_at``; otherwise a concurrent BUY
+        could lose its newly registered stop-loss protection.
         """
-        key = self._key(market, ticker)
         with FileLock(self.lock_path):
             positions = self._load()
+            key = self._lookup_key(positions, market, ticker)
             record = positions.get(key)
             if record is None:
+                return False
+            if not isinstance(record, dict):
+                logger.error("[StopLossTracker] Refusing to delete malformed record for %s %s", market, ticker)
+                return False
+            if expected_record is not None and record != expected_record:
+                logger.info("[StopLossTracker] Keeping %s %s: record changed since inspection", market, ticker)
                 return False
             if expected_updated_at is not None and record.get("updated_at") != expected_updated_at:
                 logger.info(
@@ -260,20 +393,75 @@ class StopLossTracker:
             return True
 
     def get_positions(self, market: str | None = None) -> list[dict[str, Any]]:
-        """Return all tracked positions, optionally filtered by market."""
+        """Return valid tracked positions without discarding corrupt records on disk."""
+        def valid_stored_price(value: Any, *, positive: bool = False) -> bool:
+            # Legacy/manual JSON can contain booleans or NaN/Infinity. A bool
+            # becomes 1.0 under float(), and nonfinite stop levels could
+            # silently disable protection or trigger an unintended order.
+            if isinstance(value, bool):
+                return False
+            try:
+                number = float(value)
+            except (TypeError, ValueError, OverflowError):
+                return False
+            return math.isfinite(number) and (number > 0 if positive else number >= 0)
+
         with FileLock(self.lock_path):
             data = self._load()
-            items = list(data.values())
-        if market:
-            target_market = market.strip().upper()
-            return [item for item in items if item.get("market", "").upper() == target_market]
-        return items
+            items = list(data.items())
+        target_market = market.strip().upper() if market else None
+        # Older versions may already have migrated a duplicate list into a
+        # dictionary while leaving the first conflicting entry actionable.
+        # Block that entry too until the operator reconciles the quarantine.
+        quarantined_instruments: set[str] = set()
+        active_instrument_counts: dict[str, int] = {}
+        for key, item in items:
+            if not isinstance(item, dict):
+                continue
+            q_market, q_ticker = item.get("market"), item.get("ticker")
+            if not isinstance(q_market, str) or not isinstance(q_ticker, str) or not q_market.strip() or not q_ticker.strip():
+                continue
+            canonical_key = f"{q_market.strip().upper()}:{q_ticker.strip().upper()}"
+            if key.startswith("__legacy_unverified_"):
+                quarantined_instruments.add(canonical_key)
+            elif self._key(q_market, q_ticker) == key:
+                active_instrument_counts[canonical_key] = active_instrument_counts.get(canonical_key, 0) + 1
+        valid: list[dict[str, Any]] = []
+        for key, item in items:
+            if isinstance(item, dict) and isinstance(item.get("market"), str) and isinstance(item.get("ticker"), str):
+                canonical_key = f"{item['market'].strip().upper()}:{item['ticker'].strip().upper()}"
+                if canonical_key in quarantined_instruments or active_instrument_counts.get(canonical_key, 0) > 1:
+                    logger.error("Blocking ambiguous stop-loss instrument %s pending reconciliation", canonical_key)
+                    continue
+            if (
+                not isinstance(item, dict)
+                or not isinstance(item.get("market"), str)
+                or not isinstance(item.get("ticker"), str)
+                or not item["market"].strip()
+                or not item["ticker"].strip()
+                or item["market"].strip().upper() not in {"KR", "US"}
+                or item["ticker"] != item["ticker"].strip()
+                or any(ord(ch) < 32 or ord(ch) == 127 for ch in item["market"] + item["ticker"])
+                or self._key(item["market"], item["ticker"]) != key
+                or not valid_stored_price(item.get("stop_loss"), positive=True)
+                or not valid_stored_price(item.get("entry_price", 0))
+                or (
+                    item.get("target_price") is not None
+                    and not valid_stored_price(item["target_price"])
+                )
+            ):
+                # Never dispatch an order to a malformed or mismatched ticker.
+                # Preserve the raw record on disk for operator reconciliation.
+                logger.error("Skipping malformed stop-loss record at key %s", key)
+                continue
+            if target_market is None or item["market"].strip().upper() == target_market:
+                valid.append(item)
+        return valid
 
     def get_position(self, market: str, ticker: str) -> dict[str, Any] | None:
-        key = self._key(market, ticker)
         with FileLock(self.lock_path):
             data = self._load()
-            return data.get(key)
+            return data.get(self._lookup_key(data, market, ticker))
 
     def clear(self) -> None:
         with FileLock(self.lock_path):
@@ -391,7 +579,7 @@ class StopLossWatcher:
                 try:
                     ticker = str(pos.get("ticker", "") or "")
                     stop_loss = float(pos.get("stop_loss", 0.0))
-                except (AttributeError, TypeError, ValueError):
+                except (AttributeError, TypeError, ValueError, OverflowError):
                     # One malformed persisted record must not abort the cycle
                     # and leave every later position unchecked.
                     logger.error("[Stop-Loss] Skipping malformed tracked record: %r", pos)
@@ -411,8 +599,21 @@ class StopLossWatcher:
                 if not price_info or not isinstance(price_info, dict):
                     continue
 
-                current_price = float(price_info.get("current_price", 0.0))
-                if current_price <= 0:
+                # A malformed quote must not abort this market's entire
+                # watcher cycle and leave subsequent positions unprotected.
+                try:
+                    current_price = float(price_info.get("current_price", 0.0))
+                except (TypeError, ValueError, OverflowError):
+                    logger.warning(
+                        "[Stop-Loss] Invalid current price for %s %s: %r",
+                        market, ticker, price_info.get("current_price"),
+                    )
+                    continue
+                if not math.isfinite(current_price) or current_price <= 0:
+                    logger.warning(
+                        "[Stop-Loss] Nonpositive or nonfinite current price for %s %s",
+                        market, ticker,
+                    )
                     continue
 
                 stop_hit = current_price <= stop_loss
@@ -420,7 +621,9 @@ class StopLossWatcher:
                     continue
 
                 try:
-                    holding_qty = trader.get_holding_quantity(ticker)
+                    holding_qty = self._validated_holding_quantity(
+                        trader.get_holding_quantity(ticker)
+                    )
                 except Exception as exc:
                     logger.error(
                         "[Stop-Loss] Holding quantity is UNKNOWN for %s %s; "
@@ -430,19 +633,42 @@ class StopLossWatcher:
                         exc,
                     )
                     continue
+                if holding_qty is None:
+                    logger.error(
+                        "[Stop-Loss] Invalid holding quantity for %s %s; "
+                        "blocking automatic SELL and tracker removal",
+                        market, ticker,
+                    )
+                    continue
 
-                if holding_qty <= 0:
+                if holding_qty == 0:
                     logger.info(
                         "[Stop-Loss] %s %s has 0 holding quantity; clearing from tracking",
                         market,
                         ticker,
                     )
                     self.tracker.remove_position(
-                        market, ticker, expected_updated_at=pos.get("updated_at")
+                        market, ticker, expected_updated_at=pos.get("updated_at"),
+                        expected_record=pos,
                     )
                     continue
 
                 if stop_hit:
+                    # Price/holdings inquiries can take seconds. A concurrent
+                    # BUY or operator stop-level edit may replace the snapshot
+                    # while those broker calls are running. Do not liquidate
+                    # against a stale threshold or an invalidated record.
+                    latest = self.tracker.get_positions(market=market)
+                    # Compare the full persisted snapshot, not only the
+                    # threshold and updated_at. Legacy records can lack
+                    # updated_at; a concurrent edit must invalidate the
+                    # in-flight quote/holdings decision before broker submit.
+                    if not any(current == pos for current in latest):
+                        logger.warning(
+                            "[Stop-Loss] Skipping stale or quarantined protection for %s %s",
+                            market, ticker,
+                        )
+                        continue
                     key = self.tracker._key(market, ticker)
                     now_mono = time.monotonic()
                     last_attempt = self._last_trigger_attempt.get(key, 0.0)
@@ -478,6 +704,19 @@ class StopLossWatcher:
                 "no holding quantity",
             )
         )
+
+    @staticmethod
+    def _validated_holding_quantity(value: Any) -> float | None:
+        """Return a confirmed nonnegative finite balance, or fail closed."""
+        if isinstance(value, bool):
+            return None
+        try:
+            quantity = float(value)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if not math.isfinite(quantity) or quantity < 0:
+            return None
+        return quantity
 
     def _trigger_sell(
         self, market: str, ticker: str, current_price: float, pos: dict[str, Any]
@@ -534,31 +773,36 @@ class StopLossWatcher:
                     for a in result.accounts
                 )
             )
-            if result.status == "executed" or all_accounts_clean:
-                self.tracker.remove_position(
-                    market, ticker, expected_updated_at=pos.get("updated_at")
-                )
-                self._last_trigger_attempt.pop(self.tracker._key(market, ticker), None)
-            elif result.status == "partial_success":
+            if result.status in {"executed", "partial_success"} or all_accounts_clean:
+                # Broker acceptance, duplicate suppression, and an account's
+                # "not held" message do not establish that *all* accounts are
+                # flat. Preserve the durable watcher until a fresh aggregate
+                # holdings inquiry confirms exactly zero shares.
                 try:
-                    remaining_qty = trader.get_holding_quantity(ticker)
-                    if remaining_qty <= 0:
-                        logger.info(
-                            "[Stop-Loss] %s %s has 0 remaining holdings across accounts after sell; clearing from tracking",
-                            market,
-                            ticker,
-                        )
-                        self.tracker.remove_position(
-                            market, ticker, expected_updated_at=pos.get("updated_at")
-                        )
-                        self._last_trigger_attempt.pop(self.tracker._key(market, ticker), None)
+                    remaining_qty = self._validated_holding_quantity(
+                        trader.get_holding_quantity(ticker)
+                    )
                 except Exception as exc:
                     logger.warning(
-                        "[Stop-Loss] Could not verify remaining holdings for %s %s after partial sell: %s",
-                        market,
-                        ticker,
-                        exc,
+                        "[Stop-Loss] Keeping protection for %s %s: "
+                        "post-order holdings cannot be verified: %s",
+                        market, ticker, exc,
                     )
+                else:
+                    if remaining_qty == 0:
+                        self.tracker.remove_position(
+                            market, ticker, expected_updated_at=pos.get("updated_at"),
+                            expected_record=pos,
+                        )
+                        self._last_trigger_attempt.pop(
+                            self.tracker._key(market, ticker), None
+                        )
+                    else:
+                        logger.warning(
+                            "[Stop-Loss] Keeping protection for %s %s after "
+                            "SELL (remaining=%s; order acceptance is not a fill)",
+                            market, ticker, remaining_qty,
+                        )
             return {
                 "market": market,
                 "ticker": ticker,

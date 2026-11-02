@@ -90,7 +90,7 @@ async def test_multi_account_dispatch_uses_each_us_account_key_for_orders(monkey
             broker_account_keys.append(account_key)
 
         async def async_buy_stock(self, ticker, limit_price=None):
-            return {"success": True, "message": f"order for {ticker}"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": f"order for {ticker}"}
 
     monkeypatch.setattr("trading.dispatch.USStockTrading", FakeUSTrader)
     dispatcher = make_dispatcher(monkeypatch, tmp_path)
@@ -250,3 +250,97 @@ async def test_multi_account_dispatch_skips_disabled_account(monkeypatch, tmp_pa
         ("KR-B", "skipped"),
         ("KR-A", "executed"),
     ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("targets", [[], ["", "opaque-a"], ["opaque-a", "opaque-a"]])
+async def test_queued_multi_account_invalid_targets_never_submit_orders(
+    monkeypatch, tmp_path, targets
+):
+    """A malformed persisted target list must never expand or repeat broker orders."""
+    accounts = [account("KR-A", "11111111"), account("KR-B", "22222222")]
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **kwargs: accounts)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    calls = []
+
+    async def execute(self, signal, *, account=None):
+        calls.append(account["name"])
+        return DispatchResult("executed", "mock accepted", signal.signal_type, signal.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", execute)
+    dispatcher = make_dispatcher(monkeypatch, tmp_path)
+    dispatcher.execution_dedupe = False  # Even without the ledger, no double-submit.
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+    payload = dict(signal.raw)
+    payload["__prism_queue_context"] = {"multi_account": True, "account_ids": targets}
+    result = await dispatcher.execute_queued_signal(payload)
+
+    assert result.status == "failed"
+    assert calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("context", [
+    {},
+    {"queue_id": "old-single-account-entry"},
+    {"multi_account": False, "queue_id": "old-single-account-entry"},
+    {"multi_account": "true", "account_ids": ["opaque-a"]},
+])
+async def test_queued_legacy_or_mismatched_mode_never_fans_out(
+    monkeypatch, tmp_path, context
+):
+    """Changing from single to multi-account must not broadcast old queued work."""
+    accounts = [account("KR-A", "11111111"), account("KR-B", "22222222")]
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **kwargs: accounts)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    calls = []
+
+    async def execute(self, signal, *, account=None):
+        calls.append(account["name"])
+        return DispatchResult("executed", "mock accepted", signal.signal_type, signal.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", execute)
+    dispatcher = make_dispatcher(monkeypatch, tmp_path)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+    payload = dict(signal.raw)
+    payload["__prism_queue_context"] = context
+    result = await dispatcher.execute_queued_signal(payload)
+
+    assert result.status == "failed"
+    assert calls == []
+
+
+@pytest.mark.asyncio
+async def test_queued_multi_account_cannot_replay_after_switch_to_single(
+    monkeypatch, tmp_path
+):
+    """A multi-account queue entry cannot change its target execution mode."""
+    accounts = [account("KR-A", "11111111"), account("KR-B", "22222222")]
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **kwargs: accounts)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    calls = []
+
+    async def execute(self, signal, *, account=None):
+        calls.append(account["name"] if account else "single")
+        return DispatchResult("executed", "mock accepted", signal.signal_type, signal.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", execute)
+    dispatcher = make_dispatcher(monkeypatch, tmp_path)
+    dispatcher.multi_account_enabled = False
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+    payload = dict(signal.raw)
+    payload["__prism_queue_context"] = {"multi_account": True, "account_ids": ["opaque-a"]}
+    result = await dispatcher.execute_queued_signal(payload)
+
+    assert result.status == "failed"
+    assert calls == []
+
+
+def test_explicitly_empty_multi_account_target_set_stays_empty(monkeypatch, tmp_path):
+    accounts = [account("KR-A", "11111111"), account("KR-B", "22222222")]
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **kwargs: accounts)
+    dispatcher = make_dispatcher(monkeypatch, tmp_path)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+    eligible, skipped = dispatcher.multi_account_dispatcher._eligible_accounts(signal, [])
+    assert eligible == []
+    assert skipped == []

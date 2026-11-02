@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .config_paths import runtime_file_path
-from .file_lock import FileLock
+from .file_lock import FileLock, fsync_parent_directory
 
 DEFAULT_LEDGER_PATH = Path("runtime") / "multi_account_execution_ledger.json"
 MAX_LEDGER_ENTRIES = 10_000
@@ -136,10 +136,25 @@ class ExecutionLedger:
 
     def _load(self) -> dict[str, dict[str, Any]]:
         try:
-            data = json.loads(self.path.read_text(encoding="utf-8"))
+            # A duplicate execution identity in hand-edited/recovered JSON
+            # could overwrite an "executed" claim with a retryable "failed"
+            # claim. The default JSON decoder silently keeps the last entry,
+            # risking a second broker submission. Fail closed on duplicates.
+            def unique_object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+                obj: dict[str, Any] = {}
+                for key, value in pairs:
+                    if key in obj:
+                        raise ValueError("Duplicate execution ledger JSON key")
+                    obj[key] = value
+                return obj
+
+            data = json.loads(
+                self.path.read_text(encoding="utf-8"),
+                object_pairs_hook=unique_object_pairs,
+            )
         except FileNotFoundError:
             return {}
-        except (OSError, json.JSONDecodeError):
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
             # Fail closed.  A corrupted ledger must not be silently discarded because
             # doing so could duplicate orders after recovery.
             raise RuntimeError("Automatic-trading execution ledger is unreadable")
@@ -165,6 +180,7 @@ class ExecutionLedger:
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary_path, self.path)
+            fsync_parent_directory(self.path)
             if os.name != "nt":
                 os.chmod(self.path, 0o600)
         finally:
@@ -176,22 +192,29 @@ class ExecutionLedger:
         cutoff = now - RETENTION
         retained: dict[str, dict[str, Any]] = {}
         for key, value in entries.items():
+            # Accepted/unknown/in-progress orders are not proven safe to replay.
+            # Never expire or evict their identities solely due to age or size:
+            # an old Pub/Sub redelivery could otherwise submit a second order.
+            status = str(value.get("status") or "in_progress")
+            if status not in _RETRYABLE_STATUSES:
+                retained[key] = value
+                continue
             try:
                 claimed_at = datetime.fromisoformat(str(value.get("claimed_at", "")))
                 if claimed_at.tzinfo is None:
                     claimed_at = claimed_at.replace(tzinfo=timezone.utc)
-            except ValueError:
-                # Preserve malformed records: dropping them could re-enable a duplicate.
-                retained[key] = value
-                continue
+            except (TypeError, ValueError, OverflowError) as exc:
+                # Keeping an unverifiable retryable record is insufficient:
+                # claim() would otherwise overwrite it as in_progress and
+                # permit a second broker order. Stop *all* ledger mutations
+                # until an operator reconciles the original evidence.
+                raise RuntimeError(
+                    "Automatic-trading execution ledger contains an unverifiable "
+                    "retryable claim timestamp; operator reconciliation required"
+                ) from exc
             if claimed_at >= cutoff:
                 retained[key] = value
-        if len(retained) <= MAX_LEDGER_ENTRIES:
-            return retained
-        ordered = sorted(
-            retained.items(), key=lambda pair: str(pair[1].get("claimed_at", "")), reverse=True
-        )
-        return dict(ordered[:MAX_LEDGER_ENTRIES])
+        return retained
 
     def claim(
         self, identity: str, *, aliases: Iterable[str] = ()
@@ -228,6 +251,13 @@ class ExecutionLedger:
                 if alias != identity:
                     entries.pop(alias, None)
             entries[identity] = {"status": "in_progress", "claimed_at": now.isoformat()}
+            # Fail closed at capacity. Silently dropping older accepted/unknown
+            # claims to make room would re-enable duplicate broker submissions.
+            if len(entries) > MAX_LEDGER_ENTRIES:
+                raise RuntimeError(
+                    "Automatic-trading execution ledger is full; "
+                    "operator reconciliation is required before new orders"
+                )
             self._save(entries)
         return True, previous_status
 
@@ -238,6 +268,14 @@ class ExecutionLedger:
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
             if identity in entries:
+                existing_status = str(entries[identity].get("status") or "in_progress")
+                # A terminal claim that could have reached the broker must
+                # never be rewritten as a retryable status by a late callback,
+                # duplicate finalizer, or contradictory error handler. Such a
+                # downgrade would let claim() submit the same order again.
+                # Only open or provably pre-submission claims may transition.
+                if existing_status != "in_progress" and existing_status not in _RETRYABLE_STATUSES:
+                    return
                 entries[identity]["status"] = str(status)
                 entries[identity]["finished_at"] = now.isoformat()
                 self._save(entries)

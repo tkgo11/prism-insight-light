@@ -3,6 +3,8 @@ import json
 import os
 import threading
 
+import pytest
+
 from trading.off_hours_queue import OffHoursOrderQueue, QueueCapacityError
 from trading.schema import parse_signal_payload
 
@@ -249,3 +251,39 @@ def test_queue_preserves_enqueue_that_races_with_drain(tmp_path):
     assert not drain.is_alive()
     assert queue.pending_count() == 1
     assert queue._load()[0].signal["ticker"] == "000660"
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        # A duplicate nested ticker would silently reroute the queued trade
+        # if the default JSON parser kept only the last value.
+        '[{"signal":{"type":"BUY","market":"KR","ticker":"005930",'
+        '"ticker":"000660","price":82000},'
+        '"execute_at":"2000-01-01T00:00:00+00:00",'
+        '"created_at":"2000-01-01T00:00:00+00:00"}]',
+        # Duplicate top-level status could convert a failed item into pending.
+        '[{"signal":{"type":"BUY","market":"KR","ticker":"005930","price":82000},'
+        '"status":"failed","status":"pending",'
+        '"execute_at":"2000-01-01T00:00:00+00:00",'
+        '"created_at":"2000-01-01T00:00:00+00:00"}]',
+    ],
+)
+def test_duplicate_json_queue_fields_fail_closed_without_execution(tmp_path, raw):
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    queue.storage_path.write_text(raw, encoding="utf-8")
+    executed = []
+    with pytest.raises(ValueError, match="Duplicate key"):
+        queue.drain_due(
+            lambda payload: executed.append(payload),
+            now=datetime.now(timezone.utc) + timedelta(days=7),
+        )
+    with pytest.raises(ValueError, match="Duplicate key"):
+        queue.pending_count()
+    with pytest.raises(ValueError, match="Duplicate key"):
+        queue.enqueue(
+            parse_signal_payload(
+                {"type": "BUY", "ticker": "035720", "market": "KR", "price": 50000}
+            )
+        )
+    assert executed == []
+    assert queue.storage_path.read_text(encoding="utf-8") == raw
