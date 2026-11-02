@@ -4,14 +4,14 @@
   "state": "ACTIVE_DRAFT_REMEDIATION_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T00-21-KST-turn4",
+    "id": "prism-sync-hourly-2026-11-03T01-16-KST-turn5",
     "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
-    "result": "STATIC_GAP_IDENTIFIED_NO_UNSAFE_PATCH_PRIOR_HEAD_CI_SUCCESS_AUDITS_0_OF_2",
-    "last_mutation_commit": "09acb665d712530b8d3095cd73e8dc7151386b90",
-    "previous_state_branch_sha": "f22f3adb6df90f81f29ff184d56004ba4c6c67f9",
-    "lock_started_at": "2026-11-02T15:21:57Z",
-    "completed_at": "2026-11-02T15:26:03.593Z"
+    "previous_run_id": "prism-sync-hourly-2026-11-03T00-21-KST-turn4",
+    "result": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE",
+    "last_mutation_commit": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+    "previous_state_branch_sha": "e02b9e0bc81c1dca96556093c8e7580c83c00a06",
+    "lock_started_at": "2026-11-02T16:16:10Z",
+    "completed_at": "2026-11-02T16:27:26.488Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -30,11 +30,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+    "head_sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_PRIOR_EXACT_HEAD_CI_SUCCESS_UNRESOLVED_RECONCILIATION"
+    "status": "DRAFT_EXACT_HEAD_MOCK_CI_SUCCESS_RECONCILIATION_BLOCKED"
   },
   "candidates": [
     {
@@ -107,26 +107,26 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "7debf301a0683b9dd283be98de04a1888ff02e5e",
-    "scope_estimate": 76,
+    "checksum": "65121b08992444299cf45b3a87cef0f4e95e9a69",
+    "scope_estimate": 77,
     "files_fully_audited": 0,
-    "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
-    "source_head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
-    "git_tree_sha": "4be1d36d1d8a24f2391539b8630ca137ae04331e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T23-29-KST-related.json"
+    "head_sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+    "source_head_sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+    "git_tree_sha": "94662f348dc91ea1f45d867c4fdda8464b442380",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T01-16-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "24ac6c8f9b7324c9b8d3b9ca26ba8fce467b3992",
-    "sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+    "checksum": "c9f052414acb6274947ab715e9b092c9573f54ad",
+    "sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
     "files_checked": 0,
     "fully_audited_files": 0,
-    "file_count": 170,
-    "git_tree_sha": "4be1d36d1d8a24f2391539b8630ca137ae04331e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T23-29-KST-full.json"
+    "file_count": 171,
+    "git_tree_sha": "94662f348dc91ea1f45d867c4fdda8464b442380",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T01-16-KST-full.json"
   },
-  "checks": {
-    "0": {
+  "checks": [
+    {
       "run_id": 41191643209,
       "head_sha": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
       "conclusion": "success",
@@ -135,7 +135,7 @@
         "Windows runtime smoke"
       ]
     },
-    "1": {
+    {
       "run_id": 41191639061,
       "head_sha": "689b4c9e66001c9485d08bb926eeb67df3f20c8a",
       "conclusion": "success",
@@ -144,7 +144,7 @@
         "Windows runtime smoke"
       ]
     },
-    "2": {
+    {
       "run_id": 41200988178,
       "head_sha": "41f779232c71d026dd0217863dcb5f98b96be85f",
       "status": "completed",
@@ -155,25 +155,25 @@
       ],
       "details": "Linux pytest 2 failed, 709 passed: stale test assertions expected stop-loss tracking deletion after accepted SELL; Windows smoke passed"
     },
-    "3": {
+    {
       "run_id": 41205254073,
       "head_sha": "ddec5a0a7b5481944fa8c5717155490a989dd200",
       "status": "completed",
       "conclusion": "success"
     },
-    "4": {
+    {
       "run_id": 41205318274,
       "head_sha": "9d7c3b0384d62e2a485cd7ab7a780a2d91f01ff9",
       "status": "in_progress",
       "conclusion": null
     },
-    "5": {
+    {
       "run_id": 41205354414,
       "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
       "status": "in_progress",
       "conclusion": null
     },
-    "6": {
+    {
       "run_id": 41205354414,
       "head_sha": "ef0c8d3009e2b3d7fed7b752b30b16f08e888fa7",
       "status": "completed",
@@ -183,13 +183,13 @@
         "Windows runtime smoke"
       ]
     },
-    "7": {
+    {
       "run_id": 41209608548,
       "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
       "status": "in_progress",
       "conclusion": null
     },
-    "8": {
+    {
       "run_id": 41209608548,
       "head_sha": "a24dc522a606b222a9a039573fe5d6cfa9f6faaa",
       "status": "completed",
@@ -199,13 +199,13 @@
         "Windows runtime smoke"
       ]
     },
-    "9": {
+    {
       "run_id": 41214519214,
       "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
       "status": "in_progress",
       "conclusion": null
     },
-    "10": {
+    {
       "run_id": 41214519214,
       "head_sha": "9b9dd41be871c09b9cd81900899dbc27e58a179b",
       "status": "completed",
@@ -215,19 +215,19 @@
         "Windows runtime smoke"
       ]
     },
-    "11": {
+    {
       "run_id": 41219401980,
       "head_sha": "b0cf6ffdd905d42539d5bcc74f9b638713b6750e",
       "status": "in_progress",
       "conclusion": null
     },
-    "12": {
+    {
       "run_id": 41219454375,
       "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
       "status": "in_progress",
       "conclusion": null
     },
-    "13": {
+    {
       "run_id": 41219454375,
       "head_sha": "aafc4b8a12dfc388a198752ba7beea578e89f229",
       "status": "completed",
@@ -238,14 +238,14 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41219454375"
     },
-    "14": {
+    {
       "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
       "status": "in_progress",
       "conclusion": null,
       "notes": "GitHub Actions Tests started for latest PR head; result pending",
       "run_id": 41223929687
     },
-    "15": {
+    {
       "run_id": 41223929687,
       "head_sha": "9d7a2aca1c444515da1aa7a0f49fab1600b8dfd8",
       "status": "completed",
@@ -256,7 +256,7 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41223929687"
     },
-    "16": {
+    {
       "run_id": 41228881618,
       "head_sha": "805ac8aa9f0b65964aafc414da6a7b2a175ccdfc",
       "status": "completed",
@@ -267,7 +267,7 @@
         "Windows runtime smoke: completed/success"
       ]
     },
-    "17": {
+    {
       "run_id": 41234048109,
       "head_sha": "17e622d232a015e10b2507d8713b025a4d34a238",
       "status": "completed",
@@ -282,7 +282,7 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41234048109"
     },
-    "18": {
+    {
       "run_id": 41234188307,
       "head_sha": "375878b3e8be0cde71223b15a9ec58bfa5303dc9",
       "status": "completed",
@@ -298,7 +298,7 @@
         "qlty usage: pending"
       ]
     },
-    "19": {
+    {
       "run_id": 41238941028,
       "head_sha": "3c47cbca447215dbf18c3e82cb59f8049295f330",
       "status": "completed",
@@ -314,7 +314,7 @@
         "qlty usage: pending"
       ]
     },
-    "29": {
+    {
       "run_ids": [
         41268676502,
         41268680081
@@ -329,7 +329,7 @@
       "evidence": "GitHub check-runs API and workflow job steps at current PR head",
       "verification_run_id": "prism-sync-hourly-2026-11-01T13:21+09:00"
     },
-    "34": {
+    {
       "run_id": 41301916820,
       "head_sha": "a2b3925450dfef8937fb68a7413e4efe2e77061c",
       "status": "in_progress",
@@ -345,7 +345,7 @@
         }
       ]
     },
-    "35": {
+    {
       "run_id": 41301916820,
       "head_sha": "a2b3925450dfef8937fb68a7413e4efe2e77061c",
       "status": "completed",
@@ -365,7 +365,7 @@
         }
       ]
     },
-    "39": {
+    {
       "run_id": 41325576768,
       "head_sha": "083296fcf272f23d32be0e63434b0b0d7e5a1578",
       "status": "completed",
@@ -376,7 +376,7 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41325576768"
     },
-    "50": {
+    {
       "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
       "status": "completed",
       "conclusion": "success",
@@ -399,7 +399,7 @@
         }
       ]
     },
-    "51": {
+    {
       "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
       "run_ids": [
         41407754351,
@@ -425,11 +425,11 @@
         }
       ]
     },
-    "latest_workflow_run_id": 41382334350,
-    "latest_workflow_run_status": "completed",
-    "latest_workflow_run_conclusion": "success",
-    "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
-    "automation-turn-11": {
+    41382334350,
+    "completed",
+    "success",
+    "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+    {
       "run_id": 41243400167,
       "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
       "status": "completed",
@@ -454,7 +454,7 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41243400167"
     },
-    "2026-11-01T08:20+09:00": {
+    {
       "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
       "status": "in_progress",
       "conclusion": null,
@@ -484,7 +484,7 @@
       ],
       "note": "No local tests executed; no PASS until full audit and all required checks complete"
     },
-    "2026-11-01T10:17+09:00": {
+    {
       "head_sha": "fee9a3c6594d6bbcbccdd0798ab7a43e3078f142",
       "status": "in_progress",
       "conclusion": null,
@@ -524,7 +524,7 @@
       ],
       "local_tests_executed": false
     },
-    "2026-11-01T11:20+09:00": {
+    {
       "head_sha": "c43c6f94ba57585a2646ae704bb7cf202a65b59b",
       "status": "in_progress",
       "conclusion": null,
@@ -556,7 +556,7 @@
         }
       ]
     },
-    "2026-11-01T12:17+09:00": {
+    {
       "head_sha": "65f2fcd7ab02a478dbf5c7067c2bcbb709048d30",
       "status": "in_progress",
       "conclusion": null,
@@ -585,7 +585,7 @@
       },
       "local_tests_executed": false
     },
-    "2026-11-01T14:20+09:00": {
+    {
       "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
       "status": "in_progress",
       "conclusion": null,
@@ -611,7 +611,7 @@
       ],
       "notes": "Verified both new-head workflow runs in progress; no success claimed"
     },
-    "2026-11-01T15:20+09:00": {
+    {
       "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
       "run_ids": [
         41276607805,
@@ -630,7 +630,7 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41276611432"
     },
-    "2026-11-01T16:20+09:00": {
+    {
       "head_sha": "686dedaa8037385e7354dfaad97e9a4a1b9b5750",
       "run_ids": [
         41276607805,
@@ -684,7 +684,7 @@
       ],
       "notes": "Actions checks verified at PR head; qlty usage pending; no PASS."
     },
-    "2026-11-01T17:20+09:00": {
+    {
       "head_sha": "1db54beebc5f43cb8462515d4b936265ab319e49",
       "checks": [
         {
@@ -749,7 +749,7 @@
         }
       ]
     },
-    "2026-11-01T22:20+09:00": {
+    {
       "head_sha": "234d6a280e350c0a4ffad1f127ccd9fdfaf28d79",
       "status": "in_progress",
       "conclusion": null,
@@ -774,7 +774,7 @@
       ],
       "local_tests_executed": false
     },
-    "2026-11-01T23:20+09:00": {
+    {
       "head_sha": "c24e5cd690b825b7601f28351330431c9f1cef46",
       "run_id": 41315903723,
       "linux_pytest": "success:854",
@@ -787,7 +787,7 @@
       "full_audit": "not_started",
       "merge": false
     },
-    "2026-11-02T00:20+09:00": {
+    {
       "head_sha": "a20bcb93959624471fdf641b30f46db83696e679",
       "run_ids": [
         41321379720,
@@ -841,7 +841,7 @@
       "local_tests_executed": false,
       "source": "GitHub check-runs API"
     },
-    "2026-11-02T02:20+09:00": {
+    {
       "head_sha": "645816c9c829f199979b745467030c833cb9adb9",
       "status": "completed",
       "conclusion": "success",
@@ -870,8 +870,8 @@
       "local_tests_executed": false,
       "broker_demo_executed": false
     },
-    "latest_head_sha": "def37442fff6b2d059aaca663446f53f4ef47ea8",
-    "latest_head_runs": [
+    "def37442fff6b2d059aaca663446f53f4ef47ea8",
+    [
       {
         "id": 41331411166,
         "event": "pull_request",
@@ -885,7 +885,7 @@
         "conclusion": "success"
       }
     ],
-    "2026-11-02T04:18+09:00": {
+    {
       "head_sha": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c",
       "status": "completed",
       "conclusion": "success",
@@ -914,7 +914,7 @@
         }
       ]
     },
-    "2026-11-02T05:24+09:00": {
+    {
       "run_id": 41347002844,
       "head_sha": "d89ad593fd5c2a6edeedcc178b967f49b105e625",
       "status": "completed",
@@ -938,7 +938,7 @@
         }
       ]
     },
-    "2026-11-02T06:22+09:00": {
+    {
       "head_sha": "def37442fff6b2d059aaca663446f53f4ef47ea8",
       "run_id": 41351888612,
       "status": "completed",
@@ -951,7 +951,7 @@
       "qlty_usage": "pending",
       "review": "none"
     },
-    "NaN": {
+    {
       "run_id": 41356898329,
       "head_sha": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
       "status": "completed",
@@ -978,7 +978,7 @@
         }
       ]
     },
-    "prism-sync-hourly-2026-11-02T10:16:41+09:00": {
+    {
       "head_sha": "343cb16bb7013c985fcdd91aac508a13e4ef181a",
       "run_ids": [
         {
@@ -1009,7 +1009,7 @@
       "related_pass": false,
       "full_pass": false
     },
-    "prism-sync-hourly-2026-11-02T11:16:28+09:00": {
+    {
       "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
       "status": "completed",
       "conclusion": "success",
@@ -1046,7 +1046,7 @@
         }
       ]
     },
-    "2026-11-02T12:16+09:00": {
+    {
       "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
       "status": "completed",
       "conclusion": "success",
@@ -1079,7 +1079,7 @@
         }
       ]
     },
-    "prism-sync-hourly-2026-11-02T08:31:40Z-20261102-1731KST": {
+    {
       "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
       "status": "completed",
       "conclusion": "success",
@@ -1089,7 +1089,7 @@
       ],
       "source": "Existing latest-HEAD Actions; no new tests run in this slot"
     },
-    "prism-sync-hourly-2026-11-02T18-28-KST-turn11": {
+    {
       "head_sha": "796f8767c910858446ca8b5f39e734a163dd73d7",
       "status": "completed",
       "conclusion": "success",
@@ -1112,7 +1112,7 @@
         }
       ]
     },
-    "2026-11-02T19-23+09:00": {
+    {
       "head_sha": "786e032f564d44660c3e52d5a5a0973182cb113a",
       "status": "completed",
       "conclusion": "success",
@@ -1135,7 +1135,7 @@
         }
       ]
     },
-    "2026-11-02T20-20-KST": {
+    {
       "head_sha": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
       "status": "completed",
       "conclusion": "success",
@@ -1158,7 +1158,7 @@
         }
       ]
     },
-    "manual-remediation-2026-11-02": {
+    {
       "head_sha": "a624f91d4e976fd23e21b08ae5152e84cf11522f",
       "status": "completed",
       "conclusion": "success",
@@ -1185,7 +1185,7 @@
       ],
       "notes": "Workflow and external statuses checked for exact new PR head. Does not imply file-by-file audit or broker demo validation."
     },
-    "prism-sync-hourly-2026-11-02T21-19-KST-turn1": {
+    {
       "head_sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
       "status": "completed",
       "conclusion": "success",
@@ -1215,7 +1215,7 @@
       "related_pass": false,
       "full_pass": false
     },
-    "2026-11-02T22-45-KST": {
+    {
       "head_sha": "d3bdebc12292a76677cee921abe78754ce089111",
       "status": "completed",
       "conclusion": "success",
@@ -1256,7 +1256,7 @@
         }
       ]
     },
-    "2026-11-02T23-29-KST": {
+    {
       "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
       "status": "completed",
       "conclusion": "success",
@@ -1300,7 +1300,7 @@
         }
       ]
     },
-    "prism-sync-hourly-2026-11-03T00-21-KST-turn4": {
+    {
       "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
       "ci_run_ids": [
         41463904937,
@@ -1314,8 +1314,28 @@
       "related_pass": false,
       "full_pass": false,
       "notes": "Targeted static code review only; unknown BUY no tracker path remains blocked without authoritative reconciliation"
+    },
+    {
+      "run_id": 41481126172,
+      "head_sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: 1276 passed",
+        "Windows runtime smoke: 167 passed",
+        "Docker: success"
+      ]
+    },
+    {
+      "run_id": 41481135393,
+      "head_sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: 1276 passed",
+        "Windows runtime smoke: 167 passed",
+        "Docker: success"
+      ]
     }
-  },
+  ],
   "upstream_changes": [
     {
       "scope": "latest observed 2026-10-31 commits",
@@ -4490,6 +4510,28 @@
       "ci_conclusion": "success_prior_head",
       "new_tests_run": 0,
       "run_evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T00-21-KST.json"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T01-16-KST-turn5",
+      "head_sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+      "git_tree_sha": "94662f348dc91ea1f45d867c4fdda8464b442380",
+      "level": "TEST_FIRST_MOCK_REPRODUCTION_AND_TARGETED_TRANSITIVE_REVIEW_NOT_FULL_FILE_AUDIT",
+      "files_partially_reviewed": [
+        "trading/execution_ledger.py",
+        "trading/dispatch.py",
+        "trading/stop_loss_watcher.py",
+        "tests/test_unknown_buy_intent_durability.py",
+        "tests/test_queue_execution_context.py"
+      ],
+      "fully_audited_files": 0,
+      "related_manifest_blob": "65121b08992444299cf45b3a87cef0f4e95e9a69",
+      "full_manifest_blob": "c9f052414acb6274947ab715e9b092c9573f54ad",
+      "related_pass": false,
+      "full_pass": false,
+      "ci_conclusion": "success_exact_head",
+      "linux_pytest_passed": 1276,
+      "windows_smoke_passed": 167,
+      "run_evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T01-16-KST.json"
     }
   ],
   "last_merged_upstream_sha": null,
@@ -4528,9 +4570,11 @@
     "Qlty previously reported 22 blocking issues; latest check success but individual issues and current count unverified",
     "Independent reviews absent; branch protection API 403, rulesets [] not sufficient to establish branch protection",
     "Related 76 and full 170 tracked files not fully audited; independent PASS 0/2 + 0/2",
-    "Static path: ambiguous UNKNOWN BUY without executed account does not create durable stop-loss tracker; safe fix needs pre-submit intent and KIS order/fill reconciliation; no broker demo credentials"
+    "Static path: ambiguous UNKNOWN BUY without executed account does not create durable stop-loss tracker; safe fix needs pre-submit intent and KIS order/fill reconciliation; no broker demo credentials",
+    "Exact-head CI success does not prove KIS authoritative fills; unresolved UNKNOWN BUY may fill without actionable protection",
+    "Related 77-file and full 171-file 2+2 independent audits incomplete; no PASS"
   ],
-  "next_action": "Design and test durable pre-submit BUY intent and authoritative order/fill/cancel reconciliation without changing active protection on UNKNOWN, then CI and 2+2 independent audits; Qlty/review/policy gates remain blocked",
+  "next_action": "On same current PR, implement and mock-test broker-authoritative per-account order/fill/cancel/remaining reconciliation and safe UNKNOWN BUY→confirmed position transition; no automatic SELL on intent or aggregate holdings. Then exact-head CI, Qlty/review/policy verification, and independent 2+2 audits.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -5075,6 +5119,19 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Static UNKNOWN BUY gap found; no safe patch or new runtime tests; full audit and broker reconciliation blocked"
+    },
+    {
+      "slot": "2026-11-03T01-16-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T01-16-KST-turn5",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "head_sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+      "git_tree_sha": "94662f348dc91ea1f45d867c4fdda8464b442380",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "New code and tests passed exact-head CI, but no complete transitive or whole-tree file-by-file audit; broker demo unavailable"
     }
   ],
   "discovered_defects": [
@@ -6379,6 +6436,34 @@
         "operator reset for legitimate new position",
         "full file-by-file audit"
       ]
+    },
+    {
+      "id": "unknown-buy-intent-not-persisted-20261103",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_BROKER_RECONCILIATION_BLOCKED",
+      "description": "UNKNOWN BUY persisted dedupe identity but no non-actionable stop-loss/account intent; late fill cannot be attributed for protection",
+      "reproduction": "test-first CI 41480620555: 8 failed, 1268 passed",
+      "fix_commits": [
+        "b0054b010d3b0ae696255fe3a1204b51f3bb824c",
+        "72dc169af2b62ade07e71eca00826d40afaf9de3"
+      ],
+      "test_evidence": [
+        "tests/test_unknown_buy_intent_durability.py: 8 mock/edge cases",
+        "exact-head CI 41481126172 and 41481135393: Linux 1276 passed, Windows 167 passed, Docker success"
+      ],
+      "affected_blobs": {
+        "trading/execution_ledger.py": "b36b923458d5f43627d984111209b112a5255f28",
+        "trading/dispatch.py": "f5ef838fa697cfecd9b79eeaa5e5fa9eef5479d1"
+      },
+      "first_detected_run": "prism-sync-hourly-2026-11-03T01-16-KST-turn5",
+      "last_checked_head": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+      "recurrence_count": 0,
+      "unverified": [
+        "Authoritative KIS per-account order/fill/cancel/remaining and position delta reconciliation",
+        "No actionable stop-loss registration on UNKNOWN without authoritative fill",
+        "Independent transitive and full audits"
+      ]
     }
   ],
   "risks": [
@@ -6448,16 +6533,18 @@
       "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
       "description": "Accepted stop-loss orders lack authoritative fill/cancel/remaining-quantity reconciliation",
       "defect_ids": [
-        "stop-loss-repeat-attempt-deduped-after-accepted-unfilled-order"
+        "stop-loss-repeat-attempt-deduped-after-accepted-unfilled-order",
+        "unknown-buy-intent-not-persisted-20261103"
       ],
-      "classification": "BLOCKED_AUTHORITATIVE_BROKER_DEMO",
-      "last_checked_head": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "classification": "PARTIAL_INTENT_PATCH_MOCK_CI_SUCCESS_BROKER_RECONCILIATION_BLOCKED",
+      "last_checked_head": "72dc169af2b62ade07e71eca00826d40afaf9de3",
       "subcases": [
         {
           "id": "UNKNOWN_BUY_WITHOUT_ACCEPTED_RECEIPT_HAS_NO_DURABLE_STOP_TRACKER",
-          "classification": "STATIC_CONTROL_FLOW_CONFIRMED_RUNTIME_FILL_UNVERIFIED",
-          "status": "BLOCKED_UNSAFE_TO_PATCH_WITHOUT_RECONCILIATION",
-          "observed_head": "09acb665d712530b8d3095cd73e8dc7151386b90"
+          "classification": "MOCK_VERIFIED_INTENT_PATCH_FILL_UNVERIFIED",
+          "status": "NONACTIONABLE_INTENT_PERSISTED_BUT_ACTIONABLE_TRACKER_RECONCILIATION_BLOCKED",
+          "observed_head": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+          "intent_fix_commit": "b0054b010d3b0ae696255fe3a1204b51f3bb824c"
         }
       ]
     },
@@ -6815,83 +6902,50 @@
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "d3bdebc12292a76677cee921abe78754ce089111",
-    "scope": "KR/US broker outcome and receipt, dispatch/queue/strategy, tokenized durable ledger; full transitive and KIS demo incomplete",
+    "head_sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+    "scope": "nonactionable pre-submit BUY intent and broker/ledger/watcher boundaries; full transitive KIS reconciliation incomplete",
     "entries": [
       {
-        "invariant": "Unverified rejection code or redirect must not release claim",
+        "invariant": "unknown BUY must have durable nonactionable evidence before broker",
         "paths": [
-          "trading/execution_outcome.py",
-          "trading/domestic.py",
-          "trading/us.py",
-          "trading/execution_ledger.py"
-        ],
-        "failure_modes": [
-          "nonbusiness code",
-          "redirect"
-        ],
-        "test": "tests/test_wave4_execution_safety.py KR/US mocked order calls",
-        "status": "MOCK_CI_SUCCESS_AUDIT_DEMO_PENDING"
-      },
-      {
-        "invariant": "Contradictory success with transport ambiguity is UNKNOWN",
-        "paths": [
-          "trading/execution_outcome.py",
           "trading/dispatch.py",
-          "trading/strategies/common.py",
           "trading/execution_ledger.py"
         ],
         "failure_modes": [
           "timeout",
-          "connection reset"
+          "crash after submission",
+          "multi-account partial unknown"
         ],
-        "test": "tests/test_execution_outcome.py mock and restart ledger",
-        "status": "MOCK_CI_SUCCESS_AUDIT_DEMO_PENDING"
+        "test": "tests/test_unknown_buy_intent_durability.py"
       },
       {
-        "invariant": "Order receipt must be ASCII and reconcilable",
+        "invariant": "intent alone must not sell existing holdings",
         "paths": [
-          "trading/execution_outcome.py",
-          "trading/execution_ledger.py"
+          "trading/dispatch.py",
+          "trading/stop_loss_watcher.py"
         ],
         "failure_modes": [
-          "fullwidth zero",
-          "Arabic digits",
-          "emoji",
-          "punctuation"
+          "unknown BUY existing holdings",
+          "no broker-confirmed fills"
         ],
-        "test": "tests/test_execution_outcome.py Unicode, punctuation and restart",
-        "status": "MOCK_CI_SUCCESS_AUDIT_DEMO_PENDING"
+        "test": "test_single_unknown_buy_persists_non_actionable_intent_before_broker; test_multi_unknown_buy_persists_distinct_account_intents"
       },
       {
-        "invariant": "Order acceptance != fill; partial/cancel/remaining quantities need authoritative order and fill IDs",
-        "paths": [
-          "trading/domestic.py",
-          "trading/us.py",
-          "trading/dispatch.py",
-          "trading/stop_loss_watcher.py",
-          "trading/execution_ledger.py"
-        ],
-        "status": "BLOCKED_AUTHORITATIVE_READ_ONLY_KIS_DEMO_RECONCILIATION"
-      },
-      {
-        "invariant": "A stale callback from attempt A cannot finalize/release a newer retry attempt B",
+        "invariant": "corrupt metadata or failed atomic write must block broker",
         "paths": [
           "trading/execution_ledger.py",
-          "trading/dispatch.py",
-          "tests/test_execution_ledger_retention.py",
-          "tests/test_queue_execution_context.py"
+          "trading/dispatch.py"
         ],
         "failure_modes": [
-          "late failure callback",
-          "late deferred release",
-          "missing legacy callback token",
-          "restart recovery"
+          "NaN",
+          "negative stop",
+          "raw account key",
+          "disk failure"
         ],
-        "test": "2 new durable-ledger tests and updated queued mock token propagation; latest CI 1255 Linux + 167 Windows",
-        "status": "MOCK_CI_SUCCESS_AUDIT_DEMO_PENDING"
+        "test": "test_invalid_intent_rejected_without_writes; test_intent_persistence_failure_blocks_broker"
       }
-    ]
+    ],
+    "closure_verified": false
   },
   "blocker_history": [
     "Full related dependency closure and file-by-file audit incomplete",
@@ -6950,10 +7004,16 @@
     {
       "id": "RC-STOPLOSS-ORDER-RECONCILIATION",
       "severity": "HIGH",
-      "status": "BLOCKS_MERGE_AUTHORITATIVE_RECONCILIATION_AND_UNKNOWN_BUY_INTENT",
+      "status": "BLOCKS_MERGE_BROKER_FILL_CANCEL_REMAINING_RECONCILIATION",
       "description": "Accepted broker order is not confirmed fill; partial fills/cancels and remaining quantities lack authoritative reconciliation",
       "subcases": [
         "UNKNOWN_BUY_WITHOUT_ACCEPTED_RECEIPT_HAS_NO_DURABLE_STOP_TRACKER"
+      ],
+      "intent_fix_commit": "b0054b010d3b0ae696255fe3a1204b51f3bb824c",
+      "intent_mock_ci": "41481126172/41481135393",
+      "unverified": [
+        "UNKNOWN late fill not mapped to actionable stop-loss",
+        "Per-account broker fill IDs, remaining, cancel and restart"
       ]
     },
     {

@@ -1,0 +1,124 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T01-16-KST-turn5",
+  "slot": "2026-11-03T01-16-KST",
+  "started_at": "2026-11-02T16:16:10Z",
+  "finished_at": "2026-11-02T16:27:26.488Z",
+  "lock": {
+    "status": "RELEASED",
+    "acquired_commit": "d143d090219fc682fd673f8a8d3d9f71c4939ff5",
+    "prechange_matrix_commit": "532447e499520e2b55b6d873116b75a8028c5a98",
+    "cas_expected_previous_head": "e02b9e0bc81c1dca96556093c8e7580c83c00a06"
+  },
+  "pr": {
+    "number": 43,
+    "draft": true,
+    "head": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+    "base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+    "git_tree_sha": "94662f348dc91ea1f45d867c4fdda8464b442380",
+    "merge": false,
+    "code_commits": [
+      "766c7591df17a0c6723740f28f527bc8f4659ec2",
+      "50fd8e86b1deb02ff41b1982c18f4205b9495024",
+      "b0054b010d3b0ae696255fe3a1204b51f3bb824c",
+      "72dc169af2b62ade07e71eca00826d40afaf9de3"
+    ],
+    "changed_files": [
+      "trading/execution_ledger.py",
+      "trading/dispatch.py",
+      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "tests/test_unknown_buy_intent_durability.py",
+      "tests/test_queue_execution_context.py"
+    ]
+  },
+  "upstream": {
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "ahead_commits": 47,
+    "changed_files": 41,
+    "decision": "NO_SAFE_IMPORT_VERIFIED_BTC_US_RESEARCH_FEATURES"
+  },
+  "root_cause": {
+    "id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "subcase": "UNKNOWN_BUY_HAS_NO_DURABLE_NONACTIONABLE_INTENT",
+    "status": "CODE_PATCHED_MOCK_CI_SUCCESS_FULL_BROKER_RECONCILIATION_BLOCKED",
+    "reproduction": {
+      "run_id": 41480358642,
+      "failures": 3,
+      "passed": 1273,
+      "corrected_test_run_id": 41480620555,
+      "corrected_failures": 8,
+      "corrected_passed": 1268
+    },
+    "remediation": "Pre-submit atomic non-actionable intent metadata in execution ledger, single/multi account SHA-256 scope, strict validation, restart/timeout/fail-closed tests. No tracker activation or SELL inferred.",
+    "new_tests": 8,
+    "remaining": "Broker-authoritative order-ID/fill-ID/cumulative/remaining/cancel/reject reconciliation, position attribution, actual KIS demo and restart recovery; unknown BUY may still fill without actionable protection"
+  },
+  "iterations": [
+    {
+      "stage": "test-first",
+      "head": "766c7591df17a0c6723740f28f527bc8f4659ec2",
+      "ci": 41480358642,
+      "result": "3 expected failures / 1273 passed; 5 false-positive tests detected"
+    },
+    {
+      "stage": "test-expectations-strengthened",
+      "head": "50fd8e86b1deb02ff41b1982c18f4205b9495024",
+      "ci": 41480620555,
+      "result": "8 expected failures / 1268 passed"
+    },
+    {
+      "stage": "code-remediation",
+      "head": "b0054b010d3b0ae696255fe3a1204b51f3bb824c",
+      "ci": 41480812318,
+      "result": "1 failure / 1275 passed: legacy queued mock signature; not broker regression"
+    },
+    {
+      "stage": "mock-compatibility-fix",
+      "head": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+      "ci": [
+        41481126172,
+        41481135393
+      ],
+      "result": "both completed success; Linux 1276 passed, Windows 167 passed, Docker success"
+    }
+  ],
+  "ci": {
+    "head_sha": "72dc169af2b62ade07e71eca00826d40afaf9de3",
+    "workflow_runs": [
+      {
+        "id": 41481126172,
+        "conclusion": "success"
+      },
+      {
+        "id": 41481135393,
+        "conclusion": "success"
+      }
+    ],
+    "linux_pytest_passed": 1276,
+    "windows_smoke_passed": 167,
+    "docker": "success",
+    "snyk": "success",
+    "qlty": "check_success_individual_issue_details_unverified"
+  },
+  "manifests": {
+    "related_path": ".automation/prism-upstream-sync/manifests/2026-11-03T01-16-KST-related.json",
+    "related_blob_sha": "65121b08992444299cf45b3a87cef0f4e95e9a69",
+    "related_scope": 77,
+    "full_path": ".automation/prism-upstream-sync/manifests/2026-11-03T01-16-KST-full.json",
+    "full_blob_sha": "c9f052414acb6274947ab715e9b092c9573f54ad",
+    "full_scope": 171,
+    "fully_audited": 0,
+    "related_passes": 0,
+    "full_passes": 0
+  },
+  "blockers": [
+    "KIS authoritative per-account fill/cancel/remaining reconciliation unavailable without demo environment",
+    "Qlty individual issue details not verified",
+    "No independent review submissions",
+    "Branch protection API 403; rulesets []",
+    "77-file related and 171-file full independent audits incomplete"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE"
+}
