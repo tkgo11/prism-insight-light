@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
     "started_at": "2026-11-02T00:23:35Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
-    "last_mutation_commit": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
-    "last_mutation_at": "2026-11-01T23:25:37.848Z",
-    "result": "IN_PROGRESS",
+    "completed_at": "2026-11-02T00:31:20.745Z",
+    "lock_owner": null,
+    "last_mutation_commit": "8e90304a1c45d981995484e18ab8e5a1faebb461",
+    "last_mutation_at": "2026-11-02T00:31:20.745Z",
+    "result": "SEMANTIC_STRATEGY_STATE_PATCHED_CI_SUCCESS_AUDITS_BLOCKED",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,54 +19,51 @@
       "source_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+      "pr_head": "8e90304a1c45d981995484e18ab8e5a1faebb461",
       "pr_number": 42,
-      "related_manifest_files": 60,
+      "related_manifest_files": 61,
       "related_manifest_files_fully_audited": 0,
-      "full_tree_files": 162,
+      "full_tree_files": 163,
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41361849358,
+          "id": 41367326280,
           "status": "completed",
           "conclusion": "success"
         },
         {
-          "id": 41361853464,
+          "id": 41367330932,
           "status": "completed",
           "conclusion": "success"
         }
       ],
-      "linux": "963 passed",
+      "linux": "980 passed",
       "windows": "141 passed",
       "external_statuses": [
         {
           "context": "security/snyk (tkgo11)",
-          "state": "success",
-          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/1ab8fee8-a693-4870-bf0a-d4059191e6d7"
+          "state": "success"
         },
         {
           "context": "qlty check",
-          "state": "success",
-          "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
+          "state": "success"
         },
         {
           "context": "qlty usage",
-          "state": "pending",
-          "target_url": "https://qlty.sh/gh/tkgo11/settings/analysis-minutes"
+          "state": "NOT_REPORTED_ON_CURRENT_HEAD_REQUIREDNESS_UNVERIFIED"
         }
       ],
       "commits": [
-        "5c51675486443eb8cf1355fa3227431024b353e8",
-        "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0"
+        "419a66b3fc8efcdb136d54e8757c17f6aaf280a8",
+        "8e90304a1c45d981995484e18ab8e5a1faebb461"
       ],
       "merged": false,
-      "reason": "Queued single-account broker identity pinned with mock tests; demo integration, full audits, independent review and qlty usage unresolved."
+      "reason": "Semantic strategy-state corruption guards tested; demo, account isolation, independent full audits and review unresolved."
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
     "pr_head_at_start": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
     "lock_acquired_at": "2026-11-02T00:23:35Z",
-    "lock_released_at": null
+    "lock_released_at": "2026-11-02T00:31:20.745Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -85,7 +82,7 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+    "head_sha": "8e90304a1c45d981995484e18ab8e5a1faebb461",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
@@ -176,11 +173,11 @@
   "related_manifest": {
     "status": "CURRENT_HEAD_CI_SUCCESS_FULL_DEPENDENCY_AUDIT_REQUIRED",
     "checksum": null,
-    "scope_estimate": "60 known related files; transitive dependency closure and independent full-file audit incomplete",
+    "scope_estimate": "61 known related files; transitive dependency closure and independent full-file audit incomplete",
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "dd6ed6c3d8ae8075e531733e689b4581df79aa1d",
+        "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -314,6 +311,11 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "tests/test_strategy_semantic_state_safety.py",
+        "blob_sha": "ab1e6b1ab76b96f5f8c9d05bb94a06e4f544e9c4",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
         "path": "tests/test_strategy_suite.py",
         "blob_sha": "67106033be4fd2e63eecc8dd90458c5940d08665",
         "status": "NOT_FULLY_AUDITED"
@@ -420,12 +422,12 @@
       },
       {
         "path": "trading/strategies/cooldown.py",
-        "blob_sha": "303e24aa9a561580058e91d0e82b894df57955c8",
+        "blob_sha": "71feb5baf7e7dc0e3bd37306b1dff4f238630c40",
         "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/event_risk_off.py",
-        "blob_sha": "90349df3846babe84c1f96bbfa882d5ce2eb9071",
+        "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -481,23 +483,18 @@
     ],
     "checked_files": 0,
     "modified_files": [
-      "trading/strategies/signal_trailing_stop.py",
       "trading/strategies/cooldown.py",
-      "tests/test_upstream_strategy_compatibility.py",
-      "tests/test_signal_exit_strategies.py",
-      "tests/test_cooldown_pending_reconciliation.py",
-      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-      "trading/dispatch.py",
-      "tests/test_multi_account_dispatch.py",
-      "tests/test_queue_execution_context.py"
+      "trading/strategies/event_risk_off.py",
+      "tests/test_strategy_semantic_state_safety.py",
+      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
     ],
-    "tree_sha": "6c6fbccdb95fcb89d03d1c683cfb4ba266a28b27"
+    "tree_sha": "5d275f8d93a9cbabb3aa156746cab4ea0b23f2bb"
   },
   "full_manifest": {
     "status": "RESET_AFTER_CURRENT_HEAD_CHANGE_NOT_FULLY_AUDITED",
-    "tracked_tree_entries_on_pr": 186,
-    "tracked_blob_files_on_pr": 162,
-    "sha": null,
+    "tracked_tree_entries_on_pr": 187,
+    "tracked_blob_files_on_pr": 163,
+    "sha": "8e90304a1c45d981995484e18ab8e5a1faebb461",
     "files_checked": 0,
     "checksum": null,
     "checksum_kind": "git-tree-sha1",
@@ -594,7 +591,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "dd6ed6c3d8ae8075e531733e689b4581df79aa1d",
+        "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
         "status": "NOT_REVIEWED"
       },
       {
@@ -838,6 +835,11 @@
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "tests/test_strategy_semantic_state_safety.py",
+        "blob_sha": "ab1e6b1ab76b96f5f8c9d05bb94a06e4f544e9c4",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "tests/test_strategy_suite.py",
         "blob_sha": "67106033be4fd2e63eecc8dd90458c5940d08665",
         "status": "NOT_REVIEWED"
@@ -1049,12 +1051,12 @@
       },
       {
         "path": "trading/strategies/cooldown.py",
-        "blob_sha": "303e24aa9a561580058e91d0e82b894df57955c8",
+        "blob_sha": "71feb5baf7e7dc0e3bd37306b1dff4f238630c40",
         "status": "NOT_REVIEWED"
       },
       {
         "path": "trading/strategies/event_risk_off.py",
-        "blob_sha": "90349df3846babe84c1f96bbfa882d5ce2eb9071",
+        "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1313,7 +1315,7 @@
         "status": "NOT_REVIEWED"
       }
     ],
-    "tree_sha": "67cdb5c7e5f217289a31a7ddee8e6adba60f03d2"
+    "tree_sha": "5d275f8d93a9cbabb3aa156746cab4ea0b23f2bb"
   },
   "checks": {
     "0": {
@@ -1566,10 +1568,10 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41325576768"
     },
-    "latest_workflow_run_id": 41351888612,
+    "latest_workflow_run_id": 41367330932,
     "latest_workflow_run_status": "completed",
     "latest_workflow_run_conclusion": "success",
-    "head_sha": "532a0f8d451d64d1eb55edcc211e595abd701319",
+    "head_sha": "8e90304a1c45d981995484e18ab8e5a1faebb461",
     "automation-turn-11": {
       "run_id": 41243400167,
       "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
@@ -3919,18 +3921,158 @@
         "60 related files not independently audited; 162 tracked blob files not fully audited"
       ],
       "merge": "NOT_ATTEMPTED"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
+      "kind": "ROOT_CAUSE_SEMANTIC_STATE_FAILOPEN_BATCH_PATCH_AND_PARTIAL_IMPACT_REVIEW",
+      "source_repository": "dragon1086/prism-insight",
+      "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "upstream_pinned_contract": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "upstream_new_commits": 0,
+      "target_repository": "tkgo11/prism-insight-light",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_before": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+      "head_after": "8e90304a1c45d981995484e18ab8e5a1faebb461",
+      "head_tree_sha": "5d275f8d93a9cbabb3aa156746cab4ea0b23f2bb",
+      "pr_number": 42,
+      "pr_draft": true,
+      "root_cause_id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
+      "root_cause_subcases": [
+        "Cooldown pending order with missing/mismatched/noncanonical key can be ignored and resubmitted",
+        "Risk-off event with missing/malformed scope is treated as inactive, permitting BUY",
+        "Risk-off event append could prune and overwrite semantically malformed persisted state"
+      ],
+      "reproduction": "Isolated current-source predicates: missing cooldown key did not match US:AAPL:BUY, and risk-off ticker=None did not match AAPL. Added mock broker no-submit and no-overwrite tests; no live or KIS demo access.",
+      "contract_matrix": [
+        {
+          "contract": "Every persisted cooldown pending fence must be unambiguously associated with a canonical market/ticker/side key",
+          "path": "cooldown.execute -> load_json_list -> _validate_records -> fresh_items -> pre-submit save_json -> execute_order",
+          "failure_mode": "missing/mismatched/duplicate/noncanonical key or malformed pending flag bypasses guard",
+          "tests": "test_cooldown_semantically_invalid_pending_fence_never_calls_broker (8 cases)",
+          "result": "CI_PASS_MOCK_ONLY"
+        },
+        {
+          "contract": "Persisted risk-off events must have unambiguous market/ticker/event scope before a BUY or event rewrite",
+          "path": "event_risk_off.execute BUY/EVENT -> load_json_list/update_json_list -> _validate_records -> fresh_items -> execute_order",
+          "failure_mode": "missing/invalid scope interpreted as no active risk-off, or corrupt record overwritten",
+          "tests": "test_corrupt_riskoff_record_cannot_enable_buy (7 cases); test_corrupt_riskoff_record_cannot_be_overwritten_by_event",
+          "result": "CI_PASS_MOCK_ONLY"
+        },
+        {
+          "contract": "Invalid cooldown scope configuration must not silently fall back to another policy",
+          "path": "CooldownStrategyConfig.from_mapping -> CooldownStrategy._key",
+          "failure_mode": "unknown scope accepted and silently used market_ticker behavior",
+          "tests": "test_cooldown_invalid_scope_does_not_silently_use_default",
+          "result": "CI_PASS_MOCK_ONLY"
+        }
+      ],
+      "changed_files": [
+        {
+          "path": "trading/strategies/cooldown.py",
+          "blob_sha": "71feb5baf7e7dc0e3bd37306b1dff4f238630c40",
+          "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+        },
+        {
+          "path": "trading/strategies/event_risk_off.py",
+          "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
+          "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+        },
+        {
+          "path": "tests/test_strategy_semantic_state_safety.py",
+          "blob_sha": "ab1e6b1ab76b96f5f8c9d05bb94a06e4f544e9c4",
+          "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+        },
+        {
+          "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+          "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
+          "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+        }
+      ],
+      "code_commits": [
+        "419a66b3fc8efcdb136d54e8757c17f6aaf280a8",
+        "8e90304a1c45d981995484e18ab8e5a1faebb461"
+      ],
+      "tests": {
+        "new_mock_and_boundary_cases": 17,
+        "linux": "980 passed",
+        "windows": "141 passed",
+        "static": "success",
+        "docker": "success",
+        "local_full_pytest": "NOT_RUN",
+        "authorized_kis_demo": "NOT_RUN",
+        "live_trading": "PROHIBITED"
+      },
+      "ci": {
+        "run_ids": [
+          41367326280,
+          41367330932
+        ],
+        "final_head": "8e90304a1c45d981995484e18ab8e5a1faebb461",
+        "status": "completed",
+        "conclusion": "success",
+        "linux_job_id": 125030162141,
+        "windows_job_id": 125030161843,
+        "superseded_success_run": 41367244946
+      },
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        },
+        {
+          "context": "qlty usage",
+          "state": "NOT_REPORTED_ON_CURRENT_HEAD_REQUIREDNESS_UNVERIFIED"
+        }
+      ],
+      "review": {
+        "independent_pr_reviews": 0,
+        "branch_protection": "READ_FORBIDDEN_403",
+        "rulesets": "none returned by accessible endpoint"
+      },
+      "audit": {
+        "related_files_known": 61,
+        "full_blob_files": 163,
+        "related_independent_passes": 0,
+        "full_independent_passes": 0,
+        "fully_audited_files": 0,
+        "partial_reviewed_paths": [
+          "trading/strategies/common.py",
+          "trading/strategies/cooldown.py",
+          "trading/strategies/event_risk_off.py",
+          "trading/schema.py",
+          "trading/dispatch.py",
+          "tests/test_strategy_semantic_state_safety.py",
+          "tests/test_strategy_runtime_fail_closed.py",
+          "tests/test_cooldown_pending_reconciliation.py",
+          "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
+        ]
+      },
+      "risks": [
+        "KIS authoritative order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation unverified",
+        "Strategy runtime state account isolation unverified; semantic validation does not partition accounts",
+        "No authorized KIS demo credentials; no real trades",
+        "Full 61-file related and 163-file tree independent audits incomplete",
+        "No independent reviewer approval; branch protection 403; qlty usage requiredness unverified"
+      ],
+      "merge": "NOT_ATTEMPTED",
+      "related_pass": false,
+      "full_pass": false
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "60 known related files not fully audited; related PASS 0/2.",
-    "Full 162-file repository audit incomplete; full PASS 0/2.",
-    "No authorized KIS demo credentials/environment for order-ID, partial-fill, cancel, remaining quantity and account-specific reconciliation; no live trading.",
-    "Current PR HEAD GitHub Actions/Snyk/qlty check success but qlty usage pending, no independent PR review, branch protection read 403.",
-    "External account configuration replacement and multi-account strategy state partitioning not independently verified."
+    "61 known related files not independently fully audited; related PASS 0/2.",
+    "163 tracked blob files not independently fully audited; full PASS 0/2.",
+    "No authorized KIS demo credentials/environment for order-ID, fill, partial-fill, cancel, remaining quantity and account-specific reconciliation; no live trading.",
+    "Latest HEAD GitHub Actions/Snyk/qlty check success; qlty usage requiredness unverified, no independent PR review, branch protection read 403.",
+    "Multi-account strategy runtime state partitioning and external configuration races not independently verified."
   ],
-  "next_action": "Complete full related-file dependency audit, then independent second-slot audit; validate broker order-ID/fill/cancel/remaining quantity in authorized demo; verify required branch checks and independent review; no live trading.",
+  "next_action": "Independently audit all 61 related files and 163 tree files in separate slots; investigate account-scoped strategy state and authoritative KIS demo reconciliation; do not merge before all gates.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -4258,6 +4400,16 @@
       "full_pass": false,
       "reason": "Code changed; full 60-file related and 162-file independent audits incomplete; KIS demo, qlty usage, independent review and branch-protection read blocked",
       "manifest_tree_sha": "6c6fbccdb95fcb89d03d1c683cfb4ba266a28b27"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
+      "phase": "related_code_audit",
+      "head_sha": "8e90304a1c45d981995484e18ab8e5a1faebb461",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Semantic strategy state fixes mock-tested in latest-head CI; 61/163 full-file audits, broker demo, independent review and branch policy unverified",
+      "manifest_tree_sha": "5d275f8d93a9cbabb3aa156746cab4ea0b23f2bb"
     }
   ],
   "discovered_defects": [
@@ -4968,6 +5120,34 @@
       "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
       "verification": "963 Linux pytest, 141 Windows smoke; three new mock tests; no KIS demo",
       "unverified": "External config mutation, authoritative broker fill/cancel, full dependency audit"
+    },
+    {
+      "id": "cooldown-semantic-pending-key-bypass-2026-11-02-09",
+      "root_cause_id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Cooldown pending order with missing/mismatched/noncanonical key can be ignored and resubmitted",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
+      "fix_commits": [
+        "419a66b3fc8efcdb136d54e8757c17f6aaf280a8",
+        "8e90304a1c45d981995484e18ab8e5a1faebb461"
+      ],
+      "test": "test_cooldown_semantically_invalid_pending_fence_never_calls_broker",
+      "head_sha": "8e90304a1c45d981995484e18ab8e5a1faebb461"
+    },
+    {
+      "id": "event-riskoff-semantic-scope-bypass-2026-11-02-09",
+      "root_cause_id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Risk-off event with missing/malformed scope is treated as inactive, permitting BUY; Risk-off event append could prune and overwrite semantically malformed persisted state",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
+      "fix_commits": [
+        "419a66b3fc8efcdb136d54e8757c17f6aaf280a8",
+        "8e90304a1c45d981995484e18ab8e5a1faebb461"
+      ],
+      "test": "test_corrupt_riskoff_record_cannot_enable_buy; test_corrupt_riskoff_record_cannot_be_overwritten_by_event",
+      "head_sha": "8e90304a1c45d981995484e18ab8e5a1faebb461"
     }
   ],
   "risks": [
@@ -5141,10 +5321,16 @@
       "description": "Corrupt or unwritable strategy runtime JSON was treated as empty/successful, bypassing cooldown, trailing stop, and event risk-off protections",
       "defect_ids": [
         "strategy-state-corruption-silently-cleared-2026-11-02",
-        "trailing-stop-semantic-high-watermark-2026-11-02"
+        "trailing-stop-semantic-high-watermark-2026-11-02",
+        "cooldown-semantic-pending-key-bypass-2026-11-02-09",
+        "event-riskoff-semantic-scope-bypass-2026-11-02-09"
       ],
-      "classification": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "last_checked_head": "645816c9c829f199979b745467030c833cb9adb9"
+      "classification": "CODE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "8e90304a1c45d981995484e18ab8e5a1faebb461",
+      "fix_commits": [
+        "419a66b3fc8efcdb136d54e8757c17f6aaf280a8",
+        "8e90304a1c45d981995484e18ab8e5a1faebb461"
+      ]
     },
     {
       "root_cause_id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
@@ -5191,8 +5377,8 @@
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
-    "scope": "Queued account authorization TOCTOU pinned at broker boundary; broader order lifecycle and full-file audits remain blocked.",
+    "head_sha": "8e90304a1c45d981995484e18ab8e5a1faebb461",
+    "scope": "Strategy runtime state semantic fail-closed validation; broader order lifecycle and full-file audits blocked",
     "entries": [
       {
         "contract": "Corrupt/duplicate/nonfinite runtime state cannot be silently cleared",
@@ -5323,6 +5509,24 @@
         "head_sha": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
         "evidence": "test_queued_single_account_pins_broker_account_without_losing_dedupe; test_queued_single_account_strategy_uses_pinned_account",
         "status": "CI_SUCCESS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Every persisted cooldown pending fence must be unambiguously associated with a canonical market/ticker/side key",
+        "path": "cooldown.execute -> load_json_list -> _validate_records -> fresh_items -> pre-submit save_json -> execute_order",
+        "evidence": "test_cooldown_semantically_invalid_pending_fence_never_calls_broker (8 cases); latest HEAD CI 980 Linux/141 Windows passed",
+        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Persisted risk-off events must have unambiguous market/ticker/event scope before a BUY or event rewrite",
+        "path": "event_risk_off.execute BUY/EVENT -> load_json_list/update_json_list -> _validate_records -> fresh_items -> execute_order",
+        "evidence": "test_corrupt_riskoff_record_cannot_enable_buy (7 cases); test_corrupt_riskoff_record_cannot_be_overwritten_by_event; latest HEAD CI 980 Linux/141 Windows passed",
+        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
+      },
+      {
+        "contract": "Invalid cooldown scope configuration must not silently fall back to another policy",
+        "path": "CooldownStrategyConfig.from_mapping -> CooldownStrategy._key",
+        "evidence": "test_cooldown_invalid_scope_does_not_silently_use_default; latest HEAD CI 980 Linux/141 Windows passed",
+        "status": "CI_PASS_PARTIAL_DEPENDENCY_AUDIT"
       }
     ]
   },
@@ -5382,12 +5586,14 @@
     {
       "id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "description": "Corrupted/unwritable strategy runtime state previously allowed bypass or invisible persistence failure",
+      "status": "CODE_PATCHED_LATEST_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Strict JSON plus cooldown pending-key and event risk-off semantic scope checks; broker demo/account isolation and independent audits remain unverified",
       "fix_commit": "08496832eda9fd0bd74b588d6a1039f73159b925",
       "fix_commits": [
         "08496832eda9fd0bd74b588d6a1039f73159b925",
-        "645816c9c829f199979b745467030c833cb9adb9"
+        "645816c9c829f199979b745467030c833cb9adb9",
+        "419a66b3fc8efcdb136d54e8757c17f6aaf280a8",
+        "8e90304a1c45d981995484e18ab8e5a1faebb461"
       ]
     },
     {

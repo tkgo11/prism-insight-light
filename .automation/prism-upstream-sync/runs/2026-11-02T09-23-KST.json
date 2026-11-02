@@ -1,0 +1,140 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
+  "kind": "ROOT_CAUSE_SEMANTIC_STATE_FAILOPEN_BATCH_PATCH_AND_PARTIAL_IMPACT_REVIEW",
+  "source_repository": "dragon1086/prism-insight",
+  "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+  "upstream_pinned_contract": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "upstream_new_commits": 0,
+  "target_repository": "tkgo11/prism-insight-light",
+  "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+  "head_before": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+  "head_after": "8e90304a1c45d981995484e18ab8e5a1faebb461",
+  "head_tree_sha": "5d275f8d93a9cbabb3aa156746cab4ea0b23f2bb",
+  "pr_number": 42,
+  "pr_draft": true,
+  "root_cause_id": "RC-STRATEGY-RUNTIME-STATE-FAILOPEN",
+  "root_cause_subcases": [
+    "Cooldown pending order with missing/mismatched/noncanonical key can be ignored and resubmitted",
+    "Risk-off event with missing/malformed scope is treated as inactive, permitting BUY",
+    "Risk-off event append could prune and overwrite semantically malformed persisted state"
+  ],
+  "reproduction": "Isolated current-source predicates: missing cooldown key did not match US:AAPL:BUY, and risk-off ticker=None did not match AAPL. Added mock broker no-submit and no-overwrite tests; no live or KIS demo access.",
+  "contract_matrix": [
+    {
+      "contract": "Every persisted cooldown pending fence must be unambiguously associated with a canonical market/ticker/side key",
+      "path": "cooldown.execute -> load_json_list -> _validate_records -> fresh_items -> pre-submit save_json -> execute_order",
+      "failure_mode": "missing/mismatched/duplicate/noncanonical key or malformed pending flag bypasses guard",
+      "tests": "test_cooldown_semantically_invalid_pending_fence_never_calls_broker (8 cases)",
+      "result": "CI_PASS_MOCK_ONLY"
+    },
+    {
+      "contract": "Persisted risk-off events must have unambiguous market/ticker/event scope before a BUY or event rewrite",
+      "path": "event_risk_off.execute BUY/EVENT -> load_json_list/update_json_list -> _validate_records -> fresh_items -> execute_order",
+      "failure_mode": "missing/invalid scope interpreted as no active risk-off, or corrupt record overwritten",
+      "tests": "test_corrupt_riskoff_record_cannot_enable_buy (7 cases); test_corrupt_riskoff_record_cannot_be_overwritten_by_event",
+      "result": "CI_PASS_MOCK_ONLY"
+    },
+    {
+      "contract": "Invalid cooldown scope configuration must not silently fall back to another policy",
+      "path": "CooldownStrategyConfig.from_mapping -> CooldownStrategy._key",
+      "failure_mode": "unknown scope accepted and silently used market_ticker behavior",
+      "tests": "test_cooldown_invalid_scope_does_not_silently_use_default",
+      "result": "CI_PASS_MOCK_ONLY"
+    }
+  ],
+  "changed_files": [
+    {
+      "path": "trading/strategies/cooldown.py",
+      "blob_sha": "71feb5baf7e7dc0e3bd37306b1dff4f238630c40",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    },
+    {
+      "path": "trading/strategies/event_risk_off.py",
+      "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    },
+    {
+      "path": "tests/test_strategy_semantic_state_safety.py",
+      "blob_sha": "ab1e6b1ab76b96f5f8c9d05bb94a06e4f544e9c4",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
+      "audit_status": "PARTIAL_IMPACT_REVIEW_ONLY"
+    }
+  ],
+  "code_commits": [
+    "419a66b3fc8efcdb136d54e8757c17f6aaf280a8",
+    "8e90304a1c45d981995484e18ab8e5a1faebb461"
+  ],
+  "tests": {
+    "new_mock_and_boundary_cases": 17,
+    "linux": "980 passed",
+    "windows": "141 passed",
+    "static": "success",
+    "docker": "success",
+    "local_full_pytest": "NOT_RUN",
+    "authorized_kis_demo": "NOT_RUN",
+    "live_trading": "PROHIBITED"
+  },
+  "ci": {
+    "run_ids": [
+      41367326280,
+      41367330932
+    ],
+    "final_head": "8e90304a1c45d981995484e18ab8e5a1faebb461",
+    "status": "completed",
+    "conclusion": "success",
+    "linux_job_id": 125030162141,
+    "windows_job_id": 125030161843,
+    "superseded_success_run": 41367244946
+  },
+  "external_statuses": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success"
+    },
+    {
+      "context": "qlty check",
+      "state": "success"
+    },
+    {
+      "context": "qlty usage",
+      "state": "NOT_REPORTED_ON_CURRENT_HEAD_REQUIREDNESS_UNVERIFIED"
+    }
+  ],
+  "review": {
+    "independent_pr_reviews": 0,
+    "branch_protection": "READ_FORBIDDEN_403",
+    "rulesets": "none returned by accessible endpoint"
+  },
+  "audit": {
+    "related_files_known": 61,
+    "full_blob_files": 163,
+    "related_independent_passes": 0,
+    "full_independent_passes": 0,
+    "fully_audited_files": 0,
+    "partial_reviewed_paths": [
+      "trading/strategies/common.py",
+      "trading/strategies/cooldown.py",
+      "trading/strategies/event_risk_off.py",
+      "trading/schema.py",
+      "trading/dispatch.py",
+      "tests/test_strategy_semantic_state_safety.py",
+      "tests/test_strategy_runtime_fail_closed.py",
+      "tests/test_cooldown_pending_reconciliation.py",
+      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
+    ]
+  },
+  "risks": [
+    "KIS authoritative order-ID/fill/partial-fill/cancel/remaining-quantity reconciliation unverified",
+    "Strategy runtime state account isolation unverified; semantic validation does not partition accounts",
+    "No authorized KIS demo credentials; no real trades",
+    "Full 61-file related and 163-file tree independent audits incomplete",
+    "No independent reviewer approval; branch protection 403; qlty usage requiredness unverified"
+  ],
+  "merge": "NOT_ATTEMPTED",
+  "related_pass": false,
+  "full_pass": false
+}
