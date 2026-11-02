@@ -1,11 +1,14 @@
 {
   "run_id": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
   "slot": "2026-11-02T21-19-KST",
-  "status": "CODE_PATCHED_FINAL_CI_PENDING_AUDIT_INCOMPLETE",
+  "status": "CODE_PATCHED_CI_SUCCESS_AUDITS_AND_DEMO_INCOMPLETE",
   "lock": {
     "state_parent": "980b5ce86537319e333e9eabd71fb592bc7c6605",
     "owner": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
-    "cas_required": true
+    "cas_required": true,
+    "status": "RELEASED",
+    "release_parent": "d94d1910168b183af4c898c960bc281cfc4dd98c",
+    "released_at": "2026-11-02T12:27:03Z"
   },
   "source": {
     "repo": "dragon1086/prism-insight",
@@ -93,8 +96,28 @@
       41444581957,
       41444589149
     ],
-    "status": "IN_PROGRESS",
-    "conclusion": null
+    "status": "completed",
+    "conclusion": "success",
+    "linux_pytest_passed": 1253,
+    "windows_smoke_passed": 167,
+    "docker_build": "success",
+    "jobs": [
+      "Full pytest suite",
+      "Windows runtime smoke"
+    ],
+    "external": [
+      {
+        "context": "security/snyk (tkgo11)",
+        "state": "success"
+      },
+      {
+        "context": "qlty check",
+        "state": "success",
+        "description": "10 blocking issues",
+        "issues_inspected": false
+      }
+    ],
+    "note": "All four GitHub Actions check runs for exact final SHA completed/success; qlty success status does not clear reported blocking findings"
   },
   "audit": {
     "related_scope_files": 74,
@@ -168,9 +191,10 @@
     "74-file transitive and 168-file whole-tree independent audits incomplete",
     "PR43 has no independent human review",
     "Branch protection endpoint 403: Resource not accessible by integration",
-    "Final-head required CI and qlty checks not yet confirmed complete"
+    "Qlty check description reports 10 blocking issues; individual findings could not be retrieved and remain unreviewed"
   ],
   "real_orders": 0,
   "demo_orders": 0,
-  "merged": false
+  "merged": false,
+  "completed_at": "2026-11-02T12:27:03Z"
 }

@@ -1,16 +1,17 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "ACTIVE_DRAFT_REMEDIATION_AFTER_USER_DIRECTED_EARLY_MERGE",
+  "state": "ACTIVE_DRAFT_REMEDIATION_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
-    "lock_owner": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
-    "result": "THREE_VERIFIED_SUBCASES_PATCHED_FINAL_CI_PENDING_AUDITS_INCOMPLETE",
+    "result": "CODE_PATCHED_CI_SUCCESS_AUDITS_0_OF_2_AND_DEMO_BLOCKED",
     "last_mutation_commit": "727d8d1b7cef9783e4d76677386b676d5c868e85",
     "previous_state_branch_sha": "40525585c853e8d4f864d47f65a643651401a057",
-    "lock_started_at": "2026-11-02T12:19:01Z"
+    "lock_started_at": "2026-11-02T12:19:01Z",
+    "completed_at": "2026-11-02T12:27:03Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -33,7 +34,7 @@
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_FINAL_CI_PENDING_AUDITS_0_OF_2"
+    "status": "DRAFT_CI_SUCCESS_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -1199,17 +1200,33 @@
     },
     "prism-sync-hourly-2026-11-02T21-19-KST-turn1": {
       "head_sha": "727d8d1b7cef9783e4d76677386b676d5c868e85",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "success",
       "run_ids": [
         41444581957,
         41444589149
       ],
+      "linux_pytest_passed": 1253,
+      "windows_smoke_passed": 167,
+      "docker_build": "success",
       "test_first_failures": [
         14,
         4,
         15
-      ]
+      ],
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "description": "10 blocking issues"
+        }
+      ],
+      "related_pass": false,
+      "full_pass": false
     }
   },
   "upstream_changes": [
@@ -4312,7 +4329,13 @@
       "related_manifest_blob": "7284a615eaa27796b603d90b29742d9c09cc58b7",
       "full_manifest_blob": "aa5cbf8fe5454579aaf45460f1a5dac22394f42b",
       "run_evidence_blob": "3f8081e390a399509a6fa82b8c7d2ac997df1705",
-      "fully_audited_files": 0
+      "fully_audited_files": 0,
+      "ci_conclusion": "success",
+      "linux_pytest_passed": 1253,
+      "windows_smoke_passed": 167,
+      "full_file_audit": false,
+      "related_pass": false,
+      "full_pass": false
     }
   ],
   "last_merged_upstream_sha": null,
@@ -4338,9 +4361,13 @@
     "Latest new PR CI completed/success; this alone is not an independent audit PASS",
     "KIS demo authoritative order-ID/fill-ID/partial-fill/cancel/remaining-quantity and restart reconciliation unverified",
     "Independent review/any applicable policy requirements for new PR not yet verified",
-    "Prior PR #42 merged at user's request without earlier full financial gate; do not deploy to live trading until verified"
+    "Prior PR #42 merged at user's request without earlier full financial gate; do not deploy to live trading until verified",
+    "PR43 qlty check reports 10 blocking issues; details not accessible",
+    "PR43 independent reviews absent and branch protection policy 403",
+    "KIS demo order/fill/partial/cancel/remaining quantity reconciliation unavailable",
+    "Related 74-file and whole-tree 168-file independent audits 0/2 each"
   ],
-  "next_action": "Verify final SHA CI and external checks, independently audit full related and all files across 2+2 future slots, obtain authorized read-only KIS demo fill/cancel/remaining-quantity evidence, independent review and branch policy",
+  "next_action": "Triaged qlty 10 findings; obtain authorized read-only KIS demo order/fill/cancel/remaining quantity evidence; complete separate-slot 2x 74-file related and 2x 168-file whole-tree audits; verify review/protection; do not merge",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6172,7 +6199,7 @@
         "noncanonical-kis-error-code-20261102",
         "contradictory-success-timeout-20261102"
       ],
-      "classification": "CODE_PATCHED_FINAL_CI_PENDING_AUDIT_INCOMPLETE",
+      "classification": "CODE_PATCHED_CI_SUCCESS_AUDIT_AND_BROKER_DEMO_INCOMPLETE",
       "last_checked_head": "727d8d1b7cef9783e4d76677386b676d5c868e85"
     },
     {
@@ -6443,7 +6470,7 @@
         "kis-stringified-sentinel-or-noncanonical-order-id-20261102",
         "unicode-confusable-receipt-20261102"
       ],
-      "classification": "RECURRENCE_CODE_PATCHED_FINAL_CI_PENDING_AUDIT_INCOMPLETE",
+      "classification": "CODE_PATCHED_CI_SUCCESS_AUDIT_AND_BROKER_DEMO_INCOMPLETE",
       "first_detected_run": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
       "last_checked_head": "727d8d1b7cef9783e4d76677386b676d5c868e85",
       "fix_commits": [
@@ -6704,9 +6731,10 @@
     {
       "id": "RC-BROKER-RECEIPT-INTEGRITY",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_AND_DEMO_INCOMPLETE",
       "description": "Non-reconcilable stringified sentinel/JSON/invalid numeric/escaped broker receipt now UNKNOWN in shared classifier; accepted orders still not proven filled; KIS demo partial/cancel/recovery blocked.",
-      "last_checked_head": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96"
+      "last_checked_head": "79850e818bed7758eb11f0e2b024fb8bc1ee5c96",
+      "latest_patch_commit": "727d8d1b7cef9783e4d76677386b676d5c868e85"
     },
     {
       "id": "RC-BROKER-FREEFORM-REJECTION-EVIDENCE",
@@ -6719,9 +6747,15 @@
     {
       "id": "RC-BROKER-OUTCOME-AMBIGUITY",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_CURRENT_HEAD_CI_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_AND_DEMO_INCOMPLETE",
       "latest_subcase": "unverified-kis-error-code-and-redirect-20261102",
-      "latest_patch_commit": "97779c4558fddc15115cf53a2d07506872da2ebf"
+      "latest_patch_commit": "727d8d1b7cef9783e4d76677386b676d5c868e85"
+    },
+    {
+      "id": "QLTY-PR43-10-BLOCKING-ISSUES-UNINSPECTED",
+      "severity": "UNVERIFIED",
+      "status": "BLOCKS_MERGE_UNTIL_TRIAGED",
+      "description": "Qlty check reports success but its description says 10 blocking issues; issue details unavailable, do not classify as verified defects or ignore"
     }
   ],
   "previous_active_pr_at_manual_merge": {
