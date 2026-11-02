@@ -29,8 +29,13 @@ class ScoreWeightedStrategyConfig:
             if isinstance(raw_score, bool):
                 raise ValueError("signal_strategy.score_bands keys must be integers")
             score = float(raw_score)
-            if not math.isfinite(score) or not score.is_integer():
-                raise ValueError("signal_strategy.score_bands keys must be integers")
+            if (
+                not math.isfinite(score)
+                or not score.is_integer()
+                or score < 0
+                or score > 100
+            ):
+                raise ValueError("signal_strategy.score_bands keys must be integers between 0 and 100")
             normalized_score = int(score)
             if normalized_score in parsed:
                 raise ValueError("signal_strategy.score_bands contains duplicate normalized score threshold")

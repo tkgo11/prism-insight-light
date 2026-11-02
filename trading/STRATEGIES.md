@@ -272,7 +272,7 @@ Better score, bigger buy.
 - `base_amount_krw`: base buy amount for Korean stocks.
 - `base_amount_usd`: base buy amount for U.S. stocks.
 - `min_score`: minimum accepted score (0–100); default `0`. When positive, missing and lower scores reject before broker submission.
-- `score_bands`: score levels and their weights. An omitted/null mapping uses `{0: 1.0}`; an explicit empty/non-mapping value, boolean threshold, or duplicate normalized numeric key is invalid and never silently falls back to full-size BUY.
+- `score_bands`: score levels (integer thresholds from 0 to 100) and their weights. An omitted/null mapping uses `{0: 1.0}`; an explicit empty/non-mapping value, out-of-range/boolean threshold, or duplicate normalized numeric key is invalid and never silently falls back to full-size BUY.
   - Example: `60: 0.25` means buy 25% of the base amount when the score is at least 60.
   - Example: `90: 1.0` means buy 100% of the base amount when the score is at least 90.
 
