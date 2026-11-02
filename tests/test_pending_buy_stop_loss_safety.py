@@ -153,3 +153,37 @@ def test_multi_account_partial_acceptance_preserves_pending_protection(tmp_path)
     )
     dispatcher._update_stop_loss_tracking(signal, result)
     assert tracker.get_position("KR", "005930")["pending_buy"] is True
+
+
+def test_unreconciled_pending_buy_must_not_sell_preexisting_holdings(tmp_path):
+    """A positive aggregate balance cannot prove this pending BUY filled."""
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("KR", "005930", 90, entry_price=100, pending_buy=True)
+    before = tracker.get_position("KR", "005930")
+    watcher, dispatcher, trader = _watcher(tracker, [5], current_price=85)
+    assert _cycle(watcher) == []
+    dispatcher.dispatch.assert_not_called()
+    assert trader.get_holding_quantity.call_count == 1
+    assert tracker.get_position("KR", "005930") == before
+
+
+def test_legacy_unresolved_pending_buy_cannot_sell_aggregate_holdings(tmp_path):
+    """Missing provenance on old records must not authorize an automatic SELL."""
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("KR", "005930", 90, entry_price=100)
+    raw = json.loads(tracker.path.read_text(encoding="utf-8"))
+    raw["KR:005930"].pop("pending_buy", None)
+    tracker.path.write_text(json.dumps(raw), encoding="utf-8")
+    watcher, dispatcher, _ = _watcher(tracker, [5], current_price=85)
+    assert _cycle(watcher) == []
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position("KR", "005930") is not None
+
+
+def test_explicitly_reconciled_manual_position_still_sells_on_stop(tmp_path):
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("KR", "005930", 90, entry_price=100, pending_buy=False)
+    watcher, dispatcher, _ = _watcher(tracker, [5, 0], current_price=85)
+    assert len(_cycle(watcher)) == 1
+    dispatcher.dispatch.assert_awaited_once()
+    assert tracker.get_position("KR", "005930") is None
