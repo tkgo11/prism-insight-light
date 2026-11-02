@@ -526,11 +526,11 @@ def _fake_kr_context(results):
     class FakeTrader:
         async def async_buy_stock(self, stock_code, limit_price=None):
             results["buy"] = (stock_code, limit_price)
-            return {"success": True, "message": "kr-buy"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-buy"}
 
         async def async_sell_stock(self, stock_code, limit_price=None):
             results["sell"] = (stock_code, limit_price)
-            return {"success": True, "message": "kr-sell"}
+            return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-sell"}
 
     class FakeContext:
         def __init__(self, mode):

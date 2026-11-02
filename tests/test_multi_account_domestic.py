@@ -35,6 +35,7 @@ class FakeDomesticTrader:
         quantity = 1 if success else 0
         return {
             "success": success,
+            "order_no": "MOCK-ORDER" if success else None,
             "stock_code": stock_code,
             "quantity": quantity,
             "estimated_amount": quantity * 50000,
@@ -45,6 +46,7 @@ class FakeDomesticTrader:
     async def async_sell_stock(self, stock_code, timeout=30.0, limit_price=None):
         return {
             "success": True,
+            "order_no": "MOCK-ORDER",
             "stock_code": stock_code,
             "quantity": 1,
             "estimated_amount": 50000,
@@ -124,6 +126,7 @@ async def test_multi_account_aggregate_counts_only_executed_quantities(monkeypat
                 }
             return {
                 "success": True,
+                "order_no": "MOCK-ORDER",
                 "stock_code": stock_code,
                 "quantity": 2,
                 "estimated_amount": 100000,
@@ -171,6 +174,7 @@ async def test_multi_account_aggregate_propagates_unknown_outcome(monkeypatch):
                 }
             return {
                 "success": True,
+                "order_no": "MOCK-ORDER",
                 "stock_code": stock_code,
                 "quantity": 2,
                 "estimated_amount": 100000,

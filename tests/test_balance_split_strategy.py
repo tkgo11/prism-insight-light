@@ -35,7 +35,7 @@ class FakeUSTrader:
 
     async def async_buy_stock(self, ticker, buy_amount=None, limit_price=None):
         self.buy_calls.append((ticker, buy_amount, limit_price))
-        return {"success": self.success, "message": "us-buy"}
+        return {"success": self.success, "order_no": "MOCK-ORDER" if self.success else None, "message": "us-buy"}
 
 
 class FakeAutoExchangeUSTrader(FakeUSTrader):

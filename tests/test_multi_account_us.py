@@ -42,6 +42,7 @@ class FakeUSTrader:
         quantity = 1 if success else 0
         return {
             "success": success,
+            "order_no": "MOCK-ORDER" if success else None,
             "ticker": ticker,
             "quantity": quantity,
             "estimated_amount": quantity * 100.0,
@@ -52,6 +53,7 @@ class FakeUSTrader:
     async def async_sell_stock(self, ticker, exchange=None, timeout=30.0, limit_price=None, use_moo=False):
         return {
             "success": True,
+            "order_no": "MOCK-ORDER",
             "ticker": ticker,
             "quantity": 1,
             "estimated_amount": 100.0,
@@ -149,6 +151,7 @@ async def test_multi_account_us_aggregate_counts_only_executed_quantities(monkey
                 }
             return {
                 "success": True,
+                "order_no": "MOCK-ORDER",
                 "ticker": ticker,
                 "quantity": 2,
                 "estimated_amount": 100.0,
@@ -196,6 +199,7 @@ async def test_multi_account_us_aggregate_propagates_unknown_outcome(monkeypatch
                 }
             return {
                 "success": True,
+                "order_no": "MOCK-ORDER",
                 "ticker": ticker,
                 "quantity": 2,
                 "estimated_amount": 100.0,
