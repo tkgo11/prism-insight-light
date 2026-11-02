@@ -144,3 +144,21 @@ gates. Do not treat CI success as live-trading authorization.
 ### Strategy state semantic fail-closed checks (2026-11-02)
 
 Cooldown state now rejects mismatched/missing instrument keys, duplicate entries and malformed pending flags before broker submission. Event risk-off rejects malformed market/ticker/event scopes before BUY or state replacement. These are mock-tested code safeguards only; they do not establish KIS fill/cancel reconciliation or account-scoped strategy-state isolation. Historical ambiguous records require operator reconciliation rather than automatic migration.
+
+
+### Ambiguous inbound JSON key rejection (2026-11-02)
+
+The standard JSON decoder silently retains the last occurrence of a repeated
+key. A malformed publisher/Telegram message with both
+`"position_fraction":0.1` and `"position_fraction":1.0` could therefore
+turn a partial BUY into a full-size BUY; duplicate ticker, price, signal type,
+or SELL denominator fields are similarly unsafe. The Pub/Sub byte parser,
+Telegram JSON extraction (including fenced/inline text), and WebUI signal
+validation now share a duplicate-key-rejecting object-pairs hook. Nested
+objects are checked too; separate objects may still reuse ordinary field names.
+Malformed Telegram JSON is rejected before labeled-text fallback, and polling
+skips it rather than dispatching an ambiguous trade. The regression tests
+`tests/test_inbound_json_duplicate_keys.py` cover these paths and a valid
+nested-object control. This validation is **not** KIS fill confirmation and
+does not authorize live trading. Existing order-ID, partial-fill, cancellation,
+remaining-quantity, crash-recovery, and independent audit gates remain blocked.
