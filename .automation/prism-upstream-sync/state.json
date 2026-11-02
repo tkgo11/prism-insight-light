@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
-    "started_at": "2026-11-01T23:18:56Z",
-    "completed_at": "2026-11-01T23:25:37.848Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
+    "started_at": "2026-11-02T00:23:35Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
     "last_mutation_commit": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
     "last_mutation_at": "2026-11-01T23:25:37.848Z",
-    "result": "QUEUED_SINGLE_ACCOUNT_TOCTOU_PATCHED_CI_SUCCESS_AUDITS_BLOCKED",
+    "result": "IN_PROGRESS",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -63,10 +63,10 @@
       "merged": false,
       "reason": "Queued single-account broker identity pinned with mock tests; demo integration, full audits, independent review and qlty usage unresolved."
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T06:22+09:00",
-    "pr_head_at_start": "c62e0593b64acc3c2a368662d3fd5c4219b5b198",
-    "lock_acquired_at": "2026-11-01T23:18:56Z",
-    "lock_released_at": "2026-11-01T23:25:37.848Z"
+    "prior_run_id": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
+    "pr_head_at_start": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
+    "lock_acquired_at": "2026-11-02T00:23:35Z",
+    "lock_released_at": null
   },
   "source": {
     "repository": "dragon1086/prism-insight",
