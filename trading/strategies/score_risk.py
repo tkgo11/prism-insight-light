@@ -196,7 +196,7 @@ class ScoreRiskStrategy:
             and float(signal.stop_loss) >= float(signal.price)
         ):
             return "stop_loss must be below entry price"
-        if signal.buy_score is not None and signal.buy_score < self.config.min_score:
+        if (signal.buy_score is None and self.config.min_score > 0) or (signal.buy_score is not None and signal.buy_score < self.config.min_score):
             return "BUY score is missing or below the configured threshold"
         if signal.target_price is None:
             if self.config.require_target_price:

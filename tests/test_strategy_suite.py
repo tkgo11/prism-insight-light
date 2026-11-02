@@ -49,6 +49,72 @@ def test_strategy_list_fields_reject_invalid_entries(
         config_type.from_mapping({"name": name, field: value})
 
 
+
+# A positive score floor is a broker pre-submission gate. Missing scores
+# cannot be interpreted as the default weight (1.0) and bypass that floor.
+@pytest.mark.parametrize("name", ["score_weighted", "score_risk"])
+@pytest.mark.parametrize("score", [None, 59])
+@pytest.mark.asyncio
+async def test_positive_min_score_rejects_missing_or_low_score_before_broker(name, score):
+    from trading.strategies.score_risk import ScoreRiskStrategy, ScoreRiskStrategyConfig
+
+    config_payload = {"name": name, "min_score": 60}
+    if name == "score_weighted":
+        config_payload["base_amount_usd"] = 100
+        strategy = ScoreWeightedStrategy(
+            config=ScoreWeightedStrategyConfig.from_mapping(config_payload)
+        )
+    else:
+        config_payload["risk_amount_usd"] = 10
+        strategy = ScoreRiskStrategy(
+            config=ScoreRiskStrategyConfig.from_mapping(config_payload)
+        )
+    signal_payload = {
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "stop_loss": 90,
+    }
+    if score is not None:
+        signal_payload["buy_score"] = score
+    result = await strategy.execute(parse_signal_payload(signal_payload), trading_mode="demo")
+    assert result.status == "rejected"
+    assert "score" in result.message.lower()
+    assert FakeUSTrader.calls == []
+
+
+@pytest.mark.parametrize("name", ["score_weighted", "score_risk"])
+@pytest.mark.asyncio
+async def test_positive_min_score_accepts_exact_threshold(name):
+    from trading.strategies.score_risk import ScoreRiskStrategy, ScoreRiskStrategyConfig
+
+    if name == "score_weighted":
+        strategy = ScoreWeightedStrategy(
+            config=ScoreWeightedStrategyConfig.from_mapping({
+                "name": name, "min_score": 60, "base_amount_usd": 100,
+            })
+        )
+    else:
+        strategy = ScoreRiskStrategy(
+            config=ScoreRiskStrategyConfig.from_mapping({
+                "name": name, "min_score": 60, "risk_amount_usd": 10,
+            })
+        )
+    signal = parse_signal_payload({
+        "type": "BUY", "ticker": "AAPL", "market": "US",
+        "price": 100, "stop_loss": 90, "buy_score": 60,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "executed"
+    assert len(FakeUSTrader.calls) == 1
+    assert FakeUSTrader.calls[0][0:2] == ("buy", "AAPL")
+
+
+@pytest.mark.parametrize("min_score", [-1, 101])
+def test_score_weighted_rejects_out_of_range_minimum_score(min_score):
+    with pytest.raises(ValueError, match="min_score"):
+        ScoreWeightedStrategyConfig.from_mapping({
+            "name": "score_weighted", "min_score": min_score,
+        })
+
 class FakeUSTrader:
     calls = []
     def __init__(self, mode, account_name=None, account_index=None): self.mode = mode; self.account_name = account_name; self.account_index = account_index

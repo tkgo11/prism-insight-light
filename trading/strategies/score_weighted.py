@@ -28,14 +28,14 @@ class ScoreWeightedStrategyConfig:
             parsed[int(score)] = float(raw_weight)
         if not parsed or any(not math.isfinite(v) or v < 0 for v in parsed.values()):
             raise ValueError("signal_strategy.score_bands must contain non-negative weights")
-        return cls(positive_number(payload, "base_amount_krw"), positive_number(payload, "base_amount_usd"), integer_value(payload, "min_score", 0), parsed)
+        return cls(positive_number(payload, "base_amount_krw"), positive_number(payload, "base_amount_usd"), integer_value(payload, "min_score", 0, minimum=0, maximum=100), parsed)
 
 class ScoreWeightedStrategy:
     def __init__(self, *, config: ScoreWeightedStrategyConfig): self.config = config
     async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.signal_type != "BUY":
             return StrategyExecution("rejected", "Score weighted strategy only supports BUY signals", signal.market, signal.ticker)
-        if signal.buy_score is not None and signal.buy_score < self.config.min_score:
+        if (signal.buy_score is None and self.config.min_score > 0) or (signal.buy_score is not None and signal.buy_score < self.config.min_score):
             return StrategyExecution("rejected", "BUY score is missing or below the configured threshold", signal.market, signal.ticker)
         bands = self.config.score_bands or {0: 1.0}
         weight = 1.0 if signal.buy_score is None else min(bands.values())
