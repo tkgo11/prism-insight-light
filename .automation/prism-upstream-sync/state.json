@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
     "started_at": "2026-11-02T04:20:37Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
-    "last_mutation_commit": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
-    "last_mutation_at": "2026-11-02T03:21:02.865Z",
-    "result": "IN_PROGRESS",
+    "completed_at": "2026-11-02T04:30:40.787Z",
+    "lock_owner": null,
+    "last_mutation_commit": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+    "last_mutation_at": "2026-11-02T04:30:40.787Z",
+    "result": "NUMERIC_BAND_CONFIG_FIXED_ACTIONS_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,29 +19,29 @@
       "source_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+      "pr_head": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
       "pr_number": 42,
-      "related_manifest_files": 64,
+      "related_manifest_files": 66,
       "related_manifest_files_fully_audited": 0,
-      "full_tree_files": 163,
+      "full_tree_files": 165,
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41382334350,
+          "id": 41388576914,
           "event": "pull_request",
           "status": "completed",
           "conclusion": "success",
-          "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+          "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
         },
         {
-          "id": 41382329143,
+          "id": 41388571666,
           "event": "push",
           "status": "completed",
           "conclusion": "success",
-          "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+          "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
         }
       ],
-      "linux": "1011 passed",
+      "linux": "1086 passed",
       "windows": "152 passed",
       "external_statuses": [
         {
@@ -54,15 +54,21 @@
         }
       ],
       "commits": [
-        "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+        "a7d7879308eee80754bbe55959217540c36e4837",
+        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
+        "6fdff0784d25a0a7de01bdb5c8292afb023f0212",
+        "0ab41324db6e12187168cfcbac554395065fae09",
+        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "1d9a31f3572e7ae7a106fe0258c655a717017e64",
+        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
       ],
       "merged": false,
-      "reason": "Targeted fix passed latest CI, but audits/demo/review incomplete"
+      "reason": "Latest CI success, but only targeted source review and no broker demo/review/full audit"
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
     "pr_head_at_start": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
     "lock_acquired_at": "2026-11-02T04:20:37Z",
-    "lock_released_at": "2026-11-02T03:21:02.865Z"
+    "lock_released_at": "2026-11-02T04:30:40.787Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -81,7 +87,7 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+    "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
@@ -94,7 +100,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -170,15 +176,10 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "RESET_AFTER_SCORE_MAX_CAPITAL_LOWER_BOUND_FIX",
+    "status": "RESET_AFTER_NUMERIC_BAND_CONFIG_FIX",
     "checksum": null,
-    "scope_estimate": "At least 64 related files; transitive closure not fully audited",
+    "scope_estimate": "At least 66 related files; full transitive dependency closure not proven",
     "files": [
-      {
-        "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
-        "status": "NOT_FULLY_AUDITED"
-      },
       {
         "path": "README.en.md",
         "blob_sha": "956ae8767ce601712b8f6600c65002f5a4ab3d7d",
@@ -187,6 +188,11 @@
       {
         "path": "README.ko.md",
         "blob_sha": "b0d37c4c45dd12373b6ed2780b0f2cec3da362c1",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+        "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -200,14 +206,19 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "tests/test_balanced_risk_strategy.py",
+        "blob_sha": "e2e05a407ccbb2d675234ea7ee5ab97cce830a86",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
         "path": "tests/test_cooldown_pending_reconciliation.py",
         "blob_sha": "24afa924da611e2ccdcb14cb0dd24087669a75d0",
         "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_dispatch.py",
-        "status": "NOT_FULLY_AUDITED",
-        "blob_sha": "9a77b231c259003b3e0acd89d51c5537df644b8a"
+        "blob_sha": "9a77b231c259003b3e0acd89d51c5537df644b8a",
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_effective_order_metadata.py",
@@ -260,14 +271,24 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "tests/test_profit_band_config_integrity.py",
+        "blob_sha": "b9219d4918af9788b5913f1f579da2595e17de9a",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+      },
+      {
         "path": "tests/test_queue_and_account_sizing.py",
         "blob_sha": "1f2765d5f033f4eb01a6f0a5f02a35e0d6dcaf21",
         "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_queue_execution_context.py",
-        "status": "NOT_FULLY_AUDITED",
-        "blob_sha": "1be12e40042b2423941df901ddb3c35ab26b8f55"
+        "blob_sha": "1be12e40042b2423941df901ddb3c35ab26b8f55",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "tests/test_score_band_config_integrity.py",
+        "blob_sha": "354910f908f6f05d7ce856f26efa088bf5d6aadb",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
       },
       {
         "path": "tests/test_score_max_capital_strategy.py",
@@ -281,8 +302,8 @@
       },
       {
         "path": "tests/test_signal_safety.py",
-        "status": "NOT_FULLY_AUDITED",
-        "blob_sha": "69ba1c69862cbe67ee6f740245dcb27b8669a322"
+        "blob_sha": "69ba1c69862cbe67ee6f740245dcb27b8669a322",
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_signal_schema.py",
@@ -340,6 +361,11 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "trading/STRATEGIES.md",
+        "blob_sha": "8190701d9e696d0fa2e4af955e206cc33c4a9013",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+      },
+      {
         "path": "trading/buy_sizing.py",
         "blob_sha": "3db2b3f1ea40ad54a38b32a4d4bbf95c2d8b1d19",
         "status": "NOT_FULLY_AUDITED"
@@ -347,7 +373,7 @@
       {
         "path": "trading/dispatch.py",
         "blob_sha": "035846e0845133debe4b65524c16ed9ff1cb56f2",
-        "status": "NOT_FULLY_AUDITED"
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
       },
       {
         "path": "trading/domestic.py",
@@ -400,8 +426,8 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
-        "path": "trading/STRATEGIES.md",
-        "blob_sha": "2d7acc300d88dfbbc59893d79121d414e9c0412d",
+        "path": "trading/strategies/README.md",
+        "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -410,14 +436,19 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "trading/strategies/balanced_risk.py",
+        "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+      },
+      {
         "path": "trading/strategies/bracket_exit.py",
         "blob_sha": "7355e0a20212f77926e8d856b7d0539b9dc670c0",
         "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/common.py",
-        "blob_sha": "6515bfa0de4944c59470c17c19b19589b0ce42c4",
-        "status": "NOT_FULLY_AUDITED"
+        "blob_sha": "1d121f9c589f4f37e080fb9a30b4d40e94c30ee5",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
       },
       {
         "path": "trading/strategies/cooldown.py",
@@ -431,13 +462,13 @@
       },
       {
         "path": "trading/strategies/profit_ladder.py",
-        "blob_sha": "174fa6ec00afe7f4de587e49862693506ec0e7c7",
-        "status": "NOT_FULLY_AUDITED"
+        "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
       },
       {
         "path": "trading/strategies/protective_exit.py",
-        "blob_sha": "664ecac2459a25ca3c122c1b8d69026912443e60",
-        "status": "NOT_FULLY_AUDITED"
+        "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
       },
       {
         "path": "trading/strategies/risk_bracket.py",
@@ -446,18 +477,18 @@
       },
       {
         "path": "trading/strategies/score_max_capital.py",
-        "blob_sha": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
-        "status": "NOT_FULLY_AUDITED"
+        "blob_sha": "8b8480cf9578380a1c69022318737f3c970e9c5a",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
       },
       {
         "path": "trading/strategies/score_risk.py",
-        "blob_sha": "8de985063a746453f8a291a25880b0fa65b741b7",
-        "status": "NOT_FULLY_AUDITED"
+        "blob_sha": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
       },
       {
         "path": "trading/strategies/score_weighted.py",
-        "blob_sha": "361a84149b6be0dd5cecc6361102c34dd0d9e6fc",
-        "status": "NOT_FULLY_AUDITED"
+        "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
       },
       {
         "path": "trading/strategies/signal_trailing_stop.py",
@@ -478,21 +509,6 @@
         "path": "webui/services/trade_service.py",
         "blob_sha": "fc70caf328b37cca66b47c7024bb7b9cf2524de6",
         "status": "NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "trading/strategies/README.md",
-        "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
-        "status": "NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "trading/strategies/balanced_risk.py",
-        "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
-        "status": "NOT_FULLY_AUDITED"
-      },
-      {
-        "path": "tests/test_balanced_risk_strategy.py",
-        "blob_sha": "e2e05a407ccbb2d675234ea7ee5ab97cce830a86",
-        "status": "NOT_FULLY_AUDITED"
       }
     ],
     "checked_files": 0,
@@ -504,25 +520,27 @@
       "trading/strategies/README.md",
       "tests/test_balanced_risk_strategy.py"
     ],
-    "tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8"
+    "tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8",
+    "files_fully_audited": 0,
+    "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
   },
   "full_manifest": {
-    "status": "RESET_AFTER_SCORE_MAX_CAPITAL_LOWER_BOUND_FIX",
-    "tracked_tree_entries_on_pr": 187,
-    "tracked_blob_files_on_pr": 163,
-    "sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+    "status": "RESET_AFTER_NUMERIC_BAND_CONFIG_FIX",
+    "tracked_tree_entries_on_pr": 189,
+    "tracked_blob_files_on_pr": 165,
+    "sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
     "files_checked": 0,
-    "checksum": null,
+    "checksum": "0d44f215df4aaaf7d43a2d1ab97d562658d84ff7",
     "checksum_kind": "git-tree-sha1",
     "files": [
       {
-        "path": ".agents/skills/prism-insight-light/agents/openai.yaml",
-        "blob_sha": "5b0f9ea241f62d302b5839f4036482bf034780ba",
+        "path": ".agents/skills/prism-insight-light/SKILL.md",
+        "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
         "status": "NOT_REVIEWED"
       },
       {
-        "path": ".agents/skills/prism-insight-light/SKILL.md",
-        "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
+        "path": ".agents/skills/prism-insight-light/agents/openai.yaml",
+        "blob_sha": "5b0f9ea241f62d302b5839f4036482bf034780ba",
         "status": "NOT_REVIEWED"
       },
       {
@@ -596,38 +614,13 @@
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "check_pubsub_readiness.py",
-        "blob_sha": "2ce8388379013b3bac9c792fb4425080cd18892f",
-        "status": "NOT_REVIEWED"
-      },
-      {
         "path": "Dockerfile",
         "blob_sha": "3b0dead05078f0e16e37b53aa0c4d16d0a8e7733",
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "install_prism_docker.sh",
-        "blob_sha": "c4461aed3bf4358f7fbe2fdda7f13d6a3d87c8ce",
-        "status": "NOT_REVIEWED"
-      },
-      {
         "path": "LICENSE",
         "blob_sha": "be3f7b28e564e7dd05eaf59d64adba1a4065ac0e",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "pubsub_readiness.py",
-        "blob_sha": "41e5e02faf1b5a57a10407ec8075f8dc71f2f129",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "pytest.ini",
-        "blob_sha": "fd7e79a47a073d76514c770332b0258e63fc0045",
         "status": "NOT_REVIEWED"
       },
       {
@@ -643,6 +636,31 @@
       {
         "path": "README.md",
         "blob_sha": "125dcddda02de2d1e1e377d38bb54ab0764f1156",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "check_pubsub_readiness.py",
+        "blob_sha": "2ce8388379013b3bac9c792fb4425080cd18892f",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+        "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "install_prism_docker.sh",
+        "blob_sha": "c4461aed3bf4358f7fbe2fdda7f13d6a3d87c8ce",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "pubsub_readiness.py",
+        "blob_sha": "41e5e02faf1b5a57a10407ec8075f8dc71f2f129",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "pytest.ini",
+        "blob_sha": "fd7e79a47a073d76514c770332b0258e63fc0045",
         "status": "NOT_REVIEWED"
       },
       {
@@ -786,6 +804,11 @@
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "tests/test_profit_band_config_integrity.py",
+        "blob_sha": "b9219d4918af9788b5913f1f579da2595e17de9a",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "tests/test_pubsub_readiness.py",
         "blob_sha": "cda94ccff0897c4228793cde03bd0d6cb5f5a006",
         "status": "NOT_REVIEWED"
@@ -808,6 +831,11 @@
       {
         "path": "tests/test_schema.py",
         "blob_sha": "fa42823b5396ef94551ba85a63336bfa0f7a02da",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "tests/test_score_band_config_integrity.py",
+        "blob_sha": "354910f908f6f05d7ce856f26efa088bf5d6aadb",
         "status": "NOT_REVIEWED"
       },
       {
@@ -951,6 +979,11 @@
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "trading/STRATEGIES.md",
+        "blob_sha": "8190701d9e696d0fa2e4af955e206cc33c4a9013",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "trading/__init__.py",
         "blob_sha": "a0326b8406920998e8dbe830d120148840ddfe01",
         "status": "NOT_REVIEWED"
@@ -961,13 +994,13 @@
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/config_paths.py",
-        "blob_sha": "578fec77b343c894898937dda04d8819e215d1a6",
+        "path": "trading/config/kis_devlp.yaml.example",
+        "blob_sha": "1379c70fefdcb41ede63ff0bbd00eb4d9ef417e9",
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/config/kis_devlp.yaml.example",
-        "blob_sha": "1379c70fefdcb41ede63ff0bbd00eb4d9ef417e9",
+        "path": "trading/config_paths.py",
+        "blob_sha": "578fec77b343c894898937dda04d8819e215d1a6",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1036,8 +1069,8 @@
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/STRATEGIES.md",
-        "blob_sha": "2d7acc300d88dfbbc59893d79121d414e9c0412d",
+        "path": "trading/strategies/README.md",
+        "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1062,7 +1095,7 @@
       },
       {
         "path": "trading/strategies/common.py",
-        "blob_sha": "6515bfa0de4944c59470c17c19b19589b0ce42c4",
+        "blob_sha": "1d121f9c589f4f37e080fb9a30b4d40e94c30ee5",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1082,17 +1115,12 @@
       },
       {
         "path": "trading/strategies/profit_ladder.py",
-        "blob_sha": "174fa6ec00afe7f4de587e49862693506ec0e7c7",
+        "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
         "status": "NOT_REVIEWED"
       },
       {
         "path": "trading/strategies/protective_exit.py",
-        "blob_sha": "664ecac2459a25ca3c122c1b8d69026912443e60",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "trading/strategies/README.md",
-        "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
+        "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1102,17 +1130,17 @@
       },
       {
         "path": "trading/strategies/score_max_capital.py",
-        "blob_sha": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
+        "blob_sha": "8b8480cf9578380a1c69022318737f3c970e9c5a",
         "status": "NOT_REVIEWED"
       },
       {
         "path": "trading/strategies/score_risk.py",
-        "blob_sha": "8de985063a746453f8a291a25880b0fa65b741b7",
+        "blob_sha": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
         "status": "NOT_REVIEWED"
       },
       {
         "path": "trading/strategies/score_weighted.py",
-        "blob_sha": "361a84149b6be0dd5cecc6361102c34dd0d9e6fc",
+        "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1331,7 +1359,8 @@
         "status": "NOT_REVIEWED"
       }
     ],
-    "tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8"
+    "tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8",
+    "git_tree_sha": "0d44f215df4aaaf7d43a2d1ab97d562658d84ff7"
   },
   "checks": {
     "0": {
@@ -1583,6 +1612,29 @@
         "Windows runtime smoke"
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41325576768"
+    },
+    "50": {
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "status": "completed",
+      "conclusion": "success",
+      "run_ids": [
+        41388576914,
+        41388571666
+      ],
+      "jobs": [
+        "Full pytest suite 1086 passed",
+        "Windows runtime smoke 152 passed"
+      ],
+      "external": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        }
+      ]
     },
     "latest_workflow_run_id": 41382334350,
     "latest_workflow_run_status": "completed",
@@ -4377,17 +4429,144 @@
         "tests": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9"
       },
       "notes": "Reviewed score-band documentation and score_weighted/score_risk/score_max_capital call sites; reproduced and fixed BUY/SELL below-first threshold mismatch; Linux 1011 and Windows 152 tests passed; no full dependency audit, KIS demo or independent review."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+      "kind": "ROOT_CAUSE_FIX_TARGETED_SOURCE_REVIEW_NOT_FULL_AUDIT",
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "related_pass": false,
+      "full_pass": false,
+      "changed_files": [
+        "trading/strategies/common.py",
+        "trading/strategies/score_weighted.py",
+        "trading/strategies/score_risk.py",
+        "trading/strategies/score_max_capital.py",
+        "trading/strategies/profit_ladder.py",
+        "trading/strategies/protective_exit.py",
+        "trading/STRATEGIES.md",
+        "tests/test_score_band_config_integrity.py",
+        "tests/test_profit_band_config_integrity.py"
+      ],
+      "reviewed_paths": [
+        {
+          "path": "trading/strategies/common.py",
+          "blob_sha": "1d121f9c589f4f37e080fb9a30b4d40e94c30ee5",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "trading/strategies/score_weighted.py",
+          "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "trading/strategies/score_risk.py",
+          "blob_sha": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "trading/strategies/score_max_capital.py",
+          "blob_sha": "8b8480cf9578380a1c69022318737f3c970e9c5a",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "trading/strategies/profit_ladder.py",
+          "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "trading/strategies/protective_exit.py",
+          "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "trading/strategies/balanced_risk.py",
+          "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "trading/dispatch.py",
+          "blob_sha": "035846e0845133debe4b65524c16ed9ff1cb56f2",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "trading/STRATEGIES.md",
+          "blob_sha": "8190701d9e696d0fa2e4af955e206cc33c4a9013",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "tests/test_score_band_config_integrity.py",
+          "blob_sha": "354910f908f6f05d7ce856f26efa088bf5d6aadb",
+          "review_level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "tests/test_profit_band_config_integrity.py",
+          "blob_sha": "b9219d4918af9788b5913f1f579da2595e17de9a",
+          "review_level": "TARGETED_PARTIAL"
+        }
+      ],
+      "test_first_failures": [
+        {
+          "run_id": 41388190743,
+          "failed": 33
+        },
+        {
+          "run_id": 41388362965,
+          "failed": 15
+        },
+        {
+          "run_id": 41388549498,
+          "failed": 2
+        }
+      ],
+      "regression": {
+        "commit": "0ab41324db6e12187168cfcbac554395065fae09",
+        "failure": "IndentationError in profit_ladder.py and protective_exit.py",
+        "fixed_commit": "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "final_verified": true
+      },
+      "ci": {
+        "runs": [
+          {
+            "id": 41388576914,
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+          },
+          {
+            "id": 41388571666,
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+          }
+        ],
+        "linux": "1086 passed",
+        "windows": "152 passed",
+        "external": [
+          {
+            "context": "security/snyk (tkgo11)",
+            "state": "success"
+          },
+          {
+            "context": "qlty check",
+            "state": "success"
+          }
+        ]
+      },
+      "notes": "Configuration-only financial validation patch. 11 targeted paths inspected, 66 related manifest files and 165 total tracked blob files not fully audited. KIS demo and authoritative fills unavailable."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "No authoritative KIS order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation or authorized demo environment",
-    "Related dependency closure (at least 64 files) not fully audited; 0/2",
-    "Whole PR tree (163 blob files) not fully audited; 0/2",
-    "No independent review approval; branch protection API 403; additional external check requirements unverified"
+    "Authoritative KIS order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation and authorized demo environment unavailable",
+    "Related transitive dependency audit at least 66 files incomplete: 0/2",
+    "Whole PR result tree 165 tracked blobs not fully audited: 0/2",
+    "No independent PR review approval; branch protection API 403; external qlty usage requiredness unverified"
   ],
-  "next_action": "Recheck lock and HEADs; audit all 64+ related files with per-file SHA evidence, fix verified defects, then seek two independent related passes and two full-tree passes; never trade live.",
+  "next_action": "Keep Draft. Recheck CAS lock/HEADs; complete 66+ related dependency files and authoritative mock/demo fill-cancel recovery tests, then two independent related passes, then 165-file full audit twice; no live trading.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -4773,6 +4952,19 @@
       "full_pass": false,
       "reason": "Only targeted review; related dependency closure and broker demo incomplete",
       "manifest_tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8"
+    },
+    {
+      "slot": "2026-11-02T13:20+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "related_pass": false,
+      "full_pass": false,
+      "manifest_tree_sha": "0d44f215df4aaaf7d43a2d1ab97d562658d84ff7",
+      "reason": "Verified config defects fixed, current-head CI green; only targeted review, full related closure and broker demo missing"
     }
   ],
   "discovered_defects": [
@@ -5632,6 +5824,164 @@
       "fix_commit": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
       "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
       "test_evidence": "Isolated pre-fix arithmetic reproducer; 2 new mock broker tests; Actions 41382329143 and 41382334350 success (Linux 1011, Windows 152); KIS demo not run"
+    },
+    {
+      "id": "score-band-explicit-empty-fallback-20261102",
+      "root_cause_id": "RC-STRATEGY-NUMERIC-BAND-CONFIG-INTEGRITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "description": "Explicit empty score-band mapping silently replaced by full-size {0:1.0}; score-weighted/risk/balanced/max-capital BUY+SELL",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+      "paths": [
+        "trading/strategies/score_weighted.py",
+        "trading/strategies/score_risk.py",
+        "trading/strategies/score_max_capital.py"
+      ],
+      "code_blob_shas": {
+        "trading/strategies/score_weighted.py": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+        "trading/strategies/score_risk.py": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+        "trading/strategies/score_max_capital.py": "8b8480cf9578380a1c69022318737f3c970e9c5a"
+      },
+      "fix_commits": [
+        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
+        "0ab41324db6e12187168cfcbac554395065fae09",
+        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+      ],
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "test_evidence": "33 failing test-first cases in Actions 41388190743; patched Actions 41388272122 green",
+      "unverified": "Full transitive audit, KIS demo fill/cancel/remaining quantity, review/branch protection"
+    },
+    {
+      "id": "score-band-numeric-alias-collision-20261102",
+      "root_cause_id": "RC-STRATEGY-NUMERIC-BAND-CONFIG-INTEGRITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "description": "Distinct raw score threshold keys normalize to the same integer, silently overwriting BUY/SELL allocation ratios",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+      "paths": [
+        "trading/strategies/score_weighted.py",
+        "trading/strategies/score_risk.py",
+        "trading/strategies/score_max_capital.py"
+      ],
+      "code_blob_shas": {
+        "trading/strategies/score_weighted.py": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+        "trading/strategies/score_risk.py": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+        "trading/strategies/score_max_capital.py": "8b8480cf9578380a1c69022318737f3c970e9c5a"
+      },
+      "fix_commits": [
+        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
+        "0ab41324db6e12187168cfcbac554395065fae09",
+        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+      ],
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "test_evidence": "Pre-fix alias regression failures in Actions 41388190743; final Actions 41388576914 green",
+      "unverified": "Full transitive audit, KIS demo fill/cancel/remaining quantity, review/branch protection"
+    },
+    {
+      "id": "score-band-nonmapping-and-boolean-20261102",
+      "root_cause_id": "RC-STRATEGY-NUMERIC-BAND-CONFIG-INTEGRITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "description": "Non-mapping score bands and boolean thresholds accepted or defaulted",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+      "paths": [
+        "trading/strategies/score_weighted.py",
+        "trading/strategies/score_risk.py",
+        "trading/strategies/score_max_capital.py"
+      ],
+      "code_blob_shas": {
+        "trading/strategies/score_weighted.py": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+        "trading/strategies/score_risk.py": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+        "trading/strategies/score_max_capital.py": "8b8480cf9578380a1c69022318737f3c970e9c5a"
+      },
+      "fix_commits": [
+        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
+        "0ab41324db6e12187168cfcbac554395065fae09",
+        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+      ],
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "test_evidence": "Explicit []/False/list-pairs and bool threshold tests; final Actions green",
+      "unverified": "Full transitive audit, KIS demo fill/cancel/remaining quantity, review/branch protection"
+    },
+    {
+      "id": "profit-band-numeric-alias-collision-20261102",
+      "root_cause_id": "RC-STRATEGY-NUMERIC-BAND-CONFIG-INTEGRITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "description": "Profit-ladder/protective-exit/balanced-risk normalized profit threshold aliases silently overwrite SELL fractions",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+      "paths": [
+        "trading/strategies/profit_ladder.py",
+        "trading/strategies/protective_exit.py",
+        "trading/strategies/common.py"
+      ],
+      "code_blob_shas": {
+        "trading/strategies/profit_ladder.py": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+        "trading/strategies/protective_exit.py": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+        "trading/strategies/common.py": "1d121f9c589f4f37e080fb9a30b4d40e94c30ee5"
+      },
+      "fix_commits": [
+        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
+        "0ab41324db6e12187168cfcbac554395065fae09",
+        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+      ],
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "test_evidence": "15 failing test-first cases in Actions 41388362965; final Actions green",
+      "unverified": "Full transitive audit, KIS demo fill/cancel/remaining quantity, review/branch protection"
+    },
+    {
+      "id": "profit-band-nonmapping-and-boolean-20261102",
+      "root_cause_id": "RC-STRATEGY-NUMERIC-BAND-CONFIG-INTEGRITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "description": "List-of-pairs profit band and boolean threshold accepted despite mapping-only contract",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+      "paths": [
+        "trading/strategies/profit_ladder.py",
+        "trading/strategies/protective_exit.py",
+        "trading/strategies/common.py"
+      ],
+      "code_blob_shas": {
+        "trading/strategies/profit_ladder.py": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+        "trading/strategies/protective_exit.py": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+        "trading/strategies/common.py": "1d121f9c589f4f37e080fb9a30b4d40e94c30ee5"
+      },
+      "fix_commits": [
+        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
+        "0ab41324db6e12187168cfcbac554395065fae09",
+        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+      ],
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "test_evidence": "Tests test_profit_band_config_integrity.py; final Actions green",
+      "unverified": "Full transitive audit, KIS demo fill/cancel/remaining quantity, review/branch protection"
+    },
+    {
+      "id": "score-weighted-threshold-range-20261102",
+      "root_cause_id": "RC-STRATEGY-NUMERIC-BAND-CONFIG-INTEGRITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "description": "Out-of-range score-weighted thresholds -1/101 accepted despite documented 0..100 scale",
+      "first_discovered_run": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+      "paths": [
+        "trading/strategies/score_weighted.py"
+      ],
+      "code_blob_shas": {
+        "trading/strategies/score_weighted.py": "82cb7fa8af78b47b666f777005acbc0c0674e6af"
+      },
+      "fix_commits": [
+        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
+        "0ab41324db6e12187168cfcbac554395065fae09",
+        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+      ],
+      "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "test_evidence": "2 failing test-first cases in Actions 41388549498; final Actions green",
+      "unverified": "Full transitive audit, KIS demo fill/cancel/remaining quantity, review/branch protection"
     }
   ],
   "risks": [
@@ -5885,10 +6235,34 @@
       "latest_fix_commits": [
         "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
       ]
+    },
+    {
+      "root_cause_id": "RC-STRATEGY-NUMERIC-BAND-CONFIG-INTEGRITY",
+      "previous_root_cause_ids": [
+        "RC-STRATEGY-SCORE-BAND-CONFIG-INTEGRITY"
+      ],
+      "description": "Numeric threshold band parsing must reject empty score bands, nonmapping/bool keys, out-of-range score thresholds and post-normalization duplicate keys across BUY and SELL strategies",
+      "defect_ids": [
+        "score-band-explicit-empty-fallback-20261102",
+        "score-band-numeric-alias-collision-20261102",
+        "score-band-nonmapping-and-boolean-20261102",
+        "profit-band-numeric-alias-collision-20261102",
+        "profit-band-nonmapping-and-boolean-20261102",
+        "score-weighted-threshold-range-20261102"
+      ],
+      "classification": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "latest_fix_commits": [
+        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
+        "0ab41324db6e12187168cfcbac554395065fae09",
+        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+      ],
+      "recurrence_count": 0
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+    "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
     "scope": "Derived finite-input score-based BUY budget overflow and score-risk cap/units/notional; order lifecycle integration remains unverified",
     "entries": [
       {
@@ -6086,6 +6460,30 @@
         "test_blob_sha": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9",
         "status": "TARGETED_MOCK_CI_SUCCESS_NOT_FULL_AUDIT",
         "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+      },
+      {
+        "contract": "Explicit empty score band cannot become full-size order",
+        "path": "operator config -> ScoreWeighted/ScoreRisk/BalancedRisk/ScoreMaxCapital -> TradeDispatcher -> KR/US",
+        "evidence": "Pre-fix 33 failed; final 1086 Linux passed",
+        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
+      },
+      {
+        "contract": "Numeric aliases cannot silently overwrite BUY/SELL threshold ratios",
+        "path": "score/profit bands -> normalized parsers -> strategy -> broker",
+        "evidence": "Pre-fix 33+15 failed; final CI passed",
+        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
+      },
+      {
+        "contract": "Invalid mapping shape, boolean or score threshold range cannot reach broker",
+        "path": "strategy config -> dispatcher init -> execution",
+        "evidence": "Pre-fix 2 range failures; final CI passed",
+        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
+      },
+      {
+        "contract": "Broker acceptance is not confirmed fill",
+        "path": "KR/US broker -> ledger -> stop-loss -> partial fill/cancel/recovery",
+        "evidence": "No authoritative KIS demo credentials, not validated by configuration tests",
+        "status": "BLOCKED_DEMO"
       }
     ]
   },
@@ -6128,7 +6526,8 @@
     "2026-11-02 06:22 KST: queued target fan-out/mode-switch defects patched and current-head Actions 41351888612 success (Linux 948, Windows 141); qlty check pending; 57/161 audits and KIS demo unresolved.",
     "2026-11-02 07:16 KST: queue mode and resolved account pin patched; latest-head Actions success but 60/162 audits, KIS demo, qlty usage and independent review incomplete.",
     "2026-11-02 10:16 KST: patched score and reward/risk missing-data gates; Actions 994/149 pass; qlty pending; audits 0/2 + 0/2",
-    "Latest HEAD qlty check confirmed success at final verification; requiredness of qlty usage still unknown."
+    "Latest HEAD qlty check confirmed success at final verification; requiredness of qlty usage still unknown.",
+    "2026-11-02 13:29 KST: score/profit band config integrity fixed and current-head CI 1086 Linux/152 Windows passed; full dependency/whole-tree audit, KIS demo, independent review and protection API remain unresolved."
   ],
   "risk_register_current": [
     {
@@ -6200,6 +6599,21 @@
       "fix_commits": [
         "5c51675486443eb8cf1355fa3227431024b353e8",
         "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0"
+      ]
+    },
+    {
+      "id": "RC-STRATEGY-NUMERIC-BAND-CONFIG-INTEGRITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "description": "Empty/aliased/nonmapping score/profit bands and weighted score range patched; pre-fix tests failed, latest 1086 Linux and 152 Windows tests passed; full audit and demo still blocked",
+      "fix_commits": [
+        "a7d7879308eee80754bbe55959217540c36e4837",
+        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
+        "6fdff0784d25a0a7de01bdb5c8292afb023f0212",
+        "0ab41324db6e12187168cfcbac554395065fae09",
+        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
+        "1d9a31f3572e7ae7a106fe0258c655a717017e64",
+        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
       ]
     }
   ]
