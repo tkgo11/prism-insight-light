@@ -60,3 +60,19 @@ def test_dispatcher_rejects_ambiguous_score_band_config_before_broker(config_typ
 def test_boolean_score_threshold_is_not_a_numeric_band(config_type, name, field):
     with pytest.raises(ValueError, match=field):
         config_type.from_mapping({"name": name, field: {True: 0.5}})
+
+
+@pytest.mark.parametrize("threshold", [-1, 101])
+def test_weighted_score_threshold_outside_documented_range_rejected(threshold):
+    with pytest.raises(ValueError, match="between 0 and 100"):
+        ScoreWeightedStrategyConfig.from_mapping(
+            {"name": "score_weighted", "score_bands": {threshold: 0.5}}
+        )
+
+
+@pytest.mark.parametrize("threshold", [0, 100])
+def test_weighted_score_threshold_range_endpoints_are_valid(threshold):
+    config = ScoreWeightedStrategyConfig.from_mapping(
+        {"name": "score_weighted", "score_bands": {threshold: 0.5}}
+    )
+    assert config.score_bands == {threshold: 0.5}
