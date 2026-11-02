@@ -831,6 +831,35 @@ class StopLossWatcher:
                 "market": market, "ticker": ticker, "status": "blocked",
                 "message": "Pending BUY fill unverified; broker reconciliation required",
             }
+        # The watcher revalidates after broker quote/holdings inquiries, but
+        # the record may be edited, removed or quarantined before this final
+        # dispatch boundary. Direct callers must obey the same fail-closed
+        # snapshot contract. This is a pre-submit check, not a broker fill.
+        try:
+            current_positions = self.tracker.get_positions(market=market)
+        except Exception as exc:
+            logger.error(
+                "[Stop-Loss] Blocking SELL for %s %s: cannot verify current "
+                "tracked position before submission: %s", market, ticker, exc,
+            )
+            return {
+                "market": market, "ticker": ticker, "status": "blocked",
+                "message": "Stop-loss tracker cannot be verified; operator reconciliation required",
+            }
+        if not any(
+            current == pos
+            and current.get("market", "").strip().upper() == market.strip().upper()
+            and current.get("ticker") == ticker
+            for current in current_positions
+        ):
+            logger.warning(
+                "[Stop-Loss] Blocking stale, removed or quarantined stop-loss "
+                "snapshot for %s %s before broker submission", market, ticker,
+            )
+            return {
+                "market": market, "ticker": ticker, "status": "blocked",
+                "message": "Stop-loss snapshot changed; broker submission blocked",
+            }
         signal_id = pos.get("stop_loss_signal_id")
         if signal_id is None:
             # Legacy persisted records retain the same identity they used
