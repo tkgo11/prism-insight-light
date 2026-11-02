@@ -22,7 +22,11 @@ def test_explicit_unknown_overrides_contradictory_success_flag():
 
 
 def test_explicit_broker_rejection_is_failed():
-    assert classify_broker_result({"success": False, "message": "APBK0918 - market closed"}) == "failed"
+    # The wrapper must explicitly establish the broker-authored rejection.
+    assert classify_broker_result({
+        "success": False, "outcome_unknown": False,
+        "message": "APBK0918 - market closed",
+    }) == "failed"
 
 
 def test_transport_timeout_is_unknown():
@@ -174,3 +178,30 @@ def test_unusable_textual_receipt_keeps_replay_fence_after_restart(tmp_path):
 def test_reconcilable_broker_receipt_remains_accepted(receipt):
     # Do not accidentally reject valid zero-padded or mock alphanumeric IDs.
     assert classify_broker_result({"success": True, "order_no": receipt}) == "executed"
+
+
+@pytest.mark.parametrize("message", [
+    "APBK0918 - market closed",
+    "upstream proxy returned APBK0918 after an order timeout",
+    "Unhandled client exception APBK1507",
+])
+def test_unverified_apbk_text_is_not_authoritative_rejection(message):
+    # A string can be echoed by a proxy or client after the broker accepted
+    # the request. A mere APBK-looking message must not make it retryable.
+    assert classify_broker_result({
+        "success": False, "message": message,
+    }) == "unknown"
+
+
+def test_unverified_apbk_message_preserves_duplicate_claim_after_restart(tmp_path):
+    ledger_path = tmp_path / "apbk_unverified.json"
+    ledger = ExecutionLedger(ledger_path)
+    assert ledger.claim("account-signal-apbk") == (True, None)
+    status = classify_broker_result({
+        "success": False, "message": "client exception APBK0918",
+    })
+    assert status == "unknown"
+    ledger.finalize("account-signal-apbk", status)
+    assert ExecutionLedger(ledger_path).claim("account-signal-apbk") == (
+        False, "unknown",
+    )

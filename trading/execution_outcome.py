@@ -132,10 +132,10 @@ def classify_broker_result(result: Any) -> str:
     # Keep its durable identity non-retryable pending broker reconciliation.
     if result.get("outcome_unknown") is False:
         return "failed"
-    # Compatibility for older KIS wrappers exposing the documented APBK
-    # business rejection code in their message without outcome_unknown.
-    if re.search(r"\bapbk[0-9]{4}\b", text):
-        return "failed"
+    # Never trust an APBK-looking string in free-form message text as proof
+    # that the broker rejected the order. Intermediaries, logs and exceptions
+    # may echo such strings after the broker already accepted the request.
+    # Only an explicitly verified outcome_unknown=False is retryable.
     return "unknown"
 
 
