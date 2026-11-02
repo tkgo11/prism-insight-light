@@ -1,0 +1,94 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T04-15-KST-turn8",
+  "slot": "2026-11-03T04-15-KST",
+  "lock": {
+    "status": "ACTIVE",
+    "acquired_commit": "cb02c2fdd1197e01e15afa4907ff1b93c573c0fc",
+    "plan_commit": "3c5ef951117920fb132ccb1c364cca4d3347da1d"
+  },
+  "pr": {
+    "number": 43,
+    "draft": true,
+    "head": "cda0c79e0f37eca3733c187be923886385a366b3",
+    "base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+    "git_tree_sha": "6cbc19136fbe7798940b26c3afda25fad8148182",
+    "merge": false,
+    "changed_files": [
+      "trading/execution_outcome.py",
+      "tests/test_broker_http_rejection_safety.py",
+      "tests/test_wave4_execution_safety.py"
+    ],
+    "test_first_commits": [
+      "c8766d6f12ff8d46eca212365477192c216643b9",
+      "549dc0d44b7404957b8531d1f243167083ba891b",
+      "a1b5af75acb74f031568e7944212c1cf09dd18c0"
+    ],
+    "fix_commits": [
+      "cda0c79e0f37eca3733c187be923886385a366b3"
+    ]
+  },
+  "root_cause": {
+    "id": "RC-BROKER-OUTCOME-AMBIGUITY",
+    "subcase": "intermediary-http-4xx-retry-20261103",
+    "status": "CODE_PATCHED_MOCK_CI_SUCCESS_DEMO_UNVERIFIED",
+    "reproduction": {
+      "workflow_id": 41508683446,
+      "linux_failed": 4,
+      "linux_passed": 1290
+    },
+    "tests_added": 22,
+    "remediation": "HTTP 408/409/425/429/499 and noncanonical response status are UNKNOWN regardless of KIS-like code; verified business rejections preserved.",
+    "remaining": "No authoritative broker fill/cancel/remaining reconciliation, stop-loss TOCTOU, KIS demo missing"
+  },
+  "upstream": {
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "ahead_commits": 47,
+    "changed_files": 41,
+    "decision": "NO_IMPORT"
+  },
+  "ci": {
+    "head_sha": "cda0c79e0f37eca3733c187be923886385a366b3",
+    "workflow_runs": [
+      {
+        "id": 41509049043,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 41509041355,
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "linux_pytest_passed": 1309,
+    "windows_smoke_passed": 167,
+    "docker": "success",
+    "snyk": "success",
+    "qlty": "check_success_95_blocking_issues_uninspected"
+  },
+  "manifests": {
+    "related_path": ".automation/prism-upstream-sync/manifests/2026-11-03T04-15-KST-related.json",
+    "related_scope": 79,
+    "full_path": ".automation/prism-upstream-sync/manifests/2026-11-03T04-15-KST-full.json",
+    "full_scope": 173,
+    "files_fully_audited": 3,
+    "related_passes": 0,
+    "full_passes": 0
+  },
+  "blockers": [
+    "Authoritative per-account KIS order/fill/partial/cancel/remaining reconciliation not implemented or demo-verified",
+    "Unknown/late BUY fill not automatically attributable to stop-loss position",
+    "Stop-loss final preflight not atomic with broker submission",
+    "Qlty check green but 95 blocking issues uninspected",
+    "No independent human review",
+    "Branch protection policy read 403; rulesets []",
+    "Related transitive file audit 3/79, whole-tree 3/173; independent PASS 0/2 + 0/2"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
+  "recorded_at": "2026-11-02T19:23:25.382Z"
+}
