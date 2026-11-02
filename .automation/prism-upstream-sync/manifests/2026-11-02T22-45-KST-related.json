@@ -1,0 +1,459 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T22-45-KST-turn2",
+  "slot": "2026-11-02T22-45-KST",
+  "head_sha": "d3bdebc12292a76677cee921abe78754ce089111",
+  "git_tree_sha": "d3bdebc12292a76677cee921abe78754ce089111",
+  "upstream_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "status": "NOT_FULLY_AUDITED",
+  "audit_pass": false,
+  "independent_audit_slot_passes": 0,
+  "reason": "Targeted source review and mock CI do not satisfy file-by-file transitive or whole-tree independent audits",
+  "scope": "transitive_related_minimum_prior_scope_plus_token_affected_paths",
+  "closure_verified": false,
+  "files": [
+    {
+      "path": "README.en.md",
+      "blob_sha": "956ae8767ce601712b8f6600c65002f5a4ab3d7d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "README.ko.md",
+      "blob_sha": "b0d37c4c45dd12373b6ed2780b0f2cec3da362c1",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "159da7a20cedc47be1dab431ef9093a0a5f0f41b",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "subscriber.py",
+      "blob_sha": "479a0a1ffb3e2ab17404171db47bcbf847a30bdd",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_balance_split_strategy.py",
+      "blob_sha": "209fda023339f96b178c7e97058806e7ff5cd743",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "blob_sha": "bf10730694946dd6ed0cdf3f8cdb11f2da155e21",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_buy_sizing.py",
+      "blob_sha": "b3ef619dfee6ed59920bcaeab54ef29efcf1d76e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_cooldown_pending_reconciliation.py",
+      "blob_sha": "780361a959faf8e94545071b7d582155e69b9d24",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_dispatch.py",
+      "blob_sha": "4ee5e6dc26144c865e52f98d47c39ec445aa4def",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "tests/test_durable_state_directory_sync.py",
+      "blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_effective_order_metadata.py",
+      "blob_sha": "cdb0a523f5a94e606b77ac0b6f1518dd4c03ea84",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_execution_ledger_retention.py",
+      "blob_sha": "5f11a8322caaec8945fb8ecf422f928f8f8be721",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "tests/test_execution_outcome.py",
+      "blob_sha": "e87b7a346750ef7ce5d0f9df4e39506a7e440917",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "tests/test_financial_sizing_audit.py",
+      "blob_sha": "3f311e0f82bf704231ec008894bc661dd53084de",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_inbound_json_duplicate_keys.py",
+      "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_dispatch.py",
+      "blob_sha": "f62a91164f46ce7a103e419b10fdc60be611ac3f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "tests/test_multi_account_domestic.py",
+      "blob_sha": "17bc20fe8ef1cc399cf1dde6d9a1f85e6cf3415d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_empty_balance_fail_closed.py",
+      "blob_sha": "c569088f272834d3e20829d7b15fc1dfa8ce0964",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_us.py",
+      "blob_sha": "e436d319568f7761d270508990d491c90cd23625",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_off_hours_policy.py",
+      "blob_sha": "4b456a6973113ac26c27972923e16fde247e9fb2",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_partial_exit_stop_loss_safety.py",
+      "blob_sha": "b99e699d9c376654c50ca640524840d5c851166e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_profit_band_config_integrity.py",
+      "blob_sha": "b9219d4918af9788b5913f1f579da2595e17de9a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_queue_and_account_sizing.py",
+      "blob_sha": "1f2765d5f033f4eb01a6f0a5f02a35e0d6dcaf21",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_queue_execution_context.py",
+      "blob_sha": "2d2a4760a753d37bd27daa06a96947bbebe008b1",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "tests/test_score_band_config_integrity.py",
+      "blob_sha": "354910f908f6f05d7ce856f26efa088bf5d6aadb",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_score_max_capital_strategy.py",
+      "blob_sha": "22c6a7382015fc5376cc05ffb56df4e9f3fe4633",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_exit_strategies.py",
+      "blob_sha": "9f4a3ecd43942b220e7ae302dbfd1460dff23246",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_integer_precision.py",
+      "blob_sha": "7f149439d02cc84c0fda7e7d3dcab0b5f6060180",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_safety.py",
+      "blob_sha": "faf586e4764459a9379ff86d79bd15f5a954e823",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_schema.py",
+      "blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_stop_loss_legacy_quarantine.py",
+      "blob_sha": "fdfcb6b42acf6e3035387b91307f4363bd2fafa9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_stop_loss_watcher.py",
+      "blob_sha": "b45d69f51d47943a43d5a28c5b5af582e1a23b22",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_strategy_partial_matrix.py",
+      "blob_sha": "a57d37d6acf86f34b0334793d135a02af7d53d9f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_strategy_runtime_fail_closed.py",
+      "blob_sha": "cb4120f4c6cb765de42765655773166f0c909f75",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_strategy_semantic_state_safety.py",
+      "blob_sha": "ab1e6b1ab76b96f5f8c9d05bb94a06e4f544e9c4",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "blob_sha": "a76728d36349b4d36f47d1a2629a43f8e5f39692",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_telegram_signal_worker.py",
+      "blob_sha": "0acfab8090d6b2bb62634eb1b724659dd04c9398",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_upstream_signal_sizing.py",
+      "blob_sha": "b4e98d37f1708ef203be0263172e795e9a94e075",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_upstream_strategy_compatibility.py",
+      "blob_sha": "c60e3d868f8ee231dac4caf23a0fd5a0b2f4782a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_wave4_execution_safety.py",
+      "blob_sha": "7b6af264e5f2df022d30655a0cd5e8fba76da08b",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "tests/test_webui_routes.py",
+      "blob_sha": "78e80e83844ae183349143d560039350479113e9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/STRATEGIES.md",
+      "blob_sha": "8190701d9e696d0fa2e4af955e206cc33c4a9013",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/buy_sizing.py",
+      "blob_sha": "49e8788efc2bce1059f2d6ee13cc97551d3377c2",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "0724de8abc0147a93674a38fc5d1605c5735da68",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "af18e3f9c59d0f3074b392c5311cf99f2840887e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "b7ab12a4d1ebdb94f0eef143038b8d952aba4305",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "000feb70578906ad1ed5d05effef46095c6bdc9f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "trading/file_lock.py",
+      "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/kis_auth.py",
+      "blob_sha": "5b2113b2439bed4d06b18217e9a575fff8f14319",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/off_hours_queue.py",
+      "blob_sha": "993105246f2c5db5ca89c68cf203e68ba642458c",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/schema.py",
+      "blob_sha": "bcabf06606fbda2d91defb51c895dba59c559d07",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/signal_safety.py",
+      "blob_sha": "2a30edf46e86b295c8e1f1b599511f28146884fb",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/signal_sizing.py",
+      "blob_sha": "fc8f49e52be2544528c676444cfdeb24e31b771d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "cfb947a63ff8f6f2710b3626171173909f65c49d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "trading/strategies/README.md",
+      "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/balance_split.py",
+      "blob_sha": "a3e3c7375f17788325451b45e4212866930d3596",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/balanced_risk.py",
+      "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/bracket_exit.py",
+      "blob_sha": "7355e0a20212f77926e8d856b7d0539b9dc670c0",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "454e7f2b96970b96179c7dbde011d140e5aa3b9f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "trading/strategies/cooldown.py",
+      "blob_sha": "71feb5baf7e7dc0e3bd37306b1dff4f238630c40",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/event_risk_off.py",
+      "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/profit_ladder.py",
+      "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/protective_exit.py",
+      "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/risk_bracket.py",
+      "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/score_max_capital.py",
+      "blob_sha": "8b8480cf9578380a1c69022318737f3c970e9c5a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/score_risk.py",
+      "blob_sha": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/score_weighted.py",
+      "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/signal_trailing_stop.py",
+      "blob_sha": "796593dc47c9202b5c0b0e429006265fb5de0157",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/telegram_fetch.py",
+      "blob_sha": "33df9f3ee0ea62217775c6f2b4afacfab4bd0a77",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "f7c19dd91f6dba861d01c9c0d8a207656f13421b",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "TARGETED_PATH_INSPECTION_ONLY"
+    },
+    {
+      "path": "webui/routes/signals.py",
+      "blob_sha": "2346b942321a5873e3d3b21ada301819978aa0a9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/trading.py",
+      "blob_sha": "1c7aefddb3bc1b5a893942d47a68c054c99f7b43",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/signal_service.py",
+      "blob_sha": "2cd96c0143da8d1d9194500031a74158b7571135",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "fc70caf328b37cca66b47c7024bb7b9cf2524de6",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    }
+  ]
+}

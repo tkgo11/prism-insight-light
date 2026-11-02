@@ -1,0 +1,99 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T22-45-KST-turn2",
+  "slot": "2026-11-02T22-45-KST",
+  "status": "CODE_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDITS_AND_DEMO_INCOMPLETE",
+  "lock": {
+    "owner": "prism-sync-hourly-2026-11-02T22-45-KST-turn2",
+    "state_parent": "dfe6c84b9819f02a229f935aca580f10646b492b",
+    "cas_required": true,
+    "status": "RELEASED",
+    "released_at": "2026-11-02T13:51:10.581Z"
+  },
+  "source": {
+    "repo": "dragon1086/prism-insight",
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "ahead_commits": 47,
+    "changed_files": 41,
+    "decision": "NO_IMPORT_LIGHT_FORK_CONTRACT_UNCHANGED"
+  },
+  "target": {
+    "repo": "tkgo11/prism-insight-light",
+    "base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+    "pr": 43,
+    "head": "d3bdebc12292a76677cee921abe78754ce089111",
+    "tree_sha": "d3bdebc12292a76677cee921abe78754ce089111",
+    "draft": true
+  },
+  "root_causes": [
+    {
+      "id": "RC-LEDGER-ATTEMPT-FENCING",
+      "status": "PATCHED_MOCK_CI_SUCCESS",
+      "symptoms": [
+        "stale retry callback can downgrade newer claim",
+        "stale release can remove newer claim"
+      ],
+      "test_first": {
+        "sha": "2a95b335306f3e02e74cfd3c3096961c05069cbe",
+        "failed": 2,
+        "passed": 1253,
+        "run_ids": [
+          41455986006,
+          41455994252
+        ]
+      },
+      "fix_commits": [
+        "bde4c6aa93413311d30e4bf77e81a76299664681",
+        "d3bdebc12292a76677cee921abe78754ce089111"
+      ],
+      "intermediate_failure": "Mock test fixture lacked with_token parameter; corrected same run",
+      "regression": "tests/test_execution_ledger_retention.py, tests/test_queue_execution_context.py",
+      "unverified": "KIS demo integration, full transitive review"
+    }
+  ],
+  "changed_files": [
+    "trading/execution_ledger.py",
+    "trading/dispatch.py",
+    "tests/test_execution_ledger_retention.py",
+    "tests/test_queue_execution_context.py"
+  ],
+  "ci": {
+    "head_sha": "d3bdebc12292a76677cee921abe78754ce089111",
+    "run_ids": [
+      41456146349,
+      41456153959
+    ],
+    "status": "completed",
+    "conclusion": "success",
+    "linux_pytest_passed": 1255,
+    "windows_smoke_passed": 167,
+    "docker_build": "success",
+    "snyk": "success",
+    "qlty": {
+      "check_state": "success",
+      "reported_blocking_issues": 22,
+      "details": "login_required; untriaged"
+    }
+  },
+  "audit": {
+    "related_scope_files": 74,
+    "full_scope_files": 168,
+    "fully_audited_related": 0,
+    "fully_audited_full": 0,
+    "related_pass": 0,
+    "full_pass": 0
+  },
+  "blockers": [
+    "Prior PR #42 merged at user's request without earlier full financial gate; do not deploy to live trading until verified",
+    "PR43 independent reviews absent and branch protection policy 403",
+    "KIS demo order/fill/partial/cancel/remaining quantity reconciliation unavailable",
+    "Related 74-file and whole-tree 168-file independent audits 0/2 each",
+    "PR43 latest exact-head Qlty status says 22 blocking issues; public view login_required, individual findings untriaged",
+    "Authoritative KIS demo order-ID/fill-ID/partial-fill/cancel/remaining quantity/stop-loss residual reconciliation unavailable",
+    "No independent human review; branch protection API 403; no merge"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "merged": false,
+  "completed_at": "2026-11-02T13:51:10.581Z"
+}
