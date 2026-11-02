@@ -78,6 +78,22 @@ def classify_broker_result(result: Any) -> str:
     if result.get("outcome_unknown") is True:
         return "unknown"
     if result.get("success") is True:
+        # A KIS response may say the order was accepted while its receipt is
+        # missing or malformed. If the broker wrapper supplied an order-id
+        # field, it must contain a usable identifier before we classify the
+        # submission as accepted/executed. An unresolved receipt must retain
+        # its durable ledger claim and must not be retried automatically.
+        receipt_fields = ("order_no", "broker_order_id")
+        if any(field in result for field in receipt_fields):
+            def valid_receipt(value: Any) -> bool:
+                if isinstance(value, bool):
+                    return False
+                if isinstance(value, str):
+                    return bool(value.strip())
+                return isinstance(value, int) and value > 0
+
+            if not any(valid_receipt(result.get(field)) for field in receipt_fields):
+                return "unknown"
         return "executed"
 
     # A broker order id means the request may have been accepted even when a
