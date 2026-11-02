@@ -65,6 +65,7 @@ PROJECT_ROOT = TRADING_DIR.parent
 from . import kis_auth as ka
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
 from .execution_outcome import (
+from .portfolio_pagination import next_balance_cursor
     PortfolioInquiryError,
     classify_broker_result,
     rejection_is_ambiguous,
@@ -1892,133 +1893,111 @@ class USStockTrading:
         return result
 
     def get_portfolio(self, *, raise_on_error: bool = False) -> List[Dict[str, Any]]:
-        """
-        Get current US stock portfolio
+        """Read every KIS US balance page for each exchange or fail closed.
 
-        When ``raise_on_error`` is true, propagate a temporary KIS inquiry
-        failure as ``PortfolioInquiryError`` instead of returning a partial
-        list that callers could mistake for an empty portfolio.
-
-        Returns:
-            [{
-                'ticker': 'AAPL',
-                'stock_name': 'APPLE INC',
-                'quantity': 10,
-                'avg_price': 150.00,
-                'current_price': 185.50,
-                'eval_amount': 1855.00,
-                'profit_amount': 355.00,
-                'profit_rate': 23.67,
-                'exchange': 'NASD'
-            }, ...]
+        Partial exchange/page data must not masquerade as an empty holding or
+        authorize a stop-loss cleanup / repeated SELL.
         """
         api_url = "/uapi/overseas-stock/v1/trading/inquire-balance"
-
-        if self.mode == "real":
-            tr_id = "TTTS3012R"  # Real overseas balance
-        else:
-            tr_id = "VTTS3012R"  # Demo overseas balance
-
-        params = {
-            "CANO": self.trenv.my_acct,
-            "ACNT_PRDT_CD": self.trenv.my_prod,
-            "OVRS_EXCG_CD": "NASD",  # Default to NASDAQ, loop through others
-            "TR_CRCY_CD": "USD",
-            "CTX_AREA_FK200": "",
-            "CTX_AREA_NK200": ""
-        }
-
-        portfolio = []
+        tr_id = "TTTS3012R" if self.mode == "real" else "VTTS3012R"
         self._last_portfolio_inquiry_error = None
-
-        # Query each exchange
-        for exchange in ["NASD", "NYSE", "AMEX"]:
-            params["OVRS_EXCG_CD"] = exchange
-
-            try:
-                res = self._request(api_url, tr_id, params)
-
-                if res.isOK():
+        portfolio: List[Dict[str, Any]] = []
+        try:
+            for exchange in ("NASD", "NYSE", "AMEX"):
+                params = {
+                    "CANO": self.trenv.my_acct,
+                    "ACNT_PRDT_CD": self.trenv.my_prod,
+                    "OVRS_EXCG_CD": exchange,
+                    "TR_CRCY_CD": "USD",
+                    "CTX_AREA_FK200": "",
+                    "CTX_AREA_NK200": "",
+                }
+                seen_cursors: set[tuple[str, str]] = set()
+                continuation = False
+                while True:
+                    if continuation:
+                        res = self._request(
+                            api_url, tr_id, params, appendHeaders={"tr_cont": "N"}
+                        )
+                    else:
+                        res = self._request(api_url, tr_id, params)
+                    if not res.isOK():
+                        raise PortfolioInquiryError(
+                            f"Balance inquiry failed for {exchange}: "
+                            f"{res.getErrorCode()} - {res.getErrorMessage()}"
+                        )
                     output1 = res.getBody().output1
-
                     if not isinstance(output1, list):
                         output1 = [output1] if output1 else []
-
                     for item in output1:
-                        # Use safe conversion to handle empty strings
-                        quantity = _safe_int(item.get('ovrs_cblc_qty'))
+                        quantity = _safe_int(item.get("ovrs_cblc_qty"))
                         if quantity > 0:
-                            item_ticker = item.get('ovrs_pdno', '')
+                            ticker = item.get("ovrs_pdno", "")
                             item_exchange = (
-                                normalize_exchange_code(item.get('ovrs_excg_cd'))
-                                or normalize_exchange_code(item.get('ovrs_excg_cd_name'))
-                                or normalize_exchange_code(item.get('ovrs_pdno_excg_cd'))
-                                or get_cached_exchange(item_ticker)
+                                normalize_exchange_code(item.get("ovrs_excg_cd"))
+                                or normalize_exchange_code(item.get("ovrs_excg_cd_name"))
+                                or normalize_exchange_code(item.get("ovrs_pdno_excg_cd"))
+                                or get_cached_exchange(ticker)
                             )
                             if item_exchange:
-                                cache_exchange_code(item_ticker, item_exchange)
+                                cache_exchange_code(ticker, item_exchange)
                             else:
                                 item_exchange = exchange
+                            portfolio.append({
+                                "ticker": ticker,
+                                "stock_name": item.get("ovrs_item_name", ""),
+                                "quantity": quantity,
+                                "avg_price": _safe_float(item.get("pchs_avg_pric")),
+                                "current_price": _safe_float(item.get("now_pric2")),
+                                "eval_amount": _safe_float(item.get("ovrs_stck_evlu_amt")),
+                                "profit_amount": _safe_float(item.get("frcr_evlu_pfls_amt")),
+                                "profit_rate": _safe_float(item.get("evlu_pfls_rt")),
+                                "exchange": item_exchange,
+                            })
+                    cursor = next_balance_cursor(res, 200, seen_cursors)
+                    if cursor is None:
+                        break
+                    params["CTX_AREA_FK200"], params["CTX_AREA_NK200"] = cursor
+                    continuation = True
+                    time.sleep(0.1)
+                time.sleep(0.1)
 
-                            stock_info = {
-                                'ticker': item_ticker,
-                                'stock_name': item.get('ovrs_item_name', ''),
-                                'quantity': quantity,
-                                'avg_price': _safe_float(item.get('pchs_avg_pric')),
-                                'current_price': _safe_float(item.get('now_pric2')),
-                                'eval_amount': _safe_float(item.get('ovrs_stck_evlu_amt')),
-                                'profit_amount': _safe_float(item.get('frcr_evlu_pfls_amt')),
-                                'profit_rate': _safe_float(item.get('evlu_pfls_rt')),
-                                'exchange': item_exchange
-                            }
-                            portfolio.append(stock_info)
+            # A stock can be returned for more than one exchange. Preserve
+            # the prior preferred-exchange dedupe behavior after ALL pages
+            # have been retrieved; do not dedupe incomplete page results.
+            seen_tickers = {}
+            for stock in portfolio:
+                ticker = stock.get("ticker")
+                if not ticker:
+                    continue
+                ticker_key = ticker.upper()
+                if ticker_key not in seen_tickers:
+                    seen_tickers[ticker_key] = stock
                 else:
-                    # A rejected exchange query leaves the portfolio partial;
-                    # holdings on that exchange become invisible to callers.
-                    message = (
-                        f"Balance inquiry failed for {exchange}: "
-                        f"{res.getErrorCode()} - {res.getErrorMessage()}"
-                    )
-                    logger.error(message)
-                    self._last_portfolio_inquiry_error = message
-                    if raise_on_error:
-                        raise PortfolioInquiryError(message)
-
-                time.sleep(0.1)  # Rate limit
-
-            except PortfolioInquiryError:
+                    existing = seen_tickers[ticker_key]
+                    existing_exchange = existing.get("exchange")
+                    current_exchange = stock.get("exchange")
+                    cached_exchange = get_cached_exchange(ticker_key)
+                    if cached_exchange and current_exchange == cached_exchange:
+                        seen_tickers[ticker_key] = stock
+                    elif not existing_exchange and current_exchange:
+                        seen_tickers[ticker_key] = stock
+            unique_portfolio = list(seen_tickers.values())
+            logger.info("Portfolio: %s US stocks held (complete KIS balance)", len(unique_portfolio))
+            return unique_portfolio
+        except PortfolioInquiryError as exc:
+            self._last_portfolio_inquiry_error = str(exc)
+            logger.error("Incomplete US balance inquiry: %s", exc)
+            if raise_on_error:
                 raise
-            except Exception as e:
-                message = f"Error getting portfolio for {exchange}: {str(e)}"
-                logger.error(message)
-                self._last_portfolio_inquiry_error = message
-                if raise_on_error:
-                    raise PortfolioInquiryError(message) from e
-                continue
-
-        # Deduplicate by ticker (KIS API may return same stock from multiple exchanges)
-        seen_tickers = {}
-        for stock in portfolio:
-            ticker = stock.get('ticker')
-            if not ticker:
-                continue
-            ticker_key = ticker.upper()
-            if ticker_key not in seen_tickers:
-                seen_tickers[ticker_key] = stock
-            else:
-                existing = seen_tickers[ticker_key]
-                existing_exchange = existing.get('exchange')
-                current_exchange = stock.get('exchange')
-                cached_exchange = get_cached_exchange(ticker_key)
-
-                if cached_exchange and current_exchange == cached_exchange:
-                    seen_tickers[ticker_key] = stock
-                elif not existing_exchange and current_exchange:
-                    seen_tickers[ticker_key] = stock
-
-        unique_portfolio = list(seen_tickers.values())
-        logger.info(f"Portfolio: {len(unique_portfolio)} US stocks held")
-        return unique_portfolio
+            return []
+        except Exception as exc:
+            message = f"Error during US balance inquiry: {exc}"
+            self._last_portfolio_inquiry_error = message
+            logger.error(message)
+            if raise_on_error:
+                raise PortfolioInquiryError(message) from exc
+            return []
 
     def get_account_summary(self) -> Optional[Dict[str, Any]]:
         """

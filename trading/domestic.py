@@ -29,6 +29,7 @@ from .kis_auth import (
 )
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
 from .execution_outcome import (
+from .portfolio_pagination import next_balance_cursor
     PortfolioInquiryError,
     classify_broker_result,
     rejection_is_ambiguous,
@@ -1587,32 +1588,14 @@ class DomesticStockTrading:
         return result
 
     def get_portfolio(self, *, raise_on_error: bool = False) -> List[Dict[str, Any]]:
-        """
-        Get current account portfolio.
+        """Read every KIS KR balance page before declaring any holding absent.
 
-        When ``raise_on_error`` is true, propagate a temporary KIS inquiry failure
-        instead of treating it as a genuinely empty portfolio.
-
-        Returns:
-            [{
-                'stock_code': 'stock code',
-                'stock_name': 'stock name',
-                'quantity': holding quantity,
-                'avg_price': average price,
-                'current_price': current price,
-                'eval_amount': evaluation amount,
-                'profit_amount': profit/loss amount,
-                'profit_rate': return rate (%)
-            }, ...]
+        A first-page-only result can falsely report a later-page holding as
+        zero and cause an automated stop-loss tracker to be removed. A broken
+        continuation fails closed instead of exposing partial balances.
         """
         api_url = "/uapi/domestic-stock/v1/trading/inquire-balance"
-
-        # Set TR ID (real/demo distinction)
-        if self.mode == "real":
-            tr_id = "TTTC8434R"
-        else:
-            tr_id = "VTTC8434R"
-
+        tr_id = "TTTC8434R" if self.mode == "real" else "VTTC8434R"
         params = {
             "CANO": self.trenv.my_acct,
             "ACNT_PRDT_CD": self.trenv.my_prod,
@@ -1624,63 +1607,72 @@ class DomesticStockTrading:
             "FNCG_AMT_AUTO_RDPT_YN": "N",
             "PRCS_DVSN": "00",
             "CTX_AREA_FK100": "",
-            "CTX_AREA_NK100": ""
+            "CTX_AREA_NK100": "",
         }
-
         self._last_portfolio_inquiry_error = None
         try:
-            res = self._request(api_url, tr_id, params)
-
-            if res.isOK():
-                current_portfolio = []
-                output1 = res.getBody().output1  # Holdings list
-                output2 = res.getBody().output2[0]  # Account summary
-
-                # Handle case when output1 is not a list
+            portfolio: List[Dict[str, Any]] = []
+            seen_cursors: set[tuple[str, str]] = set()
+            continuation = False
+            while True:
+                if continuation:
+                    res = self._request(
+                        api_url, tr_id, params, appendHeaders={"tr_cont": "N"}
+                    )
+                else:
+                    res = self._request(api_url, tr_id, params)
+                if not res.isOK():
+                    raise PortfolioInquiryError(
+                        f"Balance inquiry failed: {res.getErrorCode()} - {res.getErrorMessage()}"
+                    )
+                body = res.getBody()
+                output1 = body.output1
                 if not isinstance(output1, list):
                     output1 = [output1] if output1 else []
-
                 for item in output1:
-                    # Only add stocks with quantity > 0
-                    quantity = int(item.get('hldg_qty', 0))
+                    quantity = int(item.get("hldg_qty", 0))
                     if quantity > 0:
-                        stock_info = {
-                            'stock_code': item.get('pdno', ''),
-                            'stock_name': item.get('prdt_name', ''),
-                            'quantity': quantity,
-                            'avg_price': float(item.get('pchs_avg_pric', 0)),
-                            'current_price': float(item.get('prpr', 0)),
-                            'eval_amount': float(item.get('evlu_amt', 0)),
-                            'profit_amount': float(item.get('evlu_pfls_amt', 0)),
-                            'profit_rate': float(item.get('evlu_pfls_rt', 0))
-                        }
-                        current_portfolio.append(stock_info)
+                        portfolio.append({
+                            "stock_code": item.get("pdno", ""),
+                            "stock_name": item.get("prdt_name", ""),
+                            "quantity": quantity,
+                            "avg_price": float(item.get("pchs_avg_pric", 0)),
+                            "current_price": float(item.get("prpr", 0)),
+                            "eval_amount": float(item.get("evlu_amt", 0)),
+                            "profit_amount": float(item.get("evlu_pfls_amt", 0)),
+                            "profit_rate": float(item.get("evlu_pfls_rt", 0)),
+                        })
+                cursor = next_balance_cursor(res, 100, seen_cursors)
+                if cursor is None:
+                    break
+                params["CTX_AREA_FK100"], params["CTX_AREA_NK100"] = cursor
+                continuation = True
+                time.sleep(0.1)
 
-                # Log account summary
-                if output2:
-                    total_eval = float(output2.get('tot_evlu_amt', 0))
-                    total_profit = float(output2.get('evlu_pfls_smtl_amt', 0))
-                    logger.info(f"Account total evaluation: {total_eval:,.0f} KRW, total profit/loss: {total_profit:+,.0f} KRW")
-
-                logger.info(f"Portfolio: {len(current_portfolio)} holdings")
-                return current_portfolio
-
-            else:
-                message = f"Balance inquiry failed: {res.getErrorCode()} - {res.getErrorMessage()}"
-                logger.error(message)
-                self._last_portfolio_inquiry_error = message
-                if raise_on_error:
-                    raise PortfolioInquiryError(message)
-                return []
-
-        except PortfolioInquiryError:
-            raise
-        except Exception as e:
-            message = f"Error during balance inquiry: {str(e)}"
-            logger.error(message)
-            self._last_portfolio_inquiry_error = message
+            output2 = getattr(body, "output2", None)
+            summary = output2[0] if isinstance(output2, list) and output2 else (
+                output2 if isinstance(output2, dict) else None
+            )
+            if summary:
+                logger.info(
+                    "Account total evaluation: %s KRW, total profit/loss: %s KRW",
+                    float(summary.get("tot_evlu_amt", 0)),
+                    float(summary.get("evlu_pfls_smtl_amt", 0)),
+                )
+            logger.info("Portfolio: %s holdings (complete KIS balance)", len(portfolio))
+            return portfolio
+        except PortfolioInquiryError as exc:
+            self._last_portfolio_inquiry_error = str(exc)
+            logger.error("Incomplete KR balance inquiry: %s", exc)
             if raise_on_error:
-                raise PortfolioInquiryError(message) from e
+                raise
+            return []
+        except Exception as exc:
+            message = f"Error during balance inquiry: {exc}"
+            self._last_portfolio_inquiry_error = message
+            logger.error(message)
+            if raise_on_error:
+                raise PortfolioInquiryError(message) from exc
             return []
 
     def get_account_summary(self) -> None | dict[Any, Any] | dict[str, float]:
