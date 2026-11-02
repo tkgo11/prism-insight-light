@@ -7,7 +7,7 @@
     "id": "manual-user-merge-remediation-2026-11-02",
     "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11",
-    "result": "PR42_MERGED_ON_USER_REQUEST_PR43_DRAFT_CI_RUNNING_AUDITS_RESET",
+    "result": "PR42_MERGED_USER_DIRECTION_PR43_DRAFT_CI_SUCCESS_AUDITS_RESET",
     "last_mutation_commit": "a624f91d4e976fd23e21b08ae5152e84cf11522f",
     "previous_state_branch_sha": "db4a12a8071e0b3676562089a2b07a3d57fd7b52"
   },
@@ -32,7 +32,7 @@
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_CI_IN_PROGRESS_AUDITS_0_OF_2"
+    "status": "DRAFT_CI_SUCCESS_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -1167,6 +1167,33 @@
           "state": "success"
         }
       ]
+    },
+    "manual-remediation-2026-11-02": {
+      "head_sha": "a624f91d4e976fd23e21b08ae5152e84cf11522f",
+      "status": "completed",
+      "conclusion": "success",
+      "run_ids": [
+        41437847192
+      ],
+      "jobs": [
+        "Full pytest suite",
+        "Windows runtime smoke"
+      ],
+      "external": [
+        {
+          "context": "Devin Review",
+          "state": "success"
+        },
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        }
+      ],
+      "notes": "Workflow and external statuses checked for exact new PR head. Does not imply file-by-file audit or broker demo validation."
     }
   },
   "upstream_changes": [
@@ -4244,6 +4271,23 @@
       "old_merge_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
       "new_pr_head_sha": "a624f91d4e976fd23e21b08ae5152e84cf11522f",
       "notes": "GitHub reports merged=true and main HEAD equals merge SHA; two-file code/test correction in new Draft PR; CI in progress, KIS demo not run."
+    },
+    {
+      "run_id": "manual-remediation-ci-check-2026-11-02",
+      "kind": "NEW_PR_CI_FINISHED_NOT_AUDIT",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "a624f91d4e976fd23e21b08ae5152e84cf11522f",
+      "run_ids": [
+        41437847192
+      ],
+      "ci": "completed/success",
+      "external_statuses": [
+        "Devin Review: success",
+        "Snyk: success",
+        "qlty check: success"
+      ],
+      "notes": "No KIS demo integration, independent related/whole-repo audits, or approvals completed."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -4266,12 +4310,12 @@
   "blockers": [
     "New PR related transitive manifest not yet rediscovered or fully audited; 0/2 independent PASS",
     "New PR full tracked tree not yet audited; 0/2 independent PASS",
-    "Latest new PR CI running; do not claim pass until completed/success on correct head",
+    "Latest new PR CI completed/success; this alone is not an independent audit PASS",
     "KIS demo authoritative order-ID/fill-ID/partial-fill/cancel/remaining-quantity and restart reconciliation unverified",
     "Independent review/any applicable policy requirements for new PR not yet verified",
     "Prior PR #42 merged at user's request without earlier full financial gate; do not deploy to live trading until verified"
   ],
-  "next_action": "Finish current new PR CI; run transitive manifest discovery, mock-broker and account-level reconciliation safety audit. Never declare approval/pass/merge without independent evidence.",
+  "next_action": "Prioritize authoritative KIS demo order/fill/partial/cancel/remaining-quantity reconciliation and per-account state isolation; finish related per-file audit manifest, independent 2x audits, full-tree 2x audits, approvals before another merge. Treat PR #42 as merged and do not replay.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6862,7 +6906,7 @@
     {
       "id": "RC-BROKER-FREEFORM-REJECTION-EVIDENCE",
       "severity": "HIGH",
-      "status": "PATCHED_IN_NEW_DRAFT_PR_CI_PENDING",
+      "status": "PATCHED_IN_NEW_DRAFT_PR_CI_SUCCESS_AUDIT_PENDING",
       "description": "APBK-looking free-form text could mark unverified broker response as rejected/failed, allowing automatic replay",
       "fix_commit": "a624f91d4e976fd23e21b08ae5152e84cf11522f",
       "needs_demo_and_audit": true
