@@ -498,9 +498,16 @@ class StopLossTracker:
             if not isinstance(q_market, str) or not isinstance(q_ticker, str) or not q_market.strip() or not q_ticker.strip():
                 continue
             canonical_key = f"{q_market.strip().upper()}:{q_ticker.strip().upper()}"
-            if key.startswith("__legacy_unverified_"):
+            # A record claiming an instrument under a noncanonical storage
+            # key is conflicting evidence, not merely an invalid record to
+            # ignore. Otherwise a second, valid-looking record for that same
+            # instrument remains actionable and may submit an unsafe SELL.
+            # Preserve both records for operator reconciliation; unrelated
+            # instruments must remain eligible for normal monitoring.
+            if (key.startswith("__legacy_unverified_")
+                    or self._key(q_market, q_ticker) != key):
                 quarantined_instruments.add(canonical_key)
-            elif self._key(q_market, q_ticker) == key:
+            else:
                 active_instrument_counts[canonical_key] = active_instrument_counts.get(canonical_key, 0) + 1
         valid: list[dict[str, Any]] = []
         for key, item in items:
