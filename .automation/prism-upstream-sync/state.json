@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
-    "started_at": "2026-11-02T03:16:03Z",
-    "completed_at": "2026-11-02T03:21:02.865Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+    "started_at": "2026-11-02T04:20:37Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
     "last_mutation_commit": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
     "last_mutation_at": "2026-11-02T03:21:02.865Z",
-    "result": "SCORE_MAX_CAPITAL_LOWER_BOUND_FIXED_CI_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
+    "result": "IN_PROGRESS",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -59,9 +59,9 @@
       "merged": false,
       "reason": "Targeted fix passed latest CI, but audits/demo/review incomplete"
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
-    "pr_head_at_start": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
-    "lock_acquired_at": "2026-11-02T03:16:03Z",
+    "prior_run_id": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
+    "pr_head_at_start": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+    "lock_acquired_at": "2026-11-02T04:20:37Z",
     "lock_released_at": "2026-11-02T03:21:02.865Z"
   },
   "source": {
