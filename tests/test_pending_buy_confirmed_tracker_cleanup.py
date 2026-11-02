@@ -174,3 +174,17 @@ def test_zero_cleanup_guard_serializes_against_new_durable_buy_claim(tmp_path):
     assert not errors
     with ledger.guard_unresolved_buy("KR", "005930") as unresolved:
         assert unresolved is True
+
+def test_multi_account_unresolved_leg_blocks_zero_even_if_other_leg_rejected(tmp_path):
+    ledger, tracker, watcher, _ = _setup(tmp_path, "US", "AAPL")
+    _claim(ledger, "US", "AAPL", "rejected", scope="a" * 64)
+    _claim(ledger, "US", "AAPL", "unknown", scope="b" * 64)
+    assert _cycle(watcher, "US") == []
+    assert tracker.get_position("US", "AAPL") is not None
+
+
+def test_cancelled_without_authoritative_fill_attribution_is_not_proven_flat(tmp_path):
+    ledger, tracker, watcher, _ = _setup(tmp_path, "KR", "005930")
+    _claim(ledger, "KR", "005930", "cancelled")
+    assert _cycle(watcher, "KR") == []
+    assert tracker.get_position("KR", "005930") is not None
