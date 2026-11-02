@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
-    "started_at": "2026-11-02T05:25:30Z",
-    "completed_at": "2026-11-02T05:32:30Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T15:17:24+09:00",
+    "started_at": "2026-11-02T06:19:22.021Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T15:17:24+09:00",
     "last_mutation_commit": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
     "last_mutation_at": "2026-11-02T05:32:30Z",
-    "result": "INBOUND_JSON_DUPLICATE_KEY_FIXED_ACTIONS_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
+    "result": "RUNNING_CAS_LOCKED",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -68,9 +68,9 @@
       "merged": false,
       "reason": "Duplicate JSON ingress fixed; KIS demo and independent transitive/full audits blocked"
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
-    "pr_head_at_start": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
-    "lock_acquired_at": "2026-11-02T05:25:30Z",
+    "prior_run_id": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
+    "pr_head_at_start": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+    "lock_acquired_at": "2026-11-02T06:19:22.021Z",
     "lock_released_at": "2026-11-02T05:32:30Z"
   },
   "source": {
