@@ -1,0 +1,83 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+  "slot": "2026-11-02T23-29-KST",
+  "status": "IN_PROGRESS_TEST_FIRST_PREPARATION",
+  "lock": {
+    "status": "ACTIVE",
+    "parent": "368f96ce9ed7fc0c4ac92f8922dbc4a2f3678600"
+  },
+  "source": {
+    "repo": "dragon1086/prism-insight",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "ahead": 47,
+    "changed_files": 41,
+    "decision": "NO_IMPORT_UNRELATED_BTC_US_RESEARCH"
+  },
+  "target": {
+    "repo": "tkgo11/prism-insight-light",
+    "pr": 43,
+    "head": "d3bdebc12292a76677cee921abe78754ce089111",
+    "base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+    "draft": true
+  },
+  "root_cause_inventory": [
+    {
+      "id": "RC-LEDGER-ATTEMPT-FENCING",
+      "classification": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_PENDING",
+      "head": "d3bdebc12292a76677cee921abe78754ce089111"
+    },
+    {
+      "id": "RC-BUY-ACCEPTANCE-TRACKER-ZERO-RACE",
+      "classification": "SOURCE_PATH_REPRODUCIBLE_TEST_FIRST_REQUIRED",
+      "symptom": "BUY order acceptance immediately registers stop-loss; before the buy fills, a zero-holdings inquiry permanently removes tracking, and later fills are unprotected",
+      "source_paths": [
+        "trading/dispatch.py:_update_stop_loss_tracking",
+        "trading/stop_loss_watcher.py:record_position",
+        "trading/stop_loss_watcher.py:check_stop_loss_once",
+        "trading/stop_loss_watcher.py:_trigger_sell"
+      ],
+      "invariant": "broker order acceptance != fill; unresolved accepted BUY must not lose durable protection on a zero-balance inquiry",
+      "file_blobs": {
+        "trading/dispatch.py": "0724de8abc0147a93674a38fc5d1605c5735da68",
+        "trading/stop_loss_watcher.py": "cfb947a63ff8f6f2710b3626171173909f65c49d"
+      },
+      "matrix": [
+        {
+          "path": "BUY accepted -> record_position -> persisted JSON -> watcher pre-fill zero",
+          "failure": "premature delete",
+          "test": "accepted buy + zero balance"
+        },
+        {
+          "path": "reboot -> legacy JSON -> zero balance",
+          "failure": "legacy missing pending marker",
+          "test": "restart and legacy record"
+        },
+        {
+          "path": "pending BUY -> shares observed -> stop triggered -> sell accepted -> zero balance",
+          "failure": "post-sell delete while BUY may still fill",
+          "test": "post-order zero retains pending"
+        },
+        {
+          "path": "invalid pending marker -> get_positions",
+          "failure": "unsafe implicit bool coercion",
+          "test": "invalid marker quarantine"
+        },
+        {
+          "path": "manual confirmed record -> zero balance",
+          "failure": "unintended retention regression",
+          "test": "existing zero-holdings cleanup"
+        }
+      ]
+    }
+  ],
+  "audit": {
+    "related_pass": 0,
+    "full_pass": 0,
+    "fully_audited_related": 0,
+    "fully_audited_full": 0
+  },
+  "real_orders": 0,
+  "demo_orders": 0,
+  "merged": false
+}
