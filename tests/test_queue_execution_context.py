@@ -260,11 +260,15 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     replay.execution_dedupe = True
     monkeypatch.setattr(
         replay.execution_ledger, "claim",
-        lambda identity, *, aliases=(): (claims.append(identity) or True, None),
+        lambda identity, *, aliases=(), with_token=False: (
+            claims.append(identity) or True, None, "mock-claim-token"
+        ) if with_token else (True, None),
     )
     monkeypatch.setattr(
         replay.execution_ledger, "finalize",
-        lambda identity, status: finals.append((identity, status)),
+        lambda identity, status, *, claim_token=None: finals.append(
+            (identity, status, claim_token)
+        ),
     )
     async def fake_trade(self, order, *, account=None):
         calls.append(account)
@@ -277,7 +281,7 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     assert result.status == "executed"
     assert calls == [resolved]
     assert len(claims) == 1
-    assert finals == [(claims[0], "executed")]
+    assert finals == [(claims[0], "executed", "mock-claim-token")]
 
 
 @pytest.mark.asyncio
