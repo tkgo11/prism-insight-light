@@ -1,17 +1,18 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "ACTIVE_DRAFT_REMEDIATION_CI_SUCCESS_AUDIT_BLOCKED",
+  "state": "ACTIVE_DRAFT_REMEDIATION_AUDIT_IN_PROGRESS",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T02-18-KST-turn6",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T01-16-KST-turn5",
-    "result": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE",
+    "id": "prism-sync-hourly-2026-11-03T03-20-KST-turn7",
+    "lock_owner": "prism-sync-hourly-2026-11-03T03-20-KST-turn7",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T02-18-KST-turn6",
+    "result": "IN_PROGRESS",
     "last_mutation_commit": "97a4ea3b3bed0dab6b701ddba2b2a5cbb47dde90",
-    "previous_state_branch_sha": "990266abab898cc23d040acd26836206c9b6f3fa",
+    "previous_state_branch_sha": "c3dd53153292e4b9d91165b04ffe3faba7de01e1",
     "lock_started_at": "2026-11-02T17:18:49Z",
-    "completed_at": "2026-11-02T17:26:09.198Z"
+    "completed_at": "2026-11-02T17:26:09.198Z",
+    "started_at": "2026-11-02T18:20:00Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
