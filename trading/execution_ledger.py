@@ -10,6 +10,7 @@ explicit operational recovery procedure.
 from __future__ import annotations
 
 import hashlib
+from contextlib import contextmanager
 import json
 import math
 import os
@@ -248,6 +249,44 @@ class ExecutionLedger:
             if claimed_at >= cutoff:
                 retained[key] = value
         return retained
+
+    @contextmanager
+    def guard_unresolved_buy(self, market: str, ticker: str):
+        """Hold the durable claim lock through a zero-holdings tracker cleanup.
+
+        Broker acceptance/UNKNOWN is not a fill or cancellation. Any still
+        unresolved BUY intent for this instrument prevents deleting its old
+        protection, even when the latest balance is zero. This guard prevents
+        a concurrent claim from entering between the check and tracker removal.
+        """
+        if market not in {"KR", "US"} or not isinstance(ticker, str) or not ticker:
+            raise ValueError("Invalid instrument for BUY intent reconciliation")
+        with FileLock(self.lock_path):
+            entries = self._load()
+            unresolved = False
+            for entry in entries.values():
+                intent_data = entry.get("order_intent")
+                if intent_data is None:
+                    continue
+                try:
+                    intent = _validated_order_intent(intent_data)
+                except ValueError as exc:
+                    raise RuntimeError(
+                        "Invalid durable BUY intent; operator reconciliation required"
+                    ) from exc
+                status = entry.get("status", "in_progress")
+                if not isinstance(status, str):
+                    raise RuntimeError("Invalid BUY claim status; reconciliation required")
+                if status in _RETRYABLE_STATUSES:
+                    continue
+                same_ticker = (
+                    intent["ticker"].upper() == ticker.upper()
+                    if market == "US" else intent["ticker"] == ticker
+                )
+                if intent["market"] == market and same_ticker:
+                    unresolved = True
+                    break
+            yield unresolved
 
     def claim(
         self, identity: str, *, aliases: Iterable[str] = (), with_token: bool = False,

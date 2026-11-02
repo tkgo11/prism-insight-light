@@ -18,6 +18,7 @@ from typing import Any
 
 from .config_paths import runtime_file_path
 from .domestic import DomesticStockTrading, MultiAccountDomesticStockTrading
+from .execution_ledger import ExecutionLedger
 from .file_lock import FileLock, fsync_parent_directory
 from .market_hours import is_market_open
 from .schema import SignalMessage, parse_signal_payload
@@ -639,6 +640,39 @@ class StopLossWatcher:
             return True
         return now - last >= self.config.holding_check_interval_seconds
 
+    def _remove_if_verified_flat(
+        self, market: str, ticker: str, pos: dict[str, Any]
+    ) -> bool:
+        """Keep old protection while an accepted/UNKNOWN BUY may still fill."""
+        if pos.get("pending_buy", True):
+            return False
+        ledger = getattr(self.dispatcher, "execution_ledger", None)
+        if isinstance(ledger, ExecutionLedger):
+            try:
+                with ledger.guard_unresolved_buy(market, ticker) as unresolved:
+                    if unresolved:
+                        logger.error(
+                            "[Stop-Loss] Keeping %s %s: durable BUY intent "
+                            "may still fill after a zero balance", market, ticker,
+                        )
+                        return False
+                    return self.tracker.remove_position(
+                        market, ticker, expected_updated_at=pos.get("updated_at"),
+                        expected_record=pos,
+                    )
+            except Exception:
+                logger.exception(
+                    "[Stop-Loss] Keeping %s %s: BUY intent ledger could not be "
+                    "verified before tracker cleanup", market, ticker,
+                )
+                return False
+        # Legacy/mock dispatchers may have no ledger; production TradeDispatcher
+        # always supplies ExecutionLedger. Never synthesize broker fill evidence.
+        return self.tracker.remove_position(
+            market, ticker, expected_updated_at=pos.get("updated_at"),
+            expected_record=pos,
+        )
+
     def check_stop_loss_once(self) -> list[dict[str, Any]]:
         """Inspect tracked positions and trigger automatic SELL when current price <= stop_loss."""
         triggered_results: list[dict[str, Any]] = []
@@ -740,10 +774,7 @@ class StopLossWatcher:
                         market,
                         ticker,
                     )
-                    self.tracker.remove_position(
-                        market, ticker, expected_updated_at=pos.get("updated_at"),
-                        expected_record=pos,
-                    )
+                    self._remove_if_verified_flat(market, ticker, pos)
                     continue
 
                 if stop_hit:
@@ -944,10 +975,7 @@ class StopLossWatcher:
                                 "cannot establish an accepted BUY will not fill later",
                                 market, ticker,
                             )
-                        elif self.tracker.remove_position(
-                            market, ticker, expected_updated_at=pos.get("updated_at"),
-                            expected_record=pos,
-                        ):
+                        elif self._remove_if_verified_flat(market, ticker, pos):
                             self._last_trigger_attempt.pop(
                                 self.tracker._key(market, ticker), None
                             )
