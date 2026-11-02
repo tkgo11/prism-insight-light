@@ -4,7 +4,7 @@ import json
 from unittest.mock import AsyncMock, MagicMock
 
 from trading.dispatch import DispatchResult
-from trading.stop_loss_watcher import StopLossTracker, StopLossWatcher, StopLossWatcherConfig
+from trading.stop_loss_watcher import StopLossTracker, StopLossWatcher, StopLossWatcherConfig, TrackedPosition
 
 
 def _watcher(tracker):
@@ -56,3 +56,14 @@ def test_invalid_persisted_stop_signal_id_blocks_automated_order(tmp_path):
     raw["KR:005930"]["stop_loss_signal_id"] = "forged-other-order"
     tracker.path.write_text(json.dumps(raw), encoding="utf-8")
     assert tracker.get_positions("KR") == []
+
+
+def test_legacy_from_dict_preserves_reconcilable_signal_identity(tmp_path):
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("KR", "005930", 90, entry_price=100)
+    legacy = tracker.get_position("KR", "005930")
+    expected_id = legacy.pop("stop_loss_signal_id")
+    restored = TrackedPosition.from_dict(legacy)
+    assert restored.pending_buy is True
+    assert restored.stop_loss_signal_id == expected_id
+    assert restored.to_dict()["stop_loss_signal_id"] == expected_id

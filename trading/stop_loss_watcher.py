@@ -146,6 +146,13 @@ class TrackedPosition:
         pending_buy = data.get("pending_buy", True)
         if not isinstance(pending_buy, bool):
             raise ValueError("Invalid pending BUY provenance")
+        market = str(data.get("market", "")).upper()
+        ticker = str(data.get("ticker", ""))
+        stable_id = data.get("stop_loss_signal_id")
+        if stable_id is None:
+            stable_id = _legacy_stop_loss_signal_id(market, ticker, data)
+        elif not _valid_stop_loss_signal_id(stable_id, market, ticker):
+            raise ValueError("Invalid persisted stop-loss signal identity")
         return cls(
             market=str(data.get("market", "")).upper(),
             ticker=str(data.get("ticker", "")),
@@ -160,7 +167,7 @@ class TrackedPosition:
             created_at=str(data.get("created_at", "")),
             updated_at=str(data.get("updated_at", "")),
             pending_buy=pending_buy,
-            stop_loss_signal_id=str(data.get("stop_loss_signal_id") or ""),
+            stop_loss_signal_id=stable_id,
         )
 
 
