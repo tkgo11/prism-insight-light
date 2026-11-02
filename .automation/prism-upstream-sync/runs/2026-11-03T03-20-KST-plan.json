@@ -1,0 +1,58 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T03-20-KST-turn7",
+  "slot": "2026-11-03T03-20-KST",
+  "pr": 43,
+  "base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "head_before": "97a4ea3b3bed0dab6b701ddba2b2a5cbb47dde90",
+  "upstream": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "root_cause_id": "RC-STOPLOSS-STALE-SNAPSHOT-TOCTOU",
+  "parent": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "classification": "STATICALLY_OBSERVED_PENDING_MOCK_REPRO",
+  "blobs": {
+    "trading/stop_loss_watcher.py": "726ea7b11f8571879060ebd324070832b5d10c04",
+    "tests/test_stop_loss_watcher.py": "b45d69f51d47943a43d5a28c5b5af582e1a23b22",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2"
+  },
+  "invariants": [
+    "stale stop-loss snapshot must not authorize a new SELL",
+    "removed/replaced/quarantined record must not authorize SELL",
+    "a changed pending_buy provenance must not be bypassed by a stale confirmed snapshot",
+    "unchanged confirmed record must remain actionable",
+    "order acceptance is not a fill; no live or demo transactions"
+  ],
+  "matrix": [
+    {
+      "path": "check_stop_loss_once→get_positions→_trigger_sell",
+      "failure": "record changes after watcher snapshot preflight but before _trigger_sell; stale stop threshold could send SELL",
+      "test": "test_direct_trigger_rejects_stale_stop_snapshot_after_edit"
+    },
+    {
+      "path": "StopLossTracker.remove_position→_trigger_sell",
+      "failure": "deleted tracker record still permits stale direct SELL",
+      "test": "test_direct_trigger_rejects_removed_position_snapshot"
+    },
+    {
+      "path": "legacy stop-loss JSON→_trigger_sell",
+      "failure": "legacy snapshot with unchanged timestamp but changed content permits stale SELL",
+      "test": "test_direct_trigger_rejects_legacy_snapshot_rewrite"
+    },
+    {
+      "path": "persisted pending_buy→_trigger_sell",
+      "failure": "previously confirmed snapshot after provenance becomes pending permits SELL",
+      "test": "test_direct_trigger_rejects_newly_pending_record"
+    },
+    {
+      "path": "valid confirmed record→_trigger_sell",
+      "failure": "overly broad fence blocks legitimate confirmed position",
+      "test": "existing test_stop_loss_signal_identity and test_partial_exit_stop_loss_safety"
+    }
+  ],
+  "limits": [
+    "local sandbox cannot resolve github.com, so use test-first GitHub Actions; only mock broker tests",
+    "full cross-process mutation during in-flight broker submission remains a separate atomicity risk; do not claim solved by preflight"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "real_orders": 0,
+  "demo_orders": 0
+}
