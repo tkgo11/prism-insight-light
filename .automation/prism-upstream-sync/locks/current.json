@@ -5,7 +5,10 @@
   "expected_pr_head": "72dc169af2b62ade07e71eca00826d40afaf9de3",
   "expected_base_head": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
   "expected_upstream_head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-  "status": "LOCKED",
+  "status": "RELEASED",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "released_at": "2026-11-02T17:26:09.198Z",
+  "latest_pr_head": "97a4ea3b3bed0dab6b701ddba2b2a5cbb47dde90",
+  "release_parent_sha": "990266abab898cc23d040acd26836206c9b6f3fa"
 }
