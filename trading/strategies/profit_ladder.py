@@ -1,11 +1,10 @@
 """Profit-ladder SELL strategy."""
 from __future__ import annotations
-import math
-from dataclasses import dataclass, field
+ from dataclasses import dataclass, field
 from typing import Any
 from ..schema import SignalMessage
 from ..signal_sizing import adjusted_sell_fraction
-from .common import StrategyExecution, execute_order, execution_from_result, fraction_value, strategy_name, string_list
+from .common import StrategyExecution, execute_order, execution_from_result, fraction_value, profit_bands_value, strategy_name, string_list
 
 PROFIT_LADDER = "profit_ladder"
 
@@ -15,9 +14,7 @@ class ProfitLadderStrategyConfig:
     @classmethod
     def from_mapping(cls, payload: dict[str, Any] | None) -> "ProfitLadderStrategyConfig | None":
         if not payload or strategy_name(payload) != PROFIT_LADDER: return None
-        bands = {float(k): float(v) for k, v in dict(payload.get("profit_bands", {})).items()}
-        if any(not math.isfinite(k) for k in bands): raise ValueError("signal_strategy.profit_bands keys must be finite")
-        if any(not math.isfinite(v) or v < 0 or v > 1 for v in bands.values()): raise ValueError("signal_strategy.profit_bands values must be finite and between 0 and 1")
+        bands = profit_bands_value(payload)
         reasons = tuple(
             value.lower()
             for value in string_list(

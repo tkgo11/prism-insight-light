@@ -131,7 +131,7 @@ Use it when BUY signals sometimes contain useful risk fields and configured cons
 
 - `full_exit_reasons`: reasons that immediately sell the full position.
 - `stop_loss_sell_percent`: stop-loss fraction when `stop_loss` is not listed as a full-exit reason.
-- `profit_bands`: optional profit thresholds; empty by default.
+- `profit_bands`: optional profit thresholds; empty by default. The mapping may be empty but cannot be a list, have boolean thresholds, or contain numeric aliases (such as `"5"` and `"5.0"`) that would overwrite a SELL fraction.
 - `default_sell_percent`: fallback fraction when no band or urgent reason matches.
 - `use_stop_loss_price`: prefer the lower of `price` and `stop_loss` for a triggered stop-loss SELL.
 
@@ -411,7 +411,7 @@ At the top stair, you may sell all.
 
 ### Main settings
 
-- `profit_bands`: profit levels and how much to sell.
+- `profit_bands`: profit levels and how much to sell. Empty mappings remain valid; malformed non-mappings, boolean keys, and duplicate normalized numeric thresholds are rejected rather than silently choosing a different SELL fraction.
   - Example: `5: 0.25` means sell 25% when profit is at least 5%.
   - Example: `20: 1.0` means sell 100% when profit is at least 20%.
 - `stop_loss_sell_percent`: how much to sell when the reason is `stop_loss`.

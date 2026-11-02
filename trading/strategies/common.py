@@ -95,6 +95,32 @@ def fraction_value(payload: dict[str, Any], key: str, default: float) -> float:
     return value
 
 
+
+def profit_bands_value(payload: dict[str, Any]) -> dict[float, float]:
+    """Parse optional SELL profit bands without silently overwriting numeric aliases.
+
+    An empty mapping is a valid default for profit strategies; malformed shapes,
+    boolean thresholds and duplicate keys after float normalization are not.
+    """
+    raw_bands = payload.get("profit_bands", {})
+    if not isinstance(raw_bands, dict):
+        raise ValueError("signal_strategy.profit_bands must be a mapping")
+    bands: dict[float, float] = {}
+    for raw_profit, raw_fraction in raw_bands.items():
+        if isinstance(raw_profit, bool):
+            raise ValueError("signal_strategy.profit_bands keys must be finite numbers")
+        profit = float(raw_profit)
+        fraction = float(raw_fraction)
+        if not math.isfinite(profit):
+            raise ValueError("signal_strategy.profit_bands keys must be finite")
+        if not math.isfinite(fraction) or fraction < 0 or fraction > 1:
+            raise ValueError("signal_strategy.profit_bands values must be finite and between 0 and 1")
+        if profit in bands:
+            raise ValueError("signal_strategy.profit_bands contains duplicate normalized profit threshold")
+        bands[profit] = fraction
+    return bands
+
+
 def integer_value(
     payload: dict[str, Any],
     key: str,
