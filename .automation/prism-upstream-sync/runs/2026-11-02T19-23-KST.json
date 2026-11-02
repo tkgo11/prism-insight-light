@@ -1,0 +1,222 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T19-23-KST-turn11",
+  "slot": "2026-11-02T19:23+09:00",
+  "completed_at": "2026-11-02T10:33:24.670Z",
+  "stage": "RECEIPT_OMISSION_SUBCASE_PATCHED_CI_SUCCESS_AUDITS_INCOMPLETE",
+  "concurrency": {
+    "state_head_before_lock": "9334d0bd5700da211279745ff4cabfe98f7f021e",
+    "lock_commit": "7087196deab34bf1a3dfbb3ac95ce1cf73de7677",
+    "lock_owner": "prism-sync-hourly-2026-11-02T19-23-KST-turn11",
+    "cas_required": true
+  },
+  "upstream": {
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "ahead_commits": 47,
+    "changed_files": 41,
+    "decision": "NO_IMPORT"
+  },
+  "fork": {
+    "base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+    "pr_number": 42,
+    "head": "786e032f564d44660c3e52d5a5a0973182cb113a",
+    "draft": true,
+    "tree_sha": "443d960c793255e7dea87595b40feecfe60ffc0d"
+  },
+  "root_cause": "RC-BROKER-RECEIPT-INTEGRITY",
+  "subcase": "kis-success-omits-all-order-id-fields-20261102",
+  "recurrence_count": 1,
+  "pre_fix_ci": {
+    "id": 41428720506,
+    "passed": 1184,
+    "failed": 2,
+    "actual_behavior_failures": 1,
+    "test_harness_missing_import": 1
+  },
+  "intermediate_ci": {
+    "id": 41429051475,
+    "passed": 1173,
+    "failed": 13,
+    "reason": "Old test doubles omitted receipts; corrected without weakening broker contract"
+  },
+  "code_commits": [
+    "c58afdda79ce2d8c5dad0cbc361f96fd6a8f76ef",
+    "c8dee3859ea97562716c4d6bf71597bebbcbd9c0",
+    "bf38bff3ca3354d9ecf214643dfdc32072fb0f7c",
+    "f9dcc4e0f682378aca644fe723e91a4c48960b76",
+    "786e032f564d44660c3e52d5a5a0973182cb113a"
+  ],
+  "changed_files": [
+    {
+      "path": "tests/test_balance_split_strategy.py",
+      "blob_sha": "209fda023339f96b178c7e97058806e7ff5cd743",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "blob_sha": "bf10730694946dd6ed0cdf3f8cdb11f2da155e21",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_cooldown_pending_reconciliation.py",
+      "blob_sha": "780361a959faf8e94545071b7d582155e69b9d24",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_dispatch.py",
+      "blob_sha": "4ee5e6dc26144c865e52f98d47c39ec445aa4def",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_effective_order_metadata.py",
+      "blob_sha": "cdb0a523f5a94e606b77ac0b6f1518dd4c03ea84",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_execution_outcome.py",
+      "blob_sha": "cb379a9cfe64b08694096d95933385fd8974224d",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_financial_sizing_audit.py",
+      "blob_sha": "3f311e0f82bf704231ec008894bc661dd53084de",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_multi_account_dispatch.py",
+      "blob_sha": "f62a91164f46ce7a103e419b10fdc60be611ac3f",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_multi_account_domestic.py",
+      "blob_sha": "17bc20fe8ef1cc399cf1dde6d9a1f85e6cf3415d",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_multi_account_us.py",
+      "blob_sha": "e436d319568f7761d270508990d491c90cd23625",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_score_max_capital_strategy.py",
+      "blob_sha": "22c6a7382015fc5376cc05ffb56df4e9f3fe4633",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_signal_exit_strategies.py",
+      "blob_sha": "9f4a3ecd43942b220e7ae302dbfd1460dff23246",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_signal_safety.py",
+      "blob_sha": "faf586e4764459a9379ff86d79bd15f5a954e823",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "blob_sha": "a76728d36349b4d36f47d1a2629a43f8e5f39692",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_upstream_signal_sizing.py",
+      "blob_sha": "b4e98d37f1708ef203be0263172e795e9a94e075",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_upstream_strategy_compatibility.py",
+      "blob_sha": "c60e3d868f8ee231dac4caf23a0fd5a0b2f4782a",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "7e6a35e36e02a5162d292544dd47b859d0a6e23c",
+      "level": "TARGETED_CONTRACT_AND_CI_NOT_FULL_FILE_AUDIT"
+    }
+  ],
+  "contract_matrix": [
+    {
+      "invariant": "KIS success != verified fill; receipt-less acceptance must not be executed",
+      "path": "trading/execution_outcome.py",
+      "failure_mode": "success=True without order_no and broker_order_id",
+      "verification": "test_success_without_any_receipt_fields_remains_unknown; Linux CI 1186 pass",
+      "status": "MOCK_VERIFIED"
+    },
+    {
+      "invariant": "UNKNOWN must retain durable replay fence",
+      "path": "trading/execution_ledger.py -> tests/test_execution_outcome.py",
+      "failure_mode": "restart after success without receipt",
+      "verification": "test_missing_receipt_field_does_not_release_ledger_after_restart",
+      "status": "MOCK_VERIFIED"
+    },
+    {
+      "invariant": "KR/US strategy and dispatcher mock receipts must represent actual order acceptance",
+      "path": "trading/strategies/common.py -> trading/dispatch.py -> KR/US mock tests",
+      "failure_mode": "old mocks claimed executed without any receipt",
+      "verification": "17 affected files; CI 41429317502 and 41429310617",
+      "status": "MOCK_VERIFIED_NOT_KIS_DEMO"
+    },
+    {
+      "invariant": "Stop-loss BUY tracking cannot be promoted by receipt-less success",
+      "path": "trading/dispatch.py -> trading/stop_loss_watcher.py",
+      "failure_mode": "phantom tracking on unconfirmed order",
+      "verification": "classification inspected; independent broker fill integration unavailable",
+      "status": "TARGETED_REVIEW_NOT_FULLY_VERIFIED"
+    },
+    {
+      "invariant": "Partial fills, cancel, residual quantity and stop-loss replay need authoritative broker order/fill state",
+      "path": "KR/US broker -> ledger -> stop-loss watcher",
+      "failure_mode": "accepted order remains unfilled or partly filled",
+      "verification": "KIS demo credentials and isolated broker environment unavailable",
+      "status": "BLOCKED_KIS_DEMO"
+    }
+  ],
+  "final_ci": [
+    {
+      "id": 41429317502,
+      "event": "pull_request",
+      "head_sha": "786e032f564d44660c3e52d5a5a0973182cb113a",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41429310617,
+      "event": "push",
+      "head_sha": "786e032f564d44660c3e52d5a5a0973182cb113a",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "tests": {
+    "linux_passed": 1186,
+    "windows_passed": 167,
+    "new_regressions": 2
+  },
+  "external_statuses": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success"
+    },
+    {
+      "context": "qlty check",
+      "state": "success"
+    }
+  ],
+  "audit": {
+    "related_manifest_files": 74,
+    "full_tree_files": 168,
+    "related_pass": 0,
+    "full_pass": 0,
+    "related_fully_audited": 0,
+    "full_fully_audited": 0,
+    "related_manifest_checksum": "git-blob-sha1:738ffdf8a3b6f7ac3b0dba994c4d8399554ab978",
+    "full_manifest_checksum": "git-blob-sha1:0a9df6234ef368f15b08a91adee4b9e88a1cb25e"
+  },
+  "blockers": [
+    "KIS demo fill/partial/cancel/remaining-quantity/restart integration not available",
+    "Independent full transitive and all-file audits incomplete",
+    "No independent review",
+    "Branch protection API 403; cannot prove required gate policy"
+  ],
+  "merged": false,
+  "real_orders": 0
+}
