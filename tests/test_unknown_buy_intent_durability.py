@@ -146,7 +146,7 @@ async def test_multi_unknown_buy_persists_distinct_account_intents(
 def test_invalid_intent_rejected_without_writes(tmp_path, invalid):
     path = tmp_path / "ledger.json"
     ledger = ExecutionLedger(path)
-    with pytest.raises((TypeError, ValueError)):
+    with pytest.raises(ValueError):
         ledger.claim("bad-intent", with_token=True, order_intent=invalid)
     assert not path.exists()
 
@@ -170,6 +170,7 @@ async def test_intent_persistence_failure_blocks_broker(tmp_path, monkeypatch):
         execution_ledger_path=tmp_path / "ledger.json",
     )
     def disk_failure(entries):
+        assert next(iter(entries.values()))["order_intent"]["kind"] == "buy_stop_loss"
         raise RuntimeError("simulated disk failure")
     monkeypatch.setattr(dispatcher.execution_ledger, "_save", disk_failure)
     signal = parse_signal_payload({
