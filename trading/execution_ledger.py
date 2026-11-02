@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import tempfile
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -217,14 +218,19 @@ class ExecutionLedger:
         return retained
 
     def claim(
-        self, identity: str, *, aliases: Iterable[str] = ()
-    ) -> tuple[bool, str | None]:
+        self, identity: str, *, aliases: Iterable[str] = (), with_token: bool = False
+    ) -> tuple[bool, str | None] | tuple[bool, str | None, str | None]:
         """Claim an identity or return the prior status without exposing account data.
 
         ``aliases`` are legacy identities for the same logical signal (see
         :func:`execution_identities`): a suppressed alias blocks the claim
         exactly like a suppressed primary, while a retryable alias is folded
         into the primary claim so the ledger converges on one entry.
+
+        Trading callers use with_token=True and pass the returned per-attempt
+        token to finalize/release. A late callback from an earlier retry must
+        never modify a newer in-progress claim. Legacy two-tuple callers remain
+        supported for compatibility, but cannot modify tokenized claims.
 
         Entries whose recorded status provably means "no order exists at the
         broker" (clean failure, explicit rejection, dry-run, deferred, queued,
@@ -244,13 +250,17 @@ class ExecutionLedger:
                     continue
                 status = str(existing.get("status") or "in_progress")
                 if status not in _RETRYABLE_STATUSES:
-                    return False, status
+                    return (False, status, None) if with_token else (False, status)
                 if previous_status is None:
                     previous_status = status
             for alias in aliases:
                 if alias != identity:
                     entries.pop(alias, None)
-            entries[identity] = {"status": "in_progress", "claimed_at": now.isoformat()}
+            claim_token = uuid.uuid4().hex if with_token else None
+            entry = {"status": "in_progress", "claimed_at": now.isoformat()}
+            if claim_token is not None:
+                entry["claim_token"] = claim_token
+            entries[identity] = entry
             # Fail closed at capacity. Silently dropping older accepted/unknown
             # claims to make room would re-enable duplicate broker submissions.
             if len(entries) > MAX_LEDGER_ENTRIES:
@@ -259,15 +269,21 @@ class ExecutionLedger:
                     "operator reconciliation is required before new orders"
                 )
             self._save(entries)
-        return True, previous_status
+        return (True, previous_status, claim_token) if with_token else (True, previous_status)
 
-    def finalize(self, identity: str, status: str) -> None:
+    def finalize(
+        self, identity: str, status: str, *, claim_token: str | None = None
+    ) -> None:
         """Record a non-sensitive terminal status for an already claimed identity."""
 
         now = datetime.now(timezone.utc)
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
             if identity in entries:
+                stored_token = entries[identity].get("claim_token")
+                if stored_token is not None or claim_token is not None:
+                    if not isinstance(stored_token, str) or not stored_token or stored_token != claim_token:
+                        return
                 existing_status = str(entries[identity].get("status") or "in_progress")
                 # A terminal claim that could have reached the broker must
                 # never be rewritten as a retryable status by a late callback,
@@ -280,7 +296,7 @@ class ExecutionLedger:
                 entries[identity]["finished_at"] = now.isoformat()
                 self._save(entries)
 
-    def release(self, identity: str) -> None:
+    def release(self, identity: str, *, claim_token: str | None = None) -> None:
         """Drop an open claim whose attempt provably submitted nothing.
 
         Only an entry still marked ``in_progress`` is removed; a finalized
@@ -293,6 +309,11 @@ class ExecutionLedger:
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
             existing = entries.get(identity)
+            if existing is not None:
+                stored_token = existing.get("claim_token")
+                if stored_token is not None or claim_token is not None:
+                    if not isinstance(stored_token, str) or not stored_token or stored_token != claim_token:
+                        return
             if existing is not None and existing.get("status") == "in_progress":
                 del entries[identity]
                 self._save(entries)

@@ -407,8 +407,8 @@ class MultiAccountTradeDispatcher:
             account_id = _account_id(account["account_key"])
             identity, aliases = execution_identities(signal.raw, account["account_key"])
             if self.dispatcher.execution_dedupe:
-                claimed, previous_status = await asyncio.to_thread(
-                    self.ledger.claim, identity, aliases=aliases
+                claimed, previous_status, claim_token = await asyncio.to_thread(
+                    self.ledger.claim, identity, aliases=aliases, with_token=True
                 )
                 if not claimed:
                     results.append(
@@ -444,10 +444,13 @@ class MultiAccountTradeDispatcher:
                         # claim (an earlier account's workflow may straddle a
                         # market boundary). Nothing was submitted, so the claim
                         # must be released or the identity is poisoned forever.
-                        await asyncio.to_thread(self.ledger.release, identity)
+                        await asyncio.to_thread(
+                            self.ledger.release, identity, claim_token=claim_token
+                        )
                     else:
                         await asyncio.to_thread(
-                            self.ledger.finalize, identity, result.status
+                            self.ledger.finalize, identity, result.status,
+                            claim_token=claim_token,
                         )
                 results.append(
                     AccountDispatchResult(
@@ -465,12 +468,12 @@ class MultiAccountTradeDispatcher:
                 )
             except asyncio.CancelledError:
                 if self.dispatcher.execution_dedupe:
-                    self.ledger.finalize(identity, "unknown")
+                    self.ledger.finalize(identity, "unknown", claim_token=claim_token)
                 raise
             except Exception as exc:  # noqa: BLE001 - each account is an isolated boundary
                 error_message = f"{type(exc).__name__}: {str(exc)[:512]}"
                 if self.dispatcher.execution_dedupe:
-                    self.ledger.finalize(identity, "unknown")
+                    self.ledger.finalize(identity, "unknown", claim_token=claim_token)
                 results.append(
                     AccountDispatchResult(
                         account=account["name"],
@@ -771,12 +774,13 @@ class TradeDispatcher:
                 )
 
         identity = None
+        claim_token = None
         if account is None and self.execution_dedupe:
             identity, aliases = execution_identities(
                 signal.raw, self._single_account_execution_selector(signal)
             )
-            claimed, previous_status = await asyncio.to_thread(
-                self.execution_ledger.claim, identity, aliases=aliases
+            claimed, previous_status, claim_token = await asyncio.to_thread(
+                self.execution_ledger.claim, identity, aliases=aliases, with_token=True
             )
             if not claimed:
                 self.signal_gate.audit_record(
@@ -823,22 +827,26 @@ class TradeDispatcher:
             # Sizing was rejected before broker submission. Never classify it as
             # an ambiguous order (or leave a ledger claim stuck as "unknown").
             if identity is not None:
-                await asyncio.to_thread(self.execution_ledger.finalize, identity, "rejected")
+                await asyncio.to_thread(
+                    self.execution_ledger.finalize, identity, "rejected",
+                    claim_token=claim_token,
+                )
             logger.warning("Rejected %s %s(%s) sizing: %s",
                            signal.signal_type, signal.company_name, signal.ticker, exc)
             return DispatchResult("rejected", str(exc), signal.signal_type, signal.market)
         except asyncio.CancelledError:
             if identity is not None:
-                self.execution_ledger.finalize(identity, "unknown")
+                self.execution_ledger.finalize(identity, "unknown", claim_token=claim_token)
             raise
         except Exception:
             if identity is not None:
-                self.execution_ledger.finalize(identity, "unknown")
+                self.execution_ledger.finalize(identity, "unknown", claim_token=claim_token)
             raise
 
         if identity is not None:
             await asyncio.to_thread(
-                self.execution_ledger.finalize, identity, result.status
+                self.execution_ledger.finalize, identity, result.status,
+                claim_token=claim_token,
             )
         return result
 
