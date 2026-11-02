@@ -275,3 +275,9 @@ A contradictory result carrying `success=True` and a plausible order receipt
 but also a timeout/disconnect/gateway error is UNKNOWN regardless of field
 ordering. The claim stays non-retryable after restart. This does not establish
 that the order filled or that a cancellation/remaining-quantity was verified.
+
+Receipt validation also rejects Unicode digit confusables (including full-width
+zero-only sentinels), emoji and arbitrary punctuation. The previous
+`str.isdecimal()` test was Unicode-aware and did not prove an ASCII KIS
+order number. This is a recurrence of the existing receipt-integrity root
+cause; it does not create a new independent financial defect category.

@@ -112,6 +112,14 @@ def classify_broker_result(result: Any) -> str:
                     for char in receipt
                 ):
                     return False
+                # Unicode decimal digits (including full-width zeros) pass
+                # str.isdecimal() but are not KIS order numbers. Accept only
+                # ASCII broker-reconcilable identifiers; mock IDs may contain
+                # ASCII hyphens/underscores, never arbitrary punctuation.
+                if not receipt.isascii() or re.fullmatch(
+                    r"[A-Za-z0-9][A-Za-z0-9_-]*", receipt
+                ) is None:
+                    return False
                 if receipt.casefold() in {
                     "none", "null", "nan", "undefined", "true", "false",
                     "inf", "infinity", "+inf", "-inf",
