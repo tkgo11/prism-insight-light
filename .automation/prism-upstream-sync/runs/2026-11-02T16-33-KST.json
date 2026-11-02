@@ -1,0 +1,72 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
+  "stage": "PRECHANGE_CONTRACT_MATRIX",
+  "recorded_at": "2026-11-02T07:35:19.482Z",
+  "pr": {
+    "number": 42,
+    "head": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+    "base": "4c38195fadbd138a0d90832f3ef433b677dbf081"
+  },
+  "upstream": {
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "commits_ahead": 47,
+    "decision": "NO_CHERRY_PICK_BTC_RESEARCH_NOT_FORK_SCOPE"
+  },
+  "root_cause_id": "RC-LEDGER-JSON-INTEGRITY",
+  "subcase": "retryable status with missing or invalid claimed_at is retained by _prune but re-claimed by claim, allowing replay from corrupt durable evidence",
+  "classification": "REPRODUCTION_PENDING",
+  "blob_sha": {
+    "trading/dispatch.py": "035846e0845133debe4b65524c16ed9ff1cb56f2",
+    "trading/execution_ledger.py": "d5e37f9b5bb8101d83eea9d81c901a706430f9b6",
+    "trading/off_hours_queue.py": "66cd4f7b227494b4b2f00c73941f2f95d000df89",
+    "trading/execution_outcome.py": "0e594fe7d67e8ed5f50ceb9311911ba68563ac0c",
+    "tests/test_execution_ledger_retention.py": "99b832e1f58f98c4b90eb20cdc2dd965f713211f",
+    "tests/test_wave4_execution_safety.py": "130b72afc1a51538540a94c880d3d73c5e24cd99"
+  },
+  "matrix": [
+    {
+      "invariant": "Durable corrupted retryable claim must not authorize broker resubmission",
+      "path": "_load -> _prune -> claim -> dispatch -> broker",
+      "failure_mode": "status failed with missing/invalid claimed_at is retained then overwritten as in_progress",
+      "test": "parametrized malformed retryable status and timestamp; verify no rewrite"
+    },
+    {
+      "invariant": "Protected in_progress/unknown/executed must remain suppressed even if timestamps invalid",
+      "path": "_prune -> claim",
+      "failure_mode": "overstrict validator could break protected ledger",
+      "test": "existing malformed in_progress test and protected claim tests"
+    },
+    {
+      "invariant": "Legitimate verified pre-submit rejection remains retryable",
+      "path": "finalize -> claim -> retry",
+      "failure_mode": "strict validation breaks normal retry",
+      "test": "existing pre-submission failure test and all retryable status test"
+    },
+    {
+      "invariant": "Legacy identity alias cannot bypass corrupt retryable entry",
+      "path": "execution_identities -> claim(aliases)",
+      "failure_mode": "alias entry reclaims despite missing proof",
+      "test": "malformed alias test"
+    },
+    {
+      "invariant": "No real trading or false fill attribution",
+      "path": "dispatcher -> execution ledger",
+      "failure_mode": "test invokes broker",
+      "test": "tmp_path-only ledger tests, no KIS calls"
+    }
+  ],
+  "reviewed_paths": [
+    "trading/execution_ledger.py",
+    "tests/test_execution_ledger_retention.py",
+    "trading/dispatch.py",
+    "trading/execution_outcome.py",
+    "trading/off_hours_queue.py",
+    "tests/test_wave4_execution_safety.py"
+  ],
+  "full_audit": false,
+  "related_audit": false,
+  "related_passes": 0,
+  "full_passes": 0,
+  "actions": []
+}
