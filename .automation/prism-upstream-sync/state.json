@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
-    "started_at": "2026-11-02T00:23:35Z",
-    "completed_at": "2026-11-02T00:31:20.745Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
+    "started_at": "2026-11-02T01:16:41Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
     "last_mutation_commit": "8e90304a1c45d981995484e18ab8e5a1faebb461",
     "last_mutation_at": "2026-11-02T00:31:20.745Z",
-    "result": "SEMANTIC_STRATEGY_STATE_PATCHED_CI_SUCCESS_AUDITS_BLOCKED",
+    "result": "IN_PROGRESS",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -60,10 +60,10 @@
       "merged": false,
       "reason": "Semantic strategy-state corruption guards tested; demo, account isolation, independent full audits and review unresolved."
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T08:18:56+09:00",
+    "prior_run_id": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
     "pr_head_at_start": "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0",
-    "lock_acquired_at": "2026-11-02T00:23:35Z",
-    "lock_released_at": "2026-11-02T00:31:20.745Z"
+    "lock_acquired_at": "2026-11-02T01:16:41Z",
+    "lock_released_at": null
   },
   "source": {
     "repository": "dragon1086/prism-insight",
