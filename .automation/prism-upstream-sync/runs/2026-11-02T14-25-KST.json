@@ -1,0 +1,167 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
+  "phase": "TARGETED_PATCH_CI_SUCCESS_NOT_FULL_AUDIT",
+  "timestamp": "2026-11-02T05:32:30Z",
+  "root_cause_id": "RC-INBOUND-JSON-KEY-UNIQUENESS",
+  "classification": "NEW_INGRESS_TRUST_BOUNDARY_ROOT_CAUSE",
+  "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+  "upstream_pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "fork_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+  "pr": 42,
+  "pr_head_before": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+  "pr_head_after": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+  "tree_sha": "95bb88a208fc0dbf1e2e98ac6f8762c568719e39",
+  "subcases": [
+    {
+      "id": "pubsub-duplicate-financial-field-override-20261102",
+      "area": "Pub/Sub",
+      "detail": "Repeated position_fraction, sell_denominator, ticker, price, type or nested key was silently overwritten by json.loads; 6 test-first failures.",
+      "files": [
+        "trading/schema.py",
+        "tests/test_inbound_json_duplicate_keys.py"
+      ]
+    },
+    {
+      "id": "telegram-duplicate-financial-field-override-20261102",
+      "area": "Telegram",
+      "detail": "JSON, fenced and inline Telegram signals silently kept last duplicate key; 3 test-first failures. Polling now skips ambiguity.",
+      "files": [
+        "trading/telegram_fetch.py",
+        "tests/test_inbound_json_duplicate_keys.py"
+      ]
+    },
+    {
+      "id": "webui-duplicate-financial-field-override-20261102",
+      "area": "WebUI",
+      "detail": "WebUI string parser and FastAPI raw JSON body could silently overwrite sizing fields; raw route test first failed (1 failed, 1098 passed).",
+      "files": [
+        "webui/services/signal_service.py",
+        "webui/routes/signals.py",
+        "tests/test_webui_routes.py",
+        "tests/test_inbound_json_duplicate_keys.py"
+      ]
+    }
+  ],
+  "changed_paths": [
+    "trading/schema.py",
+    "trading/telegram_fetch.py",
+    "webui/services/signal_service.py",
+    "webui/routes/signals.py",
+    "tests/test_inbound_json_duplicate_keys.py",
+    "tests/test_webui_routes.py",
+    "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
+  ],
+  "blob_shas": {
+    "trading/schema.py": "2bf58b7c8edf5d685dd422952cd003acbbf3091e",
+    "trading/telegram_fetch.py": "2e744003cbe382d234b7823094b56ef4525f6404",
+    "webui/services/signal_service.py": "eb3dc13b6d0264a8533a0102f208d5d7f7e4f7ee",
+    "webui/routes/signals.py": "cb4d0dfad9fdfdf37dd028b487309c089acbeb18",
+    "tests/test_inbound_json_duplicate_keys.py": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+    "tests/test_webui_routes.py": "1749ac6f689b7a591d20ea9792da4d4a3cd1d7a2",
+    "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md": "b7f3ad3d527cb88d3549885d771d654f92e7fefc"
+  },
+  "commits": [
+    "77f591975c249e191fa245ecba26699f6b7e9f50",
+    "52465b1969e9a0ba81871627b36f7d1fb4c5fa0a",
+    "46c981e65a49b6c295bc66690514e8c734350f42",
+    "eec3a43ccf39160f500f877fd450ee29b4a3172f",
+    "e7d2f808c342fbd450668b2638903504308877e5",
+    "7bef9a5f4201fa364faea349d029bc2dd44d9de9",
+    "28c9529442ef821630ce160b3c0db0ccb308d9f2",
+    "91730a05ce6396849c5ce3bb8a8bf80385ca1962",
+    "a95839ac3c44b4a24a96109b4e54feb6a69ba22f"
+  ],
+  "test_first": {
+    "run_id": 41394133853,
+    "result": "9 failed, 1086 passed",
+    "webui_run_id": 41394345742,
+    "webui_result": "1 failed, 1098 passed"
+  },
+  "tests": {
+    "linux": "1099 passed",
+    "windows": "152 passed",
+    "new_tests": 13,
+    "kis_demo": "BLOCKED_NO_AUTHORIZED_DEMO",
+    "live_orders": 0
+  },
+  "ci": {
+    "runs": [
+      {
+        "id": 41394362508,
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f"
+      },
+      {
+        "id": 41394393557,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f"
+      }
+    ],
+    "external": [
+      {
+        "context": "security/snyk (tkgo11)",
+        "state": "success"
+      },
+      {
+        "context": "qlty check",
+        "state": "success",
+        "description": "90 blocking issues; not clean audit"
+      }
+    ]
+  },
+  "reviewed_paths": [
+    {
+      "path": "trading/schema.py",
+      "blob_sha": "2bf58b7c8edf5d685dd422952cd003acbbf3091e",
+      "level": "TARGETED_PARTIAL"
+    },
+    {
+      "path": "trading/telegram_fetch.py",
+      "blob_sha": "2e744003cbe382d234b7823094b56ef4525f6404",
+      "level": "TARGETED_PARTIAL"
+    },
+    {
+      "path": "webui/services/signal_service.py",
+      "blob_sha": "eb3dc13b6d0264a8533a0102f208d5d7f7e4f7ee",
+      "level": "TARGETED_PARTIAL"
+    },
+    {
+      "path": "webui/routes/signals.py",
+      "blob_sha": "cb4d0dfad9fdfdf37dd028b487309c089acbeb18",
+      "level": "TARGETED_PARTIAL"
+    },
+    {
+      "path": "tests/test_inbound_json_duplicate_keys.py",
+      "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+      "level": "TARGETED_PARTIAL"
+    },
+    {
+      "path": "tests/test_webui_routes.py",
+      "blob_sha": "1749ac6f689b7a591d20ea9792da4d4a3cd1d7a2",
+      "level": "TARGETED_PARTIAL"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "b7f3ad3d527cb88d3549885d771d654f92e7fefc",
+      "level": "TARGETED_PARTIAL"
+    }
+  ],
+  "related_manifest_files": 71,
+  "related_fully_audited_files": 0,
+  "full_manifest_files": 166,
+  "full_fully_audited_files": 0,
+  "related_pass": 0,
+  "full_pass": 0,
+  "draft": true,
+  "merged": false,
+  "blockers": [
+    "Authoritative KIS demo order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation unavailable; no real-account access permitted",
+    "Related transitive audit at least 71 files incomplete; 0/2 independent slots",
+    "Whole PR tree 166 tracked blobs not fully audited; 0/2 independent slots",
+    "No independent PR review approval; branch protection API 403; qlty check says 90 blocking issues despite success status; qlty usage requiredness unverified"
+  ]
+}

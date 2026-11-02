@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
     "started_at": "2026-11-02T05:25:30Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
-    "last_mutation_commit": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
-    "last_mutation_at": "2026-11-02T04:30:40.787Z",
-    "result": "IN_PROGRESS",
+    "completed_at": "2026-11-02T05:32:30Z",
+    "lock_owner": null,
+    "last_mutation_commit": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+    "last_mutation_at": "2026-11-02T05:32:30Z",
+    "result": "INBOUND_JSON_DUPLICATE_KEY_FIXED_ACTIONS_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,29 +19,29 @@
       "source_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+      "pr_head": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
       "pr_number": 42,
-      "related_manifest_files": 66,
+      "related_manifest_files": 71,
       "related_manifest_files_fully_audited": 0,
-      "full_tree_files": 165,
+      "full_tree_files": 166,
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41388576914,
-          "event": "pull_request",
-          "status": "completed",
-          "conclusion": "success",
-          "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
-        },
-        {
-          "id": 41388571666,
+          "id": 41394362508,
           "event": "push",
           "status": "completed",
           "conclusion": "success",
-          "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+          "head_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f"
+        },
+        {
+          "id": 41394393557,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f"
         }
       ],
-      "linux": "1086 passed",
+      "linux": "1099 passed",
       "windows": "152 passed",
       "external_statuses": [
         {
@@ -50,25 +50,28 @@
         },
         {
           "context": "qlty check",
-          "state": "success"
+          "state": "success",
+          "description": "90 blocking issues; not clean audit"
         }
       ],
       "commits": [
-        "a7d7879308eee80754bbe55959217540c36e4837",
-        "ada694b2929f8bbbe9492f5fea4628207f1a7608",
-        "6fdff0784d25a0a7de01bdb5c8292afb023f0212",
-        "0ab41324db6e12187168cfcbac554395065fae09",
-        "eb3622ad2478b2b7835ed86c1375142a02fabcb3",
-        "1d9a31f3572e7ae7a106fe0258c655a717017e64",
-        "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+        "77f591975c249e191fa245ecba26699f6b7e9f50",
+        "52465b1969e9a0ba81871627b36f7d1fb4c5fa0a",
+        "46c981e65a49b6c295bc66690514e8c734350f42",
+        "eec3a43ccf39160f500f877fd450ee29b4a3172f",
+        "e7d2f808c342fbd450668b2638903504308877e5",
+        "7bef9a5f4201fa364faea349d029bc2dd44d9de9",
+        "28c9529442ef821630ce160b3c0db0ccb308d9f2",
+        "91730a05ce6396849c5ce3bb8a8bf80385ca1962",
+        "a95839ac3c44b4a24a96109b4e54feb6a69ba22f"
       ],
       "merged": false,
-      "reason": "Latest CI success, but only targeted source review and no broker demo/review/full audit"
+      "reason": "Duplicate JSON ingress fixed; KIS demo and independent transitive/full audits blocked"
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
     "pr_head_at_start": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
     "lock_acquired_at": "2026-11-02T05:25:30Z",
-    "lock_released_at": "2026-11-02T04:30:40.787Z"
+    "lock_released_at": "2026-11-02T05:32:30Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -87,7 +90,7 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+    "head_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
@@ -176,9 +179,9 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "RESET_AFTER_NUMERIC_BAND_CONFIG_FIX",
+    "status": "RESET_AFTER_INBOUND_JSON_KEY_FIX",
     "checksum": null,
-    "scope_estimate": "At least 66 related files; full transitive dependency closure not proven",
+    "scope_estimate": "At least 71 related paths; transitive closure not proven",
     "files": [
       {
         "path": "README.en.md",
@@ -192,7 +195,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
+        "blob_sha": "b7f3ad3d527cb88d3549885d771d654f92e7fefc",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -241,6 +244,11 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "tests/test_inbound_json_duplicate_keys.py",
+        "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
         "path": "tests/test_multi_account_dispatch.py",
         "blob_sha": "04ef6834b1d4fa9656724255c8598a024e09ef67",
         "status": "NOT_FULLY_AUDITED"
@@ -273,7 +281,7 @@
       {
         "path": "tests/test_profit_band_config_integrity.py",
         "blob_sha": "b9219d4918af9788b5913f1f579da2595e17de9a",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_queue_and_account_sizing.py",
@@ -288,7 +296,7 @@
       {
         "path": "tests/test_score_band_config_integrity.py",
         "blob_sha": "354910f908f6f05d7ce856f26efa088bf5d6aadb",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_score_max_capital_strategy.py",
@@ -361,9 +369,14 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "tests/test_webui_routes.py",
+        "blob_sha": "1749ac6f689b7a591d20ea9792da4d4a3cd1d7a2",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
         "path": "trading/STRATEGIES.md",
         "blob_sha": "8190701d9e696d0fa2e4af955e206cc33c4a9013",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/buy_sizing.py",
@@ -373,7 +386,7 @@
       {
         "path": "trading/dispatch.py",
         "blob_sha": "035846e0845133debe4b65524c16ed9ff1cb56f2",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/domestic.py",
@@ -407,7 +420,7 @@
       },
       {
         "path": "trading/schema.py",
-        "blob_sha": "2c9e5d3ed20155f329cbc36e9a8b581c3fdc3c56",
+        "blob_sha": "2bf58b7c8edf5d685dd422952cd003acbbf3091e",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -438,7 +451,7 @@
       {
         "path": "trading/strategies/balanced_risk.py",
         "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/bracket_exit.py",
@@ -448,7 +461,7 @@
       {
         "path": "trading/strategies/common.py",
         "blob_sha": "1d121f9c589f4f37e080fb9a30b4d40e94c30ee5",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/cooldown.py",
@@ -463,12 +476,12 @@
       {
         "path": "trading/strategies/profit_ladder.py",
         "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/protective_exit.py",
         "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/risk_bracket.py",
@@ -478,21 +491,26 @@
       {
         "path": "trading/strategies/score_max_capital.py",
         "blob_sha": "8b8480cf9578380a1c69022318737f3c970e9c5a",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/score_risk.py",
         "blob_sha": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/score_weighted.py",
         "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
-        "status": "TARGETED_PARTIAL_NOT_FULL_AUDIT"
+        "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/signal_trailing_stop.py",
         "blob_sha": "796593dc47c9202b5c0b0e429006265fb5de0157",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "trading/telegram_fetch.py",
+        "blob_sha": "2e744003cbe382d234b7823094b56ef4525f6404",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -501,8 +519,18 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "webui/routes/signals.py",
+        "blob_sha": "cb4d0dfad9fdfdf37dd028b487309c089acbeb18",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
         "path": "webui/routes/trading.py",
         "blob_sha": "1c7aefddb3bc1b5a893942d47a68c054c99f7b43",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
+        "path": "webui/services/signal_service.py",
+        "blob_sha": "eb3dc13b6d0264a8533a0102f208d5d7f7e4f7ee",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -513,34 +541,35 @@
     ],
     "checked_files": 0,
     "modified_files": [
-      "trading/strategies/score_weighted.py",
-      "trading/strategies/score_risk.py",
-      "tests/test_strategy_suite.py",
-      "trading/STRATEGIES.md",
-      "trading/strategies/README.md",
-      "tests/test_balanced_risk_strategy.py"
+      "trading/schema.py",
+      "trading/telegram_fetch.py",
+      "webui/services/signal_service.py",
+      "webui/routes/signals.py",
+      "tests/test_inbound_json_duplicate_keys.py",
+      "tests/test_webui_routes.py",
+      "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
     ],
-    "tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8",
+    "tree_sha": "95bb88a208fc0dbf1e2e98ac6f8762c568719e39",
     "files_fully_audited": 0,
-    "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
+    "head_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f"
   },
   "full_manifest": {
-    "status": "RESET_AFTER_NUMERIC_BAND_CONFIG_FIX",
-    "tracked_tree_entries_on_pr": 189,
-    "tracked_blob_files_on_pr": 165,
-    "sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+    "status": "RESET_AFTER_INBOUND_JSON_KEY_FIX",
+    "tracked_tree_entries_on_pr": 190,
+    "tracked_blob_files_on_pr": 166,
+    "sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
     "files_checked": 0,
-    "checksum": "0d44f215df4aaaf7d43a2d1ab97d562658d84ff7",
+    "checksum": "95bb88a208fc0dbf1e2e98ac6f8762c568719e39",
     "checksum_kind": "git-tree-sha1",
     "files": [
       {
-        "path": ".agents/skills/prism-insight-light/SKILL.md",
-        "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
+        "path": ".agents/skills/prism-insight-light/agents/openai.yaml",
+        "blob_sha": "5b0f9ea241f62d302b5839f4036482bf034780ba",
         "status": "NOT_REVIEWED"
       },
       {
-        "path": ".agents/skills/prism-insight-light/agents/openai.yaml",
-        "blob_sha": "5b0f9ea241f62d302b5839f4036482bf034780ba",
+        "path": ".agents/skills/prism-insight-light/SKILL.md",
+        "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
         "status": "NOT_REVIEWED"
       },
       {
@@ -614,13 +643,38 @@
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "check_pubsub_readiness.py",
+        "blob_sha": "2ce8388379013b3bac9c792fb4425080cd18892f",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "Dockerfile",
         "blob_sha": "3b0dead05078f0e16e37b53aa0c4d16d0a8e7733",
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+        "blob_sha": "b7f3ad3d527cb88d3549885d771d654f92e7fefc",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "install_prism_docker.sh",
+        "blob_sha": "c4461aed3bf4358f7fbe2fdda7f13d6a3d87c8ce",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "LICENSE",
         "blob_sha": "be3f7b28e564e7dd05eaf59d64adba1a4065ac0e",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "pubsub_readiness.py",
+        "blob_sha": "41e5e02faf1b5a57a10407ec8075f8dc71f2f129",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "pytest.ini",
+        "blob_sha": "fd7e79a47a073d76514c770332b0258e63fc0045",
         "status": "NOT_REVIEWED"
       },
       {
@@ -636,31 +690,6 @@
       {
         "path": "README.md",
         "blob_sha": "125dcddda02de2d1e1e377d38bb54ab0764f1156",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "check_pubsub_readiness.py",
-        "blob_sha": "2ce8388379013b3bac9c792fb4425080cd18892f",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "9ead10df3a2b1486c89113d12922f59602e4d226",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "install_prism_docker.sh",
-        "blob_sha": "c4461aed3bf4358f7fbe2fdda7f13d6a3d87c8ce",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "pubsub_readiness.py",
-        "blob_sha": "41e5e02faf1b5a57a10407ec8075f8dc71f2f129",
-        "status": "NOT_REVIEWED"
-      },
-      {
-        "path": "pytest.ini",
-        "blob_sha": "fd7e79a47a073d76514c770332b0258e63fc0045",
         "status": "NOT_REVIEWED"
       },
       {
@@ -756,6 +785,11 @@
       {
         "path": "tests/test_financial_sizing_audit.py",
         "blob_sha": "9a99d908fdee529f92d10b5602b2082d696e611c",
+        "status": "NOT_REVIEWED"
+      },
+      {
+        "path": "tests/test_inbound_json_duplicate_keys.py",
+        "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
         "status": "NOT_REVIEWED"
       },
       {
@@ -945,7 +979,7 @@
       },
       {
         "path": "tests/test_webui_routes.py",
-        "blob_sha": "06909075a419bd740601f921512cd0d4022ef59e",
+        "blob_sha": "1749ac6f689b7a591d20ea9792da4d4a3cd1d7a2",
         "status": "NOT_REVIEWED"
       },
       {
@@ -979,11 +1013,6 @@
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/STRATEGIES.md",
-        "blob_sha": "8190701d9e696d0fa2e4af955e206cc33c4a9013",
-        "status": "NOT_REVIEWED"
-      },
-      {
         "path": "trading/__init__.py",
         "blob_sha": "a0326b8406920998e8dbe830d120148840ddfe01",
         "status": "NOT_REVIEWED"
@@ -994,13 +1023,13 @@
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/config/kis_devlp.yaml.example",
-        "blob_sha": "1379c70fefdcb41ede63ff0bbd00eb4d9ef417e9",
+        "path": "trading/config_paths.py",
+        "blob_sha": "578fec77b343c894898937dda04d8819e215d1a6",
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/config_paths.py",
-        "blob_sha": "578fec77b343c894898937dda04d8819e215d1a6",
+        "path": "trading/config/kis_devlp.yaml.example",
+        "blob_sha": "1379c70fefdcb41ede63ff0bbd00eb4d9ef417e9",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1050,7 +1079,7 @@
       },
       {
         "path": "trading/schema.py",
-        "blob_sha": "2c9e5d3ed20155f329cbc36e9a8b581c3fdc3c56",
+        "blob_sha": "2bf58b7c8edf5d685dd422952cd003acbbf3091e",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1069,8 +1098,8 @@
         "status": "NOT_REVIEWED"
       },
       {
-        "path": "trading/strategies/README.md",
-        "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
+        "path": "trading/STRATEGIES.md",
+        "blob_sha": "8190701d9e696d0fa2e4af955e206cc33c4a9013",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1124,6 +1153,11 @@
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "trading/strategies/README.md",
+        "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "trading/strategies/risk_bracket.py",
         "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf",
         "status": "NOT_REVIEWED"
@@ -1160,7 +1194,7 @@
       },
       {
         "path": "trading/telegram_fetch.py",
-        "blob_sha": "cc0528327c282d5b6cf2f99a170d84d32217eb05",
+        "blob_sha": "2e744003cbe382d234b7823094b56ef4525f6404",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1230,7 +1264,7 @@
       },
       {
         "path": "webui/routes/signals.py",
-        "blob_sha": "6276ade4ce08f9c9faf6af6f069aa3385dbab400",
+        "blob_sha": "cb4d0dfad9fdfdf37dd028b487309c089acbeb18",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1280,7 +1314,7 @@
       },
       {
         "path": "webui/services/signal_service.py",
-        "blob_sha": "ff0a9e1a004aa208a699cc004fe2afc4ae0e9367",
+        "blob_sha": "eb3dc13b6d0264a8533a0102f208d5d7f7e4f7ee",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1359,8 +1393,8 @@
         "status": "NOT_REVIEWED"
       }
     ],
-    "tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8",
-    "git_tree_sha": "0d44f215df4aaaf7d43a2d1ab97d562658d84ff7"
+    "tree_sha": "95bb88a208fc0dbf1e2e98ac6f8762c568719e39",
+    "git_tree_sha": "95bb88a208fc0dbf1e2e98ac6f8762c568719e39"
   },
   "checks": {
     "0": {
@@ -4556,17 +4590,72 @@
         ]
       },
       "notes": "Configuration-only financial validation patch. 11 targeted paths inspected, 66 related manifest files and 165 total tracked blob files not fully audited. KIS demo and authoritative fills unavailable."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
+      "kind": "TARGETED_INGRESS_JSON_FIX_NOT_FULL_AUDIT",
+      "head_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+      "related_pass": false,
+      "full_pass": false,
+      "code_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+      "files": [
+        {
+          "path": "trading/schema.py",
+          "blob_sha": "2bf58b7c8edf5d685dd422952cd003acbbf3091e",
+          "level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "trading/telegram_fetch.py",
+          "blob_sha": "2e744003cbe382d234b7823094b56ef4525f6404",
+          "level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "webui/services/signal_service.py",
+          "blob_sha": "eb3dc13b6d0264a8533a0102f208d5d7f7e4f7ee",
+          "level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "webui/routes/signals.py",
+          "blob_sha": "cb4d0dfad9fdfdf37dd028b487309c089acbeb18",
+          "level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "tests/test_inbound_json_duplicate_keys.py",
+          "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+          "level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "tests/test_webui_routes.py",
+          "blob_sha": "1749ac6f689b7a591d20ea9792da4d4a3cd1d7a2",
+          "level": "TARGETED_PARTIAL"
+        },
+        {
+          "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+          "blob_sha": "b7f3ad3d527cb88d3549885d771d654f92e7fefc",
+          "level": "TARGETED_PARTIAL"
+        }
+      ],
+      "pre_fix_ci": [
+        41394133853,
+        41394345742
+      ],
+      "final_ci": [
+        41394362508,
+        41394393557
+      ],
+      "tests": "1099 Linux, 152 Windows",
+      "note": "All 166 tracked blobs and 71+ related paths remain not fully audited; no demo integration"
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Authoritative KIS order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation and authorized demo environment unavailable",
-    "Related transitive dependency audit at least 66 files incomplete: 0/2",
-    "Whole PR result tree 165 tracked blobs not fully audited: 0/2",
-    "No independent PR review approval; branch protection API 403; external qlty usage requiredness unverified"
+    "Authoritative KIS demo order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation unavailable; no real-account access permitted",
+    "Related transitive audit at least 71 files incomplete; 0/2 independent slots",
+    "Whole PR tree 166 tracked blobs not fully audited; 0/2 independent slots",
+    "No independent PR review approval; branch protection API 403; qlty check says 90 blocking issues despite success status; qlty usage requiredness unverified"
   ],
-  "next_action": "Keep Draft. Recheck CAS lock/HEADs; complete 66+ related dependency files and authoritative mock/demo fill-cancel recovery tests, then two independent related passes, then 165-file full audit twice; no live trading.",
+  "next_action": "Keep Draft. Verify CAS and stable HEAD, review all 71+ related files and mock broker fill/cancel/recovery, obtain demo evidence and independent reviews; 2 separate related and 2 separate full audits required; no live trading.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -4965,6 +5054,19 @@
       "full_pass": false,
       "manifest_tree_sha": "0d44f215df4aaaf7d43a2d1ab97d562658d84ff7",
       "reason": "Verified config defects fixed, current-head CI green; only targeted review, full related closure and broker demo missing"
+    },
+    {
+      "slot": "2026-11-02T14:25+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+      "related_pass": false,
+      "full_pass": false,
+      "manifest_tree_sha": "95bb88a208fc0dbf1e2e98ac6f8762c568719e39",
+      "reason": "Code changed; 13 new tests green but complete related/full audit and KIS demo unavailable"
     }
   ],
   "discovered_defects": [
@@ -5982,6 +6084,67 @@
       "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
       "test_evidence": "2 failing test-first cases in Actions 41388549498; final Actions green",
       "unverified": "Full transitive audit, KIS demo fill/cancel/remaining quantity, review/branch protection"
+    },
+    {
+      "id": "pubsub-duplicate-financial-field-override-20261102",
+      "root_cause_id": "RC-INBOUND-JSON-KEY-UNIQUENESS",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_LATEST_CI_SUCCESS_FULL_AUDIT_PENDING",
+      "description": "Repeated position_fraction, sell_denominator, ticker, price, type or nested key was silently overwritten by json.loads; 6 test-first failures.",
+      "paths": [
+        "trading/schema.py",
+        "tests/test_inbound_json_duplicate_keys.py"
+      ],
+      "blob_shas": {
+        "trading/schema.py": "2bf58b7c8edf5d685dd422952cd003acbbf3091e",
+        "tests/test_inbound_json_duplicate_keys.py": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7"
+      },
+      "first_observed_run": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
+      "fix_commit": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+      "validation": "test-first GitHub Actions failures and final 1099 Linux/152 Windows passes; no KIS demo",
+      "recurrence_count": 0
+    },
+    {
+      "id": "telegram-duplicate-financial-field-override-20261102",
+      "root_cause_id": "RC-INBOUND-JSON-KEY-UNIQUENESS",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_LATEST_CI_SUCCESS_FULL_AUDIT_PENDING",
+      "description": "JSON, fenced and inline Telegram signals silently kept last duplicate key; 3 test-first failures. Polling now skips ambiguity.",
+      "paths": [
+        "trading/telegram_fetch.py",
+        "tests/test_inbound_json_duplicate_keys.py"
+      ],
+      "blob_shas": {
+        "trading/telegram_fetch.py": "2e744003cbe382d234b7823094b56ef4525f6404",
+        "tests/test_inbound_json_duplicate_keys.py": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7"
+      },
+      "first_observed_run": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
+      "fix_commit": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+      "validation": "test-first GitHub Actions failures and final 1099 Linux/152 Windows passes; no KIS demo",
+      "recurrence_count": 0
+    },
+    {
+      "id": "webui-duplicate-financial-field-override-20261102",
+      "root_cause_id": "RC-INBOUND-JSON-KEY-UNIQUENESS",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_LATEST_CI_SUCCESS_FULL_AUDIT_PENDING",
+      "description": "WebUI string parser and FastAPI raw JSON body could silently overwrite sizing fields; raw route test first failed (1 failed, 1098 passed).",
+      "paths": [
+        "webui/services/signal_service.py",
+        "webui/routes/signals.py",
+        "tests/test_webui_routes.py",
+        "tests/test_inbound_json_duplicate_keys.py"
+      ],
+      "blob_shas": {
+        "webui/services/signal_service.py": "eb3dc13b6d0264a8533a0102f208d5d7f7e4f7ee",
+        "webui/routes/signals.py": "cb4d0dfad9fdfdf37dd028b487309c089acbeb18",
+        "tests/test_webui_routes.py": "1749ac6f689b7a591d20ea9792da4d4a3cd1d7a2",
+        "tests/test_inbound_json_duplicate_keys.py": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7"
+      },
+      "first_observed_run": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
+      "fix_commit": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+      "validation": "test-first GitHub Actions failures and final 1099 Linux/152 Windows passes; no KIS demo",
+      "recurrence_count": 0
     }
   ],
   "risks": [
@@ -6259,10 +6422,32 @@
         "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
       ],
       "recurrence_count": 0
+    },
+    {
+      "root_cause_id": "RC-INBOUND-JSON-KEY-UNIQUENESS",
+      "description": "Default JSON decoding overwrites repeated financial signal fields across inbound Pub/Sub, Telegram and WebUI trust boundaries",
+      "defect_ids": [
+        "pubsub-duplicate-financial-field-override-20261102",
+        "telegram-duplicate-financial-field-override-20261102",
+        "webui-duplicate-financial-field-override-20261102"
+      ],
+      "classification": "CODE_PATCHED_LATEST_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
+      "fix_commits": [
+        "52465b1969e9a0ba81871627b36f7d1fb4c5fa0a",
+        "46c981e65a49b6c295bc66690514e8c734350f42",
+        "eec3a43ccf39160f500f877fd450ee29b4a3172f",
+        "e7d2f808c342fbd450668b2638903504308877e5",
+        "7bef9a5f4201fa364faea349d029bc2dd44d9de9",
+        "28c9529442ef821630ce160b3c0db0ccb308d9f2",
+        "91730a05ce6396849c5ce3bb8a8bf80385ca1962",
+        "a95839ac3c44b4a24a96109b4e54feb6a69ba22f"
+      ],
+      "recurrence_count": 0
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+    "head_sha": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
     "scope": "Derived finite-input score-based BUY budget overflow and score-risk cap/units/notional; order lifecycle integration remains unverified",
     "entries": [
       {
@@ -6484,6 +6669,30 @@
         "path": "KR/US broker -> ledger -> stop-loss -> partial fill/cancel/recovery",
         "evidence": "No authoritative KIS demo credentials, not validated by configuration tests",
         "status": "BLOCKED_DEMO"
+      },
+      {
+        "contract": "Duplicate JSON object keys must not override financial signal fields",
+        "path": "Pub/Sub bytes -> schema -> safety gate -> ledger -> broker",
+        "evidence": "6 pre-fix failing cases Actions 41394133853; latest Linux 1099 passed",
+        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
+      },
+      {
+        "contract": "Telegram JSON must reject duplicate keys before labeled fallback",
+        "path": "Telegram fetch -> JSON extraction -> signal parser -> dispatcher",
+        "evidence": "3 pre-fix failures Actions 41394133853; polling mock and final CI passed",
+        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
+      },
+      {
+        "contract": "WebUI raw JSON API must not lose duplicate keys in FastAPI body decoding",
+        "path": "WebUI validate route -> raw JSON -> Pydantic -> schema",
+        "evidence": "1 pre-fix failure Actions 41394345742; latest CI passed",
+        "status": "TARGETED_CI_SUCCESS_FULL_AUDIT_PENDING"
+      },
+      {
+        "contract": "Accepted broker order is not confirmed fill",
+        "path": "KR/US -> execution ledger -> stop-loss -> partial fill/cancel/recovery",
+        "evidence": "No KIS demo credentials; untouched by inbound JSON fix",
+        "status": "BLOCKED_DEMO"
       }
     ]
   },
@@ -6615,6 +6824,13 @@
         "1d9a31f3572e7ae7a106fe0258c655a717017e64",
         "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40"
       ]
+    },
+    {
+      "id": "RC-INBOUND-JSON-KEY-UNIQUENESS",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_LATEST_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Inbound duplicate JSON keys rejected for Pub/Sub, Telegram, WebUI text and raw validation API. Nested objects included; independent transitive audit and KIS demo still blocked.",
+      "fix_commit": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f"
     }
   ]
 }
