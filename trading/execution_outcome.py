@@ -84,6 +84,16 @@ def classify_broker_result(result: Any) -> str:
     # The durable ledger must preserve the unresolved state for reconciliation.
     if result.get("outcome_unknown") is True:
         return "unknown"
+    # A wrapper's success flag and a syntactically valid receipt are not
+    # authoritative if the same result also reports a transport failure.
+    # Preserve the durable UNKNOWN claim rather than promoting an ambiguous
+    # response to a completed/accepted order.
+    text = " ".join(
+        str(result.get(key) or "")
+        for key in ("message", "error", "error_message", "exception")
+    ).casefold()
+    if any(marker in text for marker in _AMBIGUOUS_MARKERS):
+        return "unknown"
     if result.get("success") is True:
         # A transport success is not proof of a broker-accepted order.
         # Require a reconcilable receipt even if the wrapper omitted all
@@ -127,12 +137,6 @@ def classify_broker_result(result: Any) -> str:
     if str(result.get("order_no") or result.get("broker_order_id") or "").strip():
         return "unknown"
 
-    text = " ".join(
-        str(result.get(key) or "")
-        for key in ("message", "error", "error_message", "exception")
-    ).casefold()
-    if any(marker in text for marker in _AMBIGUOUS_MARKERS):
-        return "unknown"
     # A bare success=False flag is not proof that the order was rejected by
     # KIS. Unless the wrapper explicitly verified a pre-submission/business
     # rejection, an unclassified failure could conceal a submitted order.

@@ -270,3 +270,8 @@ response. This is fail-closed *submission-outcome* handling, **not** evidence
 of execution, partial fills, cancellation or remaining quantity. Live orders
 remain prohibited pending authoritative read-only demo reconciliation and
 independent transitive/whole-repository audits.
+
+A contradictory result carrying `success=True` and a plausible order receipt
+but also a timeout/disconnect/gateway error is UNKNOWN regardless of field
+ordering. The claim stays non-retryable after restart. This does not establish
+that the order filled or that a cancellation/remaining-quantity was verified.
