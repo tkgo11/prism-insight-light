@@ -387,6 +387,18 @@ class StopLossTracker:
                     stable_id = _legacy_stop_loss_signal_id(market, ticker, existing)
                 elif not _valid_stop_loss_signal_id(stable_id, market, ticker):
                     raise ValueError("Invalid persisted stop-loss signal identity")
+                if pending_buy and old_pending is False:
+                    # A newly accepted BUY has no confirmed fill. Replacing an
+                    # already-confirmed position's threshold or marking it
+                    # pending would silently disable its existing protection.
+                    # The new BUY's unresolved intent is held separately in
+                    # the execution ledger until authoritative reconciliation.
+                    logger.warning(
+                        "[StopLossTracker] Keeping confirmed protection for %s %s: "
+                        "a pending BUY cannot replace its stop-loss threshold",
+                        market, ticker,
+                    )
+                    return
             pos = TrackedPosition(
                 market=market.upper(),
                 ticker=ticker,
@@ -728,6 +740,18 @@ class StopLossWatcher:
                     continue
 
                 if stop_hit:
+                    if pos.get("pending_buy", True):
+                        # A positive aggregate holding is not evidence that
+                        # THIS accepted BUY filled; it could be an unrelated,
+                        # pre-existing position. Never sell it based on an
+                        # unreconciled pending BUY's stop threshold.
+                        logger.error(
+                            "[Stop-Loss] Blocking automatic SELL for %s %s: "
+                            "pending BUY fill is not attributable to holdings; "
+                            "broker reconciliation required",
+                            market, ticker,
+                        )
+                        continue
                     # Price/holdings inquiries can take seconds. A concurrent
                     # BUY or operator stop-level edit may replace the snapshot
                     # while those broker calls are running. Do not liquidate
@@ -796,6 +820,17 @@ class StopLossWatcher:
         self, market: str, ticker: str, current_price: float, pos: dict[str, Any]
     ) -> dict[str, Any]:
         """Dispatch an automated stop-loss SELL signal."""
+        if pos.get("pending_buy", True):
+            # Defense in depth: a direct caller must not bypass the watcher's
+            # unresolved BUY fence, even if aggregate holdings are positive.
+            logger.error(
+                "[Stop-Loss] Blocking direct SELL for %s %s: "
+                "pending BUY fill is unverified", market, ticker,
+            )
+            return {
+                "market": market, "ticker": ticker, "status": "blocked",
+                "message": "Pending BUY fill unverified; broker reconciliation required",
+            }
         signal_id = pos.get("stop_loss_signal_id")
         if signal_id is None:
             # Legacy persisted records retain the same identity they used

@@ -84,13 +84,12 @@ def test_legacy_record_without_pending_provenance_remains_protected(tmp_path):
     assert tracker.get_position("KR", "005930") is not None
 
 
-def test_pending_buy_post_sell_zero_cannot_prove_no_future_buy_fill(tmp_path):
+def test_pending_buy_positive_holdings_cannot_prove_fill_or_authorize_sell(tmp_path):
     tracker = StopLossTracker(tmp_path / "stops.json")
     tracker.record_position("KR", "005930", 90, entry_price=100, pending_buy=True)
-    watcher, dispatcher, _ = _watcher(tracker, [2, 0], current_price=85)
-    results = _cycle(watcher)
-    assert len(results) == 1
-    dispatcher.dispatch.assert_awaited_once()
+    watcher, dispatcher, _ = _watcher(tracker, [2], current_price=85)
+    assert _cycle(watcher) == []
+    dispatcher.dispatch.assert_not_called()
     assert tracker.get_position("KR", "005930")["pending_buy"] is True
 
 
@@ -196,3 +195,13 @@ def test_unfilled_buy_must_not_replace_existing_confirmed_position_protection(tm
     confirmed = tracker.get_position("KR", "005930")
     tracker.record_position("KR", "005930", 70, entry_price=100, pending_buy=True)
     assert tracker.get_position("KR", "005930") == confirmed
+
+def test_direct_trigger_cannot_bypass_pending_buy_reconciliation(tmp_path):
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("KR", "005930", 90, entry_price=100, pending_buy=True)
+    watcher, dispatcher, _ = _watcher(tracker, [5], current_price=85)
+    pos = tracker.get_position("KR", "005930")
+    outcome = watcher._trigger_sell("KR", "005930", 85, pos)
+    assert outcome["status"] == "blocked"
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position("KR", "005930") == pos
