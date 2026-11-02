@@ -23,6 +23,21 @@ class SignalValidationError(ValueError):
     """Raised when an inbound trading signal is malformed."""
 
 
+def reject_duplicate_signal_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """Fail closed on ambiguous JSON objects, including nested objects.
+
+    Python's default JSON decoder keeps the final occurrence of a duplicate
+    key. For trading signals this can silently override the publisher's
+    requested ticker, order size, or exit denominator.
+    """
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise SignalValidationError("Duplicate JSON key in trading signal")
+        result[key] = value
+    return result
+
+
 def _as_text(value: Any, *, field_name: str) -> str:
     """Coerce an optional text field; reject non-string payloads and log-hostile chars."""
     if value is None:
@@ -163,7 +178,10 @@ def parse_signal_bytes(message_bytes: bytes) -> SignalMessage:
     if not isinstance(message_bytes, (bytes, bytearray)):
         raise SignalValidationError("Signal payload must be UTF-8 JSON bytes")
     try:
-        payload = json.loads(bytes(message_bytes).decode("utf-8"))
+        payload = json.loads(
+            bytes(message_bytes).decode("utf-8"),
+            object_pairs_hook=reject_duplicate_signal_keys,
+        )
     except UnicodeDecodeError as exc:
         raise SignalValidationError("Signal payload must be UTF-8 JSON") from exc
     except json.JSONDecodeError as exc:
