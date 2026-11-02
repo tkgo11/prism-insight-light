@@ -234,3 +234,24 @@ def test_contradictory_success_timeout_keeps_replay_fence_after_restart(tmp_path
     assert ExecutionLedger(path).claim("account-signal-ambiguous-receipt") == (
         False, "unknown",
     )
+
+
+@pytest.mark.parametrize("receipt", [
+    "０００", "１２３", "٠١٢", "KIS１２３", "🦄", "@", "KIS/123",
+])
+@pytest.mark.parametrize("field", ["order_no", "broker_order_id"])
+def test_nonascii_or_noncanonical_order_receipt_cannot_confirm_acceptance(receipt, field):
+    # KIS order identifiers are ASCII; Unicode decimal digits and arbitrary
+    # punctuation are not broker-reconcilable receipts. Full-width zeros must
+    # never bypass the zero-order-number sentinel check.
+    assert classify_broker_result({"success": True, field: receipt}) == "unknown"
+
+
+def test_nonascii_receipt_preserves_claim_across_restart(tmp_path):
+    path = tmp_path / "unicode-receipt.json"
+    ledger = ExecutionLedger(path)
+    assert ledger.claim("unicode-receipt") == (True, None)
+    status = classify_broker_result({"success": True, "order_no": "０００"})
+    assert status == "unknown"
+    ledger.finalize("unicode-receipt", status)
+    assert ExecutionLedger(path).claim("unicode-receipt") == (False, "unknown")
