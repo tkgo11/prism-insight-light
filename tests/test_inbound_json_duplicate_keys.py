@@ -44,3 +44,23 @@ def test_webui_json_input_rejects_duplicate_sizing_keys():
         result = parse(ambiguous)
         assert result["ok"] is False
         assert "Duplicate" in result["error"]
+
+
+def test_telegram_polling_skips_ambiguous_json_without_executing():
+    from unittest.mock import patch
+    from trading.telegram_fetch import TelegramChannelPost, fetch_signal_messages
+
+    post = TelegramChannelPost(
+        channel="test",
+        message_id="1",
+        url="https://t.me/test/1",
+        published_at=None,
+        text='{"type":"BUY","ticker":"AAPL","price":100,"position_fraction":0.1,"position_fraction":1}',
+    )
+    with patch("trading.telegram_fetch.fetch_channel_posts", return_value=[post]):
+        assert fetch_signal_messages() == []
+
+
+def test_distinct_nested_json_objects_are_not_false_duplicates():
+    raw = b'{"type":"BUY","ticker":"AAPL","price":100,"meta":{"left":{"id":"1"},"right":{"id":"2"}}}'
+    assert parse_signal_bytes(raw).ticker == "AAPL"
