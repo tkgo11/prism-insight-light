@@ -1,0 +1,133 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T00-21-KST-turn4",
+  "slot": "2026-11-03T00-21-KST",
+  "started_at": "2026-11-02T15:21:57Z",
+  "finished_at": "2026-11-02T15:26:03.593Z",
+  "lock": {
+    "acquired_commit": "f22f3adb6df90f81f29ff184d56004ba4c6c67f9",
+    "status": "RELEASED",
+    "cas_expected_previous_head": "f22f3adb6df90f81f29ff184d56004ba4c6c67f9"
+  },
+  "pr": {
+    "number": 43,
+    "draft": true,
+    "head": "09acb665d712530b8d3095cd73e8dc7151386b90",
+    "base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+    "tree_sha": "4be1d36d1d8a24f2391539b8630ca137ae04331e",
+    "new_code_commits": [],
+    "new_tests": [],
+    "merge": false
+  },
+  "upstream": {
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "ahead_commits": 47,
+    "changed_files": 41,
+    "decision": "NO_SAFE_IMPORT_VERIFIED"
+  },
+  "source_review": {
+    "scope": "TARGETED_STATIC_PATH_INSPECTION_NOT_COMPLETE_AUDIT",
+    "files": [
+      {
+        "path": "trading/dispatch.py",
+        "blob_sha": "006d0bc08a25f6706d1cf4207914cb1ad730dfb1",
+        "checked": "BUY unknown/accepted gating, ledger finalize, multi-account aggregate, queued execution"
+      },
+      {
+        "path": "trading/stop_loss_watcher.py",
+        "blob_sha": "7e61b897290600c98afd59ab2ac5fa5bba36072c",
+        "checked": "pending BUY zero-balance, SELL dedupe, tracker atomic write, aggregate holding"
+      },
+      {
+        "path": "trading/execution_ledger.py",
+        "blob_sha": "b7ab12a4d1ebdb94f0eef143038b8d952aba4305",
+        "checked": "attempt-token claim/finalize/release, unknown nonretryable, persistence"
+      },
+      {
+        "path": "trading/execution_outcome.py",
+        "blob_sha": "000feb70578906ad1ed5d05effef46095c6bdc9f",
+        "checked": "unknown vs accepted receipt classification"
+      },
+      {
+        "path": "trading/domestic.py",
+        "checked": "multi-account aggregate quantity implementation"
+      },
+      {
+        "path": "trading/us.py",
+        "checked": "multi-account aggregate quantity implementation"
+      },
+      {
+        "path": "tests/test_pending_buy_stop_loss_safety.py",
+        "blob_sha": "515721a59c52f9caf0d9bb0c87a255323936fee4",
+        "checked": "accepted BUY zero/restart tests; runtime UNKNOWN scenario not executed"
+      }
+    ],
+    "full_file_audits": 0
+  },
+  "risk": {
+    "id": "UNKNOWN_BUY_WITHOUT_ACCEPTED_RECEIPT_HAS_NO_DURABLE_STOP_TRACKER",
+    "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "classification": "STATIC_CONTROL_FLOW_CONFIRMED_RUNTIME_FILL_UNVERIFIED",
+    "severity": "HIGH",
+    "description": "An ambiguous BUY with no account marked executed exits _update_stop_loss_tracking before record_position; if KIS later fills it, no newly registered stop-loss protection exists. Persisting it as actionable without per-order/account fill reconciliation can also liquidate unrelated existing holdings.",
+    "evidence": {
+      "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "paths": {
+        "trading/dispatch.py": "006d0bc08a25f6706d1cf4207914cb1ad730dfb1",
+        "trading/stop_loss_watcher.py": "7e61b897290600c98afd59ab2ac5fa5bba36072c",
+        "trading/execution_ledger.py": "b7ab12a4d1ebdb94f0eef143038b8d952aba4305",
+        "trading/execution_outcome.py": "000feb70578906ad1ed5d05effef46095c6bdc9f",
+        "tests/test_pending_buy_stop_loss_safety.py": "515721a59c52f9caf0d9bb0c87a255323936fee4"
+      },
+      "branch_condition": "result.status != executed AND all acct.status != executed; is_success False -> return before tracker.record_position",
+      "runtime_test": "NOT_RUN",
+      "kis_demo": "BLOCKED_NO_DEMO_CREDENTIALS_OR_ORDER_FILL_QUERY"
+    },
+    "required_safe_remediation": [
+      "Pre-submit durable intent per signal/account without overwriting existing stop-loss",
+      "Authoritative KIS order-ID/fill-ID/cumulative/remaining/cancel/reject reconciliation",
+      "Crash-restart recovery and multi-account isolation",
+      "Regression/boundary/mock broker tests and full CI"
+    ],
+    "status": "BLOCKED_UNSAFE_TO_PATCH_WITHOUT_RECONCILIATION"
+  },
+  "code_patch_status": "NONE_THIS_RUN: remediation requires authoritative reconciliation and transitive design; speculative tracker patch could sell unrelated holdings",
+  "test_status": {
+    "new_tests_run": 0,
+    "prior_exact_head_ci": [
+      {
+        "run_id": 41463904937,
+        "conclusion": "success"
+      },
+      {
+        "run_id": 41463912455,
+        "conclusion": "success"
+      }
+    ],
+    "prior_linux_pytest_passed": 1268,
+    "prior_windows_smoke_passed": 167,
+    "current_run_tests": "NOT_RUN_NO_LOCAL_REPO_RUNNER; remote device offline; GitHub previous CI only",
+    "external": {
+      "snyk": "success",
+      "qlty": "success but issue detail login_required; no claim of zero issues"
+    }
+  },
+  "audit": {
+    "related_scope": 76,
+    "full_scope": 170,
+    "fully_audited": 0,
+    "related_passes": 0,
+    "full_passes": 0,
+    "reason": "incomplete transitive/whole-tree audit, broker demo unavailable, Qlty findings uninspected, reviews absent, branch protection unreadable"
+  },
+  "real_orders": 0,
+  "demo_orders": 0,
+  "remaining": [
+    "Broker-authoritative order/fill/cancel/remaining reconciliation",
+    "Unknown BUY durable intent and crash gap",
+    "Mock broker tests covering UNKNOWN->late fill, partial/cancel/restart/multi-account",
+    "Qlty issue triage and review/branch policy verification",
+    "76-file related and 170-file full file-by-file audit with independent 2+2 slots"
+  ],
+  "status": "PARTIAL_BLOCKED_NO_AUDIT_PASS"
+}

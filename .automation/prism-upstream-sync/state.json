@@ -4,14 +4,14 @@
   "state": "ACTIVE_DRAFT_REMEDIATION_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+    "id": "prism-sync-hourly-2026-11-03T00-21-KST-turn4",
     "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-02T22-45-KST-turn2",
-    "result": "CODE_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDITS_0_OF_2_DEMO_QLTY_BLOCKED",
+    "previous_run_id": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+    "result": "STATIC_GAP_IDENTIFIED_NO_UNSAFE_PATCH_PRIOR_HEAD_CI_SUCCESS_AUDITS_0_OF_2",
     "last_mutation_commit": "09acb665d712530b8d3095cd73e8dc7151386b90",
-    "previous_state_branch_sha": "b81c945c5fe347c38639000e81b76752456fd0a6",
-    "lock_started_at": "2026-11-02T14:29:03Z",
-    "completed_at": "2026-11-02T14:42:00Z"
+    "previous_state_branch_sha": "f22f3adb6df90f81f29ff184d56004ba4c6c67f9",
+    "lock_started_at": "2026-11-02T15:21:57Z",
+    "completed_at": "2026-11-02T15:26:03.593Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -34,7 +34,7 @@
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_CI_SUCCESS_AUDITS_0_OF_2"
+    "status": "DRAFT_PRIOR_EXACT_HEAD_CI_SUCCESS_UNRESOLVED_RECONCILIATION"
   },
   "candidates": [
     {
@@ -1299,6 +1299,21 @@
           "issue_count": "unverified"
         }
       ]
+    },
+    "prism-sync-hourly-2026-11-03T00-21-KST-turn4": {
+      "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "ci_run_ids": [
+        41463904937,
+        41463912455
+      ],
+      "ci_conclusion": "success_prior_head",
+      "new_ci_run_ids": [],
+      "new_tests_run": 0,
+      "qlty_issue_details": "login_required",
+      "audit_pass": false,
+      "related_pass": false,
+      "full_pass": false,
+      "notes": "Targeted static code review only; unknown BUY no tracker path remains blocked without authoritative reconciliation"
     }
   },
   "upstream_changes": [
@@ -4454,6 +4469,27 @@
       "full_file_audit": false,
       "related_pass": false,
       "full_pass": false
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T00-21-KST-turn4",
+      "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "git_tree_sha": "4be1d36d1d8a24f2391539b8630ca137ae04331e",
+      "level": "TARGETED_STATIC_PATH_INSPECTION_NOT_COMPLETE_AUDIT",
+      "files_partially_reviewed": [
+        "trading/dispatch.py",
+        "trading/stop_loss_watcher.py",
+        "trading/execution_ledger.py",
+        "trading/execution_outcome.py",
+        "trading/domestic.py",
+        "trading/us.py",
+        "tests/test_pending_buy_stop_loss_safety.py"
+      ],
+      "fully_audited_files": 0,
+      "related_pass": false,
+      "full_pass": false,
+      "ci_conclusion": "success_prior_head",
+      "new_tests_run": 0,
+      "run_evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T00-21-KST.json"
     }
   ],
   "last_merged_upstream_sha": null,
@@ -4491,9 +4527,10 @@
     "Pending BUY provenance cannot be auto-cleared without broker reconciliation; operator intervention required",
     "Qlty previously reported 22 blocking issues; latest check success but individual issues and current count unverified",
     "Independent reviews absent; branch protection API 403, rulesets [] not sufficient to establish branch protection",
-    "Related 76 and full 170 tracked files not fully audited; independent PASS 0/2 + 0/2"
+    "Related 76 and full 170 tracked files not fully audited; independent PASS 0/2 + 0/2",
+    "Static path: ambiguous UNKNOWN BUY without executed account does not create durable stop-loss tracker; safe fix needs pre-submit intent and KIS order/fill reconciliation; no broker demo credentials"
   ],
-  "next_action": "Inspect Qlty findings with authenticated access; obtain isolated KIS demo order/fill/cancel/partial/remaining-quantity and restart evidence; address accepted BUY crash-before-tracker-registration gap; complete independent 2x related (76 files) and 2x whole-tree (170 files) audits and human review/branch protection; keep Draft and no live orders.",
+  "next_action": "Design and test durable pre-submit BUY intent and authoritative order/fill/cancel reconciliation without changing active protection on UNKNOWN, then CI and 2+2 independent audits; Qlty/review/policy gates remain blocked",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -5025,6 +5062,19 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Two verified code root causes patched; independent file-by-file audits and broker demo/reviews/branch policy remain incomplete"
+    },
+    {
+      "slot": "2026-11-03T00-21-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T00-21-KST-turn4",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "git_tree_sha": "4be1d36d1d8a24f2391539b8630ca137ae04331e",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Static UNKNOWN BUY gap found; no safe patch or new runtime tests; full audit and broker reconciliation blocked"
     }
   ],
   "discovered_defects": [
@@ -6401,7 +6451,15 @@
         "stop-loss-repeat-attempt-deduped-after-accepted-unfilled-order"
       ],
       "classification": "BLOCKED_AUTHORITATIVE_BROKER_DEMO",
-      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+      "last_checked_head": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "subcases": [
+        {
+          "id": "UNKNOWN_BUY_WITHOUT_ACCEPTED_RECEIPT_HAS_NO_DURABLE_STOP_TRACKER",
+          "classification": "STATIC_CONTROL_FLOW_CONFIRMED_RUNTIME_FILL_UNVERIFIED",
+          "status": "BLOCKED_UNSAFE_TO_PATCH_WITHOUT_RECONCILIATION",
+          "observed_head": "09acb665d712530b8d3095cd73e8dc7151386b90"
+        }
+      ]
     },
     {
       "root_cause_id": "RC-STOPLOSS-LEGACY-QUARANTINE",
@@ -6892,8 +6950,11 @@
     {
       "id": "RC-STOPLOSS-ORDER-RECONCILIATION",
       "severity": "HIGH",
-      "status": "BLOCKS_MERGE",
-      "description": "Accepted broker order is not confirmed fill; partial fills/cancels and remaining quantities lack authoritative reconciliation"
+      "status": "BLOCKS_MERGE_AUTHORITATIVE_RECONCILIATION_AND_UNKNOWN_BUY_INTENT",
+      "description": "Accepted broker order is not confirmed fill; partial fills/cancels and remaining quantities lack authoritative reconciliation",
+      "subcases": [
+        "UNKNOWN_BUY_WITHOUT_ACCEPTED_RECEIPT_HAS_NO_DURABLE_STOP_TRACKER"
+      ]
     },
     {
       "id": "RC-LEDGER-TERMINAL-MONOTONICITY",
