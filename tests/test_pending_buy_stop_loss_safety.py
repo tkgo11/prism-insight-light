@@ -187,3 +187,12 @@ def test_explicitly_reconciled_manual_position_still_sells_on_stop(tmp_path):
     assert len(_cycle(watcher)) == 1
     dispatcher.dispatch.assert_awaited_once()
     assert tracker.get_position("KR", "005930") is None
+
+
+def test_unfilled_buy_must_not_replace_existing_confirmed_position_protection(tmp_path):
+    """An accepted BUY cannot downgrade an existing position's stop threshold."""
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("KR", "005930", 95, entry_price=100, pending_buy=False)
+    confirmed = tracker.get_position("KR", "005930")
+    tracker.record_position("KR", "005930", 70, entry_price=100, pending_buy=True)
+    assert tracker.get_position("KR", "005930") == confirmed
