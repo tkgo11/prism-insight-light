@@ -67,7 +67,7 @@ def test_telegram_json_rejects_inexact_decimal_integer(field):
 def test_telegram_labeled_score_rejects_precision_loss():
     from trading.telegram_fetch import parse_signal_text
     with pytest.raises(SignalValidationError, match="buy_score"):
-        parse_signal_text("New Buy: Apple(AAPL)\\nBuy Price: 100\\nBuy Score: 8.0000000000000001")
+        parse_signal_text("New Buy: Apple(AAPL)\nBuy Price: 100\nBuy Score: 8.0000000000000001")
 
 
 @pytest.mark.parametrize("field", ["sell_denominator", "buy_score"])
