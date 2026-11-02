@@ -215,3 +215,25 @@ before repairing the ledger; deleting a damaged record is not an automatic
 recovery action. This fail-closed guard is verified only by local/CI mock
 tests. It does not provide authoritative partial-fill, remaining-quantity,
 cancel or restart reconciliation and does not authorize live trading.
+
+
+### POSIX directory metadata durability for trading state (2026-11-02)
+
+The execution claim ledger, off-hours queue, stop-loss tracker and shared
+strategy state writers already wrote to unique temporary files, flushed their
+contents, called `fsync` on those files, then atomically renamed them.
+On POSIX, that sequence alone does **not** guarantee that the new directory
+entry survives an abrupt power failure. All four writers now also `fsync`
+the containing directory after `os.replace`, and propagate a directory
+sync error instead of reporting a durable claim or protection update as
+successful. Regression tests spy on the directory file descriptor and
+simulate an error after a ledger rename to verify the caller stops while
+the uncertain identity remains protected.
+
+This is a best-effort local-filesystem crash-durability improvement, not a
+proof of end-to-end storage durability. Windows retains its existing atomic
+replace behavior because POSIX directory fsync is unavailable there. Newly
+created parent directories, remote filesystems, disk controllers, multi-host
+coordination and actual broker fills/cancellations require separate
+validation. KIS demo reconciliation, independent audits and human review
+remain mandatory before any merge or live deployment.
