@@ -1137,3 +1137,23 @@ def test_nonstandard_2xx_cannot_prove_kis_order_rejection(market, http_status):
     assert result["success"] is False
     assert result["outcome_unknown"] is True
     assert classify_broker_result(result) == "unknown"
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("http_status", [201, 202, 204, 205, 206, 207, 226])
+def test_nonstandard_2xx_cannot_prove_kis_sell_rejection(market, http_status):
+    """Actual SELL adapter boundary with no broker access or live orders."""
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=http_status, error_code="APBK0918",
+        error_message="intermediary 2xx after order forwarding",
+    )
+    result = (
+        trader.sell_all_market_price("005930", holding_quantity=5)
+        if market == "KR" else trader.sell_all_market_price(
+            "AAPL", holding_quantity=2, limit_price=200.0
+        )
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"
