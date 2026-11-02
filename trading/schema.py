@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+from decimal import Decimal, InvalidOperation
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -67,12 +68,41 @@ def _as_float(value: Any, *, field_name: str) -> float | None:
     return number
 
 
+# All integer-valued order fields must survive JSON/string-to-number conversion
+# exactly. IEEE-754 doubles cannot represent every integer at or above 2**53.
+_MAX_EXACT_SIGNAL_INTEGER = (1 << 53) - 1
+
+
 def _as_int(value: Any, *, field_name: str) -> int | None:
+    error = f"Invalid integer value for '{field_name}'"
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+    if isinstance(value, bool):
+        raise SignalValidationError(error)
+    if isinstance(value, int):
+        if abs(value) > _MAX_EXACT_SIGNAL_INTEGER:
+            raise SignalValidationError(error)
+        return value
+    if isinstance(value, (str, Decimal)):
+        # float("8.0000000000000001") == 8.0, which would silently turn
+        # a fractional denominator/score into an integer. Parse strings
+        # exactly, including exponent notation, before converting to int.
+        try:
+            exact = Decimal(value.strip() if isinstance(value, str) else value)
+        except (InvalidOperation, ValueError, TypeError) as exc:
+            raise SignalValidationError(error) from exc
+        if (
+            not exact.is_finite()
+            or abs(exact) > _MAX_EXACT_SIGNAL_INTEGER
+            or exact != exact.to_integral_value()
+        ):
+            raise SignalValidationError(error)
+        return int(exact)
     number = _as_float(value, field_name=field_name)
     if number is None:
         return None
-    if not number.is_integer():
-        raise SignalValidationError(f"Invalid integer value for '{field_name}'")
+    if abs(number) > _MAX_EXACT_SIGNAL_INTEGER or not number.is_integer():
+        raise SignalValidationError(error)
     return int(number)
 
 

@@ -31,3 +31,17 @@ def test_largest_exactly_representable_safe_integer_is_not_rounded(field):
     payload = {"type": "SELL", "ticker": "AAPL", "price": 100, field: 2**53 - 1}
     parsed = parse_signal_payload(payload)
     assert getattr(parsed, field) == 2**53 - 1
+
+
+@pytest.mark.parametrize("field", ["sell_denominator", "buy_score"])
+@pytest.mark.parametrize("value", ["9007199254740990.5", "8.0000000000000001", "9.0000000000000001"])
+def test_integer_decimal_string_cannot_round_fraction_to_whole(field, value):
+    payload = {"type": "SELL", "ticker": "AAPL", "price": 100, field: value}
+    with pytest.raises(SignalValidationError, match=field):
+        parse_signal_payload(payload)
+
+
+@pytest.mark.parametrize("field", ["sell_denominator", "buy_score"])
+def test_exact_integral_numeric_strings_remain_compatible(field):
+    payload = {"type": "SELL", "ticker": "AAPL", "price": 100, field: "2.0"}
+    assert getattr(parse_signal_payload(payload), field) == 2
