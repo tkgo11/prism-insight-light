@@ -2,9 +2,10 @@
   "run_id": "prism-sync-hourly-2026-11-03T03-20-KST-turn7",
   "slot": "2026-11-03T03-20-KST",
   "lock": {
-    "status": "ACTIVE",
+    "status": "RELEASED",
     "acquired_commit": "bf90a4412e2b58ff2a258f0d9d3f5c7347dd45c9",
-    "plan_commit": "96d6e10c9424bf20748f77ff62a86e3f83c7e18c"
+    "plan_commit": "96d6e10c9424bf20748f77ff62a86e3f83c7e18c",
+    "release_parent_sha": "d178faba43c62d4c1f63dda6843fa87af9a99b16"
   },
   "pr": {
     "number": 43,
@@ -84,5 +85,6 @@
   ],
   "real_orders": 0,
   "demo_orders": 0,
-  "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE"
+  "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE",
+  "finished_at": "2026-11-02T18:27:52.962Z"
 }
