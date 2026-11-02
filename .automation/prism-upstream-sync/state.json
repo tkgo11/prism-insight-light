@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T08:31:40Z-20261102-1731KST",
-    "started_at": "2026-11-02T08:31:40Z",
-    "completed_at": "2026-11-02T08:40:00Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
+    "started_at": "2026-11-02T09:30:34.271Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
     "last_mutation_commit": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
     "last_mutation_at": "2026-11-02T07:42:10.883Z",
-    "result": "TARGETED_REVIEW_NO_NEW_CONFIRMED_DEFECT_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE",
+    "result": "IN_PROGRESS",
     "pr_comment_id": 6570654111,
     "last_report": {
       "phase": "related_code_audit",
@@ -96,10 +96,10 @@
       "review_approvals": 0,
       "reason": "No new reproduced defect in inspected paths; transitive/full file audits and authoritative KIS demo are not complete; no PASS or merge"
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
-    "pr_head_at_start": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
-    "lock_acquired_at": "2026-11-02T08:31:40Z",
-    "lock_released_at": "2026-11-02T08:40:00Z"
+    "prior_run_id": "prism-sync-hourly-2026-11-02T08:31:40Z-20261102-1731KST",
+    "pr_head_at_start": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+    "lock_acquired_at": "2026-11-02T09:30:34.271Z",
+    "lock_released_at": null
   },
   "source": {
     "repository": "dragon1086/prism-insight",
