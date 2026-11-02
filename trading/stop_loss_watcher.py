@@ -18,7 +18,7 @@ from typing import Any
 
 from .config_paths import runtime_file_path
 from .domestic import DomesticStockTrading, MultiAccountDomesticStockTrading
-from .file_lock import FileLock
+from .file_lock import FileLock, fsync_parent_directory
 from .market_hours import is_market_open
 from .schema import SignalMessage, parse_signal_payload
 from .us import MultiAccountUSStockTrading, USStockTrading
@@ -258,6 +258,7 @@ class StopLossTracker:
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary_path, self.path)
+            fsync_parent_directory(self.path)
         finally:
             if temporary_path is not None and temporary_path.exists():
                 temporary_path.unlink()

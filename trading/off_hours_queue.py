@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from .config_paths import runtime_file_path
-from .file_lock import FileLock
+from .file_lock import FileLock, fsync_parent_directory
 from .market_hours import next_market_open
 from .schema import SignalMessage
 
@@ -210,6 +210,7 @@ class OffHoursOrderQueue:
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary_path, self.storage_path)
+            fsync_parent_directory(self.storage_path)
             if os.name != "nt":
                 os.chmod(self.storage_path, 0o600)
         finally:

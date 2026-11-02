@@ -39,3 +39,22 @@ def test_atomic_state_writer_fsyncs_parent_directory_after_replace(tmp_path, mon
 
     assert path.exists()
     assert observed_directory_fsyncs, f"{writer} did not fsync parent directory metadata"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX-only directory sync failure semantics")
+def test_failed_directory_fsync_blocks_claim_without_discarding_protection(tmp_path, monkeypatch):
+    """A failed post-rename sync cannot allow the caller to submit an order."""
+    from trading import execution_ledger as ledger_module
+
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+
+    def fail_directory_sync(_path):
+        raise OSError("directory metadata sync failed")
+
+    monkeypatch.setattr(ledger_module, "fsync_parent_directory", fail_directory_sync)
+    with pytest.raises(OSError, match="directory metadata sync failed"):
+        ledger.claim("unique-signal")
+
+    # The file may already have been renamed, so a restart must still
+    # suppress the uncertain identity rather than submitting twice.
+    assert ExecutionLedger(ledger.path).claim("unique-signal") == (False, "in_progress")

@@ -16,7 +16,7 @@ from typing import Any, Callable
 from ..config_paths import configured_runtime_dir
 from ..domestic import AsyncTradingContext
 from ..execution_outcome import classify_broker_result
-from ..file_lock import FileLock
+from ..file_lock import FileLock, fsync_parent_directory
 from ..schema import SignalMessage
 from ..signal_sizing import adjusted_sell_fraction, configured_buy_budget, scaled_buy_amount
 from ..us import USStockTrading
@@ -239,6 +239,7 @@ def save_json(path: Path, payload: Any) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary_path, path)
+        fsync_parent_directory(path)
     except OSError:
         # A silently lost write after broker acceptance makes later strategy
         # decisions appear durable when they are not. Propagate to the

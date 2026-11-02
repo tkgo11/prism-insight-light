@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .config_paths import runtime_file_path
-from .file_lock import FileLock
+from .file_lock import FileLock, fsync_parent_directory
 
 DEFAULT_LEDGER_PATH = Path("runtime") / "multi_account_execution_ledger.json"
 MAX_LEDGER_ENTRIES = 10_000
@@ -180,6 +180,7 @@ class ExecutionLedger:
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary_path, self.path)
+            fsync_parent_directory(self.path)
             if os.name != "nt":
                 os.chmod(self.path, 0o600)
         finally:
