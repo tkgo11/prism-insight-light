@@ -186,7 +186,10 @@ class DomesticStockTrading:
         self.account_key = self.account_config["account_key"]
         self.account_index = account_index
         self.product_code = self.account_config["product"]
-        default_buy_amount = int(self.account_config.get("buy_amount_krw") or self.DEFAULT_BUY_AMOUNT)
+        configured_buy_amount = self.account_config.get("buy_amount_krw")
+        if isinstance(configured_buy_amount, bool) or isinstance(buy_amount, bool):
+            raise ValueError("KR buy amount must be numeric, not a boolean")
+        default_buy_amount = int(configured_buy_amount or self.DEFAULT_BUY_AMOUNT)
         self.buy_amount = buy_amount if buy_amount is not None else default_buy_amount
         self.buy_sizing = build_buy_sizing(
             fixed_amount=self.buy_amount,
