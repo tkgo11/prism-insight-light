@@ -1,14 +1,13 @@
 {
-  "run_id": "prism-sync-hourly-2026-11-03T04-15-KST-turn8",
-  "started_at": "2026-11-02T19:15:46Z",
-  "expected_state_head": "0f6e3bb7ca3702dabc9740e6b8ba8d2dfd1c35db",
-  "expected_pr_head": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
+  "run_id": "prism-sync-hourly-2026-11-03T05-22-KST-turn9",
+  "slot": "2026-11-03T05-22-KST",
+  "status": "HELD",
+  "expected_state_head": "a9cae3f569514d3ed97f822990f064788458a0c1",
+  "expected_pr_head": "cda0c79e0f37eca3733c187be923886385a366b3",
   "expected_base_head": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
   "expected_upstream_head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-  "status": "RELEASED",
   "real_orders": 0,
   "demo_orders": 0,
-  "released_at": "2026-11-02T19:23:52.081Z",
-  "latest_pr_head": "cda0c79e0f37eca3733c187be923886385a366b3",
-  "release_parent_sha": "37acd8eceddd87d21e5e0d5e90e413eb02605fc8"
+  "lock_acquisition": "GIT_REF_EXPECTED_SHA_CAS",
+  "purpose": "audit/repair only, no live broker"
 }
