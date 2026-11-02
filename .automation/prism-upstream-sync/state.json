@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T15:17:24+09:00",
-    "started_at": "2026-11-02T06:19:22.021Z",
-    "completed_at": "2026-11-02T06:28:19.356Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
+    "started_at": "2026-11-02T07:33:32.787Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
     "last_mutation_commit": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
     "last_mutation_at": "2026-11-02T06:28:19.356Z",
-    "result": "TWO_ROOT_CAUSES_PATCHED_CI_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
+    "result": "RUNNING_PRECHECK_CAS_LOCKED",
     "pr_comment_id": 6570654111,
     "last_report": {
       "phase": "related_code_audit",
@@ -65,9 +65,9 @@
       "merged": false,
       "reason": "Two source root causes fixed and CI successful; transitive/full audits, demo fills and review remain blocked"
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
-    "pr_head_at_start": "a95839ac3c44b4a24a96109b4e54feb6a69ba22f",
-    "lock_acquired_at": "2026-11-02T06:19:22.021Z",
+    "prior_run_id": "prism-sync-hourly-2026-11-02T15:17:24+09:00",
+    "pr_head_at_start": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+    "lock_acquired_at": "2026-11-02T07:33:32.787Z",
     "lock_released_at": "2026-11-02T06:28:19.356Z"
   },
   "source": {
