@@ -70,12 +70,12 @@ def rejection_is_ambiguous(res: Any) -> bool:
     # Intermediary timeouts, conflicts, retry/too-early and rate-limit
     # responses may arrive after an order reached KIS. A business-code-like
     # string in their body does NOT prove that submission was rejected.
+    # Non-200 success statuses (201/202 acceptance, 204 no-content, 206
+    # partial content, etc.) also cannot prove an authoritative KIS business
+    # rejection; only canonical 200 or an eligible 4xx can be considered.
     # 499 is the common reverse-proxy "client closed request" sentinel.
-    # A redirect, informational response or gateway/server error is likewise
-    # not authoritative rejection evidence.
     if (
-        http_status < 200
-        or 300 <= http_status < 400
+        (http_status < 400 and http_status != 200)
         or http_status >= 500
         or http_status in {408, 409, 425, 429, 499}
     ):
