@@ -144,3 +144,38 @@ def test_pre_submission_failure_remains_retryable_and_can_be_promoted(tmp_path):
     assert ledger.claim("same-order") == (True, "failed")
     ledger.finalize("same-order", "executed")
     assert ledger.claim("same-order") == (False, "executed")
+
+
+@pytest.mark.parametrize("status", sorted(ledger_module._RETRYABLE_STATUSES))
+@pytest.mark.parametrize("timestamp_case", ["missing", "null", "invalid"])
+def test_corrupt_retryable_claim_timestamp_blocks_all_replays_without_rewrite(
+    tmp_path, status, timestamp_case
+):
+    """A damaged timestamp is not proof that a retryable-looking order never submitted."""
+    path = tmp_path / "ledger.json"
+    record = {"status": status}
+    if timestamp_case == "null":
+        record["claimed_at"] = None
+    elif timestamp_case == "invalid":
+        record["claimed_at"] = "not-a-timestamp"
+    path.write_text(json.dumps({"possibly_submitted": record}), encoding="utf-8")
+    original = path.read_bytes()
+    ledger = ExecutionLedger(path)
+
+    with pytest.raises(RuntimeError, match="unverifiable"):
+        ledger.claim("possibly_submitted")
+    with pytest.raises(RuntimeError, match="unverifiable"):
+        ledger.claim("different_signal")
+    assert path.read_bytes() == original
+
+
+def test_corrupt_retryable_legacy_alias_does_not_allow_new_primary_claim(tmp_path):
+    """A legacy alias must not be discarded when its durable evidence is damaged."""
+    path = tmp_path / "ledger.json"
+    path.write_text(json.dumps({"legacy": {"status": "failed"}}), encoding="utf-8")
+    before = path.read_bytes()
+    ledger = ExecutionLedger(path)
+
+    with pytest.raises(RuntimeError, match="unverifiable"):
+        ledger.claim("current", aliases=("legacy",))
+    assert path.read_bytes() == before
