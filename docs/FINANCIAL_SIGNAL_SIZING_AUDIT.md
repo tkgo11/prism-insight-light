@@ -191,3 +191,27 @@ silently replaced by an alternative account amount. Mock-only regression
 tests cover both account markets and legacy defaults. These tests do not
 establish any actual KIS fill/cancel reconciliation or authorize live
 deployment. Independent code audits remain incomplete.
+
+
+### Durable ledger retryable-claim timestamp integrity (2026-11-02)
+
+A persisted execution ledger record marked `failed`, `rejected`,
+`deferred`, `queued`, `dry-run` or `skipped` is retryable **only**
+when its original claim timestamp is readable. Previously, the pruning
+routine retained a malformed or missing timestamp but the subsequent claim
+routine still overwrote that same retryable record with `in_progress`.
+A damaged ledger could therefore authorize a second broker submission without
+trustworthy original evidence. The ledger now refuses all mutations when it
+encounters such an unverifiable retryable record; the original file is left
+untouched for operator reconciliation. Protected statuses such as
+`executed`, `unknown` and `in_progress` remain non-retryable even if
+their timestamps are damaged. Tests cover every retryable status, missing,
+null and malformed timestamps, compatibility aliases, and preservation of
+protected identities.
+
+Operators must reconcile the original signal, account, broker order ID,
+executions and cancellations against authoritative **demo** broker records
+before repairing the ledger; deleting a damaged record is not an automatic
+recovery action. This fail-closed guard is verified only by local/CI mock
+tests. It does not provide authoritative partial-fill, remaining-quantity,
+cancel or restart reconciliation and does not authorize live trading.
