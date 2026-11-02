@@ -4,14 +4,14 @@
   "state": "ACTIVE_DRAFT_REMEDIATION_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T22-45-KST-turn2",
+    "id": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
     "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-02T21-19-KST-turn1",
+    "previous_run_id": "prism-sync-hourly-2026-11-02T22-45-KST-turn2",
     "result": "CODE_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDITS_0_OF_2_DEMO_QLTY_BLOCKED",
-    "last_mutation_commit": "d3bdebc12292a76677cee921abe78754ce089111",
-    "previous_state_branch_sha": "dfe6c84b9819f02a229f935aca580f10646b492b",
-    "lock_started_at": "2026-11-02T13:45:03Z",
-    "completed_at": "2026-11-02T13:51:10.581Z"
+    "last_mutation_commit": "09acb665d712530b8d3095cd73e8dc7151386b90",
+    "previous_state_branch_sha": "b81c945c5fe347c38639000e81b76752456fd0a6",
+    "lock_started_at": "2026-11-02T14:29:03Z",
+    "completed_at": "2026-11-02T14:42:00Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -30,7 +30,7 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "d3bdebc12292a76677cee921abe78754ce089111",
+    "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
@@ -107,23 +107,23 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "462eb5881883dc349be52daa478f418f6a10d6f3",
-    "scope_estimate": 74,
+    "checksum": "7debf301a0683b9dd283be98de04a1888ff02e5e",
+    "scope_estimate": 76,
     "files_fully_audited": 0,
-    "head_sha": "d3bdebc12292a76677cee921abe78754ce089111",
-    "source_head_sha": "d3bdebc12292a76677cee921abe78754ce089111",
-    "git_tree_sha": "d3bdebc12292a76677cee921abe78754ce089111",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T22-45-KST-related.json"
+    "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+    "source_head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+    "git_tree_sha": "4be1d36d1d8a24f2391539b8630ca137ae04331e",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T23-29-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "1b2cd92860f4f648b5e928d221115713438f926b",
-    "sha": "d3bdebc12292a76677cee921abe78754ce089111",
+    "checksum": "24ac6c8f9b7324c9b8d3b9ca26ba8fce467b3992",
+    "sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
     "files_checked": 0,
     "fully_audited_files": 0,
-    "file_count": 168,
-    "git_tree_sha": "d3bdebc12292a76677cee921abe78754ce089111",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T22-45-KST-full.json"
+    "file_count": 170,
+    "git_tree_sha": "4be1d36d1d8a24f2391539b8630ca137ae04331e",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-02T23-29-KST-full.json"
   },
   "checks": {
     "0": {
@@ -1255,6 +1255,50 @@
           "description": "22 blocking issues; login required to inspect"
         }
       ]
+    },
+    "2026-11-02T23-29-KST": {
+      "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "status": "completed",
+      "conclusion": "success",
+      "run_ids": [
+        41463912455,
+        41463904937
+      ],
+      "jobs": [
+        "Full pytest suite 1268 passed, Docker build success",
+        "Windows runtime smoke 167 passed"
+      ],
+      "test_first": {
+        "pending_buy": {
+          "sha": "e91455133c4f3b8eb212701adc0f171fc35f62d4",
+          "run_id": 41462872698,
+          "failed": 6,
+          "passed": 1255
+        },
+        "stop_identity": {
+          "sha": "32391dc12c2bef3d1f2d3b1fb00cc949ce2626b6",
+          "run_id": 41463468478,
+          "failed": 3,
+          "passed": 1264
+        }
+      },
+      "intermediate_fixture_failure": {
+        "sha": "798ecd297a2bf06f5da997b369dbc7be170cbcf1",
+        "run_id": 41463709479,
+        "failed": 1,
+        "passed": 1267
+      },
+      "external": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "issue_count": "unverified"
+        }
+      ]
     }
   },
   "upstream_changes": [
@@ -1442,6 +1486,14 @@
       "changed_files": 41,
       "decision": "NO_IMPORT",
       "reason": "Only BTC research/execution, US compression, intuition and ADD design changed; no verified safe independent lightweight KIS subscriber contract import"
+    },
+    {
+      "scope": "2026-11-02T23-29-KST",
+      "upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "commits_ahead": 47,
+      "changed_files": 41,
+      "decision": "NO_IMPORT",
+      "reason": "BTC research/execution and US compression changes do not justify altering independent lightweight KIS subscriber contracts"
     }
   ],
   "risk_register": [
@@ -4387,6 +4439,21 @@
       "full_file_audit": false,
       "related_pass": false,
       "full_pass": false
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+      "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "git_tree_sha": "4be1d36d1d8a24f2391539b8630ca137ae04331e",
+      "level": "TARGETED_SOURCE_AND_TEST_FIRST_MOCK_CI_NOT_FILE_BY_FILE_AUDIT",
+      "related_manifest_blob": "7debf301a0683b9dd283be98de04a1888ff02e5e",
+      "full_manifest_blob": "24ac6c8f9b7324c9b8d3b9ca26ba8fce467b3992",
+      "fully_audited_files": 0,
+      "ci_conclusion": "success",
+      "linux_pytest_passed": 1268,
+      "windows_smoke_passed": 167,
+      "full_file_audit": false,
+      "related_pass": false,
+      "full_pass": false
     }
   ],
   "last_merged_upstream_sha": null,
@@ -4418,9 +4485,15 @@
     "Related 74-file and whole-tree 168-file independent audits 0/2 each",
     "PR43 latest exact-head Qlty status says 22 blocking issues; public view login_required, individual findings untriaged",
     "Authoritative KIS demo order-ID/fill-ID/partial-fill/cancel/remaining quantity/stop-loss residual reconciliation unavailable",
-    "No independent human review; branch protection API 403; no merge"
+    "No independent human review; branch protection API 403; no merge",
+    "Authoritative KIS demo order/fill/partial/cancel/remaining quantity reconciliation and restart tests not performed",
+    "Crash between broker BUY acceptance and durable tracker registration remains an unresolved risk",
+    "Pending BUY provenance cannot be auto-cleared without broker reconciliation; operator intervention required",
+    "Qlty previously reported 22 blocking issues; latest check success but individual issues and current count unverified",
+    "Independent reviews absent; branch protection API 403, rulesets [] not sufficient to establish branch protection",
+    "Related 76 and full 170 tracked files not fully audited; independent PASS 0/2 + 0/2"
   ],
-  "next_action": "Inspect authenticated Qlty 22 findings; obtain isolated KIS demo read-only order/fill/cancel/remaining quantity reconciliation and restart evidence; complete independent 2x related and 2x whole-tree file audits; verify review/branch policy; keep Draft and do not merge",
+  "next_action": "Inspect Qlty findings with authenticated access; obtain isolated KIS demo order/fill/cancel/partial/remaining-quantity and restart evidence; address accepted BUY crash-before-tracker-registration gap; complete independent 2x related (76 files) and 2x whole-tree (170 files) audits and human review/branch protection; keep Draft and no live orders.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -4939,6 +5012,19 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "New ledger attempt-token code; related/full file audits incomplete; demo and Qlty blocked"
+    },
+    {
+      "slot": "2026-11-02T23-29-KST",
+      "run_id": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "head_sha": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "git_tree_sha": "4be1d36d1d8a24f2391539b8630ca137ae04331e",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Two verified code root causes patched; independent file-by-file audits and broker demo/reviews/branch policy remain incomplete"
     }
   ],
   "discovered_defects": [
@@ -6186,6 +6272,63 @@
         41456146349,
         41456153959
       ]
+    },
+    {
+      "id": "accepted-buy-pre-fill-zero-removes-stop-loss-20261102",
+      "root_cause_id": "RC-BUY-ACCEPTANCE-TRACKER-ZERO-RACE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "description": "Accepted BUY was registered as a stop-loss position, then a zero balance before the actual fill removed protection; later fill could be unprotected",
+      "reproduction": "Test-first e91455133c4f3b8eb212701adc0f171fc35f62d4, CI 41462872698: 6 failed, 1255 passed",
+      "fix_commits": [
+        "9f41d321c49e6342d39e06cc8cd9bf16093fa953",
+        "f5f74d4b90b9bda4398a84926c9b096272fb82a3"
+      ],
+      "test_evidence": [
+        "tests/test_pending_buy_stop_loss_safety.py: accepted BUY, zero before fill, restart, legacy JSON, post-SELL zero, invalid pending, manual zero cleanup, stop edit and multi-account partial acceptance",
+        "final 09acb665d712530b8d3095cd73e8dc7151386b90 CI 41463904937/41463912455: Linux 1268, Windows 167, Docker success"
+      ],
+      "affected_blobs": {
+        "trading/dispatch.py": "006d0bc08a25f6706d1cf4207914cb1ad730dfb1",
+        "trading/stop_loss_watcher.py": "2e43383c971b8f0cc6f79289e24968129925eab0"
+      },
+      "first_detected_run": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+      "last_checked_head": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "recurrence_count": 0,
+      "unverified": [
+        "KIS demo BUY order/fill/cancel/remaining quantity",
+        "crash gap before tracker registration",
+        "full transitive and whole tree audit"
+      ]
+    },
+    {
+      "id": "stop-loss-id-rotates-on-threshold-update-20261102",
+      "root_cause_id": "RC-STOP-LOSS-IDENTITY-ROTATION",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "description": "Mutable stop threshold/entry price was hashed into stop-loss SELL dedupe signal ID; editing while previous SELL was accepted but unfilled enabled a second order identity",
+      "reproduction": "Test-first 32391dc12c2bef3d1f2d3b1fb00cc949ce2626b6, CI 41463468478: 3 failed, 1264 passed",
+      "fix_commits": [
+        "740b4b625c852a2806e70408a10c60e2e5d02062",
+        "798ecd297a2bf06f5da997b369dbc7be170cbcf1",
+        "09acb665d712530b8d3095cd73e8dc7151386b90"
+      ],
+      "test_evidence": [
+        "tests/test_stop_loss_signal_identity.py: stable across edits, legacy migration, invalid ID, from_dict legacy compatibility",
+        "Intermediate 798ecd297a2bf06f5da997b369dbc7be170cbcf1 CI 41463709479: 1 failed, 1267 passed due test fixture retaining modern pending_buy=False; corrected fixture",
+        "final exact-head CI 41463904937/41463912455 success"
+      ],
+      "affected_blobs": {
+        "trading/stop_loss_watcher.py": "2e43383c971b8f0cc6f79289e24968129925eab0"
+      },
+      "first_detected_run": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+      "last_checked_head": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "recurrence_count": 0,
+      "unverified": [
+        "Authoritative accepted SELL order ID/fill/cancel reconciliation",
+        "operator reset for legitimate new position",
+        "full file-by-file audit"
+      ]
     }
   ],
   "risks": [
@@ -6580,6 +6723,37 @@
         "d3bdebc12292a76677cee921abe78754ce089111"
       ],
       "recurrence_count": 0
+    },
+    {
+      "root_cause_id": "RC-BUY-ACCEPTANCE-TRACKER-ZERO-RACE",
+      "description": "Accepted BUY was registered as a stop-loss position, then a zero balance before the actual fill removed protection; later fill could be unprotected",
+      "defect_ids": [
+        "accepted-buy-pre-fill-zero-removes-stop-loss-20261102"
+      ],
+      "classification": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "first_detected_run": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+      "last_checked_head": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "fix_commits": [
+        "9f41d321c49e6342d39e06cc8cd9bf16093fa953",
+        "f5f74d4b90b9bda4398a84926c9b096272fb82a3"
+      ],
+      "recurrence_count": 0
+    },
+    {
+      "root_cause_id": "RC-STOP-LOSS-IDENTITY-ROTATION",
+      "description": "Mutable stop threshold/entry price was hashed into stop-loss SELL dedupe signal ID; editing while previous SELL was accepted but unfilled enabled a second order identity",
+      "defect_ids": [
+        "stop-loss-id-rotates-on-threshold-update-20261102"
+      ],
+      "classification": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "first_detected_run": "prism-sync-hourly-2026-11-02T23-29-KST-turn3",
+      "last_checked_head": "09acb665d712530b8d3095cd73e8dc7151386b90",
+      "fix_commits": [
+        "740b4b625c852a2806e70408a10c60e2e5d02062",
+        "798ecd297a2bf06f5da997b369dbc7be170cbcf1",
+        "09acb665d712530b8d3095cd73e8dc7151386b90"
+      ],
+      "recurrence_count": 0
     }
   ],
   "root_cause_matrix": {
@@ -6880,8 +7054,22 @@
     {
       "id": "QLTY-PR43-22-BLOCKING-ISSUES-UNINSPECTED",
       "severity": "UNVERIFIED",
-      "status": "BLOCKS_MERGE_UNTIL_TRIAGED",
-      "description": "Qlty status success reports 22 blocking issues on latest head; web view requires login, individual findings not verified"
+      "status": "HISTORICAL_22_LATEST_COUNT_UNVERIFIED_REQUIRES_TRIAGE",
+      "description": "Previous head reported 22 blocking Qlty issues; latest head Qlty check success but issue count and findings have not been inspected"
+    },
+    {
+      "id": "RC-BUY-ACCEPTANCE-TRACKER-ZERO-RACE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "description": "Accepted BUY was registered as a stop-loss position, then a zero balance before the actual fill removed protection; later fill could be unprotected",
+      "latest_patch_commit": "09acb665d712530b8d3095cd73e8dc7151386b90"
+    },
+    {
+      "id": "RC-STOP-LOSS-IDENTITY-ROTATION",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "description": "Mutable stop threshold/entry price was hashed into stop-loss SELL dedupe signal ID; editing while previous SELL was accepted but unfilled enabled a second order identity",
+      "latest_patch_commit": "09acb665d712530b8d3095cd73e8dc7151386b90"
     }
   ],
   "previous_active_pr_at_manual_merge": {
