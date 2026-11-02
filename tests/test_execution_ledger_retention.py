@@ -166,6 +166,10 @@ def test_corrupt_retryable_claim_timestamp_blocks_all_replays_without_rewrite(
         ledger.claim("possibly_submitted")
     with pytest.raises(RuntimeError, match="unverifiable"):
         ledger.claim("different_signal")
+    with pytest.raises(RuntimeError, match="unverifiable"):
+        ledger.finalize("possibly_submitted", "failed")
+    with pytest.raises(RuntimeError, match="unverifiable"):
+        ledger.release("possibly_submitted")
     assert path.read_bytes() == original
 
 
@@ -179,3 +183,15 @@ def test_corrupt_retryable_legacy_alias_does_not_allow_new_primary_claim(tmp_pat
     with pytest.raises(RuntimeError, match="unverifiable"):
         ledger.claim("current", aliases=("legacy",))
     assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("protected_status", ["in_progress", "executed", "unknown", "partial_success"])
+def test_protected_ledger_claim_with_invalid_timestamp_still_suppresses(tmp_path, protected_status):
+    """Invalid time must never expire or downgrade a protected order identity."""
+    path = tmp_path / "ledger.json"
+    path.write_text(
+        json.dumps({"protected": {"status": protected_status, "claimed_at": None}}),
+        encoding="utf-8",
+    )
+    ledger = ExecutionLedger(path)
+    assert ledger.claim("protected") == (False, protected_status)

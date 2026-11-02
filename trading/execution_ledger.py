@@ -202,10 +202,15 @@ class ExecutionLedger:
                 claimed_at = datetime.fromisoformat(str(value.get("claimed_at", "")))
                 if claimed_at.tzinfo is None:
                     claimed_at = claimed_at.replace(tzinfo=timezone.utc)
-            except (TypeError, ValueError, OverflowError):
-                # Unknown timestamps must fail closed, even for retryable statuses.
-                retained[key] = value
-                continue
+            except (TypeError, ValueError, OverflowError) as exc:
+                # Keeping an unverifiable retryable record is insufficient:
+                # claim() would otherwise overwrite it as in_progress and
+                # permit a second broker order. Stop *all* ledger mutations
+                # until an operator reconciles the original evidence.
+                raise RuntimeError(
+                    "Automatic-trading execution ledger contains an unverifiable "
+                    "retryable claim timestamp; operator reconciliation required"
+                ) from exc
             if claimed_at >= cutoff:
                 retained[key] = value
         return retained
