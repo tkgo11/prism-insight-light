@@ -298,3 +298,23 @@ cause; it does not create a new independent financial defect category.
 - The tracker now stores the first stop-loss signal identity and preserves it across later edits and process restarts. Existing records without the field derive their *pre-upgrade* identity from the original persisted fields before overwriting them, preserving prior ledger claims. Invalid stored IDs are quarantined rather than used to submit orders.
 - This deliberately blocks fresh automatic stop-loss SELLs for a symbol until the prior broker order is authoritatively reconciled. Legitimate subsequent positions may require manual reconciliation and explicit reset. No broker demo fills/cancels were executed; tests only use mocked dispatch.
 - Regression: `tests/test_stop_loss_signal_identity.py`. Related/full independent audits remain 0/2 + 0/2, PR Draft.
+
+
+### Ambiguous BUY: durable non-actionable intent (2026-11-03)
+
+Automatic BUY claims with a positive stop-loss now atomically persist a strictly
+validated, non-sensitive `order_intent` alongside the pre-submission ledger
+claim. The intent contains market, ticker, intended stop-loss and an opaque
+SHA-256 account scope. It survives timeout, restart and deduplicated replay;
+a ledger write failure prevents broker submission. This is **reconciliation
+evidence only**, not a filled position, stop-loss order, or permission to SELL.
+It does not modify an existing tracked position. Legacy claims without intent
+remain protected against duplicate submission.
+
+**Still blocked / not safe for live trading:** The single-account scope may be
+a configuration selector rather than a broker-verified account identifier.
+Authoritative per-account KIS order IDs, fill IDs, cumulative and remaining
+quantity, cancel/reject state, position-delta attribution, restart recovery
+and broker demo integration are still needed before UNKNOWN BUY can be safely
+reconciled into actionable protection. Never infer fills from acceptance,
+intent or aggregate holdings; never automatically sell unrelated holdings.

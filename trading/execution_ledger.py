@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
+import re
 import tempfile
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -120,6 +122,36 @@ def execution_identity(signal_payload: dict[str, Any], account_key: str) -> str:
     return primary
 
 
+def _validated_order_intent(value: dict[str, Any]) -> dict[str, Any]:
+    """Non-actionable, non-sensitive BUY stop-loss reconciliation evidence only."""
+    expected = {"kind", "market", "ticker", "stop_loss", "account_scope"}
+    if not isinstance(value, dict) or set(value) != expected:
+        raise ValueError("BUY intent must contain only approved fields")
+    if value["kind"] != "buy_stop_loss" or value["market"] not in ("KR", "US"):
+        raise ValueError("Invalid BUY intent kind or market")
+    ticker = value["ticker"]
+    if (not isinstance(ticker, str) or not ticker or len(ticker) > 64
+            or ticker != ticker.strip()
+            or any(ord(ch) < 32 or ord(ch) == 127 for ch in ticker)):
+        raise ValueError("Invalid BUY intent ticker")
+    scope = value["account_scope"]
+    if not isinstance(scope, str) or re.fullmatch(r"[0-9a-f]{64}", scope) is None:
+        raise ValueError("BUY intent scope must be an opaque SHA-256 digest")
+    raw_stop = value["stop_loss"]
+    if isinstance(raw_stop, bool):
+        raise ValueError("BUY intent stop loss must be numeric")
+    try:
+        stop_loss = float(raw_stop)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("Invalid BUY intent stop loss") from exc
+    if not math.isfinite(stop_loss) or stop_loss <= 0:
+        raise ValueError("BUY intent stop loss must be positive and finite")
+    return {
+        "kind": "buy_stop_loss", "market": value["market"], "ticker": ticker,
+        "stop_loss": stop_loss, "account_scope": scope,
+    }
+
+
 class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
@@ -218,7 +250,8 @@ class ExecutionLedger:
         return retained
 
     def claim(
-        self, identity: str, *, aliases: Iterable[str] = (), with_token: bool = False
+        self, identity: str, *, aliases: Iterable[str] = (), with_token: bool = False,
+        order_intent: dict[str, Any] | None = None,
     ) -> tuple[bool, str | None] | tuple[bool, str | None, str | None]:
         """Claim an identity or return the prior status without exposing account data.
 
@@ -240,6 +273,9 @@ class ExecutionLedger:
         order.
         """
 
+        validated_intent = (
+            _validated_order_intent(order_intent) if order_intent is not None else None
+        )
         now = datetime.now(timezone.utc)
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
@@ -260,6 +296,9 @@ class ExecutionLedger:
             entry = {"status": "in_progress", "claimed_at": now.isoformat()}
             if claim_token is not None:
                 entry["claim_token"] = claim_token
+            if validated_intent is not None:
+                # Atomic with pre-submit claim; NEVER proof of a fill or SELL authority.
+                entry["order_intent"] = validated_intent
             entries[identity] = entry
             # Fail closed at capacity. Silently dropping older accepted/unknown
             # claims to make room would re-enable duplicate broker submissions.

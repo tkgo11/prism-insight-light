@@ -121,6 +121,21 @@ def _account_id(account_key: str) -> str:
     return hashlib.sha256(account_key.encode("utf-8")).hexdigest()[:24]
 
 
+def _buy_stop_loss_intent(signal: SignalMessage, account_selector: str) -> dict[str, Any] | None:
+    """Persist non-actionable reconciliation hints, not a filled position.
+
+    The scope is hashed; in single-account mode it may be a configuration
+    selector rather than a broker-verified account identity.
+    """
+    if signal.signal_type != "BUY" or signal.stop_loss is None or signal.stop_loss <= 0:
+        return None
+    return {
+        "kind": "buy_stop_loss", "market": signal.market, "ticker": signal.ticker,
+        "stop_loss": signal.stop_loss,
+        "account_scope": hashlib.sha256(account_selector.encode("utf-8")).hexdigest(),
+    }
+
+
 def _as_enabled(value: Any, default: bool = False) -> bool:
     if value is None:
         return default
@@ -408,7 +423,8 @@ class MultiAccountTradeDispatcher:
             identity, aliases = execution_identities(signal.raw, account["account_key"])
             if self.dispatcher.execution_dedupe:
                 claimed, previous_status, claim_token = await asyncio.to_thread(
-                    self.ledger.claim, identity, aliases=aliases, with_token=True
+                    self.ledger.claim, identity, aliases=aliases, with_token=True,
+                    order_intent=_buy_stop_loss_intent(signal, account["account_key"]),
                 )
                 if not claimed:
                     results.append(
@@ -780,7 +796,10 @@ class TradeDispatcher:
                 signal.raw, self._single_account_execution_selector(signal)
             )
             claimed, previous_status, claim_token = await asyncio.to_thread(
-                self.execution_ledger.claim, identity, aliases=aliases, with_token=True
+                self.execution_ledger.claim, identity, aliases=aliases, with_token=True,
+                order_intent=_buy_stop_loss_intent(
+                    signal, self._single_account_execution_selector(signal)
+                ),
             )
             if not claimed:
                 self.signal_gate.audit_record(
