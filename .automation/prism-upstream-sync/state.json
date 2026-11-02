@@ -1,14 +1,14 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "ACTIVE_DRAFT_REMEDIATION_AUDIT_IN_PROGRESS",
+  "state": "ACTIVE_DRAFT_REMEDIATION_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T03-20-KST-turn7",
     "lock_owner": "prism-sync-hourly-2026-11-03T03-20-KST-turn7",
     "previous_run_id": "prism-sync-hourly-2026-11-03T02-18-KST-turn6",
-    "result": "IN_PROGRESS",
-    "last_mutation_commit": "97a4ea3b3bed0dab6b701ddba2b2a5cbb47dde90",
+    "result": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE",
+    "last_mutation_commit": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
     "previous_state_branch_sha": "c3dd53153292e4b9d91165b04ffe3faba7de01e1",
     "lock_started_at": "2026-11-02T17:18:49Z",
     "completed_at": "2026-11-02T17:26:09.198Z",
@@ -31,11 +31,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "97a4ea3b3bed0dab6b701ddba2b2a5cbb47dde90",
+    "head_sha": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_EXACT_HEAD_MOCK_CI_SUCCESS_RECONCILIATION_BLOCKED"
+    "status": "DRAFT_EXACT_HEAD_MOCK_CI_SUCCESS_AUDIT_BLOCKED"
   },
   "candidates": [
     {
@@ -108,23 +108,23 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "e3656bf255d4d89f48aaeeab4ab008b4e5e3ee3d",
-    "scope_estimate": 77,
+    "checksum": "8f28a78544428ba6566d5a5855c0a5a676b1469f",
+    "scope_estimate": 78,
     "files_fully_audited": 0,
-    "head_sha": "97a4ea3b3bed0dab6b701ddba2b2a5cbb47dde90",
-    "source_head_sha": "97a4ea3b3bed0dab6b701ddba2b2a5cbb47dde90",
-    "git_tree_sha": "44ca6d5879118931637021637f7c03361c1727af",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T02-18-KST-related.json"
+    "head_sha": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
+    "source_head_sha": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
+    "git_tree_sha": "90e33fff6698161063d1f5e4e2a64df5bf243e55",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T03-20-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "e93ebb68bbaa6c742d36a90f5dbbb46dd4d87733",
-    "sha": "97a4ea3b3bed0dab6b701ddba2b2a5cbb47dde90",
+    "checksum": "7349fda6aa93f7c1144b27377cef1dad5e2506ff",
+    "sha": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
     "files_checked": 0,
     "fully_audited_files": 0,
-    "file_count": 171,
-    "git_tree_sha": "44ca6d5879118931637021637f7c03361c1727af",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T02-18-KST-full.json"
+    "file_count": 172,
+    "git_tree_sha": "90e33fff6698161063d1f5e4e2a64df5bf243e55",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T03-20-KST-full.json"
   },
   "checks": [
     {
@@ -1353,6 +1353,32 @@
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41490660726",
       "linux_pytest_passed": 1281,
       "windows_smoke_passed": 167
+    },
+    {
+      "head_sha": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
+      "run_ids": [
+        41500188591,
+        41500199594
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: 1287 passed",
+        "Windows runtime smoke: 167 passed",
+        "Docker build success"
+      ],
+      "external_statuses": [
+        {
+          "context": "security/snyk",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "description": "89 blocking issues (uninspected)"
+        }
+      ],
+      "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41500188591"
     }
   ],
   "upstream_changes": [
@@ -4574,6 +4600,37 @@
       "linux_pytest_passed": 1281,
       "windows_smoke_passed": 167,
       "run_evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T02-18-KST.json"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T03-20-KST-turn7",
+      "head_sha": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
+      "root_cause_id": "RC-STOPLOSS-CONCURRENT-STATE",
+      "subcase": "direct-trigger-stale-snapshot-20261103",
+      "files": [
+        {
+          "path": "trading/stop_loss_watcher.py",
+          "blob_sha": "32517301c54a9e6897897ff1e4aeec13453cbd26",
+          "functions": [
+            "_trigger_sell",
+            "check_stop_loss_once",
+            "StopLossTracker.get_positions"
+          ]
+        },
+        {
+          "path": "tests/test_stop_loss_snapshot_preflight.py",
+          "blob_sha": "e5227529f3ae172150702cddc56915b85258c5ee",
+          "functions": [
+            "6 mock tests"
+          ]
+        }
+      ],
+      "test_first_ci": 41499935262,
+      "exact_head_ci": [
+        41500188591,
+        41500199594
+      ],
+      "fully_audited": false,
+      "pass": false
     }
   ],
   "last_merged_upstream_sha": null,
@@ -4599,9 +4656,12 @@
     "Qlty reports 84 blocking issues (details unverified) despite status success",
     "No independent human review",
     "Branch protection policy API 403; rulesets []",
-    "77 related and 171 full tracked files not independently fully audited; 0/2+0/2"
+    "77 related and 171 full tracked files not independently fully audited; 0/2+0/2",
+    "Final stop-loss preflight not atomic with broker submission; full broker reconciliation unverified",
+    "Qlty 89 blocking issues not individually inspected",
+    "Independent related/full audits incomplete; no new PASS"
   ],
-  "next_action": "Broker-authoritative KIS per-account order/fill/cancel/remaining reconciliation with mock partial/late fill and safe pending BUY->confirmed attribution; maintain Draft until 2+2 independent audits, Qlty triage, policy/review and demo gate.",
+  "next_action": "First: authoritative KIS mock per-account fill/partial/cancel/remaining state machine and durable recovery; continue actual transitive file audit and Qlty issue inspection, no merge.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6547,6 +6607,29 @@
       "unverified": [
         "later fill protection reconciliation"
       ]
+    },
+    {
+      "id": "direct-trigger-stale-snapshot-20261103",
+      "root_cause_id": "RC-STOPLOSS-CONCURRENT-STATE",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_BROKER_UNVERIFIED",
+      "description": "Direct stop-loss dispatch accepted stale/removed/legacy-rewritten/newly pending/corrupt tracker snapshot despite watcher precheck",
+      "reproduction": "CI 41499935262: 5 expected failures, 1282 passes; Windows 167 passes",
+      "fix_commit": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
+      "tests": [
+        "tests/test_stop_loss_snapshot_preflight.py: 6 cases"
+      ],
+      "affected_blobs": {
+        "trading/stop_loss_watcher.py": "32517301c54a9e6897897ff1e4aeec13453cbd26",
+        "tests/test_stop_loss_snapshot_preflight.py": "e5227529f3ae172150702cddc56915b85258c5ee"
+      },
+      "last_checked_head": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
+      "recurrence_count": 0,
+      "unverified": [
+        "final preflight-to-broker submission race",
+        "broker-authoritative fills and cancellation",
+        "independent related/full audit"
+      ]
     }
   ],
   "risks": [
@@ -6724,10 +6807,18 @@
       "description": "Stale watcher snapshots and CAS removal",
       "defect_ids": [
         "legacy-stop-loss-zero-holding-rearm-deletes-new-protection-2026-11-01-22",
-        "legacy-stop-loss-stale-inflight-edit-2026-11-01-22"
+        "legacy-stop-loss-stale-inflight-edit-2026-11-01-22",
+        "direct-trigger-stale-snapshot-20261103"
       ],
-      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
-      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+      "classification": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_BROKER_UNVERIFIED",
+      "last_checked_head": "f04610e23bd4920f7e3ae419e457cb38c72f94af",
+      "subcases": [
+        {
+          "id": "direct-trigger-stale-snapshot-20261103",
+          "status": "MOCK_VERIFIED_CODE_PATCHED",
+          "fix_commit": "f04610e23bd4920f7e3ae419e457cb38c72f94af"
+        }
+      ]
     },
     {
       "root_cause_id": "RC-STOPLOSS-ATOMIC-WRITE",
