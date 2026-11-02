@@ -95,6 +95,34 @@ class _FakeResp:
         return self._error_message
 
 
+
+
+class _AcceptedWithoutOrderReceipt(_FakeResp):
+    """Broker response is OK, but its output lacks a usable KIS order number."""
+
+    def __init__(self):
+        super().__init__(True)
+
+    def getBody(self):
+        return SimpleNamespace(output={})
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_broker_accepted_without_receipt_is_unknown_in_kr_and_us(market):
+    # Exercise the actual broker wrapper, not only the shared classifier.
+    # The KIS mock must never reach a live broker or a real account.
+    if market == "KR":
+        trader = _domestic_trader()
+        trader._request = lambda *args, **kwargs: _AcceptedWithoutOrderReceipt()
+        result = trader.buy_market_price("005930", 100000)
+    else:
+        trader = _us_trader()
+        trader._request = lambda *args, **kwargs: _AcceptedWithoutOrderReceipt()
+        result = trader.buy_market_price("AAPL", 200.0)
+    assert result["success"] is True
+    assert result["order_no"] == ""
+    assert classify_broker_result(result) == "unknown"
+
 def test_domestic_order_exception_marks_outcome_unknown():
     trader = _domestic_trader()
 
