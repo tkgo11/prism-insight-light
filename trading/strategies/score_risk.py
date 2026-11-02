@@ -166,6 +166,14 @@ class ScoreRiskStrategy:
                 },
             )
 
+        if score_weight != 1.0 and units <= 0:
+            # Without usable risk-derived units, the broker default would
+            # silently discard the configured fractional score weight.
+            return StrategyExecution(
+                "rejected", "Score-risk weighting requires a usable risk budget and stop-loss distance",
+                signal.market, signal.ticker,
+            )
+
         try:
             buy_amount = units * entry_price if units > 0 else None
         except OverflowError:

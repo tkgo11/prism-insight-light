@@ -435,3 +435,28 @@ async def test_score_risk_overflow_never_reaches_broker(
     assert result.status == "rejected"
     assert "overflow" in result.message.lower()
     assert FakeUSTrader.calls == []
+
+
+@pytest.mark.parametrize("strategy_name", ["score_risk", "balanced_risk"])
+@pytest.mark.parametrize("risk_amount_usd,stop_loss", [(0.0, 90.0), (100.0, None)])
+@pytest.mark.asyncio
+async def test_fractional_score_risk_weight_requires_usable_budget_before_broker(
+    strategy_name, risk_amount_usd, stop_loss
+):
+    payload = {
+        "name": strategy_name,
+        "risk_amount_usd": risk_amount_usd,
+        "score_bands": {0: 0.5},
+    }
+    strategy = (
+        BalancedRiskStrategy(config=BalancedRiskStrategyConfig.from_mapping(payload))
+        if strategy_name == "balanced_risk"
+        else ScoreRiskStrategy(config=ScoreRiskStrategyConfig.from_mapping(payload))
+    )
+    raw = {"type": "BUY", "market": "US", "ticker": "AAPL", "price": 100, "buy_score": 5}
+    if stop_loss is not None:
+        raw["stop_loss"] = stop_loss
+    result = await strategy.execute(parse_signal_payload(raw), trading_mode="demo")
+    assert result.status == "rejected"
+    assert "weight" in result.message.lower()
+    assert FakeUSTrader.calls == []

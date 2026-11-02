@@ -680,3 +680,23 @@ async def test_score_weighted_finite_fields_multiplication_overflow_rejects_befo
     )
     assert result.status == "rejected"
     assert "overflow" in result.message.lower()
+
+
+@pytest.mark.asyncio
+async def test_score_weighted_fractional_band_without_base_rejects_broker_default(monkeypatch):
+    async def forbidden_broker_call(*args, **kwargs):
+        raise AssertionError("Fractional score band must not submit full broker default")
+
+    monkeypatch.setattr(
+        "trading.strategies.score_weighted.execute_order", forbidden_broker_call
+    )
+    config = ScoreWeightedStrategyConfig.from_mapping({
+        "name": "score_weighted", "score_bands": {0: 0.5},
+    })
+    signal = parse_signal_payload({
+        "type": "BUY", "market": "US", "ticker": "AAPL",
+        "price": 100, "buy_score": 5,
+    })
+    result = await ScoreWeightedStrategy(config=config).execute(signal, trading_mode="demo")
+    assert result.status == "rejected"
+    assert "base amount" in result.message.lower()

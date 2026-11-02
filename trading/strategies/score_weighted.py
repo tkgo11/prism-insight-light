@@ -46,6 +46,10 @@ class ScoreWeightedStrategy:
             # base_amount is unset. Never pass None to the broker default.
             return StrategyExecution("rejected", "Score band weight produced a zero buy amount", signal.market, signal.ticker)
         base_amount = market_base_amount(signal, krw=self.config.base_amount_krw, usd=self.config.base_amount_usd)
+        if base_amount <= 0 and weight != 1.0:
+            # A fractional score band cannot safely scale an unknown broker
+            # default budget. Reject instead of silently buying at full size.
+            return StrategyExecution("rejected", "Score weighted sizing requires a base amount for non-unit weight", signal.market, signal.ticker)
         buy_amount = base_amount * weight if base_amount > 0 else None
         if buy_amount is not None and not math.isfinite(buy_amount):
             # Finite configuration fields can still multiply to infinity.

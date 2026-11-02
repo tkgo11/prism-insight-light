@@ -107,6 +107,7 @@ account.
 - `max_position_amount_krw` / `max_position_amount_usd`: position notional caps.
 - `min_score`: lowest accepted `buy_score` (0–100); default `0`. A positive minimum rejects a missing score before any broker call.
 - `score_bands`: score thresholds mapped to a 0–1 risk-budget multiplier.
+- A non-unit score weight requires usable risk-derived sizing; otherwise the BUY is rejected rather than ignoring the configured weight and using the broker default.
 - `min_reward_risk`: minimum `(target_price - price) / (price - stop_loss)`; default `0` disables this filter. A positive minimum requires both a usable stop-loss and a target price even if `require_target_price` is `false`; missing data rejects before broker submission.
 - `require_stop_loss` / `require_target_price`: both default to `false`.
 - A risk budget constrains size only when the signal supplies a usable stop
@@ -264,6 +265,7 @@ Better score, bigger buy.
 - Scores below the first configured band use that band's weight instead of being skipped.
 - An explicitly selected `0.0` score-band weight rejects the BUY before broker submission, including when no base amount is configured; it never falls back to the broker's default order size.
 - With the default `0: 1.0` band, every score uses the full base amount.
+- A non-unit score weight without a configured positive base amount is rejected rather than silently using the unweighted broker default.
 
 ### Main settings
 
