@@ -195,3 +195,40 @@ def test_protected_ledger_claim_with_invalid_timestamp_still_suppresses(tmp_path
     )
     ledger = ExecutionLedger(path)
     assert ledger.claim("protected") == (False, protected_status)
+
+
+def test_stale_callback_cannot_finalize_new_tokenized_attempt(tmp_path):
+    """A late failure from attempt A must not downgrade attempt B."""
+    path = tmp_path / "ledger.json"
+    ledger = ExecutionLedger(path)
+    claimed, previous, first_token = ledger.claim("signal", with_token=True)
+    assert (claimed, previous) == (True, None)
+    assert isinstance(first_token, str) and first_token
+    ledger.finalize("signal", "failed", claim_token=first_token)
+
+    claimed, previous, second_token = ledger.claim("signal", with_token=True)
+    assert (claimed, previous) == (True, "failed")
+    assert second_token and second_token != first_token
+
+    # The first worker's delayed callbacks arrive after B was durably claimed.
+    ledger.finalize("signal", "failed", claim_token=first_token)
+    ledger.release("signal", claim_token=first_token)
+    assert ExecutionLedger(path).claim("signal") == (False, "in_progress")
+
+    # Missing tokens (old code paths) must not be able to change tokenized B.
+    ledger.finalize("signal", "failed")
+    ledger.release("signal")
+    assert ExecutionLedger(path).claim("signal") == (False, "in_progress")
+
+    ExecutionLedger(path).finalize("signal", "executed", claim_token=second_token)
+    assert ExecutionLedger(path).claim("signal") == (False, "executed")
+
+
+def test_tokenized_release_rejects_stale_attempt_and_accepts_current(tmp_path):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    claimed, _, token = ledger.claim("deferred", with_token=True)
+    assert claimed and token
+    ledger.release("deferred", claim_token="wrong-attempt")
+    assert ledger.claim("deferred") == (False, "in_progress")
+    ledger.release("deferred", claim_token=token)
+    assert ledger.claim("deferred") == (True, None)
