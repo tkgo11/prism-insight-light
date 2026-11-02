@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
-    "started_at": "2026-11-02T09:30:34.271Z",
-    "completed_at": "2026-11-02T09:39:20.448Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T19-23-KST-turn11",
+    "started_at": "2026-11-02T10:23:38Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T19-23-KST-turn11",
     "last_mutation_commit": "796f8767c910858446ca8b5f39e734a163dd73d7",
     "last_mutation_at": "2026-11-02T09:39:20.448Z",
-    "result": "ONE_ROOT_CAUSE_PATCHED_TEST_FIRST_REPRO_LATEST_CI_SUCCESS_AUDITS_BLOCKED_NO_MERGE",
+    "result": "RUNNING_CAS_LOCK",
     "pr_comment_id": 6570654111,
     "last_report": {
       "phase": "related_code_audit",
@@ -124,10 +124,11 @@
       "review_approvals": 0,
       "reason": "Receipt-integrity code and mock CI verified; transitive/full audits, KIS demo fill reconciliation, independent review and protection policy remain blocked"
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T08:31:40Z-20261102-1731KST",
+    "prior_run_id": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
     "pr_head_at_start": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
-    "lock_acquired_at": "2026-11-02T09:30:34.271Z",
-    "lock_released_at": "2026-11-02T09:39:20.448Z"
+    "lock_acquired_at": "2026-11-02T10:23:38Z",
+    "lock_released_at": null,
+    "state_head_before_lock": "9334d0bd5700da211279745ff4cabfe98f7f021e"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
