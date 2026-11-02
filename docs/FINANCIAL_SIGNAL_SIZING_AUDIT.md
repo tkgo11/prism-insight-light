@@ -180,3 +180,14 @@ No existing ledger format is migrated. This is a parser-only mock/CI
 safeguard, not evidence of KIS order acceptance, fills, cancellations or
 account-level reconciliation. Full dependency audits and demo verification
 remain mandatory before merge or deployment.
+
+### Boolean buy configuration hardening (2026-11-02)
+
+Python numeric coercion treats a YAML boolean as 1 or 0. The sizing
+helpers, KR/US trader constructors, legacy global default amount loading
+and per-account normalization now reject boolean buy amount/percent
+configuration before a broker order can be constructed. False is not
+silently replaced by an alternative account amount. Mock-only regression
+tests cover both account markets and legacy defaults. These tests do not
+establish any actual KIS fill/cancel reconciliation or authorize live
+deployment. Independent code audits remain incomplete.

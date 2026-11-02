@@ -216,9 +216,21 @@ with open(config_file, encoding="UTF-8") as f:
     _cfg = yaml.safe_load(f)
 
 
+def _reject_boolean_buy_default(value: Any, key: str) -> Any:
+    if isinstance(value, bool):
+        raise ValueError(f"{key} must be numeric, not a boolean")
+    return value
+
+
 DEFAULT_PRODUCT_CODE = str(_cfg.get("default_product_code", "01"))
-DEFAULT_BUY_AMOUNT_KRW = int(_cfg.get("default_unit_amount", 1_000_000) or 1_000_000)
-DEFAULT_BUY_AMOUNT_USD = float(_cfg.get("default_unit_amount_usd", 2_000) or 2_000)
+DEFAULT_BUY_AMOUNT_KRW = int(
+    _reject_boolean_buy_default(_cfg.get("default_unit_amount", 1_000_000), "default_unit_amount")
+    or 1_000_000
+)
+DEFAULT_BUY_AMOUNT_USD = float(
+    _reject_boolean_buy_default(_cfg.get("default_unit_amount_usd", 2_000), "default_unit_amount_usd")
+    or 2_000
+)
 DEFAULT_BUY_PERCENT_KRW = normalize_percent(_cfg.get("default_unit_asset_percent", 100))
 DEFAULT_BUY_PERCENT_USD = normalize_percent(_cfg.get("default_unit_asset_percent_usd", 100))
 MAX_CONFIGURED_ACCOUNTS = 10
@@ -314,7 +326,11 @@ def _build_normalized_account(
         "market": market,
         "enabled": enabled,
         "primary": _to_bool(item.get("primary"), default=primary_default),
-        "buy_amount_krw": _normalize_buy_amount(item.get("buy_amount_krw") or item.get("buy_amount")),
+        "buy_amount_krw": _normalize_buy_amount(
+            item.get("buy_amount_krw")
+            if item.get("buy_amount_krw") not in (None, "")
+            else item.get("buy_amount")
+        ),
         "buy_amount_usd": _normalize_buy_amount(item.get("buy_amount_usd")),
         "buy_percent_krw": _normalize_buy_percent(
             item.get("buy_percent_krw")
