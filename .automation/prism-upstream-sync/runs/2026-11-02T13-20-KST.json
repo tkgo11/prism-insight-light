@@ -1,0 +1,76 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+  "phase": "PREPATCH_REPRODUCTION_AND_IMPACT_MATRIX",
+  "timestamp": "2026-11-02T04:20:37Z",
+  "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+  "upstream_pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "upstream_delta": {
+    "commits": 45,
+    "decision": "No new publisher sizing contract; BTC/micro-split/research unrelated; no blind merge"
+  },
+  "fork_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+  "pr": 42,
+  "pr_head_before": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+  "draft": true,
+  "root_cause_id": "RC-STRATEGY-SCORE-BAND-CONFIG-INTEGRITY",
+  "classification": "NEW_ROOT_CAUSE_WITH_THREE_REPRODUCIBLE_SUBCASES",
+  "subcases": [
+    {
+      "id": "explicit-empty-bands-silently-default-to-full",
+      "reproducer": "raw={} -> raw or {0:1.0} -> {0:1.0}; score_weighted/score_risk/balanced_risk/score_max_capital BUY+SELL",
+      "invariant": "Explicit invalid sizing configuration must fail before broker submission"
+    },
+    {
+      "id": "normalized-score-alias-overwrites",
+      "reproducer": "{'05':0.2,'5':0.8} -> {5:0.8} with last-wins",
+      "invariant": "Ambiguous score threshold aliases cannot silently select different risk allocation"
+    },
+    {
+      "id": "nonmapping-bands-accepted",
+      "reproducer": "[[5,0.5]] -> dict -> {5:0.5}; [] and False default to full",
+      "invariant": "Score band configuration must be a mapping"
+    }
+  ],
+  "impact_matrix": [
+    {
+      "contract": "No invalid explicit band fallback",
+      "producer": "operator YAML/JSON strategy config",
+      "parser": "ScoreWeightedStrategyConfig.from_mapping; ScoreRiskStrategyConfig.from_mapping; ScoreMaxCapitalStrategyConfig.from_mapping",
+      "consumers": "TradeDispatcher.__init__ -> _resolve_strategy -> BUY/SELL -> KR/US broker",
+      "tests": "tests/test_score_band_config_integrity.py empty/invalid, dispatcher no-order construction"
+    },
+    {
+      "contract": "Unique normalized thresholds",
+      "producer": "YAML/JSON keys including '05'/'5' or 5/'5'",
+      "parser": "three strategy config parsers",
+      "consumers": "score_weighted BUY, score_risk/balanced_risk BUY, score_max_capital BUY/SELL",
+      "tests": "alias collision tests across five legs"
+    },
+    {
+      "contract": "Backward-compatible absent score bands",
+      "producer": "existing default config",
+      "parser": "all three parsers",
+      "consumers": "TradeDispatcher, legacy broker default",
+      "tests": "missing/None config default and valid singleton"
+    },
+    {
+      "contract": "Accepted order != fill",
+      "producer": "broker KIS KR/US",
+      "parser": "ExecutionLedger and watcher",
+      "consumers": "partial-fill/cancel/remaining/recovery",
+      "tests": "Not addressed by this config-only patch; authoritative demo blocked"
+    }
+  ],
+  "file_blob_shas_before": {
+    "trading/strategies/score_weighted.py": "361a84149b6be0dd5cecc6361102c34dd0d9e6fc",
+    "trading/strategies/score_risk.py": "8de985063a746453f8a291a25880b0fa65b741b7",
+    "trading/strategies/score_max_capital.py": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
+    "trading/strategies/balanced_risk.py": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+    "trading/dispatch.py": "035846e0845133debe4b65524c16ed9ff1cb56f2"
+  },
+  "test_first": true,
+  "local_pytest": "BLOCKED_CONTAINER_GITHUB_DNS; will use GitHub Actions",
+  "audit_related_pass": 0,
+  "audit_full_pass": 0,
+  "live_orders": 0
+}
