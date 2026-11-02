@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
-    "started_at": "2026-11-02T02:16:28Z",
-    "completed_at": "2026-11-02T02:24:30Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
+    "started_at": "2026-11-02T03:16:03Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
     "last_mutation_commit": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
     "last_mutation_at": "2026-11-02T02:24:30Z",
-    "result": "THREE_ROOT_CAUSE_PATCH_BATCHES_LATEST_ACTIONS_SUCCESS_NO_AUDIT_PASS_NO_MERGE",
+    "result": "IN_PROGRESS",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -62,8 +62,8 @@
       "reason": "Code fixes and latest CI successful; independent audits, KIS demo, and reviews blocked"
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
-    "pr_head_at_start": "8e90304a1c45d981995484e18ab8e5a1faebb461",
-    "lock_acquired_at": "2026-11-02T02:18:00Z",
+    "pr_head_at_start": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+    "lock_acquired_at": "2026-11-02T03:16:03Z",
     "lock_released_at": "2026-11-02T02:24:30Z"
   },
   "source": {
