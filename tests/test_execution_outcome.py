@@ -205,3 +205,32 @@ def test_unverified_apbk_message_preserves_duplicate_claim_after_restart(tmp_pat
     assert ExecutionLedger(ledger_path).claim("account-signal-apbk") == (
         False, "unknown",
     )
+
+
+@pytest.mark.parametrize("message", [
+    "Gateway timeout after order submission",
+    "Read timed out after the broker received the order",
+    "Connection reset after the order was accepted",
+])
+def test_success_with_receipt_and_transport_ambiguity_is_not_confirmed(message):
+    # A contradictory wrapper result cannot be trusted as an authoritative
+    # acceptance, even when it carries a syntactically valid order number.
+    assert classify_broker_result({
+        "success": True, "order_no": "KIS-123", "message": message,
+    }) == "unknown"
+
+
+def test_contradictory_success_timeout_keeps_replay_fence_after_restart(tmp_path):
+    path = tmp_path / "contradictory-receipt.json"
+    ledger = ExecutionLedger(path)
+    assert ledger.claim("account-signal-ambiguous-receipt") == (True, None)
+    outcome = classify_broker_result({
+        "success": True,
+        "order_no": "12345678",
+        "message": "Gateway timeout after order submission",
+    })
+    assert outcome == "unknown"
+    ledger.finalize("account-signal-ambiguous-receipt", outcome)
+    assert ExecutionLedger(path).claim("account-signal-ambiguous-receipt") == (
+        False, "unknown",
+    )
