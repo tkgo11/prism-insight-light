@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from .schema import SignalMessage, SignalValidationError, parse_signal_payload
+from .schema import SignalMessage, SignalValidationError, parse_signal_payload, reject_duplicate_signal_keys
 
 DEFAULT_TELEGRAM_CHANNEL_URL = "https://t.me/prism_insight_global_en"
 _TELEGRAM_PREVIEW_BASE = "https://t.me/s/"
@@ -233,7 +233,7 @@ def _parse_json_signal(text: str) -> dict[str, Any] | None:
 
     for candidate in candidates:
         try:
-            payload = json.loads(candidate)
+            payload = json.loads(candidate, object_pairs_hook=reject_duplicate_signal_keys)
         except json.JSONDecodeError:
             continue
         if isinstance(payload, dict) and str(payload.get("type", "")).strip():
