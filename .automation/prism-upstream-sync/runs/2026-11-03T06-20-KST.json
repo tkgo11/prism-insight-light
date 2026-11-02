@@ -1,0 +1,108 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T06-20-KST-turn9",
+  "slot": "2026-11-03T06-20-KST",
+  "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
+  "lock": {
+    "status": "RELEASED",
+    "acquisition_parent": "e9b1767c89e245a0a01d9a04d013c4c1639f8b1b",
+    "acquired_commit": "b9af0f1a02eefa62ccee0a7e0f276998a5f27483",
+    "expected_state_branch_head": "a325ba298dbd47cf34e16515441fb6f807f32fb8"
+  },
+  "pr": {
+    "number": 43,
+    "draft": true,
+    "head": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+    "base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+    "git_tree_sha": "21ab5779003733473efe2dc8c618893c37a04426",
+    "merge": false
+  },
+  "root_cause": {
+    "id": "RC-BROKER-OUTCOME-AMBIGUITY",
+    "subcase": "NONSTANDARD-2XX-UNVERIFIED-REJECTION",
+    "reproduced": true,
+    "test_first": {
+      "head": "f8582ed049346617dc44b584e9cc240c03582a70",
+      "run_id": 41527774724,
+      "failed": 14,
+      "passed": 1314,
+      "failure_kind": "EXPECTED_REGRESSION_ASSERTION"
+    },
+    "changes": [
+      {
+        "commit": "f8582ed049346617dc44b584e9cc240c03582a70",
+        "path": "tests/test_wave4_execution_safety.py",
+        "kind": "test-first"
+      },
+      {
+        "commit": "41201bdf993603b098368c2e9760c7d0aa895f8d",
+        "path": "tests/test_broker_http_rejection_safety.py",
+        "kind": "ledger regression"
+      },
+      {
+        "commit": "e6fec0c934b851679ef3819489364206bd817be4",
+        "path": "trading/execution_outcome.py",
+        "kind": "fix"
+      },
+      {
+        "commit": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+        "path": "tests/test_wave4_execution_safety.py",
+        "kind": "KR/US SELL boundaries"
+      }
+    ],
+    "invariants": [
+      "non-200 2xx is not KIS verified rejection",
+      "UNKNOWN cannot release durable replay fence",
+      "KR/US BUY and SELL adapters agree",
+      "canonical 200/400/422 controls remain retryable"
+    ]
+  },
+  "ci": {
+    "head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+    "runs": [
+      41528112074,
+      41528104300
+    ],
+    "status": "completed",
+    "conclusion": "success",
+    "linux_pytest_passed": 1349,
+    "windows_smoke_passed": 167,
+    "docker": "success",
+    "snyk": "success",
+    "qlty": "check_success_96_blocking_issues_uninspected"
+  },
+  "manifests": {
+    "related_scope": 82,
+    "related_file_inspections": 10,
+    "full_scope": 174,
+    "full_file_inspections": 10,
+    "related_passes": 0,
+    "full_passes": 0
+  },
+  "upstream": {
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "ahead_commits": 47,
+    "changed_files": 41,
+    "decision": "NO_IMPORT_UNRELATED_BTC_US_RESEARCH_CHANGES"
+  },
+  "prior_risk_reproduction": {
+    "id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "status": "MOCK_TESTS_EXECUTED_EXISTING_FULL_CI",
+    "paths": [
+      "tests/test_unknown_buy_intent_durability.py",
+      "tests/test_pending_buy_stop_loss_safety.py",
+      "tests/test_stop_loss_snapshot_preflight.py"
+    ],
+    "result": "Unknown BUY intent durable and non-actionable; positive aggregate holdings cannot authorize SELL; authoritative late-fill activation NOT IMPLEMENTED"
+  },
+  "blockers": [
+    "KIS authoritative per-account fill/partial/cancel/remaining/restart reconciliation and delayed BUY stop activation not implemented",
+    "Stop-loss final preflight-to-submit TOCTOU unverified",
+    "Qlty 96 blocking issues not individually inspected",
+    "No independent human review; branch protection API 403",
+    "Related and full file-level audits incomplete; 0/2 + 0/2"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "finished_at": "2026-11-02T21:27:55.228Z"
+}

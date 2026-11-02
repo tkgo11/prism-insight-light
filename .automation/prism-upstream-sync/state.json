@@ -4,14 +4,14 @@
   "state": "ACTIVE_DRAFT_REMEDIATION_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T05-22-KST-turn9",
+    "id": "prism-sync-hourly-2026-11-03T06-20-KST-turn9",
     "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T04-15-KST-turn8",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T05-22-KST-turn9",
     "result": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_INCOMPLETE",
-    "last_mutation_commit": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
-    "previous_state_branch_sha": "59c1b8e0fe3d3efd80257a187d069f1437a4cdce",
-    "started_at": "2026-11-02T20:22:18Z",
-    "completed_at": "2026-11-02T20:29:57.960Z"
+    "last_mutation_commit": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+    "previous_state_branch_sha": "a325ba298dbd47cf34e16515441fb6f807f32fb8",
+    "started_at": "2026-11-02T21:20:14Z",
+    "completed_at": "2026-11-02T21:27:55.228Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -30,7 +30,7 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+    "head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
@@ -107,23 +107,23 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "c1794d1a0e54d4d06ec03a92928ad5f937462102",
+    "checksum": "51a183ee30ca819a76e4a7a0a7fdb56fc986ccc7",
     "scope_estimate": 82,
-    "files_fully_audited": 7,
-    "head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+    "files_fully_audited": 10,
+    "head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "f2ce98385f7a803aa141db3adee3f9eee130f505",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T05-22-KST-related.json"
+    "git_tree_sha": "21ab5779003733473efe2dc8c618893c37a04426",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T06-20-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "581fe2c279b77e21144893064a5c6ceba346cf3d",
-    "sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
-    "files_checked": 7,
-    "fully_audited_files": 7,
+    "checksum": "b08eb8197a561a0893a16c1ccd3eac8a2a137171",
+    "sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+    "files_checked": 10,
+    "fully_audited_files": 10,
     "file_count": 174,
-    "git_tree_sha": "f2ce98385f7a803aa141db3adee3f9eee130f505",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T05-22-KST-full.json"
+    "git_tree_sha": "21ab5779003733473efe2dc8c618893c37a04426",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T06-20-KST-full.json"
   },
   "checks": [
     {
@@ -1431,6 +1431,36 @@
         }
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41519143559"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T06-20-KST-turn9",
+      "head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "run_ids": [
+        41528112074,
+        41528104300
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "linux_pytest_passed": 1349,
+      "windows_smoke_passed": 167,
+      "docker": "success",
+      "external": [
+        {
+          "context": "security/snyk",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "description": "96 blocking issues uninspected"
+        }
+      ],
+      "test_first": {
+        "head": "f8582ed049346617dc44b584e9cc240c03582a70",
+        "run_id": 41527774724,
+        "failed": 14,
+        "passed": 1314
+      }
     }
   ],
   "upstream_changes": [
@@ -7637,9 +7667,10 @@
     {
       "id": "RC-BROKER-OUTCOME-AMBIGUITY",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_AND_DEMO_INCOMPLETE",
-      "latest_subcase": "unverified-kis-error-code-and-redirect-20261102",
-      "latest_patch_commit": "727d8d1b7cef9783e4d76677386b676d5c868e85"
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_INCOMPLETE",
+      "latest_subcase": "nonstandard-2xx-unverified-rejection-20261103",
+      "latest_patch_commit": "e6fec0c934b851679ef3819489364206bd817be4",
+      "latest_verified_head": "bb924c79042a33bd084e586ceceeaeb999bbf13d"
     },
     {
       "id": "RC-LEDGER-ATTEMPT-FENCING",
