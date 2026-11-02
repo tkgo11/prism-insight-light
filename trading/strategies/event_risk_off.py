@@ -31,6 +31,23 @@ class EventRiskOffStrategyConfig:
 
 class EventRiskOffStrategy:
     def __init__(self, *, config: EventRiskOffStrategyConfig): self.config = config
+    @staticmethod
+    def _validate_records(items: list[dict[str, Any]]) -> None:
+        """Reject malformed risk-off records rather than silently losing BUY protection."""
+        for item in items:
+            market = item.get("market")
+            ticker = item.get("ticker")
+            event_type = item.get("event_type")
+            if (
+                not isinstance(market, str) or market not in {"", "KR", "US"}
+                or not isinstance(ticker, str)
+                or not isinstance(event_type, str) or not event_type.strip()
+            ):
+                raise RuntimeError(
+                    "Risk-off state has an ambiguous event scope; "
+                    "operator reconciliation required"
+                )
+
     async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.is_event:
             if signal.event_type.strip().upper() in self.config.risk_off_event_types:
@@ -42,17 +59,20 @@ class EventRiskOffStrategy:
                     "created_at": event_time.isoformat(),
                 }
                 window = timedelta(minutes=self.config.risk_off_window_minutes)
-                update_json_list(
-                    self.config.runtime_path,
-                    lambda items: [*fresh_items(items, window=window), item],
-                )
+                def append_validated(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+                    self._validate_records(items)
+                    return [*fresh_items(items, window=window), item]
+
+                update_json_list(self.config.runtime_path, append_validated)
                 return StrategyExecution("acknowledged", "Risk-off event recorded", signal.market, signal.ticker)
             return StrategyExecution("acknowledged", "Event signal acknowledged", signal.market, signal.ticker)
         buy_amount = None
         order_signal = signal
         risk_off_multiplier = None
         if signal.signal_type == "BUY":
-            items = fresh_items(load_json_list(self.config.runtime_path), window=timedelta(minutes=self.config.risk_off_window_minutes))
+            loaded = load_json_list(self.config.runtime_path)
+            self._validate_records(loaded)
+            items = fresh_items(loaded, window=timedelta(minutes=self.config.risk_off_window_minutes))
             active = any(item.get("ticker") in ("", signal.ticker) and item.get("market") in ("", signal.market) for item in items)
             if active and self.config.buy_size_multiplier <= 0:
                 return StrategyExecution("rejected", "Risk-off state blocks BUY signals", signal.market, signal.ticker)

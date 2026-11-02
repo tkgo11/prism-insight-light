@@ -19,13 +19,42 @@ class CooldownStrategyConfig:
             value.upper()
             for value in string_list(payload, "apply_to_signal_types", [])
         )
-        return cls(window, types, str(payload.get("scope", "market_ticker")), Path(payload.get("runtime_path") or (runtime_dir() / "cooldown_executions.json")))
+        scope = str(payload.get("scope", "market_ticker"))
+        if scope not in {"ticker", "market_ticker"}:
+            raise ValueError("signal_strategy.scope must be ticker or market_ticker")
+        return cls(window, types, scope, Path(payload.get("runtime_path") or (runtime_dir() / "cooldown_executions.json")))
 
 class CooldownStrategy:
     def __init__(self, *, config: CooldownStrategyConfig): self.config = config
     def _key(self, signal: SignalMessage) -> str:
         if self.config.scope == "ticker": return signal.ticker
         return f"{signal.market}:{signal.ticker}:{signal.signal_type}"
+    def _validate_records(self, loaded: list[dict[str, Any]]) -> None:
+        """Fail closed if a persisted pending fence cannot be matched to its instrument."""
+        seen: set[str] = set()
+        for item in loaded:
+            market = item.get("market")
+            ticker = item.get("ticker")
+            side = item.get("signal_type")
+            key = item.get("key")
+            expected_key = (
+                ticker if self.config.scope == "ticker"
+                else f"{market}:{ticker}:{side}"
+            )
+            if (
+                market not in {"KR", "US"}
+                or not isinstance(ticker, str) or not ticker
+                or side not in {"BUY", "SELL"}
+                or not isinstance(key, str) or key != expected_key
+                or key in seen
+                or ("pending" in item and not isinstance(item["pending"], bool))
+            ):
+                raise RuntimeError(
+                    "Cooldown state has an ambiguous instrument or pending fence; "
+                    "operator reconciliation required"
+                )
+            seen.add(key)
+
     async def execute(self, signal: SignalMessage, *, trading_mode: str, trader_kwargs: dict[str, Any] | None = None) -> StrategyExecution:
         if signal.signal_type not in self.config.apply_to_signal_types:
             result = await execute_order(signal, trading_mode=trading_mode, trader_kwargs=trader_kwargs, limit_price=signal.price)
@@ -38,8 +67,7 @@ class CooldownStrategy:
             loaded = load_json_list(self.config.runtime_path)
             # An unresolved order remains protected even after the configured
             # cooldown expires. Unknown broker outcomes are not clean failures.
-            if any("pending" in item and not isinstance(item["pending"], bool) for item in loaded):
-                raise RuntimeError("Cooldown state is ambiguous; operator reconciliation required")
+            self._validate_records(loaded)
             recent = fresh_items(loaded, window=timedelta(minutes=self.config.window_minutes))
             pending = [item for item in loaded if item.get("pending") is True]
             items = pending + [item for item in recent if item.get("pending") is not True]

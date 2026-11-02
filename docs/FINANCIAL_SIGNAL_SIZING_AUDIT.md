@@ -139,3 +139,8 @@ continued dedupe finalization using a fake broker only. This does not establish
 atomicity against external configuration-file replacement, actual KIS order
 fills, or cross-account strategy-state partitioning; these remain audit/demo
 gates. Do not treat CI success as live-trading authorization.
+
+
+### Strategy state semantic fail-closed checks (2026-11-02)
+
+Cooldown state now rejects mismatched/missing instrument keys, duplicate entries and malformed pending flags before broker submission. Event risk-off rejects malformed market/ticker/event scopes before BUY or state replacement. These are mock-tested code safeguards only; they do not establish KIS fill/cancel reconciliation or account-scoped strategy-state isolation. Historical ambiguous records require operator reconciliation rather than automatic migration.
