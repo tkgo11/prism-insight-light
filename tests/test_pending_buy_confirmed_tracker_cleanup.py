@@ -126,3 +126,51 @@ def test_post_sell_zero_preserves_tracker_with_another_unresolved_buy(
     assert result["status"] == "executed"
     dispatcher.dispatch.assert_awaited_once()
     assert tracker.get_position(market, ticker) == before
+
+def test_us_case_variant_pending_intent_blocks_confirmed_cleanup(tmp_path):
+    ledger, tracker, watcher, _ = _setup(tmp_path, "US", "AAPL")
+    _claim(ledger, "US", "aapl", "unknown")
+    assert _cycle(watcher, "US") == []
+    assert tracker.get_position("US", "AAPL") is not None
+
+
+def test_malformed_persisted_intent_blocks_zero_cleanup(tmp_path):
+    import json
+
+    ledger, tracker, watcher, _ = _setup(tmp_path, "KR", "005930")
+    _claim(ledger, "KR", "005930", "unknown")
+    entries = json.loads(ledger.path.read_text(encoding="utf-8"))
+    next(iter(entries.values()))["order_intent"]["account_scope"] = "not-opaque"
+    ledger.path.write_text(json.dumps(entries), encoding="utf-8")
+    assert _cycle(watcher, "KR") == []
+    assert tracker.get_position("KR", "005930") is not None
+
+
+def test_zero_cleanup_guard_serializes_against_new_durable_buy_claim(tmp_path):
+    import threading
+
+    ledger, tracker, watcher, _ = _setup(tmp_path, "KR", "005930")
+    started = threading.Event()
+    completed = threading.Event()
+    errors = []
+
+    def new_claim():
+        try:
+            started.set()
+            _claim(ledger, "KR", "005930", "unknown", scope="c" * 64)
+        except Exception as exc:
+            errors.append(exc)
+        finally:
+            completed.set()
+
+    worker = threading.Thread(target=new_claim, daemon=True)
+    with ledger.guard_unresolved_buy("KR", "005930") as unresolved:
+        assert unresolved is False
+        worker.start()
+        assert started.wait(2)
+        assert not completed.wait(0.15)
+    assert completed.wait(3)
+    worker.join(timeout=3)
+    assert not errors
+    with ledger.guard_unresolved_buy("KR", "005930") as unresolved:
+        assert unresolved is True
