@@ -10,7 +10,7 @@
     "lock_owner": null,
     "last_mutation_commit": "343cb16bb7013c985fcdd91aac508a13e4ef181a",
     "last_mutation_at": "2026-11-02T01:23:30.742Z",
-    "result": "SCORE_AND_REWARD_RISK_GATES_PATCHED_ACTIONS_SUCCESS_QLTY_PENDING_AUDITS_BLOCKED",
+    "result": "SCORE_AND_REWARD_RISK_GATES_PATCHED_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDITS_BLOCKED",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -61,7 +61,7 @@
         "343cb16bb7013c985fcdd91aac508a13e4ef181a"
       ],
       "merged": false,
-      "reason": "14 missing-input gate regression/boundary tests; GitHub Actions pass; qlty pending, KIS demo and independent audits blocked"
+      "reason": "14 missing-input gate regression/boundary tests; GitHub Actions pass; qlty success, KIS demo and independent audits blocked"
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T09:23:35+09:00",
     "pr_head_at_start": "8e90304a1c45d981995484e18ab8e5a1faebb461",
@@ -89,7 +89,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_ACTIONS_SUCCESS_QLTY_PENDING_AUDITS_0_OF_2"
+    "status": "DRAFT_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -103,7 +103,7 @@
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
       "mutation_allowed": true,
-      "status": "DRAFT_ACTIONS_SUCCESS_QLTY_PENDING_AUDIT_INCOMPLETE"
+      "status": "DRAFT_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDIT_INCOMPLETE"
     },
     {
       "number": 40,
@@ -4229,10 +4229,9 @@
     "64 related files not independently fully audited; PASS 0/2.",
     "163 total files not independently fully audited; PASS 0/2.",
     "KIS authoritative order ID/fill/partial-fill/cancel/remaining-quantity and account isolation demo tests unavailable; live trading prohibited.",
-    "Independent review approval missing; branch protection 403; qlty usage requiredness unverified.",
-    "Latest head qlty check pending; cannot count as required pass."
+    "Independent review approval missing; branch protection 403; qlty usage requiredness unverified."
   ],
-  "next_action": "Confirm qlty and required branch checks, audit 64 related files in separate slots then 163 full files; KIS demo order-ID/fill/cancel reconciliation; independent review required before merge.",
+  "next_action": "Confirm required branch checks, audit 64 related files in separate slots then 163 full files; KIS demo order-ID/fill/cancel reconciliation; independent review required before merge.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -4578,7 +4577,7 @@
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "related_pass": false,
       "full_pass": false,
-      "reason": "64 related/163 total independent file audits incomplete, KIS demo and independent review unavailable; qlty pending",
+      "reason": "64 related/163 total independent file audits incomplete, KIS demo and independent review unavailable",
       "manifest_tree_sha": "87d84dce07fd0b67429e00c11495a444f1573878"
     }
   ],
@@ -5323,7 +5322,7 @@
       "id": "score-minimum-missing-score-bypass-2026-11-02-10",
       "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDIT_INCOMPLETE",
       "description": "Missing BUY score bypassed positive min_score in score_weighted, score_risk and balanced_risk.",
       "first_discovered_run": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
       "paths": [
@@ -5342,7 +5341,7 @@
       "id": "reward-risk-floor-missing-target-bypass-2026-11-02-10",
       "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDIT_INCOMPLETE",
       "description": "Missing target_price bypassed positive min_reward_risk when require_target_price=false.",
       "first_discovered_run": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
       "paths": [
@@ -5561,7 +5560,7 @@
         "score-minimum-missing-score-bypass-2026-11-02-10",
         "reward-risk-floor-missing-target-bypass-2026-11-02-10"
       ],
-      "classification": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_PENDING_AUDIT_INCOMPLETE",
+      "classification": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDIT_INCOMPLETE",
       "last_checked_head": "343cb16bb7013c985fcdd91aac508a13e4ef181a",
       "previous_root_cause_ids": [
         "RC-RISK-BRACKET-CONSTRAINT-FALLBACK"
@@ -5800,7 +5799,8 @@
     "2026-11-02 00:30 KST: latest-head CI 41321379720 and 41321384203 completed/success, Snyk and qlty check success, qlty usage pending; related/full file audits and authoritative KIS demo order-ID/fill/cancel reconciliation incomplete.",
     "2026-11-02 06:22 KST: queued target fan-out/mode-switch defects patched and current-head Actions 41351888612 success (Linux 948, Windows 141); qlty check pending; 57/161 audits and KIS demo unresolved.",
     "2026-11-02 07:16 KST: queue mode and resolved account pin patched; latest-head Actions success but 60/162 audits, KIS demo, qlty usage and independent review incomplete.",
-    "2026-11-02 10:16 KST: patched score and reward/risk missing-data gates; Actions 994/149 pass; qlty pending; audits 0/2 + 0/2"
+    "2026-11-02 10:16 KST: patched score and reward/risk missing-data gates; Actions 994/149 pass; qlty pending; audits 0/2 + 0/2",
+    "Latest HEAD qlty check confirmed success at final verification; requiredness of qlty usage still unknown."
   ],
   "risk_register_current": [
     {
@@ -5852,7 +5852,7 @@
     {
       "id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDIT_INCOMPLETE",
       "description": "Earlier sizing bypasses patched; this run patched positive score floor and positive reward/risk floor missing-input bypasses; independent audit and KIS demo remain unverified",
       "fix_commits": [
         "c8a69a53a2427be74467ceb314d58a3f776a5d11",

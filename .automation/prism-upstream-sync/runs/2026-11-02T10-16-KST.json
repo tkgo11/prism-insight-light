@@ -188,8 +188,7 @@
     "64 related files not independently fully audited; PASS 0/2.",
     "163 total files not independently fully audited; PASS 0/2.",
     "KIS authoritative order ID/fill/partial-fill/cancel/remaining-quantity and account isolation demo tests unavailable; live trading prohibited.",
-    "Independent review approval missing; branch protection 403; qlty usage requiredness unverified.",
-    "Latest head qlty check pending; cannot count as required pass."
+    "Independent review approval missing; branch protection 403; qlty usage requiredness unverified."
   ],
   "merge": "NOT_ATTEMPTED",
   "recorded_at": "2026-11-02T01:23:30.742Z"
