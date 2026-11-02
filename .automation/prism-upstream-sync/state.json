@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_RELATED_AUDIT",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
-    "started_at": "2026-11-02T04:20:37Z",
-    "completed_at": "2026-11-02T04:30:40.787Z",
-    "lock_owner": null,
+    "id": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
+    "started_at": "2026-11-02T05:25:30Z",
+    "completed_at": null,
+    "lock_owner": "prism-sync-hourly-2026-11-02T14:25:30+09:00",
     "last_mutation_commit": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
     "last_mutation_at": "2026-11-02T04:30:40.787Z",
-    "result": "NUMERIC_BAND_CONFIG_FIXED_ACTIONS_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
+    "result": "IN_PROGRESS",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -65,9 +65,9 @@
       "merged": false,
       "reason": "Latest CI success, but only targeted source review and no broker demo/review/full audit"
     },
-    "prior_run_id": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
-    "pr_head_at_start": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
-    "lock_acquired_at": "2026-11-02T04:20:37Z",
+    "prior_run_id": "prism-sync-hourly-2026-11-02T13:20:37+09:00",
+    "pr_head_at_start": "aa40ba0a99aaf412ac3d7f64cbed1bb8582e1f40",
+    "lock_acquired_at": "2026-11-02T05:25:30Z",
     "lock_released_at": "2026-11-02T04:30:40.787Z"
   },
   "source": {
