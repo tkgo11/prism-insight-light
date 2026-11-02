@@ -1,0 +1,187 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
+  "kind": "THREE_ITERATION_FINITE_SIZING_AND_SCORE_CONSTRAINT_FIX_CI_SUCCESS_AUDITS_BLOCKED",
+  "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+  "upstream_pinned_contract": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "upstream_commits_since_pinned": 45,
+  "upstream_decision": "No new publisher sizing contract; exclude BTC, micro-split ADD, and unrelated tracking/research changes",
+  "target_repository": "tkgo11/prism-insight-light",
+  "pr_number": 42,
+  "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+  "head_before": "343cb16bb7013c985fcdd91aac508a13e4ef181a",
+  "head_after": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+  "head_tree_sha": "7fd53b7c386adc606cc6e66128c2aed6b1808f16",
+  "draft": true,
+  "root_causes": [
+    {
+      "id": "RC-SIGNAL-NUMERIC-OVERFLOW",
+      "classification": "NEW_DERIVED_SUBCASES_OF_EXISTING_ROOT_CAUSE",
+      "details": "score_weighted finite multiplication overflow; score_risk finite division, cap and notional overflow",
+      "fix_commit": "811b6bef6d380622773065a9a08cf0b006b2cbfd",
+      "new_regressions": 7,
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING"
+    },
+    {
+      "id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
+      "classification": "RECURRENCE_UNCOVERED_PATH",
+      "details": "Non-unit score weight without usable budget silently fell back to unweighted broker default; prior zero-weight test did not cover nonzero fractional bands",
+      "fix_commit": "d238ac092189c7a472e2cfa2a25589eb752c0411",
+      "new_regressions": 5,
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING"
+    },
+    {
+      "id": "RC-STRATEGY-SCORE-BAND-LOWER-BOUND",
+      "classification": "NEW_ROOT_CAUSE",
+      "details": "Below-first score selects global minimum band weight instead of first threshold for weighted/risk/balanced",
+      "fix_commit": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+      "new_regressions": 3,
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING"
+    }
+  ],
+  "changed_files": [
+    {
+      "path": "trading/strategies/score_weighted.py",
+      "blob_sha": "361a84149b6be0dd5cecc6361102c34dd0d9e6fc"
+    },
+    {
+      "path": "trading/strategies/score_risk.py",
+      "blob_sha": "8de985063a746453f8a291a25880b0fa65b741b7"
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "blob_sha": "bb8730d48c8f15e8b7ee76dd18506ca02e73b9e8"
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "blob_sha": "e2e05a407ccbb2d675234ea7ee5ab97cce830a86"
+    },
+    {
+      "path": "trading/STRATEGIES.md",
+      "blob_sha": "2d7acc300d88dfbbc59893d79121d414e9c0412d"
+    }
+  ],
+  "related_manifest_files": 64,
+  "related_fully_audited_files": 0,
+  "full_manifest_files": 163,
+  "full_fully_audited_files": 0,
+  "related_pass": 0,
+  "full_pass": 0,
+  "tests": {
+    "linux": "1009 passed",
+    "windows": "152 passed",
+    "static_and_docker": "SUCCESS_IN_ACTIONS",
+    "new_mock_boundary_cases": 15,
+    "local_pytest": "NOT_RUN_GITHUB_DNS_FAILURE",
+    "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+    "live_trading": "PROHIBITED"
+  },
+  "ci": {
+    "runs": [
+      {
+        "id": 41377355170,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+      },
+      {
+        "id": 41377350849,
+        "event": "push",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+      }
+    ],
+    "external_statuses": [
+      {
+        "context": "security/snyk (tkgo11)",
+        "state": "success"
+      },
+      {
+        "context": "qlty check",
+        "state": "success"
+      }
+    ],
+    "qlty_usage": "NOT_REPORTED_REQUIREDNESS_UNVERIFIED"
+  },
+  "review": {
+    "independent_approvals": 0,
+    "branch_protection": "READ_FORBIDDEN_403",
+    "rulesets": "EMPTY_READ_RESULT"
+  },
+  "impact_review": [
+    {
+      "path": "trading/strategies/score_weighted.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/strategies/score_risk.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/strategies/balanced_risk.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/schema.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/strategies/score_max_capital.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/strategies/risk_bracket.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/strategies/event_risk_off.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/strategies/cooldown.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/execution_outcome.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    },
+    {
+      "path": "trading/STRATEGIES.md",
+      "status": "PARTIAL_REVIEW_NOT_FULL_AUDIT"
+    }
+  ],
+  "remaining_risks": [
+    "Order acceptance != fill; no authoritative KIS order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation and no demo credentials",
+    "Related dependency closure (64 files) not independently fully audited; 0/2",
+    "Whole PR tree (163 files) not independently fully audited; 0/2",
+    "No independent review approval; branch protection API 403; requiredness of qlty usage unverified"
+  ],
+  "commits": [
+    "811b6bef6d380622773065a9a08cf0b006b2cbfd",
+    "d238ac092189c7a472e2cfa2a25589eb752c0411",
+    "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+  ],
+  "merge": "NOT_ATTEMPTED",
+  "recorded_at": "2026-11-02T02:24:30Z"
+}

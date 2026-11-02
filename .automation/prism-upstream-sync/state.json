@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
     "started_at": "2026-11-02T02:16:28Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
+    "completed_at": "2026-11-02T02:24:30Z",
+    "lock_owner": null,
     "last_mutation_commit": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
-    "last_mutation_at": "2026-11-02T02:23:00Z",
-    "result": "THREE_BATCHES_PATCHED_LATEST_CI_PENDING_AUDIT_INCOMPLETE",
+    "last_mutation_at": "2026-11-02T02:24:30Z",
+    "result": "THREE_ROOT_CAUSE_PATCH_BATCHES_LATEST_ACTIONS_SUCCESS_NO_AUDIT_PASS_NO_MERGE",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,7 +19,7 @@
       "source_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "343cb16bb7013c985fcdd91aac508a13e4ef181a",
+      "pr_head": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
       "pr_number": 42,
       "related_manifest_files": 64,
       "related_manifest_files_fully_audited": 0,
@@ -27,20 +27,22 @@
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41371985237,
+          "id": 41377355170,
           "event": "pull_request",
           "status": "completed",
-          "conclusion": "success"
+          "conclusion": "success",
+          "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
         },
         {
-          "id": 41371980585,
+          "id": 41377350849,
           "event": "push",
           "status": "completed",
-          "conclusion": "success"
+          "conclusion": "success",
+          "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
         }
       ],
-      "linux": "994 passed",
-      "windows": "149 passed",
+      "linux": "1009 passed",
+      "windows": "152 passed",
       "external_statuses": [
         {
           "context": "security/snyk (tkgo11)",
@@ -49,24 +51,20 @@
         {
           "context": "qlty check",
           "state": "success"
-        },
-        {
-          "context": "qlty usage",
-          "state": "NOT_REPORTED_REQUIREDNESS_UNVERIFIED"
         }
       ],
       "commits": [
-        "bb7ca0307855b7157abd0226ff3aa47d2c80819e",
-        "e448c9e4e5a163d1def91229c5ca24a7fd73d1bd",
-        "343cb16bb7013c985fcdd91aac508a13e4ef181a"
+        "811b6bef6d380622773065a9a08cf0b006b2cbfd",
+        "d238ac092189c7a472e2cfa2a25589eb752c0411",
+        "e1ed9915f03d48a4798e76221d2dc0f354db4863"
       ],
       "merged": false,
-      "reason": "14 missing-input gate regression/boundary tests; GitHub Actions pass; qlty success, KIS demo and independent audits blocked"
+      "reason": "Code fixes and latest CI successful; independent audits, KIS demo, and reviews blocked"
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
     "pr_head_at_start": "8e90304a1c45d981995484e18ab8e5a1faebb461",
     "lock_acquired_at": "2026-11-02T02:18:00Z",
-    "lock_released_at": "2026-11-02T01:23:30.742Z"
+    "lock_released_at": "2026-11-02T02:24:30Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -89,7 +87,7 @@
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_NEW_HEAD_CI_PENDING_AUDIT_0_OF_2"
+    "status": "DRAFT_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -103,7 +101,7 @@
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
       "mutation_allowed": true,
-      "status": "DRAFT_CI_PENDING_AUDIT_INCOMPLETE"
+      "status": "DRAFT_ACTIONS_SUCCESS_AUDIT_INCOMPLETE"
     },
     {
       "number": 40,
@@ -1588,9 +1586,9 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41325576768"
     },
-    "latest_workflow_run_id": 41371985237,
-    "latest_workflow_run_status": "pending",
-    "latest_workflow_run_conclusion": null,
+    "latest_workflow_run_id": 41377355170,
+    "latest_workflow_run_status": "completed",
+    "latest_workflow_run_conclusion": "success",
     "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
     "automation-turn-11": {
       "run_id": 41243400167,
@@ -2171,6 +2169,43 @@
       ],
       "related_pass": false,
       "full_pass": false
+    },
+    "prism-sync-hourly-2026-11-02T11:16:28+09:00": {
+      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow_runs": [
+        {
+          "id": 41377355170,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+        },
+        {
+          "id": 41377350849,
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+        }
+      ],
+      "jobs": [
+        "Full pytest suite: 1009 passed",
+        "Windows runtime smoke: 152 passed",
+        "Static checks: success",
+        "Docker build: success"
+      ],
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        }
+      ]
     }
   },
   "upstream_changes": [
@@ -4278,18 +4313,31 @@
         "tests/test_strategy_suite.py"
       ],
       "notes": "Source audit found nonmonotonic score band below-first fallback selected global minimum instead of first threshold; fixed both strategies and added 3 mock boundary cases; current CI pending; no independent audit PASS."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
+      "kind": "LATEST_HEAD_CI_CONFIRMED_NO_AUDIT_PASS",
+      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+      "related_pass": false,
+      "full_pass": false,
+      "ci_run_ids": [
+        41377355170,
+        41377350849
+      ],
+      "linux": "1009 passed",
+      "windows": "152 passed",
+      "notes": "Verified latest head all four Actions jobs successful, static and Docker successful; qlty check and snyk success. No complete independent 64-file or 163-file audit, no KIS demo or review; no PASS or merge."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "64 related files not independently fully audited; PASS 0/2.",
-    "163 total files not independently fully audited; PASS 0/2.",
-    "KIS authoritative order ID/fill/partial-fill/cancel/remaining-quantity and account isolation demo tests unavailable; live trading prohibited.",
-    "Independent review approval missing; branch protection 403; qlty usage requiredness unverified.",
-    "Latest PR head derived overflow fix requires Actions and independent audit; no local pytest due github.com DNS resolution failure."
+    "Order acceptance != fill; no authoritative KIS order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation and no demo credentials",
+    "Related dependency closure (64 files) not independently fully audited; 0/2",
+    "Whole PR tree (163 files) not independently fully audited; 0/2",
+    "No independent review approval; branch protection API 403; requiredness of qlty usage unverified"
   ],
-  "next_action": "Verify latest head Actions; inspect failed jobs and patch same run if necessary; complete related dependency closure and independent file-by-file audit; no PASS or merge without KIS demo and reviews.",
+  "next_action": "Next independent scheduled slot: recheck lock and latest SHA; continue complete 64-file dependency audit with per-file evidence; do not count PASS until all 64 files and required demo/CI gates verified. Full 163-file audit follows 2 independent related passes. No live trading.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -5445,7 +5493,7 @@
       "id": "score-weighted-derived-buy-budget-overflow-20261102",
       "root_cause_id": "RC-SIGNAL-NUMERIC-OVERFLOW",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
       "description": "Finite score-weighted base and weight multiplied to Infinity and passed as BUY budget",
       "reproduction": "1e308 * 1e308 == Infinity",
       "paths": [
@@ -5453,14 +5501,14 @@
         "tests/test_strategy_suite.py"
       ],
       "fix_commit": "811b6bef6d380622773065a9a08cf0b006b2cbfd",
-      "head_sha": "811b6bef6d380622773065a9a08cf0b006b2cbfd",
+      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
       "test_evidence": "7 new parametrized regression/boundary cases committed; GitHub Actions pending; no local pytest or KIS demo"
     },
     {
       "id": "score-risk-derived-units-cap-notional-overflow-20261102",
       "root_cause_id": "RC-SIGNAL-NUMERIC-OVERFLOW",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
       "description": "Finite score-risk price/stop/budget/cap could overflow derived units, cap units or notional and raise or pass nonfinite BUY budget",
       "reproduction": "1e308 / (1e-300 - 5e-301) == Infinity; 1e308 / 1e-300 == Infinity; 2e158 * 1e150 == Infinity",
       "paths": [
@@ -5469,14 +5517,14 @@
         "tests/test_balanced_risk_strategy.py"
       ],
       "fix_commit": "811b6bef6d380622773065a9a08cf0b006b2cbfd",
-      "head_sha": "811b6bef6d380622773065a9a08cf0b006b2cbfd",
+      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
       "test_evidence": "7 new parametrized regression/boundary cases committed; GitHub Actions pending; no local pytest or KIS demo"
     },
     {
       "id": "score-fraction-without-budget-default-bypass-20261102",
       "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
       "description": "Score-weighted and score-risk non-unit band weight silently discarded when no usable explicit sizing budget, causing broker-default unweighted BUY.",
       "reproduction": "score_weighted base_amount_usd=0 score_bands={0:0.5}; score_risk risk_amount_usd=0 or missing stop_loss with score_bands={0:0.5} both pass buy_amount=None to broker",
       "paths": [
@@ -5486,14 +5534,14 @@
         "trading/strategies/common.py"
       ],
       "fix_commit": "d238ac092189c7a472e2cfa2a25589eb752c0411",
-      "head_sha": "d238ac092189c7a472e2cfa2a25589eb752c0411",
+      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
       "test_evidence": "5 mock broker non-submission cases committed; new-head CI pending; KIS demo unavailable"
     },
     {
       "id": "score-band-below-first-global-min-20261102",
       "root_cause_id": "RC-STRATEGY-SCORE-BAND-LOWER-BOUND",
       "severity": "MEDIUM",
-      "status": "CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
       "description": "When score below first configured band and weights nonmonotonic, strategy chose global minimum band weight, not first threshold weight",
       "reproduction": "score_bands={60:1.0,90:0.25}, buy_score=50 selects 0.25 instead of 1.0 in score_weighted and score_risk",
       "paths": [
@@ -5545,8 +5593,8 @@
         "score-weighted-derived-buy-budget-overflow-20261102",
         "score-risk-derived-units-cap-notional-overflow-20261102"
       ],
-      "classification": "DERIVED_OVERFLOW_SUBCASES_CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE",
-      "last_checked_head": "811b6bef6d380622773065a9a08cf0b006b2cbfd"
+      "classification": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
     },
     {
       "root_cause_id": "RC-STOPLOSS-RECORD-VALIDATION",
@@ -5714,8 +5762,8 @@
         "reward-risk-floor-missing-target-bypass-2026-11-02-10",
         "score-fraction-without-budget-default-bypass-20261102"
       ],
-      "classification": "RECURRENT_UNCOVERED_SUBCASE_CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE",
-      "last_checked_head": "d238ac092189c7a472e2cfa2a25589eb752c0411",
+      "classification": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
       "previous_root_cause_ids": [
         "RC-RISK-BRACKET-CONSTRAINT-FALLBACK"
       ],
@@ -5752,7 +5800,7 @@
       "defect_ids": [
         "score-band-below-first-global-min-20261102"
       ],
-      "classification": "NEW_ROOT_CAUSE_CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE",
+      "classification": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
       "last_checked_head": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
     }
   ],
@@ -5926,25 +5974,25 @@
         "contract": "Derived finite input arithmetic must remain finite before broker submission",
         "path": "trading/strategies/score_weighted.py -> common.execute_order -> US/KR broker",
         "evidence": "Source branch SHA 811b6bef6d380622773065a9a08cf0b006b2cbfd and 7 new regression/boundary cases; CI pending",
-        "status": "PATCHED_CI_PENDING_INDEPENDENT_AUDIT_INCOMPLETE"
+        "status": "CI_SUCCESS_PARTIAL_REVIEW_NOT_FULL_AUDIT"
       },
       {
         "contract": "Score-risk units, position caps, and submitted notional must not overflow",
         "path": "trading/strategies/score_risk.py -> balanced_risk.py -> common.execute_order -> US/KR broker",
         "evidence": "Source branch SHA 811b6bef6d380622773065a9a08cf0b006b2cbfd and 7 new regression/boundary cases; CI pending",
-        "status": "PATCHED_CI_PENDING_INDEPENDENT_AUDIT_INCOMPLETE"
+        "status": "CI_SUCCESS_PARTIAL_REVIEW_NOT_FULL_AUDIT"
       },
       {
         "contract": "Configured fractional score weights must never silently fall back to unweighted broker default",
         "path": "score_weighted/score_risk -> balanced_risk -> common.execute_order -> US/KR broker",
         "evidence": "5 new mock broker non-submission tests at d238ac092189c7a472e2cfa2a25589eb752c0411",
-        "status": "PATCHED_CI_PENDING_AUDIT_INCOMPLETE"
+        "status": "CI_SUCCESS_PARTIAL_REVIEW_NOT_FULL_AUDIT"
       },
       {
         "contract": "Below-first score band lookup uses first threshold's weight, not global minimum weight",
         "path": "score_weighted.py and score_risk.py via balanced_risk.py",
         "evidence": "3 broker-mock boundary tests at e1ed9915f03d48a4798e76221d2dc0f354db4863",
-        "status": "PATCHED_CI_PENDING_AUDIT_INCOMPLETE"
+        "status": "CI_SUCCESS_PARTIAL_REVIEW_NOT_FULL_AUDIT"
       }
     ]
   },
