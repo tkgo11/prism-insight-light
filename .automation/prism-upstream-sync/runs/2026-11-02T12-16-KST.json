@@ -1,0 +1,84 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
+  "completed_at": "2026-11-02T03:21:02.865Z",
+  "upstream_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
+  "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+  "pr_number": 42,
+  "pr_draft": true,
+  "pr_head_before": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+  "pr_head_after": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+  "root_cause_id": "RC-STRATEGY-SCORE-BAND-LOWER-BOUND",
+  "new_subcase": {
+    "id": "score-max-capital-below-first-global-min-20261102",
+    "root_cause_id": "RC-STRATEGY-SCORE-BAND-LOWER-BOUND",
+    "severity": "HIGH",
+    "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+    "description": "score_max_capital BUY/SELL below first score threshold chose global smallest ratio rather than documented first-threshold ratio; SELL under-liquidation possible",
+    "reproduction": "score=2, bands={5:0.90,8:0.20} returns 0.20 instead of 0.90; SELL bands={5:0.80,8:0.25} returns 0.25 instead of 0.80",
+    "paths": [
+      "trading/strategies/score_max_capital.py",
+      "tests/test_score_max_capital_strategy.py"
+    ],
+    "code_blob_shas": {
+      "strategy": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
+      "tests": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9"
+    },
+    "fix_commit": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+    "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+    "test_evidence": "Isolated pre-fix arithmetic reproducer; 2 new mock broker tests; Actions 41382329143 and 41382334350 success (Linux 1011, Windows 152); KIS demo not run"
+  },
+  "reviewed_paths": [
+    {
+      "path": "trading/strategies/score_max_capital.py",
+      "blob_sha": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
+      "level": "TARGETED_ONLY"
+    },
+    {
+      "path": "tests/test_score_max_capital_strategy.py",
+      "blob_sha": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9",
+      "level": "TARGETED_ONLY"
+    }
+  ],
+  "ci": [
+    {
+      "id": 41382334350,
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+    },
+    {
+      "id": 41382329143,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+    }
+  ],
+  "ci_test_counts": {
+    "linux_passed": 1011,
+    "windows_passed": 152
+  },
+  "external_statuses": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success"
+    },
+    {
+      "context": "qlty check",
+      "state": "success"
+    }
+  ],
+  "related_pass": 0,
+  "full_pass": 0,
+  "related_manifest_files": 64,
+  "full_tree_files": 163,
+  "blockers": [
+    "No authoritative KIS order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation or authorized demo environment",
+    "Related dependency closure (at least 64 files) not fully audited; 0/2",
+    "Whole PR tree (163 blob files) not fully audited; 0/2",
+    "No independent review approval; branch protection API 403; additional external check requirements unverified"
+  ],
+  "live_orders": 0,
+  "merged": false
+}

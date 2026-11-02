@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
     "started_at": "2026-11-02T03:16:03Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
-    "last_mutation_commit": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
-    "last_mutation_at": "2026-11-02T02:24:30Z",
-    "result": "IN_PROGRESS",
+    "completed_at": "2026-11-02T03:21:02.865Z",
+    "lock_owner": null,
+    "last_mutation_commit": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+    "last_mutation_at": "2026-11-02T03:21:02.865Z",
+    "result": "SCORE_MAX_CAPITAL_LOWER_BOUND_FIXED_CI_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,7 +19,7 @@
       "source_head": "9655b4b952ff9f3b08f877194e5be990e439ac08",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+      "pr_head": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
       "pr_number": 42,
       "related_manifest_files": 64,
       "related_manifest_files_fully_audited": 0,
@@ -27,21 +27,21 @@
       "full_tree_files_reviewed": 0,
       "ci_workflow_runs": [
         {
-          "id": 41377355170,
+          "id": 41382334350,
           "event": "pull_request",
           "status": "completed",
           "conclusion": "success",
-          "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+          "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
         },
         {
-          "id": 41377350849,
+          "id": 41382329143,
           "event": "push",
           "status": "completed",
           "conclusion": "success",
-          "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+          "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
         }
       ],
-      "linux": "1009 passed",
+      "linux": "1011 passed",
       "windows": "152 passed",
       "external_statuses": [
         {
@@ -54,17 +54,15 @@
         }
       ],
       "commits": [
-        "811b6bef6d380622773065a9a08cf0b006b2cbfd",
-        "d238ac092189c7a472e2cfa2a25589eb752c0411",
-        "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+        "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
       ],
       "merged": false,
-      "reason": "Code fixes and latest CI successful; independent audits, KIS demo, and reviews blocked"
+      "reason": "Targeted fix passed latest CI, but audits/demo/review incomplete"
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T10:16:41+09:00",
     "pr_head_at_start": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
     "lock_acquired_at": "2026-11-02T03:16:03Z",
-    "lock_released_at": "2026-11-02T02:24:30Z"
+    "lock_released_at": "2026-11-02T03:21:02.865Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -83,11 +81,11 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+    "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
-    "status": "DRAFT_ACTIONS_SUCCESS_QLTY_SUCCESS_AUDITS_0_OF_2"
+    "status": "DRAFT_ACTIONS_SUCCESS_AUDITS_0_OF_2"
   },
   "candidates": [
     {
@@ -96,7 +94,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+      "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -172,9 +170,9 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "RESET_AFTER_SCORE_BAND_THRESHOLD_FIX",
+    "status": "RESET_AFTER_SCORE_MAX_CAPITAL_LOWER_BOUND_FIX",
     "checksum": null,
-    "scope_estimate": "64 related files; transitive dependency closure and independent audit incomplete",
+    "scope_estimate": "At least 64 related files; transitive closure not fully audited",
     "files": [
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
@@ -273,7 +271,7 @@
       },
       {
         "path": "tests/test_score_max_capital_strategy.py",
-        "blob_sha": "31b75c6e5797f634867130e7670daec9c98b47bc",
+        "blob_sha": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -448,7 +446,7 @@
       },
       {
         "path": "trading/strategies/score_max_capital.py",
-        "blob_sha": "ad547425270e0dbf5ef1cfcd0760f4914bcb5f98",
+        "blob_sha": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -506,13 +504,13 @@
       "trading/strategies/README.md",
       "tests/test_balanced_risk_strategy.py"
     ],
-    "tree_sha": "7fd53b7c386adc606cc6e66128c2aed6b1808f16"
+    "tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8"
   },
   "full_manifest": {
-    "status": "RESET_AFTER_SCORE_BAND_THRESHOLD_FIX",
+    "status": "RESET_AFTER_SCORE_MAX_CAPITAL_LOWER_BOUND_FIX",
     "tracked_tree_entries_on_pr": 187,
     "tracked_blob_files_on_pr": 163,
-    "sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+    "sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
     "files_checked": 0,
     "checksum": null,
     "checksum_kind": "git-tree-sha1",
@@ -814,7 +812,7 @@
       },
       {
         "path": "tests/test_score_max_capital_strategy.py",
-        "blob_sha": "31b75c6e5797f634867130e7670daec9c98b47bc",
+        "blob_sha": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1104,7 +1102,7 @@
       },
       {
         "path": "trading/strategies/score_max_capital.py",
-        "blob_sha": "ad547425270e0dbf5ef1cfcd0760f4914bcb5f98",
+        "blob_sha": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1333,7 +1331,7 @@
         "status": "NOT_REVIEWED"
       }
     ],
-    "tree_sha": "7fd53b7c386adc606cc6e66128c2aed6b1808f16"
+    "tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8"
   },
   "checks": {
     "0": {
@@ -1586,10 +1584,10 @@
       ],
       "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41325576768"
     },
-    "latest_workflow_run_id": 41377355170,
+    "latest_workflow_run_id": 41382334350,
     "latest_workflow_run_status": "completed",
     "latest_workflow_run_conclusion": "success",
-    "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+    "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
     "automation-turn-11": {
       "run_id": 41243400167,
       "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
@@ -2196,6 +2194,39 @@
         "Static checks: success",
         "Docker build: success"
       ],
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success"
+        }
+      ]
+    },
+    "2026-11-02T12:16+09:00": {
+      "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow_runs": [
+        {
+          "id": 41382334350,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+        },
+        {
+          "id": 41382329143,
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+        }
+      ],
+      "linux": "1011 passed",
+      "windows": "152 passed",
       "external_statuses": [
         {
           "context": "security/snyk (tkgo11)",
@@ -4327,17 +4358,36 @@
       "linux": "1009 passed",
       "windows": "152 passed",
       "notes": "Verified latest head all four Actions jobs successful, static and Docker successful; qlty check and snyk success. No complete independent 64-file or 163-file audit, no KIS demo or review; no PASS or merge."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
+      "kind": "TARGETED_ROOT_CAUSE_FIX_NOT_FULL_AUDIT",
+      "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+      "related_pass": false,
+      "full_pass": false,
+      "commit_shas": [
+        "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+      ],
+      "changed_files": [
+        "trading/strategies/score_max_capital.py",
+        "tests/test_score_max_capital_strategy.py"
+      ],
+      "code_blob_shas": {
+        "strategy": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
+        "tests": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9"
+      },
+      "notes": "Reviewed score-band documentation and score_weighted/score_risk/score_max_capital call sites; reproduced and fixed BUY/SELL below-first threshold mismatch; Linux 1011 and Windows 152 tests passed; no full dependency audit, KIS demo or independent review."
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "Order acceptance != fill; no authoritative KIS order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation and no demo credentials",
-    "Related dependency closure (64 files) not independently fully audited; 0/2",
-    "Whole PR tree (163 files) not independently fully audited; 0/2",
-    "No independent review approval; branch protection API 403; requiredness of qlty usage unverified"
+    "No authoritative KIS order-id/fill-id/partial-fill/cancel/remaining-quantity reconciliation or authorized demo environment",
+    "Related dependency closure (at least 64 files) not fully audited; 0/2",
+    "Whole PR tree (163 blob files) not fully audited; 0/2",
+    "No independent review approval; branch protection API 403; additional external check requirements unverified"
   ],
-  "next_action": "Next independent scheduled slot: recheck lock and latest SHA; continue complete 64-file dependency audit with per-file evidence; do not count PASS until all 64 files and required demo/CI gates verified. Full 163-file audit follows 2 independent related passes. No live trading.",
+  "next_action": "Recheck lock and HEADs; audit all 64+ related files with per-file SHA evidence, fix verified defects, then seek two independent related passes and two full-tree passes; never trade live.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -4713,6 +4763,16 @@
       "full_pass": false,
       "reason": "Third code patch invalidated prior head CI; no full audit",
       "manifest_tree_sha": "7fd53b7c386adc606cc6e66128c2aed6b1808f16"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T12:16:03+09:00",
+      "phase": "related_code_audit",
+      "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Only targeted review; related dependency closure and broker demo incomplete",
+      "manifest_tree_sha": "7bb4720bb12df9196d946a93ba808e006625d8f8"
     }
   ],
   "discovered_defects": [
@@ -5553,6 +5613,25 @@
       "fix_commit": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
       "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
       "test_evidence": "3 mock broker boundary cases committed; latest CI pending"
+    },
+    {
+      "id": "score-max-capital-below-first-global-min-20261102",
+      "root_cause_id": "RC-STRATEGY-SCORE-BAND-LOWER-BOUND",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
+      "description": "score_max_capital BUY/SELL below first score threshold chose global smallest ratio rather than documented first-threshold ratio; SELL under-liquidation possible",
+      "reproduction": "score=2, bands={5:0.90,8:0.20} returns 0.20 instead of 0.90; SELL bands={5:0.80,8:0.25} returns 0.25 instead of 0.80",
+      "paths": [
+        "trading/strategies/score_max_capital.py",
+        "tests/test_score_max_capital_strategy.py"
+      ],
+      "code_blob_shas": {
+        "strategy": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
+        "tests": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9"
+      },
+      "fix_commit": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+      "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+      "test_evidence": "Isolated pre-fix arithmetic reproducer; 2 new mock broker tests; Actions 41382329143 and 41382334350 success (Linux 1011, Windows 152); KIS demo not run"
     }
   ],
   "risks": [
@@ -5796,16 +5875,20 @@
     },
     {
       "root_cause_id": "RC-STRATEGY-SCORE-BAND-LOWER-BOUND",
-      "description": "Below-first score threshold incorrectly selects global minimum weight rather than first threshold weight across weighted/risk/balanced",
+      "description": "Below-first score band must use first threshold ratio across score_weighted, score_risk/balanced_risk and score_max_capital BUY/SELL",
       "defect_ids": [
-        "score-band-below-first-global-min-20261102"
+        "score-band-below-first-global-min-20261102",
+        "score-max-capital-below-first-global-min-20261102"
       ],
       "classification": "CODE_PATCHED_ACTIONS_SUCCESS_AUDIT_PENDING",
-      "last_checked_head": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+      "last_checked_head": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
+      "latest_fix_commits": [
+        "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
+      ]
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+    "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944",
     "scope": "Derived finite-input score-based BUY budget overflow and score-risk cap/units/notional; order lifecycle integration remains unverified",
     "entries": [
       {
@@ -5993,6 +6076,16 @@
         "path": "score_weighted.py and score_risk.py via balanced_risk.py",
         "evidence": "3 broker-mock boundary tests at e1ed9915f03d48a4798e76221d2dc0f354db4863",
         "status": "CI_SUCCESS_PARTIAL_REVIEW_NOT_FULL_AUDIT"
+      },
+      {
+        "contract": "Below-first score_max_capital score uses first configured threshold ratio for both BUY and SELL",
+        "path": "score_max_capital._ratio_for -> balance_split BUY cash reservation / common.execute_order SELL -> mock KIS",
+        "failure_mode": "Global minimum from unrelated higher band",
+        "test": "test_buy_score_below_first_threshold_uses_first_ratio_not_smallest; test_sell_score_below_first_threshold_uses_first_ratio_not_smallest",
+        "code_blob_sha": "b27e5f7f075e9ba7c4c1a4835ac7a176ddfb03a4",
+        "test_blob_sha": "fe9dacfe86cf2c1af0f66b33cef7092ed6b747b9",
+        "status": "TARGETED_MOCK_CI_SUCCESS_NOT_FULL_AUDIT",
+        "head_sha": "8b5306fe6ba67d0db5f51f315dd38ee6794e5944"
       }
     ]
   },
