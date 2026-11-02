@@ -257,3 +257,16 @@ responses are `unknown` and retain the execution ledger replay fence,
 including after restart. Positive zero-padded and alphanumeric mock IDs
 remain supported. A valid receipt still proves only acceptance, **not fill**;
 KIS demo reconciliation of fills/cancels/residual quantities remains blocked.
+
+
+### Broker rejection-code provenance (2026-11-02)
+
+A free-form APBK-like message is not a verified KIS rejection. Likewise, a
+non-canonical `getErrorCode()` value (numeric HTTP code, placeholder, malformed
+identifier), or a redirect/server error, cannot release a durable order claim.
+KR and US wrappers now preserve UNKNOWN for these cases; a canonical business
+code can establish rejection only when supplied by the trusted parsed broker
+response. This is fail-closed *submission-outcome* handling, **not** evidence
+of execution, partial fills, cancellation or remaining quantity. Live orders
+remain prohibited pending authoritative read-only demo reconciliation and
+independent transitive/whole-repository audits.

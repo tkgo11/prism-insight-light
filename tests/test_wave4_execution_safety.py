@@ -253,6 +253,23 @@ def test_http_redirect_cannot_prove_kis_business_rejection(market):
     assert classify_broker_result(result) == "unknown"
 
 
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("error_code", ["EGW00123", "APBK0918", "OPSQ2000"])
+def test_canonical_kis_business_code_remains_verified_rejection(market, error_code):
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=400, error_code=error_code,
+        error_message="KIS business rejection",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is False
+    assert classify_broker_result(result) == "failed"
+
+
 # ---------------------------------------------------------------------------
 # us.py numeric coercion: non-finite broker values fall back to defaults
 # ---------------------------------------------------------------------------

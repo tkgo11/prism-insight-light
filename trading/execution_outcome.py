@@ -59,12 +59,19 @@ def rejection_is_ambiguous(res: Any) -> bool:
     except Exception:
         return True
     try:
-        if int(status) >= 500:
-            return True
-    except (TypeError, ValueError):
+        http_status = int(status)
+    except (TypeError, ValueError, OverflowError):
         return True
-    # No parsed business code means the rejection was not authored by KIS.
-    return not error_code or error_code == str(status)
+    # A redirect, informational response or gateway/server error cannot
+    # establish that KIS rejected the order before it entered the book.
+    if http_status < 200 or 300 <= http_status < 400 or http_status >= 500:
+        return True
+    # getErrorCode() is not necessarily a KIS business code. A proxy may
+    # return a numeric HTTP code, placeholder, or arbitrary diagnostic. Only
+    # canonical KIS-style letter+digit business identifiers can support a
+    # clean rejection; everything else remains UNKNOWN and non-retryable.
+    # This is a conservative syntax gate, not proof of an actual broker fill.
+    return re.fullmatch(r"[A-Z]{2,8}[0-9]{3,8}", error_code) is None
 
 
 def classify_broker_result(result: Any) -> str:
