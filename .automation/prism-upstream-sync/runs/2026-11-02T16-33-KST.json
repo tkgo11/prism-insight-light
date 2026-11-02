@@ -1,6 +1,6 @@
 {
   "run_id": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
-  "stage": "PRECHANGE_CONTRACT_MATRIX",
+  "stage": "FINAL_TARGETED_FIXES_CI_SUCCESS_AUDITS_INCOMPLETE",
   "recorded_at": "2026-11-02T07:35:19.482Z",
   "pr": {
     "number": 42,
@@ -115,5 +115,120 @@
       ],
       "limitations": "POSIX fsync(directory) reduces crash-loss window but does not prove disk/controller guarantees; new directory creation and external broker reconciliation remain unverified"
     }
+  ],
+  "completed_at": "2026-11-02T07:42:10.883Z",
+  "final_head": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+  "git_tree_sha": "2777924adb33e6adb5c6e330195f2b828f8813e0",
+  "related_manifest_files": 74,
+  "full_tracked_files": 168,
+  "modified_files": [
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "e4daab769d8eb79cb13545a7914470b726da1ce0",
+      "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/file_lock.py",
+      "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+      "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/off_hours_queue.py",
+      "blob_sha": "993105246f2c5db5ca89c68cf203e68ba642458c",
+      "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "cfb947a63ff8f6f2710b3626171173909f65c49d",
+      "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "454e7f2b96970b96179c7dbde011d140e5aa3b9f",
+      "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_execution_ledger_retention.py",
+      "blob_sha": "418ebb4ef05172650b1ec453c54e10855a5079a0",
+      "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_durable_state_directory_sync.py",
+      "blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+      "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "b687f92522b5f0d47af7d45301d0142d53cc6d9f",
+      "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+    }
+  ],
+  "test_first_failed_ci": [
+    {
+      "run_id": 41407335432,
+      "result": "19 failed, 1143 passed"
+    },
+    {
+      "run_id": 41407659123,
+      "result": "4 failed, 1166 passed"
+    }
+  ],
+  "fix_commits": [
+    "640ab434edceb1cbe5a5a37d3fa1bb84982c68ab",
+    "77214cf1a9a1cbd9fe247ba7e51dce2b1fcad6f4",
+    "c11bbc98b8172a700a5c853251c973adf3cf4d0f",
+    "dca29b3207a62c23153e3a13a6d2d21ed03f2014",
+    "8d7afda8eb90aa89079fe590a688cfb5bae020af",
+    "082c73895d694c7aaa76c8ba5518a0013a25baa3"
+  ],
+  "final_ci": [
+    {
+      "id": 41407754351,
+      "event": "pull_request",
+      "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41407748385,
+      "event": "push",
+      "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "tests": {
+    "linux": "1171 passed",
+    "windows": "167 passed",
+    "docker": "success",
+    "kis_demo": "BLOCKED",
+    "live_orders": 0
+  },
+  "external_statuses": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success",
+      "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/fc6dba5d-95a5-4fa3-b189-fe33009b73c7"
+    },
+    {
+      "context": "qlty check",
+      "state": "success",
+      "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
+    }
+  ],
+  "merge": false,
+  "reviews": 0,
+  "blockers": [
+    "KIS demo authoritative order ID/fill ID/partial-fill/cancel/remaining-quantity/restart reconciliation unavailable",
+    "Related transitive manifest not fully audited; no independent slot PASS",
+    "Whole tracked tree not fully audited; no independent slot PASS",
+    "No independent review; branch protection API 403; qlty reported historical blocking issues; ruleset requirements not fully verifiable",
+    "POSIX directory fsync mock-tested only; Windows and storage power-loss durability not proven"
+  ],
+  "unverified_paths": [
+    "KIS authoritative fills/cancel/remaining",
+    "All 74 related files full audit",
+    "All 168 tracked files full audit",
+    "Windows/storage power loss"
   ]
 }

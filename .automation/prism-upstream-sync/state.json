@@ -6,11 +6,11 @@
   "run": {
     "id": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
     "started_at": "2026-11-02T07:33:32.787Z",
-    "completed_at": null,
-    "lock_owner": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
-    "last_mutation_commit": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
-    "last_mutation_at": "2026-11-02T06:28:19.356Z",
-    "result": "RUNNING_PRECHECK_CAS_LOCKED",
+    "completed_at": "2026-11-02T07:42:10.883Z",
+    "lock_owner": null,
+    "last_mutation_commit": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+    "last_mutation_at": "2026-11-02T07:42:10.883Z",
+    "result": "TWO_ROOT_CAUSES_PATCHED_LATEST_CI_SUCCESS_AUDITS_INCOMPLETE_NO_MERGE",
     "pr_comment_id": 6570654111,
     "last_report": {
       "phase": "related_code_audit",
@@ -19,56 +19,59 @@
       "source_head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
       "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
       "target_base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
-      "pr_head": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+      "pr_head": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
       "pr_number": 42,
-      "related_manifest_files": 73,
+      "related_manifest_files": 74,
       "related_manifest_files_fully_audited": 0,
-      "full_tree_files": 167,
+      "full_tree_files": 168,
       "full_tree_files_reviewed": 0,
+      "git_tree_sha": "2777924adb33e6adb5c6e330195f2b828f8813e0",
       "ci_workflow_runs": [
         {
-          "id": 41399805037,
-          "event": "push",
-          "head_sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+          "id": 41407754351,
+          "event": "pull_request",
+          "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
           "status": "completed",
           "conclusion": "success"
         },
         {
-          "id": 41399810968,
-          "event": "pull_request",
-          "head_sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+          "id": 41407748385,
+          "event": "push",
+          "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
           "status": "completed",
           "conclusion": "success"
         }
       ],
-      "linux": "1143 passed",
+      "linux": "1171 passed",
       "windows": "167 passed",
       "external_statuses": [
         {
           "context": "security/snyk (tkgo11)",
-          "state": "success"
+          "state": "success",
+          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/fc6dba5d-95a5-4fa3-b189-fe33009b73c7"
         },
         {
           "context": "qlty check",
           "state": "success",
-          "description": "90 blocking issues"
+          "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
         }
       ],
       "commits": [
-        "48eddb7a8a5f540328125e6a058d740cca6c4b6b",
-        "d134c8c9c7b85d368cd6dca36154f1c5b0a6019a",
-        "fef11044a8a24de404ad129c6d443032b86614df",
-        "d6e82e23f1b35f9de9219afae067472f9f8c3350",
-        "b1d32214b491f6b133b3d978ded092e60ec8498d",
-        "1364a6a17dd51f14ac4e82cbeb8a2357234609f3"
+        "640ab434edceb1cbe5a5a37d3fa1bb84982c68ab",
+        "77214cf1a9a1cbd9fe247ba7e51dce2b1fcad6f4",
+        "c11bbc98b8172a700a5c853251c973adf3cf4d0f",
+        "dca29b3207a62c23153e3a13a6d2d21ed03f2014",
+        "8d7afda8eb90aa89079fe590a688cfb5bae020af",
+        "082c73895d694c7aaa76c8ba5518a0013a25baa3"
       ],
       "merged": false,
-      "reason": "Two source root causes fixed and CI successful; transitive/full audits, demo fills and review remain blocked"
+      "review_approvals": 0,
+      "reason": "Two verified root causes patched and latest CI success; related/full audits and authoritative demo broker fill reconciliation incomplete"
     },
     "prior_run_id": "prism-sync-hourly-2026-11-02T15:17:24+09:00",
     "pr_head_at_start": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
     "lock_acquired_at": "2026-11-02T07:33:32.787Z",
-    "lock_released_at": "2026-11-02T06:28:19.356Z"
+    "lock_released_at": "2026-11-02T07:42:10.883Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -87,7 +90,7 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+    "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
@@ -100,7 +103,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+      "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -176,9 +179,9 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "RESET_AFTER_INTEGER_PRECISION_AND_BOOLEAN_SIZING_FIX",
+    "status": "RESET_AFTER_LEDGER_DURABILITY_FIX_NOT_FULLY_AUDITED",
     "checksum": null,
-    "scope_estimate": 73,
+    "scope_estimate": 74,
     "files": [
       {
         "path": "README.en.md",
@@ -192,7 +195,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "9370b154041673d9a9155f18d9bdaf92197ef5d9",
+        "blob_sha": "b687f92522b5f0d47af7d45301d0142d53cc6d9f",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -226,13 +229,18 @@
         "status": "NOT_FULLY_AUDITED"
       },
       {
+        "path": "tests/test_durable_state_directory_sync.py",
+        "blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+        "status": "NOT_FULLY_AUDITED"
+      },
+      {
         "path": "tests/test_effective_order_metadata.py",
         "blob_sha": "cda139ea6521088bb0a36d825af1b1d7a1557041",
         "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "tests/test_execution_ledger_retention.py",
-        "blob_sha": "99b832e1f58f98c4b90eb20cdc2dd965f713211f",
+        "blob_sha": "418ebb4ef05172650b1ec453c54e10855a5079a0",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -402,7 +410,7 @@
       },
       {
         "path": "trading/execution_ledger.py",
-        "blob_sha": "d5e37f9b5bb8101d83eea9d81c901a706430f9b6",
+        "blob_sha": "e4daab769d8eb79cb13545a7914470b726da1ce0",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -412,7 +420,7 @@
       },
       {
         "path": "trading/file_lock.py",
-        "blob_sha": "3b643eb5e2dc1e0c4d775dcf0b18b5d8aea65fbc",
+        "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -422,7 +430,7 @@
       },
       {
         "path": "trading/off_hours_queue.py",
-        "blob_sha": "66cd4f7b227494b4b2f00c73941f2f95d000df89",
+        "blob_sha": "993105246f2c5db5ca89c68cf203e68ba642458c",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -442,7 +450,7 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "b1a888b8134f6a9b2896933dc27cc954c412e76f",
+        "blob_sha": "cfb947a63ff8f6f2710b3626171173909f65c49d",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -467,7 +475,7 @@
       },
       {
         "path": "trading/strategies/common.py",
-        "blob_sha": "1d121f9c589f4f37e080fb9a30b4d40e94c30ee5",
+        "blob_sha": "454e7f2b96970b96179c7dbde011d140e5aa3b9f",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -548,28 +556,24 @@
     ],
     "checked_files": [],
     "modified_files": [
-      "trading/schema.py",
-      "trading/telegram_fetch.py",
-      "trading/buy_sizing.py",
-      "trading/kis_auth.py",
-      "trading/domestic.py",
-      "trading/us.py",
-      "webui/services/signal_service.py",
-      "webui/routes/signals.py",
-      "tests/test_signal_integer_precision.py",
-      "tests/test_buy_sizing.py",
-      "tests/test_webui_routes.py",
+      "trading/execution_ledger.py",
+      "trading/file_lock.py",
+      "trading/off_hours_queue.py",
+      "trading/stop_loss_watcher.py",
+      "trading/strategies/common.py",
+      "tests/test_execution_ledger_retention.py",
+      "tests/test_durable_state_directory_sync.py",
       "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md"
     ],
-    "tree_sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+    "tree_sha": "2777924adb33e6adb5c6e330195f2b828f8813e0",
     "files_fully_audited": 0,
-    "head_sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3"
+    "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3"
   },
   "full_manifest": {
-    "status": "NOT_FULLY_AUDITED",
-    "tracked_tree_entries_on_pr": 191,
-    "tracked_blob_files_on_pr": 167,
-    "sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+    "status": "NOT_FULLY_AUDITED_AFTER_CODE_CHANGE",
+    "tracked_tree_entries_on_pr": 192,
+    "tracked_blob_files_on_pr": 168,
+    "sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
     "files_checked": 0,
     "checksum": null,
     "checksum_kind": "git-tree-sha1",
@@ -686,7 +690,7 @@
       },
       {
         "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
-        "blob_sha": "9370b154041673d9a9155f18d9bdaf92197ef5d9",
+        "blob_sha": "b687f92522b5f0d47af7d45301d0142d53cc6d9f",
         "status": "NOT_REVIEWED"
       },
       {
@@ -780,13 +784,18 @@
         "status": "NOT_REVIEWED"
       },
       {
+        "path": "tests/test_durable_state_directory_sync.py",
+        "blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+        "status": "NOT_REVIEWED"
+      },
+      {
         "path": "tests/test_effective_order_metadata.py",
         "blob_sha": "cda139ea6521088bb0a36d825af1b1d7a1557041",
         "status": "NOT_REVIEWED"
       },
       {
         "path": "tests/test_execution_ledger_retention.py",
-        "blob_sha": "99b832e1f58f98c4b90eb20cdc2dd965f713211f",
+        "blob_sha": "418ebb4ef05172650b1ec453c54e10855a5079a0",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1066,7 +1075,7 @@
       },
       {
         "path": "trading/execution_ledger.py",
-        "blob_sha": "d5e37f9b5bb8101d83eea9d81c901a706430f9b6",
+        "blob_sha": "e4daab769d8eb79cb13545a7914470b726da1ce0",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1076,7 +1085,7 @@
       },
       {
         "path": "trading/file_lock.py",
-        "blob_sha": "3b643eb5e2dc1e0c4d775dcf0b18b5d8aea65fbc",
+        "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1096,7 +1105,7 @@
       },
       {
         "path": "trading/off_hours_queue.py",
-        "blob_sha": "66cd4f7b227494b4b2f00c73941f2f95d000df89",
+        "blob_sha": "993105246f2c5db5ca89c68cf203e68ba642458c",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1116,7 +1125,7 @@
       },
       {
         "path": "trading/stop_loss_watcher.py",
-        "blob_sha": "b1a888b8134f6a9b2896933dc27cc954c412e76f",
+        "blob_sha": "cfb947a63ff8f6f2710b3626171173909f65c49d",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1146,7 +1155,7 @@
       },
       {
         "path": "trading/strategies/common.py",
-        "blob_sha": "1d121f9c589f4f37e080fb9a30b4d40e94c30ee5",
+        "blob_sha": "454e7f2b96970b96179c7dbde011d140e5aa3b9f",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1410,7 +1419,7 @@
         "status": "NOT_REVIEWED"
       }
     ],
-    "tree_sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
+    "tree_sha": "2777924adb33e6adb5c6e330195f2b828f8813e0",
     "git_tree_sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3"
   },
   "checks": {
@@ -1684,6 +1693,32 @@
         {
           "context": "qlty check",
           "state": "success"
+        }
+      ]
+    },
+    "51": {
+      "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+      "run_ids": [
+        41407754351,
+        41407748385
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: 1171 passed",
+        "Windows runtime smoke: 167 passed",
+        "Docker build success"
+      ],
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success",
+          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/fc6dba5d-95a5-4fa3-b189-fe33009b73c7"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
         }
       ]
     },
@@ -4804,17 +4839,127 @@
         "Whole tracked tree not fully audited; no independent slot PASS",
         "No independent review; branch protection API 403; qlty reports 90 blocking issues"
       ]
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
+      "kind": "TWO_VERIFIED_FINANCIAL_STATE_ROOT_CAUSES_PATCHED_TARGETED_CI_SUCCESS_NOT_FULL_AUDIT",
+      "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "upstream_head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "upstream_pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "related_pass": false,
+      "full_pass": false,
+      "related_manifest_files": 74,
+      "full_tracked_files": 168,
+      "git_tree_sha": "2777924adb33e6adb5c6e330195f2b828f8813e0",
+      "changed_files": [
+        {
+          "path": "trading/execution_ledger.py",
+          "blob_sha": "e4daab769d8eb79cb13545a7914470b726da1ce0",
+          "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+        },
+        {
+          "path": "trading/file_lock.py",
+          "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+          "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+        },
+        {
+          "path": "trading/off_hours_queue.py",
+          "blob_sha": "993105246f2c5db5ca89c68cf203e68ba642458c",
+          "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+        },
+        {
+          "path": "trading/stop_loss_watcher.py",
+          "blob_sha": "cfb947a63ff8f6f2710b3626171173909f65c49d",
+          "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+        },
+        {
+          "path": "trading/strategies/common.py",
+          "blob_sha": "454e7f2b96970b96179c7dbde011d140e5aa3b9f",
+          "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+        },
+        {
+          "path": "tests/test_execution_ledger_retention.py",
+          "blob_sha": "418ebb4ef05172650b1ec453c54e10855a5079a0",
+          "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+        },
+        {
+          "path": "tests/test_durable_state_directory_sync.py",
+          "blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+          "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+        },
+        {
+          "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+          "blob_sha": "b687f92522b5f0d47af7d45301d0142d53cc6d9f",
+          "review_level": "TARGETED_SOURCE_AND_CI_NOT_FULL_FILE_AUDIT"
+        }
+      ],
+      "commits": [
+        "640ab434edceb1cbe5a5a37d3fa1bb84982c68ab",
+        "77214cf1a9a1cbd9fe247ba7e51dce2b1fcad6f4",
+        "c11bbc98b8172a700a5c853251c973adf3cf4d0f",
+        "dca29b3207a62c23153e3a13a6d2d21ed03f2014",
+        "8d7afda8eb90aa89079fe590a688cfb5bae020af",
+        "082c73895d694c7aaa76c8ba5518a0013a25baa3"
+      ],
+      "test_first_failed_ci": [
+        41407335432,
+        41407341832,
+        41407653617,
+        41407659123
+      ],
+      "final_ci": [
+        {
+          "id": 41407754351,
+          "event": "pull_request",
+          "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 41407748385,
+          "event": "push",
+          "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "tests": {
+        "linux": "1171 passed",
+        "windows": "167 passed",
+        "docker": "success",
+        "kis_demo": "BLOCKED",
+        "live_orders": 0
+      },
+      "external": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success",
+          "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/fc6dba5d-95a5-4fa3-b189-fe33009b73c7"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
+        }
+      ],
+      "root_causes": [
+        "RC-LEDGER-JSON-INTEGRITY",
+        "RC-DURABLE-STATE-DIRECTORY-SYNC"
+      ],
+      "note": "Targeted financial safety fixes and CI do not constitute independent complete file audits"
     }
   ],
   "last_merged_upstream_sha": null,
   "last_successful_merge": null,
   "blockers": [
-    "KIS demo order ID/fill ID/partial-fill/cancel/remaining-quantity/restart reconciliation unavailable",
+    "KIS demo authoritative order ID/fill ID/partial-fill/cancel/remaining-quantity/restart reconciliation unavailable",
     "Related transitive manifest not fully audited; no independent slot PASS",
     "Whole tracked tree not fully audited; no independent slot PASS",
-    "No independent review; branch protection API 403; qlty reports 90 blocking issues"
+    "No independent review; branch protection API 403; qlty reported historical blocking issues; ruleset requirements not fully verifiable",
+    "POSIX directory fsync mock-tested only; Windows and storage power-loss durability not proven"
   ],
-  "next_action": "Keep Draft. Verify stable head and CAS, perform complete per-blob transitive review and KIS mock fill/cancel/restart; obtain authorized demo integration and independent review; 2 distinct related and 2 distinct full PASS slots required. No live trading.",
+  "next_action": "Recheck current HEAD and CAS lease; finish related dependency file-by-file audit and broker mock reconciliation; require separate-slot two-pass audits and KIS demo before any merge",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -5239,6 +5384,19 @@
       "full_pass": false,
       "manifest_tree_sha": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
       "reason": "Two root causes code-patched and latest CI successful; no full 73-file transitive audit, 167-file full audit or KIS demo"
+    },
+    {
+      "slot": "2026-11-02T16:33+09:00",
+      "run_id": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
+      "phase": "related_code_audit",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+      "head_sha": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+      "manifest_tree_sha": "2777924adb33e6adb5c6e330195f2b828f8813e0",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Two code fixes changed head; 74 related and 168 full files not fully audited; KIS demo and review absent"
     }
   ],
   "discovered_defects": [
@@ -6371,6 +6529,50 @@
       "fixed_in": "1364a6a17dd51f14ac4e82cbeb8a2357234609f3",
       "first_detected_run": "prism-sync-hourly-2026-11-02T15:17:24+09:00",
       "description": "YAML boolean values silently coerced to 1 or 1 percent in shared, KR/US and legacy account buy sizing"
+    },
+    {
+      "id": "ledger-retryable-invalid-claimed-at-20261102",
+      "root_cause_id": "RC-LEDGER-JSON-INTEGRITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "fixed_in": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+      "first_detected_run": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
+      "description": "Malformed/missing retryable ledger claimed_at was retained then re-claimed, enabling replay without trustworthy durable evidence",
+      "repro_ci": [
+        41407335432,
+        41407659123
+      ],
+      "verification_ci": [
+        41407754351,
+        41407748385
+      ],
+      "unverified": [
+        "KIS_DEMO_ORDER_FILL",
+        "FULL_TRANSITIVE_AUDIT",
+        "POWER_LOSS_HARDWARE_TEST"
+      ]
+    },
+    {
+      "id": "durable-state-missing-parent-fsync-20261102",
+      "root_cause_id": "RC-DURABLE-STATE-DIRECTORY-SYNC",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "fixed_in": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+      "first_detected_run": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
+      "description": "POSIX atomic rename metadata not fsynced for execution ledger, queue, watcher and strategy state",
+      "repro_ci": [
+        41407335432,
+        41407659123
+      ],
+      "verification_ci": [
+        41407754351,
+        41407748385
+      ],
+      "unverified": [
+        "KIS_DEMO_ORDER_FILL",
+        "FULL_TRANSITIVE_AUDIT",
+        "POWER_LOSS_HARDWARE_TEST"
+      ]
     }
   ],
   "risks": [
@@ -6490,10 +6692,14 @@
       "root_cause_id": "RC-LEDGER-JSON-INTEGRITY",
       "description": "Duplicate keys in execution ledger",
       "defect_ids": [
-        "duplicate-json-execution-ledger-keys"
+        "duplicate-json-execution-ledger-keys",
+        "ledger-retryable-invalid-claimed-at-20261102"
       ],
-      "classification": "HISTORICAL_CODE_PATCHES_AUDIT_INCOMPLETE",
-      "last_checked_head": "083296fcf272f23d32be0e63434b0b0d7e5a1578"
+      "classification": "CODE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+      "fix_commits": [
+        "77214cf1a9a1cbd9fe247ba7e51dce2b1fcad6f4"
+      ]
     },
     {
       "root_cause_id": "RC-QUEUE-JSON-INTEGRITY",
@@ -6705,6 +6911,21 @@
         "legacy-default-and-account-boolean"
       ],
       "verified_by": "Source repro float(True)==1.0 and latest Actions 41399805037/41399810968 passed"
+    },
+    {
+      "root_cause_id": "RC-DURABLE-STATE-DIRECTORY-SYNC",
+      "description": "POSIX parent-directory metadata was not fsynced after atomic state-file replacement in ledger, queue, stop-loss tracker and strategy state",
+      "defect_ids": [
+        "durable-state-missing-parent-fsync-20261102"
+      ],
+      "classification": "CODE_PATCHED_CURRENT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "first_detected_run": "prism-sync-hourly-2026-11-02T07:33:32.787Z-turn11",
+      "last_checked_head": "082c73895d694c7aaa76c8ba5518a0013a25baa3",
+      "fix_commits": [
+        "8d7afda8eb90aa89079fe590a688cfb5bae020af",
+        "082c73895d694c7aaa76c8ba5518a0013a25baa3"
+      ],
+      "recurrence_count": 0
     }
   ],
   "root_cause_matrix": {
@@ -7147,6 +7368,18 @@
         "b1d32214b491f6b133b3d978ded092e60ec8498d",
         "1364a6a17dd51f14ac4e82cbeb8a2357234609f3"
       ]
+    },
+    {
+      "id": "RC-LEDGER-JSON-INTEGRITY",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Corrupt retryable timestamps now fail closed; historical duplicate-key checks preserved; broker reconciliation and independent audits outstanding"
+    },
+    {
+      "id": "RC-DURABLE-STATE-DIRECTORY-SYNC",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "description": "POSIX directory fsync added for four durable writers; Windows/storage-hardware crash guarantees and demo broker integration unverified"
     }
   ]
 }
