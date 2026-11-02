@@ -1,0 +1,65 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T05-22-KST-turn9",
+  "slot": "2026-11-03T05-22-KST",
+  "pr_number": 43,
+  "pr_base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "starting_head": "cda0c79e0f37eca3733c187be923886385a366b3",
+  "current_head": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+  "root_cause_id": "RC-STOPLOSS-AMBIGUOUS-INSTRUMENT-QUARANTINE",
+  "subcase": "noncanonical-key-record-same-instrument-conflict",
+  "status": "TEST_FIRST_REPRODUCED_FIX_CI_PENDING",
+  "test_first": {
+    "sha": "8464a204a13c2bc62a9ce7c691bf769ba88575c4",
+    "workflow_id": 41518881663,
+    "linux_failed": 2,
+    "linux_passed": 1310,
+    "windows": "NOT_YET_CHECKED",
+    "failing_cases": [
+      "test_mismatched_key_for_same_instrument_quarantines_both_snapshots",
+      "test_mismatched_key_conflict_cannot_submit_automatic_sell"
+    ]
+  },
+  "changes": [
+    {
+      "sha": "8464a204a13c2bc62a9ce7c691bf769ba88575c4",
+      "path": "tests/test_stop_loss_mismatched_key_quarantine.py",
+      "kind": "test-first"
+    },
+    {
+      "sha": "d636c0636dd8d717c121075819f7420265be582a",
+      "path": "trading/stop_loss_watcher.py",
+      "kind": "implementation"
+    },
+    {
+      "sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "path": "tests/test_stop_loss_mismatched_key_quarantine.py",
+      "kind": "additional-boundaries"
+    }
+  ],
+  "invariants": [
+    "An invalid storage key that claims the same market/ticker quarantines all automatic SELL candidates for that instrument",
+    "Unrelated valid positions remain inspectable and eligible",
+    "Read-only validation preserves corrupt ledger bytes for operator reconciliation",
+    "Direct trigger and watcher must both fail closed for ambiguous instrument"
+  ],
+  "paths": [
+    "StopLossTracker._load",
+    "StopLossTracker.get_positions",
+    "StopLossTracker.record_position",
+    "StopLossWatcher.check_stop_loss_once",
+    "StopLossWatcher._trigger_sell",
+    "trading/dispatch.py",
+    "tests/test_stop_loss_legacy_quarantine.py",
+    "tests/test_stop_loss_watcher.py"
+  ],
+  "unverified": [
+    "full transitive and whole-repo audits",
+    "KIS authoritative fills/cancel/remaining",
+    "Qlty individual issues",
+    "branch protection policy 403"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "related_pass": 0,
+  "full_pass": 0
+}
