@@ -112,3 +112,44 @@ def test_explicitly_confirmed_manual_record_still_clears_at_zero(tmp_path):
     assert _cycle(watcher) == []
     dispatcher.dispatch.assert_not_called()
     assert tracker.get_position("KR", "005930") is None
+
+
+def test_stop_price_update_cannot_clear_unreconciled_buy(tmp_path):
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("KR", "005930", 90, entry_price=100, pending_buy=True)
+    tracker.record_position("KR", "005930", 85, entry_price=100, pending_buy=False)
+    record = tracker.get_position("KR", "005930")
+    assert record["stop_loss"] == 85
+    assert record["pending_buy"] is True
+
+
+def test_legacy_stop_price_update_preserves_unknown_buy_provenance(tmp_path):
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("KR", "005930", 90, entry_price=100)
+    raw = json.loads(tracker.path.read_text(encoding="utf-8"))
+    raw["KR:005930"].pop("pending_buy", None)
+    tracker.path.write_text(json.dumps(raw), encoding="utf-8")
+    tracker.record_position("KR", "005930", 85, entry_price=100, pending_buy=False)
+    assert tracker.get_position("KR", "005930")["pending_buy"] is True
+
+
+def test_multi_account_partial_acceptance_preserves_pending_protection(tmp_path):
+    from trading.dispatch import AccountDispatchResult
+
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    dispatcher = TradeDispatcher(dry_run=True, trading_mode="demo")
+    dispatcher.stop_loss_tracker = tracker
+    signal = SignalMessage(
+        raw={"signal_type": "BUY", "market": "KR", "ticker": "005930", "price": 100,
+             "stop_loss": 90},
+        signal_type="BUY", market="KR", ticker="005930", price=100.0, stop_loss=90.0,
+    )
+    result = DispatchResult(
+        "partial_success", "one account accepted", "BUY", "KR",
+        accounts=[
+            AccountDispatchResult(account="A", account_id="A", status="executed", message="accepted"),
+            AccountDispatchResult(account="B", account_id="B", status="failed", message="rejected"),
+        ],
+    )
+    dispatcher._update_stop_loss_tracking(signal, result)
+    assert tracker.get_position("KR", "005930")["pending_buy"] is True
