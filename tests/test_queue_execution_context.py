@@ -260,7 +260,7 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     replay.execution_dedupe = True
     monkeypatch.setattr(
         replay.execution_ledger, "claim",
-        lambda identity, *, aliases=(), with_token=False: (
+        lambda identity, *, aliases=(), with_token=False, order_intent=None: (
             claims.append(identity) or True, None, "mock-claim-token"
         ) if with_token else (True, None),
     )
