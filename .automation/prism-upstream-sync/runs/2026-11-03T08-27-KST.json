@@ -1,0 +1,114 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T08-27-KST-turn9",
+  "slot": "2026-11-03T08-27-KST",
+  "status": "REPRODUCED_AND_MOCK_PATCHED_CI_SUCCESS_AUDIT_INCOMPLETE",
+  "pr": 43,
+  "head_sha": "cc8a9e8b0d55c2464182c21c8085c180b8bf9a21",
+  "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "git_tree_sha": "cc71c388f1cb81d39f714b9653850aaf211167fc",
+  "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "pinned_source_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "subcase": "CONFIRMED_TRACKER_ZERO_CLEARED_WITH_UNRESOLVED_BUY_INTENT",
+  "reproduction": {
+    "test_first_commit": "ec3ddf90e67d3c5fe32676b2a07caa51be0bd736",
+    "workflow_id": 41545762961,
+    "expected_failures": 7,
+    "other_passed": 1376,
+    "classification": "7 asserted contract violations, not fixture/import/CI infrastructure errors"
+  },
+  "fix_commits": [
+    "5f1db58a723c6921092d4c0ff74576e6016ec976",
+    "6dfedddcd3907a95bc24a44089d139e17538d16c",
+    "d2d5c08c6be892909eac4d5ad8a3bc65d87b0116",
+    "cc8a9e8b0d55c2464182c21c8085c180b8bf9a21"
+  ],
+  "modified_files": [
+    "trading/execution_ledger.py",
+    "trading/stop_loss_watcher.py",
+    "tests/test_pending_buy_confirmed_tracker_cleanup.py"
+  ],
+  "blob_shas": {
+    "tests/test_pending_buy_confirmed_tracker_cleanup.py": "f1cadb0e8c688170d33cf8df0f4d31c6659b5c2f",
+    "trading/execution_ledger.py": "8c285eaeb239e56c6b18c3bfb38847aa65bfe87c",
+    "trading/stop_loss_watcher.py": "01f91b56155d3c3c0c30aa20fc58a471efd74629"
+  },
+  "matrix": [
+    {
+      "invariant": "A zero balance is not proof an UNKNOWN/accepted BUY will never fill",
+      "path": "KR/US balance -> watcher confirmed tracker zero -> ledger pending intent",
+      "tests": "6 market/status variants + corrupted ledger + US case + cancellation",
+      "result": "MOCK_VERIFIED"
+    },
+    {
+      "invariant": "Post-SELL zero balance must not discard protection with unresolved BUY",
+      "path": "watcher._trigger_sell -> post-order balance -> tracker removal",
+      "tests": "KR and US post-SELL mock cases",
+      "result": "MOCK_VERIFIED"
+    },
+    {
+      "invariant": "New claim cannot race between unresolved-intent check and tracker removal",
+      "path": "ledger FileLock -> watcher tracker removal",
+      "tests": "threaded claim fence",
+      "result": "MOCK_VERIFIED_NOT_BROKER_ATOMICITY"
+    },
+    {
+      "invariant": "Independent accounts do not erase each other's unresolved BUY risk",
+      "path": "multi-account ledger -> watcher aggregate holding",
+      "tests": "rejected A + unknown B",
+      "result": "MOCK_VERIFIED"
+    },
+    {
+      "invariant": "Order ID, fill ID, partial fill, cancellation, remaining quantity and automatic stop activation require broker attribution",
+      "path": "KIS KR/US -> per-account ledger -> tracker",
+      "tests": "No broker-authoritative integration",
+      "result": "BLOCKED"
+    }
+  ],
+  "final_ci": [
+    {
+      "id": 41546277886,
+      "event": "push",
+      "head_sha": "cc8a9e8b0d55c2464182c21c8085c180b8bf9a21",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41546284290,
+      "event": "pull_request",
+      "head_sha": "cc8a9e8b0d55c2464182c21c8085c180b8bf9a21",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "linux_pytest_passed": 1390,
+  "windows_smoke_passed": 167,
+  "docker_build": "success",
+  "external": {
+    "snyk": "success",
+    "qlty": "success_status_but_findings_untriaged"
+  },
+  "audit": {
+    "related": {
+      "inspected": 13,
+      "total": 85,
+      "pass": 0
+    },
+    "full": {
+      "inspected": 13,
+      "total": 177,
+      "pass": 0
+    }
+  },
+  "blockers": [
+    "Broker fill attribution and pending BUY stop activation unimplemented; no KIS demo",
+    "Qlty issues not individually reviewed",
+    "No independent review",
+    "Branch protection policy 403; rulesets empty",
+    "2+2 full independent audits incomplete"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "merge": false,
+  "lock": "RELEASED_BY_EXPECTED_SHA_CAS"
+}
