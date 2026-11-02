@@ -5,13 +5,13 @@
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T04-15-KST-turn8",
-    "lock_owner": "prism-sync-hourly-2026-11-03T04-15-KST-turn8",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T03-20-KST-turn7",
     "result": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDITS_INCOMPLETE",
     "last_mutation_commit": "cda0c79e0f37eca3733c187be923886385a366b3",
-    "previous_state_branch_sha": "3c5ef951117920fb132ccb1c364cca4d3347da1d",
-    "lock_started_at": "2026-11-02T17:18:49Z",
-    "completed_at": "2026-11-02T18:27:52.962Z",
+    "previous_state_branch_sha": "37acd8eceddd87d21e5e0d5e90e413eb02605fc8",
+    "lock_started_at": "2026-11-02T19:15:46Z",
+    "completed_at": "2026-11-02T19:23:52.081Z",
     "started_at": "2026-11-02T19:15:46Z"
   },
   "source": {
