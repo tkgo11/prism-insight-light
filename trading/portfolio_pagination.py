@@ -5,6 +5,7 @@ balance APIs use F/M to announce additional pages and D/E for terminal pages.
 """
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from .execution_outcome import PortfolioInquiryError
@@ -50,3 +51,26 @@ def next_balance_cursor(
         raise PortfolioInquiryError("KIS balance continuation repeated or exceeded safe page limit")
     seen.add(cursor)
     return cursor
+
+
+def validated_balance_quantity(value: Any) -> int:
+    """Parse a KIS holding count without treating corruption as zero.
+
+    Empty KIS placeholder fields mean no holding, but nonempty malformed,
+    negative, fractional or implausibly large counts are not proof of absence.
+    """
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return 0
+    if isinstance(value, bool):
+        raise PortfolioInquiryError("KIS holding quantity must not be boolean")
+    try:
+        number = Decimal(str(value))
+    except (InvalidOperation, ValueError, TypeError, OverflowError) as exc:
+        raise PortfolioInquiryError("KIS holding quantity is malformed") from exc
+    if (
+        not number.is_finite() or number < 0
+        or number != number.to_integral_value()
+        or number > Decimal("1000000000000")
+    ):
+        raise PortfolioInquiryError("KIS holding quantity is not a valid whole-share count")
+    return int(number)

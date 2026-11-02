@@ -64,7 +64,7 @@ PROJECT_ROOT = TRADING_DIR.parent
 
 from . import kis_auth as ka
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
-from .portfolio_pagination import next_balance_cursor
+from .portfolio_pagination import next_balance_cursor, validated_balance_quantity
 from .execution_outcome import (
     PortfolioInquiryError,
     classify_broker_result,
@@ -1930,7 +1930,7 @@ class USStockTrading:
                     if not isinstance(output1, list):
                         output1 = [output1] if output1 else []
                     for item in output1:
-                        quantity = _safe_int(item.get("ovrs_cblc_qty"))
+                        quantity = validated_balance_quantity(item.get("ovrs_cblc_qty"))
                         if quantity > 0:
                             ticker = item.get("ovrs_pdno", "")
                             item_exchange = (

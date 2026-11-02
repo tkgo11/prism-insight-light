@@ -28,7 +28,7 @@ from .kis_auth import (
     TokenRequestError
 )
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
-from .portfolio_pagination import next_balance_cursor
+from .portfolio_pagination import next_balance_cursor, validated_balance_quantity
 from .execution_outcome import (
     PortfolioInquiryError,
     classify_broker_result,
@@ -1630,7 +1630,7 @@ class DomesticStockTrading:
                 if not isinstance(output1, list):
                     output1 = [output1] if output1 else []
                 for item in output1:
-                    quantity = int(item.get("hldg_qty", 0))
+                    quantity = validated_balance_quantity(item.get("hldg_qty"))
                     if quantity > 0:
                         portfolio.append({
                             "stock_code": item.get("pdno", ""),
