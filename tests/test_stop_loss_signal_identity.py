@@ -63,6 +63,8 @@ def test_legacy_from_dict_preserves_reconcilable_signal_identity(tmp_path):
     tracker.record_position("KR", "005930", 90, entry_price=100)
     legacy = tracker.get_position("KR", "005930")
     expected_id = legacy.pop("stop_loss_signal_id")
+    # Simulate the pre-upgrade JSON schema, which lacked both metadata keys.
+    legacy.pop("pending_buy", None)
     restored = TrackedPosition.from_dict(legacy)
     assert restored.pending_buy is True
     assert restored.stop_loss_signal_id == expected_id
