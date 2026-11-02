@@ -252,8 +252,9 @@ class ScoreRiskStrategy:
         weight = 1.0
         if score is None:
             return weight
-        weight = min((self.config.score_bands or {0: 1.0}).values())
-        for threshold, band_weight in sorted((self.config.score_bands or {}).items()):
+        bands = self.config.score_bands or {0: 1.0}
+        weight = bands[min(bands)]
+        for threshold, band_weight in sorted(bands.items()):
             if score >= threshold:
                 weight = band_weight
         return weight

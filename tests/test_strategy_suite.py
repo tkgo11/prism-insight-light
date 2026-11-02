@@ -700,3 +700,24 @@ async def test_score_weighted_fractional_band_without_base_rejects_broker_defaul
     result = await ScoreWeightedStrategy(config=config).execute(signal, trading_mode="demo")
     assert result.status == "rejected"
     assert "base amount" in result.message.lower()
+
+
+@pytest.mark.asyncio
+async def test_score_weighted_below_first_band_uses_first_threshold_not_minimum_weight(monkeypatch):
+    submitted = []
+    async def fake_order(signal, **kwargs):
+        submitted.append(kwargs["buy_amount"])
+        return {"success": True, "message": "accepted"}
+    monkeypatch.setattr("trading.strategies.score_weighted.execute_order", fake_order)
+    config = ScoreWeightedStrategyConfig.from_mapping({
+        "name": "score_weighted",
+        "base_amount_usd": 100,
+        "score_bands": {60: 1.0, 90: 0.25},
+    })
+    signal = parse_signal_payload({
+        "type": "BUY", "market": "US", "ticker": "AAPL",
+        "price": 10, "buy_score": 50,
+    })
+    result = await ScoreWeightedStrategy(config=config).execute(signal, trading_mode="demo")
+    assert result.status == "executed"
+    assert submitted == [100.0]

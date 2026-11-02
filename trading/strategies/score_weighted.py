@@ -38,7 +38,9 @@ class ScoreWeightedStrategy:
         if (signal.buy_score is None and self.config.min_score > 0) or (signal.buy_score is not None and signal.buy_score < self.config.min_score):
             return StrategyExecution("rejected", "BUY score is missing or below the configured threshold", signal.market, signal.ticker)
         bands = self.config.score_bands or {0: 1.0}
-        weight = 1.0 if signal.buy_score is None else min(bands.values())
+        # Scores below every threshold use the *first threshold's* weight,
+        # not the smallest weight across unrelated higher-score bands.
+        weight = 1.0 if signal.buy_score is None else bands[min(bands)]
         for score, band_weight in sorted(bands.items()):
             if signal.buy_score is not None and signal.buy_score >= score: weight = band_weight
         if weight <= 0:

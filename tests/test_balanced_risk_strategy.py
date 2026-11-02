@@ -460,3 +460,25 @@ async def test_fractional_score_risk_weight_requires_usable_budget_before_broker
     assert result.status == "rejected"
     assert "weight" in result.message.lower()
     assert FakeUSTrader.calls == []
+
+
+@pytest.mark.parametrize("strategy_name", ["score_risk", "balanced_risk"])
+@pytest.mark.asyncio
+async def test_score_risk_below_first_band_uses_first_threshold_not_minimum_weight(strategy_name):
+    payload = {
+        "name": strategy_name,
+        "risk_amount_usd": 100,
+        "score_bands": {60: 1.0, 90: 0.25},
+    }
+    strategy = (
+        BalancedRiskStrategy(config=BalancedRiskStrategyConfig.from_mapping(payload))
+        if strategy_name == "balanced_risk"
+        else ScoreRiskStrategy(config=ScoreRiskStrategyConfig.from_mapping(payload))
+    )
+    signal = parse_signal_payload({
+        "type": "BUY", "market": "US", "ticker": "AAPL",
+        "price": 100, "stop_loss": 90, "buy_score": 50,
+    })
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "executed"
+    assert FakeUSTrader.calls == [("buy", "AAPL", 1000.0, 100.0)]
