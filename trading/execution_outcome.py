@@ -89,7 +89,14 @@ def classify_broker_result(result: Any) -> str:
                 if isinstance(value, bool):
                     return False
                 if isinstance(value, str):
-                    return bool(value.strip())
+                    receipt = value.strip()
+                    if not receipt or receipt.casefold() in {"none", "null", "nan", "undefined"}:
+                        return False
+                    # An all-zero KIS order number is a placeholder, not a
+                    # reconcilable broker receipt. Preserve UNKNOWN instead.
+                    if receipt.isdecimal() and not any(char != "0" for char in receipt):
+                        return False
+                    return True
                 return isinstance(value, int) and value > 0
 
             if not any(valid_receipt(result.get(field)) for field in receipt_fields):

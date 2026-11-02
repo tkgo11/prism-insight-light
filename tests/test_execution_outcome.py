@@ -97,6 +97,10 @@ def test_unverified_broker_failure_keeps_durable_duplicate_suppression(tmp_path)
         {"order_no": None},
         {"order_no": "   "},
         {"order_no": False},
+        {"order_no": "0"},
+        {"order_no": "0000000000"},
+        {"order_no": "null"},
+        {"order_no": "None"},
         {"broker_order_id": ""},
     ],
 )
