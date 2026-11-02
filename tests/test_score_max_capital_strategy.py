@@ -184,3 +184,35 @@ async def test_concurrent_buy_scores_keep_independent_ratios(tmp_path, monkeypat
     assert second_result.buy_amount == pytest.approx(400.0)
     assert "(60% of " in first_result.message
     assert "(100% of " in second_result.message
+
+@pytest.mark.asyncio
+async def test_buy_score_below_first_threshold_uses_first_ratio_not_smallest(tmp_path):
+    strategy = ScoreMaxCapitalStrategy(
+        config=make_config(buy_score_bands={5: 0.90, 8: 0.20})
+    )
+    strategy.reservation_path = tmp_path / "below-first-buy-reservations.json"
+    signal = parse_signal_payload(
+        {"type": "BUY", "ticker": "AAPL", "market": "US", "price": 100, "buy_score": 2}
+    )
+
+    result = await strategy.execute(signal, trading_mode="demo")
+
+    assert result.status == "executed"
+    assert result.buy_amount == pytest.approx(900.0)
+    assert FakeUSTrader.calls == [("buy", "AAPL", 900.0, 100.0)]
+
+
+@pytest.mark.asyncio
+async def test_sell_score_below_first_threshold_uses_first_ratio_not_smallest():
+    strategy = ScoreMaxCapitalStrategy(
+        config=make_config(sell_score_bands={5: 0.80, 8: 0.25})
+    )
+    signal = parse_signal_payload(
+        {"type": "SELL", "ticker": "AAPL", "market": "US", "price": 120, "buy_score": 2}
+    )
+
+    result = await strategy.execute(signal, trading_mode="demo")
+
+    assert result.status == "executed"
+    assert result.details["sell_fraction"] == pytest.approx(0.80)
+    assert FakeUSTrader.calls == [("sell", "AAPL", 0.80, 120.0)]

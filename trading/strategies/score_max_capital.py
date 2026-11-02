@@ -226,7 +226,9 @@ class ScoreMaxCapitalStrategy(BalanceSplitStrategy):
     ) -> float:
         if score is None:
             return missing_ratio
-        ratio = min(bands.values())
+        # Below the lowest threshold, use that threshold's configured ratio.
+        # The smallest ratio may belong to an unrelated higher score band.
+        ratio = bands[min(bands)]
         for threshold, band_ratio in sorted(bands.items()):
             if score >= threshold:
                 ratio = band_ratio
