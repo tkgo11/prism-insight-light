@@ -8,9 +8,9 @@
     "started_at": "2026-11-02T02:16:28Z",
     "completed_at": null,
     "lock_owner": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
-    "last_mutation_commit": "d238ac092189c7a472e2cfa2a25589eb752c0411",
-    "last_mutation_at": "2026-11-02T02:22:00Z",
-    "result": "TWO_ROOT_CAUSE_BATCHES_PATCHED_NEW_HEAD_CI_PENDING_AUDIT_INCOMPLETE",
+    "last_mutation_commit": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+    "last_mutation_at": "2026-11-02T02:23:00Z",
+    "result": "THREE_BATCHES_PATCHED_LATEST_CI_PENDING_AUDIT_INCOMPLETE",
     "pr_comment_id": 6559241549,
     "last_report": {
       "phase": "related_code_audit",
@@ -85,7 +85,7 @@
     "number": 42,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/42",
     "head_ref": "feat/upstream-signal-sizing-20261031",
-    "head_sha": "d238ac092189c7a472e2cfa2a25589eb752c0411",
+    "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
     "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
     "draft": true,
     "authorized_scope": "ALL_FORK_PRS_EXPLICIT_USER_APPROVAL",
@@ -98,7 +98,7 @@
       "title": "fix(trading): preserve upstream partial BUY/SELL sizing across all execution paths",
       "author": "tkgo11",
       "head_ref": "feat/upstream-signal-sizing-20261031",
-      "head_sha": "d238ac092189c7a472e2cfa2a25589eb752c0411",
+      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
       "base_sha": "4c38195fadbd138a0d90832f3ef433b677dbf081",
       "draft": true,
       "ownership": "USER_EXPLICITLY_AUTHORIZED_ALL_FORK_PRS",
@@ -174,7 +174,7 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "RESET_AFTER_FRACTIONAL_SCORE_WEIGHT_FALLBACK_FIX",
+    "status": "RESET_AFTER_SCORE_BAND_THRESHOLD_FIX",
     "checksum": null,
     "scope_estimate": "64 related files; transitive dependency closure and independent audit incomplete",
     "files": [
@@ -320,7 +320,7 @@
       },
       {
         "path": "tests/test_strategy_suite.py",
-        "blob_sha": "1414903df68ff3d5f6bd6e5f7e6baa35827470e3",
+        "blob_sha": "bb8730d48c8f15e8b7ee76dd18506ca02e73b9e8",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -455,12 +455,12 @@
       },
       {
         "path": "trading/strategies/score_risk.py",
-        "blob_sha": "cd5838c846c891216f63d0ef653f7dea436f3aea",
+        "blob_sha": "8de985063a746453f8a291a25880b0fa65b741b7",
         "status": "NOT_FULLY_AUDITED"
       },
       {
         "path": "trading/strategies/score_weighted.py",
-        "blob_sha": "fd72b671c48f4746d2cd2ca92b63f5e5d6ca5f2c",
+        "blob_sha": "361a84149b6be0dd5cecc6361102c34dd0d9e6fc",
         "status": "NOT_FULLY_AUDITED"
       },
       {
@@ -495,7 +495,7 @@
       },
       {
         "path": "tests/test_balanced_risk_strategy.py",
-        "blob_sha": "56c91b33a56340d896b3a15c92058ca16b2d04b9",
+        "blob_sha": "e2e05a407ccbb2d675234ea7ee5ab97cce830a86",
         "status": "NOT_FULLY_AUDITED"
       }
     ],
@@ -508,13 +508,13 @@
       "trading/strategies/README.md",
       "tests/test_balanced_risk_strategy.py"
     ],
-    "tree_sha": "25e18641b48fdb86c4efd1fcd025d89bd77363f2"
+    "tree_sha": "7fd53b7c386adc606cc6e66128c2aed6b1808f16"
   },
   "full_manifest": {
-    "status": "RESET_AFTER_FRACTIONAL_SCORE_WEIGHT_FALLBACK_FIX",
+    "status": "RESET_AFTER_SCORE_BAND_THRESHOLD_FIX",
     "tracked_tree_entries_on_pr": 187,
     "tracked_blob_files_on_pr": 163,
-    "sha": "d238ac092189c7a472e2cfa2a25589eb752c0411",
+    "sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
     "files_checked": 0,
     "checksum": null,
     "checksum_kind": "git-tree-sha1",
@@ -691,7 +691,7 @@
       },
       {
         "path": "tests/test_balanced_risk_strategy.py",
-        "blob_sha": "56c91b33a56340d896b3a15c92058ca16b2d04b9",
+        "blob_sha": "e2e05a407ccbb2d675234ea7ee5ab97cce830a86",
         "status": "NOT_REVIEWED"
       },
       {
@@ -861,7 +861,7 @@
       },
       {
         "path": "tests/test_strategy_suite.py",
-        "blob_sha": "1414903df68ff3d5f6bd6e5f7e6baa35827470e3",
+        "blob_sha": "bb8730d48c8f15e8b7ee76dd18506ca02e73b9e8",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1111,12 +1111,12 @@
       },
       {
         "path": "trading/strategies/score_risk.py",
-        "blob_sha": "cd5838c846c891216f63d0ef653f7dea436f3aea",
+        "blob_sha": "8de985063a746453f8a291a25880b0fa65b741b7",
         "status": "NOT_REVIEWED"
       },
       {
         "path": "trading/strategies/score_weighted.py",
-        "blob_sha": "fd72b671c48f4746d2cd2ca92b63f5e5d6ca5f2c",
+        "blob_sha": "361a84149b6be0dd5cecc6361102c34dd0d9e6fc",
         "status": "NOT_REVIEWED"
       },
       {
@@ -1335,7 +1335,7 @@
         "status": "NOT_REVIEWED"
       }
     ],
-    "tree_sha": "25e18641b48fdb86c4efd1fcd025d89bd77363f2"
+    "tree_sha": "7fd53b7c386adc606cc6e66128c2aed6b1808f16"
   },
   "checks": {
     "0": {
@@ -1591,7 +1591,7 @@
     "latest_workflow_run_id": 41371985237,
     "latest_workflow_run_status": "pending",
     "latest_workflow_run_conclusion": null,
-    "head_sha": "d238ac092189c7a472e2cfa2a25589eb752c0411",
+    "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
     "automation-turn-11": {
       "run_id": 41243400167,
       "head_sha": "75170f89b2dfaaad1756cb28e13f5fc6f8edbbff",
@@ -4260,6 +4260,24 @@
         "trading/STRATEGIES.md"
       ],
       "notes": "Same-run second dependency review found configured fractional score weights ignored on broker default paths. Added fail-closed guards for score_weighted and score_risk/balanced_risk and 5 mock broker regression cases. Earlier overflow commit remains in ancestry. Independent audits and KIS demo not complete."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
+      "kind": "THIRD_ITERATION_SCORE_BAND_LOWER_BOUND_FIX",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+      "previous_head_sha": "d238ac092189c7a472e2cfa2a25589eb752c0411",
+      "commit_shas": [
+        "e1ed9915f03d48a4798e76221d2dc0f354db4863"
+      ],
+      "changed_files": [
+        "trading/strategies/score_risk.py",
+        "trading/strategies/score_weighted.py",
+        "tests/test_balanced_risk_strategy.py",
+        "tests/test_strategy_suite.py"
+      ],
+      "notes": "Source audit found nonmonotonic score band below-first fallback selected global minimum instead of first threshold; fixed both strategies and added 3 mock boundary cases; current CI pending; no independent audit PASS."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -4638,6 +4656,15 @@
       "full_pass": false,
       "reason": "Second code fix invalidated prior-head CI and audit; no independent PASS",
       "manifest_tree_sha": "25e18641b48fdb86c4efd1fcd025d89bd77363f2"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-02T11:16:28+09:00",
+      "phase": "related_code_audit",
+      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Third code patch invalidated prior head CI; no full audit",
+      "manifest_tree_sha": "7fd53b7c386adc606cc6e66128c2aed6b1808f16"
     }
   ],
   "discovered_defects": [
@@ -5461,6 +5488,23 @@
       "fix_commit": "d238ac092189c7a472e2cfa2a25589eb752c0411",
       "head_sha": "d238ac092189c7a472e2cfa2a25589eb752c0411",
       "test_evidence": "5 mock broker non-submission cases committed; new-head CI pending; KIS demo unavailable"
+    },
+    {
+      "id": "score-band-below-first-global-min-20261102",
+      "root_cause_id": "RC-STRATEGY-SCORE-BAND-LOWER-BOUND",
+      "severity": "MEDIUM",
+      "status": "CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE",
+      "description": "When score below first configured band and weights nonmonotonic, strategy chose global minimum band weight, not first threshold weight",
+      "reproduction": "score_bands={60:1.0,90:0.25}, buy_score=50 selects 0.25 instead of 1.0 in score_weighted and score_risk",
+      "paths": [
+        "trading/strategies/score_risk.py",
+        "trading/strategies/score_weighted.py",
+        "tests/test_balanced_risk_strategy.py",
+        "tests/test_strategy_suite.py"
+      ],
+      "fix_commit": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+      "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
+      "test_evidence": "3 mock broker boundary cases committed; latest CI pending"
     }
   ],
   "risks": [
@@ -5701,10 +5745,19 @@
         "5c51675486443eb8cf1355fa3227431024b353e8",
         "12796c8fd0f11fb0ca82cd1dbd27e53ec25488b0"
       ]
+    },
+    {
+      "root_cause_id": "RC-STRATEGY-SCORE-BAND-LOWER-BOUND",
+      "description": "Below-first score threshold incorrectly selects global minimum weight rather than first threshold weight across weighted/risk/balanced",
+      "defect_ids": [
+        "score-band-below-first-global-min-20261102"
+      ],
+      "classification": "NEW_ROOT_CAUSE_CODE_PATCHED_CI_PENDING_AUDIT_INCOMPLETE",
+      "last_checked_head": "e1ed9915f03d48a4798e76221d2dc0f354db4863"
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "d238ac092189c7a472e2cfa2a25589eb752c0411",
+    "head_sha": "e1ed9915f03d48a4798e76221d2dc0f354db4863",
     "scope": "Derived finite-input score-based BUY budget overflow and score-risk cap/units/notional; order lifecycle integration remains unverified",
     "entries": [
       {
@@ -5885,6 +5938,12 @@
         "contract": "Configured fractional score weights must never silently fall back to unweighted broker default",
         "path": "score_weighted/score_risk -> balanced_risk -> common.execute_order -> US/KR broker",
         "evidence": "5 new mock broker non-submission tests at d238ac092189c7a472e2cfa2a25589eb752c0411",
+        "status": "PATCHED_CI_PENDING_AUDIT_INCOMPLETE"
+      },
+      {
+        "contract": "Below-first score band lookup uses first threshold's weight, not global minimum weight",
+        "path": "score_weighted.py and score_risk.py via balanced_risk.py",
+        "evidence": "3 broker-mock boundary tests at e1ed9915f03d48a4798e76221d2dc0f354db4863",
         "status": "PATCHED_CI_PENDING_AUDIT_INCOMPLETE"
       }
     ]
