@@ -965,6 +965,9 @@ class TradeDispatcher:
                     entry_price=signal.price or 0.0,
                     company_name=signal.company_name,
                     target_price=signal.target_price,
+                    # Broker acceptance is not a confirmed fill. Preserve
+                    # tracking across a pre-fill zero-holdings inquiry.
+                    pending_buy=True,
                 )
             elif signal.signal_type == "SELL" and signal.sell_reason != "stop_loss":
                 # An accepted broker order (including a full-size SELL) is not

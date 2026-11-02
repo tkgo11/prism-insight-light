@@ -281,3 +281,12 @@ zero-only sentinels), emoji and arbitrary punctuation. The previous
 `str.isdecimal()` test was Unicode-aware and did not prove an ASCII KIS
 order number. This is a recurrence of the existing receipt-integrity root
 cause; it does not create a new independent financial defect category.
+
+
+## Accepted BUY / stop-loss zero-balance safety (2026-11-02)
+
+- Root cause `RC-BUY-ACCEPTANCE-TRACKER-ZERO-RACE`: order acceptance is not a fill. Previously an accepted BUY registered a stop-loss record, then a zero-holdings inquiry could remove it before the BUY filled. A later fill could remain unprotected.
+- Accepted automatic BUY registrations now persist `pending_buy=true`. Zero holdings, including a post-SELL zero snapshot, cannot auto-delete unresolved protection; old records missing the field are treated conservatively as unresolved. Explicitly confirmed/manual records can still be cleared at zero.
+- A stop-loss can still submit against positive, verified holdings; the pending flag is not an assertion of a fill. Invalid pending metadata is quarantined from automated trading.
+- The pending flag is intentionally not auto-cleared without authoritative broker order/fill/cancel reconciliation. This may retain stale records requiring manual reconciliation; it is a fail-closed trade-off, not proof of end-to-end safety. No KIS demo/live transactions were performed.
+- Tests: `tests/test_pending_buy_stop_loss_safety.py`. Independent file-by-file audits and actual KIS demo reconciliation remain blocked; keep PR Draft and audit counters 0/2 + 0/2.

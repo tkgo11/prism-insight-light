@@ -112,12 +112,17 @@ class TrackedPosition:
     target_price: float | None = None
     created_at: str = ""
     updated_at: str = ""
+    # An accepted BUY may fill after an initial zero-balance inquiry.
+    pending_buy: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TrackedPosition":
+        pending_buy = data.get("pending_buy", True)
+        if not isinstance(pending_buy, bool):
+            raise ValueError("Invalid pending BUY provenance")
         return cls(
             market=str(data.get("market", "")).upper(),
             ticker=str(data.get("ticker", "")),
@@ -131,6 +136,7 @@ class TrackedPosition:
             ),
             created_at=str(data.get("created_at", "")),
             updated_at=str(data.get("updated_at", "")),
+            pending_buy=pending_buy,
         )
 
 
@@ -272,8 +278,11 @@ class StopLossTracker:
         entry_price: float = 0.0,
         company_name: str = "",
         target_price: float | None = None,
+        pending_buy: bool = False,
     ) -> None:
         """Register or update a position's stop-loss price."""
+        if not isinstance(pending_buy, bool):
+            raise ValueError("Pending BUY provenance must be boolean")
         # Reject malformed identifiers before touching durable protection.
         # Whitespace-only instruments otherwise create unreachable ledger
         # entries that the watcher silently skips; normalize outer whitespace
@@ -328,6 +337,13 @@ class StopLossTracker:
                         "Conflicting stop-loss instrument requires operator reconciliation"
                     )
             existing = positions.get(key)
+            if isinstance(existing, dict):
+                # A stop-price update cannot clear unresolved BUY provenance.
+                # Older records without the field are ambiguous and protected.
+                old_pending = existing.get("pending_buy", True)
+                if not isinstance(old_pending, bool):
+                    raise ValueError("Invalid existing pending BUY provenance")
+                pending_buy = pending_buy or old_pending
             created_at = existing.get("created_at") if isinstance(existing, dict) else now_iso
             pos = TrackedPosition(
                 market=market.upper(),
@@ -338,6 +354,7 @@ class StopLossTracker:
                 target_price=target_price_value,
                 created_at=created_at or now_iso,
                 updated_at=now_iso,
+                pending_buy=pending_buy,
             )
             positions[key] = pos.to_dict()
             self._save(positions)
@@ -443,6 +460,7 @@ class StopLossTracker:
                 or item["ticker"] != item["ticker"].strip()
                 or any(ord(ch) < 32 or ord(ch) == 127 for ch in item["market"] + item["ticker"])
                 or self._key(item["market"], item["ticker"]) != key
+                or ("pending_buy" in item and not isinstance(item["pending_buy"], bool))
                 or not valid_stored_price(item.get("stop_loss"), positive=True)
                 or not valid_stored_price(item.get("entry_price", 0))
                 or (
@@ -642,6 +660,12 @@ class StopLossWatcher:
                     continue
 
                 if holding_qty == 0:
+                    if pos.get("pending_buy", True):
+                        logger.warning(
+                            "[Stop-Loss] Keeping %s %s: zero holdings cannot rule out "
+                            "a later fill of an unresolved accepted BUY", market, ticker,
+                        )
+                        continue
                     logger.info(
                         "[Stop-Loss] %s %s has 0 holding quantity; clearing from tracking",
                         market,
@@ -790,13 +814,19 @@ class StopLossWatcher:
                     )
                 else:
                     if remaining_qty == 0:
-                        self.tracker.remove_position(
+                        if pos.get("pending_buy", True):
+                            logger.warning(
+                                "[Stop-Loss] Keeping %s %s after SELL: zero holdings "
+                                "cannot establish an accepted BUY will not fill later",
+                                market, ticker,
+                            )
+                        elif self.tracker.remove_position(
                             market, ticker, expected_updated_at=pos.get("updated_at"),
                             expected_record=pos,
-                        )
-                        self._last_trigger_attempt.pop(
-                            self.tracker._key(market, ticker), None
-                        )
+                        ):
+                            self._last_trigger_attempt.pop(
+                                self.tracker._key(market, ticker), None
+                            )
                     else:
                         logger.warning(
                             "[Stop-Loss] Keeping protection for %s %s after "
