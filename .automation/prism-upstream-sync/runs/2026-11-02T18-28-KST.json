@@ -1,0 +1,174 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
+  "slot": "2026-11-02T18:28+09:00",
+  "stage": "BROKER_RECEIPT_INTEGRITY_PATCHED_CI_SUCCESS_AUDITS_INCOMPLETE",
+  "concurrency": {
+    "state_head_before_lock": "5fd9084c9a119b8ef776874493727d6a4814e006",
+    "lock_commit": "e2d3cec405a637bc61c304d5d4ce178adeef72a3",
+    "lock_owner": "prism-sync-hourly-2026-11-02T18-28-KST-turn11",
+    "cas_required": true
+  },
+  "upstream": {
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "ahead_commits": 47,
+    "changed_files": 41,
+    "decision": "NO_IMPORT"
+  },
+  "fork": {
+    "base": "4c38195fadbd138a0d90832f3ef433b677dbf081",
+    "pr_number": 42,
+    "head": "796f8767c910858446ca8b5f39e734a163dd73d7",
+    "draft": true,
+    "tree_sha": "4b57ddefe43bea8b2ad437fd8eb30dee58df2024"
+  },
+  "root_cause": "RC-BROKER-RECEIPT-INTEGRITY",
+  "defect_id": "kis-accepted-without-reconcilable-order-receipt-20261102",
+  "pre_fix_ci": {
+    "id": 41421360389,
+    "failed": 6,
+    "passed": 1172
+  },
+  "code_commits": [
+    "cf94fa48982327870704480df8d7140643023724",
+    "433aa9b8956086e0c3ba22b46c3ecc82b4c4d0f6",
+    "84e3116b90aee5006dfa23e1efe898bde2da8677",
+    "796f8767c910858446ca8b5f39e734a163dd73d7"
+  ],
+  "changed_files": [
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "086eb4458dee7c5e96383095b91b80c0878562c7",
+      "review_level": "TARGETED_SOURCE_TEST_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_execution_outcome.py",
+      "blob_sha": "bc303c797bc8e28aab857d05818fcec07c81181d",
+      "review_level": "TARGETED_SOURCE_TEST_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_wave4_execution_safety.py",
+      "blob_sha": "4c6a3538d3ee9ef6c3941f3c9d672ac04d692a27",
+      "review_level": "TARGETED_SOURCE_TEST_CI_NOT_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "db28fdc00dbac8a68f19a3d8005adcfd9ba5c1c5",
+      "review_level": "TARGETED_SOURCE_TEST_CI_NOT_FULL_FILE_AUDIT"
+    }
+  ],
+  "reviewed_paths": [
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "086eb4458dee7c5e96383095b91b80c0878562c7",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "e4daab769d8eb79cb13545a7914470b726da1ce0",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "af18e3f9c59d0f3074b392c5311cf99f2840887e",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "f7c19dd91f6dba861d01c9c0d8a207656f13421b",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "035846e0845133debe4b65524c16ed9ff1cb56f2",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "454e7f2b96970b96179c7dbde011d140e5aa3b9f",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "cfb947a63ff8f6f2710b3626171173909f65c49d",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_execution_outcome.py",
+      "blob_sha": "bc303c797bc8e28aab857d05818fcec07c81181d",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_wave4_execution_safety.py",
+      "blob_sha": "4c6a3538d3ee9ef6c3941f3c9d672ac04d692a27",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_multi_account_domestic.py",
+      "blob_sha": "61fb74cc449f3d670d0e155bd9aebd0c35dbf784",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_multi_account_us.py",
+      "blob_sha": "b55165d2eca3b7ead61bca2dc4a8a6706c4ac731",
+      "level": "TARGETED_SOURCE_AND_CI_NOT_FULL_TRANSITIVE_FILE_AUDIT"
+    }
+  ],
+  "final_ci": [
+    {
+      "id": 41421997864,
+      "event": "pull_request",
+      "head_sha": "796f8767c910858446ca8b5f39e734a163dd73d7",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41421991598,
+      "event": "push",
+      "head_sha": "796f8767c910858446ca8b5f39e734a163dd73d7",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "tests": {
+    "linux_passed": 1184,
+    "windows_passed": 167,
+    "new_tests": 13,
+    "docker": "success",
+    "kis_demo": "BLOCKED",
+    "live_orders": 0
+  },
+  "external_statuses": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success",
+      "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/7a5ebb4c-ce5a-4e36-8381-673a1f51f0c0"
+    },
+    {
+      "context": "qlty check",
+      "state": "success",
+      "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/42/issues"
+    }
+  ],
+  "related_audit": {
+    "files": 74,
+    "fully_audited": 0,
+    "pass": 0
+  },
+  "full_audit": {
+    "files": 168,
+    "fully_audited": 0,
+    "pass": 0
+  },
+  "independent_approvals": 0,
+  "branch_protection": "403_FORBIDDEN",
+  "merged": false,
+  "remaining_risks": [
+    "Broker acceptance not fill",
+    "Partial/cancel/remaining qty not authoritative",
+    "Stop-loss pending/retry and crash recovery demo blocked",
+    "Legacy custom wrappers omitting receipt fields retain compatibility",
+    "Transitive/full file audit incomplete"
+  ],
+  "completed_at": "2026-11-02T09:39:20.448Z"
+}
