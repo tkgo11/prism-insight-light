@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
-from trading.schema import SignalValidationError, reject_duplicate_signal_keys
+from trading.schema import SignalValidationError, load_signal_json
 from webui.routes.guards import get_urlencoded_form, require_csrf_token
 from webui.services.signal_service import parse_signal_input, parse_signal_text
 
@@ -69,11 +69,8 @@ async def validate_signal(request: Request, body: SignalRequest):
     """Validate JSON without allowing FastAPI's decoder to discard duplicate keys."""
 
     try:
-        json.loads(
-            (await request.body()).decode("utf-8"),
-            object_pairs_hook=reject_duplicate_signal_keys,
-        )
-    except SignalValidationError as exc:
+        load_signal_json((await request.body()).decode("utf-8"))
+    except (SignalValidationError, json.JSONDecodeError) as exc:
         return {"ok": False, "signal": None, "error": str(exc)}
 
     if isinstance(body.payload, str):

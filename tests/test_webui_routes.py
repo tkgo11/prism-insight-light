@@ -996,3 +996,18 @@ def test_validation_api_rejects_duplicate_keys_in_raw_json_body():
     data = response.json()
     assert data["ok"] is False
     assert "Duplicate" in data["error"]
+
+
+def test_validation_api_rejects_rounded_integer_literal_in_raw_body():
+    # Pydantic's parsed request has already lost decimal precision.
+    # The endpoint must inspect the original JSON before accepting it.
+    raw = b'{"payload":{"type":"SELL","ticker":"AAPL","price":100,"sell_denominator":8.0000000000000001}}'
+    response = client().post(
+        "/signals/validate",
+        content=raw,
+        headers={"content-type": "application/json", "X-WebUI-CSRF": "local-webui"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is False
+    assert "sell_denominator" in data["error"]

@@ -162,3 +162,21 @@ skips it rather than dispatching an ambiguous trade. The regression tests
 nested-object control. This validation is **not** KIS fill confirmation and
 does not authorize live trading. Existing order-ID, partial-fill, cancellation,
 remaining-quantity, crash-recovery, and independent audit gates remain blocked.
+
+### Integer precision boundary across inbound transports (2026-11-02)
+
+`buy_score` and `sell_denominator` must be exact integers. Earlier float
+conversion rounded JSON integers above 2**53 and near-integral decimal
+strings (for example `8.0000000000000001`) into different valid-looking
+integers. The parser now rejects integer-valued fields outside the IEEE-754
+exact integer range (absolute value > 2**53 - 1), and checks decimal
+strings exactly. JSON numeric decimal literals are preflighted using Decimal
+before ordinary deserialization at Pub/Sub, Telegram JSON and WebUI trust
+boundaries; labeled Telegram buy scores receive a precision check too.
+The second parse retains existing JSON-serializable raw payload types.
+The guard is conservative for very large historical score/denominator values;
+such signals require publisher correction rather than silent rounding.
+No existing ledger format is migrated. This is a parser-only mock/CI
+safeguard, not evidence of KIS order acceptance, fills, cancellations or
+account-level reconciliation. Full dependency audits and demo verification
+remain mandatory before merge or deployment.

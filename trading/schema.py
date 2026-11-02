@@ -113,6 +113,35 @@ def _as_positive_float(value: Any, *, field_name: str) -> float | None:
     return number
 
 
+def load_signal_json(text: str | bytes) -> Any:
+    """Decode signal JSON without losing integer-field precision.
+
+    json.loads normally rounds 8.0000000000000001 to 8.0 *before* the
+    integer validator sees it. Inspect Decimal tokens first, then return
+    ordinary JSON types so raw signals remain queue/ledger serializable.
+    Duplicate keys are rejected during both passes, including nested data.
+    """
+    try:
+        exact = json.loads(
+            text, object_pairs_hook=reject_duplicate_signal_keys, parse_float=Decimal
+        )
+    except InvalidOperation as exc:
+        raise SignalValidationError("Invalid JSON numeric literal") from exc
+
+    def check_integer_tokens(value: Any) -> None:
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if key in {"buy_score", "sell_denominator"} and isinstance(item, Decimal):
+                    _as_int(item, field_name=key)
+                check_integer_tokens(item)
+        elif isinstance(value, list):
+            for item in value:
+                check_integer_tokens(item)
+
+    check_integer_tokens(exact)
+    return json.loads(text, object_pairs_hook=reject_duplicate_signal_keys)
+
+
 @dataclass(slots=True)
 class SignalMessage:
     """Validated inbound trading signal."""
@@ -208,10 +237,7 @@ def parse_signal_bytes(message_bytes: bytes) -> SignalMessage:
     if not isinstance(message_bytes, (bytes, bytearray)):
         raise SignalValidationError("Signal payload must be UTF-8 JSON bytes")
     try:
-        payload = json.loads(
-            bytes(message_bytes).decode("utf-8"),
-            object_pairs_hook=reject_duplicate_signal_keys,
-        )
+        payload = load_signal_json(bytes(message_bytes).decode("utf-8"))
     except UnicodeDecodeError as exc:
         raise SignalValidationError("Signal payload must be UTF-8 JSON") from exc
     except json.JSONDecodeError as exc:

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import re
+import math
+from decimal import Decimal, InvalidOperation
 from dataclasses import dataclass
 from html import unescape
 from typing import Any
@@ -11,7 +13,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from .schema import SignalMessage, SignalValidationError, parse_signal_payload, reject_duplicate_signal_keys
+from .schema import SignalMessage, SignalValidationError, load_signal_json, parse_signal_payload
 
 DEFAULT_TELEGRAM_CHANNEL_URL = "https://t.me/prism_insight_global_en"
 _TELEGRAM_PREVIEW_BASE = "https://t.me/s/"
@@ -233,7 +235,7 @@ def _parse_json_signal(text: str) -> dict[str, Any] | None:
 
     for candidate in candidates:
         try:
-            payload = json.loads(candidate, object_pairs_hook=reject_duplicate_signal_keys)
+            payload = load_signal_json(candidate)
         except json.JSONDecodeError:
             continue
         if isinstance(payload, dict) and str(payload.get("type", "")).strip():
@@ -285,6 +287,16 @@ def _apply_labeled_field(payload: dict[str, Any], label: str, value: str) -> Non
         payload["stop_loss"] = _parse_number(value)
     elif label == "buy score":
         score = _parse_number(value)
+        token = _NUMBER_RE.search(value.replace("%", ""))
+        if token is not None and score is not None:
+            # Labeled Telegram numbers must not round a fractional score
+            # into an integer before the schema validates it.
+            try:
+                exact = Decimal(token.group(0).replace(",", ""))
+            except InvalidOperation as exc:
+                raise SignalValidationError("Invalid integer value for 'buy_score'") from exc
+            if not math.isfinite(score) or exact != Decimal(str(score)):
+                raise SignalValidationError("Invalid integer value for 'buy_score'")
         payload["buy_score"] = score
     elif label == "rationale":
         payload["rationale"] = value
