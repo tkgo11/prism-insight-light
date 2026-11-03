@@ -11,7 +11,7 @@ import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable, TypeVar
 
 from . import kis_auth as ka
 from . import yaml_compat as yaml
@@ -115,6 +115,36 @@ async def _serialized_broker_workflow():
             )
         finally:
             _BROKER_EXECUTION_LOCK.release()
+
+
+_WorkflowResult = TypeVar("_WorkflowResult")
+
+
+async def _complete_broker_workflow(workflow: Awaitable[_WorkflowResult]) -> _WorkflowResult:
+    """Delay caller cancellation until broker work and durable tracking finish.
+
+    Cancelling ``to_thread`` cannot stop its worker. Keep the serialization
+    locks held while the shielded workflow finishes, including repeated caller
+    cancellations, so another signal cannot overlap a still-active order.
+    """
+    task = asyncio.ensure_future(workflow)
+    cancellation: asyncio.CancelledError | None = None
+    while True:
+        try:
+            result = await asyncio.shield(task)
+        except asyncio.CancelledError as exc:
+            if task.cancelled():
+                raise
+            cancellation = exc
+        except Exception:
+            if cancellation is not None:
+                logger.exception("Broker workflow failed while draining caller cancellation")
+                raise cancellation
+            raise
+        else:
+            if cancellation is not None:
+                raise cancellation
+            return result
 
 
 def _account_id(account_key: str) -> str:
@@ -673,36 +703,9 @@ class TradeDispatcher:
     ) -> DispatchResult:
         try:
             async with _serialized_broker_workflow():
-                if _untrusted_reserved_watcher_id(signal):
-                    logger.error(
-                        "Rejecting publisher-supplied reserved watcher identity for %s %s",
-                        signal.market, signal.ticker,
-                    )
-                    return DispatchResult(
-                        "rejected", "Reserved internal watcher identity; publisher order rejected",
-                        signal.signal_type, signal.market,
-                    )
-                # Check under the cross-process broker lock before any KR/US
-                # single-account or multi-account stop-loss SELL submission.
-                stop_block = await self._stop_sell_unresolved_buy_block(signal)
-                if stop_block is not None:
-                    return stop_block
-                if self.multi_account_enabled:
-                    result = await self.multi_account_dispatcher.dispatch(
-                        signal,
-                        allow_queue=allow_queue,
-                        queued_context=queued_context,
-                    )
-                elif self.dry_run:
-                    logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
-                    result = DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
-                else:
-                    serialized_kwargs: dict[str, Any] = {"allow_queue": allow_queue}
-                    if queued_context is not None:
-                        serialized_kwargs["queued_context"] = queued_context
-                    result = await self._dispatch_serialized(signal, **serialized_kwargs)
-                await asyncio.to_thread(self._update_stop_loss_tracking, signal, result)
-                return result
+                return await _complete_broker_workflow(
+                    self._dispatch_locked(signal, allow_queue=allow_queue, queued_context=queued_context)
+                )
         except BrokerWorkflowBusyError:
             logger.warning(
                 "Deferred %s %s(%s): broker execution lock stayed busy past %.0fs",
@@ -715,6 +718,42 @@ class TradeDispatcher:
                 signal.signal_type,
                 signal.market,
             )
+
+    async def _dispatch_locked(
+        self, signal: SignalMessage, *, allow_queue: bool,
+        queued_context: dict[str, Any] | None,
+    ) -> DispatchResult:
+        """Finish routing and tracking while the caller owns broker locks."""
+        if _untrusted_reserved_watcher_id(signal):
+            logger.error(
+                "Rejecting publisher-supplied reserved watcher identity for %s %s",
+                signal.market, signal.ticker,
+            )
+            return DispatchResult(
+                "rejected", "Reserved internal watcher identity; publisher order rejected",
+                signal.signal_type, signal.market,
+            )
+        # Check under the cross-process broker lock before any KR/US
+        # single-account or multi-account stop-loss SELL submission.
+        stop_block = await self._stop_sell_unresolved_buy_block(signal)
+        if stop_block is not None:
+            return stop_block
+        if self.multi_account_enabled:
+            result = await self.multi_account_dispatcher.dispatch(
+                signal,
+                allow_queue=allow_queue,
+                queued_context=queued_context,
+            )
+        elif self.dry_run:
+            logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
+            result = DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
+        else:
+            serialized_kwargs: dict[str, Any] = {"allow_queue": allow_queue}
+            if queued_context is not None:
+                serialized_kwargs["queued_context"] = queued_context
+            result = await self._dispatch_serialized(signal, **serialized_kwargs)
+        await asyncio.to_thread(self._update_stop_loss_tracking, signal, result)
+        return result
 
     async def _dispatch_serialized(
         self,
@@ -1014,22 +1053,9 @@ class TradeDispatcher:
                         or len(set(requested_ids)) != len(requested_ids)
                     ):
                         return DispatchResult("failed", "Queued multi-account targets are invalid", signal.signal_type, signal.market)
-                    # Queued multi-account replay bypasses dispatch(), so it
-                    # must perform the same durable pending-BUY preflight
-                    # before forwarding a stop-loss SELL to any account.
-                    stop_block = await self._stop_sell_unresolved_buy_block(signal)
-                    if stop_block is not None:
-                        return stop_block
-                    result = await self.multi_account_dispatcher.dispatch(
-                        signal,
-                        allow_queue=False,
-                        requested_ids=requested_ids,
-                        queued_context=queued_context,
+                    return await _complete_broker_workflow(
+                        self._execute_queued_multi_account_locked(signal, requested_ids, queued_context)
                     )
-                    await asyncio.to_thread(
-                        self._update_stop_loss_tracking, signal, result
-                    )
-                    return result
         except BrokerWorkflowBusyError:
             return DispatchResult(
                 "deferred",
@@ -1038,6 +1064,27 @@ class TradeDispatcher:
                 signal.market,
             )
         return await self.dispatch(signal, allow_queue=False, queued_context=queued_context)
+
+    async def _execute_queued_multi_account_locked(
+        self, signal: SignalMessage, requested_ids: list[str],
+        queued_context: dict[str, Any],
+    ) -> DispatchResult:
+        # Queued multi-account replay bypasses dispatch(), so it
+        # must perform the same durable pending-BUY preflight
+        # before forwarding a stop-loss SELL to any account.
+        stop_block = await self._stop_sell_unresolved_buy_block(signal)
+        if stop_block is not None:
+            return stop_block
+        result = await self.multi_account_dispatcher.dispatch(
+            signal,
+            allow_queue=False,
+            requested_ids=requested_ids,
+            queued_context=queued_context,
+        )
+        await asyncio.to_thread(
+            self._update_stop_loss_tracking, signal, result
+        )
+        return result
 
     def _update_stop_loss_tracking(self, signal: SignalMessage, result: DispatchResult) -> None:
         # Dry-run and deferred outcomes must never mutate real position protection:

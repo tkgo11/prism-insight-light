@@ -623,9 +623,23 @@ class StopLossWatcher:
     def _get_trader(self, market: str):
         mode = getattr(self.dispatcher, "trading_mode", "real")
         multi_account = getattr(self.dispatcher, "multi_account_enabled", False)
+        if multi_account:
+            if market == "US":
+                return MultiAccountUSStockTrading(mode=mode)
+            return MultiAccountDomesticStockTrading(mode=mode)
+        # Holdings and quotes must come from the same selected account that
+        # receives the dispatcher's orders. Looking at the primary account
+        # can otherwise remove protection for a funded secondary account.
+        kwargs: dict[str, Any] = {"mode": mode}
+        account_name = getattr(self.dispatcher, "account_name", None)
+        account_index = getattr(self.dispatcher, "account_index", None)
+        if account_name:
+            kwargs["account_name"] = account_name
+        if account_index is not None:
+            kwargs["account_index"] = account_index
         if market == "US":
-            return MultiAccountUSStockTrading(mode=mode) if multi_account else USStockTrading(mode=mode)
-        return MultiAccountDomesticStockTrading(mode=mode) if multi_account else DomesticStockTrading(mode=mode)
+            return USStockTrading(**kwargs)
+        return DomesticStockTrading(**kwargs)
 
     def _get_cached_trader(self, market: str):
         trader = self._traders.get(market)
