@@ -90,7 +90,10 @@
   },
   "cas": {
     "lock_commit": "f1de867fbf73765ec0afb714fef59215da92c022",
-    "lock_status": "ACQUIRED",
-    "state_expected_sha": "f1de867fbf73765ec0afb714fef59215da92c022"
-  }
+    "lock_status": "RELEASED",
+    "state_expected_sha": "f1de867fbf73765ec0afb714fef59215da92c022",
+    "state_evidence_commit": "ee3438fc10734f0b505ba6a8539f94eb7706a5c6",
+    "released_at": "2026-11-03T01:27:52.057Z"
+  },
+  "completed_at": "2026-11-03T01:27:52.057Z"
 }
