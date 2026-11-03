@@ -27,7 +27,7 @@ def next_balance_cursor(
         raise PortfolioInquiryError("KIS balance continuation header missing")
     try:
         header = header_method()
-        continuation = getattr(header, "tr_cont", "")
+        continuation = getattr(header, "tr_cont", None)
     except Exception as exc:
         raise PortfolioInquiryError("KIS balance continuation header unreadable") from exc
     if not isinstance(continuation, str):
