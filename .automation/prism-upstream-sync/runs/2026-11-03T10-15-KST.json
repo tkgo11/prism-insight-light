@@ -1,0 +1,96 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T10-15-KST-turn10",
+  "slot": "2026-11-03T10-15-KST",
+  "started_at": "2026-11-03T01:15:54Z",
+  "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+  "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "git_tree_sha": "b75e355a05c19ed32762642dabb8d99cee2cf0bf",
+  "upstream_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "root_cause_id": "RC-WATCHER-STRATEGY-INTERCEPTION",
+  "test_first": [
+    {
+      "head": "a02dfa616dd6ef913ce4879203d27ed86f393465",
+      "ci_run": 41558873192,
+      "result": "4 failed/1416 passed; initial test lacked watcher identity, refined"
+    },
+    {
+      "head": "09cae944ac83288ed3a1ad9029031b9f0f1b6515",
+      "ci_run": 41559061596,
+      "result": "4 watcher-path failures/1418 passed; publisher/manual controls passed"
+    },
+    {
+      "head": "1fe9d28721167fe7e117a4e15bc467a52fd73562",
+      "ci_run": 41559266574,
+      "result": "92 failed due implementation NameError; helper insertion corrected, not counted as defect reproduction"
+    },
+    {
+      "head": "d031b3883eecd04dbc4ade33a9e6ddfba94637fc",
+      "ci_run": 41559424845,
+      "result": "14 watcher-strategy routing failures/1424 passed, no NameError"
+    }
+  ],
+  "fix_commits": [
+    "1fe9d28721167fe7e117a4e15bc467a52fd73562",
+    "d031b3883eecd04dbc4ade33a9e6ddfba94637fc",
+    "7eecaaed027fc0f7e700ffdf1dd9246b2ecf431e"
+  ],
+  "test_commits": [
+    "a02dfa616dd6ef913ce4879203d27ed86f393465",
+    "09cae944ac83288ed3a1ad9029031b9f0f1b6515",
+    "c019dcd8bdb7c94d2a412e097b3eb70a8d801273",
+    "b9da896c81132a1ae7460a5e31ce8e25afbb48b6"
+  ],
+  "changed_files": [
+    "trading/dispatch.py",
+    "trading/strategies/common.py",
+    "trading/STRATEGIES.md",
+    "tests/test_stop_loss_strategy_market_order.py",
+    "tests/test_watcher_strategy_bypass.py"
+  ],
+  "latest_ci": [
+    {
+      "id": 41559555569,
+      "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "conclusion": "success",
+      "linux_pytest": "1440 passed",
+      "windows_pytest": "167 passed",
+      "docker_build": "success"
+    },
+    {
+      "id": 41559562982,
+      "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "conclusion": "success",
+      "linux_pytest": "passed",
+      "windows_pytest": "passed",
+      "docker_build": "success"
+    }
+  ],
+  "external_checks": {
+    "qlty": "success",
+    "snyk": "success",
+    "reviews": 0,
+    "branch_protection": "403 Resource not accessible by integration",
+    "rulesets": []
+  },
+  "reproduced": "Watcher-generated SELL intercepted by optional strategy: stop_loss_sell/bracket_exit use limit order; signal_trailing_stop may reject absent its own BUY record. Test-first 4+14 failures and 2 broker-mock integrations.",
+  "remediation": "Watcher identity+reason market-order semantics in common broker adapter; dispatcher bypasses optional strategies for watcher emergency stop, retaining broker/ledger locks; publisher limit strategy preserved.",
+  "remaining_risks": [
+    "UNKNOWN BUY late/partial fill not mapped to authoritative order/fill IDs or actionable stop",
+    "KIS per-account broker fill/cancel/remaining/restart reconciliation unavailable; no demo credentials",
+    "Related 91/91 and whole 180/180 file-level audits incomplete; independent 0/2 + 0/2",
+    "No independent review; branch protection 403; no live trading"
+  ],
+  "audits": {
+    "related_scope": 91,
+    "whole_scope": 180,
+    "file_level_inspected": 16,
+    "related_passes": 0,
+    "full_passes": 0
+  },
+  "cas": {
+    "lock_commit": "f1de867fbf73765ec0afb714fef59215da92c022",
+    "lock_status": "ACQUIRED",
+    "state_expected_sha": "f1de867fbf73765ec0afb714fef59215da92c022"
+  }
+}

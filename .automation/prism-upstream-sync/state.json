@@ -4,14 +4,14 @@
   "state": "ACTIVE_DRAFT_REMEDIATION_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T09-25-KST-turn9",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T08-27-KST-turn9",
+    "id": "prism-sync-hourly-2026-11-03T10-15-KST-turn10",
+    "lock_owner": "prism-sync-hourly-2026-11-03T10-15-KST-turn10",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T09-25-KST-turn9",
     "result": "REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
-    "last_mutation_commit": "49189b68dd80c56915945f700a32fc2b7088f48a",
-    "previous_state_branch_sha": "4f2b1d04cdc3d822e2a5399cf3b15901be6df817",
-    "started_at": "2026-11-03T00:25:25Z",
-    "completed_at": "2026-11-03T00:45:30Z"
+    "last_mutation_commit": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+    "previous_state_branch_sha": "f1de867fbf73765ec0afb714fef59215da92c022",
+    "started_at": "2026-11-03T01:15:54Z",
+    "completed_at": null
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -30,7 +30,7 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
+    "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
@@ -107,23 +107,24 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "4c6cd6f011e7e49c32891c5e45c4b43c3a4b32e5",
-    "scope_estimate": 86,
-    "files_fully_audited": 14,
-    "head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
+    "checksum": "ea5ce3e945fe6d07201b589dc97af0090475b5af",
+    "scope_estimate": 91,
+    "files_fully_audited": 16,
+    "files_file_level_inspected": 16,
+    "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "f1dc85072e390b2019d0ef21b2be021d22649373",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T09-25-KST-related.json"
+    "git_tree_sha": "b75e355a05c19ed32762642dabb8d99cee2cf0bf",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T10-15-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "fb63a19d204b6f77ea21640d7469103862223fc3",
-    "sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
-    "files_checked": 14,
-    "fully_audited_files": 14,
-    "file_count": 178,
-    "git_tree_sha": "f1dc85072e390b2019d0ef21b2be021d22649373",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T09-25-KST-full.json"
+    "checksum": "76d24cb0c01de67350b717081107eac8a9adc025",
+    "sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+    "files_checked": 16,
+    "fully_audited_files": 16,
+    "file_count": 180,
+    "git_tree_sha": "b75e355a05c19ed32762642dabb8d99cee2cf0bf",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T10-15-KST-full.json"
   },
   "checks": [
     {
@@ -1576,6 +1577,26 @@
       "jobs": [
         "Linux pytest: 1414 passed; Docker build success",
         "Windows runtime smoke: 167 passed"
+      ]
+    },
+    {
+      "run_id": 41559555569,
+      "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Linux pytest: 1440 passed; Docker build success",
+        "Windows runtime smoke: 167 passed"
+      ]
+    },
+    {
+      "run_id": 41559562982,
+      "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Linux pytest success; Docker build success",
+        "Windows runtime smoke success"
       ]
     }
   ],
@@ -5038,6 +5059,33 @@
       "real_orders": 0,
       "demo_orders": 0,
       "notes": "Test-first 8/10/1/2 contract failures (not import/fixture errors); fixed all-BUY intent, confirmed stop SELL, broker lock and reason case; mock-only CI green, authoritative fill attribution and full audits blocked."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T10-15-KST-turn10",
+      "kind": "MOCK_REPRODUCED_ROOT_CAUSE_BUNDLE_NOT_FULL_AUDIT",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "git_tree_sha": "b75e355a05c19ed32762642dabb8d99cee2cf0bf",
+      "root_cause_id": "RC-WATCHER-STRATEGY-INTERCEPTION",
+      "test_first_ci": [
+        41558873192,
+        41559061596,
+        41559424845
+      ],
+      "final_ci": [
+        41559555569,
+        41559562982
+      ],
+      "files_file_level_inspected": 16,
+      "related_scope": 91,
+      "whole_scope": 180,
+      "manifest_paths": [
+        ".automation/prism-upstream-sync/manifests/2026-11-03T10-15-KST-related.json",
+        ".automation/prism-upstream-sync/manifests/2026-11-03T10-15-KST-full.json"
+      ],
+      "notes": "Reproduced 4 watcher limit-order and 14 optional strategy interception subcases. Patched shared broker adapter and dispatch routing. Added 2 KR/US mock broker integration tests; 1440 Linux and 167 Windows passed. UNKNOWN BUY fill attribution and full audit remain blocked."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5058,13 +5106,13 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "Broker-authoritative order ID/fill ID/partial/cancel/remaining attribution and pending BUY stop activation missing; mock only",
-    "Related 14/86 and full 14/178 file-level inspections; independent PASS 0/2 + 0/2",
-    "Qlty findings untriaged despite green status; no independent review",
-    "Branch protection API 403, rulesets []",
-    "No live/demo KIS orders, no merge"
+    "Broker-authoritative order ID/fill ID/partial/cancel/remaining attribution and UNKNOWN BUY stop activation missing; mock only",
+    "Related 16/91 and whole 16/180 file-level inspection evidence; independent PASS 0/2 + 0/2",
+    "Qlty and Snyk status green but issue-level findings not independently triaged; no independent PR review",
+    "Branch protection API 403, rulesets []; policy requirements not proven",
+    "No real/demo KIS orders, no merge"
   ],
-  "next_action": "Mock KIS authoritative per-account order/fill/partial/cancel/remaining reconciliation and safe pending BUY stop activation; continue 86-file related and 178-file full independent audits in separate slots; inspect qlty/review/policy blockers.",
+  "next_action": "Prioritize mock KIS UNKNOWN BUY delayed/partial fill/cancel/restart reconciliation and nonactionable stop activation, without promoting UNKNOWN to filled; complete remaining 75 related file audits and 164 whole-tree files in independent slots; triage qlty/review/policy.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -5697,6 +5745,18 @@
       "full_pass": false,
       "reason": "Code changed, full transitive audit and broker reconciliation incomplete",
       "manifest_tree_sha": "f1dc85072e390b2019d0ef21b2be021d22649373"
+    },
+    {
+      "slot": "2026-11-03T10-15-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T10-15-KST-turn10",
+      "phase": "related_code_audit",
+      "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Changed code; transitive 91-file audit and broker reconciliation incomplete despite exact-head CI success",
+      "manifest_tree_sha": "b75e355a05c19ed32762642dabb8d99cee2cf0bf"
     }
   ],
   "discovered_defects": [
@@ -7259,6 +7319,23 @@
       "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_BROKER_ATTRIBUTION_BLOCKED",
       "head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
       "test": "tests/test_unresolved_buy_without_stop_loss.py"
+    },
+    {
+      "id": "watcher-emergency-stop-intercepted-by-optional-strategy-20261103",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_EXACT_HEAD_MOCK_CI_SUCCESS_AUDIT_PENDING",
+      "root_cause_id": "RC-WATCHER-STRATEGY-INTERCEPTION",
+      "description": "Watcher stop SELL was routed through configured signal strategies, which could reject it (untracked trailing strategy), submit a limit instead of market, or alter intended exit behavior. Mock-reproduced in KR/US; strategy bypass and market routing patched.",
+      "first_reproduction_sha": "09cae944ac83288ed3a1ad9029031b9f0f1b6515",
+      "fix_commit": "7eecaaed027fc0f7e700ffdf1dd9246b2ecf431e",
+      "tests": [
+        "tests/test_stop_loss_strategy_market_order.py",
+        "tests/test_watcher_strategy_bypass.py"
+      ],
+      "latest_ci": [
+        41559555569,
+        41559562982
+      ]
     }
   ],
   "risks": [
@@ -7786,10 +7863,33 @@
         "pagination",
         "quantity"
       ]
+    },
+    {
+      "root_cause_id": "RC-WATCHER-STRATEGY-INTERCEPTION",
+      "description": "Optional signal strategy interception of independently generated watcher emergency SELL",
+      "defect_ids": [
+        "watcher-emergency-stop-intercepted-by-optional-strategy-20261103"
+      ],
+      "classification": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_INDEPENDENT_AUDIT_PENDING",
+      "last_checked_head": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "subcases": [
+        {
+          "id": "WATCHER_LIMIT_ORDER_KR_US",
+          "status": "MOCK_VERIFIED_PATCHED"
+        },
+        {
+          "id": "WATCHER_STRATEGY_REJECTION_OR_PARTIAL_KR_US",
+          "status": "STRATEGY_BYPASS_MOCK_VERIFIED"
+        },
+        {
+          "id": "PUBLISHER_LIMIT_STRATEGY_PRESERVATION",
+          "status": "MOCK_VERIFIED"
+        }
+      ]
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
+    "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
     "scope": "Mock-only all-BUY intent and stop SELL broker lock/case safety; KIS fill attribution unresolved",
     "entries": [
       {
@@ -8005,6 +8105,30 @@
         ],
         "test": "tests/test_unresolved_buy_without_stop_loss.py; tests/test_stop_loss_watcher.py",
         "result": "MOCK_VERIFIED"
+      },
+      {
+        "invariant": "Watcher-generated stop SELL must bypass optional strategy rejection and use market order, while publisher SELL preserves limit configuration",
+        "paths": [
+          "trading/stop_loss_watcher.py",
+          "trading/dispatch.py",
+          "trading/strategies/common.py",
+          "trading/strategies/stop_loss_sell.py",
+          "trading/strategies/signal_trailing_stop.py",
+          "trading/strategies/bracket_exit.py",
+          "trading/domestic.py",
+          "trading/us.py"
+        ],
+        "failure_modes": [
+          "configured signal_trailing_stop rejects absent record",
+          "stop_loss_sell/bracket_exit submits unfilled limit",
+          "KR/US route divergence",
+          "publisher strategy regression"
+        ],
+        "tests": [
+          "tests/test_stop_loss_strategy_market_order.py",
+          "tests/test_watcher_strategy_bypass.py"
+        ],
+        "status": "MOCK_CI_VERIFIED_HEAD_b9da896c81132a1ae7460a5e31ce8e25afbb48b6"
       }
     ],
     "closure_verified": false
@@ -8287,6 +8411,14 @@
       "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_KIS_DEMO_PENDING",
       "description": "KR/US KIS balance pagination and strict quantity validation passed 24 mock cases; KIS demo and independent audit pending",
       "head_sha": "fa1a9de1decadd0dc2940a4262a3d4ed3cbe531c"
+    },
+    {
+      "id": "RC-WATCHER-STRATEGY-INTERCEPTION",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Watcher emergency stop strategy interception mock-reproduced and patched; 1440 Linux/167 Windows tests passed; KIS demo and full audits outstanding",
+      "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "fix_commit": "7eecaaed027fc0f7e700ffdf1dd9246b2ecf431e"
     }
   ],
   "previous_active_pr_at_manual_merge": {
