@@ -1,0 +1,795 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T11-19-KST-turn11",
+  "slot": "2026-11-03T11-19-KST",
+  "head_sha": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
+  "git_tree_sha": "cc68ee8091b1ce3b622ed813a85e4bbc4f92fa54",
+  "upstream_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "status": "REBUILT_INCOMPLETE",
+  "audit_pass": false,
+  "independent_audit_slot_passes": 0,
+  "closure_verified": false,
+  "reason": "Mock UNKNOWN BUY fences passed; authoritative KIS order/fill/cancel/remaining attribution absent; related/full transitive audit and independent slots incomplete",
+  "files_fully_audited": 19,
+  "files_file_level_inspected": 19,
+  "scope": "92 related files; includes new mock late/partial holding fence suite",
+  "files": [
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "32ccef1a4a5604cb0137009b5fff991d1f8a8290",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "README.en.md",
+      "blob_sha": "956ae8767ce601712b8f6600c65002f5a4ab3d7d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "README.ko.md",
+      "blob_sha": "b0d37c4c45dd12373b6ed2780b0f2cec3da362c1",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "subscriber.py",
+      "blob_sha": "479a0a1ffb3e2ab17404171db47bcbf847a30bdd",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_balance_split_strategy.py",
+      "blob_sha": "209fda023339f96b178c7e97058806e7ff5cd743",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "blob_sha": "bf10730694946dd6ed0cdf3f8cdb11f2da155e21",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_broker_http_rejection_safety.py",
+      "blob_sha": "8603c39807bdb6075ca319310d10928fed81dd41",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 84-line mock suite reviewed; added seven nonstandard-2xx durable UNKNOWN replay-fence cases, existing 408/409/425/429/499 and 200/400/422 controls",
+      "lines_reviewed": 84,
+      "tests": [
+        "tests/test_broker_http_rejection_safety.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_broker_portfolio_pagination_safety.py",
+      "blob_sha": "8f29a596ed942b3d5a80b6e11acec05ac0fe331d",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 181-line regression file reviewed; test-first CI produced 8 + 9 intended failures before corresponding fixes; final 24 parametrized cases pass",
+      "lines_reviewed": 181,
+      "tests": [
+        "tests/test_broker_portfolio_pagination_safety.py"
+      ],
+      "ci_head_sha": "fa1a9de1decadd0dc2940a4262a3d4ed3cbe531c",
+      "ci_runs": [
+        41537737805,
+        41537743740
+      ]
+    },
+    {
+      "path": "tests/test_buy_sizing.py",
+      "blob_sha": "b3ef619dfee6ed59920bcaeab54ef29efcf1d76e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_cooldown_pending_reconciliation.py",
+      "blob_sha": "780361a959faf8e94545071b7d582155e69b9d24",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_dispatch.py",
+      "blob_sha": "4ee5e6dc26144c865e52f98d47c39ec445aa4def",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_durable_state_directory_sync.py",
+      "blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_effective_order_metadata.py",
+      "blob_sha": "cdb0a523f5a94e606b77ac0b6f1518dd4c03ea84",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_execution_ledger_retention.py",
+      "blob_sha": "5f11a8322caaec8945fb8ecf422f928f8f8be721",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 235 lines inspected: retained unknown/executed/in-progress, capacity, duplicate JSON keys, invalid timestamps, terminal monotonicity, stale attempt token, release and restart; exact-head pytest 1450 passed",
+      "tests": [
+        "tests/test_execution_ledger_retention.py",
+        "tests/test_unknown_buy_delayed_fill_fence.py",
+        "tests/test_unknown_buy_intent_durability.py"
+      ],
+      "ci_head_sha": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
+      "ci_runs": [
+        41565880471
+      ]
+    },
+    {
+      "path": "tests/test_execution_outcome.py",
+      "blob_sha": "e87b7a346750ef7ce5d0f9df4e39506a7e440917",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire receipt, rejection, ambiguity, restart regression suite inspected for expected outcome and replay fence",
+      "lines_reviewed": 258,
+      "tests": [
+        "test_explicit_broker_rejection_is_failed",
+        "test_unverified_apbk_message_preserves_duplicate_claim_after_restart"
+      ],
+      "ci_head_sha": "cda0c79e0f37eca3733c187be923886385a366b3",
+      "ci_runs": [
+        41509041355,
+        41509049043
+      ]
+    },
+    {
+      "path": "tests/test_financial_sizing_audit.py",
+      "blob_sha": "3f311e0f82bf704231ec008894bc661dd53084de",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_inbound_json_duplicate_keys.py",
+      "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_dispatch.py",
+      "blob_sha": "f62a91164f46ce7a103e419b10fdc60be611ac3f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_domestic.py",
+      "blob_sha": "17bc20fe8ef1cc399cf1dde6d9a1f85e6cf3415d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_empty_balance_fail_closed.py",
+      "blob_sha": "c569088f272834d3e20829d7b15fc1dfa8ce0964",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_us.py",
+      "blob_sha": "e436d319568f7761d270508990d491c90cd23625",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_off_hours_policy.py",
+      "blob_sha": "4b456a6973113ac26c27972923e16fde247e9fb2",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_partial_exit_stop_loss_safety.py",
+      "blob_sha": "b99e699d9c376654c50ca640524840d5c851166e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+      "blob_sha": "5653e71c581605e39e223801ec88d2156f10d71b",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full revised 191-line suite inspected; direct zero cleanup and unresolved BUY stop SELL fence",
+      "lines_reviewed": 191,
+      "tests": [
+        "tests/test_unresolved_buy_without_stop_loss.py",
+        "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "ci_head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
+      "ci_runs": [
+        41554799563,
+        41554792686
+      ]
+    },
+    {
+      "path": "tests/test_pending_buy_stop_loss_safety.py",
+      "blob_sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 208-line pending BUY suite reviewed: zero holdings/restart, unrelated positive holdings, manual confirmed controls, multi-account partial acceptance, no automatic SELL for unresolved BUY",
+      "lines_reviewed": 208,
+      "tests": [
+        "tests/test_pending_buy_stop_loss_safety.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_profit_band_config_integrity.py",
+      "blob_sha": "b9219d4918af9788b5913f1f579da2595e17de9a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_queue_and_account_sizing.py",
+      "blob_sha": "1f2765d5f033f4eb01a6f0a5f02a35e0d6dcaf21",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_queue_execution_context.py",
+      "blob_sha": "835cac25e5d6b51896349774b21916db8ab627a8",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_runtime_paths.py",
+      "blob_sha": "cd12299bb5d5f037484087ee1cf98f5f1a557ef7",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 151-line runtime relocation and isolated dry-run tests inspected; exact-head Linux CI green",
+      "tests": [
+        "tests/test_runtime_paths.py"
+      ],
+      "lines_reviewed": 151,
+      "ci_head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "ci_runs": [
+        41519143559,
+        41519155758
+      ]
+    },
+    {
+      "path": "tests/test_score_band_config_integrity.py",
+      "blob_sha": "354910f908f6f05d7ce856f26efa088bf5d6aadb",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_score_max_capital_strategy.py",
+      "blob_sha": "22c6a7382015fc5376cc05ffb56df4e9f3fe4633",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_exit_strategies.py",
+      "blob_sha": "9f4a3ecd43942b220e7ae302dbfd1460dff23246",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_integer_precision.py",
+      "blob_sha": "7f149439d02cc84c0fda7e7d3dcab0b5f6060180",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_safety.py",
+      "blob_sha": "faf586e4764459a9379ff86d79bd15f5a954e823",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_schema.py",
+      "blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_stop_loss_legacy_quarantine.py",
+      "blob_sha": "fdfcb6b42acf6e3035387b91307f4363bd2fafa9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_stop_loss_mismatched_key_quarantine.py",
+      "blob_sha": "3ac8519a8bb699d499b891b6fa0d78ec7955265d",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire new 102-line offline regression module reviewed; five mock/edge tests; test-first 2 failed then exact-head 1314 passed",
+      "tests": [
+        "tests/test_stop_loss_mismatched_key_quarantine.py"
+      ],
+      "lines_reviewed": 102,
+      "ci_head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "ci_runs": [
+        41519143559,
+        41519155758
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_signal_identity.py",
+      "blob_sha": "82be94f9dff37d58d5f333b33297309b332b03e8",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_stop_loss_snapshot_preflight.py",
+      "blob_sha": "e5227529f3ae172150702cddc56915b85258c5ee",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 84-line mock suite reviewed: stale edited/removed/legacy/pending/unreadable snapshots blocked; unchanged confirmed snapshot control; final preflight-to-broker TOCTOU remains unverified",
+      "lines_reviewed": 84,
+      "tests": [
+        "tests/test_stop_loss_snapshot_preflight.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_strategy_market_order.py",
+      "blob_sha": "21cbbc8c46fad5db49c71c07011c0cbdd78acddf",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 105-line mock KR/US direct strategy regression reviewed; 4 watcher market cases and 4 publisher/manual limit controls; Linux 1440 pass Windows 167 pass",
+      "tests": [
+        "tests/test_stop_loss_strategy_market_order.py"
+      ],
+      "ci_head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "ci_runs": [
+        41559555569,
+        41559562982
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_watcher.py",
+      "blob_sha": "6d3b312ec8f0e974c1aeb543ee730ac4dbd387bd",
+      "status": "TARGETED_SOURCE_REVIEW_CI_SUCCESS_NOT_FULL_AUDIT",
+      "inspection": "Targeted revised code paths inspected in tests/test_stop_loss_watcher.py; full transitive file audit incomplete",
+      "tests": [
+        "tests/test_unresolved_buy_without_stop_loss.py",
+        "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "ci_head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
+      "ci_runs": [
+        41554799563,
+        41554792686
+      ]
+    },
+    {
+      "path": "tests/test_strategy_partial_matrix.py",
+      "blob_sha": "a57d37d6acf86f34b0334793d135a02af7d53d9f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_strategy_runtime_fail_closed.py",
+      "blob_sha": "cb4120f4c6cb765de42765655773166f0c909f75",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_strategy_semantic_state_safety.py",
+      "blob_sha": "ab1e6b1ab76b96f5f8c9d05bb94a06e4f544e9c4",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "blob_sha": "a76728d36349b4d36f47d1a2629a43f8e5f39692",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_telegram_signal_worker.py",
+      "blob_sha": "0acfab8090d6b2bb62634eb1b724659dd04c9398",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_unknown_buy_intent_durability.py",
+      "blob_sha": "067f69b773d7d1a17a8f51fc6e04a02684d0c83a",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 183-line mock suite reviewed: UNKNOWN BUY pre-submit durable intent, restart, per-account separation, no secret leakage, persistence failure prevents broker call",
+      "lines_reviewed": 183,
+      "tests": [
+        "tests/test_unknown_buy_intent_durability.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_unresolved_buy_without_stop_loss.py",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 341-line mock-only regression suite inspected: KR/US, restart, unknown/accepted, disk failure, multi-account, corrupt ledger, reason variants, broker-lock preflight",
+      "blob_sha": "31ec7b22952e2374a3f1b14de27b36debe94f0d3",
+      "tests": [
+        "tests/test_unresolved_buy_without_stop_loss.py",
+        "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "ci_head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
+      "ci_runs": [
+        41554799563,
+        41554792686
+      ],
+      "lines_reviewed": 341
+    },
+    {
+      "path": "tests/test_upstream_signal_sizing.py",
+      "blob_sha": "b4e98d37f1708ef203be0263172e795e9a94e075",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_upstream_strategy_compatibility.py",
+      "blob_sha": "c60e3d868f8ee231dac4caf23a0fd5a0b2f4782a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_watcher_strategy_bypass.py",
+      "blob_sha": "7f1ec39f8d40966774de482b2ae52e49adf7db65",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 123-line mock-only route regression reviewed; 14 KR/US optional strategy bypass cases, 2 publisher controls, 2 KR/US dispatcher mock-broker integration cases; Linux 1440 pass Windows 167 pass",
+      "tests": [
+        "tests/test_watcher_strategy_bypass.py"
+      ],
+      "ci_head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
+      "ci_runs": [
+        41559555569,
+        41559562982
+      ]
+    },
+    {
+      "path": "tests/test_wave4_execution_safety.py",
+      "blob_sha": "38ecc2cffd3a21f6bfdc78f9d17a4e1d8e6abd59",
+      "status": "TARGETED_REVIEW_NOT_FULLY_AUDITED",
+      "inspection": "Targeted new KR/US BUY and SELL adapter tests (28 cases) inspected; full 1158-line suite NOT independently fully audited",
+      "tests": [
+        "test_nonstandard_2xx_cannot_prove_kis_order_rejection",
+        "test_nonstandard_2xx_cannot_prove_kis_sell_rejection"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_webui_routes.py",
+      "blob_sha": "78e80e83844ae183349143d560039350479113e9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/buy_sizing.py",
+      "blob_sha": "49e8788efc2bce1059f2d6ee13cc97551d3377c2",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/config_paths.py",
+      "blob_sha": "578fec77b343c894898937dda04d8819e215d1a6",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire config path module read; runtime override and config fallback verified against runtime path tests and exact-head CI",
+      "tests": [
+        "tests/test_runtime_paths.py"
+      ],
+      "lines_reviewed": 58,
+      "ci_head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "ci_runs": [
+        41519143559,
+        41519155758
+      ]
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "837f92d3285322e5eb3d0dcbbacac62fd5289460",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "Reviewed stop-loss routing/strategy broker submission and relevant call paths; complete per-file dependency audit remains incomplete",
+      "ci_head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6"
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "bc8ebd1ffc6d8117ca672da8d370518c4967d38e",
+      "status": "TARGETED_REVIEW_NOT_FULLY_AUDITED",
+      "inspection": "Complete get_portfolio replacement and account/watcher consumers reviewed; full 2000+ line module not audited",
+      "tests": [
+        "tests/test_broker_portfolio_pagination_safety.py"
+      ],
+      "ci_head_sha": "fa1a9de1decadd0dc2940a4262a3d4ed3cbe531c",
+      "ci_runs": [
+        41537737805,
+        41537743740
+      ]
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "95a29e9730e9cf860addd9747ae1e81a11ea6d48",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 408 lines inspected: _identity_source/execution_identities, validated BUY intent, strict JSON load, atomic save, retention, guard_unresolved_buy, claim/finalize/release, token fencing; tests/test_execution_ledger_retention.py and new mock tests; no authoritative broker fill reconciliation",
+      "tests": [
+        "tests/test_execution_ledger_retention.py",
+        "tests/test_unknown_buy_delayed_fill_fence.py",
+        "tests/test_unknown_buy_intent_durability.py"
+      ],
+      "ci_head_sha": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
+      "ci_runs": [
+        41565880471
+      ]
+    },
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "8911c634bc16dc8ca78a685784faa9ac36719757",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 176-line classifier read; non-200 2xx cannot establish verified KIS rejection, shared KR/US BUY/SELL path and durable ledger checked against exact-head mock CI",
+      "lines_reviewed": 176,
+      "tests": [
+        "tests/test_wave4_execution_safety.py",
+        "tests/test_broker_http_rejection_safety.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "trading/file_lock.py",
+      "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire file read; POSIX flock, Windows msvcrt locking and fsync_parent_directory contracts inspected; exact-head suite exercises ledger/stop-loss/queue",
+      "tests": [
+        "tests/test_execution_ledger_retention.py",
+        "tests/test_stop_loss_legacy_quarantine.py",
+        "tests/test_runtime_paths.py"
+      ],
+      "lines_reviewed": 106,
+      "ci_head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "ci_runs": [
+        41519143559,
+        41519155758
+      ]
+    },
+    {
+      "path": "trading/kis_auth.py",
+      "blob_sha": "5b2113b2439bed4d06b18217e9a575fff8f14319",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/off_hours_queue.py",
+      "blob_sha": "993105246f2c5db5ca89c68cf203e68ba642458c",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "d031950753dbfb73c0c763d21a7bbd78de91c524",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 77-line continuation and strict quantity validation helper reviewed; 24 parametrized mock cases passed exact-head CI",
+      "lines_reviewed": 77,
+      "tests": [
+        "tests/test_broker_portfolio_pagination_safety.py"
+      ],
+      "ci_head_sha": "fa1a9de1decadd0dc2940a4262a3d4ed3cbe531c",
+      "ci_runs": [
+        41537737805,
+        41537743740
+      ]
+    },
+    {
+      "path": "trading/schema.py",
+      "blob_sha": "bcabf06606fbda2d91defb51c895dba59c559d07",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/signal_safety.py",
+      "blob_sha": "2a30edf46e86b295c8e1f1b599511f28146884fb",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/signal_sizing.py",
+      "blob_sha": "fc8f49e52be2544528c676444cfdeb24e31b771d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "694fe9f1686343ab45ee2777d9340d2cd115baa1",
+      "status": "TARGETED_SOURCE_REVIEW_CI_SUCCESS_NOT_FULL_AUDIT",
+      "inspection": "Targeted revised code paths inspected in trading/stop_loss_watcher.py; full transitive file audit incomplete",
+      "tests": [
+        "tests/test_unresolved_buy_without_stop_loss.py",
+        "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "ci_head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
+      "ci_runs": [
+        41554799563,
+        41554792686
+      ]
+    },
+    {
+      "path": "trading/STRATEGIES.md",
+      "blob_sha": "44870567851422601bc5563038eb77609c494205",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "Reviewed stop-loss routing/strategy broker submission and relevant call paths; complete per-file dependency audit remains incomplete",
+      "ci_head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6"
+    },
+    {
+      "path": "trading/strategies/__init__.py",
+      "blob_sha": "f5ce41bce6f6c9fc314ebcd401df0df376e79232",
+      "status": "NOT_FULLY_AUDITED"
+    },
+    {
+      "path": "trading/strategies/balance_split.py",
+      "blob_sha": "a3e3c7375f17788325451b45e4212866930d3596",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/balanced_risk.py",
+      "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/bracket_exit.py",
+      "blob_sha": "7355e0a20212f77926e8d856b7d0539b9dc670c0",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "0105dfafbb13002f162d2ad35a829156d3c176c1",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "Reviewed stop-loss routing/strategy broker submission and relevant call paths; complete per-file dependency audit remains incomplete",
+      "ci_head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6"
+    },
+    {
+      "path": "trading/strategies/cooldown.py",
+      "blob_sha": "71feb5baf7e7dc0e3bd37306b1dff4f238630c40",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/event_risk_off.py",
+      "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/limit_buffer.py",
+      "blob_sha": "d61848090f664b45155be1efbf017030de08eacd",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "Reviewed stop-loss routing/strategy broker submission and relevant call paths; complete per-file dependency audit remains incomplete",
+      "ci_head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6"
+    },
+    {
+      "path": "trading/strategies/profit_ladder.py",
+      "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/protective_exit.py",
+      "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/README.md",
+      "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/risk_bracket.py",
+      "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/score_max_capital.py",
+      "blob_sha": "8b8480cf9578380a1c69022318737f3c970e9c5a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/score_risk.py",
+      "blob_sha": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/score_weighted.py",
+      "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/signal_trailing_stop.py",
+      "blob_sha": "796593dc47c9202b5c0b0e429006265fb5de0157",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/stop_loss_sell.py",
+      "blob_sha": "51da4cd995adc32a0ee0ab97a5ce3e31160cd870",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "Reviewed stop-loss routing/strategy broker submission and relevant call paths; complete per-file dependency audit remains incomplete",
+      "ci_head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6"
+    },
+    {
+      "path": "trading/telegram_fetch.py",
+      "blob_sha": "33df9f3ee0ea62217775c6f2b4afacfab4bd0a77",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "1a3c683f0ec853026b1d10476bf160c9195d72f3",
+      "status": "TARGETED_REVIEW_NOT_FULLY_AUDITED",
+      "inspection": "Complete get_portfolio replacement and account/watcher consumers reviewed; full 2000+ line module not audited",
+      "tests": [
+        "tests/test_broker_portfolio_pagination_safety.py"
+      ],
+      "ci_head_sha": "fa1a9de1decadd0dc2940a4262a3d4ed3cbe531c",
+      "ci_runs": [
+        41537737805,
+        41537743740
+      ]
+    },
+    {
+      "path": "webui/routes/signals.py",
+      "blob_sha": "2346b942321a5873e3d3b21ada301819978aa0a9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/trading.py",
+      "blob_sha": "1c7aefddb3bc1b5a893942d47a68c054c99f7b43",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/signal_service.py",
+      "blob_sha": "2cd96c0143da8d1d9194500031a74158b7571135",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "fc70caf328b37cca66b47c7024bb7b9cf2524de6",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "blob_sha": "908bf401f82b6794e3b1b44bde9c1ad1d815914c",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire new mock suite inspected after correcting 6 test-expectation mismatches: KR/US zero-to-positive aggregate holdings, late contradictory status, one rejected/one unknown account leg, restart, finalize disk failure; 10 cases, exact-head pytest 1450 passed",
+      "tests": [
+        "tests/test_execution_ledger_retention.py",
+        "tests/test_unknown_buy_delayed_fill_fence.py",
+        "tests/test_unknown_buy_intent_durability.py"
+      ],
+      "ci_head_sha": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
+      "ci_runs": [
+        41565880471
+      ]
+    }
+  ]
+}
