@@ -1,13 +1,19 @@
 {
   "run_id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7",
   "slot": "2026-11-04T02-20-KST",
-  "status": "ACQUIRED",
-  "expected_state_head": "9e0e6d8d125eb00755587c89976630527e5d1cc0",
-  "expected_pr_head": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+  "status": "RELEASED",
+  "expected_state_head": "3e3daab2f5c40b975aa6b1e54eb6d28979b9eb2a",
+  "expected_pr_head": "b056e733467a9e2f784271bedb99479100322781",
   "expected_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
   "expected_upstream_head": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
   "created_at": "2026-11-03T17:20:47Z",
-  "reason": "Turn7 CAS financial audit; no live trading",
+  "released_at": "2026-11-03T17:30:01Z",
+  "reason": "Test-first two rounds, exact-head CI, manifests and evidence persisted under CAS",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "final_pr_head": "b056e733467a9e2f784271bedb99479100322781",
+  "audit_passes": {
+    "related": 0,
+    "full": 0
+  }
 }

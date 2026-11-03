@@ -4,21 +4,18 @@
   "state": "ACTIVE_DRAFT_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "run_id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
-    "previous_run_id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
-    "started_at": "2026-11-03T16:24:00Z",
-    "completed_at": "2026-11-03T16:32:00.573Z",
+    "run_id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7",
+    "previous_run_id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
+    "started_at": "2026-11-03T17:20:47Z",
+    "completed_at": "2026-11-03T17:30:01Z",
     "status": "RELEASED",
     "lock_owner": null,
-    "lock_expected_state_branch_sha": "0b8c0e7145998688d3dd3370b360ad28d5974529",
+    "lock_expected_state_branch_sha": "3e3daab2f5c40b975aa6b1e54eb6d28979b9eb2a",
     "lock_expected_pr_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
-    "lock_expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-    "lock_expected_upstream_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
-    "final_pr_head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+    "final_pr_head_sha": "b056e733467a9e2f784271bedb99479100322781",
     "related_pass": false,
     "full_pass": false,
-    "id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
-    "schema_correction": "run.id restored after turn6 state serialization; manifest blob SHAs unchanged"
+    "id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -38,11 +35,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+    "head_sha": "b056e733467a9e2f784271bedb99479100322781",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_56_REPRODUCED_ASSERTIONS_PATCHED_EXACT_HEAD_CI_SUCCESS_14_FILE_AUDITS_NO_PASS",
+    "status": "DRAFT_TRANSPORT_EXCEPTION_PROVENANCE_PATCHED_EXACT_HEAD_MOCK_CI_SUCCESS_18_FILE_AUDITS_NO_PASS",
     "base_ref": "main"
   },
   "candidates": [
@@ -115,31 +112,31 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "INCOMPLETE_CURRENT_HEAD",
-    "checksum": "41d2fd7defa95080320e50b14968830f4428d09d",
+    "status": "INCOMPLETE_CURRENT_HEAD_18_FULL_FILE_AUDITS",
+    "checksum": "57e1592e67119c9e0c3c4246018c5713420ed4ae",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 168,
-    "files_fully_audited": 14,
+    "scope_estimate": 169,
+    "files_fully_audited": 18,
     "files_file_level_inspected": 99,
     "files_targeted_path_review": 9,
-    "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+    "head_sha": "b056e733467a9e2f784271bedb99479100322781",
     "source_head_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
-    "git_tree_sha": "20dba46a5fcbba83c2d203aef216bcf10d792bf8",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T01-24-KST-related.json",
-    "sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285"
+    "git_tree_sha": "ff81c6e8eccabd8d3079e4717df6eb3120a35904",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T02-20-KST-related.json",
+    "sha": "b056e733467a9e2f784271bedb99479100322781"
   },
   "full_manifest": {
-    "status": "INCOMPLETE_CURRENT_HEAD",
-    "checksum": "0f014b650a7fb84a6028224be3de5205edf36015",
+    "status": "INCOMPLETE_CURRENT_HEAD_18_FULL_FILE_AUDITS",
+    "checksum": "e1a86ea09dd6c01c660808de24df8c0ecda39ed6",
     "checksum_kind": "git_blob_sha1",
-    "sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
-    "files_checked": 99,
-    "fully_audited_files": 14,
-    "file_count": 215,
+    "sha": "b056e733467a9e2f784271bedb99479100322781",
+    "files_checked": 103,
+    "fully_audited_files": 18,
+    "file_count": 216,
     "files_targeted_path_review": 9,
-    "git_tree_sha": "20dba46a5fcbba83c2d203aef216bcf10d792bf8",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T01-24-KST-full.json",
-    "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285"
+    "git_tree_sha": "ff81c6e8eccabd8d3079e4717df6eb3120a35904",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T02-20-KST-full.json",
+    "head_sha": "b056e733467a9e2f784271bedb99479100322781"
   },
   "checks": [
     {
@@ -1879,6 +1876,28 @@
       ],
       "local_tests_executed": false,
       "kis_demo_executed": false
+    },
+    {
+      "run_id": 41684476397,
+      "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite 1809 passed",
+        "Windows runtime smoke",
+        "Docker build"
+      ]
+    },
+    {
+      "run_id": 41684488536,
+      "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite 1819 passed",
+        "Windows runtime smoke",
+        "Docker build"
+      ]
     }
   ],
   "upstream_changes": [
@@ -5923,6 +5942,30 @@
       "kind": "STATE_SCHEMA_CORRECTION_ONLY",
       "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
       "details": "Restore run.id; no production code/test changes, no audit PASS"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7",
+      "kind": "TEST_FIRST_TWO_ITERATIONS_AND_PARTIAL_FULL_FILE_AUDIT",
+      "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+      "related_pass": false,
+      "full_pass": false,
+      "red_runs": [
+        41683768616,
+        41684227617
+      ],
+      "green_runs": [
+        41684476397,
+        41684488536
+      ],
+      "changed_files": [
+        "trading/execution_outcome.py",
+        "tests/test_broker_exception_class_ambiguity.py"
+      ],
+      "new_tests": 73,
+      "red_assertions": 71,
+      "related_complete": 18,
+      "full_complete": 18,
+      "notes": "11 transport exception subcases, one root cause; KIS order reconciliation still stalled. No demo/live orders."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5943,14 +5986,14 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "Broker-authoritative UNKNOWN BUY delayed/partial fill, cancel/remaining quantity and stop-loss activation unimplemented; KIS demo credentials absent",
-    "Qlty latest exact-HEAD pending; previous 93 blocking issues not individually triaged",
-    "Independent human approval reviews absent",
-    "Branch protection endpoint HTTP 403; rulesets list empty does not prove policy compliance",
-    "PR base 4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb behind current main e17032bac72c0aebac8a1e4710b2c4b018abc986; merge-result CI not verified",
-    "Related 14/168 and full 14/215 complete file audits; independent 0/2 + 0/2"
+    "Broker-authoritative UNKNOWN BUY delayed/partial fill, cancel/remainder and stop activation not implemented; no KIS demo credentials",
+    "Qlty exact-head pending; prior 93 blocking issues untriaged",
+    "Independent human review absent",
+    "Branch protection endpoint HTTP 403; empty ruleset listing not proof",
+    "PR base behind current main; merge-result CI unverified",
+    "Related 18/169 and full 18/216; independent 0/2 + 0/2"
   ],
-  "next_action": "Build deterministic Mock KIS per-account order-id/fill-id/partial/cancel/remaining reconciliation test-first and implement safe fail-closed attribution; no live orders; then complete transitive manifest and 2+2 independent slot audits.",
+  "next_action": "Write deterministic read-only Mock KIS order-inquiry contract tests for KR/US, account-specific pagination, fill IDs and cumulative/residual quantities; verify red first.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6772,6 +6815,18 @@
       "related_fully_audited": 14,
       "full_fully_audited": 14,
       "reason": "New production commit resets independent 0/2 + 0/2; broker fill attribution and external gates incomplete"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7",
+      "slot": "2026-11-04T02-20-KST",
+      "phase": "related_code_audit",
+      "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Code modified; Mock CI exact-head success but broker reconciliation, external gates and manifest incomplete",
+      "related_fully_audited": 18,
+      "full_fully_audited": 18
     }
   ],
   "discovered_defects": [
@@ -10312,8 +10367,8 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "related_manifest_sha": "41d2fd7defa95080320e50b14968830f4428d09d",
-  "full_manifest_sha": "0f014b650a7fb84a6028224be3de5205edf36015",
+  "related_manifest_sha": "57e1592e67119c9e0c3c4246018c5713420ed4ae",
+  "full_manifest_sha": "e1a86ea09dd6c01c660808de24df8c0ecda39ed6",
   "run5_candidate_inventory": [
     {
       "candidate_id": "T5-01",
@@ -10890,5 +10945,985 @@
       "KIS demo",
       "Qlty/review/policy/merge-result CI"
     ]
+  },
+  "run7_candidate_inventory": [
+    {
+      "candidate_id": "T7-01",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "ConnectionRefusedError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact ConnectionRefusedError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-02",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "ConnectionResetError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact ConnectionResetError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-03",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "ConnectionAbortedError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact ConnectionAbortedError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-04",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "RemoteDisconnected",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact RemoteDisconnected transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-05",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "BrokenPipeError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact BrokenPipeError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-06",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "ChunkedEncodingError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact ChunkedEncodingError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-07",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "ProtocolError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact ProtocolError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-08",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "ProxyError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact ProxyError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-09",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "SSLEOFError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact SSLEOFError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-10",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "MaxRetryError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact MaxRetryError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-11",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "subcase": "NameResolutionError",
+      "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "path": "trading/execution_outcome.py",
+      "functions": [
+        "classify_broker_result",
+        "rejection_is_ambiguous"
+      ],
+      "hypothesis": "Compact NameResolutionError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+      "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+      "priority": "HIGH",
+      "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+      "result": "REPRODUCED_PRODUCT_ASSERTION",
+      "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+      "test_ids": [
+        "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+      ],
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T7-12",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function": "guard_unresolved_buy",
+      "hypothesis": "UNKNOWN BUY -> delayed/partial fill cannot be safely attributed or activate a confirmed stop",
+      "priority": "CRITICAL",
+      "reproduction_attempt": "Existing mock tests rerun on exact-head full CI; no new authoritative fill-ID test",
+      "result": "MOCK_FENCE_PASS; BROKER_ORDER_FILL_RECONCILIATION_NOT_IMPLEMENTED",
+      "decision": "STALLED_UNVERIFIED_NO_SPECULATIVE_PATCH",
+      "verification_method": "Official KIS order-inquiry schema + deterministic KR/US per-account paginated mock; KIS demo read-only proof",
+      "source": "koreainvestment/open-trading-api examples_llm/domestic_stock/inquire_daily_ccld/inquire_daily_ccld.py and overseas_stock/inquire_ccnl/inquire_ccnl.py"
+    },
+    {
+      "candidate_id": "T7-13",
+      "root_cause_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "acbb8d22af42a78a4cea523ea1e35faa",
+      "function": "CI merge-result gating",
+      "hypothesis": "Current main diverged from PR base by 6 commits; head CI is not merge-result CI",
+      "priority": "HIGH",
+      "reproduction_attempt": "GitHub compare e17032ba...b056e733 returned diverged ahead 121/behind 6",
+      "result": "UNVERIFIED_MERGE_RESULT",
+      "decision": "CARRY_FORWARD_BLOCKED"
+    },
+    {
+      "candidate_id": "T7-14",
+      "root_cause_id": "RC-EXTERNAL-QUALITY-GATES",
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "acbb8d22af42a78a4cea523ea1e35faa",
+      "function": "Snyk/Qlty/reviews/branch policy",
+      "hypothesis": "Green Actions cannot prove external review and branch policy compliance",
+      "priority": "HIGH",
+      "reproduction_attempt": "Latest commit status, reviews and branch protection GET",
+      "result": "SNYK_SUCCESS_QLTY_PENDING_REVIEWS_ZERO_PROTECTION_403",
+      "decision": "BLOCKED_NOT_PASS"
+    }
+  ],
+  "run7_carry_forward": [
+    {
+      "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "STALLED_AUTHORITATIVE_FILL_ATTRIBUTION",
+      "last_reproduction_run": "41684476397/41684488536 existing mock fences rerun; no new broker fill-ID assertion",
+      "unverified_transitions": [
+        "UNKNOWN -> delayed fill",
+        "partial fill -> remaining",
+        "cancel -> final remainder",
+        "confirmed fill -> actionable stop"
+      ],
+      "blocker": "No integrated broker order/fill/cancel/remaining query and no KIS demo credentials; current Mock only prevents unsafe SELL",
+      "delta": "New official KIS KR daily-order and US order inquiry contracts inspected, including demo pagination and US demo ODNO filter unsupported; no new fill-ID mock test or stop activation. Remains STALLED.",
+      "next_exact_action": "Write deterministic read-only Mock KIS order-inquiry contract tests for KR/US, account-specific pagination, fill IDs and cumulative/residual quantities; verify red first."
+    },
+    {
+      "carry_forward_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+      "status": "UNVERIFIED",
+      "blocker": "main e17032ba diverges from PR base 4a5c3c6c; merge-result tree CI not run",
+      "delta": "Compare confirmed ahead 121/behind 6"
+    },
+    {
+      "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
+      "status": "BLOCKED",
+      "blocker": "Qlty pending exact-head (prior 93 issues untriaged); Snyk success; human reviews 0; protection read 403",
+      "delta": "Fresh exact-head statuses and review list read"
+    }
+  ],
+  "run7_financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_outcome.py",
+      "mock_result": "MOCK_PASS; no fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null
+    },
+    {
+      "transition": "UNKNOWN",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_transport_ambiguity_fence.py; tests/test_broker_exception_class_ambiguity.py",
+      "mock_result": "MOCK_PASS new compact exception name + KIS wrapper 73 tests; no order fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null
+    },
+    {
+      "transition": "지연 체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_FENCE_PASS; actual fill attribution BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "부분체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_FENCE_PASS; fill IDs/quantities BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "취소/거절",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_http_rejection_safety.py",
+      "mock_result": "MOCK_PASS; final cancel remainder BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "중복 통지",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS; KIS duplicate events BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "잔여량",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_GUARD_PASS; authoritative remaining BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_pending_buy_stop_loss_safety.py; tests/test_stop_loss_signal_identity.py",
+      "mock_result": "MOCK_FAIL_CLOSED_PASS; activation on confirmed fills BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "다계좌 격리",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_intent_durability.py; tests/test_broker_transport_ambiguity_fence.py",
+      "mock_result": "MOCK_PASS; per-order fill isolation BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "재시작",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_broker_transport_ambiguity_fence.py; tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_durable_state_directory_sync.py; tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null
+    },
+    {
+      "transition": "복구·재조정",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unresolved_buy_without_stop_loss.py",
+      "mock_result": "MOCK_FENCE_PASS; KIS authoritative recovery BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    }
+  ],
+  "run7_remediation": {
+    "run_id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7",
+    "slot": "2026-11-04T02-20-KST",
+    "pr": {
+      "number": 43,
+      "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "draft": true
+    },
+    "source": {
+      "head": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
+      "changes_since_pinned": 48
+    },
+    "target": {
+      "main": "e17032bac72c0aebac8a1e4710b2c4b018abc986"
+    },
+    "metrics": {
+      "candidate_count": 14,
+      "candidate_target": 10,
+      "verified_candidates": 11,
+      "deferred_candidates": 3,
+      "attempted_reproductions": 73,
+      "red_product_assertion_failures": 71,
+      "reproduced_root_causes": 1,
+      "reproduced_subcases": 11,
+      "actual_code_fixes": 2,
+      "regression_tests_added_and_run": 73,
+      "verified_paths": [
+        "classify_broker_result",
+        "rejection_is_ambiguous",
+        "KR/US single/multi durable ledger mock restart"
+      ],
+      "unverified_paths": [
+        "KIS order/fill-ID reconciliation",
+        "partial/cancel/remainder",
+        "stop activation after confirmed fill",
+        "demo broker",
+        "merge-result CI"
+      ],
+      "complete_related_files": 18,
+      "related_total": 169,
+      "complete_full_files": 18,
+      "full_total": 216,
+      "related_pass": "0/2",
+      "full_pass": "0/2"
+    },
+    "commits": {
+      "red1": "9079531636cb8706ac573744d9c45b7fe0e5df09",
+      "fix1": "56432b0ced278c43013e75f28a6ae8b145a3bc05",
+      "red2": "61bde431e73a9c5e30c1b01b59b1f05b967944c8",
+      "fix2": "b056e733467a9e2f784271bedb99479100322781"
+    },
+    "ci": {
+      "red1": {
+        "run_id": 41683768616,
+        "failed": 48,
+        "passed": 1737
+      },
+      "red2": {
+        "run_id": 41684227617,
+        "failed": 23,
+        "passed": 1786
+      },
+      "final_push": {
+        "run_id": 41684476397,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "conclusion": "success",
+        "pytest_passed": 1809
+      },
+      "final_pr": {
+        "run_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "conclusion": "success",
+        "pytest_passed": 1819
+      },
+      "windows": "success",
+      "docker": "success",
+      "snyk": "success",
+      "qlty": "pending"
+    },
+    "external": {
+      "review_count": 0,
+      "branch_protection": "HTTP_403",
+      "qlty_prior_blocking_issues": 93,
+      "qlty_current_blocking_issues": "UNVERIFIED_PENDING"
+    },
+    "candidates": [
+      {
+        "candidate_id": "T7-01",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "ConnectionRefusedError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact ConnectionRefusedError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-02",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "ConnectionResetError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact ConnectionResetError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-03",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "ConnectionAbortedError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact ConnectionAbortedError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-04",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "RemoteDisconnected",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact RemoteDisconnected transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-05",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "BrokenPipeError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact BrokenPipeError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-06",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "ChunkedEncodingError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact ChunkedEncodingError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-07",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "ProtocolError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact ProtocolError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-08",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "ProxyError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact ProxyError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-09",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "SSLEOFError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact SSLEOFError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-10",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "MaxRetryError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact MaxRetryError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-11",
+        "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+        "subcase": "NameResolutionError",
+        "source_blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+        "final_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+        "path": "trading/execution_outcome.py",
+        "functions": [
+          "classify_broker_result",
+          "rejection_is_ambiguous"
+        ],
+        "hypothesis": "Compact NameResolutionError transport exception with contradictory KIS wrapper flags can release replay fence or accept receipt",
+        "expected_impact": "duplicate BUY/SELL on automatic retry or incorrect accepted status",
+        "priority": "HIGH",
+        "reproduction_attempt": "Actions red1 41683768616 (classifier) and red2 41684227617 (KIS wrapper accessor)",
+        "result": "REPRODUCED_PRODUCT_ASSERTION",
+        "decision": "PATCHED_AND_MOCK_CI_VERIFIED",
+        "test_ids": [
+          "tests/test_broker_exception_class_ambiguity.py::test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+          "tests/test_broker_exception_class_ambiguity.py::test_broker_wrapper_rejection_flag_must_preserve_exception_provenance"
+        ],
+        "root_cause_subcase": true
+      },
+      {
+        "candidate_id": "T7-12",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+        "path": "trading/execution_ledger.py",
+        "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+        "function": "guard_unresolved_buy",
+        "hypothesis": "UNKNOWN BUY -> delayed/partial fill cannot be safely attributed or activate a confirmed stop",
+        "priority": "CRITICAL",
+        "reproduction_attempt": "Existing mock tests rerun on exact-head full CI; no new authoritative fill-ID test",
+        "result": "MOCK_FENCE_PASS; BROKER_ORDER_FILL_RECONCILIATION_NOT_IMPLEMENTED",
+        "decision": "STALLED_UNVERIFIED_NO_SPECULATIVE_PATCH",
+        "verification_method": "Official KIS order-inquiry schema + deterministic KR/US per-account paginated mock; KIS demo read-only proof",
+        "source": "koreainvestment/open-trading-api examples_llm/domestic_stock/inquire_daily_ccld/inquire_daily_ccld.py and overseas_stock/inquire_ccnl/inquire_ccnl.py"
+      },
+      {
+        "candidate_id": "T7-13",
+        "root_cause_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+        "path": ".github/workflows/tests.yml",
+        "blob_sha": "acbb8d22af42a78a4cea523ea1e35faa",
+        "function": "CI merge-result gating",
+        "hypothesis": "Current main diverged from PR base by 6 commits; head CI is not merge-result CI",
+        "priority": "HIGH",
+        "reproduction_attempt": "GitHub compare e17032ba...b056e733 returned diverged ahead 121/behind 6",
+        "result": "UNVERIFIED_MERGE_RESULT",
+        "decision": "CARRY_FORWARD_BLOCKED"
+      },
+      {
+        "candidate_id": "T7-14",
+        "root_cause_id": "RC-EXTERNAL-QUALITY-GATES",
+        "path": ".github/workflows/tests.yml",
+        "blob_sha": "acbb8d22af42a78a4cea523ea1e35faa",
+        "function": "Snyk/Qlty/reviews/branch policy",
+        "hypothesis": "Green Actions cannot prove external review and branch policy compliance",
+        "priority": "HIGH",
+        "reproduction_attempt": "Latest commit status, reviews and branch protection GET",
+        "result": "SNYK_SUCCESS_QLTY_PENDING_REVIEWS_ZERO_PROTECTION_403",
+        "decision": "BLOCKED_NOT_PASS"
+      }
+    ],
+    "carry_forward": [
+      {
+        "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+        "status": "STALLED_AUTHORITATIVE_FILL_ATTRIBUTION",
+        "last_reproduction_run": "41684476397/41684488536 existing mock fences rerun; no new broker fill-ID assertion",
+        "unverified_transitions": [
+          "UNKNOWN -> delayed fill",
+          "partial fill -> remaining",
+          "cancel -> final remainder",
+          "confirmed fill -> actionable stop"
+        ],
+        "blocker": "No integrated broker order/fill/cancel/remaining query and no KIS demo credentials; current Mock only prevents unsafe SELL",
+        "delta": "New official KIS KR daily-order and US order inquiry contracts inspected, including demo pagination and US demo ODNO filter unsupported; no new fill-ID mock test or stop activation. Remains STALLED.",
+        "next_exact_action": "Write deterministic read-only Mock KIS order-inquiry contract tests for KR/US, account-specific pagination, fill IDs and cumulative/residual quantities; verify red first."
+      },
+      {
+        "carry_forward_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+        "status": "UNVERIFIED",
+        "blocker": "main e17032ba diverges from PR base 4a5c3c6c; merge-result tree CI not run",
+        "delta": "Compare confirmed ahead 121/behind 6"
+      },
+      {
+        "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
+        "status": "BLOCKED",
+        "blocker": "Qlty pending exact-head (prior 93 issues untriaged); Snyk success; human reviews 0; protection read 403",
+        "delta": "Fresh exact-head statuses and review list read"
+      }
+    ],
+    "financial_transition_coverage": [
+      {
+        "transition": "접수≠체결",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_execution_outcome.py",
+        "mock_result": "MOCK_PASS; no fill proof",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": null
+      },
+      {
+        "transition": "UNKNOWN",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_transport_ambiguity_fence.py; tests/test_broker_exception_class_ambiguity.py",
+        "mock_result": "MOCK_PASS new compact exception name + KIS wrapper 73 tests; no order fill proof",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": null
+      },
+      {
+        "transition": "지연 체결",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py",
+        "mock_result": "MOCK_FENCE_PASS; actual fill attribution BLOCKED",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+      },
+      {
+        "transition": "부분체결",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+        "mock_result": "MOCK_FENCE_PASS; fill IDs/quantities BLOCKED",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+      },
+      {
+        "transition": "취소/거절",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_http_rejection_safety.py",
+        "mock_result": "MOCK_PASS; final cancel remainder BLOCKED",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+      },
+      {
+        "transition": "중복 통지",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_execution_ledger_retention.py",
+        "mock_result": "MOCK_PASS; KIS duplicate events BLOCKED",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+      },
+      {
+        "transition": "잔여량",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+        "mock_result": "MOCK_GUARD_PASS; authoritative remaining BLOCKED",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+      },
+      {
+        "transition": "손절 활성화·중복",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_pending_buy_stop_loss_safety.py; tests/test_stop_loss_signal_identity.py",
+        "mock_result": "MOCK_FAIL_CLOSED_PASS; activation on confirmed fills BLOCKED",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+      },
+      {
+        "transition": "다계좌 격리",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_unknown_buy_intent_durability.py; tests/test_broker_transport_ambiguity_fence.py",
+        "mock_result": "MOCK_PASS; per-order fill isolation BLOCKED",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+      },
+      {
+        "transition": "재시작",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_broker_transport_ambiguity_fence.py; tests/test_execution_ledger_retention.py",
+        "mock_result": "MOCK_PASS",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": null
+      },
+      {
+        "transition": "원장 영속화 실패",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_durable_state_directory_sync.py; tests/test_unknown_buy_delayed_fill_fence.py",
+        "mock_result": "MOCK_PASS",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": null
+      },
+      {
+        "transition": "복구·재조정",
+        "applicability": "KR/US; single/multi where supported",
+        "test_ids": "tests/test_unresolved_buy_without_stop_loss.py",
+        "mock_result": "MOCK_FENCE_PASS; KIS authoritative recovery BLOCKED",
+        "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+        "real_broker": "NOT_RUN_PROHIBITED",
+        "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+      }
+    ],
+    "kis_contract_evidence": {
+      "source_repo": "koreainvestment/open-trading-api",
+      "source_ref": "3a9be59a3ed8745720dc3aa9d584bdf3b7830362",
+      "kr_endpoint": "/uapi/domestic-stock/v1/trading/inquire-daily-ccld",
+      "kr_demo_tr_id": "VTTC0081R",
+      "kr_demo_page_limit": 15,
+      "us_endpoint": "/uapi/overseas-stock/v1/trading/inquire-ccnl",
+      "us_demo_tr_id": "VTTS3035R",
+      "us_demo_order_number_filter": "NOT_SUPPORTED; ODNO must be blank, filter locally after complete pagination",
+      "notes": "Documentation inspection only; no credentials or read-only broker query executed"
+    },
+    "upstream": {
+      "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "head": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
+      "commits_since_pinned": 48,
+      "decision": "No safe relevant import verified; latest change docs/RESEARCH_LESSONS_ko.md BTC research"
+    },
+    "real_orders": 0,
+    "demo_orders": 0,
+    "limits": [
+      "No broker-authoritative order/fill query integrated; mock-only fail-closed",
+      "Qlty pending exact-head",
+      "branch protection 403",
+      "human reviews absent",
+      "full manifest incomplete"
+    ],
+    "next_exact_action": "Write deterministic read-only Mock KIS order-inquiry contract tests for KR/US, account-specific pagination, fill IDs and cumulative/residual quantities; verify red first.",
+    "manifest_sha": {
+      "related": "57e1592e67119c9e0c3c4246018c5713420ed4ae",
+      "full": "e1a86ea09dd6c01c660808de24df8c0ecda39ed6"
+    }
   }
 }
