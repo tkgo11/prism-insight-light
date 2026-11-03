@@ -454,6 +454,7 @@ class MultiAccountTradeDispatcher:
                 claimed, previous_status, claim_token = await asyncio.to_thread(
                     self.ledger.claim, identity, aliases=aliases, with_token=True,
                     order_intent=_buy_stop_loss_intent(signal, account["account_key"]),
+                    order_side="SELL" if signal.signal_type == "SELL" else None,
                 )
                 if not claimed:
                     results.append(
@@ -885,6 +886,7 @@ class TradeDispatcher:
                 order_intent=_buy_stop_loss_intent(
                     signal, self._single_account_execution_selector(signal)
                 ),
+                order_side="SELL" if signal.signal_type == "SELL" else None,
             )
             if not claimed:
                 self.signal_gate.audit_record(

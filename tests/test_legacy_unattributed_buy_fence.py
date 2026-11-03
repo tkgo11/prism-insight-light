@@ -75,3 +75,131 @@ def test_legacy_verified_rejection_without_intent_does_not_block_other_stop(tmp_
     ledger.finalize("old-verified-rejection", "rejected", claim_token=token)
     with ExecutionLedger(ledger.path).guard_unresolved_buy("KR", "005930") as unresolved:
         assert unresolved is False
+
+
+@pytest.mark.parametrize("status", ["in_progress", "unknown", "executed"])
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+def test_modern_sell_provenance_does_not_globally_block_other_stops(
+    tmp_path, status, market, ticker
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    claimed, _, token = ledger.claim(
+        "modern-sell", with_token=True, order_side="SELL",
+    )
+    assert claimed and token
+    if status != "in_progress":
+        ledger.finalize("modern-sell", status, claim_token=token)
+    import json
+    raw = json.loads(ledger.path.read_text(encoding="utf-8"))
+    assert raw["modern-sell"]["order_side"] == "SELL"
+    with ExecutionLedger(ledger.path).guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is False
+
+
+@pytest.mark.parametrize("side", ["BUY", "UNKNOWN", "", False])
+def test_untrusted_or_contradictory_side_cannot_be_persisted(tmp_path, side):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    with pytest.raises(ValueError):
+        ledger.claim("bad-side", with_token=True, order_side=side)
+    assert not ledger.path.exists()
+
+
+def test_corrupted_side_provenance_fails_closed(tmp_path):
+    import json
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    claimed, _, token = ledger.claim("sell", with_token=True, order_side="SELL")
+    assert claimed and token
+    ledger.finalize("sell", "unknown", claim_token=token)
+    raw = json.loads(ledger.path.read_text(encoding="utf-8"))
+    raw["sell"]["order_side"] = "BUY"
+    ledger.path.write_text(json.dumps(raw), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="Invalid durable order side"):
+        with ExecutionLedger(ledger.path).guard_unresolved_buy("US", "AAPL"):
+            pass
+
+
+@pytest.mark.asyncio
+async def test_real_single_dispatch_persists_sell_side_before_mock_broker(tmp_path, monkeypatch):
+    import json
+    from types import SimpleNamespace
+    from trading.dispatch import DispatchResult, TradeDispatcher
+    from trading.schema import parse_signal_payload
+
+    path = tmp_path / "ledger.json"
+    observed = []
+
+    async def mock_sell(signal, **kwargs):
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        assert len(raw) == 1
+        entry = next(iter(raw.values()))
+        assert entry["status"] == "in_progress"
+        assert entry["order_side"] == "SELL"
+        assert "order_intent" not in entry
+        observed.append(signal.ticker)
+        return DispatchResult("unknown", "mock ambiguous SELL", "SELL", "US")
+
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=path,
+    )
+    dispatcher.signal_gate.evaluate_execution = MagicMock(
+        return_value=SimpleNamespace(outcome="allow", fresh_quote=None)
+    )
+    dispatcher._execute_legacy_trade = AsyncMock(side_effect=mock_sell)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda m: True)
+    signal = parse_signal_payload({
+        "signal_id": "modern-sell-1", "type": "SELL", "market": "US",
+        "ticker": "AAPL", "price": 100,
+    })
+    first = await dispatcher.dispatch(signal)
+    second = await dispatcher.dispatch(signal)
+    assert first.status == "unknown"
+    assert second.status == "skipped"
+    assert observed == ["AAPL"]
+    with ExecutionLedger(path).guard_unresolved_buy("KR", "005930") as unresolved:
+        assert unresolved is False
+
+
+@pytest.mark.asyncio
+async def test_multi_account_dispatch_persists_sell_provenance_per_leg(tmp_path, monkeypatch):
+    import json
+    from trading.dispatch import DispatchResult, TradeDispatcher
+    from trading.schema import parse_signal_payload
+
+    monkeypatch.setattr(
+        TradeDispatcher, "_load_runtime_config",
+        staticmethod(lambda: {"multi_account_trading": {"enabled": True}}),
+    )
+    accounts = [
+        {"name": "A", "account_key": "vps:11111111:01", "svr": "vps",
+         "market": "us", "product": "01", "account": "11111111"},
+        {"name": "B", "account_key": "vps:22222222:01", "svr": "vps",
+         "market": "us", "product": "01", "account": "22222222"},
+    ]
+    monkeypatch.setattr(
+        "trading.dispatch.ka.get_configured_accounts", lambda **kwargs: accounts,
+    )
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda m: True)
+
+    async def mock_sell(self, signal, *, account=None):
+        return DispatchResult("unknown", "mock ambiguous SELL", "SELL", "US")
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_sell)
+    path = tmp_path / "ledger.json"
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=path,
+    )
+    signal = parse_signal_payload({
+        "signal_id": "multi-sell-1", "type": "SELL", "market": "US",
+        "ticker": "AAPL", "price": 100,
+    })
+    result = await dispatcher.dispatch(signal)
+    assert [leg.status for leg in result.accounts] == ["unknown", "unknown"]
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    assert len(raw) == 2
+    assert all(entry["order_side"] == "SELL" for entry in raw.values())
+    assert "11111111" not in json.dumps(raw)
+    assert "22222222" not in json.dumps(raw)
+    with ExecutionLedger(path).guard_unresolved_buy("US", "AAPL") as unresolved:
+        assert unresolved is False

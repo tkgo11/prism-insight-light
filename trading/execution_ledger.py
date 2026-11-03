@@ -272,20 +272,39 @@ class ExecutionLedger:
             entries = self._load()
             unresolved = False
             for entry in entries.values():
-                intent_data = entry.get("order_intent")
-                if intent_data is None:
+                status = entry.get("status", "in_progress")
+                if not isinstance(status, str):
+                    raise RuntimeError("Invalid BUY claim status; reconciliation required")
+                if status in _RETRYABLE_STATUSES:
                     continue
+                intent_data = entry.get("order_intent")
+                side = entry.get("order_side")
+                if intent_data is None:
+                    if side == "SELL":
+                        # Modern SELL-only claims cannot represent a delayed BUY.
+                        continue
+                    if side is not None:
+                        raise RuntimeError(
+                            "Invalid durable order side; operator reconciliation required"
+                        )
+                    # Historical pre-provenance ledgers contain only opaque
+                    # identities and statuses. A protected record might be an
+                    # accepted/UNKNOWN BUY for *any* account/instrument. Never
+                    # infer safety from missing attribution; require operator
+                    # reconciliation. This deliberately blocks automatic stops
+                    # until old opaque claims have been reconciled.
+                    unresolved = True
+                    break
+                if side is not None:
+                    raise RuntimeError(
+                        "Contradictory durable order provenance; reconciliation required"
+                    )
                 try:
                     intent = _validated_order_intent(intent_data)
                 except ValueError as exc:
                     raise RuntimeError(
                         "Invalid durable BUY intent; operator reconciliation required"
                     ) from exc
-                status = entry.get("status", "in_progress")
-                if not isinstance(status, str):
-                    raise RuntimeError("Invalid BUY claim status; reconciliation required")
-                if status in _RETRYABLE_STATUSES:
-                    continue
                 same_ticker = (
                     intent["ticker"].upper() == ticker.upper()
                     if market == "US" else intent["ticker"] == ticker
@@ -298,6 +317,7 @@ class ExecutionLedger:
     def claim(
         self, identity: str, *, aliases: Iterable[str] = (), with_token: bool = False,
         order_intent: dict[str, Any] | None = None,
+        order_side: str | None = None,
     ) -> tuple[bool, str | None] | tuple[bool, str | None, str | None]:
         """Claim an identity or return the prior status without exposing account data.
 
@@ -322,6 +342,8 @@ class ExecutionLedger:
         validated_intent = (
             _validated_order_intent(order_intent) if order_intent is not None else None
         )
+        if order_side is not None and (order_side != "SELL" or validated_intent is not None):
+            raise ValueError("Only SELL without BUY intent can use explicit order-side provenance")
         now = datetime.now(timezone.utc)
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
@@ -345,6 +367,11 @@ class ExecutionLedger:
             if validated_intent is not None:
                 # Atomic with pre-submit claim; NEVER proof of a fill or SELL authority.
                 entry["order_intent"] = validated_intent
+            if order_side == "SELL":
+                # A modern SELL cannot later create an un-attributed BUY fill.
+                # Persist before submission so the legacy quarantine can
+                # distinguish this safe case after a crash or restart.
+                entry["order_side"] = "SELL"
             entries[identity] = entry
             # Fail closed at capacity. Silently dropping older accepted/unknown
             # claims to make room would re-enable duplicate broker submissions.
