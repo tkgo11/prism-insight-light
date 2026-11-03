@@ -5,15 +5,23 @@
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T21-17-KST-turn2",
-    "lock_owner": "prism-sync-hourly-2026-11-03T21-17-KST-turn2",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
     "started_at": "2026-11-03T12:17:10Z",
     "lock_expected_pr_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
     "lock_expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
     "lock_expected_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
     "lock_expected_state_branch_sha": "d32da1fb93c8ca8e4c34393c9e70fbd2a6ae690f",
-    "status": "LOCKED",
-    "previous_main_moved_from": "d9d68ae2c96cf9e609376aaee1b21c811240ca35"
+    "status": "RELEASED",
+    "previous_main_moved_from": "d9d68ae2c96cf9e609376aaee1b21c811240ca35",
+    "completed_at": "2026-11-03T12:35:35.304Z",
+    "lock_released_at": "2026-11-03T12:35:35.304Z",
+    "final_pr_head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+    "final_state_parent_sha": "695b9076f7b66d9091f8d6b7bf96dbabec6151b3",
+    "related_manifest_sha": "f1c1fd689238ed51c29401d9cdb20b829576c9e7",
+    "full_manifest_sha": "406dc50f5aa06c2c25ece567774af7511c756980",
+    "related_pass": false,
+    "full_pass": false
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -33,11 +41,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+    "head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_EXACT_HEAD_CI_SUCCESS_RELATED_AND_FULL_AUDITS_BLOCKED",
+    "status": "DRAFT_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
     "base_ref": "main"
   },
   "candidates": [
@@ -1809,6 +1817,20 @@
       "status": "completed",
       "conclusion": "success",
       "details": "1654 Linux pytest, 167 Windows, Docker success; event pull_request"
+    },
+    {
+      "run_id": 41636445181,
+      "head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+      "status": "completed",
+      "conclusion": "success",
+      "details": "1662 Linux pytest, 167 Windows smoke, Docker build success; push"
+    },
+    {
+      "run_id": 41636455075,
+      "head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+      "status": "completed",
+      "conclusion": "success",
+      "details": "1672 Linux pytest, 167 Windows smoke, Docker build success; pull_request"
     }
   ],
   "upstream_changes": [
@@ -5672,6 +5694,54 @@
       "real_orders": 0,
       "demo_orders": 0,
       "notes": "No broker order/fill/cancel/remaining attribution; qlty pending; human review absent; branch protection 403; PR base diverged from main."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T21-17-KST-turn2",
+      "head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "kind": "MOCK_REPRODUCED_TWO_ROOT_SUBCASES_PATCHED_FILE_LEVEL_REVIEW_NOT_INDEPENDENT_PASS",
+      "root_cause_id": "RC-STOPLOSS-AMBIGUOUS-INSTRUMENT-QUARANTINE",
+      "red_runs": [
+        {
+          "id": 41635066092,
+          "failures": 12,
+          "passed": 1648
+        },
+        {
+          "id": 41635895053,
+          "failures": 2,
+          "passed": 1660
+        }
+      ],
+      "fix_commits": [
+        "640ca13461fbc87af58f80c49df83d41bebd3698",
+        "c83c955ce6f0b3a87e969b7d53da09f693713a2a",
+        "f8477dea26f8207d679b5cdf013746d4a5f35cd5",
+        "e930a788456785cf2afe3ed1fe320da0f73ea88d"
+      ],
+      "cancelled_buy_tests_commit": "36d600e8ef4097303c87e96de691034bf1a933a2",
+      "final_ci_runs": [
+        {
+          "id": 41636445181,
+          "status": "success",
+          "tests": 1662
+        },
+        {
+          "id": 41636455075,
+          "status": "success",
+          "tests": 1672
+        }
+      ],
+      "related_manifest_sha": "f1c1fd689238ed51c29401d9cdb20b829576c9e7",
+      "full_manifest_sha": "406dc50f5aa06c2c25ece567774af7511c756980",
+      "related_file_level_inspected": 79,
+      "related_scope": 166,
+      "full_file_level_inspected": 79,
+      "full_scope": 213,
+      "files_fully_audited": 0,
+      "related_pass": false,
+      "full_pass": false,
+      "notes": "No KIS orders; 4 additional cancelled/unattributed BUY mock cases green; 12 corrupt tracker and 2 pre-submit failures reproduced; one stale legacy test expectation corrected, two cancellation fixture failures corrected; external Qlty status success but 94 blocking issues remain untriaged."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -6458,6 +6528,24 @@
       "full_file_level_inspected": 70,
       "full_scope": 213,
       "reason": "Code changed; zero complete independent audits; KIS order/fill attribution absent; qlty pending, human review absent, policy 403 and main drift."
+    },
+    {
+      "slot": "2026-11-03T21-17-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T21-17-KST-turn2",
+      "phase": "related_code_audit",
+      "head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "related_pass": false,
+      "full_pass": false,
+      "related_manifest_sha": "f1c1fd689238ed51c29401d9cdb20b829576c9e7",
+      "full_manifest_sha": "406dc50f5aa06c2c25ece567774af7511c756980",
+      "related_file_level_inspected": 79,
+      "related_scope": 166,
+      "full_file_level_inspected": 79,
+      "full_scope": 213,
+      "reason": "Code changed, 0 full-file independent audits; authoritative broker fill/cancel/remaining missing; Qlty 94 issues, human review, branch protection 403."
     }
   ],
   "discovered_defects": [
@@ -8324,6 +8412,53 @@
         "No KIS demo integration",
         "Independent audit gates and review"
       ]
+    },
+    {
+      "id": "corrupt-canonical-stop-rearm-erases-evidence-20261103",
+      "root_cause_id": "RC-STOPLOSS-AMBIGUOUS-INSTRUMENT-QUARANTINE",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Corrupt canonical stop-loss record was silently overwritten by a new registration, destroying unresolved protection evidence",
+      "affected_paths": [
+        "trading/stop_loss_watcher.py",
+        "tests/test_stop_loss_legacy_quarantine.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "test_first_commit": "7d0668a199c2c509dd9b90a37d7ca39b511c43e4",
+      "red_run": 41635066092,
+      "red_failures": 12,
+      "fix_commits": [
+        "d585a6e474892dd0fbb2b319aaa6be30e27d7800",
+        "640ca13461fbc87af58f80c49df83d41bebd3698",
+        "c83c955ce6f0b3a87e969b7d53da09f693713a2a"
+      ],
+      "final_ci": [
+        41636445181,
+        41636455075
+      ]
+    },
+    {
+      "id": "corrupt-stop-buy-preflight-missing-20261103",
+      "root_cause_id": "RC-STOPLOSS-AMBIGUOUS-INSTRUMENT-QUARANTINE",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Corrupt stop tracker was rejected only AFTER mocked broker BUY acceptance, potentially leaving a newly filled position without durable protection; now preflight blocks before broker",
+      "affected_paths": [
+        "trading/dispatch.py",
+        "trading/stop_loss_watcher.py",
+        "tests/test_stop_loss_legacy_quarantine.py"
+      ],
+      "test_first_commit": "485a492c091205298bc4aea86b351d48c7edbb48",
+      "red_run": 41635895053,
+      "red_failures": 2,
+      "fix_commits": [
+        "f8477dea26f8207d679b5cdf013746d4a5f35cd5",
+        "e930a788456785cf2afe3ed1fe320da0f73ea88d"
+      ],
+      "final_ci": [
+        41636445181,
+        41636455075
+      ]
     }
   ],
   "risks": [
@@ -8842,16 +8977,31 @@
       "root_cause_id": "RC-STOPLOSS-AMBIGUOUS-INSTRUMENT-QUARANTINE",
       "description": "Valid-looking stop-loss remained actionable when a second mismatched-key persisted record claimed the same instrument",
       "defect_ids": [
-        "mismatched-key-conflicting-stop-loss-instrument-20261103"
+        "mismatched-key-conflicting-stop-loss-instrument-20261103",
+        "corrupt-canonical-stop-rearm-erases-evidence-20261103",
+        "corrupt-stop-buy-preflight-missing-20261103"
       ],
-      "classification": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_KIS_DEMO_PENDING",
+      "classification": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_AND_KIS_DEMO_PENDING",
       "first_detected_run": "prism-sync-hourly-2026-11-03T05-22-KST-turn9",
-      "last_checked_head": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "last_checked_head": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
       "fix_commits": [
         "d636c0636dd8d717c121075819f7420265be582a",
-        "816c6a83be16e7cb84f5b5453da55f7a30175f43"
+        "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+        "640ca13461fbc87af58f80c49df83d41bebd3698",
+        "c83c955ce6f0b3a87e969b7d53da09f693713a2a",
+        "f8477dea26f8207d679b5cdf013746d4a5f35cd5",
+        "e930a788456785cf2afe3ed1fe320da0f73ea88d"
       ],
-      "recurrence_count": 0
+      "recurrence_count": 0,
+      "subcases": [
+        "CORRUPT_CANONICAL_REARM_EVIDENCE_LOSS",
+        "CORRUPT_TRACKER_BUY_PREFLIGHT_MISSING"
+      ],
+      "unverified": [
+        "KIS authoritative order/fill/cancel/remaining quantity reconciliation",
+        "multi-account live/demo and concurrent manual file edit interleaving",
+        "independent 2+2 full audits, Qlty 94 blocking findings, human review, branch protection 403"
+      ]
     },
     {
       "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
@@ -9604,10 +9754,23 @@
     {
       "id": "RC-STOPLOSS-AMBIGUOUS-INSTRUMENT-QUARANTINE",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_KIS_DEMO_PENDING",
-      "description": "Valid-looking stop-loss remained actionable when a second mismatched-key persisted record claimed the same instrument",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_AND_KIS_DEMO_PENDING",
+      "description": "Two mock-reproduced subcases: corrupt canonical stop tracker overwritten (12 failures) and BUY accepted before tracker integrity preflight (2 failures); shared fail-closed validation now prevents both",
       "fix_commit": "d636c0636dd8d717c121075819f7420265be582a",
-      "head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43"
+      "head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+      "unverified": [
+        "KIS authoritative order/fill/cancel/remaining quantity reconciliation",
+        "multi-account live/demo and concurrent manual file edit interleaving",
+        "independent 2+2 full audits, Qlty 94 blocking findings, human review, branch protection 403"
+      ],
+      "red_runs": [
+        41635066092,
+        41635895053
+      ],
+      "final_ci_runs": [
+        41636445181,
+        41636455075
+      ]
     },
     {
       "id": "RC-KIS-BALANCE-COMPLETENESS",
@@ -9840,5 +10003,9 @@
     },
     "validation_warning": null,
     "metadata_correction": "Uses tree SHA from git commit object"
-  }
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "related_manifest_sha": "f1c1fd689238ed51c29401d9cdb20b829576c9e7",
+  "full_manifest_sha": "406dc50f5aa06c2c25ece567774af7511c756980"
 }

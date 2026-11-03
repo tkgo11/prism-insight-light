@@ -1,0 +1,87 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T21-17-KST-turn2",
+  "started_at": "2026-11-03T12:17:10Z",
+  "completed_at": "2026-11-03T12:35:35.304Z",
+  "repository": "tkgo11/prism-insight-light",
+  "pr_number": 43,
+  "head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "current_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "changed_paths": [
+    "tests/test_unknown_buy_delayed_fill_fence.py",
+    "tests/test_stop_loss_legacy_quarantine.py",
+    "tests/test_stop_loss_watcher.py",
+    "trading/stop_loss_watcher.py",
+    "trading/dispatch.py"
+  ],
+  "test_first_runs": [
+    {
+      "id": 41635066092,
+      "failed": 12,
+      "passed": 1648,
+      "kind": "expected defect reproduction"
+    },
+    {
+      "id": 41635895053,
+      "failed": 2,
+      "passed": 1660,
+      "kind": "expected defect reproduction"
+    }
+  ],
+  "intermediate_ci_errors": [
+    {
+      "id": 41635355219,
+      "reason": "obsolete test expected unsafe automatic repair",
+      "failed": 1
+    },
+    {
+      "id": 41636216246,
+      "reason": "mock dispatcher omitted stop_loss_tracker attribute",
+      "failed": 2
+    }
+  ],
+  "final_ci": [
+    {
+      "id": 41636445181,
+      "head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+      "conclusion": "success",
+      "pytest": 1662
+    },
+    {
+      "id": 41636455075,
+      "head_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+      "conclusion": "success",
+      "pytest": 1672
+    }
+  ],
+  "external": {
+    "snyk": "success",
+    "qlty_status": "success",
+    "qlty_untriaged_blocking_issues": 94,
+    "branch_protection": "403 unverified",
+    "reviews": 0
+  },
+  "risk": {
+    "unknown_buy_order_fill_cancel_remaining": "BLOCKED_KIS_DEMO_AND_NO_AUTHORITY",
+    "cancelled_unattributed_buy_mock": "4 KR/US cases passed on intermediate head and latest suite",
+    "corrupt_stop_tracker": "14 genuine red assertions patched"
+  },
+  "audit": {
+    "related_file_level_inspected": 79,
+    "related_scope": 166,
+    "full_file_level_inspected": 79,
+    "full_scope": 213,
+    "fully_audited": 0,
+    "related_pass": "0/2",
+    "full_pass": "0/2",
+    "related_manifest_sha": "f1c1fd689238ed51c29401d9cdb20b829576c9e7",
+    "full_manifest_sha": "406dc50f5aa06c2c25ece567774af7511c756980"
+  },
+  "real_orders": 0,
+  "demo_orders": 0,
+  "merge": false,
+  "lock": "RELEASED",
+  "notes": "No claim of authoritative KIS reconciliation. PR remains Draft. Upstream 47 commits/41 paths since pinned baseline; none imported due independent fork design. Main moved before lock acquisition and was snapshotted; no concurrent SHA drift during writes."
+}
