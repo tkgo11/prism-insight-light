@@ -1,0 +1,142 @@
+"""Mock-only regression: BUY without a stop price still has unresolved fill risk.
+
+An old confirmed stop-loss tracker must not be erased by a temporary zero
+balance when a later BUY with no new stop-loss threshold may still fill.
+No real or demo KIS orders are placed.
+"""
+from __future__ import annotations
+
+import json
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
+from trading.dispatch import TradeDispatcher, _buy_stop_loss_intent
+from trading.execution_ledger import ExecutionLedger
+from trading.schema import SignalMessage, parse_signal_payload
+from trading.stop_loss_watcher import StopLossTracker, StopLossWatcher, StopLossWatcherConfig
+
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("status", ["in_progress", "unknown", "executed"])
+def test_unresolved_buy_without_new_stop_preserves_confirmed_tracker(
+    tmp_path, market, ticker, status
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position(market, ticker, 90, entry_price=100, pending_buy=False)
+    before = tracker.get_position(market, ticker)
+    signal = SignalMessage(signal_type="BUY", market=market, ticker=ticker)
+    intent = _buy_stop_loss_intent(signal, "mock-account")
+    assert intent is not None, "Every BUY needs durable reconciliation identity"
+    assert intent["kind"] == "buy_unresolved"
+    assert intent["stop_loss"] is None
+
+    claimed, previous, token = ledger.claim(
+        "later-buy", with_token=True, order_intent=intent,
+    )
+    assert claimed and previous is None and token
+    if status != "in_progress":
+        ledger.finalize("later-buy", status, claim_token=token)
+
+    restarted = ExecutionLedger(ledger.path)
+    with restarted.guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
+
+    dispatcher = MagicMock()
+    dispatcher.execution_ledger = restarted
+    dispatcher.trading_mode = "demo"
+    dispatcher.multi_account_enabled = False
+    dispatcher.dispatch = AsyncMock()
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, storage_path=tracker.path),
+        tracker=tracker,
+    )
+    assert watcher._remove_if_verified_flat(market, ticker, before) is False
+    assert tracker.get_position(market, ticker) == before
+    dispatcher.dispatch.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_real_dispatch_path_persists_no_stop_buy_intent_before_mock_timeout(
+    tmp_path, monkeypatch
+):
+    ledger_path = tmp_path / "ledger.json"
+    calls = []
+
+    class MockUSTrader:
+        def __init__(self, **kwargs):
+            pass
+
+        async def async_buy_stock(self, ticker, limit_price=None):
+            calls.append(ticker)
+            entries = json.loads(ledger_path.read_text(encoding="utf-8"))
+            assert len(entries) == 1
+            entry = next(iter(entries.values()))
+            assert entry["status"] == "in_progress"
+            assert entry["order_intent"]["kind"] == "buy_unresolved"
+            assert entry["order_intent"]["stop_loss"] is None
+            return {"success": False, "message": "read timed out after submit"}
+
+    monkeypatch.setattr("trading.dispatch.USStockTrading", MockUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=ledger_path,
+    )
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("US", "AAPL", 90, entry_price=100, pending_buy=False)
+    before = tracker.get_position("US", "AAPL")
+    dispatcher.stop_loss_tracker = tracker
+
+    signal = parse_signal_payload({
+        "signal_id": "no-stop-unknown-1",
+        "type": "BUY", "market": "US", "ticker": "AAPL", "price": 200,
+    })
+    first = await dispatcher.dispatch(signal)
+    second = await dispatcher.dispatch(signal)
+    assert (first.status, second.status) == ("unknown", "skipped")
+    assert calls == ["AAPL"]
+    entries = json.loads(ledger_path.read_text(encoding="utf-8"))
+    entry = next(iter(entries.values()))
+    assert entry["order_intent"]["kind"] == "buy_unresolved"
+    assert entry["order_intent"]["stop_loss"] is None
+    assert tracker.get_position("US", "AAPL") == before
+    with ExecutionLedger(ledger_path).guard_unresolved_buy("US", "AAPL") as unresolved:
+        assert unresolved is True
+
+
+@pytest.mark.asyncio
+async def test_no_stop_buy_intent_disk_failure_blocks_mock_broker(
+    tmp_path, monkeypatch
+):
+    calls = []
+
+    class MockUSTrader:
+        def __init__(self, **kwargs):
+            pass
+
+        async def async_buy_stock(self, ticker, limit_price=None):
+            calls.append(ticker)
+            return {"success": True, "order_no": "MOCK-ONLY"}
+
+    monkeypatch.setattr("trading.dispatch.USStockTrading", MockUSTrader)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=tmp_path / "ledger.json",
+    )
+
+    def failed_save(entries):
+        assert next(iter(entries.values()))["order_intent"]["kind"] == "buy_unresolved"
+        raise RuntimeError("simulated persistence failure")
+
+    monkeypatch.setattr(dispatcher.execution_ledger, "_save", failed_save)
+    signal = parse_signal_payload({
+        "signal_id": "no-stop-disk-fail", "type": "BUY",
+        "market": "US", "ticker": "AAPL", "price": 200,
+    })
+    with pytest.raises(RuntimeError, match="simulated persistence failure"):
+        await dispatcher.dispatch(signal)
+    assert calls == []
