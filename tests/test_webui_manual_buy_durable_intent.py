@@ -114,3 +114,47 @@ async def test_separately_armed_manual_orders_have_distinct_durable_identities(
     entries = json.loads(path.read_text(encoding="utf-8"))
     assert len(entries) == 2
     assert calls == ["AAPL", "AAPL"]
+
+
+@pytest.mark.asyncio
+async def test_manual_multi_account_unknown_buy_has_separate_durable_intents(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "ledger.json"
+    observed = []
+
+    async def mock_unknown(self, signal, *, account=None):
+        observed.append(account["account_key"])
+        return DispatchResult("unknown", "mock ambiguous response", "BUY", "US")
+
+    _install_mock_manual_dispatcher(monkeypatch, path, mock_unknown)
+    monkeypatch.setattr(
+        TradeDispatcher, "_load_runtime_config",
+        staticmethod(lambda: {"multi_account_trading": {"enabled": True}}),
+    )
+    accounts = [
+        {"name": "A", "account_key": "vps:11111111:01", "svr": "vps",
+         "market": "us", "product": "01", "account": "11111111"},
+        {"name": "B", "account_key": "vps:22222222:01", "svr": "vps",
+         "market": "us", "product": "01", "account": "22222222"},
+    ]
+    monkeypatch.setattr(
+        "trading.dispatch.ka.get_configured_accounts",
+        lambda **kwargs: accounts,
+    )
+    result = await trade_service.dispatch_manual_order(
+        action="BUY", ticker="AAPL", market="US", price=100,
+        arm_phrase=trade_service.ARM_PHRASE, trading_mode="demo",
+    )
+    assert result["result"] is not None
+    assert len(observed) == 2
+    entries = json.loads(path.read_text(encoding="utf-8"))
+    assert len(entries) == 2
+    assert all(e["status"] == "unknown" for e in entries.values())
+    scopes = {e["order_intent"]["account_scope"] for e in entries.values()}
+    assert len(scopes) == 2
+    assert all(e["order_intent"]["kind"] == "buy_unresolved" for e in entries.values())
+    assert "11111111" not in json.dumps(entries)
+    assert "22222222" not in json.dumps(entries)
+    with ExecutionLedger(path).guard_unresolved_buy("US", "AAPL") as unresolved:
+        assert unresolved is True
