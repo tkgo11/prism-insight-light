@@ -1,11 +1,10 @@
 {
   "run_id": "prism-sync-hourly-2026-11-04T05-23-KST-turn10",
-  "status": "RELEASED",
-  "expected_state_head": "51e1b38de2f5d154481317df5018027100ad8b7f",
+  "status": "ACTIVE_GATE_RECHECK",
+  "expected_state_head": "4e85216a25e179baf9e00c4a18f9d72391a06c92",
   "expected_pr_head": "126ef3545dd386b6dc8c761f51c9342dd242c141",
-  "created_at": "2026-11-03T20:27:00Z",
-  "released_at": "2026-11-03T20:32:00Z",
-  "reason": "Mock-red 8 cases, fixed shared KIS parser, green exact-head CI; unresolved KIS order attribution and 2+2 audits",
+  "created_at": "2026-11-03T20:33:00Z",
+  "reason": "Final exact-head Qlty status arrived after initial CAS evidence commit",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
