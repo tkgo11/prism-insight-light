@@ -230,3 +230,49 @@ def test_verified_rejected_new_buy_does_not_disable_old_confirmed_stop(tmp_path)
     outcome = watcher._trigger_sell("KR", "005930", 85, pos)
     assert outcome["status"] == "executed"
     dispatcher.dispatch.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("buy_status,expected", [
+    ("unknown", "deferred"),
+    ("rejected", "executed"),
+])
+async def test_dispatcher_broker_lock_boundary_rechecks_buy_intent_before_stop_sell(
+    tmp_path, monkeypatch, buy_status, expected
+):
+    from types import SimpleNamespace
+    from trading.dispatch import DispatchResult
+
+    ledger_path = tmp_path / "ledger.json"
+    ledger = ExecutionLedger(ledger_path)
+    intent = _buy_stop_loss_intent(
+        SignalMessage(signal_type="BUY", market="US", ticker="AAPL"),
+        "mock-account",
+    )
+    claimed, _, token = ledger.claim("new-buy", with_token=True, order_intent=intent)
+    assert claimed
+    ledger.finalize("new-buy", buy_status, claim_token=token)
+
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=ledger_path,
+    )
+    dispatcher.stop_loss_tracker = StopLossTracker(tmp_path / "stops.json")
+    dispatcher.signal_gate.evaluate_execution = MagicMock(
+        return_value=SimpleNamespace(outcome="allow", fresh_quote=None)
+    )
+    dispatcher._execute_legacy_trade = AsyncMock(return_value=DispatchResult(
+        "executed", "mock SELL accepted", "SELL", "US",
+    ))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    signal = parse_signal_payload({
+        "signal_id": "old-confirmed-stop", "type": "SELL",
+        "market": "US", "ticker": "AAPL", "price": 85,
+        "sell_reason": "stop_loss",
+    })
+    result = await dispatcher.dispatch(signal, allow_queue=False)
+    assert result.status == expected
+    if buy_status == "unknown":
+        dispatcher._execute_legacy_trade.assert_not_called()
+    else:
+        dispatcher._execute_legacy_trade.assert_awaited_once()
