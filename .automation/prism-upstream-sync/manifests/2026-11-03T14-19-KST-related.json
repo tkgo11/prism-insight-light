@@ -10,8 +10,8 @@
   "closure_verified": false,
   "reason": "Current head mock CI and qlty pending; KIS order/fill/cancel/remaining and independent 2+2 audit/review/policy unavailable",
   "files_fully_audited": 0,
-  "files_file_level_inspected": 56,
-  "scope": "94 files, 56 file-level inspected, 0 fully audited; no independent PASS",
+  "files_file_level_inspected": 47,
+  "scope": "94 files; 47 file-level inspected, 9 targeted-only; 0 fully audited, no independent PASS",
   "files": [
     {
       "path": "README.en.md",
@@ -928,5 +928,6 @@
         41578366433
       ]
     }
-  ]
+  ],
+  "files_targeted_path_review": 9
 }

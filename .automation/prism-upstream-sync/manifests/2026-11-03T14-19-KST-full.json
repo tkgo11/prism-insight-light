@@ -10,8 +10,8 @@
   "closure_verified": false,
   "reason": "Current head mock CI and qlty pending; KIS order/fill/cancel/remaining and independent 2+2 audit/review/policy unavailable",
   "files_fully_audited": 0,
-  "files_file_level_inspected": 57,
-  "scope": "183 files, 57 file-level inspected, 0 fully audited; no independent PASS",
+  "files_file_level_inspected": 48,
+  "scope": "183 files; 48 file-level inspected, 9 targeted-only; 0 fully audited, no independent PASS",
   "files": [
     {
       "path": ".agents/skills/prism-insight-light/SKILL.md",
@@ -1466,5 +1466,6 @@
       "status": "NOT_FULLY_AUDITED",
       "inspection": "NOT_FULLY_INSPECTED"
     }
-  ]
+  ],
+  "files_targeted_path_review": 9
 }
