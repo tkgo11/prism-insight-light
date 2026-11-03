@@ -196,3 +196,38 @@ async def test_reserved_identity_remains_available_to_real_watcher(
     from trading.execution_ledger import execution_identities
     identity, _ = execution_identities(trusted.raw, dispatcher._single_account_execution_selector(trusted))
     assert restarted.claim(identity) == (False, "executed")
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("id_field", ["signal_id", "event_id", "id"])
+async def test_reserved_id_with_outer_whitespace_cannot_alias_internal_watcher(
+    tmp_path, monkeypatch, market, ticker, id_field
+):
+    """The durable identity algorithm strips IDs; the reserved gate must too."""
+    from unittest.mock import AsyncMock
+    from types import SimpleNamespace
+    from trading.dispatch import DispatchResult
+
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", fresh_quote_enabled=False,
+        strategy_config={"name": ""}, execution_ledger_path=tmp_path / "ledger.json",
+    )
+    dispatcher._execute_legacy_trade = AsyncMock(return_value=DispatchResult(
+        "executed", "mock only", "BUY", market,
+    ))
+    monkeypatch.setattr(
+        dispatcher.signal_gate, "evaluate_execution",
+        lambda *args, **kwargs: SimpleNamespace(outcome="allow", fresh_quote=None),
+    )
+    payload = {
+        "type": "BUY", "market": market, "ticker": ticker,
+        "price": 100, "stop_loss": 90,
+        id_field: f"  stop_loss_{market}_{ticker}_{'c' * 20}  ",
+    }
+    signal = parse_signal_payload(payload)
+    result = await dispatcher.dispatch(signal, allow_queue=False)
+    assert result.status == "rejected"
+    dispatcher._execute_legacy_trade.assert_not_awaited()
+    assert not dispatcher.execution_ledger.path.exists()
