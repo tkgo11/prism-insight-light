@@ -148,6 +148,28 @@ def market_base_amount(signal: SignalMessage, *, krw: float, usd: float) -> floa
     return usd if signal.market == "US" else krw
 
 
+def _is_watcher_generated_stop_sell(signal: SignalMessage) -> bool:
+    """Select watcher market-order semantics without changing publisher limits.
+
+    The watcher uses a stable instrument-scoped identity plus stop_loss reason.
+    The identity shape is a routing marker, not proof of authentication.
+    """
+    if (
+        signal.signal_type != "SELL"
+        or not isinstance(signal.sell_reason, str)
+        or signal.sell_reason.strip().casefold() != "stop_loss"
+        or not isinstance(signal.raw, dict)
+    ):
+        return False
+    signal_id = signal.raw.get("signal_id")
+    prefix = f"stop_loss_{signal.market}_{signal.ticker}_"
+    return (
+        isinstance(signal_id, str)
+        and signal_id.startswith(prefix)
+        and re.fullmatch(r"[0-9a-f]{20}", signal_id[len(prefix):]) is not None
+    )
+
+
 async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount: float | None = None, limit_price: float | None = None, sell_fraction: float | None = None, trader_kwargs: dict[str, Any] | None = None) -> dict[str, Any]:
     if _is_watcher_generated_stop_sell(signal):
         # The automatic watcher needs a market SELL; an unfilled protective
