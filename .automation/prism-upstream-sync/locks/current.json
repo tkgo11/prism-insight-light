@@ -1,11 +1,10 @@
 {
-  "run_id": "prism-sync-hourly-2026-11-04T03-20-KST-turn8",
-  "status": "RELEASED",
-  "expected_state_head": "125b89e1e23f90ad43f3ce1bc5d8dc6cca4fe913",
+  "run_id": "prism-sync-hourly-2026-11-04T04-20-KST-turn9",
+  "status": "ACQUIRED",
+  "expected_state_head": "6523e265f5e9f18e23442a8c91b8c5aae247cea8",
   "expected_pr_head": "b056e733467a9e2f784271bedb99479100322781",
-  "created_at": "2026-11-03T18:26:00Z",
-  "released_at": "2026-11-03T18:26:30Z",
-  "reason": "Corrected one candidate blob SHA without product changes; all audit gates unchanged",
+  "created_at": "2026-11-03T19:19:00Z",
+  "scope": "state-only until evidence verified",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
