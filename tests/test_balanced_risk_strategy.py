@@ -321,7 +321,8 @@ def test_example_config_uses_requested_execution_defaults():
         Path("trading/config/kis_devlp.yaml.example").read_text(encoding="utf-8")
     )
 
-    assert payload["default_mode"] == "real"
+    # The shipped example must never select a production account implicitly.
+    assert payload["default_mode"] == "demo"
     assert payload["auto_trading"] is True
     assert payload["multi_account_trading"] == {"enabled": False}
     assert payload["default_unit_amount"] == 1_000_000
