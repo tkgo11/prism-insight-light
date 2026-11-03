@@ -295,6 +295,11 @@ class DomesticStockTrading:
                 logger.debug("KIS trading environment unavailable after request; keeping existing trader environment")
             return response
 
+    def get_order_history_for_reconciliation(self, *, order_no: str, order_date: str, ticker: str, max_pages: int = 5) -> dict[str, Any]:
+        """Read-only KIS history evidence; NEVER fill proof or stop-loss authority."""
+        from .order_reconciliation import read_order_history
+        return read_order_history(self, market="KR", order_no=order_no, order_date=order_date, ticker=ticker, max_pages=max_pages)
+
     def get_current_price(self, stock_code: str) -> Optional[Dict[str, Any]]:
         """
         Get current market price (also used for connectivity test)

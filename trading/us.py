@@ -445,6 +445,11 @@ class USStockTrading:
             "message": "KIS could not validate a supported US exchange for this ticker",
         }
 
+    def get_order_history_for_reconciliation(self, *, order_no: str, order_date: str, ticker: str, max_pages: int = 5) -> dict[str, Any]:
+        """Read-only KIS history evidence; NEVER fill proof or stop-loss authority."""
+        from .order_reconciliation import read_order_history
+        return read_order_history(self, market="US", order_no=order_no, order_date=order_date, ticker=ticker, max_pages=max_pages)
+
     def get_current_price(self, ticker: str, exchange: str = None) -> Optional[Dict[str, Any]]:
         """Return a KIS-validated US quote and its corresponding trading exchange.
 
