@@ -49,6 +49,20 @@ _AMBIGUOUS_MARKERS = (
     "expecting value",
     "jsondecodeerror",
     "json decode",
+    # Requests/urllib3/stdlib often stringify exception class names without
+    # spaces. An explicit "rejected" flag or a plausible receipt cannot
+    # override these post-submission transport ambiguities.
+    "connectionrefusederror",
+    "connectionreseterror",
+    "connectionabortederror",
+    "remotedisconnected",
+    "brokenpipeerror",
+    "chunkedencodingerror",
+    "protocolerror",
+    "proxyerror",
+    "ssleoferror",
+    "maxretryerror",
+    "nameresolutionerror",
 )
 
 
