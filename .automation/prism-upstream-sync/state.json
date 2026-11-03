@@ -4,25 +4,24 @@
   "state": "ACTIVE_DRAFT_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
-    "previous_run_id": "prism-sync-hourly-2026-11-03T23-17-KST-turn4",
-    "started_at": "2026-11-03T15:18:53Z",
-    "completed_at": "2026-11-03T15:24:38.913Z",
+    "run_id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
+    "previous_run_id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
+    "started_at": "2026-11-03T16:24:00Z",
+    "completed_at": "2026-11-03T16:31:05.248Z",
     "status": "RELEASED",
     "lock_owner": null,
-    "lock_expected_state_branch_sha": "e0a93db7bfdf3f01dac589322e0e58e82b8c7ec9",
-    "lock_expected_pr_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+    "lock_expected_state_branch_sha": "f4c6c145b849f44c851f8ca2557fdc60b9d8d15f",
+    "lock_expected_pr_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
     "lock_expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-    "lock_expected_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "final_pr_head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+    "lock_expected_upstream_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
+    "final_pr_head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
     "related_pass": false,
-    "full_pass": false,
-    "state_reference_correction": "CAS corrected manifest hashes"
+    "full_pass": false
   },
   "source": {
     "repository": "dragon1086/prism-insight",
     "default_branch": "main",
-    "latest_observed_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "latest_observed_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
     "pinned_contract_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
     "last_integrated_upstream_sha": null,
     "checkpoint_status": "UNKNOWN_BASELINE"
@@ -37,11 +36,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+    "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_EXACT_HEAD_RERUN_SUCCESS_AUDIT_4_OF_167_QLTY_93_UNRESOLVED",
+    "status": "DRAFT_56_REPRODUCED_ASSERTIONS_PATCHED_EXACT_HEAD_CI_SUCCESS_14_FILE_AUDITS_NO_PASS",
     "base_ref": "main"
   },
   "candidates": [
@@ -115,30 +114,30 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "INCOMPLETE_CURRENT_HEAD",
-    "checksum": "5c87208d9ed5adaff3a1c1f254ad9124daf5902b",
+    "checksum": "41d2fd7defa95080320e50b14968830f4428d09d",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 167,
-    "files_fully_audited": 10,
-    "files_file_level_inspected": 98,
-    "files_targeted_path_review": 13,
-    "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
-    "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "9187d3264febb9112810b423f56217bb4a73e44e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T00-18-KST-related.json",
-    "sha": "329911a126ae072606ff2ac72c494a79088fb3f9"
+    "scope_estimate": 168,
+    "files_fully_audited": 14,
+    "files_file_level_inspected": 99,
+    "files_targeted_path_review": 9,
+    "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+    "source_head_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
+    "git_tree_sha": "20dba46a5fcbba83c2d203aef216bcf10d792bf8",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T01-24-KST-related.json",
+    "sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285"
   },
   "full_manifest": {
     "status": "INCOMPLETE_CURRENT_HEAD",
-    "checksum": "0629a676b1768053ca0c529017326057e9dfcf91",
+    "checksum": "0f014b650a7fb84a6028224be3de5205edf36015",
     "checksum_kind": "git_blob_sha1",
-    "sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+    "sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
     "files_checked": 99,
-    "fully_audited_files": 10,
-    "file_count": 214,
-    "files_targeted_path_review": 13,
-    "git_tree_sha": "9187d3264febb9112810b423f56217bb4a73e44e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T00-18-KST-full.json",
-    "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9"
+    "fully_audited_files": 14,
+    "file_count": 215,
+    "files_targeted_path_review": 9,
+    "git_tree_sha": "20dba46a5fcbba83c2d203aef216bcf10d792bf8",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T01-24-KST-full.json",
+    "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285"
   },
   "checks": [
     {
@@ -1842,6 +1841,42 @@
       "status": "completed",
       "conclusion": "success",
       "details": "1689 Linux, 167 Windows, Docker success; pull_request"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
+      "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+      "status": "completed",
+      "conclusion": "success",
+      "run_ids": [
+        41674457223,
+        41674466354
+      ],
+      "jobs": [
+        "Full pytest suite 1736 push/1746 PR; Docker build success",
+        "Windows runtime smoke success"
+      ],
+      "test_first": {
+        "head": "6629238e39e252b049881a256b4c72e4cda23360",
+        "run_ids": [
+          41674168975,
+          41674180595
+        ],
+        "expected_assertion_failures": 56
+      },
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success",
+          "description": "1 security test has passed"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "description": "93 blocking issues"
+        }
+      ],
+      "local_tests_executed": false,
+      "kis_demo_executed": false
     }
   ],
   "upstream_changes": [
@@ -5848,6 +5883,38 @@
       "full_pass": false,
       "stalled_root_cause": "RC-STOPLOSS-ORDER-RECONCILIATION",
       "notes": "No new test-first mock scenario this run. Prior mock fences are not broker-authoritative order fill reconciliation. Current head unchanged. Qlty 93 blocking issues; human review absent; branch policy 403; merge result untested; no demo credentials."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
+      "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "kind": "TEST_FIRST_56_EXPECTED_FAILURES_ROOT_CAUSE_PATCH_57_MOCK_REGRESSIONS_AND_4_NEW_COMPLETE_FILE_REVIEWS",
+      "candidate_count": 14,
+      "verified_candidates": 8,
+      "unverified_candidates": 6,
+      "attempted_new_reproductions": 57,
+      "reproduced_defects": 1,
+      "actual_code_fixes": 1,
+      "new_regression_tests": 57,
+      "red_head": "6629238e39e252b049881a256b4c72e4cda23360",
+      "red_run_ids": [
+        41674168975,
+        41674180595
+      ],
+      "red_failures": 56,
+      "green_run_ids": [
+        41674457223,
+        41674466354
+      ],
+      "green_pytest_pr": 1746,
+      "green_pytest_push": 1736,
+      "related_fully_audited": 14,
+      "full_fully_audited": 14,
+      "related_total": 168,
+      "full_total": 215,
+      "related_pass": false,
+      "full_pass": false,
+      "notes": "Broker transport marker subcases fixed; authoritative UNKNOWN BUY fill/stop attribution remains STALLED. Qlty pending, review 0, policy 403, merge result untested."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5868,14 +5935,14 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "KIS order/fill/cancel/remaining and stop activation not authoritatively reconciled; no demo credentials",
-    "Qlty exact-head success but 93 blocking issues untriaged",
-    "Human review absent",
-    "Branch protection API 403",
-    "PR base snapshot 4a5c3c6 differs from current main e17032ba; no unverified rebase",
-    "Related 2/167 and full 2/214 complete file audits, independent 0/2 + 0/2"
+    "Broker-authoritative UNKNOWN BUY delayed/partial fill, cancel/remaining quantity and stop-loss activation unimplemented; KIS demo credentials absent",
+    "Qlty latest exact-HEAD pending; previous 93 blocking issues not individually triaged",
+    "Independent human approval reviews absent",
+    "Branch protection endpoint HTTP 403; rulesets list empty does not prove policy compliance",
+    "PR base 4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb behind current main e17032bac72c0aebac8a1e4710b2c4b018abc986; merge-result CI not verified",
+    "Related 14/168 and full 14/215 complete file audits; independent 0/2 + 0/2"
   ],
-  "next_action": "Build deterministic test-first mock for order-ID/fill-ID/partial/cancel/remainder reconciliation; review main merge-result compatibility and Qlty 93 findings; continue remaining 157 related/204 total full-file audits. Do not infer fills from aggregate balances.",
+  "next_action": "Build deterministic Mock KIS per-account order-id/fill-id/partial/cancel/remaining reconciliation test-first and implement safe fail-closed attribution; no live orders; then complete transitive manifest and 2+2 independent slot audits.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6685,6 +6752,18 @@
       "full_pass": false,
       "reason": "Only 10/167 related and 10/214 full file audits; no authoritative fill attribution, Qlty 93, review and policy unresolved",
       "manifest_tree_sha": "9187d3264febb9112810b423f56217bb4a73e44e"
+    },
+    {
+      "slot": "2026-11-04T01-24-KST",
+      "run_id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
+      "phase": "related_code_audit",
+      "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "related_pass": false,
+      "full_pass": false,
+      "related_fully_audited": 14,
+      "full_fully_audited": 14,
+      "reason": "New production commit resets independent 0/2 + 0/2; broker fill attribution and external gates incomplete"
     }
   ],
   "discovered_defects": [
@@ -8615,6 +8694,37 @@
       ],
       "fix_commit": "329911a126ae072606ff2ac72c494a79088fb3f9",
       "description": "Missing/nonstring/missing-field KIS balance continuation header previously treated as terminal, could misreport incomplete KR/US holdings as zero"
+    },
+    {
+      "id": "broker-transport-marker-gap-20261104",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Unrecognized connection refusal/ConnectionError/TLS/SSL/HTTP504/proxy disconnect could downgrade ambiguous submission to retryable failed or promote contradictory receipt to executed",
+      "affected_paths": [
+        "trading/execution_outcome.py",
+        "trading/strategies/common.py",
+        "trading/dispatch.py",
+        "trading/execution_ledger.py",
+        "trading/domestic.py",
+        "trading/us.py"
+      ],
+      "test_first_commit": "6629238e39e252b049881a256b4c72e4cda23360",
+      "red_runs": [
+        41674168975,
+        41674180595
+      ],
+      "red_failures": 56,
+      "fix_commits": [
+        "c1077e46fb71ad65d57e00adedbf35ebe8fef285"
+      ],
+      "final_ci": [
+        41674457223,
+        41674466354
+      ],
+      "unverified": [
+        "KIS actual transport semantics and fill attribution"
+      ]
     }
   ],
   "risks": [
@@ -8774,10 +8884,23 @@
         "contradictory-success-timeout-20261102",
         "intermediary-http-4xx-retry-20261103"
       ],
-      "classification": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_KIS_DEMO_INCOMPLETE",
-      "last_checked_head": "cda0c79e0f37eca3733c187be923886385a366b3",
+      "classification": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_KIS_DEMO_PENDING",
+      "last_checked_head": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
       "latest_fix_commits": [
-        "cda0c79e0f37eca3733c187be923886385a366b3"
+        "cda0c79e0f37eca3733c187be923886385a366b3",
+        "c1077e46fb71ad65d57e00adedbf35ebe8fef285"
+      ],
+      "subcases": [
+        {
+          "id": "ADDITIONAL_TRANSPORT_MARKERS_OVERRIDE_FLAGS",
+          "red_head": "6629238e39e252b049881a256b4c72e4cda23360",
+          "red_failures": 56,
+          "fix_head": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+          "ci_run_ids": [
+            41674457223,
+            41674466354
+          ]
+        }
       ]
     },
     {
@@ -10181,8 +10304,8 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "related_manifest_sha": "5c87208d9ed5adaff3a1c1f254ad9124daf5902b",
-  "full_manifest_sha": "0629a676b1768053ca0c529017326057e9dfcf91",
+  "related_manifest_sha": "41d2fd7defa95080320e50b14968830f4428d09d",
+  "full_manifest_sha": "0f014b650a7fb84a6028224be3de5205edf36015",
   "run5_candidate_inventory": [
     {
       "candidate_id": "T5-01",
@@ -10377,5 +10500,387 @@
       "status": "BLOCKED",
       "blocker": "Qlty 93 blocking issues untriaged; human reviews zero; branch protection 403"
     }
-  ]
+  ],
+  "run6_candidate_inventory": [
+    {
+      "candidate_id": "T6-01",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "function": "classify_broker_result",
+      "hypothesis": "Connection refused after submit can override verified rejection",
+      "priority": "HIGH",
+      "reproduction_attempt": "NEW_GITHUB_ACTIONS_TEST_FIRST_41674168975_41674180595",
+      "result": "REPRODUCED",
+      "decision": "PATCHED",
+      "expected_impact": "prevent duplicate broker order or false accepted status",
+      "verification_method": "57-case mock-only pytest and exact-HEAD CI",
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T6-02",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "function": "classify_broker_result",
+      "hypothesis": "ConnectionError upstream disconnect not recognized",
+      "priority": "HIGH",
+      "reproduction_attempt": "NEW_GITHUB_ACTIONS_TEST_FIRST_41674168975_41674180595",
+      "result": "REPRODUCED",
+      "decision": "PATCHED",
+      "expected_impact": "prevent duplicate broker order or false accepted status",
+      "verification_method": "57-case mock-only pytest and exact-HEAD CI",
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T6-03",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "function": "classify_broker_result",
+      "hypothesis": "TLS handshake failure with accepted receipt misclassified executed",
+      "priority": "HIGH",
+      "reproduction_attempt": "NEW_GITHUB_ACTIONS_TEST_FIRST_41674168975_41674180595",
+      "result": "REPRODUCED",
+      "decision": "PATCHED",
+      "expected_impact": "prevent duplicate broker order or false accepted status",
+      "verification_method": "57-case mock-only pytest and exact-HEAD CI",
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T6-04",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "function": "classify_broker_result",
+      "hypothesis": "SSLError EOF after submit can enable duplicate retry",
+      "priority": "HIGH",
+      "reproduction_attempt": "NEW_GITHUB_ACTIONS_TEST_FIRST_41674168975_41674180595",
+      "result": "REPRODUCED",
+      "decision": "PATCHED",
+      "expected_impact": "prevent duplicate broker order or false accepted status",
+      "verification_method": "57-case mock-only pytest and exact-HEAD CI",
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T6-05",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "function": "classify_broker_result",
+      "hypothesis": "HTTP 504 without textual gateway timeout marker misclassified",
+      "priority": "HIGH",
+      "reproduction_attempt": "NEW_GITHUB_ACTIONS_TEST_FIRST_41674168975_41674180595",
+      "result": "REPRODUCED",
+      "decision": "PATCHED",
+      "expected_impact": "prevent duplicate broker order or false accepted status",
+      "verification_method": "57-case mock-only pytest and exact-HEAD CI",
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T6-06",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "ce509d2f657c880ac01899174e528e628be5e82b",
+      "function": "classify_broker_result",
+      "hypothesis": "proxy disconnected with valid-looking receipt promoted to executed",
+      "priority": "HIGH",
+      "reproduction_attempt": "NEW_GITHUB_ACTIONS_TEST_FIRST_41674168975_41674180595",
+      "result": "REPRODUCED",
+      "decision": "PATCHED",
+      "expected_impact": "prevent duplicate broker order or false accepted status",
+      "verification_method": "57-case mock-only pytest and exact-HEAD CI",
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T6-07",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function": "claim/finalize/guard_unresolved_buy",
+      "hypothesis": "KR/US single and multi-account transport UNKNOWN durable restart fence",
+      "priority": "HIGH",
+      "reproduction_attempt": "NEW_GITHUB_ACTIONS_TEST_FIRST_41674168975_41674180595",
+      "result": "REPRODUCED",
+      "decision": "PATCHED_SHARED_CLASSIFIER",
+      "expected_impact": "prevent duplicate broker order or false accepted status",
+      "verification_method": "57-case mock-only pytest and exact-HEAD CI",
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T6-08",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "path": "trading/strategies/common.py",
+      "blob_sha": "12960b7ef2de28cb3427e659208bcd0d5b556ff4",
+      "function": "execution_from_result",
+      "hypothesis": "KR/US strategy result must preserve transport UNKNOWN",
+      "priority": "HIGH",
+      "reproduction_attempt": "NEW_GITHUB_ACTIONS_TEST_FIRST_41674168975_41674180595",
+      "result": "REPRODUCED",
+      "decision": "PATCHED_SHARED_CLASSIFIER",
+      "expected_impact": "prevent duplicate broker order or false accepted status",
+      "verification_method": "57-case mock-only pytest and exact-HEAD CI",
+      "root_cause_subcase": true
+    },
+    {
+      "candidate_id": "T6-09",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "function": "_trigger_sell",
+      "hypothesis": "UNKNOWN BUY late partial fill requires order/fill attribution before actionable stop",
+      "priority": "HIGH",
+      "reproduction_attempt": "PRIOR_MOCK_TESTS_AND_CURRENT_CODE_REVIEW",
+      "result": "UNVERIFIED_BROKER_FILL",
+      "decision": "CARRY_FORWARD_STALLED",
+      "expected_impact": "audit safety gate",
+      "verification_method": "broker-authoritative reconciliation or complete audit",
+      "root_cause_subcase": false
+    },
+    {
+      "candidate_id": "T6-10",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function": "guard_unresolved_buy",
+      "hypothesis": "cancelled BUY partial fill and remaining quantity not authoritatively reconciled",
+      "priority": "HIGH",
+      "reproduction_attempt": "PRIOR_MOCK_TESTS_AND_CURRENT_CODE_REVIEW",
+      "result": "UNVERIFIED_BROKER_REMAINDER",
+      "decision": "CARRY_FORWARD_STALLED",
+      "expected_impact": "audit safety gate",
+      "verification_method": "broker-authoritative reconciliation or complete audit",
+      "root_cause_subcase": false
+    },
+    {
+      "candidate_id": "T6-11",
+      "root_cause_id": "RC-STOPLOSS-SNAPSHOT-TOCTOU",
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "function": "_trigger_sell",
+      "hypothesis": "snapshot and broker workflow lock boundary race",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "PRIOR_MOCK_TESTS_AND_CURRENT_CODE_REVIEW",
+      "result": "EXISTING_MOCK_SNAPSHOT_TEST",
+      "decision": "AUDIT_PENDING",
+      "expected_impact": "audit safety gate",
+      "verification_method": "broker-authoritative reconciliation or complete audit",
+      "root_cause_subcase": false
+    },
+    {
+      "candidate_id": "T6-12",
+      "root_cause_id": "RC-MANUAL-HTTP-RETRY-IDEMPOTENCY",
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "function": "dispatch_manual_order",
+      "hypothesis": "new ticket ID for each armed request may duplicate network retry",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_CODE_AND_GITHUB_METADATA_REVIEW",
+      "result": "UNVERIFIED_INTENTIONAL_TICKET_SEMANTICS",
+      "decision": "NO_SPECULATIVE_PATCH",
+      "expected_impact": "audit safety gate",
+      "verification_method": "broker-authoritative reconciliation or complete audit",
+      "root_cause_subcase": false
+    },
+    {
+      "candidate_id": "T6-13",
+      "root_cause_id": "RC-EXTERNAL-QUALITY-GATES",
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "acbb8d22af42a78a4cea523ea1b6338ea1e35faa",
+      "function": "external statuses",
+      "hypothesis": "Qlty pending, branch policy 403, human review absent",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_CODE_AND_GITHUB_METADATA_REVIEW",
+      "result": "BLOCKED_EXTERNAL",
+      "decision": "NO_PATCH",
+      "expected_impact": "audit safety gate",
+      "verification_method": "broker-authoritative reconciliation or complete audit",
+      "root_cause_subcase": false
+    },
+    {
+      "candidate_id": "T6-14",
+      "root_cause_id": "RC-UPSTREAM-CHANGE-SELECTION",
+      "path": "trading/config_paths.py",
+      "blob_sha": "64e9ac586681ab5144cf6de6582d027ee9abf21e",
+      "function": "active_kis_config_path",
+      "hypothesis": "upstream docs-only H-1103 result has no validated lightweight-fork import",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_CODE_AND_GITHUB_METADATA_REVIEW",
+      "result": "NO_SAFE_IMPORT",
+      "decision": "REJECT_UNNECESSARY_CHANGE",
+      "expected_impact": "audit safety gate",
+      "verification_method": "broker-authoritative reconciliation or complete audit",
+      "root_cause_subcase": false
+    }
+  ],
+  "run6_carry_forward": [
+    {
+      "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "STALLED_AUTHORITATIVE_FILL_ATTRIBUTION",
+      "last_reproduction_run": "41674466354 existing mock fence tests plus new transport mock tests",
+      "unverified_transitions": [
+        "UNKNOWN -> delayed fill",
+        "partial fill -> remaining quantity",
+        "cancel -> final filled remainder",
+        "confirmed fill -> actionable stop"
+      ],
+      "blocker": "No KIS-authoritative order/fill/cancel/remaining API integration; mock safety fences do not activate stops",
+      "delta": "57 new transport classification regression cases; 56 red then all green; +4 complete file reviews; no new authoritative fill attribution"
+    },
+    {
+      "carry_forward_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+      "status": "UNVERIFIED",
+      "blocker": "PR base 4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb differs from main e17032bac72c0aebac8a1e4710b2c4b018abc986; no merge-result CI"
+    },
+    {
+      "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
+      "status": "BLOCKED",
+      "blocker": "Qlty latest exact-head pending; prior 93 issues not triaged; review zero; protection API 403"
+    }
+  ],
+  "run6_financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_outcome.py",
+      "mock_result": "MOCK_PASS; no fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null
+    },
+    {
+      "transition": "UNKNOWN",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_transport_ambiguity_fence.py",
+      "mock_result": "MOCK_PASS; no KIS order ID reconciliation",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null
+    },
+    {
+      "transition": "지연 체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_FENCE_PASS; actual fill attribution BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "부분체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_FENCE_PASS; fill IDs/quantities BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "취소/거절",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_http_rejection_safety.py",
+      "mock_result": "MOCK_PASS; final cancel remainder BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "중복 통지",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS; KIS duplicate events BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "잔여량",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_GUARD_PASS; authoritative remaining BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_pending_buy_stop_loss_safety.py; tests/test_stop_loss_signal_identity.py",
+      "mock_result": "MOCK_FAIL_CLOSED_PASS; activation on confirmed fills BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "다계좌 격리",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_intent_durability.py; tests/test_broker_transport_ambiguity_fence.py",
+      "mock_result": "MOCK_PASS; per-order fill isolation BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    },
+    {
+      "transition": "재시작",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_broker_transport_ambiguity_fence.py; tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_durable_state_directory_sync.py; tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null
+    },
+    {
+      "transition": "복구·재조정",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unresolved_buy_without_stop_loss.py",
+      "mock_result": "MOCK_FENCE_PASS; KIS authoritative recovery BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent"
+    }
+  ],
+  "run6_remediation": {
+    "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+    "subcase": "ADDITIONAL_TRANSPORT_MARKERS_OVERRIDE_CONTRADICTORY_BROKER_FLAGS",
+    "red_test_head": "6629238e39e252b049881a256b4c72e4cda23360",
+    "red_run_ids": [
+      41674168975,
+      41674180595
+    ],
+    "red_failures": 56,
+    "red_passed_pr": 1690,
+    "fix_head": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+    "fix_commit": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+    "changed_files": [
+      "trading/execution_outcome.py",
+      "tests/test_broker_transport_ambiguity_fence.py"
+    ],
+    "regression_tests_added": 57,
+    "regression_tests_run": 57,
+    "green_runs": [
+      41674457223,
+      41674466354
+    ],
+    "green_push_tests": 1736,
+    "green_pr_tests": 1746,
+    "green_windows_smoke": "SUCCESS",
+    "green_docker": "SUCCESS",
+    "mock_only": true,
+    "real_orders": 0,
+    "demo_orders": 0,
+    "unverified": [
+      "broker-authoritative fill/cancel/remaining reconciliation",
+      "KIS demo",
+      "Qlty/review/policy/merge-result CI"
+    ]
+  }
 }
