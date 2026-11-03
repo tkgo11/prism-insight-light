@@ -605,6 +605,48 @@ class TradeDispatcher:
     ) -> DispatchResult:
         try:
             async with _serialized_broker_workflow():
+                if (
+                    signal.signal_type == "SELL"
+                    and signal.sell_reason == "stop_loss"
+                    and not self.dry_run
+                ):
+                    # The watcher checks its snapshot before dispatch, but a
+                    # second BUY can acquire a durable claim between that check
+                    # and broker serialization. Re-check *inside* the shared
+                    # broker workflow lock, before any KR/US/account SELL path.
+                    # Other automatic dispatchers cannot register a new BUY
+                    # while this lock is held. No aggregate balance is proof
+                    # of per-order fill attribution.
+                    def unresolved_buy_before_stop_sell() -> bool:
+                        with self.execution_ledger.guard_unresolved_buy(
+                            signal.market, signal.ticker
+                        ) as unresolved:
+                            return unresolved
+
+                    try:
+                        unresolved = await asyncio.to_thread(
+                            unresolved_buy_before_stop_sell
+                        )
+                    except Exception:
+                        logger.exception(
+                            "Blocking automatic stop SELL for %s %s: BUY intent "
+                            "ledger cannot be verified", signal.market, signal.ticker,
+                        )
+                        return DispatchResult(
+                            "deferred",
+                            "BUY intent ledger unavailable; operator reconciliation required",
+                            signal.signal_type, signal.market,
+                        )
+                    if unresolved:
+                        logger.critical(
+                            "Blocking automatic stop SELL for %s %s: "
+                            "unresolved BUY fill attribution", signal.market, signal.ticker,
+                        )
+                        return DispatchResult(
+                            "deferred",
+                            "Unresolved BUY; broker-authoritative fill reconciliation required",
+                            signal.signal_type, signal.market,
+                        )
                 if self.multi_account_enabled:
                     result = await self.multi_account_dispatcher.dispatch(
                         signal,
