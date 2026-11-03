@@ -1,4 +1,4 @@
-"""Mock-only UNKNOWN BUY late/partial-fill, cancellation and crash fences.
+"""Mock-only UNKNOWN BUY late/partial-holding, rejection and crash fences.
 
 A changing aggregate balance is not order-ID/fill-ID attribution. These tests
 assert safe suppression, NOT that an eventually filled BUY has an active stop.
@@ -60,7 +60,7 @@ def test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop(
     )
     assert claimed and token
     ledger.finalize("late-buy-" + market, "unknown", claim_token=token)
-    # A delayed contradictory callback is not authoritative cancellation.
+    # A delayed contradictory callback is not broker-authoritative reconciliation.
     ledger.finalize("late-buy-" + market, late_callback, claim_token=token)
     restarted = ExecutionLedger(ledger.path)
     assert restarted.claim("late-buy-" + market) == (False, "unknown")
@@ -80,7 +80,7 @@ def test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop(
 
 
 @pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
-def test_multi_account_one_unknown_leg_survives_cancelled_other_leg_restart(
+def test_multi_account_one_unknown_leg_survives_rejected_other_leg_restart(
     tmp_path, market, ticker
 ):
     path = tmp_path / "ledger.json"
