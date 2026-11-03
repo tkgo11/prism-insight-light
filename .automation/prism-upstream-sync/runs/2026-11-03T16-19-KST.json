@@ -122,6 +122,9 @@
   "cas": {
     "acquired_commit": "c4a0b88221d36cf90f5d50d495555c3f491f7bbd",
     "state_parent": "76570e0393a94116324eeaa6b00a6a99d75de427",
-    "release": "PENDING"
-  }
+    "release": "RELEASED",
+    "release_parent_sha": "b089c5977e3562c4fa1513370b51dccb04f09f40"
+  },
+  "released_at": "2026-11-03T07:27:50.294Z",
+  "pr_comment_id": 6597924030
 }
