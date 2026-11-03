@@ -1,5 +1,7 @@
 cryptography>=50.0.0,<51.0.0
 google-cloud-pubsub>=2.18.0
+# Security floor for google-auth's transitive ASN.1 decoder dependency.
+pyasn1>=0.6.5,<0.7.0
 holidays~=0.68
 pandas-market-calendars>=4.0.0
 python-dotenv>=1.0.0
