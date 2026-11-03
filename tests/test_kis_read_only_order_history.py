@@ -177,3 +177,83 @@ def test_us_demo_query_must_use_unfiltered_broker_order_number():
     assert calls[0][2]["ODNO"] == ""
     assert calls[0][2]["PDNO"] == ""
     assert calls[0][2]["CCLD_NCCS_DVSN"] == "00"
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_unknown_continuation_header_must_not_claim_complete(market):
+    response = MockHistoryResponse([_row(market)], market=market)
+    response.getHeader = lambda: SimpleNamespace(tr_cont="?")
+    trader, _ = _trader(market, [response])
+    result = _read(trader, market)
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_conflicting_cumulative_fill_snapshot_is_not_a_final_fill(market):
+    first = MockHistoryResponse([
+        _row(market, ord_qty="10", tot_ccld_qty="2", rmn_qty="8", ccld_no="FILL1")
+    ], more=True, market=market)
+    second = MockHistoryResponse([
+        _row(market, ord_qty="10", tot_ccld_qty="4", rmn_qty="6", ccld_no="FILL1")
+    ], market=market)
+    trader, _ = _trader(market, [first, second])
+    result = _read(trader, market)
+    assert result["status"] == "UNVERIFIED"
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_duplicate_history_row_is_not_double_counted(market):
+    row = _row(market, ord_qty="10", tot_ccld_qty="4", rmn_qty="6", ccld_no="FILL1")
+    trader, _ = _trader(market, [
+        MockHistoryResponse([row], more=True, market=market),
+        MockHistoryResponse([dict(row)], market=market),
+    ])
+    result = _read(trader, market)
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert len(result["matches"]) == 1
+    assert result["matches"][0]["filled_quantity"] == 4
+    assert result["matches"][0]["remaining_quantity"] == 6
+    assert result["matches"][0]["execution_id"] == "FILL1"
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_account_mismatch_in_broker_row_is_not_attributed(market):
+    trader, _ = _trader(market, [MockHistoryResponse([
+        _row(market, cano="87654321")
+    ], market=market)])
+    result = _read(trader, market)
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_pagination_limit_does_not_return_partial_proof(market):
+    trader, calls = _trader(market, [
+        MockHistoryResponse([_row(market)], more=True, market=market),
+    ])
+    result = _read(trader, market, max_pages=1)
+    assert result["status"] == "UNVERIFIED"
+    assert result["matches"] == []
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_restart_requery_remains_non_actionable(market):
+    snapshots = []
+    for _ in range(2):
+        trader, _ = _trader(market, [MockHistoryResponse([
+            _row(market, ord_qty="10", tot_ccld_qty="4", rmn_qty="6")
+        ], market=market)])
+        snapshots.append(_read(trader, market))
+    assert all(s["can_activate_stop"] is False for s in snapshots)
+    assert snapshots[0]["matches"] == snapshots[1]["matches"]
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_invalid_date_fails_before_broker_query(market):
+    trader, calls = _trader(market, [])
+    with pytest.raises(ValueError):
+        _read(trader, market, order_date="20261340")
+    assert calls == []
