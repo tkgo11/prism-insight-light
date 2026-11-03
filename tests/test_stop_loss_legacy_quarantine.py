@@ -267,3 +267,36 @@ def test_stop_loss_failed_atomic_replace_preserves_original_bytes(tmp_path, monk
         tracker.record_position("US", "MSFT", 80, entry_price=95)
     assert path.read_bytes() == original
     assert not list(tmp_path.glob(".positions.json.*.tmp"))
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("corruption", [
+    "non_mapping", "missing_identity", "mismatched_ticker",
+    "nan_stop", "missing_stop", "nonfinite_entry",
+])
+def test_corrupt_canonical_tracker_cannot_be_overwritten_on_new_registration(
+    tmp_path, market, ticker, corruption
+):
+    """A later BUY must not erase quarantined stop evidence under the same key."""
+    path = tmp_path / "stops.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position(market, ticker, 90, entry_price=100)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    key = f"{market}:{ticker}"
+    if corruption == "non_mapping":
+        data[key] = None
+    elif corruption == "missing_identity":
+        data[key].pop("market")
+    elif corruption == "mismatched_ticker":
+        data[key]["ticker"] = "000660" if market == "KR" else "MSFT"
+    elif corruption == "nan_stop":
+        data[key]["stop_loss"] = "NaN"
+    elif corruption == "missing_stop":
+        data[key].pop("stop_loss")
+    elif corruption == "nonfinite_entry":
+        data[key]["entry_price"] = "Infinity"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    original = path.read_bytes()
+    assert tracker.get_positions(market) == []
+    with pytest.raises(ValueError, match="operator reconciliation"):
+        tracker.record_position(market, ticker, 80, entry_price=110)
+    assert path.read_bytes() == original
