@@ -4,17 +4,15 @@
   "state": "ACTIVE_DRAFT_MOCK_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T14-19-KST-turn11",
-    "result": "LEGACY_OPAQUE_LEDGER_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
-    "last_mutation_commit": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
-    "previous_state_branch_sha": "25f7a014d68685803c82bf11a0eccba995eaa963",
-    "started_at": "2026-11-03T06:20:32Z",
-    "completed_at": "2026-11-03T06:28:47.369Z",
-    "evidence_commit": "4cfaba5876686be8bed0c17e438798b393b9175c",
-    "released_at": "2026-11-03T06:29:03.651Z",
-    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T15-20-KST.json"
+    "id": "prism-sync-hourly-2026-11-03T16-19-KST-run11",
+    "lock_owner": "prism-sync-hourly-2026-11-03T16-19-KST-run11",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+    "result": "WEBUI_MANUAL_BUY_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
+    "last_mutation_commit": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+    "previous_state_branch_sha": "76570e0393a94116324eeaa6b00a6a99d75de427",
+    "started_at": "2026-11-03T07:19:14Z",
+    "completed_at": "2026-11-03T07:27:25.252Z",
+    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T16-19-KST.json"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -33,7 +31,7 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+    "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
@@ -110,28 +108,28 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "f594f60f98462322d6467bdcd5a5c52b45542fae",
+    "checksum": "c90eb62772781eee566b83851981dd0cdf057980",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 95,
+    "scope_estimate": 98,
     "files_fully_audited": 0,
-    "files_file_level_inspected": 49,
-    "files_targeted_path_review": 5,
-    "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+    "files_file_level_inspected": 51,
+    "files_targeted_path_review": 11,
+    "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "7ab9f3b4b57db779d9d0c86e79eea823a7c264ef",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T15-20-KST-related.json"
+    "git_tree_sha": "e09dca88d4e90a75b956e19c736936c09952a060",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T16-19-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "896c81084ae8219274f6da40568c880b7a3c2561",
+    "checksum": "ea614230606393b308723b81a6d7f1eddba656ed",
     "checksum_kind": "git_blob_sha1",
-    "sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
-    "files_checked": 50,
+    "sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+    "files_checked": 52,
     "fully_audited_files": 0,
-    "file_count": 184,
-    "files_targeted_path_review": 5,
-    "git_tree_sha": "7ab9f3b4b57db779d9d0c86e79eea823a7c264ef",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T15-20-KST-full.json"
+    "file_count": 185,
+    "files_targeted_path_review": 11,
+    "git_tree_sha": "e09dca88d4e90a75b956e19c736936c09952a060",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T16-19-KST-full.json"
   },
   "checks": [
     {
@@ -1728,6 +1726,30 @@
         }
       ],
       "kis_demo": "NOT_RUN"
+    },
+    {
+      "run_id": 41596017506,
+      "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: 1553 passed + Docker build",
+        "Windows runtime smoke: 167 passed"
+      ],
+      "security": "Snyk success",
+      "qlty": "success status, 94 blocking issues"
+    },
+    {
+      "run_id": 41596023001,
+      "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: 1553 passed + Docker build",
+        "Windows runtime smoke: 167 passed"
+      ],
+      "security": "Snyk success",
+      "qlty": "success status, 94 blocking issues"
     }
   ],
   "upstream_changes": [
@@ -5424,6 +5446,39 @@
         "human review",
         "branch policy 403"
       ]
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T16-19-KST-run11",
+      "kind": "TEST_FIRST_MOCK_REPRODUCED_PATCH_EXACT_HEAD_CI_SUCCESS_PARTIAL_AUDIT_NO_PASS",
+      "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "related_pass": false,
+      "full_pass": false,
+      "test_first_commit": "b18feb8afee46e37e42ef10273854a39ee7dc949",
+      "test_first_run_id": 41595738896,
+      "test_first_result": "5 failed, 1547 passed; mock assertions/absence of ledger, not import or infrastructure",
+      "patch_commits": [
+        "21f05b4484647c769260b3bd3b8b8f78625898d5",
+        "7b37b93583e4a25b85ce866c5dba9fe27ee1b596",
+        "83ddfccb78db7cb66e9664476f598e3bb6b23606"
+      ],
+      "latest_ci_run_ids": [
+        41596017506,
+        41596023001
+      ],
+      "latest_ci": "1553 Linux passed, 167 Windows passed, Docker built",
+      "files_inspected": [
+        "webui/services/trade_service.py",
+        "webui/routes/trading.py",
+        "webui/services/account_service.py",
+        "trading/dispatch.py",
+        "trading/execution_ledger.py",
+        "trading/stop_loss_watcher.py",
+        "tests/test_webui_manual_buy_durable_intent.py"
+      ],
+      "related_manifest": ".automation/prism-upstream-sync/manifests/2026-11-03T16-19-KST-related.json",
+      "full_manifest": ".automation/prism-upstream-sync/manifests/2026-11-03T16-19-KST-full.json",
+      "notes": "No KIS orders; manual BUY persisted before mocked submission, KR/US/restart/storage-failure and multi-account tests; no independent complete audit. Qlty 94 untriaged blocking issues, human review absent, branch protection 403."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5451,7 +5506,7 @@
     "Manual/WebUI execution_dedupe=False BUY path unverified; mock reproduction required",
     "Independent related/full 2-slot audit incomplete; related 0/2 full 0/2"
   ],
-  "next_action": "First mock-reproduce manual/WebUI execution_dedupe=False ambiguous BUY + old confirmed stop zero-holdings race; reconcile legacy opaque protected claims only with broker evidence; then inspect Qlty 94 findings and continue per-file audits. KIS demo and branch-protection review blocked; no live trading.",
+  "next_action": "Prioritize broker-authoritative per-order fill/partial/cancel/remaining and stop activation reconciliation in mock-only paths; triage 94 Qlty findings, complete per-file transitive audit 2 independent slots then full tree 2 slots, human review and branch protection policy; no KIS demo/live orders.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6155,6 +6210,18 @@
       "full_pass": false,
       "reason": "49/95 related and 50/184 whole file-level inspected, zero complete independent audits; KIS fill attribution, Qlty 94 findings, human review and branch policy unavailable",
       "manifest_tree_sha": "7ab9f3b4b57db779d9d0c86e79eea823a7c264ef"
+    },
+    {
+      "slot": "2026-11-03T16-19-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T16-19-KST-run11",
+      "phase": "related_code_audit",
+      "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "51/98 related and 52/185 whole file-level inspected; 0 fully audited; KIS fill attribution, 94 Qlty issues, review and branch protection unresolved",
+      "manifest_tree_sha": "e09dca88d4e90a75b956e19c736936c09952a060"
     }
   ],
   "discovered_defects": [
@@ -7900,6 +7967,54 @@
         "Branch protection API 403"
       ],
       "recurrence_count": 0
+    },
+    {
+      "id": "webui-manual-buy-no-durable-intent-20261103",
+      "root_cause_id": "RC-MANUAL-BUY-DEDUPEDISABLED-PENDING-FENCE",
+      "subcase": "WEBUI_MANUAL_BUY_NO_DURABLE_INTENT",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_BROKER_RECONCILIATION_AND_AUDIT_BLOCKED",
+      "description": "An explicitly armed WebUI BUY bypassed the durable execution ledger via execution_dedupe=False, so UNKNOWN/accepted manual BUY lacked account-scoped intent and could evade stop-loss zero-holdings/SELL fences. The manual order now has a unique server-generated ticket ID and uses durable pre-submit claims; separate intentional manual tickets remain distinct.",
+      "prepatch_blob_sha": "fc70caf328b37cca66b47c7024bb7b9cf2524de6",
+      "test_first_commit": "b18feb8afee46e37e42ef10273854a39ee7dc949",
+      "test_first_ci_run_id": 41595738896,
+      "expected_failures": 5,
+      "passes_before_fix": 1547,
+      "fix_commits": [
+        "21f05b4484647c769260b3bd3b8b8f78625898d5",
+        "7b37b93583e4a25b85ce866c5dba9fe27ee1b596",
+        "83ddfccb78db7cb66e9664476f598e3bb6b23606"
+      ],
+      "affected_paths": [
+        "webui/services/trade_service.py",
+        "tests/test_webui_manual_buy_durable_intent.py",
+        "trading/STRATEGIES.md"
+      ],
+      "affected_blobs": {
+        "webui/services/trade_service.py": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+        "tests/test_webui_manual_buy_durable_intent.py": "eb7c816267b8b08e899e84fd752bde67d07de93e",
+        "trading/STRATEGIES.md": "65adb322efb0bcd103045ad122d1d5d0d3f3d758"
+      },
+      "validation": {
+        "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+        "actions_run_ids": [
+          41596017506,
+          41596023001
+        ],
+        "linux_pytest_passed": 1553,
+        "windows_smoke_passed": 167,
+        "docker": "success",
+        "snyk": "success_no_manifest_changes",
+        "qlty": "success_with_94_uninspected_blocking_issues",
+        "kis_demo": "NOT_RUN"
+      },
+      "unverified": [
+        "Per-order KIS fill/partial/cancel/remaining reconciliation and stop activation",
+        "Explicit new manual re-arm can duplicate an unresolved broker order; operator reconciliation required",
+        "Legacy opaque orders remain quarantined",
+        "Independent 2+2 audits, human review, branch protection 403"
+      ],
+      "recurrence_count": 0
     }
   ],
   "risks": [
@@ -8508,10 +8623,29 @@
         "b082b161650863eee8f79d510afdef0c2d379ca9"
       ],
       "recurrence_count": 0
+    },
+    {
+      "root_cause_id": "RC-MANUAL-BUY-DEDUPEDISABLED-PENDING-FENCE",
+      "description": "An explicitly armed WebUI BUY bypassed the durable execution ledger via execution_dedupe=False, so UNKNOWN/accepted manual BUY lacked account-scoped intent and could evade stop-loss zero-holdings/SELL fences. The manual order now has a unique server-generated ticket ID and uses durable pre-submit claims; separate intentional manual tickets remain distinct.",
+      "defect_ids": [
+        "webui-manual-buy-no-durable-intent-20261103"
+      ],
+      "recurrence_count": 0,
+      "classification": "MOCK_REPRODUCED_CODE_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "fix_commits": [
+        "21f05b4484647c769260b3bd3b8b8f78625898d5",
+        "7b37b93583e4a25b85ce866c5dba9fe27ee1b596",
+        "83ddfccb78db7cb66e9664476f598e3bb6b23606"
+      ],
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ]
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "b082b161650863eee8f79d510afdef0c2d379ca9",
+    "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
     "scope": "Mock-only all-BUY intent and stop SELL broker lock/case safety; KIS fill attribution unresolved",
     "entries": [
       {
@@ -9151,15 +9285,31 @@
     },
     {
       "id": "RC-MANUAL-BUY-DEDUPEDISABLED-PENDING-FENCE",
-      "severity": "UNVERIFIED_RISK",
-      "status": "STATIC_PATH_REVIEW_ONLY_NO_MOCK_REPRODUCTION",
-      "description": "WebUI manual TradeDispatcher uses execution_dedupe=False; no BUY order_intent ledger claim is evident. A manual ambiguous BUY could evade watcher pending fence. Requires mock KR/US/manual impact contract and operator workflow review before modifying behavior.",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_BLOCKED",
+      "description": "An explicitly armed WebUI BUY bypassed the durable execution ledger via execution_dedupe=False, so UNKNOWN/accepted manual BUY lacked account-scoped intent and could evade stop-loss zero-holdings/SELL fences. The manual order now has a unique server-generated ticket ID and uses durable pre-submit claims; separate intentional manual tickets remain distinct.",
       "paths": [
         "webui/services/trade_service.py",
         "trading/dispatch.py",
         "trading/execution_ledger.py"
       ],
-      "first_action": "Mock manual BUY timeout + old confirmed tracker zero inquiry; confirm no durable intent and impact; no real KIS orders"
+      "first_action": "Mock manual BUY timeout + old confirmed tracker zero inquiry; confirm no durable intent and impact; no real KIS orders",
+      "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "fix_commits": [
+        "21f05b4484647c769260b3bd3b8b8f78625898d5",
+        "7b37b93583e4a25b85ce866c5dba9fe27ee1b596",
+        "83ddfccb78db7cb66e9664476f598e3bb6b23606"
+      ],
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ],
+      "unverified": [
+        "Per-order KIS fill/partial/cancel/remaining reconciliation and stop activation",
+        "Explicit new manual re-arm can duplicate an unresolved broker order; operator reconciliation required",
+        "Legacy opaque orders remain quarantined",
+        "Independent 2+2 audits, human review, branch protection 403"
+      ]
     }
   ],
   "previous_active_pr_at_manual_merge": {
