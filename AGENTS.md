@@ -1,20 +1,23 @@
 # PRISM-INSIGHT Light repository guidance
 
-Use `.agents/skills/prism-insight-light/SKILL.md` for project conventions.
+Use `.agents/skills/prism-insight-light/SKILL.md` for project-specific patterns.
 
-The project-local Codex maintenance skills are:
-- `.agents/skills/autonomous-maintainer/SKILL.md` (OMX variant)
-- `.agents/skills/autonomous-maintainer-standalone/SKILL.md` (standalone variant)
+Autonomous maintenance skills use a pinned Git Submodule dependency:
+- OMX: `.agents/skills/autonomous-maintainer/SKILL.md`
+- Standalone: `.agents/skills/autonomous-maintainer-standalone/SKILL.md`
+  (a local adapter reading the upstream
+  `.agents/skills/autonomous-maintainer/standalone/SKILL.md`)
 
-Invoke a repository-wide maintenance skill only after explicit user authorization.
-Skill synchronization only installs skill instructions; it must not launch an
-autonomous maintenance run. For all skill-guided tasks, prioritize accepted
-trading-safety contracts and repository protections over broad rewrites.
+If the submodule has not been initialized, run
+`git submodule update --init --recursive`. Verify with
+`python scripts/check_autonomous_maintainer_dependency.py`.
+Dependabot proposes reviewed updates of the pinned commit; updates do not
+run the autonomous maintenance agent.
 
-Do not place live orders, deploy trading changes, disable stop-loss protections,
-weaken tests, or merge high-impact changes without the established safety gates.
-Use fixtures, mocks, demo mode, and dry-run before any real-account behavior.
-Never commit KIS/GCP secrets, account identifiers, tokens or live configuration.
+Only invoke repository-wide maintenance after explicit user authorization.
+Preserve all finance, KIS, stop-loss, mock/demo, regression-test, fail-closed,
+pre-PR approval, and deployment controls. Do not make live trades or merge
+safety-critical changes without separate authorization. Never commit secrets,
+account numbers, tokens, or live configuration.
 
-Run relevant tests and review all affected consumer paths. Record failures and
-limitations accurately. See `docs/AUTONOMOUS_MAINTAINER.md` for auto-updates.
+See `docs/AUTONOMOUS_MAINTAINER.md` for dependency and update instructions.

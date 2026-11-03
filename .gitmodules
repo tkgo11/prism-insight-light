@@ -1,0 +1,4 @@
+[submodule ".agents/skills/autonomous-maintainer"]
+	path = .agents/skills/autonomous-maintainer
+	url = https://github.com/tkgo11/autonomous-maintainer.git
+	branch = main
