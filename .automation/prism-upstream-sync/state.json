@@ -1,18 +1,22 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "ACTIVE_LOCKED_AUDIT_IN_PROGRESS",
+  "state": "ACTIVE_DRAFT_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
-    "lock_owner": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
+    "lock_owner": null,
     "previous_run_id": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
     "started_at": "2026-11-03T11:16:17Z",
     "lock_expected_pr_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
     "lock_expected_main_sha": "d9d68ae2c96cf9e609376aaee1b21c811240ca35",
     "lock_expected_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
     "lock_expected_state_branch_sha": "b178d8db9edbce5b13f99c44dedb1567f53d4be0",
-    "status": "LOCKED"
+    "status": "RELEASED",
+    "completed_at": "2026-11-03T11:29:31Z",
+    "final_pr_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+    "final_state_expected_parent_sha": "9d6cab4085a70fb73dae1b84d13abf89b66ede74",
+    "cas_release_verified": "PENDING_REF_UPDATE"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -25,18 +29,18 @@
   "target": {
     "repository": "tkgo11/prism-insight-light",
     "default_branch": "main",
-    "base_sha": "fbd1ee28d2fb4a380ed6ca6178c17c2c7dd7cd17",
-    "main_head_sha": "fbd1ee28d2fb4a380ed6ca6178c17c2c7dd7cd17"
+    "base_sha": "d9d68ae2c96cf9e609376aaee1b21c811240ca35",
+    "main_head_sha": "d9d68ae2c96cf9e609376aaee1b21c811240ca35"
   },
   "active_pr": {
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_RESYNCED_CI_OBSERVED_AUDIT_BLOCKED",
+    "status": "DRAFT_EXACT_HEAD_CI_SUCCESS_RELATED_AND_FULL_AUDITS_BLOCKED",
     "base_ref": "main"
   },
   "candidates": [
@@ -109,30 +113,30 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "RESYNCED_PROVISIONAL_INCOMPLETE",
-    "checksum": "8710e5f933f3c003d8c1fff241ba55f615da88d5",
+    "status": "INCOMPLETE_CURRENT_HEAD",
+    "checksum": "cc0db546c97d6527a2ee0e2357d417a7a4b2568f",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 165,
+    "scope_estimate": 166,
     "files_fully_audited": 0,
-    "files_file_level_inspected": 59,
-    "files_targeted_path_review": 7,
-    "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "files_file_level_inspected": 70,
+    "files_targeted_path_review": 9,
+    "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "7c1347eaf1a98c3b49053936053f15e11ed559e3",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/manual-resync-2026-11-03T10-27-02-534Z-related.json"
+    "git_tree_sha": "ed99e421c4f2afdfa4f1e5b3ed53e893c2026888",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T20-16-KST-related.json"
   },
   "full_manifest": {
-    "status": "RESYNCED_INCOMPLETE",
-    "checksum": "8485c958c5ece0ad8e56ea358262e0682a36b06c",
+    "status": "INCOMPLETE_CURRENT_HEAD",
+    "checksum": "64f35ab71ef8e9eace691dd8ff54872f46c2c8a9",
     "checksum_kind": "git_blob_sha1",
-    "sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
-    "files_checked": 59,
+    "sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+    "files_checked": 70,
     "fully_audited_files": 0,
-    "file_count": 212,
-    "files_targeted_path_review": 7,
-    "git_tree_sha": "7c1347eaf1a98c3b49053936053f15e11ed559e3",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/manual-resync-2026-11-03T10-27-02-534Z-full.json",
-    "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5"
+    "file_count": 213,
+    "files_targeted_path_review": 9,
+    "git_tree_sha": "ed99e421c4f2afdfa4f1e5b3ed53e893c2026888",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T20-16-KST-full.json",
+    "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f"
   },
   "checks": [
     {
@@ -1794,6 +1798,20 @@
       "status": "completed",
       "conclusion": "success",
       "details": "1583 pytest, 167 Windows, Docker success"
+    },
+    {
+      "run_id": 41627709878,
+      "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+      "status": "completed",
+      "conclusion": "success",
+      "details": "1644 Linux pytest, 167 Windows, Docker success; event push"
+    },
+    {
+      "run_id": 41627717361,
+      "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+      "status": "completed",
+      "conclusion": "success",
+      "details": "1654 Linux pytest, 167 Windows, Docker success; event pull_request"
     }
   ],
   "upstream_changes": [
@@ -1997,6 +2015,14 @@
       "changed_files": 41,
       "decision": "NO_IMPORT",
       "reason": "Changed paths are BTC research/execution, US compression, intuition and ADD design; no verified compatible change to lightweight fork"
+    },
+    {
+      "scope": "2026-11-03T20-16-KST",
+      "upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "commits_ahead": 47,
+      "changed_files": 41,
+      "decision": "NO_IMPORT",
+      "reason": "Fresh pinned-to-latest comparison: BTC research/scenario, US compression, intuition and ADD-only; no independently verified lightweight KIS subscriber contract change."
     }
   ],
   "risk_register": [
@@ -5586,6 +5612,69 @@
       "full_manifest_sha": "a9de33be33ce0f2a6254a8ee3f2ed86cd0787362",
       "notes": "8 genuine queued KR/US assertion failures; 2 verified rejection controls passed; 1583 latest-head pytest and Windows/Docker passed. No KIS orders; broker fill attribution and full audit remain incomplete.",
       "qlty": "success_with_94_blocking_issues_untriaged"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
+      "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+      "kind": "FIVE_TEST_FIRST_REPRODUCTIONS_FIXED_AND_TARGETED_FILE_LEVEL_REVIEW_NOT_INDEPENDENT_PASS",
+      "root_cause_id": "RC-IMPLICIT-LIVE-MODE-FALLBACK",
+      "prepatch_red_run_id": 41627191820,
+      "prepatch_failed_assertions": 5,
+      "final_ci_run_ids": [
+        41627709878,
+        41627717361
+      ],
+      "inspected_paths": [
+        "tests/test_dispatch_cancellation_safety.py",
+        "tests/test_stop_loss_account_selection.py",
+        "tests/test_queue_corrupt_entry_recovery.py",
+        "tests/test_strategy_partial_matrix.py",
+        "tests/test_off_hours_policy.py",
+        "tests/test_market_hours.py",
+        "trading/modes.py",
+        "trading/strategy_names.py",
+        "trading/config_paths.py",
+        "trading/market_hours.py",
+        "tests/test_implicit_live_config_safety.py",
+        "tests/test_signal_integer_precision.py"
+      ],
+      "blob_shas": {
+        "tests/test_dispatch_cancellation_safety.py": "4064f0c775f8dd76f5567fde1452ea5b5c1b15b7",
+        "tests/test_implicit_live_config_safety.py": "bb8921553e8855fcf6e7f46d44ffd311f64c00c6",
+        "tests/test_market_hours.py": "7e140a732dcd94b75fbdcd65cd0ea3476ad49364",
+        "tests/test_off_hours_policy.py": "4b456a6973113ac26c27972923e16fde247e9fb2",
+        "tests/test_queue_corrupt_entry_recovery.py": "1f4fac4e9857bc59156e50de1d780de989b51026",
+        "tests/test_signal_integer_precision.py": "7f149439d02cc84c0fda7e7d3dcab0b5f6060180",
+        "tests/test_stop_loss_account_selection.py": "f3e992bb83678d3c60d920f7ec36816f98820ca4",
+        "tests/test_strategy_partial_matrix.py": "a57d37d6acf86f34b0334793d135a02af7d53d9f",
+        "trading/config_paths.py": "64e9ac586681ab5144cf6de6582d027ee9abf21e",
+        "trading/market_hours.py": "931a5689ac00ae81b1c7ae3958bae295119a5cb9",
+        "trading/modes.py": "49caad45c48992394cc00b090495cb1bc4cbbd85",
+        "trading/strategy_names.py": "2fbd9fd37b9b37c6fd1fdf532de5c09809e94705"
+      },
+      "targeted_only": [
+        "trading/domestic.py",
+        "trading/us.py",
+        "tests/test_balanced_risk_strategy.py",
+        "trading/config/kis_devlp.yaml.example",
+        "README.en.md",
+        "README.ko.md",
+        "trading/dispatch.py",
+        "trading/stop_loss_watcher.py",
+        "trading/execution_ledger.py"
+      ],
+      "related_manifest_sha": "cc0db546c97d6527a2ee0e2357d417a7a4b2568f",
+      "full_manifest_sha": "64f35ab71ef8e9eace691dd8ff54872f46c2c8a9",
+      "related_scope": 166,
+      "related_file_level_inspected": 70,
+      "full_scope": 213,
+      "full_file_level_inspected": 70,
+      "files_fully_audited": 0,
+      "related_pass": false,
+      "full_pass": false,
+      "real_orders": 0,
+      "demo_orders": 0,
+      "notes": "No broker order/fill/cancel/remaining attribution; qlty pending; human review absent; branch protection 403; PR base diverged from main."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5606,13 +5695,14 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "Qlty exact-head status success but 94 blocking issues uninspected; Snyk success; human review absent",
-    "Branch protection API 403 Resource not accessible by integration; rulesets GET []",
-    "Broker-authoritative order/fill/partial/cancel/remaining reconciliation and KIS demo evidence absent; live trading prohibited",
-    "Unknown BUY late fill remains without broker-authoritative stop activation; legacy opaque claims require operator reconciliation",
-    "Independent related/full 2-slot audit incomplete; related 0/2 full 0/2"
+    "KIS per-order ID/fill ID/partial/cancel/remaining and stop activation not reconciled; no demo access",
+    "Qlty exact-head pending; prior findings not triaged",
+    "Human review absent",
+    "Branch protection API 403",
+    "PR branch diverged 5 main commits and has not been safely rebased",
+    "Related/full independent 2+2 audits incomplete"
   ],
-  "next_action": "Review latest PR head/changed files and unknown BUY reconciliation; revalidate main movement and dependencies; do not award PASS before full independent slots",
+  "next_action": "Inspect exact-head Qlty status and main divergence under CAS; design mock KIS per-order attribution test before any stop activation; continue file-level audit and independent PASS gates.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6353,6 +6443,24 @@
       "related_manifest_sha": "8f83c52513f8fbd6f8a7468883597d2646a7c2c6",
       "full_manifest_sha": "a9de33be33ce0f2a6254a8ee3f2ed86cd0787362",
       "reason": "New code; only 58/98 related and 59/185 whole file-level inspected, 0 fully audited; KIS fill attribution, qlty, review and branch policy outstanding"
+    },
+    {
+      "slot": "2026-11-03T20-16-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
+      "phase": "related_code_audit",
+      "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "related_pass": false,
+      "full_pass": false,
+      "related_manifest_sha": "cc0db546c97d6527a2ee0e2357d417a7a4b2568f",
+      "full_manifest_sha": "64f35ab71ef8e9eace691dd8ff54872f46c2c8a9",
+      "related_file_level_inspected": 70,
+      "related_scope": 166,
+      "full_file_level_inspected": 70,
+      "full_scope": 213,
+      "reason": "Code changed; zero complete independent audits; KIS order/fill attribution absent; qlty pending, human review absent, policy 403 and main drift."
     }
   ],
   "discovered_defects": [
@@ -8187,6 +8295,38 @@
         41611344744,
         41611353781
       ]
+    },
+    {
+      "id": "implicit-example-real-mode-without-operator-config-20261103",
+      "root_cause_id": "RC-IMPLICIT-LIVE-MODE-FALLBACK",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_NOT_REAL_BROKER",
+      "description": "Without an operator KIS config, shipped example default_mode real and auto_trading true selected live trading mode; missing explicit config and missing default_mode also silently selected real; KR/US direct constructors inherited example real default.",
+      "affected_paths": [
+        "trading/config_paths.py",
+        "trading/market_hours.py",
+        "trading/domestic.py",
+        "trading/us.py",
+        "trading/config/kis_devlp.yaml.example",
+        "README.en.md",
+        "README.ko.md",
+        "tests/test_implicit_live_config_safety.py",
+        "tests/test_balanced_risk_strategy.py"
+      ],
+      "test_first_ci_run": 41627191820,
+      "expected_failures": 5,
+      "fix_commits": [
+        "0b39eff1e5a2313287d19e0f1e813982fc196b43",
+        "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f"
+      ],
+      "final_ci_run_ids": [
+        41627709878,
+        41627717361
+      ],
+      "unverified": [
+        "No KIS demo integration",
+        "Independent audit gates and review"
+      ]
     }
   ],
   "risks": [
@@ -8829,10 +8969,33 @@
       ],
       "test_first_commit": "7ae5431a818a37276db393d393243ae2c9ea40b0",
       "recurrence_count": 0
+    },
+    {
+      "root_cause_id": "RC-IMPLICIT-LIVE-MODE-FALLBACK",
+      "description": "Without an operator KIS config, shipped example default_mode real and auto_trading true selected live trading mode; missing explicit config and missing default_mode also silently selected real; KR/US direct constructors inherited example real default.",
+      "classification": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_NOT_REAL_BROKER",
+      "first_detected_run": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
+      "last_checked_head": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+      "test_first_ci_run": 41627191820,
+      "fix_commits": [
+        "0b39eff1e5a2313287d19e0f1e813982fc196b43",
+        "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f"
+      ],
+      "final_ci_run_ids": [
+        41627709878,
+        41627717361
+      ],
+      "recurrence_count": 0,
+      "unverified": [
+        "No real/demo KIS trade performed",
+        "Actual credentials/config deployment semantics not integrated-tested",
+        "Independent related/full 2+2 audits",
+        "Qlty pending, review absent, policy 403"
+      ]
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+    "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
     "scope": "Mock-only all-BUY intent and stop SELL broker lock/case safety; KIS fill attribution unresolved",
     "entries": [
       {
@@ -9140,6 +9303,29 @@
           41603148658,
           41603156354
         ]
+      },
+      {
+        "invariant": "No implicit example/missing KIS config can select real trading mode; explicit real config remains operator-controlled",
+        "paths": [
+          "trading/config_paths.py",
+          "trading/market_hours.py",
+          "trading/domestic.py",
+          "trading/us.py",
+          "trading/config/kis_devlp.yaml.example"
+        ],
+        "failure_modes": [
+          "example default_mode real",
+          "explicit config missing",
+          "default_mode absent",
+          "direct KR/US constructor defaults"
+        ],
+        "test": "tests/test_implicit_live_config_safety.py",
+        "prepatch_red": 41627191820,
+        "final_ci": [
+          41627709878,
+          41627717361
+        ],
+        "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_NOT_LIVE_BROKER"
       }
     ],
     "closure_verified": false
@@ -9546,6 +9732,26 @@
         "KIS demo response semantics and stop activation",
         "Qlty findings; current status pending, previous 94 blocking issues untriaged",
         "Human review absent, branch-protection 403, 2+2 audits incomplete"
+      ]
+    },
+    {
+      "id": "RC-IMPLICIT-LIVE-MODE-FALLBACK",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_NOT_REAL_BROKER",
+      "description": "Without an operator KIS config, shipped example default_mode real and auto_trading true selected live trading mode; missing explicit config and missing default_mode also silently selected real; KR/US direct constructors inherited example real default.",
+      "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+      "fix_commits": [
+        "0b39eff1e5a2313287d19e0f1e813982fc196b43",
+        "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f"
+      ],
+      "ci_run_ids": [
+        41627709878,
+        41627717361
+      ],
+      "unverified": [
+        "KIS demo not run",
+        "qlty pending",
+        "2+2 independent audits"
       ]
     }
   ],

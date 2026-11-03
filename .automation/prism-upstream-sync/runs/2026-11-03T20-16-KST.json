@@ -1,0 +1,167 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
+  "started_at": "2026-11-03T11:16:17Z",
+  "completed_at": "2026-11-03T11:29:31Z",
+  "state_branch_prelock": "b178d8db9edbce5b13f99c44dedb1567f53d4be0",
+  "state_branch_lock_commit": "9d6cab4085a70fb73dae1b84d13abf89b66ede74",
+  "cas_lock_owner": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
+  "cas_release_intended": true,
+  "pr_number": 43,
+  "pr_draft": true,
+  "pr_head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d9d68ae2c96cf9e609376aaee1b21c811240ca35",
+  "upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "git_tree_sha": "ed99e421c4f2afdfa4f1e5b3ed53e893c2026888",
+  "tracked_files": 213,
+  "related_files": 166,
+  "previous_risk_reproduction": {
+    "risk": "UNKNOWN BUY timeout -> late/partial fill -> stop-loss not attributable",
+    "action": "Re-ran existing exact-head full pytest on pre-change PR and inspected KR/US delayed-fill mock cases and ledger/stop guards; new broker-order-ID/fill-ID integration not implemented",
+    "rerun_workflow_id": 41617016803,
+    "rerun_attempt": 2,
+    "rerun_head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "rerun_conclusion": "success",
+    "latest_full_suite_includes": [
+      "tests/test_unknown_buy_delayed_fill_fence.py",
+      "tests/test_unresolved_buy_without_stop_loss.py",
+      "tests/test_unknown_buy_intent_durability.py"
+    ],
+    "new_specific_late_fill_scenarios": 0,
+    "broker_authoritative_reconciliation": "NOT_RUN_NO_KIS_DEMO_CREDENTIALS"
+  },
+  "root_cause_id": "RC-IMPLICIT-LIVE-MODE-FALLBACK",
+  "root_cause": "Without an operator KIS config, shipped example default_mode real and auto_trading true selected live trading mode; missing explicit config and missing default_mode also silently selected real; KR/US direct constructors inherited example real default.",
+  "classification": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_NOT_REAL_BROKER",
+  "affected_paths": [
+    "trading/config_paths.py",
+    "trading/market_hours.py",
+    "trading/domestic.py",
+    "trading/us.py",
+    "trading/config/kis_devlp.yaml.example",
+    "README.en.md",
+    "README.ko.md",
+    "tests/test_implicit_live_config_safety.py",
+    "tests/test_balanced_risk_strategy.py"
+  ],
+  "test_first_commits": [
+    "c001f9298c315e142179d8c8434ed4d2b6254200",
+    "fd790dfcdbb11849f0bdea645ab3ebaa2c0298c2",
+    "cd961243c20806ffd72a1eeda24713d488c4d8b6"
+  ],
+  "test_first_ci": {
+    "valid_red_run_id": 41627191820,
+    "head_sha": "cd961243c20806ffd72a1eeda24713d488c4d8b6",
+    "expected_failures": 5,
+    "other_passed": 1639,
+    "infrastructure_error_run_id": 41627095502,
+    "infrastructure_error": "Subprocess script used escaped literal newlines, corrected in cd961243; 5 genuine failures verified after correction"
+  },
+  "fix_commits": [
+    "0b39eff1e5a2313287d19e0f1e813982fc196b43",
+    "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f"
+  ],
+  "first_patch_ci": {
+    "run_id": 41627470696,
+    "head_sha": "0b39eff1e5a2313287d19e0f1e813982fc196b43",
+    "failures": 1,
+    "passes": 1643,
+    "reason": "Pre-existing test expected real example default; stale contract assertion updated"
+  },
+  "final_ci": [
+    {
+      "id": 41627709878,
+      "event": "push",
+      "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+      "status": "completed",
+      "conclusion": "success",
+      "linux_pytest_passed": 1644,
+      "windows_smoke_passed": 167,
+      "docker": "success"
+    },
+    {
+      "id": 41627717361,
+      "event": "pull_request",
+      "head_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+      "status": "completed",
+      "conclusion": "success",
+      "linux_pytest_passed": 1654,
+      "windows_smoke_passed": 167,
+      "docker": "success"
+    }
+  ],
+  "external_checks": {
+    "snyk": "success",
+    "qlty": "pending",
+    "qlty_prior_findings": "94 previously untriaged; current exact-head count not verified"
+  },
+  "review": "none",
+  "branch_protection": "403 Resource not accessible by integration",
+  "rulesets": "[]",
+  "KIS_demo": "NOT_RUN",
+  "live_orders": 0,
+  "real_orders": 0,
+  "upstream_comparison": {
+    "pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "latest_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "commits_ahead": 47,
+    "changed_paths": 41,
+    "decision": "NO_IMPORT",
+    "reason": "BTC research/scenario, US compression, ADD and intuition-only paths; no verified compatible lightweight KIS subscriber contract changes"
+  },
+  "audit": {
+    "related": {
+      "total": 166,
+      "file_level": 70,
+      "targeted": 9,
+      "fully_audited": 0
+    },
+    "full": {
+      "total": 213,
+      "file_level": 70,
+      "targeted": 9,
+      "fully_audited": 0
+    },
+    "related_passes": "0/2",
+    "full_passes": "0/2",
+    "manifest_paths": [
+      ".automation/prism-upstream-sync/manifests/2026-11-03T20-16-KST-related.json",
+      ".automation/prism-upstream-sync/manifests/2026-11-03T20-16-KST-full.json"
+    ],
+    "inspected_this_slot": [
+      "tests/test_dispatch_cancellation_safety.py",
+      "tests/test_stop_loss_account_selection.py",
+      "tests/test_queue_corrupt_entry_recovery.py",
+      "tests/test_strategy_partial_matrix.py",
+      "tests/test_off_hours_policy.py",
+      "tests/test_market_hours.py",
+      "trading/modes.py",
+      "trading/strategy_names.py",
+      "trading/config_paths.py",
+      "trading/market_hours.py",
+      "tests/test_implicit_live_config_safety.py",
+      "tests/test_signal_integer_precision.py"
+    ],
+    "targeted_only": [
+      "trading/domestic.py",
+      "trading/us.py",
+      "tests/test_balanced_risk_strategy.py",
+      "trading/config/kis_devlp.yaml.example",
+      "README.en.md",
+      "README.ko.md",
+      "trading/dispatch.py",
+      "trading/stop_loss_watcher.py",
+      "trading/execution_ledger.py"
+    ],
+    "independent_pass": false
+  },
+  "blockers": [
+    "KIS per-order ID/fill ID/partial/cancel/remaining and stop activation not reconciled; no demo access",
+    "Qlty exact-head pending; prior findings not triaged",
+    "Human review absent",
+    "Branch protection API 403",
+    "PR branch diverged 5 main commits and has not been safely rebased",
+    "Related/full independent 2+2 audits incomplete"
+  ],
+  "resume_first_action": "Inspect exact-head Qlty status and main divergence under CAS; design mock KIS per-order attribution test before any stop activation; continue file-level audit and independent PASS gates."
+}
