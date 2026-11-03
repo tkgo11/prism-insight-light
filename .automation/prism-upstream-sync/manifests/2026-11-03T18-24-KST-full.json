@@ -1,0 +1,1591 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
+  "slot": "2026-11-03T18-24-KST",
+  "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+  "git_tree_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+  "upstream_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "status": "REBUILT_INCOMPLETE",
+  "audit_pass": false,
+  "independent_audit_slot_passes": 0,
+  "closure_verified": false,
+  "reason": "8 queued KR/US mock regression assertions failed on test-first HEAD; shared dispatch/queued multi-account fence patch exact-head Actions green, but 2+2 complete audits, authoritative fills, review, qlty and branch policy blocked",
+  "files_fully_audited": 0,
+  "files_file_level_inspected": 59,
+  "scope": "185 files; 59 file-level inspected, 7 targeted-only; 0 fully audited",
+  "files": [
+    {
+      "path": ".agents/skills/prism-insight-light/SKILL.md",
+      "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".agents/skills/prism-insight-light/agents/openai.yaml",
+      "blob_sha": "5b0f9ea241f62d302b5839f4036482bf034780ba",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".claude/ecc-tools.json",
+      "blob_sha": "2c893f7ba0b42ffc1788839737763e55ec4a4150",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".claude/homunculus/instincts/inherited/prism-insight-light-instincts.yaml",
+      "blob_sha": "aa4e351b89edd631eddb9443243430ed5c8324e3",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".claude/identity.json",
+      "blob_sha": "f033d29c5f7e28e61dd4824401d288ab168e0d97",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".claude/skills/prism-insight-light/SKILL.md",
+      "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".codex/AGENTS.md",
+      "blob_sha": "c7dda2d79ee76ddcbcdd2c723b8839ee75abb0eb",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".codex/agents/docs-researcher.toml",
+      "blob_sha": "ecf4557e443fe460177527c96d387015180823a0",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".codex/agents/explorer.toml",
+      "blob_sha": "e57fb3b60c010bd5e53a1af3f3883ec65707bcff",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".codex/agents/reviewer.toml",
+      "blob_sha": "827de0a18c6398d8e2209a69da471165e1de4c6d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".codex/agents/test-planner.toml",
+      "blob_sha": "d880784d3839d1478b2ba83120d39dff5a3245e2",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".codex/config.toml",
+      "blob_sha": "cb590f808b9ebddc43444c1fbf6f0673ef718302",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".dockerignore",
+      "blob_sha": "2b8213e1a84f4221cc5784743cf2d6e7b58d0edb",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".env.example",
+      "blob_sha": "1337983d8e65c504c500e11e331abc7fb16c3c30",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "11be975d457a88139ee8326c15c4aabb664db895",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 81-line workflow checked: Linux full pytest + Docker build, Windows smoke; CI success on exact head",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": ".gitignore",
+      "blob_sha": "35a1af29fde81bfff3c4b24895ad91dc2da3870c",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "Dockerfile",
+      "blob_sha": "3b0dead05078f0e16e37b53aa0c4d16d0a8e7733",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "LICENSE",
+      "blob_sha": "be3f7b28e564e7dd05eaf59d64adba1a4065ac0e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "README.en.md",
+      "blob_sha": "956ae8767ce601712b8f6600c65002f5a4ab3d7d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "README.ko.md",
+      "blob_sha": "b0d37c4c45dd12373b6ed2780b0f2cec3da362c1",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "README.md",
+      "blob_sha": "125dcddda02de2d1e1e377d38bb54ab0764f1156",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "check_pubsub_readiness.py",
+      "blob_sha": "2ce8388379013b3bac9c792fb4425080cd18892f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "32ccef1a4a5604cb0137009b5fff991d1f8a8290",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "install_prism_docker.sh",
+      "blob_sha": "c4461aed3bf4358f7fbe2fdda7f13d6a3d87c8ce",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "pubsub_readiness.py",
+      "blob_sha": "41e5e02faf1b5a57a10407ec8075f8dc71f2f129",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "pytest.ini",
+      "blob_sha": "fd7e79a47a073d76514c770332b0258e63fc0045",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "renovate.json",
+      "blob_sha": "16674ff993b4b61a24948ecd1b14f4e6758a71fd",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "blob_sha": "90aee653b4f09cb5667daa34e804a9c88d8b8b76",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "requirements.txt",
+      "blob_sha": "9da639b5835a16b5df9b729b267729b623594258",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "setup_subscriber_crontab.sh",
+      "blob_sha": "5571b59b6bf010fb86e662573d4008ea9f617fba",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "setup_subscriber_docker_crontab.sh",
+      "blob_sha": "50e4462e7e52962936e157dc25d2c6e155142131",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "subscriber.py",
+      "blob_sha": "479a0a1ffb3e2ab17404171db47bcbf847a30bdd",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "Targeted parse_signal_bytes -> dispatch inbound path inspected; full subscriber audit incomplete",
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "tests/conftest.py",
+      "blob_sha": "b35b9f428d5a66510ed8abdab2052361f1a181ff",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_balance_split_strategy.py",
+      "blob_sha": "209fda023339f96b178c7e97058806e7ff5cd743",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "blob_sha": "bf10730694946dd6ed0cdf3f8cdb11f2da155e21",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_broker_http_rejection_safety.py",
+      "blob_sha": "8603c39807bdb6075ca319310d10928fed81dd41",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 84-line mock suite reviewed; added seven nonstandard-2xx durable UNKNOWN replay-fence cases, existing 408/409/425/429/499 and 200/400/422 controls",
+      "lines_reviewed": 84,
+      "tests": [
+        "tests/test_broker_http_rejection_safety.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_broker_portfolio_pagination_safety.py",
+      "blob_sha": "9b97b9eb7428f589ca912f158cea9b27a0735781",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 278-line KIS pagination mock suite reviewed; 8 test-first assertion failures (1555 other passes), 20 new boundary cases, latest-head 1573 pytest passed.",
+      "lines_reviewed": 181,
+      "tests": [
+        "tests/test_broker_portfolio_pagination_safety.py"
+      ],
+      "ci_head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "ci_runs": [
+        41603148658,
+        41603156354
+      ]
+    },
+    {
+      "path": "tests/test_buy_sizing.py",
+      "blob_sha": "b3ef619dfee6ed59920bcaeab54ef29efcf1d76e",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 109 lines inspected; valid asset-percent cap, fixed sizing, nonfinite/boolean config and trader construction controls",
+      "tests": [
+        "tests/test_buy_sizing.py",
+        "tests/test_percent_buy_account_summary_finite.py"
+      ]
+    },
+    {
+      "path": "tests/test_check_pubsub_readiness.py",
+      "blob_sha": "e0765d4513357ff046a5bcf7aeb567d8e4d10859",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_cooldown_pending_reconciliation.py",
+      "blob_sha": "722173fa7eb4c1018facbe515a0ba020eaad841a",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 170-line suite; test-first 2 real failures on 30-day legacy missing-pending records, KR/US; final assertions verify no broker calls, state unchanged; CI 1452 pass",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "tests/test_direct_cron_script.py",
+      "blob_sha": "d14481c2a3dbe1c591a4134a28fd4c5901cf505a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_dispatch.py",
+      "blob_sha": "4ee5e6dc26144c865e52f98d47c39ec445aa4def",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 567-line dispatch mock suite inspected; KR/US receipts, timeout, duplicate suppression, exception fence, stop tracker failure and queue paths. Latest-head full pytest covers cases.",
+      "ci_head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "ci_runs": [
+        41603148658,
+        41603156354
+      ]
+    },
+    {
+      "path": "tests/test_docker_installer_smoke.py",
+      "blob_sha": "b649c7713a170b89733861a5e82487b1e585a765",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_durable_state_directory_sync.py",
+      "blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 61-line POSIX durability suite; fsync parent after replace for four state writers; failed fsync preserves pending claim",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "tests/test_effective_order_metadata.py",
+      "blob_sha": "cdb0a523f5a94e606b77ac0b6f1518dd4c03ea84",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 146-line strategy metadata mock suite inspected; BUY effective amount and SELL fraction labels, not broker fill proof. Latest-head full pytest covers cases.",
+      "ci_head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "ci_runs": [
+        41603148658,
+        41603156354
+      ]
+    },
+    {
+      "path": "tests/test_execution_ledger_retention.py",
+      "blob_sha": "5f11a8322caaec8945fb8ecf422f928f8f8be721",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 235 lines inspected: retained unknown/executed/in-progress, capacity, duplicate JSON keys, invalid timestamps, terminal monotonicity, stale attempt token, release and restart; exact-head pytest 1450 passed",
+      "tests": [
+        "tests/test_execution_ledger_retention.py",
+        "tests/test_unknown_buy_delayed_fill_fence.py",
+        "tests/test_unknown_buy_intent_durability.py"
+      ],
+      "ci_head_sha": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
+      "ci_runs": [
+        41565880471
+      ]
+    },
+    {
+      "path": "tests/test_execution_outcome.py",
+      "blob_sha": "e87b7a346750ef7ce5d0f9df4e39506a7e440917",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire receipt, rejection, ambiguity, restart regression suite inspected for expected outcome and replay fence",
+      "lines_reviewed": 258,
+      "tests": [
+        "test_explicit_broker_rejection_is_failed",
+        "test_unverified_apbk_message_preserves_duplicate_claim_after_restart"
+      ],
+      "ci_head_sha": "cda0c79e0f37eca3733c187be923886385a366b3",
+      "ci_runs": [
+        41509041355,
+        41509049043
+      ]
+    },
+    {
+      "path": "tests/test_financial_sizing_audit.py",
+      "blob_sha": "3f311e0f82bf704231ec008894bc661dd53084de",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Lines 1-112 and remaining test inventory inspected; existing fractional budget controls did not cover direct KR/US _resolve_buy_amount invalid KIS summaries"
+    },
+    {
+      "path": "tests/test_inbound_json_duplicate_keys.py",
+      "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 67-line duplicate-key suite inspected; Pub/Sub, Telegram and WebUI duplicate sizing/instrument rejection and nested distinct keys. Latest-head full pytest covers cases.",
+      "ci_head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "ci_runs": [
+        41603148658,
+        41603156354
+      ]
+    },
+    {
+      "path": "tests/test_kis_auth_token_paths.py",
+      "blob_sha": "2aad283cf196af6ceaaa302bac51baad2d70eadf",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_legacy_unattributed_buy_fence.py",
+      "blob_sha": "a98fa4b0fd2a45e29c8389f35a2868f5d59f7075",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 22-case mock-only suite reviewed: legacy KR/US unknown/in_progress/executed, watcher cleanup, modern SELL, malformed side, single/multi dispatch",
+      "tests": [
+        "tests/test_legacy_unattributed_buy_fence.py",
+        "tests/test_queue_execution_context.py"
+      ],
+      "ci_head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+      "ci_runs": [
+        41589812317,
+        41589818296
+      ]
+    },
+    {
+      "path": "tests/test_market_hours.py",
+      "blob_sha": "7e140a732dcd94b75fbdcd65cd0ea3476ad49364",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_dispatch.py",
+      "blob_sha": "f62a91164f46ce7a103e419b10fdc60be611ac3f",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 347-line account dispatch suite inspected; per-account failure isolation, scoped identities, queue target migration, disabled accounts and replay. Latest-head full pytest covers cases.",
+      "ci_head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "ci_runs": [
+        41603148658,
+        41603156354
+      ]
+    },
+    {
+      "path": "tests/test_multi_account_domestic.py",
+      "blob_sha": "17bc20fe8ef1cc399cf1dde6d9a1f85e6cf3415d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_empty_balance_fail_closed.py",
+      "blob_sha": "c569088f272834d3e20829d7b15fc1dfa8ce0964",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 22-line KR/US empty account configuration regression; missing account is not zero holdings",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "tests/test_multi_account_kis_auth.py",
+      "blob_sha": "a46c30438ab16495e1780f9a47d3e02cf096e718",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_multi_account_us.py",
+      "blob_sha": "e436d319568f7761d270508990d491c90cd23625",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_off_hours_policy.py",
+      "blob_sha": "4b456a6973113ac26c27972923e16fde247e9fb2",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_partial_exit_stop_loss_safety.py",
+      "blob_sha": "b99e699d9c376654c50ca640524840d5c851166e",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 77-line mock suite; post-SELL 0 versus 3 holdings, failed holdings query preserves tracker; accepted receipt not equated with fill",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+      "blob_sha": "5653e71c581605e39e223801ec88d2156f10d71b",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full revised 191-line suite inspected; direct zero cleanup and unresolved BUY stop SELL fence",
+      "lines_reviewed": 191,
+      "tests": [
+        "tests/test_unresolved_buy_without_stop_loss.py",
+        "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "ci_head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
+      "ci_runs": [
+        41554799563,
+        41554792686
+      ]
+    },
+    {
+      "path": "tests/test_pending_buy_stop_loss_safety.py",
+      "blob_sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 208-line pending BUY suite reviewed: zero holdings/restart, unrelated positive holdings, manual confirmed controls, multi-account partial acceptance, no automatic SELL for unresolved BUY",
+      "lines_reviewed": 208,
+      "tests": [
+        "tests/test_pending_buy_stop_loss_safety.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_percent_buy_account_summary_finite.py",
+      "blob_sha": "d12d25430518753c31e3fed197ea743360ff4b8a",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 118-line new mock-only regression suite inspected: 31 test-first failures on KR/US adapter paths, additional zero-USD auto-exchange and huge finite assets boundary controls; final CI pending",
+      "tests": [
+        "tests/test_buy_sizing.py",
+        "tests/test_percent_buy_account_summary_finite.py"
+      ]
+    },
+    {
+      "path": "tests/test_profit_band_config_integrity.py",
+      "blob_sha": "b9219d4918af9788b5913f1f579da2595e17de9a",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 49 lines read; duplicate profit thresholds, malformed shape and pre-broker rejection.",
+      "lines_reviewed": 49,
+      "ci_head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "ci_runs": [
+        41611344744,
+        41611353781
+      ]
+    },
+    {
+      "path": "tests/test_pubsub_readiness.py",
+      "blob_sha": "cda94ccff0897c4228793cde03bd0d6cb5f5a006",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_queue_and_account_sizing.py",
+      "blob_sha": "1f2765d5f033f4eb01a6f0a5f02a35e0d6dcaf21",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 74 lines read; queue signal fractions and per-account mock budget checks.",
+      "lines_reviewed": 74,
+      "ci_head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "ci_runs": [
+        41611344744,
+        41611353781
+      ]
+    },
+    {
+      "path": "tests/test_queue_execution_context.py",
+      "blob_sha": "be2b011657ada3eb7adffbbf700bd665660659bf",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 312 lines inspected including queued pinned account mock claim signature and BUY intent assertion",
+      "lines_reviewed": 312,
+      "tests": [
+        "tests/test_legacy_unattributed_buy_fence.py",
+        "tests/test_queue_execution_context.py"
+      ],
+      "ci_head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+      "ci_runs": [
+        41589812317,
+        41589818296
+      ]
+    },
+    {
+      "path": "tests/test_runtime_paths.py",
+      "blob_sha": "cd12299bb5d5f037484087ee1cf98f5f1a557ef7",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 151-line runtime relocation and isolated dry-run tests inspected; exact-head Linux CI green",
+      "tests": [
+        "tests/test_runtime_paths.py"
+      ],
+      "lines_reviewed": 151,
+      "ci_head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "ci_runs": [
+        41519143559,
+        41519155758
+      ]
+    },
+    {
+      "path": "tests/test_schema.py",
+      "blob_sha": "fa42823b5396ef94551ba85a63336bfa0f7a02da",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_score_band_config_integrity.py",
+      "blob_sha": "354910f908f6f05d7ce856f26efa088bf5d6aadb",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 79 lines read; duplicate numeric threshold aliases, boolean and range rejection.",
+      "lines_reviewed": 79,
+      "ci_head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "ci_runs": [
+        41611344744,
+        41611353781
+      ]
+    },
+    {
+      "path": "tests/test_score_max_capital_strategy.py",
+      "blob_sha": "22c6a7382015fc5376cc05ffb56df4e9f3fe4633",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_exit_strategies.py",
+      "blob_sha": "9f4a3ecd43942b220e7ae302dbfd1460dff23246",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_integer_precision.py",
+      "blob_sha": "7f149439d02cc84c0fda7e7d3dcab0b5f6060180",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_safety.py",
+      "blob_sha": "faf586e4764459a9379ff86d79bd15f5a954e823",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_signal_schema.py",
+      "blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_stop_loss_legacy_quarantine.py",
+      "blob_sha": "fdfcb6b42acf6e3035387b91307f4363bd2fafa9",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 270-line legacy stop tracker suite inspected; duplicate/case variant quarantine, invalid price and atomic persistence. Latest-head full pytest covers cases.",
+      "ci_head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "ci_runs": [
+        41603148658,
+        41603156354
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_mismatched_key_quarantine.py",
+      "blob_sha": "3ac8519a8bb699d499b891b6fa0d78ec7955265d",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire new 102-line offline regression module reviewed; five mock/edge tests; test-first 2 failed then exact-head 1314 passed",
+      "tests": [
+        "tests/test_stop_loss_mismatched_key_quarantine.py"
+      ],
+      "lines_reviewed": 102,
+      "ci_head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "ci_runs": [
+        41519143559,
+        41519155758
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_signal_identity.py",
+      "blob_sha": "82be94f9dff37d58d5f333b33297309b332b03e8",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 72-line identity rotation, legacy ID migration and invalid persisted ID quarantine regressions",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_snapshot_preflight.py",
+      "blob_sha": "e5227529f3ae172150702cddc56915b85258c5ee",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 84-line mock suite reviewed: stale edited/removed/legacy/pending/unreadable snapshots blocked; unchanged confirmed snapshot control; final preflight-to-broker TOCTOU remains unverified",
+      "lines_reviewed": 84,
+      "tests": [
+        "tests/test_stop_loss_snapshot_preflight.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_strategy_market_order.py",
+      "blob_sha": "64ac3bb603c87a4fbce01a6694830487d1783ce8",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full KR/US market/limit strategy regression reviewed; internal marker added to trusted fixture; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 106,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_watcher.py",
+      "blob_sha": "6d3b312ec8f0e974c1aeb543ee730ac4dbd387bd",
+      "status": "TARGETED_SOURCE_REVIEW_CI_SUCCESS_NOT_FULL_AUDIT",
+      "inspection": "Targeted revised code paths inspected in tests/test_stop_loss_watcher.py; full transitive file audit incomplete",
+      "tests": [
+        "tests/test_unresolved_buy_without_stop_loss.py",
+        "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "ci_head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
+      "ci_runs": [
+        41554799563,
+        41554792686
+      ]
+    },
+    {
+      "path": "tests/test_strategy_partial_matrix.py",
+      "blob_sha": "a57d37d6acf86f34b0334793d135a02af7d53d9f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_strategy_runtime_fail_closed.py",
+      "blob_sha": "cb4120f4c6cb765de42765655773166f0c909f75",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 152-line invalid JSON, nonfinite, corrupt timestamp, trailing/riskoff state and disk failure tests",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "tests/test_strategy_semantic_state_safety.py",
+      "blob_sha": "ab1e6b1ab76b96f5f8c9d05bb94a06e4f544e9c4",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 101-line invalid cooldown/risk-off record cases; duplicate and malformed scopes fail closed",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "blob_sha": "a76728d36349b4d36f47d1a2629a43f8e5f39692",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_subscriber_smoke.py",
+      "blob_sha": "baaad276d08c5ff7fde4f413401bf75e2282a45a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_telegram_fetch.py",
+      "blob_sha": "a1b8a93f4012e422a14c2d97d3eccbfb2160aa80",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_telegram_signal_worker.py",
+      "blob_sha": "0acfab8090d6b2bb62634eb1b724659dd04c9398",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "blob_sha": "5948c68eb7ad145cb8d5640c16938086ebfbed8d",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 129-line mock-only UNKNOWN BUY KR/US late/partial/restart/finalize-persistence suite reviewed; corrected literal backslash-n that commented out 6 assertions; 6 mistaken expectation failures corrected to assert blocked result, no SELL submitted",
+      "tests": [
+        "tests/test_execution_ledger_retention.py",
+        "tests/test_unknown_buy_delayed_fill_fence.py",
+        "tests/test_unknown_buy_intent_durability.py"
+      ],
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "tests/test_unknown_buy_intent_durability.py",
+      "blob_sha": "067f69b773d7d1a17a8f51fc6e04a02684d0c83a",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 183-line mock suite reviewed: UNKNOWN BUY pre-submit durable intent, restart, per-account separation, no secret leakage, persistence failure prevents broker call",
+      "lines_reviewed": 183,
+      "tests": [
+        "tests/test_unknown_buy_intent_durability.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_unresolved_buy_without_stop_loss.py",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 424-line mock suite including new 10 queued KR/US multi-account cases; 8 expected red assertions, 2 rejected controls green, 1583 exact-head tests green; no broker fills attributed",
+      "blob_sha": "7751ce96f23a336c8ed5a5dd15aac35e6f505deb",
+      "tests": [
+        "tests/test_unresolved_buy_without_stop_loss.py",
+        "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+        "tests/test_stop_loss_watcher.py"
+      ],
+      "ci_head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "ci_runs": [
+        41611344744,
+        41611353781
+      ],
+      "lines_reviewed": 424
+    },
+    {
+      "path": "tests/test_upstream_signal_sizing.py",
+      "blob_sha": "b4e98d37f1708ef203be0263172e795e9a94e075",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_upstream_strategy_compatibility.py",
+      "blob_sha": "c60e3d868f8ee231dac4caf23a0fd5a0b2f4782a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_watcher_origin_spoofing.py",
+      "blob_sha": "d51905a710f75ac1403eef339e2a202f61b64d6b",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full mock regression reviewed: forged publisher ID, aliases, cross-ticker, whitespace, restart and legitimate watcher; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 213,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "tests/test_watcher_strategy_bypass.py",
+      "blob_sha": "49ec5a4c90a67d731fb62b2db997957a4550824b",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full KR/US strategy routing regression reviewed; internal marker added to watcher-only fixtures; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 125,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "tests/test_wave4_execution_safety.py",
+      "blob_sha": "38ecc2cffd3a21f6bfdc78f9d17a4e1d8e6abd59",
+      "status": "TARGETED_REVIEW_NOT_FULLY_AUDITED",
+      "inspection": "Targeted new KR/US BUY and SELL adapter tests (28 cases) inspected; full 1158-line suite NOT independently fully audited",
+      "tests": [
+        "test_nonstandard_2xx_cannot_prove_kis_order_rejection",
+        "test_nonstandard_2xx_cannot_prove_kis_sell_rejection"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "tests/test_webui_console.py",
+      "blob_sha": "378b6a6da0bf820e39faa300d9a1448febbcacdf",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_webui_dry_run_service.py",
+      "blob_sha": "282d2334943f32dab5ed9e700d9ad4440ae7e2ed",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_webui_log_service.py",
+      "blob_sha": "e81b04d2c3a9fafc3e5237d51784220e5565441e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_webui_manual_buy_durable_intent.py",
+      "blob_sha": "eb7c816267b8b08e899e84fd752bde67d07de93e",
+      "status": "FILE_LEVEL_INSPECTED_CI_PENDING_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire six-case mock suite authored/reviewed; KR/US timeout, durable write failure, explicit repeated orders, multi-account; latest-head CI pending",
+      "ci_head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ]
+    },
+    {
+      "path": "tests/test_webui_queue_service.py",
+      "blob_sha": "eb9f2b0207d83c7f45540f64473bbd89c0c36138",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_webui_readiness_service.py",
+      "blob_sha": "344cadc082a6b7a10fa66da01d2ce8344b6626de",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_webui_routes.py",
+      "blob_sha": "78e80e83844ae183349143d560039350479113e9",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "Manual arming/nonce replay/concurrency tests inspected; remainder not full",
+      "ci_head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ]
+    },
+    {
+      "path": "tests/test_webui_security.py",
+      "blob_sha": "d25e2cdba7c6ea5c5279ab032cfe4d30d99f43fa",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_webui_signal_service.py",
+      "blob_sha": "3b4aa6628f88c9b415e01ee86eb9941a73787547",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_webui_startup.py",
+      "blob_sha": "999f9a3cd0ac77e3ff9003e95e7c0b6b288b3f63",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/test_webui_telegram_service.py",
+      "blob_sha": "556d9084efb712c5adca05c6366c85d4a7134481",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/webui_browser_smoke.cjs",
+      "blob_sha": "53aec023f1b2e3d3148853d02a35f2a0804df34e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "tests/webui_fixture_server.py",
+      "blob_sha": "9e2ee38cb00c41375f1f7cc0711106aebe483639",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/STRATEGIES.md",
+      "blob_sha": "65adb322efb0bcd103045ad122d1d5d0d3f3d758",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "Legacy opaque-order quarantine and manual-order contract sections inspected; remainder not full",
+      "ci_head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ]
+    },
+    {
+      "path": "trading/__init__.py",
+      "blob_sha": "a0326b8406920998e8dbe830d120148840ddfe01",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/buy_sizing.py",
+      "blob_sha": "bae6cd582801b40d70ad8054e3eb2de189fb746b",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 130-line helper inspected after 31 expected KR/US mock failures: finite account summary, missing/boolean fields, negative cash, nonfinite fallback; percent auto-exchange zero-cash contract preserved; final CI pending",
+      "tests": [
+        "tests/test_buy_sizing.py",
+        "tests/test_percent_buy_account_summary_finite.py"
+      ]
+    },
+    {
+      "path": "trading/config/kis_devlp.yaml.example",
+      "blob_sha": "1379c70fefdcb41ede63ff0bbd00eb4d9ef417e9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/config_paths.py",
+      "blob_sha": "578fec77b343c894898937dda04d8819e215d1a6",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire config path module read; runtime override and config fallback verified against runtime path tests and exact-head CI",
+      "tests": [
+        "tests/test_runtime_paths.py"
+      ],
+      "lines_reviewed": 58,
+      "ci_head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "ci_runs": [
+        41519143559,
+        41519155758
+      ]
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "f3c854a2a40ea6ed941f4380c9a0b683b2f8d606",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "Inspected shared _stop_sell_unresolved_buy_block, immediate dispatch, queued multi-account replay, account ledger claims and broker-lock ordering; full 1329-line audit not complete",
+      "ci_head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ],
+      "ci_runs": [
+        41611344744,
+        41611353781
+      ]
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "9ff73ff4357ddcc6e9fd2473c91058fc9990c6a9",
+      "status": "TARGETED_REVIEW_NOT_FULLY_AUDITED",
+      "inspection": "Reviewed KR get_portfolio/get_holding_quantity, account aggregation and new shared row validator call; rest of 2030-line module not fully audited.",
+      "tests": [
+        "tests/test_broker_portfolio_pagination_safety.py"
+      ],
+      "ci_head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "ci_runs": [
+        41603148658,
+        41603156354
+      ]
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "execution_identities, claim, guard_unresolved_buy and protected status transitions inspected; not full file",
+      "lines_reviewed": 408,
+      "tests": [
+        "tests/test_legacy_unattributed_buy_fence.py",
+        "tests/test_queue_execution_context.py"
+      ],
+      "ci_head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "ci_runs": [
+        41589812317,
+        41589818296
+      ],
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ]
+    },
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "8911c634bc16dc8ca78a685784faa9ac36719757",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 176-line classifier read; non-200 2xx cannot establish verified KIS rejection, shared KR/US BUY/SELL path and durable ledger checked against exact-head mock CI",
+      "lines_reviewed": 176,
+      "tests": [
+        "tests/test_wave4_execution_safety.py",
+        "tests/test_broker_http_rejection_safety.py"
+      ],
+      "ci_head_sha": "bb924c79042a33bd084e586ceceeaeb999bbf13d",
+      "ci_runs": [
+        41528112074,
+        41528104300
+      ]
+    },
+    {
+      "path": "trading/file_lock.py",
+      "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire file read; POSIX flock, Windows msvcrt locking and fsync_parent_directory contracts inspected; exact-head suite exercises ledger/stop-loss/queue",
+      "tests": [
+        "tests/test_execution_ledger_retention.py",
+        "tests/test_stop_loss_legacy_quarantine.py",
+        "tests/test_runtime_paths.py"
+      ],
+      "lines_reviewed": 106,
+      "ci_head_sha": "816c6a83be16e7cb84f5b5453da55f7a30175f43",
+      "ci_runs": [
+        41519143559,
+        41519155758
+      ]
+    },
+    {
+      "path": "trading/kis_auth.py",
+      "blob_sha": "5b2113b2439bed4d06b18217e9a575fff8f14319",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/market_hours.py",
+      "blob_sha": "170d8a7ff22ce4e40dcdecda865515ad7670fb9f",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/modes.py",
+      "blob_sha": "49caad45c48992394cc00b090495cb1bc4cbbd85",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/off_hours_queue.py",
+      "blob_sha": "993105246f2c5db5ca89c68cf203e68ba642458c",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 332 lines inspected: strict JSON load, durable enqueue/drain, account context, failure quarantine; crash after broker acceptance remains protected by execution ledger, but full independent audit incomplete"
+    },
+    {
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "7dd758cb7b4014939a8af5a2da1bf755e9ae4bd5",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 107-line balance pagination/quantity and new identified-row validation reviewed; 8 test-first failures and 20 new KR/US mock cases, latest-head 1573 pytest passed; not independent full audit.",
+      "lines_reviewed": 77,
+      "tests": [
+        "tests/test_broker_portfolio_pagination_safety.py"
+      ],
+      "ci_head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "ci_runs": [
+        41603148658,
+        41603156354
+      ]
+    },
+    {
+      "path": "trading/schema.py",
+      "blob_sha": "034488d3d5dba31cad65e632e1dc95fbc4094265",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full signal schema and parse_signal_bytes reviewed; inbound JSON cannot set internal origin; numeric and duplicate-key validators inspected; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 254,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/signal_safety.py",
+      "blob_sha": "2a30edf46e86b295c8e1f1b599511f28146884fb",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/signal_sizing.py",
+      "blob_sha": "fc8f49e52be2544528c676444cfdeb24e31b771d",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 94 lines inspected: configured_buy_budget, scaled_buy_amount and adjusted_sell_fraction; fractional BUY already validates cash; direct broker percent path was missing same validation"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "496139946a5e5832cbc0be14f2bdd5f51f9dc2dc",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "_remove_if_verified_flat, pending_buy and _trigger_sell guards inspected; not full file",
+      "ci_head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ],
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ]
+    },
+    {
+      "path": "trading/strategies/README.md",
+      "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/__init__.py",
+      "blob_sha": "f5ce41bce6f6c9fc314ebcd401df0df376e79232",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 73-line strategy export and cooldown dispatch registration checked",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "trading/strategies/balance_split.py",
+      "blob_sha": "a3e3c7375f17788325451b45e4212866930d3596",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/balanced_risk.py",
+      "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full combined BUY/SELL strategy routing and delegated config path read; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 73,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/strategies/bracket_exit.py",
+      "blob_sha": "7355e0a20212f77926e8d856b7d0539b9dc670c0",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full bracket trigger/fraction/limit order path read; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 127,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "12960b7ef2de28cb3427e659208bcd0d5b556ff4",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full shared strategy helpers and runtime-state writers reviewed; watcher origin and reserved stable-ID aliases checked; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 355,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/strategies/cooldown.py",
+      "blob_sha": "824afe8cd6f71f43a937c3684f3bf97264627bee",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 107-line code path: pre-submit pending persistence, cross-process lock, legacy missing-pending quarantine, verified-rejection handling, timeout behavior",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "trading/strategies/event_risk_off.py",
+      "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full 89-line event/BUY path; validated state, expiration and configured risk multiplier; distinct from order pending fence",
+      "ci_head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_runs": [
+        41572020004
+      ]
+    },
+    {
+      "path": "trading/strategies/limit_buffer.py",
+      "blob_sha": "d61848090f664b45155be1efbf017030de08eacd",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full KR/US buffered price, rounding and broker dispatch path read; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "lines_reviewed": 120,
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/strategies/profit_ladder.py",
+      "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full SELL profit-band/stop-reason and broker execution path read; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 46,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/strategies/protective_exit.py",
+      "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full protective stop/reason/price and fraction path read; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 139,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/strategies/risk_bracket.py",
+      "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full BUY risk-budget and broker submission path read; finite units and position cap checks inspected; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 65,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/strategies/score_max_capital.py",
+      "blob_sha": "8b8480cf9578380a1c69022318737f3c970e9c5a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/score_risk.py",
+      "blob_sha": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/strategies/score_weighted.py",
+      "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full score band and finite BUY sizing path read; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "lines_reviewed": 86,
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/strategies/signal_trailing_stop.py",
+      "blob_sha": "796593dc47c9202b5c0b0e429006265fb5de0157",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 423 lines inspected: durable entry/exit pending fence, state validation, broker receipt recording, rejection rollback; broker-authoritative partial fill reconciliation still absent"
+    },
+    {
+      "path": "trading/strategies/stop_loss_sell.py",
+      "blob_sha": "51da4cd995adc32a0ee0ab97a5ce3e31160cd870",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "Full stop-loss strategy path reviewed; only internal watcher can override publisher limit order; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "ci_head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "lines_reviewed": 71,
+      "ci_runs": [
+        41578361551,
+        41578366433
+      ]
+    },
+    {
+      "path": "trading/strategy_names.py",
+      "blob_sha": "2fbd9fd37b9b37c6fd1fdf532de5c09809e94705",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/telegram_fetch.py",
+      "blob_sha": "33df9f3ee0ea62217775c6f2b4afacfab4bd0a77",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "4232d7f49dc2ad68b36c00063b44f1d033e438f0",
+      "status": "TARGETED_REVIEW_NOT_FULLY_AUDITED",
+      "inspection": "Reviewed US get_portfolio/get_holding_quantity, exchange pagination and new shared row validator call; rest of 2351-line module not fully audited.",
+      "tests": [
+        "tests/test_broker_portfolio_pagination_safety.py"
+      ],
+      "ci_head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "ci_runs": [
+        41603148658,
+        41603156354
+      ]
+    },
+    {
+      "path": "trading/yaml_compat.py",
+      "blob_sha": "d28beb4d042ec631409ebe17d01588fe3b00c2a6",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/__init__.py",
+      "blob_sha": "7a80de1688e723fec4a0cbb96ca21e005525a4ea",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/__main__.py",
+      "blob_sha": "fcabfa185168eac19da0b2ac5dd6110afc5858b9",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/app.py",
+      "blob_sha": "0a9576bb59e01e131250b5ab06ac5baf57e8ef76",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/__init__.py",
+      "blob_sha": "ddddf4858bec829a4cc1770e3728a84068f44322",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/activity.py",
+      "blob_sha": "d003a105c30d2a70934f447d6f0f73c794e82f8a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/dashboard.py",
+      "blob_sha": "93ad8dffab06496b5ab3ea85596144e3c30adbc5",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/dry_run.py",
+      "blob_sha": "36fda1fdbbdfc8aea862485664f95a1923dccfcb",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/guards.py",
+      "blob_sha": "e4a95f69b3f651633f55defdaaae9cc49571e3b4",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/logs.py",
+      "blob_sha": "e2d680f356062a1d3ad9027b08a90beffe30e481",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/queue.py",
+      "blob_sha": "eba37a4c0e4bc58c9d077432ff9944bbee5b6d14",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/readiness.py",
+      "blob_sha": "17b9e8c143a1901169cbb8e8d15f41ff43a14e56",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/signals.py",
+      "blob_sha": "2346b942321a5873e3d3b21ada301819978aa0a9",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 79 lines read; CSRF and duplicate-key raw request validation; no broker submission.",
+      "lines_reviewed": 79,
+      "ci_head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "ci_runs": [
+        41611344744,
+        41611353781
+      ]
+    },
+    {
+      "path": "webui/routes/telegram.py",
+      "blob_sha": "652624391aa1752cd3453432d56aff036a6fb79d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/routes/trading.py",
+      "blob_sha": "1c7aefddb3bc1b5a893942d47a68c054c99f7b43",
+      "status": "FILE_LEVEL_INSPECTED_CI_PENDING_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 187-line WebUI trading route read; CSRF, local mutation, nonce consumption, manual dispatch and dry-run boundaries inspected",
+      "ci_head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ]
+    },
+    {
+      "path": "webui/services/account_service.py",
+      "blob_sha": "586aee6b00713da80a49b3d366afffda554df94f",
+      "status": "TARGETED_PATH_REVIEW_NOT_FULL_AUDIT",
+      "inspection": "build_manual_signal lines 280-289 and config/account helper lines 1-155 inspected; remaining code not fully reviewed",
+      "ci_head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ]
+    },
+    {
+      "path": "webui/services/activity_service.py",
+      "blob_sha": "67fb004425f6f59b06227a59c5263409276c6170",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/dry_run_service.py",
+      "blob_sha": "01e94a72fb3c3dcfd481bcddfdb9463eeb00976a",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/log_service.py",
+      "blob_sha": "afcedd5622e857a3d5a0cb939126d394f3785674",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/masking.py",
+      "blob_sha": "0214b94b9acf52f6668cd2dedfbf6edde5921b81",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/queue_service.py",
+      "blob_sha": "5676ec357f18e38a65e212bd8de957c1c29527eb",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/readiness_service.py",
+      "blob_sha": "472da75058b3a852760e33731476390777f6e6e8",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/signal_service.py",
+      "blob_sha": "2cd96c0143da8d1d9194500031a74158b7571135",
+      "status": "FILE_LEVEL_INSPECTED_TESTED_NOT_INDEPENDENT_PASS",
+      "inspection": "All 49 lines read; strict JSON signal parsing and labeled-text fallback; WebUI parsing does not submit orders.",
+      "lines_reviewed": 49,
+      "ci_head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "ci_runs": [
+        41611344744,
+        41611353781
+      ]
+    },
+    {
+      "path": "webui/services/telegram_service.py",
+      "blob_sha": "8bf1ad38fbc48d319e432a71a2872f46bac9e536",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "status": "FILE_LEVEL_INSPECTED_CI_PENDING_NOT_INDEPENDENT_PASS",
+      "inspection": "Entire 136-line manual order service read; per-ticket ID, pre-submit ledger claim, arming/nonce and exception paths inspected; mock tests on latest HEAD pending",
+      "ci_head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+      "ci_run_ids": [
+        41596017506,
+        41596023001
+      ]
+    },
+    {
+      "path": "webui/static/console.css",
+      "blob_sha": "b5ec46d0a14289d17d667199fc9e414096da0f92",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/static/console.js",
+      "blob_sha": "8fab1f7b73a604c4182098604dcbc1b33df8ecc6",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/static/style.css",
+      "blob_sha": "1a640490eaf214467390987595ddc6d58fba8c6d",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/activity.html",
+      "blob_sha": "6a656b2262c26d38f80a73aeed24d666fa1c4c94",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/base.html",
+      "blob_sha": "8133337ed11b75d110c74c78327572a648e4ca63",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/dashboard.html",
+      "blob_sha": "e4c4d3d2c9467320451c13d3849bc64d1eecbae0",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/dry_run.html",
+      "blob_sha": "b322d66efea7dac30998e5a9d591a0b860ca6744",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/logs.html",
+      "blob_sha": "df8c3a5a9dabb71fe22ea2c2e8b4934000c43726",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/queue.html",
+      "blob_sha": "e141d1a4901feab19ac900f71abad43e0fa7bac0",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/readiness.html",
+      "blob_sha": "7326ceeea4400cb06d6d050790dd01965725afb1",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/signals.html",
+      "blob_sha": "80065293abffc797fae9e5c58c3396c6f64fd4b6",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/telegram.html",
+      "blob_sha": "dce3410f1e3e7922ba2393e6cb8d0add520b5a98",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    },
+    {
+      "path": "webui/templates/trading.html",
+      "blob_sha": "6c9bbc9bec5dd0f30b557e2c2f7459bb4774f91b",
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
+    }
+  ],
+  "files_targeted_path_review": 7,
+  "kind": "full"
+}

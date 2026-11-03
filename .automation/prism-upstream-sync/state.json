@@ -4,18 +4,15 @@
   "state": "ACTIVE_DRAFT_MOCK_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T16-19-KST-run11",
-    "result": "KIS_BALANCE_ROW_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
-    "last_mutation_commit": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
-    "previous_state_branch_sha": "1414deeb87c6956d7126b968efd7eb6bc4fe0dbc",
-    "started_at": "2026-11-03T08:20:31Z",
-    "completed_at": "2026-11-03T08:27:00Z",
-    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T17-20-KST.json",
-    "released_at": "2026-11-03T08:28:22.953Z",
-    "release_parent_sha": "039327b081e888adcfa28e5830991d72783d7d56",
-    "pr_comment_id": 6598907795
+    "id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
+    "lock_owner": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
+    "result": "QUEUED_STOP_SELL_FENCE_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
+    "last_mutation_commit": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+    "previous_state_branch_sha": "55a5ae05e83ef8d4213492175f4e51d21ad1c6b8",
+    "started_at": "2026-11-03T09:24:43Z",
+    "completed_at": "2026-11-03T09:31:23.268Z",
+    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T18-24-KST.json"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -34,7 +31,7 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+    "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
@@ -111,28 +108,28 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "564a2c82a6e9afa52f199348169dbcad0879f7af",
+    "checksum": "8f83c52513f8fbd6f8a7468883597d2646a7c2c6",
     "checksum_kind": "git_blob_sha1",
     "scope_estimate": 98,
     "files_fully_audited": 0,
-    "files_file_level_inspected": 56,
-    "files_targeted_path_review": 11,
-    "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+    "files_file_level_inspected": 58,
+    "files_targeted_path_review": 7,
+    "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "b3bb283564c6c43a4e976f1792713d038f0dfde5",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T17-20-KST-related.json"
+    "git_tree_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T18-24-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "fd8e630d64df9ae655a124a171e890ca40b8a954",
+    "checksum": "a9de33be33ce0f2a6254a8ee3f2ed86cd0787362",
     "checksum_kind": "git_blob_sha1",
-    "sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
-    "files_checked": 57,
+    "sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+    "files_checked": 59,
     "fully_audited_files": 0,
     "file_count": 185,
-    "files_targeted_path_review": 11,
-    "git_tree_sha": "b3bb283564c6c43a4e976f1792713d038f0dfde5",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T17-20-KST-full.json"
+    "files_targeted_path_review": 7,
+    "git_tree_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T18-24-KST-full.json"
   },
   "checks": [
     {
@@ -1773,6 +1770,27 @@
         "Full pytest suite 1573 passed Docker success",
         "Windows runtime smoke 167 passed"
       ]
+    },
+    {
+      "run_id": 41611123876,
+      "head_sha": "7ae5431a818a37276db393d393243ae2c9ea40b0",
+      "status": "completed",
+      "conclusion": "failure",
+      "details": "8 expected queued KR/US mock assertion failures, 1575 passes, no infrastructure failures"
+    },
+    {
+      "run_id": 41611344744,
+      "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "status": "completed",
+      "conclusion": "success",
+      "details": "1583 pytest, 167 Windows, Docker success"
+    },
+    {
+      "run_id": 41611353781,
+      "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "status": "completed",
+      "conclusion": "success",
+      "details": "1583 pytest, 167 Windows, Docker success"
     }
   ],
   "upstream_changes": [
@@ -5538,6 +5556,32 @@
       "full_pass": false,
       "real_orders": 0,
       "demo_orders": 0
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
+      "kind": "TEST_FIRST_REPRODUCTION_ROOT_CAUSE_FIX_AND_TARGETED_PATH_AUDIT_NOT_INDEPENDENT_PASS",
+      "phase": "related_code_audit",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "upstream_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "root_cause_id": "RC-QUEUED-MULTI-STOP-SELL-FENCE-BYPASS",
+      "test_first_commit": "7ae5431a818a37276db393d393243ae2c9ea40b0",
+      "fix_commit": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "changed_files": [
+        "trading/dispatch.py",
+        "tests/test_unresolved_buy_without_stop_loss.py"
+      ],
+      "ci_run_ids": [
+        41611344744,
+        41611353781
+      ],
+      "related_file_level_inspected": 58,
+      "full_file_level_inspected": 59,
+      "related_manifest_sha": "8f83c52513f8fbd6f8a7468883597d2646a7c2c6",
+      "full_manifest_sha": "a9de33be33ce0f2a6254a8ee3f2ed86cd0787362",
+      "notes": "8 genuine queued KR/US assertion failures; 2 verified rejection controls passed; 1583 latest-head pytest and Windows/Docker passed. No KIS orders; broker fill attribution and full audit remain incomplete."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5558,13 +5602,13 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "Qlty status success but 94 blocking issues uninspected; Snyk success; human review absent",
-    "Branch protection API 403 Resource not accessible by integration",
-    "Broker-authoritative order ID/fill ID/partial/cancel/remaining reconciliation and KIS demo evidence absent; live trading prohibited",
-    "Legacy opaque protected entries globally quarantine automatic stops until operator reconciliation",
+    "Qlty current head PENDING, prior 94 blocking issues untriaged; Snyk success; human review absent",
+    "Branch protection API 403 Resource not accessible by integration; rulesets GET []",
+    "Broker-authoritative order/fill/partial/cancel/remaining reconciliation and KIS demo evidence absent; live trading prohibited",
+    "Unknown BUY late fill remains without broker-authoritative stop activation; legacy opaque claims require operator reconciliation",
     "Independent related/full 2-slot audit incomplete; related 0/2 full 0/2"
   ],
-  "next_action": "Continue broker-authoritative UNKNOWN BUY delayed/partial fill reconciliation and stop activation mock test-first; review remaining related files (42/98 not file-level inspected), triage qlty 94, obtain KIS demo/human review/branch policy; keep Draft and no live orders.",
+  "next_action": "Prioritize broker-authoritative UNKNOWN BUY delayed/partial-fill reconciliation via Mock KIS and temporary ledger, inspect remaining 40/98 related files, triage qlty and review/policy; Draft/no live orders.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6291,6 +6335,20 @@
       "full_pass": false,
       "reason": "Code changed; incomplete 98-file related audit and 185-file whole audit, KIS fill reconciliation, qlty 94, human review and branch policy 403",
       "manifest_tree_sha": "b3bb283564c6c43a4e976f1792713d038f0dfde5"
+    },
+    {
+      "slot": "2026-11-03T18-24-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
+      "phase": "related_code_audit",
+      "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "latest_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+      "related_pass": false,
+      "full_pass": false,
+      "related_manifest_sha": "8f83c52513f8fbd6f8a7468883597d2646a7c2c6",
+      "full_manifest_sha": "a9de33be33ce0f2a6254a8ee3f2ed86cd0787362",
+      "reason": "New code; only 58/98 related and 59/185 whole file-level inspected, 0 fully audited; KIS fill attribution, qlty, review and branch policy outstanding"
     }
   ],
   "discovered_defects": [
@@ -8108,6 +8166,23 @@
         "KIS demo",
         "per-order fill attribution"
       ]
+    },
+    {
+      "id": "queued-multi-stop-sell-unresolved-buy-bypass-20261103",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_CI_SUCCESS_AUDIT_PENDING",
+      "root_cause_id": "RC-QUEUED-MULTI-STOP-SELL-FENCE-BYPASS",
+      "paths": [
+        "trading/dispatch.py",
+        "tests/test_unresolved_buy_without_stop_loss.py"
+      ],
+      "description": "Queued multi-account replay bypassed immediate stop-loss SELL guard and could submit SELL with unresolved BUY or corrupt durable ledger",
+      "test_first_commit": "7ae5431a818a37276db393d393243ae2c9ea40b0",
+      "fix_commit": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "ci_run_ids": [
+        41611344744,
+        41611353781
+      ]
     }
   ],
   "risks": [
@@ -8736,6 +8811,20 @@
         41596017506,
         41596023001
       ]
+    },
+    {
+      "root_cause_id": "RC-QUEUED-MULTI-STOP-SELL-FENCE-BYPASS",
+      "description": "Queue replay multi-account fast path skipped pending-BUY durable stop-loss SELL fence enforced by normal dispatch",
+      "defect_ids": [
+        "queued-multi-stop-sell-unresolved-buy-bypass-20261103"
+      ],
+      "classification": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "fix_commits": [
+        "218e92fe98ee31c7a916c7f3ef7c65c12e308036"
+      ],
+      "test_first_commit": "7ae5431a818a37276db393d393243ae2c9ea40b0",
+      "recurrence_count": 0
     }
   ],
   "root_cause_matrix": {
@@ -9435,6 +9524,24 @@
         "Explicit new manual re-arm can duplicate an unresolved broker order; operator reconciliation required",
         "Legacy opaque orders remain quarantined",
         "Independent 2+2 audits, human review, branch protection 403"
+      ]
+    },
+    {
+      "id": "RC-QUEUED-MULTI-STOP-SELL-FENCE-BYPASS",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_CODE_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "description": "Queued multi-account stop-loss SELL bypassed the durable unresolved BUY pre-submit guard; 8 KR/US mock assertions reproduced, shared helper now gates immediate and queued paths",
+      "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+      "test_first_commit": "7ae5431a818a37276db393d393243ae2c9ea40b0",
+      "ci_run_ids": [
+        41611344744,
+        41611353781
+      ],
+      "unverified": [
+        "UNKNOWN BUY delayed/partial fills and per-order order/fill/cancel/remaining quantity reconciliation",
+        "KIS demo response semantics and stop activation",
+        "Qlty findings; current status pending, previous 94 blocking issues untriaged",
+        "Human review absent, branch-protection 403, 2+2 audits incomplete"
       ]
     }
   ],
