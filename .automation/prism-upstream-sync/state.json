@@ -4,18 +4,15 @@
   "state": "ACTIVE_DRAFT_MOCK_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T16-19-KST-run11",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
-    "result": "WEBUI_MANUAL_BUY_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
-    "last_mutation_commit": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
-    "previous_state_branch_sha": "76570e0393a94116324eeaa6b00a6a99d75de427",
-    "started_at": "2026-11-03T07:19:14Z",
-    "completed_at": "2026-11-03T07:27:25.252Z",
-    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T16-19-KST.json",
-    "released_at": "2026-11-03T07:27:50.294Z",
-    "release_parent_sha": "b089c5977e3562c4fa1513370b51dccb04f09f40",
-    "pr_comment_id": 6597924030
+    "id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
+    "lock_owner": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T16-19-KST-run11",
+    "result": "KIS_BALANCE_ROW_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
+    "last_mutation_commit": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+    "previous_state_branch_sha": "1414deeb87c6956d7126b968efd7eb6bc4fe0dbc",
+    "started_at": "2026-11-03T08:20:31Z",
+    "completed_at": "2026-11-03T08:27:00Z",
+    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T17-20-KST.json"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -34,7 +31,7 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+    "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
@@ -111,28 +108,28 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "c90eb62772781eee566b83851981dd0cdf057980",
+    "checksum": "564a2c82a6e9afa52f199348169dbcad0879f7af",
     "checksum_kind": "git_blob_sha1",
     "scope_estimate": 98,
     "files_fully_audited": 0,
-    "files_file_level_inspected": 51,
+    "files_file_level_inspected": 56,
     "files_targeted_path_review": 11,
-    "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+    "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "e09dca88d4e90a75b956e19c736936c09952a060",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T16-19-KST-related.json"
+    "git_tree_sha": "b3bb283564c6c43a4e976f1792713d038f0dfde5",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T17-20-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "ea614230606393b308723b81a6d7f1eddba656ed",
+    "checksum": "fd8e630d64df9ae655a124a171e890ca40b8a954",
     "checksum_kind": "git_blob_sha1",
-    "sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
-    "files_checked": 52,
+    "sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+    "files_checked": 57,
     "fully_audited_files": 0,
     "file_count": 185,
     "files_targeted_path_review": 11,
-    "git_tree_sha": "e09dca88d4e90a75b956e19c736936c09952a060",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T16-19-KST-full.json"
+    "git_tree_sha": "b3bb283564c6c43a4e976f1792713d038f0dfde5",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T17-20-KST-full.json"
   },
   "checks": [
     {
@@ -1753,6 +1750,26 @@
       ],
       "security": "Snyk success",
       "qlty": "success status, 94 blocking issues"
+    },
+    {
+      "run_id": 41603148658,
+      "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite 1573 passed Docker success",
+        "Windows runtime smoke 167 passed"
+      ]
+    },
+    {
+      "run_id": 41603156354,
+      "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite 1573 passed Docker success",
+        "Windows runtime smoke 167 passed"
+      ]
     }
   ],
   "upstream_changes": [
@@ -5482,6 +5499,42 @@
       "related_manifest": ".automation/prism-upstream-sync/manifests/2026-11-03T16-19-KST-related.json",
       "full_manifest": ".automation/prism-upstream-sync/manifests/2026-11-03T16-19-KST-full.json",
       "notes": "No KIS orders; manual BUY persisted before mocked submission, KR/US/restart/storage-failure and multi-account tests; no independent complete audit. Qlty 94 untriaged blocking issues, human review absent, branch protection 403."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
+      "kind": "TEST_FIRST_KIS_BALANCE_ROW_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_PARTIAL_AUDIT_NO_PASS",
+      "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "test_first_commit": "70fe03586834029622c38ab48eaac318ce12a476",
+      "test_first_ci": 41602945506,
+      "test_first_failures": 8,
+      "test_first_passes": 1555,
+      "patch_commit": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "final_ci_run_ids": [
+        41603148658,
+        41603156354
+      ],
+      "final_linux_passed": 1573,
+      "final_windows_passed": 167,
+      "docker": "success",
+      "new_file_level_inspected": [
+        "tests/test_dispatch.py",
+        "tests/test_multi_account_dispatch.py",
+        "tests/test_inbound_json_duplicate_keys.py",
+        "tests/test_effective_order_metadata.py",
+        "tests/test_stop_loss_legacy_quarantine.py"
+      ],
+      "related_manifest_sha": "564a2c82a6e9afa52f199348169dbcad0879f7af",
+      "full_manifest_sha": "fd8e630d64df9ae655a124a171e890ca40b8a954",
+      "related_inspected": 56,
+      "related_scope": 98,
+      "full_inspected": 57,
+      "full_scope": 185,
+      "fully_audited": 0,
+      "related_pass": false,
+      "full_pass": false,
+      "real_orders": 0,
+      "demo_orders": 0
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5502,14 +5555,13 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "Qlty check success but 94 blocking issues uninspected; Snyk success; human review absent",
-    "Branch protection API 403 Resource not accessible by integration; rulesets []",
-    "Broker-authoritative order ID/fill ID/partial/cancel/remaining reconciliation and demo KIS evidence absent; live trading prohibited",
+    "Qlty status success but 94 blocking issues uninspected; Snyk success; human review absent",
+    "Branch protection API 403 Resource not accessible by integration",
+    "Broker-authoritative order ID/fill ID/partial/cancel/remaining reconciliation and KIS demo evidence absent; live trading prohibited",
     "Legacy opaque protected entries globally quarantine automatic stops until operator reconciliation",
-    "Manual/WebUI execution_dedupe=False BUY path unverified; mock reproduction required",
     "Independent related/full 2-slot audit incomplete; related 0/2 full 0/2"
   ],
-  "next_action": "Prioritize broker-authoritative per-order fill/partial/cancel/remaining and stop activation reconciliation in mock-only paths; triage 94 Qlty findings, complete per-file transitive audit 2 independent slots then full tree 2 slots, human review and branch protection policy; no KIS demo/live orders.",
+  "next_action": "Continue broker-authoritative UNKNOWN BUY delayed/partial fill reconciliation and stop activation mock test-first; review remaining related files (42/98 not file-level inspected), triage qlty 94, obtain KIS demo/human review/branch policy; keep Draft and no live orders.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6225,6 +6277,17 @@
       "full_pass": false,
       "reason": "51/98 related and 52/185 whole file-level inspected; 0 fully audited; KIS fill attribution, 94 Qlty issues, review and branch protection unresolved",
       "manifest_tree_sha": "e09dca88d4e90a75b956e19c736936c09952a060"
+    },
+    {
+      "slot": "2026-11-03T17-20-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
+      "phase": "related_code_audit",
+      "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Code changed; incomplete 98-file related audit and 185-file whole audit, KIS fill reconciliation, qlty 94, human review and branch policy 403",
+      "manifest_tree_sha": "b3bb283564c6c43a4e976f1792713d038f0dfde5"
     }
   ],
   "discovered_defects": [
@@ -8018,6 +8081,30 @@
         "Independent 2+2 audits, human review, branch protection 403"
       ],
       "recurrence_count": 0
+    },
+    {
+      "id": "kis-balance-identified-row-missing-provenance-20261103",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "first_seen_slot": "2026-11-03T17-20-KST",
+      "prepatch_head": "70fe03586834029622c38ab48eaac318ce12a476",
+      "fix_commit": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "test_first_run": 41602945506,
+      "failed_assertions": 8,
+      "final_runs": [
+        41603148658,
+        41603156354
+      ],
+      "affected_paths": [
+        "trading/portfolio_pagination.py",
+        "trading/domestic.py",
+        "trading/us.py",
+        "tests/test_broker_portfolio_pagination_safety.py"
+      ],
+      "unverified": [
+        "KIS demo",
+        "per-order fill attribution"
+      ]
     }
   ],
   "risks": [
@@ -8551,11 +8638,12 @@
       "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
       "description": "KIS balance response was accepted as complete despite missing continuation pages or unverifiable share quantities",
       "defect_ids": [
-        "kis-balance-incomplete-snapshot-20261103"
+        "kis-balance-incomplete-snapshot-20261103",
+        "kis-balance-identified-row-missing-provenance-20261103"
       ],
-      "classification": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "classification": "MOCK_REPRODUCED_CODE_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_DEMO_PENDING",
       "first_detected_run": "prism-sync-hourly-2026-11-03T07-20-KST-turn9",
-      "last_checked_head": "fa1a9de1decadd0dc2940a4262a3d4ed3cbe531c",
+      "last_checked_head": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
       "fix_commits": [
         "5a86d6fb2352fa26123ebac5f61d72ec3f2bdeba",
         "fa1a9de1decadd0dc2940a4262a3d4ed3cbe531c"
@@ -8648,7 +8736,7 @@
     }
   ],
   "root_cause_matrix": {
-    "head_sha": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+    "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
     "scope": "Mock-only all-BUY intent and stop SELL broker lock/case safety; KIS fill attribution unresolved",
     "entries": [
       {
@@ -8935,6 +9023,27 @@
           41583890780
         ],
         "status": "MOCK_REPRODUCED_PATCHED_NOT_KIS_DEMO"
+      },
+      {
+        "invariant": "A named KIS holding with missing quantity, or positive quantity without instrument, must not be mistaken for verified zero",
+        "paths": [
+          "trading/portfolio_pagination.py",
+          "trading/domestic.py",
+          "trading/us.py",
+          "trading/stop_loss_watcher.py"
+        ],
+        "failure_modes": [
+          "missing/null/blank quantity",
+          "missing/nonstring/whitespace instrument",
+          "KR/US exchange pagination",
+          "empty placeholder control"
+        ],
+        "test": "tests/test_broker_portfolio_pagination_safety.py",
+        "test_first_ci_run": 41602945506,
+        "final_ci_run_ids": [
+          41603148658,
+          41603156354
+        ]
       }
     ],
     "closure_verified": false
@@ -9224,9 +9333,20 @@
     {
       "id": "RC-KIS-BALANCE-COMPLETENESS",
       "severity": "HIGH",
-      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_KIS_DEMO_PENDING",
-      "description": "KR/US KIS balance pagination and strict quantity validation passed 24 mock cases; KIS demo and independent audit pending",
-      "head_sha": "fa1a9de1decadd0dc2940a4262a3d4ed3cbe531c"
+      "status": "MOCK_REPRODUCED_CODE_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_DEMO_PENDING",
+      "description": "KIS KR/US identified holding rows with missing/blank quantities or positive quantities without instrument were silently treated as zero, risking false stop-loss cleanup. Shared strict row validation now blocks incomplete rows; blank placeholders and explicit zero remain accepted.",
+      "head_sha": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "fix_commit": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+      "test_first_commit": "70fe03586834029622c38ab48eaac318ce12a476",
+      "ci_run_ids": [
+        41603148658,
+        41603156354
+      ],
+      "unverified": [
+        "KIS demo response semantics",
+        "broker order/fill/cancel/remaining attribution",
+        "2+2 audits, qlty 94, review, branch policy 403"
+      ]
     },
     {
       "id": "RC-WATCHER-STRATEGY-INTERCEPTION",

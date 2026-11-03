@@ -1,0 +1,101 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
+  "slot": "2026-11-03T17-20-KST",
+  "pr_number": 43,
+  "pr_head": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+  "pr_base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "pr_draft": true,
+  "upstream_latest": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "upstream_pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "upstream_delta": {
+    "commits": 47,
+    "files": 41,
+    "integrated": 0
+  },
+  "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+  "subcase": "IDENTIFIED_ROW_MISSING_QUANTITY_OR_INSTRUMENT",
+  "classification": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_INDEPENDENT_AUDIT_AND_KIS_DEMO_PENDING",
+  "invariant": "A named holding with missing quantity or a positive holding with missing instrument is UNKNOWN, never verified zero. Empty placeholder rows and explicit zero remain accepted.",
+  "test_first": {
+    "commit": "70fe03586834029622c38ab48eaac318ce12a476",
+    "ci_run": 41602945506,
+    "failed_assertions": 8,
+    "passed": 1555,
+    "infrastructure_failures": 0
+  },
+  "fix": {
+    "commit": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+    "files": [
+      "trading/portfolio_pagination.py",
+      "trading/domestic.py",
+      "trading/us.py",
+      "tests/test_broker_portfolio_pagination_safety.py"
+    ],
+    "blobs": {
+      "trading/portfolio_pagination.py": "7dd758cb7b4014939a8af5a2da1bf755e9ae4bd5",
+      "trading/domestic.py": "9ff73ff4357ddcc6e9fd2473c91058fc9990c6a9",
+      "trading/us.py": "4232d7f49dc2ad68b36c00063b44f1d033e438f0",
+      "tests/test_broker_portfolio_pagination_safety.py": "9b97b9eb7428f589ca912f158cea9b27a0735781"
+    },
+    "regressions_added": 20
+  },
+  "final_ci": {
+    "head": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
+    "run_ids": [
+      41603148658,
+      41603156354
+    ],
+    "linux_pytest_passed": 1573,
+    "windows_smoke_passed": 167,
+    "docker": "success",
+    "snyk": "success",
+    "qlty": "success_with_94_blocking_issues_untriaged"
+  },
+  "prior_unknown_buy_retest": {
+    "head": "83ddfccb78db7cb66e9664476f598e3bb6b23606",
+    "run_id": 41596023001,
+    "attempt": 2,
+    "conclusion": "success",
+    "new_reproduction_failures": 0,
+    "authoritative_fill_attribution": "NOT_TESTED"
+  },
+  "affected_flow": [
+    "KIS KR/US output1 balance rows",
+    "validated_balance_row",
+    "get_portfolio(raise_on_error=True)",
+    "get_holding_quantity",
+    "multi-account aggregate",
+    "stop-loss watcher verified-flat cleanup and pre-sell",
+    "manual WebUI/account monitoring"
+  ],
+  "audit": {
+    "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T17-20-KST-related.json",
+    "related_blob_sha": "564a2c82a6e9afa52f199348169dbcad0879f7af",
+    "related_scope": 98,
+    "related_file_level": 56,
+    "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T17-20-KST-full.json",
+    "full_blob_sha": "fd8e630d64df9ae655a124a171e890ca40b8a954",
+    "full_scope": 185,
+    "full_file_level": 57,
+    "fully_audited": 0,
+    "related_passes": 0,
+    "full_passes": 0
+  },
+  "unverified": [
+    "Unknown BUY delayed/partial fills and per-account order/fill/cancel/remaining reconciliation",
+    "KIS demo response semantics for blank identified rows",
+    "94 qlty blocking findings, human review, branch policy 403",
+    "All transitive files not completely audited; 2+2 independent slots outstanding"
+  ],
+  "safety": {
+    "real_orders": 0,
+    "demo_orders": 0,
+    "merge": false,
+    "live_trading": false
+  },
+  "cas": {
+    "lock_acquired_commit": "1414deeb87c6956d7126b968efd7eb6bc4fe0dbc",
+    "expected_state_parent": "1414deeb87c6956d7126b968efd7eb6bc4fe0dbc",
+    "release": "PENDING"
+  }
+}
