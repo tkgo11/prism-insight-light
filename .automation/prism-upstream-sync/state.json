@@ -5,14 +5,16 @@
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
-    "lock_owner": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
     "result": "QUEUED_STOP_SELL_FENCE_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
     "last_mutation_commit": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
     "previous_state_branch_sha": "55a5ae05e83ef8d4213492175f4e51d21ad1c6b8",
     "started_at": "2026-11-03T09:24:43Z",
     "completed_at": "2026-11-03T09:31:23.268Z",
-    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T18-24-KST.json"
+    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T18-24-KST.json",
+    "released_at": "2026-11-03T09:31:53.724Z",
+    "release_parent_sha": "366ae5e37e46eebf22541dc2bfe5484cd5b83dcc"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -5581,7 +5583,8 @@
       "full_file_level_inspected": 59,
       "related_manifest_sha": "8f83c52513f8fbd6f8a7468883597d2646a7c2c6",
       "full_manifest_sha": "a9de33be33ce0f2a6254a8ee3f2ed86cd0787362",
-      "notes": "8 genuine queued KR/US assertion failures; 2 verified rejection controls passed; 1583 latest-head pytest and Windows/Docker passed. No KIS orders; broker fill attribution and full audit remain incomplete."
+      "notes": "8 genuine queued KR/US assertion failures; 2 verified rejection controls passed; 1583 latest-head pytest and Windows/Docker passed. No KIS orders; broker fill attribution and full audit remain incomplete.",
+      "qlty": "success_with_94_blocking_issues_untriaged"
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5602,7 +5605,7 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "Qlty current head PENDING, prior 94 blocking issues untriaged; Snyk success; human review absent",
+    "Qlty exact-head status success but 94 blocking issues uninspected; Snyk success; human review absent",
     "Branch protection API 403 Resource not accessible by integration; rulesets GET []",
     "Broker-authoritative order/fill/partial/cancel/remaining reconciliation and KIS demo evidence absent; live trading prohibited",
     "Unknown BUY late fill remains without broker-authoritative stop activation; legacy opaque claims require operator reconciliation",

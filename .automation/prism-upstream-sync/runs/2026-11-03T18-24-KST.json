@@ -42,7 +42,7 @@
     "windows_smoke_passed": 167,
     "docker": "success",
     "snyk": "success",
-    "qlty": "PENDING_UNTRIAGED"
+    "qlty": "success_with_94_blocking_issues_untriaged"
   },
   "affected_flow": [
     "off-hours queue durable payload",
@@ -81,6 +81,8 @@
   },
   "cas": {
     "lock_acquired_commit": "55a5ae05e83ef8d4213492175f4e51d21ad1c6b8",
-    "release": "PENDING"
-  }
+    "release": "RELEASED",
+    "release_parent_sha": "366ae5e37e46eebf22541dc2bfe5484cd5b83dcc"
+  },
+  "released_at": "2026-11-03T09:31:53.724Z"
 }
