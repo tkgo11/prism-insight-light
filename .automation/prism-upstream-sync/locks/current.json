@@ -1,17 +1,13 @@
 {
-  "run_id": "prism-sync-hourly-2026-11-03T13-18-KST-turn11",
-  "slot": "2026-11-03T13-18-KST",
-  "status": "RELEASED",
-  "expected_state_head": "06eb5dd2cb2f33383d7b9cc4de5854edadda6794",
-  "expected_pr_head": "077e101357e3e560eda1492c9d660ce21787dce1",
+  "run_id": "prism-sync-hourly-2026-11-03T14-19-KST-turn11",
+  "slot": "2026-11-03T14-19-KST",
+  "status": "ACTIVE",
+  "expected_state_head": "ac3e09ccee8de254ef4df5ec1279981ef0f38672",
+  "expected_pr_head": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
   "expected_base_head": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
   "expected_upstream_head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
   "real_orders": 0,
   "demo_orders": 0,
   "lock_acquisition": "GIT_REF_EXPECTED_SHA_CAS",
-  "purpose": "mock reproduce unresolved unknown BUY delayed/partial fill and per-account stop attribution; inspect transitive code",
-  "final_pr_head": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
-  "released_at": "2026-11-03T04:32:55.826Z",
-  "result": "WATCHER_ORIGIN_SPOOFING_MOCK_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
-  "evidence_commit": "0aae00bedfb067fc273d60d97b91b82ded762385"
+  "purpose": "recheck unknown BUY delayed/partial fill with mock; audit current code and record evidence"
 }
