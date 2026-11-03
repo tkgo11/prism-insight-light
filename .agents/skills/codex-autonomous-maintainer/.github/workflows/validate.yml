@@ -11,7 +11,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate skill variants
         run: make validate
       - name: Verify package checksums
@@ -22,7 +22,7 @@ jobs:
   validate-powershell:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Test PowerShell installers
         shell: pwsh
         run: ./tests/test_installers.ps1
