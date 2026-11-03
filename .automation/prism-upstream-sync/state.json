@@ -1,18 +1,18 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "RESYNC_IN_PROGRESS",
+  "state": "ACTIVE_DRAFT_RESYNCED_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
     "id": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
     "lock_owner": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
     "previous_run_id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
-    "result": "RESYNC_LOCK_ACQUIRED",
-    "last_mutation_commit": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+    "result": "RESYNC_SNAPSHOT_STAGED_AWAITING_LOCK_RELEASE",
+    "last_mutation_commit": null,
     "previous_state_branch_sha": "55a5ae05e83ef8d4213492175f4e51d21ad1c6b8",
     "started_at": "2026-11-03T10:25:35.554Z",
-    "completed_at": null,
-    "evidence_path": null,
+    "completed_at": "2026-11-03T10:27:02.534Z",
+    "evidence_path": ".automation/prism-upstream-sync/runs/manual-resync-2026-11-03T10-27-02-534Z.json",
     "released_at": null,
     "release_parent_sha": null
   },
@@ -27,17 +27,19 @@
   "target": {
     "repository": "tkgo11/prism-insight-light",
     "default_branch": "main",
-    "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254"
+    "base_sha": "fbd1ee28d2fb4a380ed6ca6178c17c2c7dd7cd17",
+    "main_head_sha": "fbd1ee28d2fb4a380ed6ca6178c17c2c7dd7cd17"
   },
   "active_pr": {
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
-    "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+    "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_EXACT_HEAD_MOCK_CI_SUCCESS_AUDIT_BLOCKED"
+    "status": "DRAFT_RESYNCED_CI_OBSERVED_AUDIT_BLOCKED",
+    "base_ref": "main"
   },
   "candidates": [
     {
@@ -109,29 +111,30 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "REBUILT_INCOMPLETE",
-    "checksum": "8f83c52513f8fbd6f8a7468883597d2646a7c2c6",
+    "status": "RESYNCED_PROVISIONAL_INCOMPLETE",
+    "checksum": "ee533c33e896bfa99d2c3ab1c6e0c7406e38cf50",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 98,
+    "scope_estimate": 165,
     "files_fully_audited": 0,
-    "files_file_level_inspected": 58,
+    "files_file_level_inspected": 59,
     "files_targeted_path_review": 7,
-    "head_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+    "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T18-24-KST-related.json"
+    "git_tree_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/manual-resync-2026-11-03T10-27-02-534Z-related.json"
   },
   "full_manifest": {
-    "status": "REBUILT_INCOMPLETE",
-    "checksum": "a9de33be33ce0f2a6254a8ee3f2ed86cd0787362",
+    "status": "RESYNCED_INCOMPLETE",
+    "checksum": "409d465aff1727637a8bcd1d4d39ab8f7a95ec6a",
     "checksum_kind": "git_blob_sha1",
-    "sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+    "sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
     "files_checked": 59,
     "fully_audited_files": 0,
-    "file_count": 185,
+    "file_count": 212,
     "files_targeted_path_review": 7,
-    "git_tree_sha": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T18-24-KST-full.json"
+    "git_tree_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/manual-resync-2026-11-03T10-27-02-534Z-full.json",
+    "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5"
   },
   "checks": [
     {
@@ -5611,7 +5614,7 @@
     "Unknown BUY late fill remains without broker-authoritative stop activation; legacy opaque claims require operator reconciliation",
     "Independent related/full 2-slot audit incomplete; related 0/2 full 0/2"
   ],
-  "next_action": "Prioritize broker-authoritative UNKNOWN BUY delayed/partial-fill reconciliation via Mock KIS and temporary ledger, inspect remaining 40/98 related files, triage qlty and review/policy; Draft/no live orders.",
+  "next_action": "Review latest PR head/changed files and unknown BUY reconciliation; revalidate main movement and dependencies; do not award PASS before full independent slots",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -9571,13 +9574,60 @@
     "release_parent_sha": "366ae5e37e46eebf22541dc2bfe5484cd5b83dcc"
   },
   "manual_resync": {
-    "status": "LOCKED",
+    "status": "SNAPSHOT_STAGED",
     "run_id": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
     "pre_sync_state_branch_sha": "629b31d0b9545092e698023e7293d4c015e62422",
     "observed_pr_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
     "observed_pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
-    "observed_main_sha": "c761208645421e3b24724dab0e42d6e260b14f10",
+    "observed_main_sha": "fbd1ee28d2fb4a380ed6ca6178c17c2c7dd7cd17",
     "started_at": "2026-11-03T10:25:35.554Z",
-    "verification": "not_completed"
+    "verification": "not_completed",
+    "verified_at": "2026-11-03T10:27:02.534Z",
+    "observed_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "tree_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "changes": {
+      "related": {
+        "total": 165,
+        "carried": 59,
+        "changed": 10,
+        "new": 67
+      },
+      "full": {
+        "total": 212,
+        "carried": 59,
+        "changed": 19,
+        "new": 27
+      },
+      "removed_old_related": [],
+      "removed_old_full": []
+    },
+    "previous_related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T18-24-KST-related.json",
+    "previous_full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T18-24-KST-full.json",
+    "ci_runs": [
+      {
+        "id": 41617016803,
+        "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "pull_request"
+      },
+      {
+        "id": 41617005094,
+        "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "push"
+      }
+    ],
+    "external_statuses": [
+      {
+        "context": "qlty check",
+        "state": "success"
+      },
+      {
+        "context": "security/snyk (tkgo11)",
+        "state": "success"
+      }
+    ]
   }
 }
