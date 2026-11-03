@@ -81,6 +81,13 @@ KIS_RATE_LIMIT_RETRY_BASE_SECONDS=1.0
 KIS_RATE_LIMIT_RETRY_MAX_SECONDS=5.0
 ```
 
+Telegram posts are processed oldest first within the newest fetched batch.
+Seen-post state is scoped by channel. On upgrade, an old ID-only state file is
+bound to the first configured channel; keep the original channel for that first
+startup, or reconcile its history before switching. Polling pauses if this state
+cannot be read or durably saved. The broker execution ledger remains the order
+deduplication boundary when multiple subscribers run concurrently.
+
 The required Pub/Sub identifiers are:
 
 - `GCP_PROJECT_ID`
