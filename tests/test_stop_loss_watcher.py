@@ -479,7 +479,8 @@ def test_multi_account_stop_loss_retains_tracking_when_duplicate_suppressed_behi
 
 
 @pytest.mark.asyncio
-async def test_dispatcher_stop_loss_sell_signal_uses_market_order_in_legacy_trade(tmp_path, monkeypatch):
+@pytest.mark.parametrize("reason", ["stop_loss", "STOP_LOSS", "Stop_Loss"])
+async def test_dispatcher_stop_loss_sell_signal_uses_market_order_in_legacy_trade(tmp_path, monkeypatch, reason):
     captured_limit_prices: list[int | None] = []
 
     class FakeTrader:
@@ -513,14 +514,14 @@ async def test_dispatcher_stop_loss_sell_signal_uses_market_order_in_legacy_trad
             "ticker": "252990",
             "price": 14090.0,
             "stop_loss": 15000.0,
-            "sell_reason": "stop_loss",
+            "sell_reason": reason,
         },
         signal_type="SELL",
         market="KR",
         ticker="252990",
         price=14090.0,
         stop_loss=15000.0,
-        sell_reason="stop_loss",
+        sell_reason=reason,
     )
 
     result = await dispatcher._execute_legacy_trade(stop_loss_signal)
