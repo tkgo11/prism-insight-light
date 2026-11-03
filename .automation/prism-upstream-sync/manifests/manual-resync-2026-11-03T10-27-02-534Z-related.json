@@ -2,7 +2,7 @@
   "run_id": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
   "observed_at": "2026-11-03T10:27:02.534Z",
   "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
-  "git_tree_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+  "git_tree_sha": "7c1347eaf1a98c3b49053936053f15e11ed559e3",
   "upstream_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
   "status": "RESYNCED_SCOPE_PROVISIONAL_AUDIT_INCOMPLETE",
   "independent_audit_slot_passes": 0,

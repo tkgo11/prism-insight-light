@@ -16,7 +16,7 @@
     },
     "main_sha": "fbd1ee28d2fb4a380ed6ca6178c17c2c7dd7cd17",
     "upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "pr_tree_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "pr_tree_sha": "7c1347eaf1a98c3b49053936053f15e11ed559e3",
     "ci_runs": [
       {
         "id": 41617016803,
@@ -42,7 +42,8 @@
         "context": "security/snyk (tkgo11)",
         "state": "success"
       }
-    ]
+    ],
+    "pr_commit_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5"
   },
   "file_manifest_change": {
     "related": {
@@ -76,5 +77,6 @@
     "Branch protection/rulesets not verified",
     "Qlty issue details not independently triaged"
   ],
-  "sync_disclaimer": "Main advanced beyond PR base SHA; PR not rebased or merged. Existing test success is historical and not a new execution."
+  "sync_disclaimer": "Main advanced beyond PR base SHA; PR not rebased or merged. Existing test success is historical and not a new execution.",
+  "metadata_correction": "Tree SHA from Git commit tree object, not tree-ish commit lookup"
 }

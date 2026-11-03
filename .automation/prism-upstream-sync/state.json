@@ -5,16 +5,16 @@
   "phase": "related_code_audit",
   "run": {
     "id": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
-    "lock_owner": "manual-prism-state-resync-2026-11-03T10-25-35-554Z-metadata-correction",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
-    "result": "RESYNC_SNAPSHOT_SAVED_AND_RELEASED",
+    "result": "RESYNC_SUCCESS_METADATA_CORRECTED_AND_RELEASED",
     "last_mutation_commit": null,
     "previous_state_branch_sha": "55a5ae05e83ef8d4213492175f4e51d21ad1c6b8",
     "started_at": "2026-11-03T10:25:35.554Z",
     "completed_at": "2026-11-03T10:27:02.534Z",
     "evidence_path": ".automation/prism-upstream-sync/runs/manual-resync-2026-11-03T10-27-02-534Z.json",
-    "released_at": "2026-11-03T10:27:59.428Z",
-    "release_parent_sha": "20037cc6c46ced28d0150b6502d087af3791ffb3"
+    "released_at": "2026-11-03T10:29:18.766Z",
+    "release_parent_sha": "fcb79019be33e68954d87a2a280050af57759c22"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -112,7 +112,7 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "RESYNCED_PROVISIONAL_INCOMPLETE",
-    "checksum": "ee533c33e896bfa99d2c3ab1c6e0c7406e38cf50",
+    "checksum": "8710e5f933f3c003d8c1fff241ba55f615da88d5",
     "checksum_kind": "git_blob_sha1",
     "scope_estimate": 165,
     "files_fully_audited": 0,
@@ -120,19 +120,19 @@
     "files_targeted_path_review": 7,
     "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "git_tree_sha": "7c1347eaf1a98c3b49053936053f15e11ed559e3",
     "manifest_path": ".automation/prism-upstream-sync/manifests/manual-resync-2026-11-03T10-27-02-534Z-related.json"
   },
   "full_manifest": {
     "status": "RESYNCED_INCOMPLETE",
-    "checksum": "409d465aff1727637a8bcd1d4d39ab8f7a95ec6a",
+    "checksum": "8485c958c5ece0ad8e56ea358262e0682a36b06c",
     "checksum_kind": "git_blob_sha1",
     "sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
     "files_checked": 59,
     "fully_audited_files": 0,
     "file_count": 212,
     "files_targeted_path_review": 7,
-    "git_tree_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "git_tree_sha": "7c1347eaf1a98c3b49053936053f15e11ed559e3",
     "manifest_path": ".automation/prism-upstream-sync/manifests/manual-resync-2026-11-03T10-27-02-534Z-full.json",
     "head_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5"
   },
@@ -9574,7 +9574,7 @@
     "release_parent_sha": "366ae5e37e46eebf22541dc2bfe5484cd5b83dcc"
   },
   "manual_resync": {
-    "status": "METADATA_CHECKSUM_CORRECTION_LOCKED",
+    "status": "RELEASED_AND_VERIFIED",
     "run_id": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
     "pre_sync_state_branch_sha": "629b31d0b9545092e698023e7293d4c015e62422",
     "observed_pr_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
@@ -9584,7 +9584,7 @@
     "verification": "not_completed",
     "verified_at": "2026-11-03T10:27:02.534Z",
     "observed_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "tree_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "tree_sha": "7c1347eaf1a98c3b49053936053f15e11ed559e3",
     "changes": {
       "related": {
         "total": 165,
@@ -9637,6 +9637,7 @@
       "state_snapshot_main_head": "fbd1ee28d2fb4a380ed6ca6178c17c2c7dd7cd17",
       "match": true
     },
-    "validation_warning": null
+    "validation_warning": null,
+    "metadata_correction": "Uses tree SHA from git commit object"
   }
 }
