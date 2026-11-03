@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
   "slot": "2026-11-03T15-20-KST",
-  "status": "TEST_FIRST_CI_PENDING",
+  "status": "TEST_FIRST_REPRODUCED_PATCH_CI_IN_PROGRESS",
   "lock_commit": "d351d794424c678a5ee9f9c8be3863430d09e2e5",
   "pr_number": 43,
   "starting_pr_head": "b082b161650863eee8f79d510afdef0c2d379ca9",
@@ -64,5 +64,29 @@
     "merge": false,
     "related_passes": 0,
     "full_passes": 0
+  },
+  "test_first": {
+    "commit": "182e3e58945bd0ddddcab97b1651abfbd063bb02",
+    "run_id": 41589439076,
+    "job_id": 125762508332,
+    "failures": 8,
+    "passes": 1526,
+    "windows": "success",
+    "classification": "ASSERTION_REPRODUCTION_NOT_FIXTURE_OR_INFRA",
+    "evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41589439076"
+  },
+  "patch": {
+    "commit": "86bbc81e61581c3cad6d8160403acea0558fdf2f",
+    "paths": [
+      "trading/execution_ledger.py",
+      "trading/dispatch.py",
+      "tests/test_legacy_unattributed_buy_fence.py"
+    ],
+    "checks": "IN_PROGRESS",
+    "changes": [
+      "legacy opaque protected records now block auto stop/zero cleanup",
+      "modern SELL side marker persisted before submission",
+      "KR/US and multi-account mock controls"
+    ]
   }
 }
