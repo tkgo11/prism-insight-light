@@ -1,0 +1,330 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T22-17-KST-turn3",
+  "started_at": "2026-11-03T13:17:45Z",
+  "completed_at": "2026-11-03T13:28:00Z",
+  "repository": "tkgo11/prism-insight-light",
+  "pr_number": 43,
+  "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "upstream_compare": {
+    "commits": 47,
+    "paths": 41,
+    "imported": 0,
+    "reason": "Changes mainly BTC scenario/US compression not verified compatible with independent lightweight fork"
+  },
+  "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+  "subcase": "Missing/nonstring/missing-field KIS balance continuation headers were accepted as terminal, permitting incomplete KR/US holdings to be reported as zero",
+  "candidates": [
+    {
+      "candidate_id": "C01",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cf8b0f12836a6b5000e31689ea36aace7f38b66b",
+      "hypothesis": "KR header method absent",
+      "result": "MOCK_RED_1_FIXED",
+      "test_run": "41643524948",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C02",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cf8b0f12836a6b5000e31689ea36aace7f38b66b",
+      "hypothesis": "US header method absent",
+      "result": "MOCK_RED_1_FIXED",
+      "test_run": "41643524948",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C03",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cf8b0f12836a6b5000e31689ea36aace7f38b66b",
+      "hypothesis": "KR nonstring continuation",
+      "result": "MOCK_RED_4_FIXED",
+      "test_run": "41643524948",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C04",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cf8b0f12836a6b5000e31689ea36aace7f38b66b",
+      "hypothesis": "US nonstring continuation",
+      "result": "MOCK_RED_4_FIXED",
+      "test_run": "41643524948",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C05",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cf8b0f12836a6b5000e31689ea36aace7f38b66b",
+      "hypothesis": "KR present header missing tr_cont",
+      "result": "MOCK_RED_1_FIXED",
+      "test_run": "41643946101",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C06",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cf8b0f12836a6b5000e31689ea36aace7f38b66b",
+      "hypothesis": "US present header missing tr_cont",
+      "result": "MOCK_RED_1_FIXED",
+      "test_run": "41643946101",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C07",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/domestic.py",
+      "blob_sha": "27057931e7e40270bb8c6d8c37c99dea70436eda",
+      "hypothesis": "KR missing header through get_holding_quantity",
+      "result": "NEW_MOCK_GREEN",
+      "test_run": "41644186314",
+      "decision": "EXISTING_COVERAGE_VERIFIED"
+    },
+    {
+      "candidate_id": "C08",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/us.py",
+      "blob_sha": "8455e8fba6e9b261547f08d59074b90f1700fe87",
+      "hypothesis": "US missing header through get_holding_quantity",
+      "result": "NEW_MOCK_GREEN",
+      "test_run": "41644186314",
+      "decision": "EXISTING_COVERAGE_VERIFIED"
+    },
+    {
+      "candidate_id": "C09",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "tests/test_broker_portfolio_pagination_safety.py",
+      "blob_sha": "9b97b9eb7428f589ca912f158cea9b27a0735781",
+      "hypothesis": "F/M cursor absent or repeated",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_run": "41644186314",
+      "decision": "EXISTING_COVERAGE_VERIFIED"
+    },
+    {
+      "candidate_id": "C10",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cf8b0f12836a6b5000e31689ea36aace7f38b66b",
+      "hypothesis": "malformed/missing balance quantity",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_run": "41644186314",
+      "decision": "EXISTING_COVERAGE_VERIFIED"
+    },
+    {
+      "candidate_id": "C11",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "hypothesis": "UNKNOWN BUY delayed/partial holding attribution",
+      "result": "MOCK_FENCE_GREEN_BROKER_ATTRIBUTION_UNVERIFIED",
+      "test_run": "41644186314",
+      "decision": "MOCK_VERIFIED_INTEGRATION_BLOCKED"
+    },
+    {
+      "candidate_id": "C12",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "hypothesis": "partial SELL residual tracker retention",
+      "result": "EXISTING_MOCK_GREEN_BROKER_ATTRIBUTION_UNVERIFIED",
+      "test_run": "41644186314",
+      "decision": "MOCK_VERIFIED_INTEGRATION_BLOCKED"
+    },
+    {
+      "candidate_id": "C13",
+      "root_cause_id": "RC-WEBUI-MANUAL-INTENT",
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "hypothesis": "WebUI manual BUY durable intent",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_run": "41644186314",
+      "decision": "EXISTING_COVERAGE_VERIFIED"
+    },
+    {
+      "candidate_id": "C14",
+      "root_cause_id": "RC-LEDGER-ATTEMPT-FENCING",
+      "path": "trading/dispatch.py",
+      "blob_sha": "b7e6dc1eb9add17005133a3120c4a0f66cb2706d",
+      "hypothesis": "multi-account retry/attempt identity",
+      "result": "EXISTING_MOCK_GREEN_KIS_DEMO_UNVERIFIED",
+      "test_run": "41644186314",
+      "decision": "MOCK_VERIFIED_INTEGRATION_BLOCKED"
+    }
+  ],
+  "candidate_count": 14,
+  "attempted_reproductions": 12,
+  "reproduced_defect_subcases": 12,
+  "unique_root_causes": 1,
+  "actual_production_fixes": 2,
+  "changed_paths": [
+    "trading/portfolio_pagination.py",
+    "tests/test_broker_portfolio_header_fail_closed.py",
+    "tests/test_multi_account_us.py"
+  ],
+  "test_first_commits": [
+    "73188aea21059ab820b5b527b2d9a5552e4b6173",
+    "3418b00ed227fb78775d73823b40e8b79ed1e1fb"
+  ],
+  "red_runs": [
+    {
+      "id": 41643524948,
+      "head": "73188aea21059ab820b5b527b2d9a5552e4b6173",
+      "failed": 10,
+      "passed": 1665,
+      "classification": "EXPECTED_PRODUCT_REPRO"
+    },
+    {
+      "id": 41643946101,
+      "head": "3418b00ed227fb78775d73823b40e8b79ed1e1fb",
+      "failed": 2,
+      "passed": 1675,
+      "other_failed": 2,
+      "other_failure_classification": "STALE_MOCK_FIXTURE_MISSING_REQUIRED_HEADER"
+    }
+  ],
+  "fix_commits": [
+    "77c3a08bb25dc3ea796ac2eb7c27fe8551b9fbaf",
+    "329911a126ae072606ff2ac72c494a79088fb3f9"
+  ],
+  "regression_tests_added": 17,
+  "final_ci": [
+    {
+      "id": 41644186314,
+      "event": "push",
+      "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+      "conclusion": "success",
+      "linux_pytest": 1679,
+      "windows_pytest": 167,
+      "docker": "success"
+    },
+    {
+      "id": 41644194933,
+      "event": "pull_request",
+      "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+      "conclusion": "success",
+      "linux_pytest": 1689,
+      "windows_pytest": 167,
+      "docker": "success"
+    }
+  ],
+  "external": {
+    "snyk": "success",
+    "qlty_status": "success",
+    "qlty_untriaged_blocking_issues": 93,
+    "branch_protection": "403",
+    "reviews": 0
+  },
+  "coverage": [
+    {
+      "contract": "acceptance_not_fill",
+      "scope": "KR/US",
+      "evidence": "existing classifier and durable ledger mocks pass; authoritative fills unverified",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "unknown",
+      "scope": "KR/US single/multi",
+      "evidence": "existing UNKNOWN BUY fence mock passes; late broker fill attribution unverified",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "late_fill",
+      "scope": "KR/US",
+      "evidence": "aggregate balance cannot prove order attribution; KIS demo blocked",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "partial_fill",
+      "scope": "KR/US",
+      "evidence": "residual stop tracker mocks pass; broker fill ID/remaining quantity blocked",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "cancel_reject",
+      "scope": "KR/US",
+      "evidence": "cancelled unattributed BUY and rejected-account mocks pass; broker authoritative cancel blocked",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "duplicate_notice",
+      "scope": "KR/US",
+      "evidence": "ledger claim token and duplicate-signal mocks pass; real callback mapping unverified",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "remaining_quantity",
+      "scope": "KR/US",
+      "evidence": "aggregate holdings checks tested; per-order remainder unverified",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "stop_activation_dedupe",
+      "scope": "KR/US",
+      "evidence": "pending BUY stop not promoted, stable stop identity tested; automatic fill activation unimplemented",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "multi_account_isolation",
+      "scope": "KR/US",
+      "evidence": "account-scoped intents/claims mocks pass; demo account fill integration blocked",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "restart",
+      "scope": "KR/US",
+      "evidence": "ledger/restart mocks pass; per-order reconciliation after restart blocked",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "persistence_failure",
+      "scope": "KR/US",
+      "evidence": "durable intent and tracker corruption fail-closed mocks pass",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    },
+    {
+      "contract": "recovery_reconciliation",
+      "scope": "KR/US",
+      "evidence": "manual reconciliation required; KIS authoritative ID/fill integration absent",
+      "broker_demo": "NOT_RUN_NO_CREDENTIALS"
+    }
+  ],
+  "verified_paths": [
+    "portfolio_pagination.next_balance_cursor",
+    "portfolio_pagination.validated_balance_quantity",
+    "portfolio_pagination.validated_balance_row",
+    "DomesticStockTrading.get_portfolio/get_holding_quantity headerless mock",
+    "USStockTrading.get_portfolio/get_holding_quantity headerless mock",
+    "StopLossWatcher check holding inquiry failure existing mock"
+  ],
+  "unverified_paths": [
+    "KIS demo per-order IDs/fill IDs/partial/cancel/remaining",
+    "pending BUY late fill automatic stop activation",
+    "full related dependency closure",
+    "Qlty 93 blocking issues",
+    "human review",
+    "branch protection 403"
+  ],
+  "audit": {
+    "related_scope": 167,
+    "related_file_level_inspected": 90,
+    "related_fully_audited": 2,
+    "full_scope": 214,
+    "full_file_level_inspected": 90,
+    "full_fully_audited": 2,
+    "related_pass": "0/2",
+    "full_pass": "0/2"
+  },
+  "real_orders": 0,
+  "demo_orders": 0,
+  "merge": false,
+  "lock": "RELEASED",
+  "next_exact_action": "Audit remaining 165 related manifest files and design test-first mock authoritative per-order fill/partial/cancel attribution; do not enable automatic stop from aggregate holdings."
+}
