@@ -6,37 +6,37 @@ The authoritative skill source is the public repository
 This project uses **one pinned Git Submodule**, rather than copying upstream
 skill content or running a custom synchronization workflow:
 
-- \`.agents/skills/autonomous-maintainer/\` is a Git Submodule with the **OMX**
-  \`SKILL.md\` and its complete upstream package.
-- \`.agents/skills/autonomous-maintainer-standalone/SKILL.md\` is a small,
+- `.agents/skills/autonomous-maintainer/` is a Git Submodule with the **OMX**
+  `SKILL.md` and its complete upstream package.
+- `.agents/skills/autonomous-maintainer-standalone/SKILL.md` is a small,
   platform-neutral adapter that loads the original
-  \`../autonomous-maintainer/standalone/SKILL.md\` from that same submodule.
+  `../autonomous-maintainer/standalone/SKILL.md` from that same submodule.
   Its local UI metadata/icon are kept for Codex skill discovery.
 - Both variants follow the **same pinned upstream commit**. The current commit
   is recorded by the parent repository's gitlink, not a copied version manifest.
 
 ## Clone and initialize
 
-\`\`\`bash
+```bash
 git clone --recurse-submodules https://github.com/tkgo11/prism-insight-light.git
-\`\`\`
+```
 
 For an existing checkout, run:
 
-\`\`\`bash
+```bash
 git submodule update --init --recursive
 python scripts/check_autonomous_maintainer_dependency.py
-\`\`\`
+```
 
-A plain \`git clone\` without submodule initialization will not populate the
+A plain `git clone` without submodule initialization will not populate the
 skill and Codex will not be able to use it. Do not use
-\`git submodule update --remote\` as an unattended deployment mechanism; it
+`git submodule update --remote` as an unattended deployment mechanism; it
 advances the gitlink without a reviewable dependency PR.
 
 ## Automatic updates
 
 GitHub **Dependabot** checks the Git Submodule daily according to
-\`.github/dependabot.yml\` (13:17 Asia/Seoul). When upstream \`main\` advances,
+`.github/dependabot.yml` (13:17 Asia/Seoul). When upstream `main` advances,
 Dependabot can propose a normal pull request to update the **one pinned gitlink**.
 This does not require GitHub Actions write permissions or an API key.
 
