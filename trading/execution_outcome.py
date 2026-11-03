@@ -110,7 +110,22 @@ def rejection_is_ambiguous(res: Any) -> bool:
     # canonical KIS-style letter+digit business identifiers can support a
     # clean rejection; everything else remains UNKNOWN and non-retryable.
     # This is a conservative syntax gate, not proof of an actual broker fill.
-    return re.fullmatch(r"[A-Z]{2,8}[0-9]{3,8}", error_code) is None
+    if re.fullmatch(r"[A-Z]{2,8}[0-9]{3,8}", error_code) is None:
+        return True
+    # A syntactically valid KIS-looking business code cannot prove a clean
+    # rejection if the response also reports a transport-layer exception.
+    # This protects direct KR/US wrapper consumers before any downstream
+    # classify_broker_result() call. Missing optional accessors retain legacy
+    # behavior, but an unreadable accessor fails closed.
+    get_message = getattr(res, "getErrorMessage", None)
+    if get_message is not None:
+        try:
+            error_message = str(get_message() or "").casefold()
+        except Exception:
+            return True
+        if any(marker in error_message for marker in _AMBIGUOUS_MARKERS):
+            return True
+    return False
 
 
 def classify_broker_result(result: Any) -> str:
