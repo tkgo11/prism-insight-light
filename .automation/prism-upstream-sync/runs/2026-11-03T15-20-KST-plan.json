@@ -1,0 +1,68 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+  "slot": "2026-11-03T15-20-KST",
+  "status": "TEST_FIRST_CI_PENDING",
+  "lock_commit": "d351d794424c678a5ee9f9c8be3863430d09e2e5",
+  "pr_number": 43,
+  "starting_pr_head": "b082b161650863eee8f79d510afdef0c2d379ca9",
+  "test_first_pr_head": "182e3e58945bd0ddddcab97b1651abfbd063bb02",
+  "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "subcase": "LEGACY_PROTECTED_LEDGER_MISSING_BUY_INTENT",
+  "classification": "HYPOTHESIS_AWAITING_MOCK_CI_REPRODUCTION",
+  "invariant": "A protected pre-intent legacy execution identity has no order side, instrument or account attribution; it must not prove a ticker safe for stop-loss SELL or zero-holdings tracker deletion. Broker acceptance != fill.",
+  "matrix": [
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "95a29e9730e9cf860addd9747ae1e81a11ea6d48",
+      "functions": [
+        "guard_unresolved_buy",
+        "claim",
+        "finalize",
+        "_load"
+      ],
+      "failure": "legacy unknown/in_progress/executed with no order_intent silently ignored"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "496139946a5e5832cbc0be14f2bdd5f51f9dc2dc",
+      "functions": [
+        "_remove_if_verified_flat",
+        "_trigger_sell",
+        "check_stop_loss_once"
+      ],
+      "failure": "confirmed tracker deleted or auto SELL submitted with un-attributable historical BUY"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "6c1feaf94600ff2d58a3b814609c7b683076ccf4",
+      "functions": [
+        "dispatch",
+        "_dispatch_serialized"
+      ],
+      "failure": "broker workflow stop SELL preflight delegates to ledger and may miss legacy unknown order"
+    },
+    {
+      "path": "tests/test_legacy_unattributed_buy_fence.py",
+      "new": true,
+      "tests": 9
+    }
+  ],
+  "test_first_actions": [
+    41589433601,
+    41589439076
+  ],
+  "expected_failure_type": "assertion on unresolved=False and old tracker deletion; not import/fixture failure",
+  "unverified": [
+    "KIS order ID/fill ID/partial/cancel/remaining reconciliation",
+    "historical opaque entries may include non-BUY; global quarantine trades availability for safety",
+    "KIS demo not run",
+    "full transitive audit and review pending"
+  ],
+  "safety": {
+    "real_orders": 0,
+    "demo_orders": 0,
+    "merge": false,
+    "related_passes": 0,
+    "full_passes": 0
+  }
+}
