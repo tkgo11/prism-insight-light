@@ -1,0 +1,141 @@
+"""Read-only KIS order-history collection: never proof of a fill or permission to SELL."""
+from datetime import datetime
+import re
+
+
+def _get(obj, key, default=None):
+    return obj.get(key, default) if isinstance(obj, dict) else getattr(obj, key, default)
+
+
+def _first(row, *keys):
+    return next((row[k] for k in keys if k in row), None)
+
+
+def _qty(value):
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        raise ValueError("boolean quantity")
+    if isinstance(value, int) and value >= 0:
+        return value
+    if not isinstance(value, str) or re.fullmatch(r"[0-9]{1,18}", value) is None:
+        raise ValueError("noncanonical quantity")
+    return int(value)
+
+
+def _matched(row, *, order_no, order_date, ticker, account, product):
+    if not isinstance(row, dict):
+        raise ValueError("malformed history row")
+    if (_first(row, "odno", "ODNO") != order_no
+            or _first(row, "pdno", "PDNO", "ovrs_pdno") != ticker
+            or _first(row, "ord_dt", "ORD_DT") != order_date
+            or _first(row, "sll_buy_dvsn_cd", "sll_buy_dvsn", "SLL_BUY_DVSN_CD", "SLL_BUY_DVSN") != "02"):
+        return None
+    for key, value in (("cano", account), ("CANO", account),
+                       ("acnt_prdt_cd", product), ("ACNT_PRDT_CD", product)):
+        if key in row and row[key] != value:
+            return None
+    ordered = _qty(_first(row, "ord_qty", "ORD_QTY", "ft_ord_qty"))
+    filled = _qty(_first(row, "tot_ccld_qty", "ft_ccld_qty", "ccld_qty"))
+    remaining = _qty(_first(row, "rmn_qty", "nccs_qty", "ord_remn_qty"))
+    if ordered is not None and ((filled or 0) + (remaining or 0) > ordered):
+        raise ValueError("contradictory quantities")
+    execution_id = _first(row, "ccld_no", "ccld_seq", "CCLD_NO")
+    if execution_id is not None and (
+            not isinstance(execution_id, str)
+            or re.fullmatch(r"[A-Za-z0-9]{1,40}", execution_id) is None):
+        raise ValueError("invalid execution ID")
+    cancel_flag = _first(row, "cncl_yn", "CNCL_YN")
+    if cancel_flag not in (None, "", "Y", "N"):
+        raise ValueError("invalid cancel flag")
+    return dict(order_no=order_no, order_date=order_date, ticker=ticker,
+                order_quantity=ordered, filled_quantity=filled,
+                remaining_quantity=remaining, execution_id=execution_id,
+                cancel_flag=cancel_flag or None)
+
+
+def read_order_history(trader, *, market, order_no, order_date, ticker, max_pages=5):
+    """Bounded read-only account-bound inquiry; returned rows are NON-ACTIONABLE.
+
+    No stop-loss, order submission, ledger finalize, or balance mutation occurs.
+    Missing rows never prove cancellation, rejection or absence of a late fill.
+    """
+    if market not in ("KR", "US"):
+        raise ValueError("unknown market")
+    if not isinstance(order_no, str) or re.fullmatch(r"[0-9]{1,20}", order_no) is None:
+        raise ValueError("invalid order number")
+    if not isinstance(order_date, str) or re.fullmatch(r"[0-9]{8}", order_date) is None:
+        raise ValueError("invalid date")
+    try:
+        datetime.strptime(order_date, "%Y%m%d")
+    except ValueError as exc:
+        raise ValueError("invalid date") from exc
+    pattern = r"[0-9]{6}" if market == "KR" else r"[A-Z0-9.]{1,16}"
+    if not isinstance(ticker, str) or re.fullmatch(pattern, ticker) is None:
+        raise ValueError("invalid ticker")
+    if type(max_pages) is not int or not 1 <= max_pages <= 20:
+        raise ValueError("invalid page limit")
+    env = getattr(trader, "trenv", None)
+    account, product, scope = (getattr(env, "my_acct", None),
+                               getattr(env, "my_prod", None),
+                               getattr(trader, "account_key", None))
+    if not all(isinstance(x, str) and x for x in (account, product, scope)):
+        raise ValueError("missing account provenance")
+    mode = getattr(trader, "mode", None)
+    if mode not in ("demo", "real"):
+        raise ValueError("unknown broker mode")
+    result = dict(market=market, account_scope=scope, order_no=order_no,
+                  order_date=order_date, ticker=ticker, status="UNVERIFIED",
+                  complete=False, can_activate_stop=False, matches=[])
+    if market == "KR":
+        path = "/uapi/domestic-stock/v1/trading/inquire-daily-ccld"
+        tr_id = "VTTC0081R" if mode == "demo" else "TTTC0081R"
+        params = dict(CANO=account, ACNT_PRDT_CD=product, INQR_STRT_DT=order_date,
+                      INQR_END_DT=order_date, SLL_BUY_DVSN_CD="02", PDNO=ticker,
+                      CCLD_DVSN="00", INQR_DVSN="00", INQR_DVSN_3="00",
+                      ORD_GNO_BRNO="", ODNO=order_no, INQR_DVSN_1="",
+                      CTX_AREA_FK100="", CTX_AREA_NK100="")
+        fk, nk, output = "CTX_AREA_FK100", "CTX_AREA_NK100", "output1"
+    else:
+        path = "/uapi/overseas-stock/v1/trading/inquire-ccnl"
+        tr_id = "VTTS3035R" if mode == "demo" else "TTTS3035R"
+        params = dict(CANO=account, ACNT_PRDT_CD=product,
+                      PDNO="" if mode == "demo" else "%",
+                      ORD_STRT_DT=order_date, ORD_END_DT=order_date,
+                      SLL_BUY_DVSN="00" if mode == "demo" else "02",
+                      CCLD_NCCS_DVSN="00", SORT_SQN="DS",
+                      ORD_DT="", ORD_GNO_BRNO="", ODNO="",
+                      OVRS_EXCG_CD="" if mode == "demo" else "%",
+                      CTX_AREA_FK200="", CTX_AREA_NK200="")
+        fk, nk, output = "CTX_AREA_FK200", "CTX_AREA_NK200", "output"
+    cursors, records, matches = set(), set(), []
+    for page in range(max_pages):
+        try:
+            response = trader._request(path, tr_id, dict(params), tr_cont="N" if page else "")
+            if not response.isOK():
+                return result
+            body, header = response.getBody(), response.getHeader()
+            rows = _get(body, output)
+            if isinstance(rows, dict):
+                rows = [rows]
+            if not isinstance(rows, list):
+                return result
+            for row in rows:
+                match = _matched(row, order_no=order_no, order_date=order_date,
+                                 ticker=ticker, account=account, product=product)
+                if match is not None:
+                    signature = tuple(match.values())
+                    if signature not in records:
+                        records.add(signature)
+                        matches.append(match)
+            if _get(header, "tr_cont", "") not in ("M", "F"):
+                result.update(status="EVIDENCE_ONLY", complete=True, matches=matches)
+                return result
+            cursor = (_get(body, fk.lower(), ""), _get(body, nk.lower(), ""))
+            if not all(isinstance(c, str) for c in cursor) or not any(cursor) or cursor in cursors:
+                return result
+            cursors.add(cursor)
+            params[fk], params[nk] = cursor
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError, KeyError):
+            return result
+    return result
