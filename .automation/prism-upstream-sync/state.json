@@ -5,13 +5,15 @@
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T13-18-KST-turn11",
-    "lock_owner": "prism-sync-hourly-2026-11-03T13-18-KST-turn11",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
     "result": "WATCHER_ORIGIN_SPOOFING_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
     "last_mutation_commit": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
     "previous_state_branch_sha": "319c576d600f645d76378ebd424dbc9406ca8195",
     "started_at": "2026-11-03T03:20:56Z",
-    "completed_at": "2026-11-03T04:32:29.970Z"
+    "completed_at": "2026-11-03T04:32:29.970Z",
+    "evidence_commit": "0aae00bedfb067fc273d60d97b91b82ded762385",
+    "released_at": "2026-11-03T04:32:55.826Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
