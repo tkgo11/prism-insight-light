@@ -1,0 +1,469 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-04T05-23-KST-turn10",
+  "slot": "2026-11-04T05-23-KST",
+  "observed_at": "2026-11-03T20:32:00Z",
+  "pr": {
+    "number": 43,
+    "draft": true,
+    "head": "126ef3545dd386b6dc8c761f51c9342dd242c141",
+    "base_ref": "main",
+    "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+    "api_pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+    "merge_result_sha": "6f9b9a1b9b67f404b444333179cb12183bad9e7a"
+  },
+  "source": {
+    "repo": "dragon1086/prism-insight",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "head": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
+    "commits_since_pinned": 48,
+    "files_changed": 41,
+    "imported": 0
+  },
+  "metrics": {
+    "candidate_count": 12,
+    "candidate_target": 10,
+    "verified_candidates": 5,
+    "deferred_candidates": 7,
+    "attempted_reproductions": 12,
+    "reproduced_defects": 1,
+    "actual_code_fixes": 1,
+    "regression_tests_added_and_run": 16,
+    "verified_paths": [
+      "trading/portfolio_pagination.py",
+      "trading/domestic.py::get_portfolio/get_holding_quantity",
+      "trading/us.py::get_portfolio/get_holding_quantity",
+      "trading/stop_loss_watcher.py::check_stop_loss_once",
+      "tests/test_kis_noncanonical_holding_quantity.py"
+    ],
+    "unverified_paths": [
+      "KR/US order-specific KIS history",
+      "multi-account malformed zero propagation direct new tests",
+      "confirmed fill -> stop activation",
+      "Qlty latest issue triage",
+      "branch protection 403",
+      "independent review"
+    ],
+    "complete_related_files": 42,
+    "related_total": 170,
+    "complete_all_files": 42,
+    "full_total": 217,
+    "related_pass": "0/2",
+    "full_pass": "0/2"
+  },
+  "candidates": [
+    {
+      "candidate_id": "C10-01",
+      "root_cause_id": "RC-KIS-BALANCE-NONCANONICAL-ZERO",
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cb8e36b0dc69e02296c93a611fb859bb7f884c4f",
+      "function_or_path": "validated_balance_quantity",
+      "hypothesis": "Underscore-containing zero is silently accepted as a verified flat balance",
+      "priority": "HIGH",
+      "expected_impact": "Broker parsing / test coverage",
+      "reproduction_attempt": "8-red-case suite 41712651185; direct 0_0 case failed",
+      "result": "MOCK_RED_THEN_GREEN",
+      "decision": "FIXED_MOCK_VERIFIED",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-02",
+      "root_cause_id": "RC-KIS-BALANCE-NONCANONICAL-ZERO",
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cb8e36b0dc69e02296c93a611fb859bb7f884c4f",
+      "function_or_path": "validated_balance_quantity",
+      "hypothesis": "Scientific zero notation is silently accepted as verified flat balance",
+      "priority": "HIGH",
+      "expected_impact": "Broker parsing / test coverage",
+      "reproduction_attempt": "0e999999 direct red case in 41712651185",
+      "result": "MOCK_RED_THEN_GREEN",
+      "decision": "FIXED_MOCK_VERIFIED",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-03",
+      "root_cause_id": "RC-KIS-BALANCE-NONCANONICAL-ZERO",
+      "path": "trading/domestic.py",
+      "blob_sha": "27057931e7e40270bb8c6d8c37c99dea70436eda",
+      "function_or_path": "DomesticStockTrading.get_portfolio/get_holding_quantity",
+      "hypothesis": "Malformed KIS KR zero propagates to stop-loss cleanup",
+      "priority": "HIGH",
+      "expected_impact": "Broker parsing / test coverage",
+      "reproduction_attempt": "KR mock broker red in 41712651185; green 41713014909",
+      "result": "MOCK_RED_THEN_GREEN",
+      "decision": "FIXED_VIA_SHARED_PARSER",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-04",
+      "root_cause_id": "RC-KIS-BALANCE-NONCANONICAL-ZERO",
+      "path": "trading/us.py",
+      "blob_sha": "8455e8fba6e9b261547f08d59074b90f1700fe87",
+      "function_or_path": "USStockTrading.get_portfolio/get_holding_quantity",
+      "hypothesis": "Malformed KIS US zero propagates to stop-loss cleanup",
+      "priority": "HIGH",
+      "expected_impact": "Broker parsing / test coverage",
+      "reproduction_attempt": "US mock broker red in 41712651185; green 41713014909",
+      "result": "MOCK_RED_THEN_GREEN",
+      "decision": "FIXED_VIA_SHARED_PARSER",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-05",
+      "root_cause_id": "RC-KIS-BALANCE-NONCANONICAL-ZERO",
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "function_or_path": "check_stop_loss_once/_remove_if_verified_flat",
+      "hypothesis": "False-zero KIS snapshot could erase confirmed stop-loss record",
+      "priority": "CRITICAL",
+      "expected_impact": "Financial exposure, attribution or stop-loss safety",
+      "reproduction_attempt": "4 KR/US mock end-to-end tests green on 41713014909; prior parser red confirms input",
+      "result": "MOCK_RED_THEN_GREEN",
+      "decision": "FIXED_VIA_SHARED_PARSER",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-06",
+      "root_cause_id": "RC-KIS-BALANCE-NONCANONICAL-ZERO",
+      "path": "trading/domestic.py",
+      "blob_sha": "27057931e7e40270bb8c6d8c37c99dea70436eda",
+      "function_or_path": "MultiAccountDomesticStockTrading.get_holding_quantity",
+      "hypothesis": "One malformed account leg must abort aggregate flat inference",
+      "priority": "HIGH",
+      "expected_impact": "Broker parsing / test coverage",
+      "reproduction_attempt": "Call graph checked; no dedicated new multi-account mock in this slot",
+      "result": "UNVERIFIED_SUBCASE",
+      "decision": "UNVERIFIED_SUBCASE",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-07",
+      "root_cause_id": "RC-KIS-BALANCE-NONCANONICAL-ZERO",
+      "path": "trading/us.py",
+      "blob_sha": "8455e8fba6e9b261547f08d59074b90f1700fe87",
+      "function_or_path": "MultiAccountUSStockTrading.get_holding_quantity",
+      "hypothesis": "One malformed US account leg must abort aggregate flat inference",
+      "priority": "HIGH",
+      "expected_impact": "Broker parsing / test coverage",
+      "reproduction_attempt": "Call graph checked; no dedicated new multi-account mock in this slot",
+      "result": "UNVERIFIED_SUBCASE",
+      "decision": "UNVERIFIED_SUBCASE",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-08",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function_or_path": "guard_unresolved_buy",
+      "hypothesis": "Accepted UNKNOWN BUY late fill still lacks order-specific proof and actionable stop activation",
+      "priority": "CRITICAL",
+      "expected_impact": "Financial exposure, attribution or stop-loss safety",
+      "reproduction_attempt": "Existing mock fences inspected; no new KIS order-history test",
+      "result": "STALLED_UNVERIFIED",
+      "decision": "STALLED_UNVERIFIED",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-09",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "function_or_path": "dispatch_manual_order",
+      "hypothesis": "UI ok/executed may be misread as confirmed fill rather than accepted order",
+      "priority": "MEDIUM",
+      "expected_impact": "Broker parsing / test coverage",
+      "reproduction_attempt": "Status mapping read; not newly reproduced",
+      "result": "UNVERIFIED_SEMANTICS",
+      "decision": "UNVERIFIED_SEMANTICS",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-10",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/domestic.py",
+      "blob_sha": "27057931e7e40270bb8c6d8c37c99dea70436eda",
+      "function_or_path": "DomesticStockTrading._request",
+      "hypothesis": "KR read-only inquire-daily-ccld order/partial/cancel query not integrated",
+      "priority": "CRITICAL",
+      "expected_impact": "Financial exposure, attribution or stop-loss safety",
+      "reproduction_attempt": "Official KIS contract compared; no mock history adapter executed",
+      "result": "UNVERIFIED_FEATURE_GAP",
+      "decision": "UNVERIFIED_FEATURE_GAP",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-11",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/us.py",
+      "blob_sha": "8455e8fba6e9b261547f08d59074b90f1700fe87",
+      "function_or_path": "USStockTrading._request",
+      "hypothesis": "US read-only inquire-ccnl requires ODNO blank and full-page local matching",
+      "priority": "CRITICAL",
+      "expected_impact": "Financial exposure, attribution or stop-loss safety",
+      "reproduction_attempt": "Official KIS contract compared; no mock history adapter executed",
+      "result": "UNVERIFIED_FEATURE_GAP",
+      "decision": "UNVERIFIED_FEATURE_GAP",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    },
+    {
+      "candidate_id": "C10-12",
+      "root_cause_id": "RC-CI-COVERAGE-GAP",
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "acbb8d22af42a78a4cea523ea1b6338ea1e35faa",
+      "function_or_path": "windows-runtime",
+      "hypothesis": "New malformed-zero E2E tests are not in selected Windows smoke suite",
+      "priority": "MEDIUM",
+      "expected_impact": "Broker parsing / test coverage",
+      "reproduction_attempt": "Linux push 1825 and PR 1835 passed; Windows 167 passed without new tests",
+      "result": "UNVERIFIED_WINDOWS_COVERAGE",
+      "decision": "UNVERIFIED_WINDOWS_COVERAGE",
+      "verification_method": "Test-first Actions 41712651185; exact-head push 41713005297; PR merge 41713014909; targeted source and call-path inspection"
+    }
+  ],
+  "carry_forward": [
+    {
+      "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "STALLED_NO_ORDER_HISTORY_TEST_PROGRESS",
+      "last_reproduction_run": "No new per-order fill/cancel/remainder history mock; prior 41713014909 only validates unrelated balance parser",
+      "unverified_transitions": [
+        "UNKNOWN -> delayed/partial fill",
+        "cancel -> final remainder",
+        "confirmed fill -> actionable stop",
+        "multi-account fill attribution"
+      ],
+      "blocker": "No integrated KR/US read-only KIS order-history query and no demo credentials; official US ODNO-blank constraint remains",
+      "delta": "0 new order-history tests, 0 broker-authoritative reconciliation progress; separate balance parser defect reproduced and fixed",
+      "next_exact_action": "Test-first KR inquire-daily-ccld and US inquire-ccnl mock pagination with US ODNO blank, account/order/date/symbol match, cumulative fill/remaining; observe red before code fix"
+    },
+    {
+      "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
+      "status": "BLOCKED",
+      "blocker": "Qlty latest status pending (previously 90 untriaged); Snyk success, review 0, branch protection 403, rulesets empty",
+      "delta": "Rechecked latest HEAD; no external gate PASS"
+    },
+    {
+      "carry_forward_id": "RC-KIS-BALANCE-NONCANONICAL-ZERO",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS",
+      "last_reproduction_run": "41712651185: 8 failed, 1813 passed; 41713005297 and 41713014909 green",
+      "unverified_transitions": [
+        "Real/demo KIS balance formatting",
+        "multi-account malformed quantity propagation on both markets"
+      ],
+      "blocker": "No KIS demo credentials; no new dedicated multi-account mock",
+      "delta": "New 16 test cases; 1 production parser root-cause fix; 42/170 and 42/217 full-file evidence"
+    }
+  ],
+  "financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_outcome.py",
+      "mock_result": "MOCK_PASS; no fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "UNKNOWN",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_transport_ambiguity_fence.py; tests/test_broker_exception_class_ambiguity.py",
+      "mock_result": "MOCK_PASS new compact exception name + KIS wrapper 73 tests; no order fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "지연 체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_FENCE_PASS; actual fill attribution BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "부분체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_FENCE_PASS; fill IDs/quantities BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "취소/거절",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_http_rejection_safety.py",
+      "mock_result": "MOCK_PASS; final cancel remainder BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "중복 통지",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS; KIS duplicate events BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "잔여량",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_GUARD_PASS; authoritative remaining BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_pending_buy_stop_loss_safety.py; tests/test_stop_loss_signal_identity.py",
+      "mock_result": "MOCK_FAIL_CLOSED_PASS; activation on confirmed fills BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "다계좌 격리",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_intent_durability.py; tests/test_broker_transport_ambiguity_fence.py",
+      "mock_result": "MOCK_PASS; per-order fill isolation BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "재시작",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_broker_transport_ambiguity_fence.py; tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_durable_state_directory_sync.py; tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    },
+    {
+      "transition": "복구·재조정",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unresolved_buy_without_stop_loss.py",
+      "mock_result": "MOCK_FENCE_PASS; KIS authoritative recovery BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Current exact-head PR 41713014909: 1835 Linux, 167 Windows; KIS order-specific attribution still NOT TESTED"
+    }
+  ],
+  "remediation": {
+    "root_cause_id": "RC-KIS-BALANCE-NONCANONICAL-ZERO",
+    "test_first_commit": "2c70b05762b7f2964867b9c25d0911e30d7136c1",
+    "red_run_ids": [
+      41712651185,
+      41712664285
+    ],
+    "red_result": "8 failed, 1813 passed (real product parser behavior, not fixture/import error)",
+    "fix_commits": [
+      "303350a8448fcaae5fddb74d3dcb6a372ea578f3",
+      "450f6dd92f70001d72b9352dd0b2840e8aa4af98"
+    ],
+    "regression_commit": "126ef3545dd386b6dc8c761f51c9342dd242c141",
+    "final_head": "126ef3545dd386b6dc8c761f51c9342dd242c141",
+    "code_files": [
+      "trading/portfolio_pagination.py"
+    ],
+    "test_files": [
+      "tests/test_kis_noncanonical_holding_quantity.py"
+    ],
+    "red_cases": 8,
+    "green_cases": 16,
+    "notes": "One intermediate regex escape error corrected before final CI; no real/demo orders; 4 end-to-end watcher cleanup tests"
+  },
+  "ci": {
+    "red": {
+      "id": 41712651185,
+      "sha": "2c70b05762b7f2964867b9c25d0911e30d7136c1",
+      "status": "completed",
+      "conclusion": "failure",
+      "expected_regression": true
+    },
+    "push": {
+      "id": 41713005297,
+      "sha": "126ef3545dd386b6dc8c761f51c9342dd242c141",
+      "status": "completed",
+      "conclusion": "success",
+      "linux_passed": 1825,
+      "windows_passed": 167,
+      "docker": "success"
+    },
+    "pull_request": {
+      "id": 41713014909,
+      "head_sha": "126ef3545dd386b6dc8c761f51c9342dd242c141",
+      "merge_sha": "6f9b9a1b9b67f404b444333179cb12183bad9e7a",
+      "status": "completed",
+      "conclusion": "success",
+      "linux_passed": 1835,
+      "windows_passed": 167,
+      "docker": "success"
+    }
+  },
+  "external": {
+    "snyk": {
+      "state": "success",
+      "required": "UNVERIFIED",
+      "issue_count": "NOT_READ"
+    },
+    "qlty": {
+      "state": "PENDING_AT_LAST_READ",
+      "previous_blocking_issues": 90,
+      "required": "UNVERIFIED",
+      "triaged": 0
+    },
+    "reviews": {
+      "count": 0
+    },
+    "branch_protection": {
+      "read": "403_FORBIDDEN_NOT_PASS",
+      "branch_protected_flag": false
+    },
+    "rulesets": {
+      "read": "SUCCESS",
+      "count": 0
+    }
+  },
+  "real_orders": 0,
+  "demo_orders": 0,
+  "limits": [
+    "No new KIS order-history read-only mock; core reconciliation remains STALLED",
+    "Qlty latest pending and previous issues untriaged",
+    "Branch protection API 403 and independent review absent",
+    "128 related files and 175 full files not fully audited"
+  ],
+  "next_exact_action": "Test-first KR inquire-daily-ccld and US inquire-ccnl mock pagination with US ODNO blank, account/order/date/symbol match, cumulative fill/remaining; observe red before code fix",
+  "cas": {
+    "lease_acquired_commit": "51e1b38de2f5d154481317df5018027100ad8b7f",
+    "expected_pr_head": "126ef3545dd386b6dc8c761f51c9342dd242c141",
+    "lock_release_intent": "RELEASED",
+    "state_commit": "RETURNED_AFTER_CAS_UPDATE"
+  }
+}
