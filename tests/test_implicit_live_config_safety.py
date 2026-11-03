@@ -67,12 +67,12 @@ def test_direct_broker_default_without_live_config_is_not_real(tmp_path):
     # Separate interpreter: module-level DEFAULT_MODE is evaluated at import,
     # and reloading KIS modules in the test process would contaminate fixtures.
     script = (
-        "from pathlib import Path\\n"
-        "from trading import config_paths\\n"
-        f"config_paths.DEFAULT_CONFIG_PATH = Path({str(tmp_path / 'missing.yaml')!r})\\n"
-        "from trading.domestic import DomesticStockTrading\\n"
-        "from trading.us import USStockTrading\\n"
-        "print(DomesticStockTrading.DEFAULT_MODE, USStockTrading.DEFAULT_MODE)\\n"
+        "from pathlib import Path\n"
+        "from trading import config_paths\n"
+        f"config_paths.DEFAULT_CONFIG_PATH = Path({str(tmp_path / 'missing.yaml')!r})\n"
+        "from trading.domestic import DomesticStockTrading\n"
+        "from trading.us import USStockTrading\n"
+        "print(DomesticStockTrading.DEFAULT_MODE, USStockTrading.DEFAULT_MODE)\n"
     )
     environment = dict(os.environ)
     environment.pop(config_paths.KIS_CONFIG_PATH_ENV, None)
