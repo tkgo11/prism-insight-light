@@ -68,7 +68,7 @@ def validated_balance_quantity(value: Any) -> int:
     # counts; interpreting them as zero could erase an active stop-loss.
     # Keep integer/decimal-zero representations used by KIS, but fail closed
     # on malformed or ambiguous strings before Decimal normalization.
-    if isinstance(value, str) and re.fullmatch(r"[0-9]+(?:\\.[0-9]+)?", value) is None:
+    if isinstance(value, str) and re.fullmatch(r"[0-9]+(?:\.[0-9]+)?", value) is None:
         raise PortfolioInquiryError("KIS holding quantity is not canonical decimal text")
     try:
         number = Decimal(str(value))
