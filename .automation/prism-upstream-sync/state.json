@@ -5,9 +5,9 @@
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T11-19-KST-turn11",
-    "lock_owner": "prism-sync-hourly-2026-11-03T11-19-KST-turn11",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T10-15-KST-turn10",
-    "result": "MOCK_FENCES_VERIFIED_NO_NEW_PRODUCTION_DEFECT_REPRODUCED_AUDIT_INCOMPLETE",
+    "result": "MOCK_FENCES_VERIFIED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE_LOCK_RELEASED",
     "last_mutation_commit": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
     "previous_state_branch_sha": "875141fcc4a44f8c42e5b758235a8b0ab7248cdb",
     "started_at": "2026-11-03T02:19:54Z",

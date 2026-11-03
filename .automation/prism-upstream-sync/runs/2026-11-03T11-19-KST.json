@@ -60,7 +60,9 @@
   "demo_orders": 0,
   "cas": {
     "lock_commit": "875141fcc4a44f8c42e5b758235a8b0ab7248cdb",
-    "lock_status": "HELD",
-    "expected_state_head": "875141fcc4a44f8c42e5b758235a8b0ab7248cdb"
+    "lock_status": "RELEASED",
+    "expected_state_head": "875141fcc4a44f8c42e5b758235a8b0ab7248cdb",
+    "evidence_commit": "f29211de5ce0a2f4fd17b41ed57906ab37b896bb",
+    "released_at": "2026-11-03T02:27:20.644Z"
   }
 }
