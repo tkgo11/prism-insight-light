@@ -1,16 +1,10 @@
 {
-  "run_id": "prism-sync-hourly-2026-11-04T07-17-KST-turn10",
-  "status": "RELEASED",
-  "expected_state_head": "b28d4b00f4d5d629a0b131c624adb99a6b9ed135",
+  "run_id": "prism-sync-hourly-2026-11-04T08-16-KST-recovery",
+  "status": "LOCKED",
+  "expected_state_head": "82b9b475bed493ac54961f4bd499a2a6411689e0",
   "expected_pr_head": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
-  "created_at": "2026-11-03T22:17:11Z",
-  "released_at": "2026-11-03T22:17:11Z",
-  "evidence_commit": "185116a97a0d3554bf6edaf68bbe4d17d4cd0f64",
-  "reason": "12 candidate audits, 10 full file audits, core KIS reconciliation STALLED, 0 new tests or code fixes; no gate PASS",
+  "created_at": "2026-11-03T23:16:31Z",
+  "purpose": "TEST_FIRST_KR_US_READ_ONLY_ORDER_HISTORY_RECONCILIATION",
   "real_orders": 0,
-  "demo_orders": 0,
-  "audit_passes": {
-    "related": 0,
-    "full": 0
-  }
+  "demo_orders": 0
 }
