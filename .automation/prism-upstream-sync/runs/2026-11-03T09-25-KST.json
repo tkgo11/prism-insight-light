@@ -102,5 +102,5 @@
   "real_orders": 0,
   "demo_orders": 0,
   "merge": false,
-  "lock": "HELD_UNTIL_CAS_RELEASE"
+  "lock": "RELEASED_BY_EXPECTED_SHA_CAS"
 }

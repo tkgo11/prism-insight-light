@@ -5,13 +5,13 @@
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T09-25-KST-turn9",
-    "lock_owner": "prism-sync-hourly-2026-11-03T09-25-KST-turn9",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T08-27-KST-turn9",
     "result": "REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
     "last_mutation_commit": "49189b68dd80c56915945f700a32fc2b7088f48a",
     "previous_state_branch_sha": "4f2b1d04cdc3d822e2a5399cf3b15901be6df817",
     "started_at": "2026-11-03T00:25:25Z",
-    "completed_at": "2026-11-03T00:44:37Z"
+    "completed_at": "2026-11-03T00:45:30Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
