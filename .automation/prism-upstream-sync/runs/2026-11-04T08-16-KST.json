@@ -470,9 +470,10 @@
   },
   "cas": {
     "lock_acquired_commit": "7c24665b65adb9e27825085c59feaededf3c908a",
-    "evidence_commit": "THIS_COMMIT",
-    "release_commit": "PENDING",
-    "lock_status": "LOCKED"
+    "evidence_commit": "98e5ecc607f34bd0f70d4222a8764acbf7cde514",
+    "release_commit": "THIS_RELEASE_COMMIT",
+    "lock_status": "RELEASED",
+    "released_at": "2026-11-03T23:28:52.400Z"
   },
   "next_exact_action": "Test-first persist canonical per-account order receipt/date/symbol and execution-ID/quantity state; reconcile UNKNOWN lacking ODNO without guessing; keep stop blocked until broker-authoritative fill+balance proof"
 }

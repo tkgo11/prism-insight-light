@@ -1,10 +1,16 @@
 {
   "run_id": "prism-sync-hourly-2026-11-04T08-16-KST-recovery",
-  "status": "LOCKED",
-  "expected_state_head": "82b9b475bed493ac54961f4bd499a2a6411689e0",
-  "expected_pr_head": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
+  "status": "RELEASED",
+  "expected_state_head": "98e5ecc607f34bd0f70d4222a8764acbf7cde514",
+  "expected_pr_head": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
   "created_at": "2026-11-03T23:16:31Z",
-  "purpose": "TEST_FIRST_KR_US_READ_ONLY_ORDER_HISTORY_RECONCILIATION",
+  "released_at": "2026-11-03T23:28:52.400Z",
+  "evidence_commit": "98e5ecc607f34bd0f70d4222a8764acbf7cde514",
+  "reason": "31 new read-only KR/US mock tests pass; 4 red parser assertions fixed; 55/178 related and 55/210 full file audits; 0/2+0/2 PASS; no merge",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "audit_passes": {
+    "related": 0,
+    "full": 0
+  }
 }
