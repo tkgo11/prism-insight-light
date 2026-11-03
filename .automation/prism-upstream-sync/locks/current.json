@@ -1,13 +1,10 @@
 {
-  "run_id": "prism-sync-hourly-2026-11-04T05-23-KST-turn10",
-  "status": "RELEASED",
-  "expected_state_head": "907d68d8bf8878e13d8d4deee068cd1fc0bf5e66",
-  "expected_pr_head": "126ef3545dd386b6dc8c761f51c9342dd242c141",
-  "created_at": "2026-11-03T20:33:00Z",
-  "released_at": "2026-11-03T20:33:00Z",
-  "reason": "Final Qlty 90 issues and Snyk success recorded, no gate PASS",
-  "real_orders": 0,
-  "demo_orders": 0,
+  "run_id": "prism-sync-hourly-2026-11-04T07-17-KST-turn10",
+  "status": "LOCKED",
+  "expected_state_head": "92a0b520cf0badf347525322983befd2b28f22c9",
+  "expected_pr_head": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
+  "created_at": "2026-11-03T22:17:11Z",
+  "purpose": "read-only financial path audits and evidence gate; no broker orders",
   "audit_passes": {
     "related": 0,
     "full": 0
