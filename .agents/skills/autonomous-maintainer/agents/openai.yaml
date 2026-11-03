@@ -1,0 +1,8 @@
+interface:
+  display_name: "Autonomous Maintainer (OMX)"
+  short_description: "Exhaustively improve repositories with OMX orchestration"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  default_prompt: "Use $autonomous-maintainer to improve this repository exhaustively with OMX, verify every applied change, and prepare safe delivery."
+policy:
+  allow_implicit_invocation: true

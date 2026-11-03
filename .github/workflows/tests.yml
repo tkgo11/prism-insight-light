@@ -39,6 +39,9 @@ jobs:
           python -m compileall -q subscriber.py pubsub_readiness.py trading webui tests
           bash -n install_prism_docker.sh setup_subscriber_crontab.sh setup_subscriber_docker_crontab.sh
 
+      - name: Verify installed maintenance skill snapshot
+        run: python scripts/sync_autonomous_maintainer.py --verify-installed
+
       - name: Run all tests
         run: python -m pytest -q
 

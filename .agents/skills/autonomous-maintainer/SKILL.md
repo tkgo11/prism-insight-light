@@ -25,7 +25,7 @@ The mission is to:
 - repeat the complete discovery matrix until genuine convergence or a recorded blocker;
 - commit verified waves, prepare dedicated-branch delivery, and create or update a pull request only after the mandatory user inspection and approval gate.
 
-Do not infer this authority from a narrow bug fix, review request, or formatting task.
+Do not infer this authority from a narrow bug fix, review request, or formatting task. A request to improve this skill, its packaging, metadata, or resources targets the skill itself; it does not activate repository-wide maintenance of an unrelated repository.
 
 ## 2. Instruction Priority and Trust Boundary
 
@@ -60,7 +60,8 @@ $autonomous-maintainer resume [key=value ...]
 | `max_epochs` | integer `1..100` | `50` | Maximum complete discover-transform-rescan epochs. |
 | `quiescence_scans` | integer `1..10` | `3` | Consecutive clean full-matrix scans required. |
 | `parallelism` | `auto` or integer `1..32` | `auto` | Maximum independent discovery or verification lanes. |
-| `network` | `off`, `public-read` | `public-read` | Authoritative public read-only research. |
+| `network` | `off`, `public-read` | `public-read` | Network ceiling; `off` prohibits all network calls, including remote delivery. |
+| `candidate_retry_limit` | integer `0..10` | `3` | Additional attempts per failed candidate after its initial attempt. |
 | `rewrite_policy` | `surgical`, `allow`, `aggressive` | `aggressive` | Whether replacements are avoided, allowed, or actively competed. |
 | `compatibility` | `observable-output`, `public-contract`, `strict-internals` | `observable-output` | Preservation boundary. |
 | `delivery` | `none`, `branch`, `pull-request` | `pull-request` | Remote delivery behavior. |
@@ -77,11 +78,17 @@ features, dependencies, compatibility, simplification, dead-code
 
 Validation rules:
 
-- `max_epochs >= quiescence_scans`.
-- `mode=report` forces `commit=false` and `delivery=none`.
+- Parse comma-separated `focus` categories; bare `resume` means `resume=true`. Reject malformed values and conflicting duplicates before mutation.
+- `mode=report` forces `commit=false` and `delivery=none`; `commit=false` also forces `delivery=none`.
+- `network=off` prohibits fetch, authentication lookup, dependency downloads, remote research, fork creation, push, and PR operations. Retain requested delivery as pending and continue independently safe local work; report a delivery blocker rather than silently changing the option.
+- `network=public-read` permits public research. Authenticated reads and remote writes are permitted only as required by separately authorized delivery; never upload private source, logs, or secrets to research services.
 - `feature_policy=proactive` enables discovery and implementation of new repository-aligned features; it does not authorize breaking accepted behavior for existing inputs.
-- `compatibility=observable-output` protects observable effects, not file layout, private APIs, dependencies, algorithms, or architecture.
-- `rewrite_policy=aggressive` prohibits smallest-diff bias and requires replacement candidates for systemic findings.
+- `max_epochs` must be at least `quiescence_scans`.
+- `compatibility=observable-output` protects supported observable effects except evidenced corrections; it does not preserve file layout, private APIs, dependencies, algorithms, or architecture.
+- `compatibility=public-contract` preserves documented and supported public interfaces and effects; separately record observed but undocumented behavior before deciding whether it is relied upon.
+- `compatibility=strict-internals` additionally preserves existing internal interfaces and layout.
+- `rewrite_policy=surgical` confines changes to localized fixes and additions; `allow` permits evidence-backed larger replacements; `aggressive` actively compares them. Compatibility and user constraints take precedence.
+- `rewrite_policy=aggressive` prohibits smallest-diff bias and requires real replacement candidates for systemic findings.
 - `delivery=pull-request` permits only a dedicated remote branch and PR after final verification and the mandatory pre-PR user inspection gate.
 - `permission_fallback=fork` authorizes automatic validated-fork creation or reuse and fork delivery preparation; it never bypasses the mandatory user approval required before creating or updating the cross-repository PR.
 - Unknown options or focus categories are errors.
@@ -165,16 +172,14 @@ Aggressive discovery does not lower evidence or verification standards. Broad re
 
 Before any edit:
 
-1. resolve repository root, Git common directory, current branch, default branch, starting `HEAD`, worktree identity, remotes, sparse checkout, and submodules;
-2. determine the canonical upstream repository independently of local remote names, then sanitize remote URLs before recording them;
-3. identify the authenticated account, upstream write permission, and any existing authenticated fork whose parent or source matches the upstream;
-4. read every applicable instruction file;
-5. inspect staged, unstaged, and untracked work plus in-progress Git operations;
-6. fingerprint pre-existing user work that may overlap;
-7. identify generated, vendored, archived, fixture, cache, binary, symlink, and submodule boundaries;
-8. refuse writes during unresolved merge, rebase, cherry-pick, revert, bisect, corruption, or uncertain ownership;
-9. create or reuse `autonomous-maintainer/<run-id>-<slug>` before the first commit;
-10. never resolve overlap with reset, checkout, stash, clean, or whole-worktree replacement.
+1. resolve local repository root, Git common directory, current branch, starting `HEAD`, worktree identity, local remotes, sparse checkout, submodules, and every staged, unstaged, and untracked modification;
+2. read every applicable instruction file and identify generated, vendored, archived, fixture, cache, binary, symlink, and submodule boundaries;
+3. fingerprint pre-existing user work that may overlap;
+4. refuse writes during unresolved merge, rebase, cherry-pick, revert, bisect, corruption, or uncertain ownership;
+5. resolve canonical upstream, default branch, authenticated account, write permission, and fork topology only when network policy and delivery require them; missing remote credentials block remote operations, not independently safe local maintenance;
+6. create or reuse `autonomous-maintainer/<run-id>-<slug>` before the first commit, preferably in a separate worktree from a known commit when that preserves user work;
+7. never silently omit uncommitted inputs relevant to the task: record the chosen snapshot and block only dependent changes if they cannot be incorporated safely;
+8. never resolve overlap with reset, checkout, stash, clean, or whole-worktree replacement.
 
 When overlap cannot be safely preserved, mark `blocked-user-work` and continue in disjoint areas.
 
@@ -230,7 +235,7 @@ Create or resume:
   delivery.json
 ```
 
-`findings.jsonl`, `hypotheses.jsonl`, and `transformations.jsonl` are append-only; highest revision wins. Persist atomically. A live or uncertain competing owner blocks writes.
+`findings.jsonl`, `hypotheses.jsonl`, and `transformations.jsonl` are append-only; highest revision wins. Persist records atomically and acquire `run.lock` with exclusive creation, not an existence check followed by a write. Record schema version, run ID, repository/worktree identity, owner token, host, process/session identity, start time, and heartbeat. A live or uncertain competing owner blocks writes to its scope. Reclaim a stale lock only with evidence its owner ended; age alone is insufficient. Release only a lock whose owner token still matches. Redact secrets and exclude raw operational state from commits and delivery fingerprints.
 
 Each component-category matrix cell records files examined, commands run, hypotheses tested, findings, exclusions, confidence, and last epoch. Empty cells prohibit completion.
 
@@ -239,12 +244,11 @@ Each component-category matrix cell records files examined, commands run, hypoth
 Execute in order:
 
 1. validate invocation;
-2. reconcile repository identity, canonical upstream, local remotes, branch, and worktree state;
-3. discover the upstream default branch, authenticated account, upstream permission, existing validated fork, and existing run branches or PRs across upstream and fork;
-4. build capability manifest;
-5. reconcile durable state, goals, findings, commits, matrix coverage, delivery topology, and fingerprints;
-6. detect stale assumptions caused by changed files, dependencies, tools, upstream releases, or fork divergence;
-7. classify the run as write-capable, report-capable, direct-delivery-capable, fork-delivery-capable, or blocked.
+2. reconcile local repository identity, branch, worktree state, user work, active runs, and durable fingerprints;
+3. build the capability manifest and detect stale evidence caused by changed files, dependencies, tools, or configuration;
+4. reconcile goals, findings, commits, matrix coverage, and local delivery intent;
+5. only when permitted and needed for delivery, resolve canonical upstream, default branch, authenticated account, upstream permission, validated fork, divergence, and existing run branches or PRs;
+6. classify local-ready, report-capable, direct-delivery-capable, fork-delivery-capable, and blocked capabilities separately. Remote uncertainty must not block local-ready work.
 
 Resume compatible inactive work when `resume=true`. Never create duplicate active runs or duplicate PRs for the same run ID. A resumed run MUST revalidate prior evidence before relying on it. If durable state is `awaiting-user-pr-approval`, resume at the inspection gate and invalidate the pending approval candidate whenever its base, head, diff, verification evidence, delivery topology, title, body, or draft state changed.
 
@@ -268,7 +272,7 @@ No area is complete until covered or explicitly excluded with evidence.
 
 ## 12. Baseline and Behavioral Capture
 
-Run all applicable repository-native diagnostics: format, lint, type checks, static analysis, tests, coverage, mutation tests, fuzz targets, builds, packaging, examples, schema checks, security checks, dependency checks, license checks, benchmarks, startup probes, and smoke tests.
+Inspect commands before execution for writes, network access, external services, and install hooks. Run checks in disposable fixtures or isolated worktrees when they mutate data; never infer permission to contact production from test configuration. Use non-mutating formatter/check modes for baseline capture. Run all applicable repository-native diagnostics: format, lint, type checks, static analysis, tests, coverage, mutation tests, fuzz targets, builds, packaging, examples, schema checks, security checks, dependency checks, license checks, benchmarks, startup probes, and smoke tests.
 
 Before broad transformation, capture behavior using combinations of:
 
@@ -348,8 +352,8 @@ Never discard a valid finding merely because it is low severity, broad in scope,
 
 A change is eligible when:
 
-- evidence strength is at least 3 of 5;
-- confidence is at least 3 of 5;
+- direct evidence demonstrates a reproducible defect, contract mismatch, measurable improvement, or objectively verifiable maintainability/architecture benefit;
+- the verification method distinguishes success from failure and the evidence is strong enough for the change's risk;
 - a feature candidate satisfies the selected `feature_policy` and has testable acceptance criteria;
 - verification is feasible;
 - accepted contracts are known or can be captured;
@@ -450,7 +454,7 @@ Normalize only proven nondeterminism such as timestamps, random IDs, ports, path
 
 ## 20. Verification and Rollback
 
-A wave becomes `applied` only after fresh targeted and affected-closure checks pass, including differential equivalence, regression tests, negative tests, types, lint, static analysis, build, package, examples, schemas, security checks, compatibility checks, mutation or fuzz checks where useful, benchmarks where relevant, secret scan, diff hygiene, and user-work preservation.
+Select verification from changed contracts and reachable consumers. A wave becomes `applied` only after the relevant repository gates, focused regression checks, affected-closure verification, diff hygiene, secret checks, and user-work preservation pass. Use differential tests for replacements and benchmarks for performance claims; add types, lint, build, packaging, security, mutation, fuzz, schema, or compatibility checks when applicable or required by repository policy. Record every check as passed, failed, unavailable, timed-out, or not-applicable with justification. Missing optional tooling is a blind spot; a missing required check blocks the affected wave.
 
 Verification MUST include the changed implementation and all reachable consumers. Passing only a focused test is insufficient for a broad replacement.
 
@@ -462,7 +466,9 @@ If a replacement fails, retain its evidence and compare why; do not automaticall
 
 For `commit=checkpoint`, create one coherent commit per verified wave. For `commit=final`, create one final verified commit. For `commit=false`, leave verified changes uncommitted and disable remote delivery.
 
-Always stage explicit owned paths, inspect staged diffs, and record commit IDs. Commit messages SHOULD state root cause, transformation, and verified contract.
+Always stage explicit owned paths, inspect staged diffs, and record commit IDs. Preserve pre-existing staged work: never commit an index containing unrelated user changes; use an isolated worktree/index or block the affected commit. Never stage operational state, unrelated untracked files, or secrets. Commit messages SHOULD state root cause, transformation, and verified contract.
+
+If final verification finds an empty candidate diff, record a verified no-op and complete without remote identity lookup, an empty commit, fork, push, or PR.
 
 No commit policy permits direct push to the default branch, force push, history rewriting, or inclusion of unrelated work.
 
@@ -482,24 +488,61 @@ After each wave set:
 
 1. increment the epoch;
 2. refresh inventory, contracts, dependencies, history hotspots, and matrix coverage;
-3. rerun baseline and newly relevant checks;
-4. rerun every enabled discovery lane against every affected and previously weak component;
+3. rerun affected baseline and newly relevant checks; retain unaffected evidence only when source, dependencies, configuration, and tool fingerprints still match;
+4. rerun every enabled discovery lane against affected, previously weak, or materially changed components;
 5. search for adjacent defects, inverse cases, second-order regressions, obsolete shims, duplicate implementations, and migration debris;
 6. run a fresh-eyes replacement review that assumes the current architecture may still be wrong;
 7. reopen regressions and add newly exposed opportunities;
-8. reset the clean count to zero when any eligible work, untested cell, stale evidence, or worsened signal appears.
+8. reset the clean count when eligible unblocked work, a required untested or stale cell, or a worsened signal appears.
 
-A scan is clean only when every matrix cell is current, every hypothesis is terminal, no eligible finding remains, verification is fresh, and no unexplained blind spot exists.
+A scan is clean only when every matrix cell is current, every hypothesis is resolved or explicitly blocked, all eligible unblocked findings are applied and verified, and required verification is fresh. Findings use `discovered`, `eligible`, `in-progress`, `applied-verified`, `rejected-with-evidence`, `superseded`, or `blocked`. Blocked work remains visible and prevents an unqualified `complete`; optional-tool blind spots are tracked separately from required verification blockers. A newer epoch alone does not stale unchanged evidence.
 
-Use three different emphases in sequence:
+To prevent cyclic rediscovery, compute a stable finding identity from the affected contract, root cause, reproduction signature, and impacted component (not the epoch number or description wording). Before reopening a previously terminal finding, require new evidence, an invalidated fix, or a changed contract; unchanged observations are not new work. Record before/after file hashes, test signatures, and solution decisions for each transformation. Detect inverse patches or repeated equivalent repository states across epochs: after two such recurrences without measurable improvement, stop retrying that candidate, classify it as blocked with an oscillation/root-cause report, and continue independent work. Never reset the retry budget merely by renaming a finding, creating a new epoch, or resuming a run.
 
-- completeness and breadth;
-- adversarial failure and recovery;
-- simplification, deletion, and replacement from a fresh design perspective.
-
-Require `quiescence_scans` consecutive clean full-matrix scans. At `max_epochs`, persist `resume-required` without claiming completion.
+Use three distinct review emphases in sequence: completeness and breadth; adversarial failure and recovery; simplification, deletion, and replacement. Require `quiescence_scans` consecutive clean full-matrix scans with distinct emphases; do not rerun identical checks solely to increment the count. One epoch is one discovery-through-rescan cycle, including a clean cycle without edits. At `max_epochs`, persist `resume-required`. When only known blockers remain and no safe work can advance, return `partial-blocked` rather than consuming empty epochs.
 
 ## 24. Delivery Preconditions
+
+### Pull-request partitioning algorithm
+
+Before selecting delivery branches, map every verified transformation wave to a node and evaluate every pair of nodes. Add a **must-stay-together edge** when any of these conditions is true:
+
+1. either node would fail to build, test, run, or satisfy the accepted contract against the recorded upstream base without the other;
+2. both nodes implement the same user-visible acceptance criterion and splitting them would leave either PR behaviorally incomplete or misleading;
+3. both participate in one schema, data, configuration, protocol, or deployment migration that must land atomically;
+4. one node exists solely to supply tests, documentation, generated output, caller migration, compatibility removal, or cleanup required by the other;
+5. reverting either node alone would leave a supported state broken, unsafe, or contract-invalid;
+6. the repository cannot independently verify either node against the same upstream base because their verification corpus or fixtures are inherently coupled.
+
+The connected components of this graph are the minimum atomic PR units. Never split a connected component merely to reduce file count, changed lines, review difficulty, or apparent scope.
+
+Start with one PR candidate per connected component. Two components MAY be combined only when every condition below is true:
+
+- they can be described by one objective sentence and one coherent acceptance-criteria set;
+- they affect the same contract surface and risk class;
+- they belong to the same ownership or reviewer domain when repository evidence defines one;
+- neither component has useful independent release, review, or rollback value;
+- combined verification still attributes failures to a specific component;
+- none of the forced-separation rules below applies;
+- the combined candidate changes at most 10 files and at most 300 non-generated lines.
+
+Keep components in separate PRs when any of these forced-separation rules applies and no must-stay-together edge exists:
+
+- distinct user-visible features or distinct acceptance-criteria sets;
+- unrelated root causes, subsystems, or independently valuable fixes;
+- security, privacy, authentication, authorization, secret-handling, or trust-boundary work mixed with unrelated work;
+- dependency, runtime, toolchain, lockfile, or platform upgrades mixed with behavior changes;
+- mechanical formatting, mass rename, generated-file, vendored-file, or broad code-motion churn mixed with semantic changes;
+- infrastructure, deployment, release, or migration mechanics mixed with application behavior when the repository supports staged landing;
+- experimental diagnostics, opportunistic cleanup, or speculative refactoring mixed with the primary verified objective.
+
+Tests, documentation, changelog entries, generated artifacts, caller updates, and cleanup that exist only to support one implementation travel with that implementation rather than becoming separate PRs.
+
+Any candidate touching more than 25 files, more than 800 non-generated changed lines, or more than 3 top-level packages or workspaces MUST undergo a fresh decomposition audit. Split every disconnected component found by that audit, but do not split an atomic connected component solely because a threshold is exceeded. Size never justifies omitting eligible work.
+
+Every split candidate MUST build, pass its affected-closure verification, and preserve the accepted contract against the same recorded upstream base without any unmerged sibling candidate. If it cannot, the relevant nodes are not independent and MUST be joined. Do not create stacked PRs to disguise a missing must-stay-together edge.
+
+Record all nodes, edge reasons, connected components, forced-separation decisions, permitted merges, threshold audits, and the ordered PR candidate list in `delivery.json`. Every candidate receives its own dedicated branch and fingerprint. References below to “the PR candidate” apply independently to each member of this candidate list; a single inspection packet may present the complete list, but approval must explicitly cover every unchanged fingerprint that will be delivered.
 
 Remote delivery is allowed only when:
 
@@ -562,6 +605,8 @@ After valid explicit approval:
 7. attach labels or reviewers only when repository policy authorizes them;
 8. record the approval fingerprint, approval evidence, upstream repository, delivery repository, authenticated account, permission result, delivery mode, fork identity, PR URL, number, head SHA, and base SHA in `delivery.json`.
 
+If a push or PR mutation times out or returns an ambiguous result, read back the exact remote head and matching PR before retrying; reuse an existing matching result and never retry blindly. Record a successful push even if subsequent PR creation fails. An unrelated base advance requires reassessing affected compatibility and mergeability, not automatically repeating unaffected tests.
+
 If the user rejects the candidate or requests changes, do not create or update the PR. Apply authorized changes, rerun affected verification and the final gate, then present a new fingerprinted packet. The user may instead choose `delivery=branch` or `delivery=none`.
 
 If upstream is not writable and fork creation, fork push, or cross-repository PR creation is unavailable, record the exact failed capability and return `partial-blocked`; do not silently downgrade to report-only or ask the user to perform routine fork steps manually.
@@ -587,9 +632,9 @@ If verified changes exist and delivery remains safe, a partial-blocked run SHOUL
 
 ## 27. Report Mode
 
-With `mode=report`, perform inventory, contract capture, baseline, complete discovery matrix, history and upstream research, replacement tournament, dependency planning, verification design, migration design, risk analysis, and delivery planning without implementation edits, commits, pushes, or PR creation.
+With `mode=report`, perform inventory, contract capture, baseline, complete discovery matrix, permitted history and upstream research, replacement comparison, dependency planning, verification design, migration design, risk analysis, and delivery planning. Do not modify the target worktree, index, refs, repository configuration, locks, or remote state. Save reports and state outside the target repository; run checks that write caches, build outputs, or fixtures only in an isolated copy/worktree when creating that isolation is authorized, otherwise record them as unavailable. Do not create a run branch or fork.
 
-Return a prioritized transformation program containing every eligible finding, not only the most important few. Include subsystem and whole-codebase replacement options whenever evidence supports them.
+Return every eligible finding, not only a short prioritized sample. Include subsystem and whole-codebase replacement options whenever evidence supports them. Report mode ends with `report-only` once permitted discovery and analysis are recorded, including coverage gaps and blockers; it does not require apply-mode convergence, commits, or delivery.
 
 ## 28. Progress and Result Semantics
 
@@ -632,7 +677,7 @@ Before `complete`, prove:
 - independent review and adversarial QA are clean;
 - required clean scans passed;
 - unrelated user work is preserved;
-- for `delivery=pull-request`, the exact candidate received explicit user approval, the dedicated branch was pushed to the upstream or validated fork, and the upstream PR was created or updated;
+- delivery obeys the selected mode and applicable approval gate; for a nonempty `delivery=pull-request` candidate, the exact candidate received explicit user approval, the dedicated branch was pushed to the upstream or validated fork, and the upstream PR was created or updated; a verified empty diff completes without remote mutation;
 - no merge, deployment, release, production mutation, force push, secret disclosure, or hidden test weakening occurred.
 
 Write a final report with scope coverage, discovery matrix, findings, hypotheses falsified, code and dependencies deleted, architecture replaced, equivalence corpus, verification, benchmark deltas, commits, upstream/fork/PR metadata, blockers, blind spots, and exact resume state.
