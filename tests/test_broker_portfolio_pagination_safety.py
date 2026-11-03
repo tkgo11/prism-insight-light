@@ -234,3 +234,44 @@ def test_blank_placeholder_balance_row_does_not_invent_a_position(
         monkeypatch.setattr("trading.us.time.sleep", lambda _: None)
     monkeypatch.setattr(trader, "_request", lambda *a, **kw: _Response([{}]))
     assert trader.get_holding_quantity(symbol) == 0
+
+
+@pytest.mark.parametrize("cls, qty_field, ticker_field, symbol", [
+    (DomesticStockTrading, "hldg_qty", "pdno", "005930"),
+    (USStockTrading, "ovrs_cblc_qty", "ovrs_pdno", "AAPL"),
+])
+@pytest.mark.parametrize("invalid_ticker", [None, "  ", 123, " AAPL "])
+def test_positive_quantity_with_invalid_instrument_blocks_false_zero(
+    monkeypatch, cls, qty_field, ticker_field, symbol, invalid_ticker
+):
+    trader = _trader(cls)
+    if cls is USStockTrading:
+        monkeypatch.setattr("trading.us.time.sleep", lambda _: None)
+    monkeypatch.setattr(
+        trader, "_request",
+        lambda *a, **kw: _Response([
+            {ticker_field: invalid_ticker, qty_field: "3"}
+        ]),
+    )
+    with pytest.raises(PortfolioInquiryError):
+        trader.get_holding_quantity(symbol)
+    assert trader._last_portfolio_inquiry_error
+
+
+@pytest.mark.parametrize("cls, qty_field, ticker_field, symbol", [
+    (DomesticStockTrading, "hldg_qty", "pdno", "005930"),
+    (USStockTrading, "ovrs_cblc_qty", "ovrs_pdno", "AAPL"),
+])
+def test_identified_explicit_zero_holding_is_not_a_false_error(
+    monkeypatch, cls, qty_field, ticker_field, symbol
+):
+    trader = _trader(cls)
+    if cls is USStockTrading:
+        monkeypatch.setattr("trading.us.time.sleep", lambda _: None)
+    monkeypatch.setattr(
+        trader, "_request",
+        lambda *a, **kw: _Response([
+            {ticker_field: symbol, qty_field: "0"}
+        ]),
+    )
+    assert trader.get_holding_quantity(symbol) == 0

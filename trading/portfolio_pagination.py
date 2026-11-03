@@ -74,3 +74,33 @@ def validated_balance_quantity(value: Any) -> int:
     ):
         raise PortfolioInquiryError("KIS holding quantity is not a valid whole-share count")
     return int(number)
+
+
+def validated_balance_row(
+    item: dict[str, Any], *, instrument_key: str, quantity_key: str
+) -> tuple[str, int]:
+    """Do not mistake an incomplete identified KIS holding for zero shares.
+
+    Entirely blank placeholder rows may represent no position. Once a row
+    identifies an instrument, missing quantity is UNKNOWN, not zero. Conversely,
+    a positive quantity without an instrument cannot be attributed safely.
+    """
+    raw_instrument = item.get(instrument_key)
+    if raw_instrument is None:
+        instrument = ""
+    elif not isinstance(raw_instrument, str):
+        raise PortfolioInquiryError("KIS balance instrument is malformed")
+    else:
+        instrument = raw_instrument
+    if instrument and instrument != instrument.strip():
+        raise PortfolioInquiryError("KIS balance instrument has ambiguous whitespace")
+    raw_quantity = item.get(quantity_key)
+    if instrument and (
+        raw_quantity is None
+        or (isinstance(raw_quantity, str) and not raw_quantity.strip())
+    ):
+        raise PortfolioInquiryError("KIS identified holding quantity is missing")
+    quantity = validated_balance_quantity(raw_quantity)
+    if quantity > 0 and not instrument:
+        raise PortfolioInquiryError("KIS positive holding lacks an instrument")
+    return instrument, quantity
