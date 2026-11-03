@@ -5,14 +5,17 @@
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
-    "lock_owner": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T16-19-KST-run11",
     "result": "KIS_BALANCE_ROW_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
     "last_mutation_commit": "65d9a9f2d6288eb30e2ce57fdbd36975a5b98249",
     "previous_state_branch_sha": "1414deeb87c6956d7126b968efd7eb6bc4fe0dbc",
     "started_at": "2026-11-03T08:20:31Z",
     "completed_at": "2026-11-03T08:27:00Z",
-    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T17-20-KST.json"
+    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T17-20-KST.json",
+    "released_at": "2026-11-03T08:28:22.953Z",
+    "release_parent_sha": "039327b081e888adcfa28e5830991d72783d7d56",
+    "pr_comment_id": 6598907795
   },
   "source": {
     "repository": "dragon1086/prism-insight",

@@ -96,6 +96,9 @@
   "cas": {
     "lock_acquired_commit": "1414deeb87c6956d7126b968efd7eb6bc4fe0dbc",
     "expected_state_parent": "1414deeb87c6956d7126b968efd7eb6bc4fe0dbc",
-    "release": "PENDING"
-  }
+    "release": "RELEASED",
+    "release_parent_sha": "039327b081e888adcfa28e5830991d72783d7d56"
+  },
+  "released_at": "2026-11-03T08:28:22.953Z",
+  "pr_comment_id": 6598907795
 }
