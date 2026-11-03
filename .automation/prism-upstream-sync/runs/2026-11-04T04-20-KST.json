@@ -1,0 +1,459 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-04T04-20-KST-turn9",
+  "slot": "2026-11-04T04-20-KST",
+  "observed_at": "2026-11-03T19:21:48.865Z",
+  "pr": {
+    "number": 43,
+    "draft": true,
+    "head": "b056e733467a9e2f784271bedb99479100322781",
+    "base_ref": "main",
+    "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+    "api_pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+    "merge_result_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12"
+  },
+  "source": {
+    "repo": "dragon1086/prism-insight",
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "head": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
+    "commits_since_pinned": 48,
+    "files_changed": 41,
+    "imported": 0
+  },
+  "metrics": {
+    "candidate_count": 12,
+    "candidate_target": 10,
+    "verified_candidates": 10,
+    "deferred_candidates": 2,
+    "attempted_reproductions": 0,
+    "reproduced_defects": 0,
+    "actual_code_fixes": 0,
+    "regression_tests_added_and_run": 0,
+    "verified_paths": [
+      "tests/conftest.py",
+      "tests/test_cooldown_pending_reconciliation.py",
+      "tests/test_dispatch_cancellation_safety.py",
+      "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+      "tests/test_multi_account_empty_balance_fail_closed.py",
+      "tests/test_legacy_unattributed_buy_fence.py",
+      "tests/test_unresolved_buy_without_stop_loss.py",
+      "tests/test_stop_loss_account_selection.py",
+      "tests/test_stop_loss_legacy_quarantine.py",
+      "tests/test_stop_loss_mismatched_key_quarantine.py",
+      "tests/test_broker_portfolio_pagination_safety.py",
+      "tests/test_queue_execution_context.py"
+    ],
+    "unverified_paths": [
+      "KIS per-order fill-ID and cumulative fill attribution",
+      "partial/cancel/remainder",
+      "confirmed-fill stop activation",
+      "Qlty 90 untriaged issues",
+      "branch protection 403",
+      "independent review"
+    ],
+    "complete_related_files": 41,
+    "related_total": 169,
+    "complete_full_files": 41,
+    "full_total": 216,
+    "related_pass": "0/2",
+    "full_pass": "0/2",
+    "previous_exact_head_tests_verified": {
+      "linux": 1819,
+      "windows": 167,
+      "docker": "success",
+      "branch_sha": "b056e733467a9e2f784271bedb99479100322781",
+      "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+      "pr_run_id": 41684488536,
+      "push_run_id": 41684476397
+    }
+  },
+  "candidates": [
+    {
+      "candidate_id": "C09-01",
+      "root_cause_id": "RC-TEST-RUNTIME-ISOLATION",
+      "path": "tests/conftest.py",
+      "blob_sha": "b35b9f428d5a66510ed8abdab2052361f1a181ff",
+      "function_or_path": "pytest_configure/pytest_pyfunc_call/_isolated_runtime_dir",
+      "hypothesis": "Fake demo config and per-test runtime isolation prevent accidental real-state mutation; coroutine test runner may be brittle",
+      "priority": "MEDIUM",
+      "expected_impact": "Test isolation",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "pytest configuration, temporary demo credentials, autouse runtime directory, async invocation"
+    },
+    {
+      "candidate_id": "C09-02",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "tests/test_cooldown_pending_reconciliation.py",
+      "blob_sha": "722173fa7eb4c1018facbe515a0ba020eaad841a",
+      "function_or_path": "test_ambiguous_cooldown_order_remains_blocked_across_restart_and_expiry; test_accepted_cooldown_order_stays_pending_until_verified_fill",
+      "hypothesis": "Accepted order remains pending without authoritative final fill/cancel proof",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "UNVERIFIED_FILL_ATTRIBUTION",
+      "decision": "BLOCKED_AUTHORITATIVE_FILL",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "mock pending fence survives expiry and restart; manual reconciliation simulated, not KIS confirmed"
+    },
+    {
+      "candidate_id": "C09-03",
+      "root_cause_id": "RC-DISPATCH-CANCELLATION-SERIALIZATION",
+      "path": "tests/test_dispatch_cancellation_safety.py",
+      "blob_sha": "4064f0c775f8dd76f5567fde1452ea5b5c1b15b7",
+      "function_or_path": "test_cancelled_dispatch_keeps_broker_lock_until_worker_and_tracking_finish",
+      "hypothesis": "Repeated coroutine cancellation cannot release lock while worker still submits",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "thread events and competitor gate assert serialization; cross-process behavior not established"
+    },
+    {
+      "candidate_id": "C09-04",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+      "blob_sha": "5653e71c581605e39e223801ec88d2156f10d71b",
+      "function_or_path": "test_unresolved_buy_survives_restart_and_prevents_zero_cleanup; test_cancelled_without_authoritative_fill_attribution_is_not_proven_flat",
+      "hypothesis": "Zero holding snapshot cannot erase confirmed tracker while unresolved BUY remains",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "watcher and ledger mock tests assert no SELL and no deletion; fill-ID integration missing"
+    },
+    {
+      "candidate_id": "C09-05",
+      "root_cause_id": "RC-MULTIACCOUNT-EMPTY-HOLDINGS",
+      "path": "tests/test_multi_account_empty_balance_fail_closed.py",
+      "blob_sha": "c569088f272834d3e20829d7b15fc1dfa8ce0964",
+      "function_or_path": "test_empty_multi_account_holdings_fail_closed",
+      "hypothesis": "No configured accounts cannot imply zero holdings",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "constructors bypassed; get_holding_quantity must raise rather than erase stops"
+    },
+    {
+      "candidate_id": "C09-06",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "tests/test_legacy_unattributed_buy_fence.py",
+      "blob_sha": "a98fa4b0fd2a45e29c8389f35a2868f5d59f7075",
+      "function_or_path": "test_legacy_protected_claim_without_intent_must_fence_unattributed_buy; test_real_single_dispatch_persists_sell_side_before_mock_broker",
+      "hypothesis": "Opaque legacy claims and invalid provenance must not authorize SELL or deletion",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "legacy global fail-closed fence and modern SELL-side specificity; broker calls mocked"
+    },
+    {
+      "candidate_id": "C09-07",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "tests/test_unresolved_buy_without_stop_loss.py",
+      "blob_sha": "7751ce96f23a336c8ed5a5dd15aac35e6f505deb",
+      "function_or_path": "test_unresolved_buy_without_new_stop_preserves_confirmed_tracker; test_queued_multi_account_stop_sell_rechecks_unknown_buy_before_mock_broker",
+      "hypothesis": "BUY without stop still creates durable intent and blocks ambiguous stop SELL",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "UNVERIFIED_FILL_ATTRIBUTION",
+      "decision": "BLOCKED_AUTHORITATIVE_FILL",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "tests prove pre-broker fences; cannot activate confirmed-fill stop without broker proof"
+    },
+    {
+      "candidate_id": "C09-08",
+      "root_cause_id": "RC-STOPLOSS-ACCOUNT-SELECTION",
+      "path": "tests/test_stop_loss_account_selection.py",
+      "blob_sha": "f3e992bb83678d3c60d920f7ec36816f98820ca4",
+      "function_or_path": "test_watcher_passes_selected_single_account_to_broker; test_watcher_multi_account_inquiry_still_covers_all_accounts",
+      "hypothesis": "Stop watcher must query configured account selector not unrelated default",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "constructor kwargs captured; no actual KIS account or per-order fill attribution"
+    },
+    {
+      "candidate_id": "C09-09",
+      "root_cause_id": "RC-STOPLOSS-LEGACY-QUARANTINE",
+      "path": "tests/test_stop_loss_legacy_quarantine.py",
+      "blob_sha": "97657edc424b61e1789034de08e6bf69b2ebc695",
+      "function_or_path": "test_legacy_list_quarantine_survives_remove_and_new_position; test_duplicate_json_keys_block_orders_and_preserve_original_file; test_corrupt_stop_tracker_blocks_buy_before_mock_broker",
+      "hypothesis": "Malformed legacy positions must remain preserved and non-actionable",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "lossless quarantine, read-only conflict checks, atomic failure preservation, no broker calls"
+    },
+    {
+      "candidate_id": "C09-10",
+      "root_cause_id": "RC-STOPLOSS-MISMATCHED-KEY",
+      "path": "tests/test_stop_loss_mismatched_key_quarantine.py",
+      "blob_sha": "3ac8519a8bb699d499b891b6fa0d78ec7955265d",
+      "function_or_path": "test_mismatched_key_for_same_instrument_quarantines_both_snapshots; test_direct_trigger_cannot_bypass_mismatched_key_quarantine",
+      "hypothesis": "Canonical and noncanonical records for same symbol cannot generate competing stops",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "tests assert no automatic SELL, no rearm and no evidence loss"
+    },
+    {
+      "candidate_id": "C09-11",
+      "root_cause_id": "RC-BROKER-PORTFOLIO-PAGINATION",
+      "path": "tests/test_broker_portfolio_pagination_safety.py",
+      "blob_sha": "9b97b9eb7428f589ca912f158cea9b27a0735781",
+      "function_or_path": "test_kr_holding_on_later_page_is_not_reported_as_zero; test_repeated_pagination_cursor_fails_closed; test_malformed_balance_quantity_must_not_prove_zero",
+      "hypothesis": "Incomplete KIS balance pages must not be treated as flat positions",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "mock pagination proves zero-balance false-positive fence; order fill-ID reconciliation separate"
+    },
+    {
+      "candidate_id": "C09-12",
+      "root_cause_id": "RC-QUEUE-ACCOUNT-PINNING",
+      "path": "tests/test_queue_execution_context.py",
+      "blob_sha": "be2b011657ada3eb7adffbbf700bd665660659bf",
+      "function_or_path": "test_queued_single_account_never_switches_trading_mode; test_queued_single_account_pins_broker_account_without_losing_dedupe; test_queued_multi_account_cannot_switch_demo_to_real",
+      "hypothesis": "Queued order must preserve demo/real environment and account identity",
+      "priority": "HIGH",
+      "expected_impact": "Financial order safety and coverage",
+      "reproduction_attempt": "Existing exact-HEAD mock regression inspected; no new red reproduction or newly executed test in this slot",
+      "result": "VERIFIED_EXISTING_MOCK",
+      "decision": "EXISTING_TEST_VERIFIED_MOCK_ONLY",
+      "verification_method": "Reviewed complete current blob, test failure-path assertions, and exact-head prior completed Actions 41684488536",
+      "review_evidence": "mock queue replay rejects context drift and validates account-bound ledger claim"
+    }
+  ],
+  "carry_forward": [
+    {
+      "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "STALLED_BROKER_ATTRIBUTION_WITH_FILE_AUDIT_PROGRESS",
+      "last_reproduction_run": "No new per-order fill-ID reproduction test this slot; latest existing mock suite run 41684488536 (prior slot)",
+      "unverified_transitions": [
+        "UNKNOWN -> delayed fill",
+        "partial fill -> remaining",
+        "cancel -> final remainder",
+        "confirmed fill -> actionable stop"
+      ],
+      "blocker": "No integrated read-only KIS order/fill/cancel/remainder inquiry or demo credentials; new mock contract not implemented",
+      "delta": "+12 fully audited current-blob files (29→41); +0 new tests, +0 authoritative fill proof",
+      "next_exact_action": "Write KR/US account-scoped read-only Mock KIS order inquiry contract regression for fill IDs, pagination, cumulative and remaining quantity; observe red before production change."
+    },
+    {
+      "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
+      "status": "BLOCKED",
+      "blocker": "Qlty success reports 90 blocking issues not triaged; Snyk success; reviews 0; branch protection 403; rulesets []",
+      "delta": "Rechecked exact-head Snyk/Qlty statuses, zero reviews and protection 403; no gate PASS."
+    }
+  ],
+  "financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_outcome.py",
+      "mock_result": "MOCK_PASS; no fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "UNKNOWN",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_transport_ambiguity_fence.py; tests/test_broker_exception_class_ambiguity.py",
+      "mock_result": "MOCK_PASS new compact exception name + KIS wrapper 73 tests; no order fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "지연 체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_FENCE_PASS; actual fill attribution BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "부분체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_FENCE_PASS; fill IDs/quantities BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "취소/거절",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_http_rejection_safety.py",
+      "mock_result": "MOCK_PASS; final cancel remainder BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "중복 통지",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS; KIS duplicate events BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "잔여량",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_GUARD_PASS; authoritative remaining BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_pending_buy_stop_loss_safety.py; tests/test_stop_loss_signal_identity.py",
+      "mock_result": "MOCK_FAIL_CLOSED_PASS; activation on confirmed fills BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "다계좌 격리",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_intent_durability.py; tests/test_broker_transport_ambiguity_fence.py",
+      "mock_result": "MOCK_PASS; per-order fill isolation BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "재시작",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_broker_transport_ambiguity_fence.py; tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_durable_state_directory_sync.py; tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    },
+    {
+      "transition": "복구·재조정",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unresolved_buy_without_stop_loss.py",
+      "mock_result": "MOCK_FENCE_PASS; KIS authoritative recovery BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "Prior exact-head CI 41684488536 (1819 Linux, 167 Windows), no new mock execution this slot"
+    }
+  ],
+  "ci": {
+    "push": {
+      "id": 41684476397,
+      "sha": "b056e733467a9e2f784271bedb99479100322781",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "pull_request": {
+      "id": 41684488536,
+      "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+      "merge_checkout_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+      "merge_parents": [
+        "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+        "b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "linux_passed": 1819,
+      "windows_passed": 167,
+      "docker": "success"
+    }
+  },
+  "external": {
+    "snyk": {
+      "state": "success",
+      "required": "UNVERIFIED",
+      "issue_count": "NOT_READ"
+    },
+    "qlty": {
+      "state": "success",
+      "blocking_issues": 90,
+      "triaged": 0,
+      "required": "UNVERIFIED"
+    },
+    "reviews": {
+      "count": 0
+    },
+    "branch_protection": {
+      "read": "403_FORBIDDEN_NOT_PASS",
+      "branch_protected_flag": false
+    },
+    "rulesets": {
+      "read": "SUCCESS",
+      "count": 0,
+      "protection_equivalence": "NOT_ESTABLISHED"
+    }
+  },
+  "real_orders": 0,
+  "demo_orders": 0,
+  "limits": [
+    "No new per-order fill-ID reproduction; broker attribution remains STALLED",
+    "Only previous exact-head CI; no new tests executed this slot",
+    "Qlty 90 blocking issues untriaged",
+    "branch protection 403",
+    "human review absent",
+    "128 related files and 175 full files still unaudited"
+  ],
+  "next_exact_action": "Write KR/US account-scoped read-only Mock KIS order inquiry contract regression for fill IDs, pagination, cumulative and remaining quantity; observe red before production change.",
+  "cas": {
+    "lease_acquired_commit": "818cfd3f8aee1f179addea6120c432e0d5b1891c",
+    "expected_pr_head": "b056e733467a9e2f784271bedb99479100322781",
+    "lock_release_intent": "RELEASED",
+    "state_commit": "RETURNED_BY_GITHUB_AFTER_CAS_UPDATE"
+  }
+}
