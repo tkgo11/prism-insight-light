@@ -4,19 +4,18 @@
   "state": "ACTIVE_DRAFT_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "run_id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7",
-    "previous_run_id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
-    "started_at": "2026-11-03T17:20:47Z",
-    "completed_at": "2026-11-03T17:30:01Z",
+    "run_id": "prism-sync-hourly-2026-11-04T03-20-KST-turn8",
+    "previous_run_id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7",
+    "started_at": "2026-11-03T18:23:00Z",
+    "completed_at": "2026-11-03T18:25:04Z",
     "status": "RELEASED",
     "lock_owner": null,
-    "lock_expected_state_branch_sha": "3e3daab2f5c40b975aa6b1e54eb6d28979b9eb2a",
-    "lock_expected_pr_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+    "lock_expected_state_branch_sha": "70687738023e7574eff42b3e2b1dcd253f517f2c",
+    "lock_acquired_commit": "63746c806458095b9338c4a7de697df29a256b2b",
+    "lock_expected_pr_sha": "b056e733467a9e2f784271bedb99479100322781",
     "final_pr_head_sha": "b056e733467a9e2f784271bedb99479100322781",
     "related_pass": false,
-    "full_pass": false,
-    "id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7",
-    "schema_correction": "Qlty changed from pending to success/90 blocking issues before run finalization; CAS corrected."
+    "full_pass": false
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -40,7 +39,7 @@
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_TRANSPORT_EXCEPTION_PROVENANCE_PATCHED_EXACT_HEAD_MOCK_CI_SUCCESS_18_FILE_AUDITS_NO_PASS",
+    "status": "DRAFT_MERGE_TREE_CI_VERIFIED_29_FULL_FILE_AUDITS_NO_PASS",
     "base_ref": "main"
   },
   "candidates": [
@@ -113,30 +112,30 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "INCOMPLETE_CURRENT_HEAD_18_FULL_FILE_AUDITS",
-    "checksum": "57e1592e67119c9e0c3c4246018c5713420ed4ae",
+    "status": "INCOMPLETE_CURRENT_HEAD_29_FULL_FILE_AUDITS",
+    "checksum": "b9161a677df4a253ba40a307c3cddf6344319b64",
     "checksum_kind": "git_blob_sha1",
     "scope_estimate": 169,
-    "files_fully_audited": 18,
+    "files_fully_audited": 29,
     "files_file_level_inspected": 99,
     "files_targeted_path_review": 9,
     "head_sha": "b056e733467a9e2f784271bedb99479100322781",
     "source_head_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
     "git_tree_sha": "ff81c6e8eccabd8d3079e4717df6eb3120a35904",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T02-20-KST-related.json",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T03-20-KST-related.json",
     "sha": "b056e733467a9e2f784271bedb99479100322781"
   },
   "full_manifest": {
-    "status": "INCOMPLETE_CURRENT_HEAD_18_FULL_FILE_AUDITS",
-    "checksum": "e1a86ea09dd6c01c660808de24df8c0ecda39ed6",
+    "status": "INCOMPLETE_CURRENT_HEAD_29_FULL_FILE_AUDITS",
+    "checksum": "ff2d74369bf478c09d7467fc19da89e8665da6fc",
     "checksum_kind": "git_blob_sha1",
     "sha": "b056e733467a9e2f784271bedb99479100322781",
     "files_checked": 103,
-    "fully_audited_files": 18,
+    "fully_audited_files": 29,
     "file_count": 216,
     "files_targeted_path_review": 9,
     "git_tree_sha": "ff81c6e8eccabd8d3079e4717df6eb3120a35904",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T02-20-KST-full.json",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T03-20-KST-full.json",
     "head_sha": "b056e733467a9e2f784271bedb99479100322781"
   },
   "checks": [
@@ -1907,6 +1906,21 @@
       "conclusion": "success",
       "context": "qlty check",
       "description": "90 blocking issues; not independently triaged; not a merge PASS"
+    },
+    {
+      "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+      "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+      "run_ids": [
+        41684476397,
+        41684488536
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "linux_tests": 1819,
+      "windows_tests": 167,
+      "verified_at": "2026-11-03T18:25:04Z",
+      "slot": "2026-11-04T03-20-KST",
+      "notes": "Actual pull_request checkout merge SHA from Linux+Windows job logs; no new tests in turn8"
     }
   ],
   "upstream_changes": [
@@ -6002,7 +6016,7 @@
     "PR base behind current main; merge-result CI unverified",
     "Related 18/169 and full 18/216; independent 0/2 + 0/2"
   ],
-  "next_action": "Write deterministic read-only Mock KIS order-inquiry contract tests for KR/US, account-specific pagination, fill IDs and cumulative/residual quantities; verify red first.",
+  "next_action": "Add a deterministic read-only KR/US Mock KIS order inquiry contract regression for per-account fill IDs, pagination, cumulative and remaining quantities; require observed red failure before safe code change.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -10376,8 +10390,8 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "related_manifest_sha": "57e1592e67119c9e0c3c4246018c5713420ed4ae",
-  "full_manifest_sha": "e1a86ea09dd6c01c660808de24df8c0ecda39ed6",
+  "related_manifest_sha": "b9161a677df4a253ba40a307c3cddf6344319b64",
+  "full_manifest_sha": "ff2d74369bf478c09d7467fc19da89e8665da6fc",
   "run5_candidate_inventory": [
     {
       "candidate_id": "T5-01",
@@ -11934,5 +11948,414 @@
       "related": "57e1592e67119c9e0c3c4246018c5713420ed4ae",
       "full": "e1a86ea09dd6c01c660808de24df8c0ecda39ed6"
     }
+  },
+  "run8_candidate_inventory": [
+    {
+      "candidate_id": "C08-01",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "function_or_path": "_trigger_sell/check_stop_loss_once",
+      "hypothesis": "late broker fill lacks per-order proof and actionable stop",
+      "priority": "HIGH",
+      "result": "UNVERIFIED",
+      "reproduction_attempt": "existing mock fences checked, no new fill-ID test",
+      "decision": "BLOCKED_BROKER_ATTRIBUTION",
+      "verification_method": "Add deterministic mock contract test; observe red before any patch",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-02",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "tests/test_partial_exit_stop_loss_safety.py",
+      "blob_sha": "b99e699d9c376654c50ca640524840d5c851166e",
+      "function_or_path": "test_watcher_strategy_partial_execution_requires_verified_flat",
+      "hypothesis": "partial execution needs authoritative remaining quantity",
+      "priority": "HIGH",
+      "result": "UNVERIFIED",
+      "reproduction_attempt": "positive/zero holdings mock passes; fill-ID missing",
+      "decision": "BLOCKED_BROKER_ATTRIBUTION",
+      "verification_method": "Add deterministic mock contract test; observe red before any patch",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-03",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function_or_path": "guard_unresolved_buy/finalize",
+      "hypothesis": "cancellation and remaining unfilled quantity must not release unknown fence without broker proof",
+      "priority": "HIGH",
+      "result": "UNVERIFIED",
+      "reproduction_attempt": "ledger status contract reviewed; no cancel reconciliation adapter",
+      "decision": "BLOCKED_BROKER_ATTRIBUTION",
+      "verification_method": "Add deterministic mock contract test; observe red before any patch",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-04",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function_or_path": "claim/finalize",
+      "hypothesis": "duplicate execution notifications must be idempotent by fill-ID",
+      "priority": "HIGH",
+      "result": "UNVERIFIED",
+      "reproduction_attempt": "ledger dedupes signals not broker fill IDs",
+      "decision": "BLOCKED_BROKER_ATTRIBUTION",
+      "verification_method": "Add deterministic mock contract test; observe red before any patch",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-05",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function_or_path": "_validated_order_intent/guard_unresolved_buy",
+      "hypothesis": "fill attribution must isolate hashed account scope",
+      "priority": "HIGH",
+      "result": "UNVERIFIED",
+      "reproduction_attempt": "mock multi-account fence present; no per-account fill reconciliation",
+      "decision": "BLOCKED_BROKER_ATTRIBUTION",
+      "verification_method": "Add deterministic mock contract test; observe red before any patch",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-06",
+      "root_cause_id": "RC-LEDGER-ATTEMPT-FENCING",
+      "path": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "blob_sha": "6a2325723a1b58e63fb3e78475fc118f3d860583",
+      "function_or_path": "test_finalize_persistence_failure_after_unknown_buy_claim_keeps_fence",
+      "hypothesis": "restart must not permit duplicate unknown order",
+      "priority": "HIGH",
+      "result": "VERIFIED_EXISTING",
+      "reproduction_attempt": "previous tests passed in exact-head CI 1819; no new red",
+      "decision": "EXISTING_RESOLVED_MOCK_ONLY",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-07",
+      "root_cause_id": "RC-STOP-LOSS-IDENTITY-ROTATION",
+      "path": "tests/test_stop_loss_signal_identity.py",
+      "blob_sha": "82be94f9dff37d58d5f333b33297309b332b03e8",
+      "function_or_path": "test_stop_loss_identity_does_not_rotate_after_threshold_or_entry_edit",
+      "hypothesis": "price edit must not rotate SELL dedupe identity",
+      "priority": "HIGH",
+      "result": "VERIFIED_EXISTING",
+      "reproduction_attempt": "full file and watcher implementation reviewed; CI success",
+      "decision": "EXISTING_RESOLVED_MOCK_ONLY",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-08",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "tests/test_partial_exit_stop_loss_safety.py",
+      "blob_sha": "b99e699d9c376654c50ca640524840d5c851166e",
+      "function_or_path": "test_watcher_strategy_partial_execution_requires_verified_flat",
+      "hypothesis": "positive holdings must retain stop after SELL acceptance",
+      "priority": "HIGH",
+      "result": "VERIFIED_EXISTING",
+      "reproduction_attempt": "mock positive/zero/failure tests pass; broker fill proof absent",
+      "decision": "EXISTING_FENCE_ONLY",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-09",
+      "root_cause_id": "RC-IMPLICIT-LIVE-MODE-FALLBACK",
+      "path": "tests/test_implicit_live_config_safety.py",
+      "blob_sha": "bb8921553e8855fcf6e7f46d44ffd311f64c00c6",
+      "function_or_path": "test_implicit_example_cannot_select_real_mode",
+      "hypothesis": "example config must never arm live implicitly",
+      "priority": "HIGH",
+      "result": "VERIFIED_EXISTING",
+      "reproduction_attempt": "seven current-blob test cases and config paths reviewed",
+      "decision": "EXISTING_RESOLVED_MOCK_ONLY",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-10",
+      "root_cause_id": "RC-QUEUE-INVALID-RECORD-RECOVERY",
+      "path": "tests/test_queue_corrupt_entry_recovery.py",
+      "blob_sha": "1f4fac4e9857bc59156e50de1d780de989b51026",
+      "function_or_path": "test_corrupt_entry_is_quarantined_without_wedging_queue",
+      "hypothesis": "malformed queue entry must not block valid drain",
+      "priority": "MEDIUM",
+      "result": "VERIFIED_EXISTING",
+      "reproduction_attempt": "six malformed cases passed exact-head suite",
+      "decision": "EXISTING_RESOLVED_MOCK_ONLY",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Read-only integrity / input validation"
+    },
+    {
+      "candidate_id": "C08-11",
+      "root_cause_id": "RC-INBOUND-JSON-DUPLICATE-KEYS",
+      "path": "tests/test_inbound_json_duplicate_keys.py",
+      "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+      "function_or_path": "test_pubsub_rejects_duplicate_json_keys",
+      "hypothesis": "duplicate financial fields cannot silently override",
+      "priority": "HIGH",
+      "result": "VERIFIED_EXISTING",
+      "reproduction_attempt": "PubSub/Telegram/WebUI tests passed exact-head suite",
+      "decision": "EXISTING_RESOLVED_MOCK_ONLY",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-12",
+      "root_cause_id": "RC-WEBUI-DRYRUN-SIDE-EFFECT",
+      "path": "webui/services/dry_run_service.py",
+      "blob_sha": "01e94a72fb3c3dcfd481bcddfdb9463eeb00976a",
+      "function_or_path": "simulate_dispatch",
+      "hypothesis": "dry-run must not instantiate KIS/dispatcher",
+      "priority": "HIGH",
+      "result": "VERIFIED_EXISTING",
+      "reproduction_attempt": "constructor trap and duplicate JSON tests passed exact-head suite",
+      "decision": "EXISTING_RESOLVED_MOCK_ONLY",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-13",
+      "root_cause_id": "RC-WEBUI-SIGNAL-VALIDATION",
+      "path": "webui/services/signal_service.py",
+      "blob_sha": "2cd96c0143da8d1d9194500031a74158b7571135",
+      "function_or_path": "parse_signal_input/parse_signal_text",
+      "hypothesis": "invalid/duplicate signal must not become order",
+      "priority": "HIGH",
+      "result": "VERIFIED_EXISTING",
+      "reproduction_attempt": "schema/duplicate-key tests passed exact-head suite",
+      "decision": "EXISTING_RESOLVED_MOCK_ONLY",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-14",
+      "root_cause_id": "RC-WEBUI-READINESS-ISOLATION",
+      "path": "webui/services/readiness_service.py",
+      "blob_sha": "472da75058b3a852760e33731476390777f6e6e8",
+      "function_or_path": "get_readiness_summary",
+      "hypothesis": "static dashboard readiness must not call PubSub",
+      "priority": "MEDIUM",
+      "result": "VERIFIED_EXISTING",
+      "reproduction_attempt": "monkeypatched network trap test passed exact-head suite",
+      "decision": "EXISTING_RESOLVED_MOCK_ONLY",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Read-only integrity / input validation"
+    },
+    {
+      "candidate_id": "C08-15",
+      "root_cause_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "acbb8d22af42a78a4cea523ea1b6338ea1e35faa",
+      "function_or_path": "pull_request checkout",
+      "hypothesis": "merge-result tree with current main must be tested",
+      "priority": "HIGH",
+      "result": "VERIFIED_THIS_RUN",
+      "reproduction_attempt": "Actions job logs show checkout merge e79378a9 and 1819/167 tests green",
+      "decision": "VERIFIED_MERGE_TREE_CI",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-16",
+      "root_cause_id": "RC-EXTERNAL-QUALITY-GATES",
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "acbb8d22af42a78a4cea523ea1b6338ea1e35faa",
+      "function_or_path": "external quality gate",
+      "hypothesis": "green status with 90 blocking issues is not resolved",
+      "priority": "HIGH",
+      "result": "BLOCKED",
+      "reproduction_attempt": "status description 90 issues, details untriaged, protection 403",
+      "decision": "BLOCKED_EXTERNAL",
+      "verification_method": "Read current blob and check exact-head Actions logs",
+      "expected_impact": "Financial order safety / merge eligibility"
+    },
+    {
+      "candidate_id": "C08-17",
+      "root_cause_id": "RC-US-BROKER-QUANTITY-PARSING",
+      "path": "trading/us.py",
+      "blob_sha": "UNKNOWN_CURRENT_BLOB_SHA",
+      "function_or_path": "_safe_int/_resolve_orderable_usd",
+      "hypothesis": "boolean/fraction/large integer parsing may distort broker max quantity",
+      "priority": "MEDIUM",
+      "result": "UNVERIFIED",
+      "reproduction_attempt": "source inspected, no test run or patch",
+      "decision": "UNVERIFIED_NEEDS_MOCK",
+      "verification_method": "Add deterministic mock contract test; observe red before any patch",
+      "expected_impact": "Read-only integrity / input validation"
+    }
+  ],
+  "run8_carry_forward": [
+    {
+      "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "STALLED_AUTHORITATIVE_FILL_ATTRIBUTION",
+      "last_reproduction_run": "Previous 41684488536/41684476397 rerun existing fences; no new per-order fill-ID test this slot",
+      "unverified_transitions": [
+        "UNKNOWN -> delayed fill",
+        "partial fill -> remaining",
+        "cancel -> final remainder",
+        "confirmed fill -> actionable stop"
+      ],
+      "blocker": "No integrated read-only KIS order/fill/cancel/remaining reconciliation; no demo credentials; no authoritative per-account fill-ID test",
+      "delta": "+11 file-complete audits (18→29), but 0 new fill-ID reproduction tests and 0 broker attribution proof. This risk remains STALLED.",
+      "next_exact_action": "Write KR/US account-scoped read-only Mock KIS order-inquiry pagination and fill-ID/cumulative/residual quantity tests; red first."
+    },
+    {
+      "carry_forward_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+      "status": "VERIFIED_MERGE_RESULT_CI",
+      "blocker": null,
+      "delta": "Inspected Actions Linux and Windows checkout logs: both ran merge SHA e79378a9f5a7e957a98d958de41644fcbc9dee12 with parents e17032bac72c0aebac8a1e4710b2c4b018abc986 and b056e733467a9e2f784271bedb99479100322781; 1819 Linux and 167 Windows passed. Branch head and merge tree both verified."
+    },
+    {
+      "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
+      "status": "BLOCKED",
+      "blocker": "Qlty check success but 90 blocking issues untriaged; Snyk success; human reviews 0; branch protection 403; rulesets API []",
+      "delta": "Latest SHA status and reviews confirmed; not PASS."
+    }
+  ],
+  "run8_financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_outcome.py",
+      "mock_result": "MOCK_PASS; no fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "UNKNOWN",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_transport_ambiguity_fence.py; tests/test_broker_exception_class_ambiguity.py",
+      "mock_result": "MOCK_PASS new compact exception name + KIS wrapper 73 tests; no order fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "지연 체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_FENCE_PASS; actual fill attribution BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "부분체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_FENCE_PASS; fill IDs/quantities BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "취소/거절",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_http_rejection_safety.py",
+      "mock_result": "MOCK_PASS; final cancel remainder BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "중복 통지",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS; KIS duplicate events BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "잔여량",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_GUARD_PASS; authoritative remaining BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_pending_buy_stop_loss_safety.py; tests/test_stop_loss_signal_identity.py",
+      "mock_result": "MOCK_FAIL_CLOSED_PASS; activation on confirmed fills BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "다계좌 격리",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_intent_durability.py; tests/test_broker_transport_ambiguity_fence.py",
+      "mock_result": "MOCK_PASS; per-order fill isolation BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "재시작",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_broker_transport_ambiguity_fence.py; tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_durable_state_directory_sync.py; tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": null,
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    },
+    {
+      "transition": "복구·재조정",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unresolved_buy_without_stop_loss.py",
+      "mock_result": "MOCK_FENCE_PASS; KIS authoritative recovery BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 (1819 passed); no new test in this slot"
+    }
+  ],
+  "run8_audit_progress": {
+    "new_full_file_audits": [
+      "tests/test_implicit_live_config_safety.py",
+      "tests/test_partial_exit_stop_loss_safety.py",
+      "tests/test_stop_loss_signal_identity.py",
+      "tests/test_queue_corrupt_entry_recovery.py",
+      "tests/test_inbound_json_duplicate_keys.py",
+      "webui/services/dry_run_service.py",
+      "webui/services/signal_service.py",
+      "tests/test_webui_signal_service.py",
+      "tests/test_webui_dry_run_service.py",
+      "tests/test_webui_readiness_service.py",
+      "webui/services/readiness_service.py"
+    ],
+    "previous": 18,
+    "current": 29,
+    "ci_merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+    "run_id": "prism-sync-hourly-2026-11-04T03-20-KST-turn8"
   }
 }
