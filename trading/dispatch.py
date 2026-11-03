@@ -926,7 +926,7 @@ class TradeDispatcher:
         # leave a potentially filled position without reliable protection.
         # This read-only preflight applies to KR/US, strategy, queued and
         # multi-account broker paths (the latter may already hold a claim).
-        if signal.signal_type == "BUY" and isinstance(self.stop_loss_tracker, StopLossTracker):
+        if signal.signal_type == "BUY" and isinstance(getattr(self, "stop_loss_tracker", None), StopLossTracker):
             try:
                 await asyncio.to_thread(
                     self.stop_loss_tracker.assert_registration_safe,
