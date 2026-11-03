@@ -898,6 +898,33 @@ class StopLossWatcher:
                 "market": market, "ticker": ticker, "status": "blocked",
                 "message": "Stop-loss snapshot changed; broker submission blocked",
             }
+        # A confirmed older tracker can coexist with an UNKNOWN new BUY for
+        # this ticker. Aggregate holdings cannot attribute shares to either
+        # order, so the old threshold must not authorize a SELL of the new
+        # unresolved position. Fail closed until broker-authoritative fill
+        # reconciliation; retain the old tracker for operator inspection.
+        ledger = getattr(self.dispatcher, "execution_ledger", None)
+        if isinstance(ledger, ExecutionLedger):
+            try:
+                with ledger.guard_unresolved_buy(market, ticker) as unresolved:
+                    if unresolved:
+                        logger.critical(
+                            "[Stop-Loss] Blocking SELL for %s %s: unresolved "
+                            "BUY may have changed attributable holdings", market, ticker,
+                        )
+                        return {
+                            "market": market, "ticker": ticker, "status": "blocked",
+                            "message": "Unresolved BUY; per-order broker reconciliation required",
+                        }
+            except Exception:
+                logger.exception(
+                    "[Stop-Loss] Blocking SELL for %s %s: durable BUY ledger "
+                    "could not be verified", market, ticker,
+                )
+                return {
+                    "market": market, "ticker": ticker, "status": "blocked",
+                    "message": "BUY intent ledger unavailable; operator reconciliation required",
+                }
         signal_id = pos.get("stop_loss_signal_id")
         if signal_id is None:
             # Legacy persisted records retain the same identity they used

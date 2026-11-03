@@ -111,7 +111,7 @@ def test_verified_no_submission_intent_does_not_block_zero_cleanup(tmp_path, sta
     assert tracker.get_position("US", "AAPL") is None
 
 @pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
-def test_post_sell_zero_preserves_tracker_with_another_unresolved_buy(
+def test_unresolved_buy_blocks_sell_and_zero_cleanup(
     tmp_path, market, ticker
 ):
     from trading.dispatch import DispatchResult
@@ -123,8 +123,9 @@ def test_post_sell_zero_preserves_tracker_with_another_unresolved_buy(
     )
     before = tracker.get_position(market, ticker)
     result = watcher._trigger_sell(market, ticker, 85, before)
-    assert result["status"] == "executed"
-    dispatcher.dispatch.assert_awaited_once()
+    assert result["status"] == "blocked"
+    dispatcher.dispatch.assert_not_awaited()
+    assert watcher._remove_if_verified_flat(market, ticker, before) is False
     assert tracker.get_position(market, ticker) == before
 
 def test_us_case_variant_pending_intent_blocks_confirmed_cleanup(tmp_path):

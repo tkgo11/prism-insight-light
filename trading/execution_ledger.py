@@ -124,11 +124,11 @@ def execution_identity(signal_payload: dict[str, Any], account_key: str) -> str:
 
 
 def _validated_order_intent(value: dict[str, Any]) -> dict[str, Any]:
-    """Non-actionable, non-sensitive BUY stop-loss reconciliation evidence only."""
+    """Non-actionable, non-sensitive BUY reconciliation evidence only."""
     expected = {"kind", "market", "ticker", "stop_loss", "account_scope"}
     if not isinstance(value, dict) or set(value) != expected:
         raise ValueError("BUY intent must contain only approved fields")
-    if value["kind"] != "buy_stop_loss" or value["market"] not in ("KR", "US"):
+    if value["kind"] not in ("buy_stop_loss", "buy_unresolved") or value["market"] not in ("KR", "US"):
         raise ValueError("Invalid BUY intent kind or market")
     ticker = value["ticker"]
     if (not isinstance(ticker, str) or not ticker or len(ticker) > 64
@@ -139,16 +139,23 @@ def _validated_order_intent(value: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(scope, str) or re.fullmatch(r"[0-9a-f]{64}", scope) is None:
         raise ValueError("BUY intent scope must be an opaque SHA-256 digest")
     raw_stop = value["stop_loss"]
-    if isinstance(raw_stop, bool):
-        raise ValueError("BUY intent stop loss must be numeric")
-    try:
-        stop_loss = float(raw_stop)
-    except (TypeError, ValueError, OverflowError) as exc:
-        raise ValueError("Invalid BUY intent stop loss") from exc
-    if not math.isfinite(stop_loss) or stop_loss <= 0:
-        raise ValueError("BUY intent stop loss must be positive and finite")
+    if value["kind"] == "buy_unresolved":
+        # An absent stop price is NOT permission to discard a different
+        # confirmed position's protection or to activate a synthetic stop.
+        if raw_stop is not None:
+            raise ValueError("Unresolved BUY without stop must have null stop loss")
+        stop_loss = None
+    else:
+        if isinstance(raw_stop, bool):
+            raise ValueError("BUY intent stop loss must be numeric")
+        try:
+            stop_loss = float(raw_stop)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Invalid BUY intent stop loss") from exc
+        if not math.isfinite(stop_loss) or stop_loss <= 0:
+            raise ValueError("BUY intent stop loss must be positive and finite")
     return {
-        "kind": "buy_stop_loss", "market": value["market"], "ticker": ticker,
+        "kind": value["kind"], "market": value["market"], "ticker": ticker,
         "stop_loss": stop_loss, "account_scope": scope,
     }
 

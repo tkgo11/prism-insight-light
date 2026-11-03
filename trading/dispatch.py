@@ -127,11 +127,16 @@ def _buy_stop_loss_intent(signal: SignalMessage, account_selector: str) -> dict[
     The scope is hashed; in single-account mode it may be a configuration
     selector rather than a broker-verified account identity.
     """
-    if signal.signal_type != "BUY" or signal.stop_loss is None or signal.stop_loss <= 0:
+    if signal.signal_type != "BUY":
         return None
+    # A BUY without a new stop threshold can still fill after an initial
+    # zero-balance inquiry. Persist its non-actionable identity before broker
+    # submission so an older confirmed tracker is not silently discarded.
+    has_stop = signal.stop_loss is not None and signal.stop_loss > 0
     return {
-        "kind": "buy_stop_loss", "market": signal.market, "ticker": signal.ticker,
-        "stop_loss": signal.stop_loss,
+        "kind": "buy_stop_loss" if has_stop else "buy_unresolved",
+        "market": signal.market, "ticker": signal.ticker,
+        "stop_loss": signal.stop_loss if has_stop else None,
         "account_scope": hashlib.sha256(account_selector.encode("utf-8")).hexdigest(),
     }
 

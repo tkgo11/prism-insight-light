@@ -180,3 +180,53 @@ def test_confirmed_old_stop_must_not_sell_unattributed_unknown_buy_holdings(
     assert outcome["status"] == "blocked"
     dispatcher.dispatch.assert_not_called()
     assert tracker.get_position(market, ticker) == pos
+
+
+@pytest.mark.parametrize("kind,stop", [
+    ("buy_unresolved", 50.0),
+    ("buy_stop_loss", None),
+    ("buy_unresolved", False),
+])
+def test_invalid_buy_intent_kind_and_stop_combination_fails_closed(
+    tmp_path, kind, stop
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    with pytest.raises(ValueError):
+        ledger.claim("bad", order_intent={
+            "kind": kind, "market": "US", "ticker": "AAPL",
+            "stop_loss": stop, "account_scope": "a" * 64,
+        })
+    assert not ledger.path.exists()
+
+
+def test_verified_rejected_new_buy_does_not_disable_old_confirmed_stop(tmp_path):
+    from trading.dispatch import DispatchResult
+
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position("KR", "005930", 90, entry_price=100, pending_buy=False)
+    pos = tracker.get_position("KR", "005930")
+    intent = _buy_stop_loss_intent(
+        SignalMessage(signal_type="BUY", market="KR", ticker="005930"),
+        "mock-account",
+    )
+    claimed, _, token = ledger.claim("clean-rejection", with_token=True, order_intent=intent)
+    assert claimed
+    ledger.finalize("clean-rejection", "rejected", claim_token=token)
+    dispatcher = MagicMock()
+    dispatcher.execution_ledger = ledger
+    dispatcher.trading_mode = "demo"
+    dispatcher.multi_account_enabled = False
+    dispatcher.dispatch = AsyncMock(return_value=DispatchResult(
+        "executed", "mock old-position stop accepted", "SELL", "KR",
+    ))
+    watcher = StopLossWatcher(
+        dispatcher, StopLossWatcherConfig(enabled=True, storage_path=tracker.path),
+        tracker=tracker,
+    )
+    trader = MagicMock()
+    trader.get_holding_quantity.return_value = 5
+    watcher._get_trader = MagicMock(return_value=trader)
+    outcome = watcher._trigger_sell("KR", "005930", 85, pos)
+    assert outcome["status"] == "executed"
+    dispatcher.dispatch.assert_awaited_once()
