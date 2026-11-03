@@ -276,3 +276,64 @@ async def test_dispatcher_broker_lock_boundary_rechecks_buy_intent_before_stop_s
         dispatcher._execute_legacy_trade.assert_not_called()
     else:
         dispatcher._execute_legacy_trade.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_multi_account_stop_sell_blocked_when_only_one_buy_leg_unknown(
+    tmp_path, monkeypatch
+):
+    from trading.dispatch import DispatchResult
+
+    path = tmp_path / "ledger.json"
+    ledger = ExecutionLedger(path)
+    for index, status in enumerate(("rejected", "unknown")):
+        intent = _buy_stop_loss_intent(
+            SignalMessage(signal_type="BUY", market="US", ticker="AAPL"),
+            "mock-account-" + str(index),
+        )
+        claimed, _, token = ledger.claim(
+            "account-buy-" + str(index), with_token=True, order_intent=intent,
+        )
+        assert claimed
+        ledger.finalize("account-buy-" + str(index), status, claim_token=token)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=path,
+    )
+    dispatcher.multi_account_enabled = True
+    dispatcher.multi_account_dispatcher.dispatch = AsyncMock(
+        return_value=DispatchResult("executed", "mock SELL", "SELL", "US")
+    )
+    signal = parse_signal_payload({
+        "signal_id": "multi-account-stop", "type": "SELL",
+        "market": "US", "ticker": "AAPL", "price": 85,
+        "sell_reason": "stop_loss",
+    })
+    result = await dispatcher.dispatch(signal, allow_queue=False)
+    assert result.status == "deferred"
+    dispatcher.multi_account_dispatcher.dispatch.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_corrupt_buy_ledger_blocks_dispatcher_stop_sell_without_mock_broker(
+    tmp_path, monkeypatch
+):
+    from trading.dispatch import DispatchResult
+
+    path = tmp_path / "ledger.json"
+    path.write_text("{broken", encoding="utf-8")
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=path,
+    )
+    dispatcher._execute_legacy_trade = AsyncMock(
+        return_value=DispatchResult("executed", "mock SELL", "SELL", "KR")
+    )
+    signal = parse_signal_payload({
+        "signal_id": "corrupt-ledger-stop", "type": "SELL",
+        "market": "KR", "ticker": "005930", "price": 85,
+        "sell_reason": "stop_loss",
+    })
+    result = await dispatcher.dispatch(signal, allow_queue=False)
+    assert result.status == "deferred"
+    dispatcher._execute_legacy_trade.assert_not_called()
