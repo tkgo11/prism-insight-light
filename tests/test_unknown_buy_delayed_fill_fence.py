@@ -72,7 +72,7 @@ def test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop(
     with patch("trading.stop_loss_watcher.is_market_open",
                side_effect=lambda candidate: candidate == market):
         assert watcher.check_stop_loss_once() == []  # before delayed fill
-        assert watcher.check_stop_loss_once() == []  # aggregate partial holding
+        blocked = watcher.check_stop_loss_once()  # aggregate holding is not a fill ID\n        assert len(blocked) == 1 and blocked[0]["status"] == "blocked"
     direct = watcher._trigger_sell(market, ticker, 80, old_tracker)
     assert direct["status"] == "blocked"
     dispatcher.dispatch.assert_not_called()
