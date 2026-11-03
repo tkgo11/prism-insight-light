@@ -139,3 +139,31 @@ async def test_accepted_cooldown_without_order_id_still_blocks_retry(tmp_path, m
     path.write_text(json.dumps(state), encoding="utf-8")
     assert (await _strategy(path).execute(_signal(), trading_mode="demo")).status == "rejected"
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.asyncio
+async def test_legacy_cooldown_record_without_pending_provenance_cannot_expire_into_retry(
+    tmp_path, monkeypatch, market, ticker
+):
+    """Old records do not prove broker fill/cancel; age alone cannot authorize replay."""
+    path = tmp_path / "cooldown.json"
+    old = [{
+        "key": f"{market}:{ticker}:BUY", "market": market, "ticker": ticker,
+        "signal_type": "BUY",
+        "created_at": (datetime.now(timezone.utc) - timedelta(days=30)).isoformat(),
+    }]
+    raw = json.dumps(old)
+    path.write_text(raw, encoding="utf-8")
+    calls = []
+    async def mock_broker(*args, **kwargs):
+        calls.append(1)
+        return {"success": True, "order_no": "MOCK"}
+    monkeypatch.setattr("trading.strategies.cooldown.execute_order", mock_broker)
+    signal = parse_signal_payload({
+        "type": "BUY", "market": market, "ticker": ticker, "price": 100
+    })
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        await _strategy(path).execute(signal, trading_mode="demo")
+    assert calls == []
+    assert path.read_text(encoding="utf-8") == raw
