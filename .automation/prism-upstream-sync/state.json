@@ -4,19 +4,19 @@
   "state": "ACTIVE_DRAFT_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "run_id": "prism-sync-hourly-2026-11-04T07-17-KST-turn10",
-    "previous_run_id": "prism-sync-hourly-2026-11-04T06-25-KST-turn9",
-    "started_at": "2026-11-03T22:17:11Z",
-    "status": "RELEASED",
-    "lock_owner": null,
-    "lock_acquired_commit": "b28d4b00f4d5d629a0b131c624adb99a6b9ed135",
+    "run_id": "prism-sync-hourly-2026-11-04T08-16-KST-recovery",
+    "previous_run_id": "prism-sync-hourly-2026-11-04T07-17-KST-turn10",
+    "started_at": "2026-11-03T23:16:31Z",
+    "status": "EVIDENCE_WRITTEN_LOCKED",
+    "lock_owner": "prism-sync-hourly-2026-11-04T08-16-KST-recovery",
+    "lock_acquired_commit": "7c24665b65adb9e27825085c59feaededf3c908a",
     "lock_expected_pr_sha": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
-    "final_pr_head_sha": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
+    "final_pr_head_sha": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
     "related_pass": false,
     "full_pass": false,
-    "lock_released": true,
-    "evidence_commit": "185116a97a0d3554bf6edaf68bbe4d17d4cd0f64",
-    "completed_at": "2026-11-03T22:17:11Z"
+    "lock_released": false,
+    "evidence_commit": "THIS_COMMIT",
+    "completed_at": "2026-11-03T23:28:00Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -36,11 +36,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
+    "head_sha": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_43_FULL_FILE_AUDITS_NO_PASS",
+    "status": "DRAFT_43_ORDER_HISTORY_READ_ONLY_MOCK_CI_GREEN_RECONCILIATION_UNRESOLVED",
     "base_ref": "main"
   },
   "candidates": [
@@ -54,33 +54,33 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "INCOMPLETE_CURRENT_MERGE_TREE_53_FULL_FILE_AUDITS",
-    "checksum": "641892cdad0110f66189619a50873fe2195a195a",
+    "status": "INCOMPLETE_CURRENT_MERGE_TREE_55_FULL_FILE_AUDITS",
+    "checksum": "f3bccb267bb6b623d007db4ac0d61b85c78f438f",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 176,
-    "files_fully_audited": 53,
+    "scope_estimate": 178,
+    "files_fully_audited": 55,
     "files_file_level_inspected": 116,
     "files_targeted_path_review": 9,
-    "head_sha": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
+    "head_sha": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
     "source_head_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
-    "git_tree_sha": "dfc0feb3440dc7aa0d8903ff16f88c4f233543dd",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T07-17-KST-related.json",
-    "sha": "126ef3545dd386b6dc8c761f51c9342dd242c141",
-    "merge_result_sha": "8fa5982d14e53fb84edc024926577cde099c5164"
+    "git_tree_sha": "b2770a12f002277229a345b26bfd9a5cdba0fce7",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T08-16-KST-related.json",
+    "sha": "f3bccb267bb6b623d007db4ac0d61b85c78f438f",
+    "merge_result_sha": "aca057d3be77c7e970e1e557db001b4d4e935b8b"
   },
   "full_manifest": {
-    "status": "INCOMPLETE_CURRENT_MERGE_TREE_53_FULL_FILE_AUDITS",
-    "checksum": "072e38ded32fd1ed28861af05410e26d4065a4ff",
+    "status": "INCOMPLETE_CURRENT_MERGE_TREE_55_FULL_FILE_AUDITS",
+    "checksum": "0343f27b38179713c3fcb3ab3ea3444831942f5f",
     "checksum_kind": "git_blob_sha1",
-    "sha": "126ef3545dd386b6dc8c761f51c9342dd242c141",
+    "sha": "0343f27b38179713c3fcb3ab3ea3444831942f5f",
     "files_checked": 116,
-    "fully_audited_files": 53,
-    "file_count": 208,
+    "fully_audited_files": 55,
+    "file_count": 210,
     "files_targeted_path_review": 9,
-    "git_tree_sha": "dfc0feb3440dc7aa0d8903ff16f88c4f233543dd",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T07-17-KST-full.json",
-    "head_sha": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
-    "merge_result_sha": "8fa5982d14e53fb84edc024926577cde099c5164"
+    "git_tree_sha": "b2770a12f002277229a345b26bfd9a5cdba0fce7",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T08-16-KST-full.json",
+    "head_sha": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
+    "merge_result_sha": "aca057d3be77c7e970e1e557db001b4d4e935b8b"
   },
   "checks": [
     {
@@ -1906,6 +1906,29 @@
       "jobs": [
         "Linux 1853 passed, Docker success",
         "Windows 167 passed"
+      ]
+    },
+    {
+      "run_id": 41738962086,
+      "head_sha": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Linux 1874 passed",
+        "Windows 167 passed",
+        "Docker success"
+      ]
+    },
+    {
+      "run_id": 41738969895,
+      "head_sha": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
+      "merge_sha": "aca057d3be77c7e970e1e557db001b4d4e935b8b",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Linux 1884 passed",
+        "Windows 167 passed",
+        "Docker success"
       ]
     }
   ],
@@ -6025,6 +6048,34 @@
       "new_tests": 0,
       "new_fixes": 0,
       "notes": "12 distinct candidate paths, 10 complete file audits, 2 partial; core order reconciliation STALLED; no KIS orders"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-04T08-16-KST-recovery",
+      "kind": "READ_ONLY_KR_US_ORDER_HISTORY_TEST_FIRST_RED_GREEN_2_FULL_FILE_AUDITS_NO_PASS",
+      "head_sha": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
+      "merge_result_sha": "aca057d3be77c7e970e1e557db001b4d4e935b8b",
+      "related_pass": false,
+      "full_pass": false,
+      "red_runs": [
+        41738181175,
+        41738763529
+      ],
+      "green_runs": [
+        41738962086,
+        41738969895
+      ],
+      "changed_files": [
+        "tests/test_kis_read_only_order_history.py",
+        "trading/order_reconciliation.py",
+        "trading/domestic.py",
+        "trading/us.py"
+      ],
+      "new_tests": 31,
+      "red_feature_gap": 17,
+      "red_assertions": 4,
+      "related_complete": 55,
+      "full_complete": 55,
+      "notes": "Broker history evidence only, no UNKNOWN fill-to-ledger attribution, no stop activation; 0 demo/live orders"
     }
   ],
   "last_merged_upstream_sha": null,
@@ -6052,7 +6103,7 @@
     "PR base behind current main; merge-result CI unverified",
     "Related 18/169 and full 18/216; independent 0/2 + 0/2"
   ],
-  "next_action": "Test-first read-only KR/US order history mock pagination and local account/date/order/symbol matching, US ODNO blank; do not infer fill from accepted order",
+  "next_action": "Test-first persist canonical per-account order receipt/date/symbol and execution-ID/quantity state; reconcile UNKNOWN lacking ODNO without guessing; keep stop blocked until broker-authoritative fill+balance proof",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6910,6 +6961,18 @@
       "related_fully_audited": 53,
       "full_fully_audited": 53,
       "reason": "10 more full files audited, but transitive KIS fill reconciliation, external gates and manifest remain incomplete"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-04T08-16-KST-recovery",
+      "slot": "2026-11-04T08-16-KST",
+      "phase": "related_code_audit",
+      "head_sha": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "related_pass": false,
+      "full_pass": false,
+      "related_fully_audited": 55,
+      "full_fully_audited": 55,
+      "reason": "Read-only mock feature added and CI green; full broker-authoritative reconciliation, manifest and external gates remain incomplete"
     }
   ],
   "discovered_defects": [
@@ -10535,8 +10598,8 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "related_manifest_sha": "641892cdad0110f66189619a50873fe2195a195a",
-  "full_manifest_sha": "072e38ded32fd1ed28861af05410e26d4065a4ff",
+  "related_manifest_sha": "f3bccb267bb6b623d007db4ac0d61b85c78f438f",
+  "full_manifest_sha": "0343f27b38179713c3fcb3ab3ea3444831942f5f",
   "run5_candidate_inventory": [
     {
       "candidate_id": "T5-01",
@@ -14183,5 +14246,424 @@
       "lookup": "SUCCESS",
       "count": 0
     }
+  },
+  "run13_candidate_inventory": [
+    {
+      "candidate_id": "C13-01",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "KR_READ_ONLY_PAGINATION",
+      "blob_sha": "ec19985fac743a140f1197ef4ecec1280cd4d804",
+      "function_or_path": "DomesticStockTrading.get_order_history_for_reconciliation",
+      "hypothesis": "KR daily-ccld two-page exact order",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "HIGH",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_read_only_pagination_and_exact_local_order_match[KR]",
+      "result": "VERIFIED_MOCK_PASS",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_read_only_pagination_and_exact_local_order_match[KR]",
+      "market": "KR"
+    },
+    {
+      "candidate_id": "C13-02",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "US_READ_ONLY_PAGINATION",
+      "blob_sha": "30e7e6ed731fb60fe97d6eb329aa5a0ad8edee0c",
+      "function_or_path": "USStockTrading.get_order_history_for_reconciliation",
+      "hypothesis": "US inquire-ccnl blank ODNO and local match",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "HIGH",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_read_only_pagination_and_exact_local_order_match[US];test_us_demo_query_must_use_unfiltered_broker_order_number",
+      "result": "VERIFIED_MOCK_PASS",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_read_only_pagination_and_exact_local_order_match[US];test_us_demo_query_must_use_unfiltered_broker_order_number",
+      "market": "US"
+    },
+    {
+      "candidate_id": "C13-03",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "ACCOUNT_ISOLATION",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "separate selected account scopes",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_account_scopes_are_isolated",
+      "result": "VERIFIED_MOCK_PASS",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_account_scopes_are_isolated",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-04",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "LOCAL_MATCH",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "order/date/ticker/side exact matching",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_wrong_symbol_date_and_side_are_not_attributed",
+      "result": "VERIFIED_MOCK_PASS",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_wrong_symbol_date_and_side_are_not_attributed",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-05",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "CURSOR_LOOP",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "repeated pagination cursor fails closed",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_repeated_pagination_cursor_is_incomplete",
+      "result": "VERIFIED_MOCK_PASS",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_repeated_pagination_cursor_is_incomplete",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-06",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "UNKNOWN_CONTINUATION",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "unknown tr_cont falsely marked complete",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "HIGH",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_unknown_continuation_header_must_not_claim_complete",
+      "result": "RED_REPRODUCED_FIXED_MOCK_PASS",
+      "decision": "FIXED_AND_VERIFIED_MOCK",
+      "test_id": "test_unknown_continuation_header_must_not_claim_complete",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-07",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "PARTIAL_CANCEL_EVIDENCE",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "partial fill/cancel rows never activate stop",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_partial_fill_and_cancel_are_evidence_only",
+      "result": "VERIFIED_MOCK_PASS_NOT_FILL_PROOF",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_partial_fill_and_cancel_are_evidence_only",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-08",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "INVALID_QUANTITY",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "NaN and malformed quantities fail closed",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_invalid_quantity_is_never_fill_proof",
+      "result": "VERIFIED_MOCK_PASS",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_invalid_quantity_is_never_fill_proof",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-09",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "DUPLICATE_ROW",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "duplicate history rows not double counted",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_duplicate_history_row_is_not_double_counted",
+      "result": "VERIFIED_MOCK_PASS",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_duplicate_history_row_is_not_double_counted",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-10",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "CONFLICTING_SNAPSHOT",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "same execution ID contradictory cumulative fill",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "HIGH",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_conflicting_cumulative_fill_snapshot_is_not_a_final_fill",
+      "result": "RED_REPRODUCED_FIXED_MOCK_PASS",
+      "decision": "FIXED_AND_VERIFIED_MOCK",
+      "test_id": "test_conflicting_cumulative_fill_snapshot_is_not_a_final_fill",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-11",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "RESTART_REQUERY",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "requery after restart cannot authorize SELL",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_restart_requery_remains_non_actionable",
+      "result": "VERIFIED_MOCK_PASS",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_restart_requery_remains_non_actionable",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-12",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "ROW_ACCOUNT_MISMATCH",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "broker row account mismatch must not attribute",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_account_mismatch_in_broker_row_is_not_attributed",
+      "result": "VERIFIED_MOCK_PASS",
+      "decision": "VERIFIED_MOCK_ONLY",
+      "test_id": "test_account_mismatch_in_broker_row_is_not_attributed",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-13",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "UNKNOWN_NO_ORDER_ID",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "UNKNOWN BUY with no broker order number cannot be queried",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "HIGH",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_order_number_must_be_canonical_before_query",
+      "result": "DEFERRED_NO_AUTHORITATIVE_ORDER_ID",
+      "decision": "UNVERIFIED_BLOCKED",
+      "test_id": "test_order_number_must_be_canonical_before_query",
+      "market": "KR/US"
+    },
+    {
+      "candidate_id": "C13-14",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "AUTO_STOP_ACTIVATION",
+      "blob_sha": "3ad7fc758b4cc045364a4b875c544a258e28f4ae",
+      "function_or_path": "trading/order_reconciliation.py::read_order_history/_matched",
+      "hypothesis": "confirmed fill -> attributed actionable stop not implemented",
+      "expected_impact": "HIGH: unsafe fill attribution or missing stop protection if later automated",
+      "priority": "HIGH",
+      "reproduction_attempt": "GitHub Actions test-first 41738181175 (17 expected missing-method failures), edge 41738763529 (4 real assertions), green 41738962086 and 41738969895; test_partial_fill_and_cancel_are_evidence_only",
+      "result": "DEFERRED_NO_FILL_ID_LEDGER_CONTRACT",
+      "decision": "UNVERIFIED_BLOCKED",
+      "test_id": "test_partial_fill_and_cancel_are_evidence_only",
+      "market": "KR/US"
+    }
+  ],
+  "run13_carry_forward": [
+    {
+      "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "prior_stalled_count": ">=2",
+      "status": "PROGRESSED_READ_ONLY_MOCK_NOT_RESOLVED",
+      "last_reproduction_run": "41738181175 17 missing-method test-first failures; 41738763529 4 asserted parser ambiguity failures",
+      "unverified_transitions": [
+        "UNKNOWN -> broker order ID absent",
+        "late/partial fill -> position attribution",
+        "cancel -> final remainder",
+        "confirmed fill -> stop activation",
+        "multi-account execution ID persistence"
+      ],
+      "exact_blocker": "New read-only history evidence has no authoritative fill-to-ledger attribution; UNKNOWN orders may have no order number; KIS demo credentials absent",
+      "evidence_delta": "+31 new Mock tests, 17 feature-gap red + 4 genuine assertion red, 2 ambiguous subcases fixed, 2 new fully audited files; no live orders",
+      "next_exact_action": "Test-first persist canonical per-account order receipt/date/symbol and execution-ID/quantity state; reconcile UNKNOWN lacking ODNO without guessing; keep stop blocked until broker-authoritative fill+balance proof"
+    }
+  ],
+  "run13_financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "tests/test_execution_outcome.py; test_partial_fill_and_cancel_are_evidence_only",
+      "mock_result": "MOCK_PASS_EVIDENCE_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "receipt not fill"
+    },
+    {
+      "transition": "UNKNOWN",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; test_order_number_must_be_canonical_before_query",
+      "mock_result": "MOCK_FENCE_PASS",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "UNKNOWN may lack order ID"
+    },
+    {
+      "transition": "지연 체결",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; test_restart_requery_remains_non_actionable",
+      "mock_result": "MOCK_FENCE_PASS",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "no fill-ID attribution"
+    },
+    {
+      "transition": "부분체결",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "test_partial_fill_and_cancel_are_evidence_only; test_conflicting_cumulative_fill_snapshot_is_not_a_final_fill",
+      "mock_result": "MOCK_PASS_NON_ACTIONABLE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "no authoritative cumulative fill reconciliation"
+    },
+    {
+      "transition": "취소/거절",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "test_partial_fill_and_cancel_are_evidence_only; tests/test_broker_http_rejection_safety.py",
+      "mock_result": "MOCK_FENCE_PASS",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "cancelled order may have partial fill"
+    },
+    {
+      "transition": "중복 통지",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "test_duplicate_history_row_is_not_double_counted; tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS_ROW_DEDUP",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "broker execution-event notification unverified"
+    },
+    {
+      "transition": "잔여량",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "test_duplicate_history_row_is_not_double_counted; test_invalid_quantity_is_never_fill_proof",
+      "mock_result": "MOCK_PASS_EVIDENCE_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "not reconciled to confirmed holdings"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "tests/test_pending_buy_stop_loss_safety.py; test_partial_fill_and_cancel_are_evidence_only",
+      "mock_result": "MOCK_FAIL_CLOSED_PASS",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "filled BUY automatic stop activation still BLOCKED"
+    },
+    {
+      "transition": "다계좌 격리",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "test_account_scopes_are_isolated; test_account_mismatch_in_broker_row_is_not_attributed",
+      "mock_result": "MOCK_PASS_PER_ACCOUNT",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "multi-account facade and KIS demo unverified"
+    },
+    {
+      "transition": "재시작",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "test_restart_requery_remains_non_actionable; tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_PASS_NO_PROMOTION",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "no durable execution-ID reconciliation"
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py::test_finalize_persistence_failure_after_unknown_buy_claim_keeps_fence",
+      "mock_result": "EXISTING_MOCK_PASS",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS demo not run"
+    },
+    {
+      "transition": "복구·재조정",
+      "applicability": "KR/US single; per-account scope mocked; multi-account integration incomplete",
+      "test_ids": "test_read_only_pagination_and_exact_local_order_match; tests/test_unresolved_buy_without_stop_loss.py",
+      "mock_result": "READ_ONLY_MOCK_PASS",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "no automated broker-authoritative recovery"
+    }
+  ],
+  "run13_remediation": {
+    "test_first_commit": "36d1354aa9c0a0f096cb4f40831795b5e98e96c6",
+    "feature_commits": [
+      "1d735541ff354ec42409874c108b38624a4b8ad2",
+      "8fc7a94466d3c582046765d14165cbe4166e425c"
+    ],
+    "edge_test_first_commit": "595247d9ef2ea0961c6d813d4d571deffe64aefa",
+    "fix_commit": "f10eee5b879ce025b66a56fe16b512b4ca7c8a45",
+    "changed_files": [
+      "tests/test_kis_read_only_order_history.py",
+      "trading/order_reconciliation.py",
+      "trading/domestic.py",
+      "trading/us.py"
+    ],
+    "new_tests": 31,
+    "red_missing_method": 17,
+    "red_product_assertions": 4,
+    "root_cause": "Read-only history completeness ambiguity (2 subcases); UNKNOWN->fill activation remains unimplemented",
+    "real_orders": 0,
+    "demo_orders": 0
+  },
+  "run13_external": {
+    "qlty": {
+      "state": "success",
+      "unresolved": 90,
+      "required": "UNKNOWN_403",
+      "triaged": 0
+    },
+    "snyk": {
+      "state": "success",
+      "description": "1 security test passed",
+      "required": "UNKNOWN_403"
+    },
+    "reviews": {
+      "count": 0
+    },
+    "branch_protection": {
+      "read": "403 Resource not accessible by integration",
+      "required": "UNKNOWN"
+    },
+    "rulesets": {
+      "read": "SUCCESS",
+      "count": 0
+    }
+  },
+  "run13_audit_progress": {
+    "candidate_count": 14,
+    "candidate_target": 10,
+    "verified_candidates": 12,
+    "deferred_candidates": 2,
+    "attempted_reproductions": 31,
+    "reproduced_defects": 2,
+    "actual_code_fixes": 1,
+    "feature_additions": 1,
+    "regression_tests_added_and_run": 31,
+    "verified_paths": [
+      "trading/order_reconciliation.py",
+      "trading/domestic.py::get_order_history_for_reconciliation",
+      "trading/us.py::get_order_history_for_reconciliation",
+      "tests/test_kis_read_only_order_history.py"
+    ],
+    "unverified_paths": [
+      "UNKNOWN without ODNO",
+      "KIS fill/cancel/remaining authoritative attribution",
+      "stop activation",
+      "multi-account facade end-to-end",
+      "KIS demo",
+      "Qlty 90 issues",
+      "branch protection 403",
+      "independent review",
+      "2+2 complete audits"
+    ],
+    "complete_related_files": 55,
+    "related_total": 178,
+    "complete_all_files": 55,
+    "full_total": 210,
+    "related_pass": "0/2",
+    "full_pass": "0/2"
   }
 }
