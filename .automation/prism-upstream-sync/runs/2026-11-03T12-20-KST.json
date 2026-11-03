@@ -59,9 +59,10 @@
   "demo_orders": 0,
   "cas": {
     "acquired_commit": "8410ca08ce4025b6e99f1412736687932e1a1531",
-    "status": "EVIDENCE_WRITTEN_RELEASE_PENDING",
+    "status": "RELEASED",
     "expected_pr_head": "077e101357e3e560eda1492c9d660ce21787dce1",
-    "evidence_commit": "c55cd76575cbaa7001870f9a657618c5ff32bc32"
+    "evidence_commit": "c55cd76575cbaa7001870f9a657618c5ff32bc32",
+    "released_at": "2026-11-03T03:27:41Z"
   },
   "completed_at": "2026-11-03T03:27:41Z"
 }

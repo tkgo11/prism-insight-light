@@ -5,9 +5,9 @@
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
-    "lock_owner": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T11-19-KST-turn11",
-    "result": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
+    "result": "MOCK_LEGACY_COOLDOWN_FENCE_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
     "last_mutation_commit": "077e101357e3e560eda1492c9d660ce21787dce1",
     "previous_state_branch_sha": "8410ca08ce4025b6e99f1412736687932e1a1531",
     "started_at": "2026-11-03T03:20:56Z",
