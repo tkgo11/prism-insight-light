@@ -1,0 +1,70 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T14-19-KST-turn11",
+  "slot": "2026-11-03T14-19-KST",
+  "status": "TEST_FIRST_CI_PENDING",
+  "cas_lock_commit": "32568b3e65f27666d3c2ac4a6703a04f1ea4f537",
+  "starting_pr_head": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+  "test_first_pr_head": "5970f3f02c0f768db7d1d84c8efd2c01959fa762",
+  "risk_id": "RC-BUY-PERCENT-SUMMARY-FINITE-VALIDATION",
+  "classification": "HYPOTHESIS_PENDING_MOCK_REPRODUCTION",
+  "invariant": "KIS account total assets, available cash and configured fallback must be finite; negative broker balances cannot authorize percent BUY sizing; no actual KIS order is made",
+  "matrix": [
+    {
+      "path": "trading/buy_sizing.py",
+      "blob_sha": "49e8788efc2bce1059f2d6ee13cc97551d3377c2",
+      "functions": [
+        "resolve_buy_amount",
+        "build_buy_sizing"
+      ],
+      "failure_modes": [
+        "NaN/Infinity total_eval_amount",
+        "NaN/Infinity/negative available_amount",
+        "NaN/Infinity fallback"
+      ],
+      "test": "tests/test_percent_buy_account_summary_finite.py"
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "bc8ebd1ffc6d8117ca672da8d370518c4967d38e",
+      "functions": [
+        "_resolve_buy_amount",
+        "calculate_buy_quantity",
+        "_execute_buy_stock"
+      ],
+      "failure_modes": [
+        "invalid KIS summary propagates into order quantity"
+      ],
+      "test": "KR parameterized broker adapter mock"
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "1a3c683f0ec853026b1d10476bf160c9195d72f3",
+      "functions": [
+        "_resolve_buy_amount",
+        "_calculate_buy_quantity_inputs",
+        "_resolve_orderable_usd",
+        "_execute_buy_stock"
+      ],
+      "failure_modes": [
+        "invalid KIS summary propagates into USD quantity and optional auto exchange"
+      ],
+      "test": "US parameterized broker adapter mock"
+    }
+  ],
+  "unverified": [
+    "KIS demo account summary semantics",
+    "zero USD cash with KIS auto-exchange: do not change without proof",
+    "broker-authoritative BUY fill/stop activation"
+  ],
+  "tests_started": [
+    41583538003,
+    41583545148
+  ],
+  "safety": {
+    "live_orders": 0,
+    "demo_orders": 0,
+    "merge_allowed": false,
+    "related_passes": 0,
+    "full_passes": 0
+  }
+}
