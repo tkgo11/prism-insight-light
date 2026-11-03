@@ -54,7 +54,16 @@ jobs:
           git diff --cached --check
           branch="automation/autonomous-maintainer-${UPSTREAM_SHA:0:12}"
           if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
-            echo "::notice::An update branch already exists for $UPSTREAM_SHA; refusing to force-push."
+            existing="$(gh pr list --head "$branch" --state all --json number --jq 'length')"
+            if [[ "$existing" != "0" ]]; then
+              echo "::notice::A PR for upstream $UPSTREAM_SHA already exists; refusing duplicate delivery."
+              exit 0
+            fi
+            echo "::notice::Update branch exists without a PR; retrying PR creation without rewriting it."
+            gh pr create \
+              --base main --head "$branch" \
+              --title "chore(skills): sync autonomous-maintainer ${UPSTREAM_SHA:0:12}" \
+              --body "Automated synchronization of the six Codex skill resources from tkgo11/autonomous-maintainer at $UPSTREAM_SHA. The source checksums, installed snapshot, and updater regression suite passed. No trading runtime files are updated. Review and CI are required before merging; this workflow never auto-merges."
             exit 0
           fi
           git config user.name 'github-actions[bot]'
