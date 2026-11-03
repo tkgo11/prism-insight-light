@@ -22,6 +22,8 @@ _AMBIGUOUS_MARKERS = (
     "read timed out",
     "connect timeout",
     "connection reset",
+    "connection refused",
+    "connectionerror",
     "connection aborted",
     "connection closed",
     "connection broken",
@@ -34,7 +36,16 @@ _AMBIGUOUS_MARKERS = (
     "gateway timeout",
     "service unavailable",
     "server disconnected",
+    "proxy disconnected",
     "remote end closed connection",
+    # A broker wrapper may contradict itself: an accepted receipt or a
+    # supposedly verified rejection cannot override a TLS/HTTP transport
+    # exception. Preserve UNKNOWN until broker-authoritative reconciliation.
+    "tls handshake",
+    "sslerror",
+    "http 502",
+    "http 503",
+    "http 504",
     "expecting value",
     "jsondecodeerror",
     "json decode",
