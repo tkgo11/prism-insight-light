@@ -16,7 +16,8 @@
     "completed_at": "2026-11-03T11:29:31Z",
     "final_pr_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
     "final_state_expected_parent_sha": "9d6cab4085a70fb73dae1b84d13abf89b66ede74",
-    "cas_release_verified": "PENDING_REF_UPDATE"
+    "cas_release_verified": "REF_READBACK_VERIFIED",
+    "cas_release_ref_sha": "89c31faea0e552c789c6036a73eee0b8cd35fac7"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
