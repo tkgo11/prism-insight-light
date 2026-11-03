@@ -473,7 +473,8 @@ That waiting time is the cooldown.
 - `apply_to_signal_types` is empty by default, so every signal passes.
 - It checks whether the same key traded recently.
 - If the key is still cooling down, it rejects the trade.
-- If enough time has passed, it lets the trade happen and records it.
+- If enough time has passed, a **verified resolved** entry may permit a new trade. Accepted/unknown orders remain pending regardless of age until broker-authoritative reconciliation.
+- Existing state records that lack a boolean `pending` field are ambiguous legacy evidence. They block new protected orders and require operator reconciliation; do not delete or mark them resolved solely because the cooldown expired.
 
 ### Main settings
 
