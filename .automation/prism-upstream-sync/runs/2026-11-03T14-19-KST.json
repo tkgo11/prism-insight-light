@@ -1,0 +1,158 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T14-19-KST-turn11",
+  "slot": "2026-11-03T14-19-KST",
+  "started_at": "2026-11-03T05:19:08Z",
+  "completed_at": "2026-11-03T05:30:07.719Z",
+  "prior_state_head": "ac3e09ccee8de254ef4df5ec1279981ef0f38672",
+  "expected_state_parent": "74e29c529dbfd9de157c0309010d1225d15efe0a",
+  "pr_number": 43,
+  "pr_head": "b082b161650863eee8f79d510afdef0c2d379ca9",
+  "pr_base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "pr_draft": true,
+  "upstream_latest": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "upstream_delta": {
+    "commits": 47,
+    "files": 41,
+    "integrated": 0
+  },
+  "root_cause_id": "RC-BUY-PERCENT-SUMMARY-INTEGRITY",
+  "defect": {
+    "id": "percent-buy-unverified-kis-summary-20261103",
+    "root_cause_id": "RC-BUY-PERCENT-SUMMARY-INTEGRITY",
+    "severity": "HIGH",
+    "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+    "description": "Direct KR/US asset-percent BUY sizing accepted NaN/Infinity/negative KIS total assets/cash, silently fell back to fixed amount for missing/boolean/zero asset summary, and allowed nonfinite fallback budgets",
+    "first_detected_run": "prism-sync-hourly-2026-11-03T14-19-KST-turn11",
+    "test_first_commits": [
+      "5970f3f02c0f768db7d1d84c8efd2c01959fa762",
+      "750f3a0e3e14ac02b52b6b1c029726f381905452"
+    ],
+    "test_first_ci": [
+      41583538003,
+      41583693838
+    ],
+    "expected_failures": [
+      17,
+      31
+    ],
+    "fix_commits": [
+      "b4a8ba140e767f14010a300076b147bd6e6a8867",
+      "b082b161650863eee8f79d510afdef0c2d379ca9"
+    ],
+    "final_ci_run_ids": [
+      41583885621,
+      41583890780
+    ],
+    "paths": [
+      "trading/buy_sizing.py",
+      "trading/domestic.py",
+      "trading/us.py",
+      "trading/signal_sizing.py",
+      "tests/test_percent_buy_account_summary_finite.py"
+    ],
+    "affected_blobs": {
+      "trading/buy_sizing.py": "bae6cd582801b40d70ad8054e3eb2de189fb746b",
+      "tests/test_percent_buy_account_summary_finite.py": "d12d25430518753c31e3fed197ea743360ff4b8a"
+    },
+    "validation": {
+      "linux_pytest_passed": 1525,
+      "windows_smoke_passed": 167,
+      "docker": "success",
+      "kis_demo": "NOT_RUN"
+    },
+    "unverified": [
+      "KIS demo account summary semantics and auto-exchange integration",
+      "independent 2-slot related and full audits",
+      "qlty 93 blocking findings",
+      "branch policy and human review"
+    ],
+    "recurrence_count": 0
+  },
+  "test_first": [
+    {
+      "sha": "5970f3f02c0f768db7d1d84c8efd2c01959fa762",
+      "run_id": 41583538003,
+      "expected_failures": 17,
+      "passes": 1490
+    },
+    {
+      "sha": "750f3a0e3e14ac02b52b6b1c029726f381905452",
+      "run_id": 41583693838,
+      "expected_failures": 31,
+      "passes": 1490
+    }
+  ],
+  "final_ci": [
+    {
+      "run_id": 41583885621,
+      "head_sha": "b082b161650863eee8f79d510afdef0c2d379ca9",
+      "linux": 1525,
+      "windows": 167,
+      "docker": "success"
+    },
+    {
+      "run_id": 41583890780,
+      "head_sha": "b082b161650863eee8f79d510afdef0c2d379ca9",
+      "linux": 1525,
+      "windows": 167,
+      "docker": "success"
+    }
+  ],
+  "prior_unknown_buy_retest": {
+    "run_id": 41578366433,
+    "attempt": 2,
+    "head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+    "status": "completed",
+    "conclusion": "success",
+    "new_reproduction": 0,
+    "broker_fill_attribution": "BLOCKED"
+  },
+  "files_changed": [
+    "trading/buy_sizing.py",
+    "tests/test_percent_buy_account_summary_finite.py"
+  ],
+  "commits": [
+    "5970f3f02c0f768db7d1d84c8efd2c01959fa762",
+    "750f3a0e3e14ac02b52b6b1c029726f381905452",
+    "b4a8ba140e767f14010a300076b147bd6e6a8867",
+    "b082b161650863eee8f79d510afdef0c2d379ca9"
+  ],
+  "manifests": {
+    "related": {
+      "path": ".automation/prism-upstream-sync/manifests/2026-11-03T14-19-KST-related.json",
+      "sha": "c9cee7e2bb6a78d4321358d262f7d2a9b6af71df",
+      "scope": 94,
+      "file_level": 47,
+      "fully": 0
+    },
+    "full": {
+      "path": ".automation/prism-upstream-sync/manifests/2026-11-03T14-19-KST-full.json",
+      "sha": "e4cc063fa50239c80a1ec0186f2bd09c977b088c",
+      "scope": 183,
+      "file_level": 48,
+      "fully": 0
+    }
+  },
+  "audit_passes": {
+    "related": 0,
+    "full": 0
+  },
+  "checks": {
+    "snyk": "success",
+    "qlty": "success but 93 blocking issues",
+    "branch_protection": "403",
+    "reviews": 0,
+    "kis_demo": "NOT_RUN"
+  },
+  "safety": {
+    "real_orders": 0,
+    "demo_orders": 0,
+    "merge": false,
+    "live_trading": false
+  },
+  "cas": {
+    "acquired_commit": "32568b3e65f27666d3c2ac4a6703a04f1ea4f537",
+    "expected_release_parent": "74e29c529dbfd9de157c0309010d1225d15efe0a",
+    "release": "PENDING_COMMIT"
+  }
+}
