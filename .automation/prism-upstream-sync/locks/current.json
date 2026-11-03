@@ -1,11 +1,9 @@
 {
   "run_id": "prism-sync-hourly-2026-11-04T04-20-KST-turn9",
-  "status": "RELEASED",
-  "expected_state_head": "818cfd3f8aee1f179addea6120c432e0d5b1891c",
+  "status": "ACQUIRED_EVIDENCE_AMENDMENT",
+  "expected_state_head": "afa47b067c360a1f331574f88469cb3846b079cb",
   "expected_pr_head": "b056e733467a9e2f784271bedb99479100322781",
-  "created_at": "2026-11-03T19:19:00Z",
-  "released_at": "2026-11-03T19:21:56.761Z",
-  "reason": "Twelve file-level current-blob audits, no new broker mock reproduction; all gates remain closed",
+  "created_at": "2026-11-03T19:22:51.053Z",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
