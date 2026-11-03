@@ -72,3 +72,35 @@ def test_unverified_or_boolean_percent_buy_summary_must_not_use_fixed_fallback(m
     trader.get_account_summary = lambda: summary
     with pytest.raises(ValueError, match="summary|assets|finite|invalid|verified"):
         trader._resolve_buy_amount()
+
+
+def test_zero_usd_cash_keeps_only_a_candidate_for_downstream_auto_exchange_check():
+    # Zero USD cash alone does not establish KIS post-exchange orderability.
+    # This helper computes a candidate, never broker approval or fill evidence.
+    assert resolve_buy_amount(
+        build_buy_sizing(fixed_amount=50, asset_percent=10),
+        account_summary={"total_eval_amount": 1000, "available_amount": 0},
+        fallback_amount=50, currency="USD",
+    ) == 100
+
+
+def test_large_finite_assets_do_not_overflow_before_cash_cap():
+    assert resolve_buy_amount(
+        build_buy_sizing(fixed_amount=50, asset_percent=100),
+        account_summary={"total_eval_amount": 1e308, "available_amount": 500},
+        fallback_amount=50, currency="KRW",
+    ) == 500
+
+
+@pytest.mark.parametrize("field,invalid", [
+    ("total_eval_amount", -1),
+    ("available_amount", "not-a-balance"),
+])
+def test_corrupt_finite_or_textual_kis_balance_rejected(field, invalid):
+    summary = {"total_eval_amount": 1000, "available_amount": 500}
+    summary[field] = invalid
+    with pytest.raises(ValueError, match="finite|positive|nonnegative"):
+        resolve_buy_amount(
+            build_buy_sizing(fixed_amount=50, asset_percent=10),
+            account_summary=summary, fallback_amount=50, currency="KRW",
+        )
