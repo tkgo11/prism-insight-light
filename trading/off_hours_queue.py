@@ -154,9 +154,26 @@ class OffHoursOrderQueue:
                     )
                 )
                 continue
-            items.append(
-                QueuedSignal(**{k: v for k, v in item.items() if k in known_fields})
+            record = {k: v for k, v in item.items() if k in known_fields}
+            malformed = (
+                not isinstance(record.get("signal"), dict)
+                or not isinstance(record.get("execute_at"), str)
+                or not isinstance(record.get("created_at"), str)
+                or not isinstance(record.get("execution_context", {}), dict)
+                or record.get("status", "pending") not in ("pending", "failed")
             )
+            if malformed:
+                # Never let a corrupt entry block valid orders, or repair its
+                # missing execution provenance into an actionable order.
+                items.append(QueuedSignal(
+                    signal=record.get("signal", {}),
+                    execute_at=record.get("execute_at", ""),
+                    created_at=record.get("created_at", ""),
+                    status="failed",
+                    failure_message="Malformed queue entry (missing or invalid fields)",
+                ))
+                continue
+            items.append(QueuedSignal(**record))
         return items
 
     def _save(
