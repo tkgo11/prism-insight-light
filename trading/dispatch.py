@@ -61,6 +61,7 @@ from .strategies import (
     StopLossSellStrategy,
     StopLossSellStrategyConfig,
 )
+from .strategies.common import _is_watcher_generated_stop_sell
 from .stop_loss_watcher import StopLossTracker, StopLossWatcherConfig
 from .us import USStockTrading
 
@@ -1136,6 +1137,13 @@ class TradeDispatcher:
         return None
 
     def _resolve_strategy(self, signal: SignalMessage):
+        if _is_watcher_generated_stop_sell(signal):
+            # The independent watcher has already verified its own stop
+            # snapshot and position gate. An opt-in signal strategy may
+            # reject it (e.g. no trailing BUY record) or turn its emergency
+            # SELL into a partial/limit order. Use the legacy market SELL
+            # adapter, while retaining the normal ledger and broker locks.
+            return None
         if self.score_max_capital_config is not None and signal.is_trade:
             return ScoreMaxCapitalStrategy(config=self.score_max_capital_config)
         if self.balanced_risk_config is not None and signal.is_trade:
