@@ -161,7 +161,7 @@ def _has_reserved_watcher_identity(signal: SignalMessage) -> bool:
         value = signal.raw.get(field)
         if (
             isinstance(value, str)
-            and re.fullmatch(r"stop_loss_(?:KR|US)_.+_[0-9a-f]{20}", value) is not None
+            and re.fullmatch(r"stop_loss_(?:KR|US)_.+_[0-9a-f]{20}", value.strip()) is not None
         ):
             return True
     return False
