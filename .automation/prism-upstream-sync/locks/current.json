@@ -1,11 +1,10 @@
 {
-  "run_id": "prism-sync-hourly-2026-11-04T04-20-KST-turn9",
-  "status": "RELEASED",
-  "expected_state_head": "aa8d3253ab8e630622ac16a7c780ac9fdfe0e691",
+  "run_id": "prism-sync-hourly-2026-11-04T05-23-KST-turn10",
+  "status": "ACTIVE",
+  "expected_state_head": "ec0dfcea7c1277d63097787e3511595d638cbb20",
   "expected_pr_head": "b056e733467a9e2f784271bedb99479100322781",
-  "created_at": "2026-11-03T19:19:00Z",
-  "released_at": "2026-11-03T19:23:17.458Z",
-  "reason": "Persisted official KIS KR/US inquiry contracts; no code changes, no PASS",
+  "created_at": "2026-11-03T20:27:00Z",
+  "purpose": "Test-first mock regression of malformed KIS zero-balance quantity; no real/demo orders",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
