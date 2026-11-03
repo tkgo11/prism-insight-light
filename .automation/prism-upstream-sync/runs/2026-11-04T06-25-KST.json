@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-hourly-2026-11-04T06-25-KST-turn9",
   "slot": "2026-11-04T06-25-KST",
-  "observed_at": "2026-11-03T21:29:30Z",
+  "observed_at": "2026-11-03T21:31:41.740Z",
   "pr": {
     "number": 43,
     "draft": true,
@@ -515,8 +515,9 @@
   "next_exact_action": "Test-first read-only KR/US order-history mock pagination and local account/order/date/symbol matching, US ODNO blank",
   "cas": {
     "lock_acquired_commit": "0bbe349b232a0a9106082de7014d16734673f78d",
-    "evidence_commit": "PENDING",
-    "release_commit": "PENDING",
-    "lock_status": "LOCKED"
+    "evidence_commit": "fae596a0049e65ec4409fa7d4549c6444914232d",
+    "release_commit": "SEE_CURRENT_STATE_BRANCH_HEAD",
+    "lock_status": "RELEASED",
+    "released_at": "2026-11-03T21:31:41.740Z"
   }
 }
