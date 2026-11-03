@@ -172,6 +172,17 @@ class TrackedPosition:
         )
 
 
+def _valid_stored_price(value: Any, *, positive: bool = False) -> bool:
+    """Validate persisted tracker prices before reads AND overwrites."""
+    if isinstance(value, bool):
+        return False
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return math.isfinite(number) and (number > 0 if positive else number >= 0)
+
+
 class StopLossTracker:
     """Thread-safe and process-safe JSON ledger for active stop-loss positions."""
 
@@ -369,6 +380,49 @@ class StopLossTracker:
                         "Conflicting stop-loss instrument requires operator reconciliation"
                     )
             existing = positions.get(key)
+            if key in positions:
+                # A corrupt canonical record is quarantined by get_positions().
+                # A later BUY registration must not overwrite it and destroy
+                # the evidence an operator needs to reconcile a possible fill.
+                # Use the same structural/price/provenance rules as the reader,
+                # while allowing valid pre-upgrade records with absent metadata.
+                if not isinstance(existing, dict):
+                    raise ValueError(
+                        "Malformed existing stop-loss record; operator reconciliation required"
+                    )
+                stored_market = existing.get("market")
+                stored_ticker = existing.get("ticker")
+                if (
+                    not isinstance(stored_market, str)
+                    or not isinstance(stored_ticker, str)
+                    or not stored_market.strip()
+                    or not stored_ticker.strip()
+                    or stored_market.strip().upper() not in {"KR", "US"}
+                    or stored_ticker != stored_ticker.strip()
+                    or any(ord(ch) < 32 or ord(ch) == 127
+                           for ch in stored_market + stored_ticker)
+                    or self._key(stored_market, stored_ticker) != key
+                    or not __valid_stored_price(existing.get("stop_loss"), positive=True)
+                    or not __valid_stored_price(existing.get("entry_price", 0))
+                    or (
+                        existing.get("target_price") is not None
+                        and not __valid_stored_price(existing["target_price"])
+                    )
+                    or (
+                        "pending_buy" in existing
+                        and not isinstance(existing["pending_buy"], bool)
+                    )
+                    or (
+                        "stop_loss_signal_id" in existing
+                        and not _valid_stop_loss_signal_id(
+                            existing["stop_loss_signal_id"],
+                            stored_market.strip().upper(), stored_ticker,
+                        )
+                    )
+                ):
+                    raise ValueError(
+                        "Corrupt existing stop-loss record; operator reconciliation required"
+                    )
             if isinstance(existing, dict):
                 # A stop-price update cannot clear unresolved BUY provenance.
                 # Older records without the field are ambiguous and protected.
@@ -471,18 +525,6 @@ class StopLossTracker:
 
     def get_positions(self, market: str | None = None) -> list[dict[str, Any]]:
         """Return valid tracked positions without discarding corrupt records on disk."""
-        def valid_stored_price(value: Any, *, positive: bool = False) -> bool:
-            # Legacy/manual JSON can contain booleans or NaN/Infinity. A bool
-            # becomes 1.0 under float(), and nonfinite stop levels could
-            # silently disable protection or trigger an unintended order.
-            if isinstance(value, bool):
-                return False
-            try:
-                number = float(value)
-            except (TypeError, ValueError, OverflowError):
-                return False
-            return math.isfinite(number) and (number > 0 if positive else number >= 0)
-
         with FileLock(self.lock_path):
             data = self._load()
             items = list(data.items())
@@ -531,11 +573,11 @@ class StopLossTracker:
                 or ("stop_loss_signal_id" in item and not _valid_stop_loss_signal_id(
                     item["stop_loss_signal_id"], item["market"].strip().upper(), item["ticker"]
                 ))
-                or not valid_stored_price(item.get("stop_loss"), positive=True)
-                or not valid_stored_price(item.get("entry_price", 0))
+                or not _valid_stored_price(item.get("stop_loss"), positive=True)
+                or not _valid_stored_price(item.get("entry_price", 0))
                 or (
                     item.get("target_price") is not None
-                    and not valid_stored_price(item["target_price"])
+                    and not _valid_stored_price(item["target_price"])
                 )
             ):
                 # Never dispatch an order to a malformed or mismatched ticker.
