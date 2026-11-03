@@ -56,6 +56,7 @@ async def test_automated_stop_sell_never_submits_unfilled_limit_order(
         "type": "SELL", "market": market, "ticker": ticker,
         "price": 85, "stop_loss": 90, "target_price": 120,
         "sell_reason": "StOp_LoSs",
+        "signal_id": f"stop_loss_{market}_{ticker}_{'a' * 20}",
     })
     if strategy_name == "stop_loss_sell":
         strategy = StopLossSellStrategy(
@@ -80,6 +81,28 @@ async def test_ordinary_strategy_sell_preserves_limit_order(
     signal = parse_signal_payload({
         "type": "SELL", "market": market, "ticker": ticker,
         "price": 85, "stop_loss": 90, "sell_reason": "manual_exit",
+    })
+    strategy = StopLossSellStrategy(
+        config=StopLossSellStrategyConfig.from_mapping({"name": "stop_loss_sell"})
+    )
+    result = await strategy.execute(signal, trading_mode="demo")
+    assert result.status == "executed"
+    assert CALLS == [(market, ticker, expected_limit)]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker,expected_limit", [
+    ("KR", "005930", 90), ("US", "AAPL", 85),
+])
+async def test_publisher_stop_loss_signal_keeps_configured_limit(
+    market, ticker, expected_limit
+):
+    # A publisher's stop-loss reason alone is not a watcher-origin marker.
+    # Preserve the intentionally configurable limit-price strategy.
+    signal = parse_signal_payload({
+        "signal_id": "publisher-stop-signal",
+        "type": "SELL", "market": market, "ticker": ticker,
+        "price": 85, "stop_loss": 90, "sell_reason": "stop_loss",
     })
     strategy = StopLossSellStrategy(
         config=StopLossSellStrategyConfig.from_mapping({"name": "stop_loss_sell"})
