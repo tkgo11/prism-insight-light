@@ -233,12 +233,13 @@ def test_verified_rejected_new_buy_does_not_disable_old_confirmed_stop(tmp_path)
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("reason", ["stop_loss", "STOP_LOSS", "Stop_Loss"])
 @pytest.mark.parametrize("buy_status,expected", [
     ("unknown", "deferred"),
     ("rejected", "executed"),
 ])
 async def test_dispatcher_broker_lock_boundary_rechecks_buy_intent_before_stop_sell(
-    tmp_path, monkeypatch, buy_status, expected
+    tmp_path, monkeypatch, buy_status, expected, reason
 ):
     from types import SimpleNamespace
     from trading.dispatch import DispatchResult
@@ -268,7 +269,7 @@ async def test_dispatcher_broker_lock_boundary_rechecks_buy_intent_before_stop_s
     signal = parse_signal_payload({
         "signal_id": "old-confirmed-stop", "type": "SELL",
         "market": "US", "ticker": "AAPL", "price": 85,
-        "sell_reason": "stop_loss",
+        "sell_reason": reason,
     })
     result = await dispatcher.dispatch(signal, allow_queue=False)
     assert result.status == expected
