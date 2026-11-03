@@ -4,16 +4,17 @@
   "state": "ACTIVE_DRAFT_MOCK_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T14-19-KST-turn11",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T13-18-KST-turn11",
-    "result": "PERCENT_BUY_SUMMARY_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
-    "last_mutation_commit": "b082b161650863eee8f79d510afdef0c2d379ca9",
-    "previous_state_branch_sha": "ac3e09ccee8de254ef4df5ec1279981ef0f38672",
-    "started_at": "2026-11-03T05:19:08Z",
-    "completed_at": "2026-11-03T05:30:07.719Z",
+    "id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+    "lock_owner": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T14-19-KST-turn11",
+    "result": "LEGACY_OPAQUE_LEDGER_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
+    "last_mutation_commit": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+    "previous_state_branch_sha": "25f7a014d68685803c82bf11a0eccba995eaa963",
+    "started_at": "2026-11-03T06:20:32Z",
+    "completed_at": "2026-11-03T06:28:47.369Z",
     "evidence_commit": "74e29c529dbfd9de157c0309010d1225d15efe0a",
-    "released_at": "2026-11-03T05:30:07.719Z"
+    "released_at": "2026-11-03T05:30:07.719Z",
+    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T15-20-KST.json"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -32,7 +33,7 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "b082b161650863eee8f79d510afdef0c2d379ca9",
+    "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
@@ -109,28 +110,28 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "c9cee7e2bb6a78d4321358d262f7d2a9b6af71df",
+    "checksum": "f594f60f98462322d6467bdcd5a5c52b45542fae",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 94,
+    "scope_estimate": 95,
     "files_fully_audited": 0,
-    "files_file_level_inspected": 47,
-    "files_targeted_path_review": 9,
-    "head_sha": "b082b161650863eee8f79d510afdef0c2d379ca9",
+    "files_file_level_inspected": 49,
+    "files_targeted_path_review": 5,
+    "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "7ac59fbe198559c2486e7653e355ec2b0d8fb953",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T14-19-KST-related.json"
+    "git_tree_sha": "7ab9f3b4b57db779d9d0c86e79eea823a7c264ef",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T15-20-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "e4cc063fa50239c80a1ec0186f2bd09c977b088c",
+    "checksum": "896c81084ae8219274f6da40568c880b7a3c2561",
     "checksum_kind": "git_blob_sha1",
-    "sha": "b082b161650863eee8f79d510afdef0c2d379ca9",
-    "files_checked": 48,
+    "sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+    "files_checked": 50,
     "fully_audited_files": 0,
-    "file_count": 183,
-    "files_targeted_path_review": 9,
-    "git_tree_sha": "7ac59fbe198559c2486e7653e355ec2b0d8fb953",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T14-19-KST-full.json"
+    "file_count": 184,
+    "files_targeted_path_review": 5,
+    "git_tree_sha": "7ab9f3b4b57db779d9d0c86e79eea823a7c264ef",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T15-20-KST-full.json"
   },
   "checks": [
     {
@@ -1702,6 +1703,31 @@
         31
       ],
       "replayed_prior_unknown_buy_mock": true
+    },
+    {
+      "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+      "status": "completed",
+      "conclusion": "success",
+      "run_ids": [
+        41589812317,
+        41589818296
+      ],
+      "jobs": [
+        "Full pytest suite: 1547 passed; Docker build success",
+        "Windows runtime smoke: 167 passed"
+      ],
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "description": "94 blocking issues untriaged"
+        }
+      ],
+      "kis_demo": "NOT_RUN"
     }
   ],
   "upstream_changes": [
@@ -5369,6 +5395,35 @@
       },
       "real_orders": 0,
       "demo_orders": 0
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+      "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+      "related_manifest_sha": "f594f60f98462322d6467bdcd5a5c52b45542fae",
+      "full_manifest_sha": "896c81084ae8219274f6da40568c880b7a3c2561",
+      "related_inspected": 49,
+      "related_scope": 95,
+      "full_inspected": 50,
+      "full_scope": 184,
+      "fully_audited": 0,
+      "related_pass": false,
+      "full_pass": false,
+      "tests": {
+        "prepatch_failures": 8,
+        "prepatch_passes": 1526,
+        "final_linux": 1547,
+        "final_windows": 167,
+        "ci_runs": [
+          41589812317,
+          41589818296
+        ]
+      },
+      "blockers": [
+        "KIS fill/cancel/remaining",
+        "Qlty 94 untriaged",
+        "human review",
+        "branch policy 403"
+      ]
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5389,14 +5444,14 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "Qlty check success but 93 blocking issues uninspected; Snyk success; human review absent",
+    "Qlty check success but 94 blocking issues uninspected; Snyk success; human review absent",
     "Branch protection API 403 Resource not accessible by integration; rulesets []",
     "Broker-authoritative order ID/fill ID/partial/cancel/remaining reconciliation and demo KIS evidence absent; live trading prohibited",
-    "Legacy pre-patch reserved watcher execution IDs cannot be attributed without broker evidence",
-    "Qlty status green but 93 blocking findings remain untriaged",
-    "Human financial-safety review absent; independent related/full 2-slot audit incomplete"
+    "Legacy opaque protected entries globally quarantine automatic stops until operator reconciliation",
+    "Manual/WebUI execution_dedupe=False BUY path unverified; mock reproduction required",
+    "Independent related/full 2-slot audit incomplete; related 0/2 full 0/2"
   ],
-  "next_action": "Preserve Draft; first verify unresolved UNKNOWN BUY per-account fill/cancel/remaining with authoritative mock contract, then inspect 93 Qlty findings and continue transitive per-file audits. KIS demo and branch-protection review remain blocked; no live trading.",
+  "next_action": "First mock-reproduce manual/WebUI execution_dedupe=False ambiguous BUY + old confirmed stop zero-holdings race; reconcile legacy opaque protected claims only with broker evidence; then inspect Qlty 94 findings and continue per-file audits. KIS demo and branch-protection review blocked; no live trading.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6088,6 +6143,18 @@
       "full_pass": false,
       "reason": "47/94 related and 48/183 whole file-level inspected, zero complete independent audits; KIS fill attribution, 93 Qlty blocking issues, review and policy unavailable",
       "manifest_tree_sha": "7ac59fbe198559c2486e7653e355ec2b0d8fb953"
+    },
+    {
+      "slot": "2026-11-03T15-20-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+      "phase": "related_code_audit",
+      "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "49/95 related and 50/184 whole file-level inspected, zero complete independent audits; KIS fill attribution, Qlty 94 findings, human review and branch policy unavailable",
+      "manifest_tree_sha": "7ab9f3b4b57db779d9d0c86e79eea823a7c264ef"
     }
   ],
   "discovered_defects": [
@@ -7774,6 +7841,65 @@
         "branch policy and human review"
       ],
       "recurrence_count": 0
+    },
+    {
+      "id": "legacy-protected-opaque-order-missing-attribution-20261103",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "LEGACY_PROTECTED_LEDGER_MISSING_BUY_INTENT",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_BROKER_RECONCILIATION_AND_AUDIT_BLOCKED",
+      "description": "Legacy protected execution entries lacking BUY intent/side were silently skipped by unresolved-BUY guard, permitting confirmed tracker deletion before delayed legacy BUY fill. Modern SELL provenance is now persisted before submission to avoid false global quarantine.",
+      "first_detected_run": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+      "prepatch_blob_sha": "95a29e9730e9cf860addd9747ae1e81a11ea6d48",
+      "test_first_commit": "182e3e58945bd0ddddcab97b1651abfbd063bb02",
+      "test_first_ci_run_id": 41589439076,
+      "expected_failures": 8,
+      "passes_before_fix": 1526,
+      "fix_commits": [
+        "86bbc81e61581c3cad6d8160403acea0558fdf2f",
+        "186d3f37c7c3827fa531a71e4c9bfe57d375fef5"
+      ],
+      "affected_paths": [
+        "trading/execution_ledger.py",
+        "trading/dispatch.py",
+        "tests/test_legacy_unattributed_buy_fence.py",
+        "tests/test_queue_execution_context.py",
+        "trading/STRATEGIES.md"
+      ],
+      "affected_blobs": {
+        "trading/execution_ledger.py": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+        "trading/dispatch.py": "c2127ff22117cd364525ae3f38836e85d84a9ae6",
+        "tests/test_legacy_unattributed_buy_fence.py": "a98fa4b0fd2a45e29c8389f35a2868f5d59f7075",
+        "tests/test_queue_execution_context.py": "be2b011657ada3eb7adffbbf700bd665660659bf",
+        "trading/STRATEGIES.md": "3b25d7d6aa838a5d0d1162311126104c33a97e2a"
+      },
+      "test_infrastructure_error": {
+        "run_id": 41589641163,
+        "failures": 1,
+        "passes": 1546,
+        "cause": "existing queued-account mock lambda did not accept new optional order_side; fixed test fixture, not broker logic"
+      },
+      "validation": {
+        "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+        "actions_run_ids": [
+          41589812317,
+          41589818296
+        ],
+        "linux_pytest_passed": 1547,
+        "windows_smoke_passed": 167,
+        "docker": "success",
+        "snyk": "success",
+        "qlty": "success_with_94_uninspected_blocking_issues",
+        "kis_demo": "NOT_RUN"
+      },
+      "unverified": [
+        "Legacy opaque claims require operator reconciliation and may conservatively block unrelated stops",
+        "KIS per-order ID/fill ID/partial/cancel/remaining and stop activation",
+        "Manual/WebUI execution_dedupe=False path not yet mock-reproduced or remediated",
+        "Independent related/full 2+2 audits and human review",
+        "Branch protection API 403"
+      ],
+      "recurrence_count": 0
     }
   ],
   "risks": [
@@ -7850,10 +7976,11 @@
         "confirmed-tracker-zero-cleanup-over-unresolved-buy-20261103",
         "BUY_WITHOUT_STOP_LOSS_OMITS_DURABLE_INTENT",
         "CONFIRMED_STOP_SELLS_UNATTRIBUTED_UNKNOWN_BUY_HOLDINGS",
-        "STOP_SELL_BROKER_LOCK_TOCTOU_AND_REASON_CASE_BYPASS"
+        "STOP_SELL_BROKER_LOCK_TOCTOU_AND_REASON_CASE_BYPASS",
+        "legacy-protected-opaque-order-missing-attribution-20261103"
       ],
-      "classification": "MOCK_FENCES_RECONFIRMED_BROKER_AUTHORITATIVE_RECONCILIATION_BLOCKED",
-      "last_checked_head": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
+      "classification": "MOCK_FENCES_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_BROKER_RECONCILIATION_BLOCKED",
+      "last_checked_head": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
       "subcases": [
         {
           "id": "UNKNOWN_BUY_WITHOUT_ACCEPTED_RECEIPT_HAS_NO_DURABLE_STOP_TRACKER",
@@ -7898,6 +8025,16 @@
           "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_BROKER_ATTRIBUTION_BLOCKED",
           "head_sha": "49189b68dd80c56915945f700a32fc2b7088f48a",
           "tests": "tests/test_unresolved_buy_without_stop_loss.py"
+        },
+        {
+          "id": "LEGACY_PROTECTED_LEDGER_MISSING_BUY_INTENT",
+          "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+          "test_first_ci": 41589439076,
+          "final_ci": [
+            41589812317,
+            41589818296
+          ],
+          "fix_head": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5"
         }
       ]
     },
@@ -8742,7 +8879,8 @@
         "CONFIRMED_TRACKER_ZERO_CLEARED_WITH_UNRESOLVED_BUY_INTENT",
         "BUY_WITHOUT_STOP_LOSS_OMITS_DURABLE_INTENT",
         "CONFIRMED_STOP_SELLS_UNATTRIBUTED_UNKNOWN_BUY_HOLDINGS",
-        "STOP_SELL_BROKER_LOCK_TOCTOU_AND_REASON_CASE_BYPASS"
+        "STOP_SELL_BROKER_LOCK_TOCTOU_AND_REASON_CASE_BYPASS",
+        "LEGACY_PROTECTED_LEDGER_MISSING_BUY_INTENT"
       ],
       "intent_fix_commit": "b0054b010d3b0ae696255fe3a1204b51f3bb824c",
       "intent_mock_ci": "41481126172/41481135393",
@@ -8752,10 +8890,12 @@
         "Pending accepted BUY late fill still lacks actionable stop protection",
         "KIS per-account authoritative fill/cancel/remaining reconciliation",
         "Confirmed old tracker + new UNKNOWN BUY post-SELL broker fill attribution and eventual automatic stop activation still unverified",
-        "No authoritative KIS per-order fill/partial/cancel/remaining reconciliation, no pending BUY stop activation; old confirmed stop may be conservatively blocked while new BUY unresolved"
+        "No authoritative KIS per-order fill/partial/cancel/remaining reconciliation, no pending BUY stop activation; old confirmed stop may be conservatively blocked while new BUY unresolved",
+        "Historical opaque protected entries may block unrelated automatic stops until operator reconciliation",
+        "Manual WebUI execution_dedupe=False BUY path lacks verified durable intent; requires mock reproduction before any patch"
       ],
-      "latest_patch_commit": "49189b68dd80c56915945f700a32fc2b7088f48a",
-      "last_checked_head": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
+      "latest_patch_commit": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+      "last_checked_head": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
       "mock_evidence": {
         "run_id": 41565880471,
         "test": "tests/test_unknown_buy_delayed_fill_fence.py",
@@ -9008,6 +9148,18 @@
         "qlty 93 blocking findings",
         "branch policy and human review"
       ]
+    },
+    {
+      "id": "RC-MANUAL-BUY-DEDUPEDISABLED-PENDING-FENCE",
+      "severity": "UNVERIFIED_RISK",
+      "status": "STATIC_PATH_REVIEW_ONLY_NO_MOCK_REPRODUCTION",
+      "description": "WebUI manual TradeDispatcher uses execution_dedupe=False; no BUY order_intent ledger claim is evident. A manual ambiguous BUY could evade watcher pending fence. Requires mock KR/US/manual impact contract and operator workflow review before modifying behavior.",
+      "paths": [
+        "webui/services/trade_service.py",
+        "trading/dispatch.py",
+        "trading/execution_ledger.py"
+      ],
+      "first_action": "Mock manual BUY timeout + old confirmed tracker zero inquiry; confirm no durable intent and impact; no real KIS orders"
     }
   ],
   "previous_active_pr_at_manual_merge": {

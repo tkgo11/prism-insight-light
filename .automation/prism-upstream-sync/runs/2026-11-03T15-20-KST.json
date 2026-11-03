@@ -1,0 +1,147 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+  "slot": "2026-11-03T15-20-KST",
+  "started_at": "2026-11-03T06:20:32Z",
+  "completed_at": "2026-11-03T06:28:47.369Z",
+  "pr_number": 43,
+  "pr_head": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+  "pr_base": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "pr_draft": true,
+  "upstream_latest": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "upstream_delta": {
+    "commits": 47,
+    "files": 41,
+    "integrated": 0
+  },
+  "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "subcase": "LEGACY_PROTECTED_LEDGER_MISSING_BUY_INTENT",
+  "defect": {
+    "id": "legacy-protected-opaque-order-missing-attribution-20261103",
+    "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "subcase": "LEGACY_PROTECTED_LEDGER_MISSING_BUY_INTENT",
+    "severity": "HIGH",
+    "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_BROKER_RECONCILIATION_AND_AUDIT_BLOCKED",
+    "description": "Legacy protected execution entries lacking BUY intent/side were silently skipped by unresolved-BUY guard, permitting confirmed tracker deletion before delayed legacy BUY fill. Modern SELL provenance is now persisted before submission to avoid false global quarantine.",
+    "first_detected_run": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+    "prepatch_blob_sha": "95a29e9730e9cf860addd9747ae1e81a11ea6d48",
+    "test_first_commit": "182e3e58945bd0ddddcab97b1651abfbd063bb02",
+    "test_first_ci_run_id": 41589439076,
+    "expected_failures": 8,
+    "passes_before_fix": 1526,
+    "fix_commits": [
+      "86bbc81e61581c3cad6d8160403acea0558fdf2f",
+      "186d3f37c7c3827fa531a71e4c9bfe57d375fef5"
+    ],
+    "affected_paths": [
+      "trading/execution_ledger.py",
+      "trading/dispatch.py",
+      "tests/test_legacy_unattributed_buy_fence.py",
+      "tests/test_queue_execution_context.py",
+      "trading/STRATEGIES.md"
+    ],
+    "affected_blobs": {
+      "trading/execution_ledger.py": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "trading/dispatch.py": "c2127ff22117cd364525ae3f38836e85d84a9ae6",
+      "tests/test_legacy_unattributed_buy_fence.py": "a98fa4b0fd2a45e29c8389f35a2868f5d59f7075",
+      "tests/test_queue_execution_context.py": "be2b011657ada3eb7adffbbf700bd665660659bf",
+      "trading/STRATEGIES.md": "3b25d7d6aa838a5d0d1162311126104c33a97e2a"
+    },
+    "test_infrastructure_error": {
+      "run_id": 41589641163,
+      "failures": 1,
+      "passes": 1546,
+      "cause": "existing queued-account mock lambda did not accept new optional order_side; fixed test fixture, not broker logic"
+    },
+    "validation": {
+      "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+      "actions_run_ids": [
+        41589812317,
+        41589818296
+      ],
+      "linux_pytest_passed": 1547,
+      "windows_smoke_passed": 167,
+      "docker": "success",
+      "snyk": "success",
+      "qlty": "success_with_94_uninspected_blocking_issues",
+      "kis_demo": "NOT_RUN"
+    },
+    "unverified": [
+      "Legacy opaque claims require operator reconciliation and may conservatively block unrelated stops",
+      "KIS per-order ID/fill ID/partial/cancel/remaining and stop activation",
+      "Manual/WebUI execution_dedupe=False path not yet mock-reproduced or remediated",
+      "Independent related/full 2+2 audits and human review",
+      "Branch protection API 403"
+    ],
+    "recurrence_count": 0
+  },
+  "test_first": {
+    "sha": "182e3e58945bd0ddddcab97b1651abfbd063bb02",
+    "run_id": 41589439076,
+    "failures": 8,
+    "passes": 1526,
+    "type": "ASSERTION_REPRODUCTION"
+  },
+  "intermediate_failure": {
+    "run_id": 41589641163,
+    "type": "TEST_FIXTURE_SIGNATURE",
+    "failures": 1,
+    "passes": 1546
+  },
+  "final_ci": {
+    "head_sha": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+    "run_ids": [
+      41589812317,
+      41589818296
+    ],
+    "linux": 1547,
+    "windows": 167,
+    "docker": "success",
+    "snyk": "success",
+    "qlty": "success_with_94_untriaged_blocking_issues"
+  },
+  "files_changed": [
+    "trading/execution_ledger.py",
+    "trading/dispatch.py",
+    "tests/test_legacy_unattributed_buy_fence.py",
+    "tests/test_queue_execution_context.py",
+    "trading/STRATEGIES.md"
+  ],
+  "manifests": {
+    "related": {
+      "sha": "f594f60f98462322d6467bdcd5a5c52b45542fae",
+      "scope": 95,
+      "file_level": 49,
+      "fully": 0
+    },
+    "full": {
+      "sha": "896c81084ae8219274f6da40568c880b7a3c2561",
+      "scope": 184,
+      "file_level": 50,
+      "fully": 0
+    }
+  },
+  "audit_passes": {
+    "related": 0,
+    "full": 0
+  },
+  "blockers": [
+    "Qlty check success but 94 blocking issues uninspected; Snyk success; human review absent",
+    "Branch protection API 403 Resource not accessible by integration; rulesets []",
+    "Broker-authoritative order ID/fill ID/partial/cancel/remaining reconciliation and demo KIS evidence absent; live trading prohibited",
+    "Legacy opaque protected entries globally quarantine automatic stops until operator reconciliation",
+    "Manual/WebUI execution_dedupe=False BUY path unverified; mock reproduction required",
+    "Independent related/full 2-slot audit incomplete; related 0/2 full 0/2"
+  ],
+  "unverified_risk": "RC-MANUAL-BUY-DEDUPEDISABLED-PENDING-FENCE",
+  "safety": {
+    "real_orders": 0,
+    "demo_orders": 0,
+    "merge": false,
+    "live_trading": false
+  },
+  "cas": {
+    "acquired_commit": "d351d794424c678a5ee9f9c8be3863430d09e2e5",
+    "state_parent": "10f7fbf34cc10748110d41cea7f1cc77cc9415bc",
+    "release": "PENDING_COMMIT"
+  }
+}
