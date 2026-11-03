@@ -178,3 +178,59 @@ def test_malformed_balance_quantity_must_not_prove_zero(
         trader.get_holding_quantity(symbol)
     assert trader._last_portfolio_inquiry_error
     assert trader.get_portfolio() == []
+
+
+@pytest.mark.parametrize("cls, qty_field, ticker_field, symbol", [
+    (DomesticStockTrading, "hldg_qty", "pdno", "005930"),
+    (USStockTrading, "ovrs_cblc_qty", "ovrs_pdno", "AAPL"),
+])
+@pytest.mark.parametrize("missing_quantity", ["absent", None, ""])
+def test_identified_holding_with_missing_quantity_is_not_proof_of_zero(
+    monkeypatch, cls, qty_field, ticker_field, symbol, missing_quantity
+):
+    """A named holding with missing KIS quantity must not erase a stop tracker."""
+    trader = _trader(cls)
+    row = {ticker_field: symbol}
+    if missing_quantity != "absent":
+        row[qty_field] = missing_quantity
+    if cls is USStockTrading:
+        row["ovrs_excg_cd"] = "NASD"
+        monkeypatch.setattr("trading.us.time.sleep", lambda _: None)
+    monkeypatch.setattr(trader, "_request", lambda *a, **kw: _Response([row]))
+    with pytest.raises(PortfolioInquiryError):
+        trader.get_holding_quantity(symbol)
+    assert trader._last_portfolio_inquiry_error
+
+
+@pytest.mark.parametrize("cls, qty_field, symbol", [
+    (DomesticStockTrading, "hldg_qty", "005930"),
+    (USStockTrading, "ovrs_cblc_qty", "AAPL"),
+])
+def test_positive_holding_with_missing_instrument_is_not_proof_of_zero(
+    monkeypatch, cls, qty_field, symbol
+):
+    """A positive KIS quantity without instrument attribution is incomplete."""
+    trader = _trader(cls)
+    if cls is USStockTrading:
+        monkeypatch.setattr("trading.us.time.sleep", lambda _: None)
+    monkeypatch.setattr(
+        trader, "_request", lambda *a, **kw: _Response([{qty_field: "5"}])
+    )
+    with pytest.raises(PortfolioInquiryError):
+        trader.get_holding_quantity(symbol)
+    assert trader._last_portfolio_inquiry_error
+
+
+@pytest.mark.parametrize("cls, symbol", [
+    (DomesticStockTrading, "005930"),
+    (USStockTrading, "AAPL"),
+])
+def test_blank_placeholder_balance_row_does_not_invent_a_position(
+    monkeypatch, cls, symbol
+):
+    """A wholly empty KIS placeholder row remains a valid no-position result."""
+    trader = _trader(cls)
+    if cls is USStockTrading:
+        monkeypatch.setattr("trading.us.time.sleep", lambda _: None)
+    monkeypatch.setattr(trader, "_request", lambda *a, **kw: _Response([{}]))
+    assert trader.get_holding_quantity(symbol) == 0
