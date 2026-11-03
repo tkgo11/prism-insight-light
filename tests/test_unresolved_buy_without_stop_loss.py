@@ -338,3 +338,88 @@ async def test_corrupt_buy_ledger_blocks_dispatcher_stop_sell_without_mock_broke
     result = await dispatcher.dispatch(signal, allow_queue=False)
     assert result.status == "deferred"
     dispatcher._execute_legacy_trade.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("buy_status,expected", [
+    ("in_progress", "deferred"),
+    ("unknown", "deferred"),
+    ("cancelled", "deferred"),
+    ("rejected", "executed"),
+])
+async def test_queued_multi_account_stop_sell_rechecks_unknown_buy_before_mock_broker(
+    tmp_path, market, ticker, buy_status, expected
+):
+    """Queued multi-account replay must preserve the same pending-BUY fence as dispatch()."""
+    from trading.dispatch import DispatchResult
+
+    path = tmp_path / "ledger.json"
+    ledger = ExecutionLedger(path)
+    intent = _buy_stop_loss_intent(
+        SignalMessage(signal_type="BUY", market=market, ticker=ticker),
+        "mock-account-A",
+    )
+    claimed, _, token = ledger.claim(
+        "queued-buy-" + market, with_token=True, order_intent=intent,
+    )
+    assert claimed and token
+    if buy_status != "in_progress":
+        ledger.finalize("queued-buy-" + market, buy_status, claim_token=token)
+
+    replay = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=path,
+    )
+    replay.multi_account_enabled = True
+    replay.multi_account_dispatcher.dispatch = AsyncMock(
+        return_value=DispatchResult("executed", "mock SELL accepted", "SELL", market)
+    )
+    queued = parse_signal_payload({
+        "signal_id": "queued-stop-" + market, "type": "SELL",
+        "market": market, "ticker": ticker, "price": 85,
+        "sell_reason": "stop_loss",
+    })
+    result = await replay.execute_queued_signal({
+        **queued.raw,
+        "__prism_queue_context": {
+            "version": 2, "multi_account": True,
+            "trading_mode": "demo", "account_ids": ["a" * 24],
+        },
+    })
+    assert result.status == expected
+    if expected == "deferred":
+        replay.multi_account_dispatcher.dispatch.assert_not_awaited()
+    else:
+        replay.multi_account_dispatcher.dispatch.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+async def test_queued_multi_account_stop_sell_blocks_corrupt_buy_ledger(
+    tmp_path, market, ticker
+):
+    """An unreadable durable BUY ledger is not evidence that queued SELL is safe."""
+    from trading.dispatch import DispatchResult
+
+    path = tmp_path / "ledger.json"
+    path.write_text("{corrupt", encoding="utf-8")
+    replay = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=path,
+    )
+    replay.multi_account_enabled = True
+    replay.multi_account_dispatcher.dispatch = AsyncMock(
+        return_value=DispatchResult("executed", "mock SELL accepted", "SELL", market)
+    )
+    result = await replay.execute_queued_signal({
+        "signal_id": "queued-corrupt-stop-" + market,
+        "type": "SELL", "market": market, "ticker": ticker,
+        "price": 85, "sell_reason": "stop_loss",
+        "__prism_queue_context": {
+            "version": 2, "multi_account": True,
+            "trading_mode": "demo", "account_ids": ["b" * 24],
+        },
+    })
+    assert result.status == "deferred"
+    replay.multi_account_dispatcher.dispatch.assert_not_awaited()
