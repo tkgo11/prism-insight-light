@@ -108,7 +108,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                       OVRS_EXCG_CD="" if mode == "demo" else "%",
                       CTX_AREA_FK200="", CTX_AREA_NK200="")
         fk, nk, output = "CTX_AREA_FK200", "CTX_AREA_NK200", "output"
-    cursors, records, matches = set(), set(), []
+    cursors, records, matches, versions = set(), set(), [], {}
     for page in range(max_pages):
         try:
             response = trader._request(path, tr_id, dict(params), tr_cont="N" if page else "")
@@ -124,12 +124,21 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                 match = _matched(row, order_no=order_no, order_date=order_date,
                                  ticker=ticker, account=account, product=product)
                 if match is not None:
+                    # Repeated pages may duplicate rows. Conflicting snapshots
+                    # for the same execution identity cannot prove final fills.
+                    key = (match["order_no"], match["execution_id"])
+                    if key in versions and versions[key] != match:
+                        return result
+                    versions[key] = match
                     signature = tuple(match.values())
                     if signature not in records:
                         records.add(signature)
                         matches.append(match)
-            if _get(header, "tr_cont", "") not in ("M", "F"):
+            continuation = _get(header, "tr_cont", None)
+            if continuation in ("", "D", "E"):
                 result.update(status="EVIDENCE_ONLY", complete=True, matches=matches)
+                return result
+            if continuation not in ("M", "F"):
                 return result
             cursor = (_get(body, fk.lower(), ""), _get(body, nk.lower(), ""))
             if not all(isinstance(c, str) for c in cursor) or not any(cursor) or cursor in cursors:
