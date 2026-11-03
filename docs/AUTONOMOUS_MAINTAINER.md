@@ -36,7 +36,7 @@ advances the gitlink without a reviewable dependency PR.
 ## Automatic updates
 
 GitHub **Dependabot** checks the Git Submodule daily according to
-`.github/dependabot.yml` (13:17 Asia/Seoul). When upstream `main` advances,
+`.github/dependabot.yml` (04:00 Asia/Seoul). When upstream `main` advances,
 Dependabot can propose a normal pull request to update the **one pinned gitlink**.
 This does not require GitHub Actions write permissions or an API key.
 
