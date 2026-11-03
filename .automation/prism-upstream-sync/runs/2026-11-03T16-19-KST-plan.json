@@ -1,0 +1,68 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T16-19-KST-run11",
+  "slot": "2026-11-03T16-19-KST",
+  "status": "TEST_FIRST_COMMITTED_AWAITING_ACTIONS",
+  "lock_commit": "c4a0b88221d36cf90f5d50d495555c3f491f7bbd",
+  "pr_number": 43,
+  "starting_pr_head": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+  "test_first_pr_head": "b18feb8afee46e37e42ef10273854a39ee7dc949",
+  "root_cause_id": "RC-MANUAL-BUY-DEDUPEDISABLED-PENDING-FENCE",
+  "classification": "MOCK_REPRODUCTION_PENDING",
+  "invariant": "Every broker-submitted BUY including explicitly armed WebUI manual BUY must persist non-actionable account-scoped BUY intent before submission, even without a stop threshold; acceptance/UNKNOWN is not fill",
+  "matrix": [
+    {
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "fc70caf328b37cca66b47c7024bb7b9cf2524de6",
+      "function": "dispatch_manual_order",
+      "failure": "execution_dedupe=False bypasses ledger claim"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "c2127ff22117cd364525ae3f38836e85d84a9ae6",
+      "functions": [
+        "dispatch",
+        "_dispatch_serialized",
+        "_buy_stop_loss_intent"
+      ],
+      "failure": "durable intent written only when execution_dedupe=True"
+    },
+    {
+      "path": "webui/services/account_service.py",
+      "blob_sha": "586aee6b00713da80a49b3d366afffda554df94f",
+      "function": "build_manual_signal",
+      "failure": "identical manual payloads lack unique per-order identity"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "functions": [
+        "claim",
+        "guard_unresolved_buy"
+      ],
+      "failure": "unrecorded manual BUY invisible to watcher"
+    },
+    {
+      "path": "tests/test_webui_manual_buy_durable_intent.py",
+      "new": true,
+      "tests": 5
+    }
+  ],
+  "test_first": {
+    "sha": "b18feb8afee46e37e42ef10273854a39ee7dc949",
+    "status": "CI_QUEUED_OR_NOT_YET_INDEXED",
+    "expected_failure": "assertion from missing ledger, or broker call after injected storage failure; not fixture/import failure"
+  },
+  "safety": {
+    "real_orders": 0,
+    "demo_orders": 0,
+    "merge": false,
+    "related_passes": 0,
+    "full_passes": 0
+  },
+  "unverified": [
+    "KR/US mock regression CI",
+    "multi-account manual route",
+    "broker authoritative fills/partial/cancel/remaining",
+    "full transitive audit and review"
+  ]
+}
