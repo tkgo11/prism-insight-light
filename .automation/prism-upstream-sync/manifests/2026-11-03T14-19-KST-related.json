@@ -11,7 +11,7 @@
   "reason": "Current head mock CI and qlty pending; KIS order/fill/cancel/remaining and independent 2+2 audit/review/policy unavailable",
   "files_fully_audited": 0,
   "files_file_level_inspected": 56,
-  "scope": "94 related files; file-level inspections are NOT complete independent audit",
+  "scope": "94 files, 56 file-level inspected, 0 fully audited; no independent PASS",
   "files": [
     {
       "path": "README.en.md",

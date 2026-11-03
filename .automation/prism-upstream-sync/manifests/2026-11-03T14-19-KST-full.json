@@ -10,78 +10,92 @@
   "closure_verified": false,
   "reason": "Current head mock CI and qlty pending; KIS order/fill/cancel/remaining and independent 2+2 audit/review/policy unavailable",
   "files_fully_audited": 0,
-  "files_file_level_inspected": 145,
-  "scope": "183 full files; file-level inspections are NOT complete independent audit",
+  "files_file_level_inspected": 57,
+  "scope": "183 files, 57 file-level inspected, 0 fully audited; no independent PASS",
   "files": [
     {
       "path": ".agents/skills/prism-insight-light/SKILL.md",
       "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".agents/skills/prism-insight-light/agents/openai.yaml",
       "blob_sha": "5b0f9ea241f62d302b5839f4036482bf034780ba",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".claude/ecc-tools.json",
       "blob_sha": "2c893f7ba0b42ffc1788839737763e55ec4a4150",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".claude/homunculus/instincts/inherited/prism-insight-light-instincts.yaml",
       "blob_sha": "aa4e351b89edd631eddb9443243430ed5c8324e3",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".claude/identity.json",
       "blob_sha": "f033d29c5f7e28e61dd4824401d288ab168e0d97",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".claude/skills/prism-insight-light/SKILL.md",
       "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".codex/AGENTS.md",
       "blob_sha": "c7dda2d79ee76ddcbcdd2c723b8839ee75abb0eb",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".codex/agents/docs-researcher.toml",
       "blob_sha": "ecf4557e443fe460177527c96d387015180823a0",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".codex/agents/explorer.toml",
       "blob_sha": "e57fb3b60c010bd5e53a1af3f3883ec65707bcff",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".codex/agents/reviewer.toml",
       "blob_sha": "827de0a18c6398d8e2209a69da471165e1de4c6d",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".codex/agents/test-planner.toml",
       "blob_sha": "d880784d3839d1478b2ba83120d39dff5a3245e2",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".codex/config.toml",
       "blob_sha": "cb590f808b9ebddc43444c1fbf6f0673ef718302",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".dockerignore",
       "blob_sha": "2b8213e1a84f4221cc5784743cf2d6e7b58d0edb",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".env.example",
       "blob_sha": "1337983d8e65c504c500e11e331abc7fb16c3c30",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": ".github/workflows/tests.yml",
@@ -96,17 +110,20 @@
     {
       "path": ".gitignore",
       "blob_sha": "35a1af29fde81bfff3c4b24895ad91dc2da3870c",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "Dockerfile",
       "blob_sha": "3b0dead05078f0e16e37b53aa0c4d16d0a8e7733",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "LICENSE",
       "blob_sha": "be3f7b28e564e7dd05eaf59d64adba1a4065ac0e",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "README.en.md",
@@ -123,12 +140,14 @@
     {
       "path": "README.md",
       "blob_sha": "125dcddda02de2d1e1e377d38bb54ab0764f1156",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "check_pubsub_readiness.py",
       "blob_sha": "2ce8388379013b3bac9c792fb4425080cd18892f",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
@@ -139,42 +158,50 @@
     {
       "path": "install_prism_docker.sh",
       "blob_sha": "c4461aed3bf4358f7fbe2fdda7f13d6a3d87c8ce",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "pubsub_readiness.py",
       "blob_sha": "41e5e02faf1b5a57a10407ec8075f8dc71f2f129",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "pytest.ini",
       "blob_sha": "fd7e79a47a073d76514c770332b0258e63fc0045",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "renovate.json",
       "blob_sha": "16674ff993b4b61a24948ecd1b14f4e6758a71fd",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "requirements-dev.txt",
       "blob_sha": "90aee653b4f09cb5667daa34e804a9c88d8b8b76",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "requirements.txt",
       "blob_sha": "9da639b5835a16b5df9b729b267729b623594258",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "setup_subscriber_crontab.sh",
       "blob_sha": "5571b59b6bf010fb86e662573d4008ea9f617fba",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "setup_subscriber_docker_crontab.sh",
       "blob_sha": "50e4462e7e52962936e157dc25d2c6e155142131",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "subscriber.py",
@@ -190,7 +217,8 @@
     {
       "path": "tests/conftest.py",
       "blob_sha": "b35b9f428d5a66510ed8abdab2052361f1a181ff",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_balance_split_strategy.py",
@@ -247,7 +275,8 @@
     {
       "path": "tests/test_check_pubsub_readiness.py",
       "blob_sha": "e0765d4513357ff046a5bcf7aeb567d8e4d10859",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_cooldown_pending_reconciliation.py",
@@ -262,7 +291,8 @@
     {
       "path": "tests/test_direct_cron_script.py",
       "blob_sha": "d14481c2a3dbe1c591a4134a28fd4c5901cf505a",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_dispatch.py",
@@ -273,7 +303,8 @@
     {
       "path": "tests/test_docker_installer_smoke.py",
       "blob_sha": "b649c7713a170b89733861a5e82487b1e585a765",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_durable_state_directory_sync.py",
@@ -337,12 +368,14 @@
     {
       "path": "tests/test_kis_auth_token_paths.py",
       "blob_sha": "2aad283cf196af6ceaaa302bac51baad2d70eadf",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_market_hours.py",
       "blob_sha": "7e140a732dcd94b75fbdcd65cd0ea3476ad49364",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_multi_account_dispatch.py",
@@ -369,7 +402,8 @@
     {
       "path": "tests/test_multi_account_kis_auth.py",
       "blob_sha": "a46c30438ab16495e1780f9a47d3e02cf096e718",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_multi_account_us.py",
@@ -444,7 +478,8 @@
     {
       "path": "tests/test_pubsub_readiness.py",
       "blob_sha": "cda94ccff0897c4228793cde03bd0d6cb5f5a006",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_queue_and_account_sizing.py",
@@ -476,7 +511,8 @@
     {
       "path": "tests/test_schema.py",
       "blob_sha": "fa42823b5396ef94551ba85a63336bfa0f7a02da",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_score_band_config_integrity.py",
@@ -623,12 +659,14 @@
     {
       "path": "tests/test_subscriber_smoke.py",
       "blob_sha": "baaad276d08c5ff7fde4f413401bf75e2282a45a",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_telegram_fetch.py",
       "blob_sha": "a1b8a93f4012e422a14c2d97d3eccbfb2160aa80",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_telegram_signal_worker.py",
@@ -737,27 +775,32 @@
     {
       "path": "tests/test_webui_console.py",
       "blob_sha": "378b6a6da0bf820e39faa300d9a1448febbcacdf",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_webui_dry_run_service.py",
       "blob_sha": "282d2334943f32dab5ed9e700d9ad4440ae7e2ed",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_webui_log_service.py",
       "blob_sha": "e81b04d2c3a9fafc3e5237d51784220e5565441e",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_webui_queue_service.py",
       "blob_sha": "eb9f2b0207d83c7f45540f64473bbd89c0c36138",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_webui_readiness_service.py",
       "blob_sha": "344cadc082a6b7a10fa66da01d2ce8344b6626de",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_webui_routes.py",
@@ -768,32 +811,38 @@
     {
       "path": "tests/test_webui_security.py",
       "blob_sha": "d25e2cdba7c6ea5c5279ab032cfe4d30d99f43fa",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_webui_signal_service.py",
       "blob_sha": "3b4aa6628f88c9b415e01ee86eb9941a73787547",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_webui_startup.py",
       "blob_sha": "999f9a3cd0ac77e3ff9003e95e7c0b6b288b3f63",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/test_webui_telegram_service.py",
       "blob_sha": "556d9084efb712c5adca05c6366c85d4a7134481",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/webui_browser_smoke.cjs",
       "blob_sha": "53aec023f1b2e3d3148853d02a35f2a0804df34e",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "tests/webui_fixture_server.py",
       "blob_sha": "9e2ee38cb00c41375f1f7cc0711106aebe483639",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "trading/STRATEGIES.md",
@@ -809,7 +858,8 @@
     {
       "path": "trading/__init__.py",
       "blob_sha": "a0326b8406920998e8dbe830d120148840ddfe01",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "trading/buy_sizing.py",
@@ -824,7 +874,8 @@
     {
       "path": "trading/config/kis_devlp.yaml.example",
       "blob_sha": "1379c70fefdcb41ede63ff0bbd00eb4d9ef417e9",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "trading/config_paths.py",
@@ -923,12 +974,14 @@
     {
       "path": "trading/market_hours.py",
       "blob_sha": "170d8a7ff22ce4e40dcdecda865515ad7670fb9f",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "trading/modes.py",
       "blob_sha": "49caad45c48992394cc00b090495cb1bc4cbbd85",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "trading/off_hours_queue.py",
@@ -1157,7 +1210,8 @@
     {
       "path": "trading/strategy_names.py",
       "blob_sha": "2fbd9fd37b9b37c6fd1fdf532de5c09809e94705",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "trading/telegram_fetch.py",
@@ -1182,62 +1236,74 @@
     {
       "path": "trading/yaml_compat.py",
       "blob_sha": "d28beb4d042ec631409ebe17d01588fe3b00c2a6",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/__init__.py",
       "blob_sha": "7a80de1688e723fec4a0cbb96ca21e005525a4ea",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/__main__.py",
       "blob_sha": "fcabfa185168eac19da0b2ac5dd6110afc5858b9",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/app.py",
       "blob_sha": "0a9576bb59e01e131250b5ab06ac5baf57e8ef76",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/__init__.py",
       "blob_sha": "ddddf4858bec829a4cc1770e3728a84068f44322",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/activity.py",
       "blob_sha": "d003a105c30d2a70934f447d6f0f73c794e82f8a",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/dashboard.py",
       "blob_sha": "93ad8dffab06496b5ab3ea85596144e3c30adbc5",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/dry_run.py",
       "blob_sha": "36fda1fdbbdfc8aea862485664f95a1923dccfcb",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/guards.py",
       "blob_sha": "e4a95f69b3f651633f55defdaaae9cc49571e3b4",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/logs.py",
       "blob_sha": "e2d680f356062a1d3ad9027b08a90beffe30e481",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/queue.py",
       "blob_sha": "eba37a4c0e4bc58c9d077432ff9944bbee5b6d14",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/readiness.py",
       "blob_sha": "17b9e8c143a1901169cbb8e8d15f41ff43a14e56",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/signals.py",
@@ -1248,7 +1314,8 @@
     {
       "path": "webui/routes/telegram.py",
       "blob_sha": "652624391aa1752cd3453432d56aff036a6fb79d",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/routes/trading.py",
@@ -1259,37 +1326,44 @@
     {
       "path": "webui/services/account_service.py",
       "blob_sha": "586aee6b00713da80a49b3d366afffda554df94f",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/services/activity_service.py",
       "blob_sha": "67fb004425f6f59b06227a59c5263409276c6170",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/services/dry_run_service.py",
       "blob_sha": "01e94a72fb3c3dcfd481bcddfdb9463eeb00976a",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/services/log_service.py",
       "blob_sha": "afcedd5622e857a3d5a0cb939126d394f3785674",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/services/masking.py",
       "blob_sha": "0214b94b9acf52f6668cd2dedfbf6edde5921b81",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/services/queue_service.py",
       "blob_sha": "5676ec357f18e38a65e212bd8de957c1c29527eb",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/services/readiness_service.py",
       "blob_sha": "472da75058b3a852760e33731476390777f6e6e8",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/services/signal_service.py",
@@ -1300,7 +1374,8 @@
     {
       "path": "webui/services/telegram_service.py",
       "blob_sha": "8bf1ad38fbc48d319e432a71a2872f46bac9e536",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/services/trade_service.py",
@@ -1316,67 +1391,80 @@
     {
       "path": "webui/static/console.css",
       "blob_sha": "b5ec46d0a14289d17d667199fc9e414096da0f92",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/static/console.js",
       "blob_sha": "8fab1f7b73a604c4182098604dcbc1b33df8ecc6",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/static/style.css",
       "blob_sha": "1a640490eaf214467390987595ddc6d58fba8c6d",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/activity.html",
       "blob_sha": "6a656b2262c26d38f80a73aeed24d666fa1c4c94",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/base.html",
       "blob_sha": "8133337ed11b75d110c74c78327572a648e4ca63",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/dashboard.html",
       "blob_sha": "e4c4d3d2c9467320451c13d3849bc64d1eecbae0",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/dry_run.html",
       "blob_sha": "b322d66efea7dac30998e5a9d591a0b860ca6744",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/logs.html",
       "blob_sha": "df8c3a5a9dabb71fe22ea2c2e8b4934000c43726",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/queue.html",
       "blob_sha": "e141d1a4901feab19ac900f71abad43e0fa7bac0",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/readiness.html",
       "blob_sha": "7326ceeea4400cb06d6d050790dd01965725afb1",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/signals.html",
       "blob_sha": "80065293abffc797fae9e5c58c3396c6f64fd4b6",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/telegram.html",
       "blob_sha": "dce3410f1e3e7922ba2393e6cb8d0add520b5a98",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     },
     {
       "path": "webui/templates/trading.html",
       "blob_sha": "6c9bbc9bec5dd0f30b557e2c2f7459bb4774f91b",
-      "status": "NOT_FULLY_AUDITED"
+      "status": "NOT_FULLY_AUDITED",
+      "inspection": "NOT_FULLY_INSPECTED"
     }
   ]
 }
