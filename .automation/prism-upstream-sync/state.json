@@ -7,16 +7,18 @@
     "run_id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
     "previous_run_id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
     "started_at": "2026-11-03T16:24:00Z",
-    "completed_at": "2026-11-03T16:31:05.248Z",
+    "completed_at": "2026-11-03T16:32:00.573Z",
     "status": "RELEASED",
     "lock_owner": null,
-    "lock_expected_state_branch_sha": "f4c6c145b849f44c851f8ca2557fdc60b9d8d15f",
+    "lock_expected_state_branch_sha": "0b8c0e7145998688d3dd3370b360ad28d5974529",
     "lock_expected_pr_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
     "lock_expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
     "lock_expected_upstream_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
     "final_pr_head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
     "related_pass": false,
-    "full_pass": false
+    "full_pass": false,
+    "id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
+    "schema_correction": "run.id restored after turn6 state serialization; manifest blob SHAs unchanged"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -5915,6 +5917,12 @@
       "related_pass": false,
       "full_pass": false,
       "notes": "Broker transport marker subcases fixed; authoritative UNKNOWN BUY fill/stop attribution remains STALLED. Qlty pending, review 0, policy 403, merge result untested."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-04T01-24-KST-turn6",
+      "kind": "STATE_SCHEMA_CORRECTION_ONLY",
+      "head_sha": "c1077e46fb71ad65d57e00adedbf35ebe8fef285",
+      "details": "Restore run.id; no production code/test changes, no audit PASS"
     }
   ],
   "last_merged_upstream_sha": null,
