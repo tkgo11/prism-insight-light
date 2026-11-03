@@ -1,0 +1,91 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T13-18-KST-turn11",
+  "slot": "2026-11-03T13-18-KST",
+  "head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+  "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "git_tree_sha": "566e2a3a5f09658d1b4b715afba9c572ef78b1cb",
+  "upstream_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "pinned_upstream_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "root_cause_id": "RC-WATCHER-ORIGIN-SPOOFING",
+  "classification": "THREE_REPRODUCED_SUBCASES_PATCHED_MOCK_CI_SUCCESS",
+  "test_first": [
+    {
+      "commit": "4214d85a1c1dccb927e62da5a6372c8e9ac64f8d",
+      "run_id": 41577717447,
+      "failed": 4,
+      "passed": 1452,
+      "classification": "PRODUCTION_REPRODUCTION"
+    },
+    {
+      "commit": "53448e7e4899529313f653dd0826521b9a21e3f8",
+      "run_id": 41578001387,
+      "failed": 4,
+      "passed": 1458,
+      "classification": "PRODUCTION_REPRODUCTION"
+    },
+    {
+      "commit": "558b75c4af5f29ee318fea9e8dcad0c1c6ef8444",
+      "run_id": 41578220075,
+      "failed": 6,
+      "passed": 1484,
+      "classification": "PRODUCTION_REPRODUCTION"
+    }
+  ],
+  "fix_commits": [
+    "e102066adfd8bc18bc368506e690d2c877135083",
+    "f8692a17d6c881af745a4c03533919a3ca54ba16",
+    "718ad5f3a70c72ade20dbc62b14482d74c05cb4f"
+  ],
+  "final_ci": {
+    "run_ids": [
+      41578361551,
+      41578366433
+    ],
+    "head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+    "status": "completed",
+    "conclusion": "success",
+    "linux_pytest_passed": 1490,
+    "windows_smoke_passed": 167,
+    "docker": "success"
+  },
+  "prior_unknown_buy_mock_rerun": {
+    "run_id": 41572020004,
+    "attempt": 2,
+    "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+    "status": "completed",
+    "conclusion": "success",
+    "scope": "Existing UNKNOWN BUY mock cases only; no broker fill attribution"
+  },
+  "audit": {
+    "related_files": 93,
+    "related_file_level": 40,
+    "whole_files": 182,
+    "whole_file_level": 41,
+    "fully_audited": 0,
+    "related_passes": 0,
+    "full_passes": 0,
+    "related_manifest_blob_sha": "3e93267e583bea8d50a857cec45b06abcf5419ce",
+    "full_manifest_blob_sha": "01acf944c5585e581b4af508f67ca9cbe1927d66"
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success status but 93 blocking issues uninspected",
+    "reviews": 0,
+    "branch_protection": "403 Resource not accessible by integration",
+    "rulesets": []
+  },
+  "residual": [
+    "UNKNOWN BUY delayed/partial fill lacks authoritative order/fill/remaining/cancel reconciliation and automatic stop activation",
+    "Legacy pre-patch watcher-ID ledger claims cannot be retroactively attributed without broker evidence",
+    "Multi-account broker-authoritative reconciliation and cross-process tracker edit TOCTOU remain unverified",
+    "Qlty 93 blocking issues, independent review, branch policy, full 2+2 audits incomplete"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "cas": {
+    "acquired_commit": "319c576d600f645d76378ebd424dbc9406ca8195",
+    "status": "ACTIVE_EVIDENCE_PERSISTED",
+    "expected_pr_head": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f"
+  },
+  "completed_at": "2026-11-03T04:32:29.970Z"
+}

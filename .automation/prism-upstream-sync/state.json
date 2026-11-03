@@ -4,14 +4,14 @@
   "state": "ACTIVE_DRAFT_MOCK_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T11-19-KST-turn11",
-    "result": "MOCK_LEGACY_COOLDOWN_FENCE_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
-    "last_mutation_commit": "077e101357e3e560eda1492c9d660ce21787dce1",
-    "previous_state_branch_sha": "8410ca08ce4025b6e99f1412736687932e1a1531",
+    "id": "prism-sync-hourly-2026-11-03T13-18-KST-turn11",
+    "lock_owner": "prism-sync-hourly-2026-11-03T13-18-KST-turn11",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
+    "result": "WATCHER_ORIGIN_SPOOFING_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
+    "last_mutation_commit": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+    "previous_state_branch_sha": "319c576d600f645d76378ebd424dbc9406ca8195",
     "started_at": "2026-11-03T03:20:56Z",
-    "completed_at": "2026-11-03T03:27:41Z"
+    "completed_at": "2026-11-03T04:32:29.970Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -30,7 +30,7 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+    "head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
@@ -107,26 +107,26 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "9775771ba89fa788f0c2e2dd13e7c7cc503c9dcc",
+    "checksum": "3e93267e583bea8d50a857cec45b06abcf5419ce",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 92,
+    "scope_estimate": 93,
     "files_fully_audited": 0,
-    "files_file_level_inspected": 30,
-    "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+    "files_file_level_inspected": 40,
+    "head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "32f19a394503b725217ee21bd7b46f1a8c152b01",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T12-20-KST-related.json"
+    "git_tree_sha": "566e2a3a5f09658d1b4b715afba9c572ef78b1cb",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T13-18-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "ecfe31e3a5924c4544ec8e968462e4f44a066ba3",
+    "checksum": "01acf944c5585e581b4af508f67ca9cbe1927d66",
     "checksum_kind": "git_blob_sha1",
-    "sha": "077e101357e3e560eda1492c9d660ce21787dce1",
-    "files_checked": 31,
+    "sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+    "files_checked": 41,
     "fully_audited_files": 0,
-    "file_count": 181,
-    "git_tree_sha": "32f19a394503b725217ee21bd7b46f1a8c152b01",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T12-20-KST-full.json"
+    "file_count": 182,
+    "git_tree_sha": "566e2a3a5f09658d1b4b715afba9c572ef78b1cb",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T13-18-KST-full.json"
   },
   "checks": [
     {
@@ -1638,6 +1638,34 @@
       "docker_build": "success",
       "snyk": "success",
       "qlty": "success status; 93 blocking issues uninspected"
+    },
+    {
+      "head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "run_ids": [
+        41578361551,
+        41578366433
+      ],
+      "status": "completed",
+      "conclusion": "success",
+      "linux_pytest_passed": 1490,
+      "windows_smoke_passed": 167,
+      "docker_build": "success",
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "description": "93 blocking issues uninspected"
+        }
+      ],
+      "test_first_failures": [
+        4,
+        4,
+        6
+      ]
     }
   ],
   "upstream_changes": [
@@ -5189,6 +5217,64 @@
       "real_orders": 0,
       "demo_orders": 0,
       "notes": "2 verified mock legacy pending-fence failures, 6 separate mistaken mock assertions; fix quarantines legacy missing pending, corrected UNKNOWN BUY blocked expectations; no authoritative KIS fill attribution"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T13-18-KST-turn11",
+      "head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "kind": "THREE_MOCK_REPRODUCTIONS_AND_TRANSITIVE_FILE_LEVEL_INSPECTION_NOT_INDEPENDENT_PASS",
+      "root_cause_id": "RC-WATCHER-ORIGIN-SPOOFING",
+      "paths": [
+        "trading/schema.py",
+        "trading/strategies/common.py",
+        "trading/strategies/stop_loss_sell.py",
+        "trading/strategies/risk_bracket.py",
+        "trading/strategies/profit_ladder.py",
+        "trading/strategies/balanced_risk.py",
+        "trading/strategies/bracket_exit.py",
+        "trading/strategies/protective_exit.py",
+        "trading/strategies/limit_buffer.py",
+        "trading/strategies/score_weighted.py",
+        "tests/test_watcher_strategy_bypass.py",
+        "tests/test_stop_loss_strategy_market_order.py",
+        "tests/test_watcher_origin_spoofing.py",
+        "trading/dispatch.py",
+        "trading/stop_loss_watcher.py",
+        "trading/STRATEGIES.md",
+        "subscriber.py",
+        "webui/services/trade_service.py"
+      ],
+      "blob_shas": {
+        "trading/schema.py": "034488d3d5dba31cad65e632e1dc95fbc4094265",
+        "trading/strategies/common.py": "12960b7ef2de28cb3427e659208bcd0d5b556ff4",
+        "trading/strategies/stop_loss_sell.py": "51da4cd995adc32a0ee0ab97a5ce3e31160cd870",
+        "trading/strategies/risk_bracket.py": "a21130bbdfb8ff1957321542ab19131b2202beaf",
+        "trading/strategies/profit_ladder.py": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+        "trading/strategies/balanced_risk.py": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+        "trading/strategies/bracket_exit.py": "7355e0a20212f77926e8d856b7d0539b9dc670c0",
+        "trading/strategies/protective_exit.py": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+        "trading/strategies/limit_buffer.py": "d61848090f664b45155be1efbf017030de08eacd",
+        "trading/strategies/score_weighted.py": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+        "tests/test_watcher_strategy_bypass.py": "49ec5a4c90a67d731fb62b2db997957a4550824b",
+        "tests/test_stop_loss_strategy_market_order.py": "64ac3bb603c87a4fbce01a6694830487d1783ce8",
+        "tests/test_watcher_origin_spoofing.py": "d51905a710f75ac1403eef339e2a202f61b64d6b",
+        "trading/dispatch.py": "6c1feaf94600ff2d58a3b814609c7b683076ccf4",
+        "trading/stop_loss_watcher.py": "496139946a5e5832cbc0be14f2bdd5f51f9dc2dc",
+        "trading/STRATEGIES.md": "7689a209875bfd6f5eaa7a1d332f74a6b87e161e",
+        "subscriber.py": "479a0a1ffb3e2ab17404171db47bcbf847a30bdd",
+        "webui/services/trade_service.py": "fc70caf328b37cca66b47c7024bb7b9cf2524de6"
+      },
+      "mock_reproduced_failures": 14,
+      "final_ci_run_ids": [
+        41578361551,
+        41578366433
+      ],
+      "related_scope": 93,
+      "related_file_level": 40,
+      "whole_scope": 182,
+      "whole_file_level": 41,
+      "independent_passes": "0/2 + 0/2",
+      "real_orders": 0,
+      "demo_orders": 0
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5209,12 +5295,12 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "Related 30/92 and whole 31/181 file-level inspected; complete independent 2+2 PASS = 0/2 + 0/2",
     "Qlty check success but 93 blocking issues uninspected; Snyk success; human review absent",
     "Branch protection API 403 Resource not accessible by integration; rulesets []",
-    "Broker-authoritative order ID/fill ID/partial/cancel/remaining reconciliation and demo KIS evidence absent; live trading prohibited"
+    "Broker-authoritative order ID/fill ID/partial/cancel/remaining reconciliation and demo KIS evidence absent; live trading prohibited",
+    "Legacy pre-patch reserved watcher execution IDs cannot be attributed without broker evidence"
   ],
-  "next_action": "Verify missing broker fill/cancel/remaining attribution with mock adapter and per-account ledger; inspect Qlty 93 findings and expand transitive file-level audit, retain Draft and 0/2+0/2",
+  "next_action": "Reproduce authoritative per-account UNKNOWN BUY delayed/partial fill/cancel/remaining attribution with mock broker; inspect Qlty 93 blocking findings; continue transitive per-file audit; retain Draft 0/2+0/2 and no live trading",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -5882,6 +5968,18 @@
       "full_pass": false,
       "reason": "30/92 related and 31/181 whole file-level inspected; new production patch and KIS/review/qlty blockers prevent PASS",
       "manifest_tree_sha": "32f19a394503b725217ee21bd7b46f1a8c152b01"
+    },
+    {
+      "slot": "2026-11-03T13-18-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T13-18-KST-turn11",
+      "phase": "related_code_audit",
+      "head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "40/93 related and 41/182 whole file-level inspected; KIS fill attribution, 93 qlty issues, human review and branch policy block PASS",
+      "manifest_tree_sha": "566e2a3a5f09658d1b4b715afba9c572ef78b1cb"
     }
   ],
   "discovered_defects": [
@@ -7485,6 +7583,37 @@
         "077e101357e3e560eda1492c9d660ce21787dce1"
       ],
       "test_expectation_failure_run_id": 41571894890
+    },
+    {
+      "id": "publisher-forged-watcher-origin-and-ledger-namespace-20261103",
+      "root_cause_id": "RC-WATCHER-ORIGIN-SPOOFING",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Untrusted publisher-controlled stable signal IDs and stop reason could impersonate the internal stop-loss watcher, bypass configured SELL limits, and poison its durable execution identity",
+      "subcases": [
+        "publisher-forged-watcher-market-sell-20261103",
+        "reserved-watcher-id-dedupe-poisoning-20261103",
+        "whitespace-normalized-reserved-id-alias-20261103"
+      ],
+      "test_first_run_ids": [
+        41577717447,
+        41578001387,
+        41578220075
+      ],
+      "expected_failures": [
+        4,
+        4,
+        6
+      ],
+      "fix_commits": [
+        "e102066adfd8bc18bc368506e690d2c877135083",
+        "f8692a17d6c881af745a4c03533919a3ca54ba16",
+        "718ad5f3a70c72ade20dbc62b14482d74c05cb4f"
+      ],
+      "final_ci_run_ids": [
+        41578361551,
+        41578366433
+      ]
     }
   ],
   "risks": [
@@ -8047,6 +8176,27 @@
           "status": "MOCK_VERIFIED"
         }
       ]
+    },
+    {
+      "root_cause_id": "RC-WATCHER-ORIGIN-SPOOFING",
+      "description": "Untrusted publisher-controlled stable signal IDs and stop reason could impersonate the internal stop-loss watcher, bypass configured SELL limits, and poison its durable execution identity",
+      "defect_ids": [
+        "publisher-forged-watcher-market-sell-20261103",
+        "reserved-watcher-id-dedupe-poisoning-20261103",
+        "whitespace-normalized-reserved-id-alias-20261103"
+      ],
+      "classification": "THREE_SUBCASES_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "fix_commits": [
+        "e102066adfd8bc18bc368506e690d2c877135083",
+        "f8692a17d6c881af745a4c03533919a3ca54ba16",
+        "718ad5f3a70c72ade20dbc62b14482d74c05cb4f"
+      ],
+      "ci_run_ids": [
+        41578361551,
+        41578366433
+      ],
+      "recurrence_count": 0
     }
   ],
   "root_cause_matrix": {
@@ -8615,6 +8765,26 @@
       "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
       "fix_commit": "077e101357e3e560eda1492c9d660ce21787dce1",
       "ci_run_id": 41572020004
+    },
+    {
+      "id": "RC-WATCHER-ORIGIN-SPOOFING",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "description": "Untrusted publisher-controlled stable signal IDs and stop reason could impersonate the internal stop-loss watcher, bypass configured SELL limits, and poison its durable execution identity",
+      "head_sha": "718ad5f3a70c72ade20dbc62b14482d74c05cb4f",
+      "fix_commits": [
+        "e102066adfd8bc18bc368506e690d2c877135083",
+        "f8692a17d6c881af745a4c03533919a3ca54ba16",
+        "718ad5f3a70c72ade20dbc62b14482d74c05cb4f"
+      ],
+      "ci_run_ids": [
+        41578361551,
+        41578366433
+      ],
+      "unverified": [
+        "Existing legacy reserved watcher claims may require manual broker reconciliation",
+        "Cross-process tracker edits and authoritative KIS fills remain unverified"
+      ]
     }
   ],
   "previous_active_pr_at_manual_merge": {
