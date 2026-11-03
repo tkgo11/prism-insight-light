@@ -1,0 +1,263 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T23-17-KST-turn4",
+  "started_at": "2026-11-03T14:17:02Z",
+  "completed_at": "2026-11-03T14:24:04.555Z",
+  "pr_number": 43,
+  "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "current_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "candidate_count": 14,
+  "candidates": [
+    {
+      "candidate_id": "C01",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function": "guard_unresolved_buy",
+      "hypothesis": "UNKNOWN BUY late fill attribution",
+      "result": "EXISTING_MOCK_GREEN_NO_FILL_ATTRIBUTION",
+      "test_evidence": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C02",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "function": "_trigger_sell",
+      "hypothesis": "Partial SELL remaining shares cannot be inferred from acceptance",
+      "result": "EXISTING_MOCK_GREEN_BROKER_REMAINDER_UNVERIFIED",
+      "test_evidence": "tests/test_partial_exit_stop_loss_safety.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C03",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "blob_sha": "6a2325723a1b58e63fb3e78475fc118f3d860583",
+      "function": "test_cancelled_unattributed_buy_with_late_holdings_stays_fenced",
+      "hypothesis": "Cancellation may coexist with partial fill",
+      "result": "EXISTING_MOCK_GREEN_CANCEL_FILL_UNVERIFIED",
+      "test_evidence": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C04",
+      "root_cause_id": "RC-LEDGER-ATTEMPT-FENCING",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function": "finalize/release",
+      "hypothesis": "Late callback cannot downgrade newer claim",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_evidence": "tests/test_execution_ledger_retention.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C05",
+      "root_cause_id": "RC-LEDGER-DURABILITY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "function": "claim/_save",
+      "hypothesis": "Persist intent before broker and preserve after failed finalize",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_evidence": "tests/test_unknown_buy_intent_durability.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C06",
+      "root_cause_id": "RC-QUEUE-ACCOUNT-SCOPE",
+      "path": "trading/dispatch.py",
+      "blob_sha": "b7e6dc1eb9add17005133a3120c4a0f66cb2706d",
+      "function": "execute_queued_signal",
+      "hypothesis": "Queued single/multi order must not switch account or demo/real",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_evidence": "tests/test_queue_execution_context.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C07",
+      "root_cause_id": "RC-QUEUED-MULTI-STOP-SELL-FENCE-BYPASS",
+      "path": "trading/dispatch.py",
+      "blob_sha": "b7e6dc1eb9add17005133a3120c4a0f66cb2706d",
+      "function": "_execute_queued_multi_account_locked",
+      "hypothesis": "Queued stop SELL cannot bypass unresolved BUY guard",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_evidence": "tests/test_unresolved_buy_without_stop_loss.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C08",
+      "root_cause_id": "RC-WEBUI-MANUAL-INTENT",
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "function": "dispatch_manual_order",
+      "hypothesis": "Fresh server ticket per invocation may not dedupe a browser retry; intentional separate orders are supported",
+      "result": "UNVERIFIED_RETRY_IDEMPOTENCY",
+      "test_evidence": "tests/test_webui_manual_buy_durable_intent.py",
+      "decision": "UNVERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C09",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/domestic.py",
+      "blob_sha": "27057931e7e40270bb8c6d8c37c99dea70436eda",
+      "function": "get_portfolio/get_holding_quantity",
+      "hypothesis": "Missing continuation header must not prove zero KR holdings",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_evidence": "tests/test_broker_portfolio_header_fail_closed.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C10",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/us.py",
+      "blob_sha": "8455e8fba6e9b261547f08d59074b90f1700fe87",
+      "function": "get_portfolio/get_holding_quantity",
+      "hypothesis": "Same US ticker returned from multiple exchanges is deduped; exact account semantics require KIS confirmation",
+      "result": "UNVERIFIED_EXCHANGE_DUPLICATE_SEMANTICS",
+      "test_evidence": "tests/test_broker_portfolio_pagination_safety.py",
+      "decision": "UNVERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C11",
+      "root_cause_id": "RC-IMPLICIT-LIVE-MODE-FALLBACK",
+      "path": "trading/config_paths.py",
+      "blob_sha": "64e9ac586681ab5144cf6de6582d027ee9abf21e",
+      "function": "active_kis_config_path/implicit_example_kis_config_active",
+      "hypothesis": "Implicit example must not select real trading mode",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_evidence": "tests/test_implicit_live_config_safety.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C12",
+      "root_cause_id": "RC-BROKER-OUTCOME-AMBIGUITY",
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "8911c634bc16dc8ca78a685784faa9ac36719757",
+      "function": "rejection_is_ambiguous/classify_broker_result",
+      "hypothesis": "Intermediary HTTP statuses cannot authorize retry",
+      "result": "EXISTING_MOCK_GREEN",
+      "test_evidence": "tests/test_broker_http_rejection_safety.py",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C13",
+      "root_cause_id": "RC-STOPLOSS-PREFLIGHT-TOCTOU",
+      "path": "trading/dispatch.py",
+      "blob_sha": "b7e6dc1eb9add17005133a3120c4a0f66cb2706d",
+      "function": "_dispatch_serialized",
+      "hypothesis": "Tracker may change between preflight and broker submission; untested race",
+      "result": "UNVERIFIED_NEEDS_DETERMINISTIC_MOCK",
+      "test_evidence": "tests/test_stop_loss_snapshot_preflight.py",
+      "decision": "UNVERIFIED",
+      "actual_new_red_reproduction": false
+    },
+    {
+      "candidate_id": "C14",
+      "root_cause_id": "RC-CI-MERGE-BASE-DRIFT",
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "acbb8d22af42a78a4cea523ea1b6338ea1e35faa",
+      "function": "workflow jobs",
+      "hypothesis": "Current main advanced six commits and modified workflow/Dockerfile; merge-result CI not proven by PR-head tests",
+      "result": "CONFIRMED_BASE_DRIFT_MERGE_RESULT_UNVERIFIED",
+      "test_evidence": "https://github.com/tkgo11/prism-insight-light/actions/runs/41644194933",
+      "decision": "EXISTING_COVERAGE_OR_DRIFT_VERIFIED",
+      "actual_new_red_reproduction": false
+    }
+  ],
+  "attempted_new_red_reproductions": 0,
+  "reason_no_new_red": "Existing equivalent mock regression scenarios already exist; no independently justified new failing assertion was established without speculative broker semantics. Exact-head full pytest rerun performed.",
+  "rerun": {
+    "workflow_id": 41644194933,
+    "job_id": 125975112746,
+    "status": "completed",
+    "conclusion": "success",
+    "pytest_passed": 1689,
+    "docker": "success",
+    "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9"
+  },
+  "previous_ci": {
+    "push": 41644186314,
+    "pr": 41644194933,
+    "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+    "conclusion": "success"
+  },
+  "root_cause_carry_forward": [
+    {
+      "carry_forward_id": "CF-UNKNOWN-BUY-FILL-ATTRIBUTION",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "STALLED_INTEGRATION_UNVERIFIED",
+      "last_mock_test": "tests/test_unknown_buy_delayed_fill_fence.py rerun job 125975112746",
+      "unverified": "per-order order/fill IDs, partial/cancel/remainder and automatic stop activation",
+      "blocker": "No authoritative KIS demo credentials or verified KIS response contract; implementing inferred fills would be unsafe",
+      "delta": "No new per-order attribution tests; two new file-level complete audits and exact-head rerun"
+    },
+    {
+      "carry_forward_id": "CF-MERGE-BASE-DRIFT",
+      "status": "UNVERIFIED",
+      "unverified": "PR result tree after six newer main commits",
+      "blocker": "No verified merge-result CI; avoid blind rebase"
+    },
+    {
+      "carry_forward_id": "CF-QLTY-93",
+      "status": "UNTRIAGED",
+      "unverified": "93 blocking findings content",
+      "blocker": "External issue details require authenticated Qlty access"
+    }
+  ],
+  "changed_production_files": [],
+  "new_regression_tests": 0,
+  "verified_paths": [
+    "execution_outcome.rejection_is_ambiguous",
+    "execution_outcome.classify_broker_result",
+    "config_paths six helpers",
+    "ExecutionLedger.guard_unresolved_buy mock fence",
+    "queued account scope mock controls",
+    "KR/US pagination mock controls"
+  ],
+  "unverified_paths": [
+    "KIS per-order fill/cancel/remainder attribution",
+    "manual HTTP retry ticket idempotency",
+    "US duplicate exchange holdings semantics",
+    "stop-loss preflight-to-broker TOCTOU",
+    "merge result after main 6 commits",
+    "Docker Python 3.15 runtime vs 3.13 test environment"
+  ],
+  "audit": {
+    "related_complete": 4,
+    "related_total": 167,
+    "related_file_level_inspected": 92,
+    "full_complete": 4,
+    "full_total": 214,
+    "full_file_level_inspected": 93,
+    "related_pass": "0/2",
+    "full_pass": "0/2",
+    "manifest_related_sha": "2009e095f98f9237f75e447b19e9bbb2e57e30c0",
+    "manifest_full_sha": "75b66fe75e72e144973f180b814cf29c01e3aa57"
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success_status_93_blocking_issues",
+    "branch_protection": "403",
+    "reviews": 0
+  },
+  "real_orders": 0,
+  "demo_orders": 0,
+  "merge": false,
+  "lock": "RELEASED",
+  "next_exact_action": "Construct deterministic test-first mock for broker-authoritative per-order BUY fill/partial/cancel/remainder reconciliation, keeping pending BUY non-actionable; inspect current main merge-result compatibility and Qlty 93 issues. Continue complete file audits without optional refactors."
+}

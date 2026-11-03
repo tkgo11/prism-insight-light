@@ -4,19 +4,17 @@
   "state": "ACTIVE_DRAFT_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T22-17-KST-turn3",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T21-17-KST-turn2",
-    "started_at": "2026-11-03T13:17:45Z",
+    "id": "prism-sync-hourly-2026-11-03T23-17-KST-turn4",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T22-17-KST-turn3",
+    "started_at": "2026-11-03T14:17:02Z",
+    "completed_at": "2026-11-03T14:24:04.555Z",
     "status": "RELEASED",
-    "lock_expected_pr_sha": "e930a788456785cf2afe3ed1fe320da0f73ea88d",
+    "lock_owner": null,
+    "lock_expected_state_branch_sha": "a0f8c1c6113627203378ebb4f193d54aed2b943f",
+    "lock_expected_pr_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
     "lock_expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
     "lock_expected_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "lock_expected_state_branch_sha": "5a17b8cab2c1e741ac1a31e540b4dc8941a8ed68",
-    "completed_at": "2026-11-03T13:28:00Z",
-    "lock_released_at": "2026-11-03T13:28:00Z",
     "final_pr_head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
-    "final_state_parent_sha": "c498323ce498c7a42031a839e22c4a2e04f4f6f7",
     "related_pass": false,
     "full_pass": false
   },
@@ -42,7 +40,7 @@
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_EXACT_HEAD_ACTIONS_SUCCESS_QLTY_93_AUDIT_INCOMPLETE",
+    "status": "DRAFT_EXACT_HEAD_RERUN_SUCCESS_AUDIT_4_OF_167_QLTY_93_UNRESOLVED",
     "base_ref": "main"
   },
   "candidates": [
@@ -116,29 +114,29 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "INCOMPLETE_CURRENT_HEAD",
-    "checksum": "5f9aae66c372bdef687c1f0c4ac571a6fae20098",
+    "checksum": "2009e095f98f9237f75e447b19e9bbb2e57e30c0",
     "checksum_kind": "git_blob_sha1",
     "scope_estimate": 167,
-    "files_fully_audited": 2,
-    "files_file_level_inspected": 90,
-    "files_targeted_path_review": 11,
+    "files_fully_audited": 4,
+    "files_file_level_inspected": 92,
+    "files_targeted_path_review": 13,
     "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
     "git_tree_sha": "9187d3264febb9112810b423f56217bb4a73e44e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T22-17-KST-related.json",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T23-17-KST-related.json",
     "sha": "329911a126ae072606ff2ac72c494a79088fb3f9"
   },
   "full_manifest": {
     "status": "INCOMPLETE_CURRENT_HEAD",
-    "checksum": "4c1b26bac961543b9c79ea1dbbbe5b1f150ad2c4",
+    "checksum": "75b66fe75e72e144973f180b814cf29c01e3aa57",
     "checksum_kind": "git_blob_sha1",
     "sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
-    "files_checked": 90,
-    "fully_audited_files": 2,
+    "files_checked": 93,
+    "fully_audited_files": 4,
     "file_count": 214,
-    "files_targeted_path_review": 11,
+    "files_targeted_path_review": 13,
     "git_tree_sha": "9187d3264febb9112810b423f56217bb4a73e44e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T22-17-KST-full.json",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T23-17-KST-full.json",
     "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9"
   },
   "checks": [
@@ -5808,6 +5806,22 @@
       "full_pass": false,
       "candidates": 14,
       "notes": "No real/demo KIS; 10 red on missing/nonstring header, 2 red on missing tr_cont, two obsolete synthetic response fixtures repaired, latest exact HEAD CI green, Qlty 93 blocking issues untriaged."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T23-17-KST-turn4",
+      "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+      "kind": "EXACT_HEAD_CI_RERUN_AND_TWO_NEW_FILE_COMPLETE_AUDITS_NO_NEW_RED",
+      "candidate_count": 14,
+      "actual_new_red_reproductions": 0,
+      "actual_code_fixes": 0,
+      "rerun_job_id": 125975112746,
+      "rerun_workflow_id": 41644194933,
+      "rerun_pytest_passed": 1689,
+      "related_fully_audited": 4,
+      "full_fully_audited": 4,
+      "related_pass": false,
+      "full_pass": false,
+      "notes": "Broker-authoritative UNKNOWN BUY fill/cancel/remaining attribution still STALLED; mock fence green not proof of automatic stop activation; no new test-first failing scenario added. Main advanced six commits; Qlty 93 untriaged; branch protection 403; no merge."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5835,7 +5849,7 @@
     "PR base snapshot 4a5c3c6 differs from current main e17032ba; no unverified rebase",
     "Related 2/167 and full 2/214 complete file audits, independent 0/2 + 0/2"
   ],
-  "next_action": "Audit remaining 165 related manifest files and design test-first mock authoritative per-order fill/partial/cancel attribution; do not enable automatic stop from aggregate holdings.",
+  "next_action": "Construct deterministic test-first mock for broker-authoritative per-order BUY fill/partial/cancel/remainder reconciliation, keeping pending BUY non-actionable; inspect current main merge-result compatibility and Qlty 93 issues. Continue complete file audits without optional refactors.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6621,6 +6635,20 @@
       "related_pass": false,
       "full_pass": false,
       "reason": "Related scope 2/167 full-file complete, 165 incomplete; broker fill attribution/demo, Qlty 93, human review, branch policy 403"
+    },
+    {
+      "slot": "2026-11-03T23-17-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T23-17-KST-turn4",
+      "phase": "related_code_audit",
+      "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "related_pass": false,
+      "full_pass": false,
+      "related_fully_audited": 4,
+      "full_fully_audited": 4,
+      "related_manifest_sha": "2009e095f98f9237f75e447b19e9bbb2e57e30c0",
+      "full_manifest_sha": "75b66fe75e72e144973f180b814cf29c01e3aa57",
+      "reason": "4/167 related, 4/214 full audited; broker attribution unverified, main drift 6 commits, qlty 93, review 0, branch protection 403"
     }
   ],
   "discovered_defects": [
@@ -10117,6 +10145,6 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "related_manifest_sha": "5f9aae66c372bdef687c1f0c4ac571a6fae20098",
-  "full_manifest_sha": "4c1b26bac961543b9c79ea1dbbbe5b1f150ad2c4"
+  "related_manifest_sha": "2009e095f98f9237f75e447b19e9bbb2e57e30c0",
+  "full_manifest_sha": "75b66fe75e72e144973f180b814cf29c01e3aa57"
 }
