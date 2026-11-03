@@ -18,21 +18,20 @@ def next_balance_cursor(
 ) -> tuple[str, str] | None:
     """Return a validated next-page cursor or None for a terminal response.
 
-    Older synthetic response fixtures may omit the KIS header entirely; actual
-    KIS APIResp objects expose getHeader().tr_cont. Any explicit continuation
-    must have a new, bounded cursor or the entire inquiry is untrustworthy.
+    A missing or malformed KIS continuation header cannot establish that a
+    page is terminal. Treat it as UNKNOWN instead of inventing a complete
+    balance (and potentially removing stop-loss protection).
     """
     header_method = getattr(response, "getHeader", None)
     if header_method is None:
-        return None
+        raise PortfolioInquiryError("KIS balance continuation header missing")
     try:
         header = header_method()
         continuation = getattr(header, "tr_cont", "")
     except Exception as exc:
         raise PortfolioInquiryError("KIS balance continuation header unreadable") from exc
-    # Non-string MagicMock headers in older test fixtures are not KIS headers.
     if not isinstance(continuation, str):
-        return None
+        raise PortfolioInquiryError("KIS balance continuation header is malformed")
     if continuation in {"", "D", "E"}:
         return None
     if continuation not in {"F", "M"}:
