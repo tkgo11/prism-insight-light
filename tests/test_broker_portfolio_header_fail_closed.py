@@ -68,3 +68,13 @@ def test_missing_header_never_confirms_zero_holdings_for_kr_us(monkeypatch, trad
     with pytest.raises(PortfolioInquiryError, match="header"):
         trader.get_holding_quantity(symbol)
     assert trader._last_portfolio_inquiry_error
+
+
+@pytest.mark.parametrize("suffix", [100, 200])
+def test_missing_continuation_field_in_present_header_is_not_terminal(suffix):
+    class _MissingContinuationField(_HeaderlessResponse):
+        def getHeader(self):
+            return SimpleNamespace()  # A response header exists but is incomplete.
+
+    with pytest.raises(PortfolioInquiryError, match="header"):
+        next_balance_cursor(_MissingContinuationField(), suffix, set())
