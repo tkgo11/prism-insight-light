@@ -1,20 +1,20 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "ACTIVE_DRAFT_MOCK_CI_SUCCESS_AUDIT_BLOCKED",
+  "state": "RESYNC_IN_PROGRESS",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
-    "result": "QUEUED_STOP_SELL_FENCE_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
+    "id": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
+    "lock_owner": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
+    "result": "RESYNC_LOCK_ACQUIRED",
     "last_mutation_commit": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
     "previous_state_branch_sha": "55a5ae05e83ef8d4213492175f4e51d21ad1c6b8",
-    "started_at": "2026-11-03T09:24:43Z",
-    "completed_at": "2026-11-03T09:31:23.268Z",
-    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T18-24-KST.json",
-    "released_at": "2026-11-03T09:31:53.724Z",
-    "release_parent_sha": "366ae5e37e46eebf22541dc2bfe5484cd5b83dcc"
+    "started_at": "2026-11-03T10:25:35.554Z",
+    "completed_at": null,
+    "evidence_path": null,
+    "released_at": null,
+    "release_parent_sha": null
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -9556,5 +9556,28 @@
     "related_passes": 0,
     "full_passes": 0,
     "run_id": "prism-sync-hourly-2026-11-02T20-20-KST-turn11"
+  },
+  "previous_run_before_manual_resync": {
+    "id": "prism-sync-hourly-2026-11-03T18-24-KST-run11",
+    "lock_owner": null,
+    "previous_run_id": "prism-sync-hourly-2026-11-03T17-20-KST-run11",
+    "result": "QUEUED_STOP_SELL_FENCE_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
+    "last_mutation_commit": "218e92fe98ee31c7a916c7f3ef7c65c12e308036",
+    "previous_state_branch_sha": "55a5ae05e83ef8d4213492175f4e51d21ad1c6b8",
+    "started_at": "2026-11-03T09:24:43Z",
+    "completed_at": "2026-11-03T09:31:23.268Z",
+    "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T18-24-KST.json",
+    "released_at": "2026-11-03T09:31:53.724Z",
+    "release_parent_sha": "366ae5e37e46eebf22541dc2bfe5484cd5b83dcc"
+  },
+  "manual_resync": {
+    "status": "LOCKED",
+    "run_id": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
+    "pre_sync_state_branch_sha": "629b31d0b9545092e698023e7293d4c015e62422",
+    "observed_pr_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
+    "observed_pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+    "observed_main_sha": "c761208645421e3b24724dab0e42d6e260b14f10",
+    "started_at": "2026-11-03T10:25:35.554Z",
+    "verification": "not_completed"
   }
 }
