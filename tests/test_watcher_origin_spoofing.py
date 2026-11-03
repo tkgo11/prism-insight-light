@@ -115,11 +115,13 @@ def test_real_watcher_marks_internal_origin_only_after_snapshot_preflight(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("market,ticker,other", [
-    ("KR", "005930", "000660"), ("US", "AAPL", "MSFT"),
+    ("KR", "005930", "005930"), ("KR", "005930", "000660"),
+    ("US", "AAPL", "AAPL"), ("US", "AAPL", "MSFT"),
 ])
 @pytest.mark.parametrize("action", ["BUY", "SELL"])
+@pytest.mark.parametrize("id_field", ["signal_id", "event_id", "id"])
 async def test_untrusted_reserved_watcher_id_cannot_poison_future_internal_claim(
-    tmp_path, monkeypatch, market, ticker, other, action
+    tmp_path, monkeypatch, market, ticker, other, action, id_field
 ):
     """A forged signal ID must not reserve a future watcher's dedupe identity."""
     from unittest.mock import AsyncMock
@@ -141,14 +143,56 @@ async def test_untrusted_reserved_watcher_id_cannot_poison_future_internal_claim
     )
     # The payload's instrument differs from the reserved ID's instrument:
     # matching only the current ticker would miss cross-instrument poisoning.
-    signal = parse_signal_payload({
-        "signal_id": f"stop_loss_{market}_{other}_{'a' * 20}",
+    payload = {
         "type": action, "market": market, "ticker": ticker,
         "price": 100, "stop_loss": 90, "sell_reason": "stop_loss",
         "internal_watcher_stop": True,
-    })
+    }
+    payload[id_field] = f"stop_loss_{market}_{other}_{'a' * 20}"
+    signal = parse_signal_payload(payload)
     assert not signal.internal_watcher_stop
     result = await dispatcher.dispatch(signal, allow_queue=False)
     assert result.status == "rejected"
     dispatcher._execute_legacy_trade.assert_not_awaited()
     assert not dispatcher.execution_ledger.path.exists()
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+async def test_reserved_identity_remains_available_to_real_watcher(
+    tmp_path, monkeypatch, market, ticker
+):
+    """A rejected spoof cannot preempt the subsequent trusted stop SELL."""
+    from unittest.mock import AsyncMock
+    from types import SimpleNamespace
+    from trading.dispatch import DispatchResult
+
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", fresh_quote_enabled=False,
+        strategy_config={"name": "stop_loss_sell"},
+        execution_ledger_path=tmp_path / "ledger.json",
+    )
+    dispatcher._execute_legacy_trade = AsyncMock(return_value=DispatchResult(
+        "executed", "mock acceptance, not fill", "SELL", market,
+    ))
+    monkeypatch.setattr(
+        dispatcher.signal_gate, "evaluate_execution",
+        lambda *args, **kwargs: SimpleNamespace(outcome="allow", fresh_quote=None),
+    )
+    payload = {
+        "signal_id": f"stop_loss_{market}_{ticker}_{'b' * 20}",
+        "type": "SELL", "market": market, "ticker": ticker,
+        "price": 85, "stop_loss": 90, "sell_reason": "stop_loss",
+    }
+    untrusted = parse_signal_payload(payload)
+    assert (await dispatcher.dispatch(untrusted, allow_queue=False)).status == "rejected"
+    assert not dispatcher.execution_ledger.path.exists()
+    trusted = parse_signal_payload(payload)
+    trusted.internal_watcher_stop = True
+    assert (await dispatcher.dispatch(trusted, allow_queue=False)).status == "executed"
+    dispatcher._execute_legacy_trade.assert_awaited_once()
+    restarted = type(dispatcher.execution_ledger)(dispatcher.execution_ledger.path)
+    from trading.execution_ledger import execution_identities
+    identity, _ = execution_identities(trusted.raw, dispatcher._single_account_execution_selector(trusted))
+    assert restarted.claim(identity) == (False, "executed")

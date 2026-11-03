@@ -61,7 +61,7 @@ from .strategies import (
     StopLossSellStrategy,
     StopLossSellStrategyConfig,
 )
-from .strategies.common import _is_watcher_generated_stop_sell
+from .strategies.common import _has_reserved_watcher_identity, _is_watcher_generated_stop_sell
 from .stop_loss_watcher import StopLossTracker, StopLossWatcherConfig
 from .us import USStockTrading
 
@@ -128,6 +128,15 @@ def _is_stop_loss_sell(signal: SignalMessage) -> bool:
         signal.signal_type == "SELL"
         and isinstance(signal.sell_reason, str)
         and signal.sell_reason.strip().casefold() == "stop_loss"
+    )
+
+
+def _untrusted_reserved_watcher_id(signal: SignalMessage) -> bool:
+    # Publisher-controlled stable IDs can collide with a future internal
+    # stop-loss SELL's durable dedupe claim, even across instrument tickers.
+    return (
+        _has_reserved_watcher_identity(signal)
+        and not _is_watcher_generated_stop_sell(signal)
     )
 
 
@@ -364,6 +373,11 @@ class MultiAccountTradeDispatcher:
         requested_ids: list[str] | None = None,
         queued_context: dict[str, Any] | None = None,
     ) -> DispatchResult:
+        if _untrusted_reserved_watcher_id(signal):
+            return DispatchResult(
+                "rejected", "Reserved internal watcher identity; publisher order rejected",
+                signal.signal_type, signal.market,
+            )
         if signal.is_event:
             # Event signals are account-agnostic state (e.g. risk-off). Route
             # them through the single-account path exactly once instead of
@@ -615,6 +629,15 @@ class TradeDispatcher:
     ) -> DispatchResult:
         try:
             async with _serialized_broker_workflow():
+                if _untrusted_reserved_watcher_id(signal):
+                    logger.error(
+                        "Rejecting publisher-supplied reserved watcher identity for %s %s",
+                        signal.market, signal.ticker,
+                    )
+                    return DispatchResult(
+                        "rejected", "Reserved internal watcher identity; publisher order rejected",
+                        signal.signal_type, signal.market,
+                    )
                 if (
                     _is_stop_loss_sell(signal)
                     and not self.dry_run
@@ -693,6 +716,12 @@ class TradeDispatcher:
         account: dict[str, Any] | None = None,
         queued_context: dict[str, Any] | None = None,
     ) -> DispatchResult:
+        # Defense in depth for internal callers that bypass dispatch().
+        if _untrusted_reserved_watcher_id(signal):
+            return DispatchResult(
+                "rejected", "Reserved internal watcher identity; publisher order rejected",
+                signal.signal_type, signal.market,
+            )
         event_strategy = self._resolve_event_strategy(signal)
         if signal.is_event:
             if event_strategy is not None:

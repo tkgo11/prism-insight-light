@@ -148,6 +148,25 @@ def market_base_amount(signal: SignalMessage, *, krw: float, usd: float) -> floa
     return usd if signal.market == "US" else krw
 
 
+def _has_reserved_watcher_identity(signal: SignalMessage) -> bool:
+    """A publisher must not preempt the watcher's durable execution ID.
+
+    Stable signal_id/event_id/id and legacy aliases all hash their value
+    under the same account. Reject the entire reserved namespace at ingress
+    unless a trusted watcher generated the matching stop SELL.
+    """
+    if not isinstance(signal.raw, dict):
+        return False
+    for field in ("signal_id", "event_id", "id"):
+        value = signal.raw.get(field)
+        if (
+            isinstance(value, str)
+            and re.fullmatch(r"stop_loss_(?:KR|US)_.+_[0-9a-f]{20}", value) is not None
+        ):
+            return True
+    return False
+
+
 def _is_watcher_generated_stop_sell(signal: SignalMessage) -> bool:
     """Select watcher market-order semantics without changing publisher limits.
 

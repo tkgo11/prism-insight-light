@@ -554,3 +554,5 @@ Users should be able to open this guide and understand every available strategy 
 ### Watcher-origin stop SELL trust boundary
 
 An inbound signal's `signal_id` and `sell_reason` are **not** proof that it came from the internal stop-loss watcher. Only a runtime-only marker set by `StopLossWatcher` after its persisted-position checks may bypass configured signal strategies for an emergency market SELL. The JSON parser deliberately ignores any publisher-supplied `internal_watcher_stop` field. Broker order acceptance still does not prove a fill; unresolved BUY attribution remains blocked pending authoritative reconciliation.
+
+The watcher `stop_loss_<market>_<ticker>_<20-hex>` signal-ID namespace is reserved across `signal_id`, `event_id`, and legacy `id`. Inbound BUY/SELL/EVENT payloads cannot reserve or replay this namespace; the internal watcher must supply the trusted runtime marker. This also prevents a publisher from poisoning a future watcher's durable deduplication claim.
