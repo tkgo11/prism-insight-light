@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+          submodules: true
 
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
@@ -39,8 +40,8 @@ jobs:
           python -m compileall -q subscriber.py pubsub_readiness.py trading webui tests
           bash -n install_prism_docker.sh setup_subscriber_crontab.sh setup_subscriber_docker_crontab.sh
 
-      - name: Verify installed maintenance skill snapshot
-        run: python scripts/sync_autonomous_maintainer.py --verify-installed
+      - name: Verify pinned maintenance skill Git Submodule
+        run: python scripts/check_autonomous_maintainer_dependency.py
 
       - name: Run all tests
         run: python -m pytest -q
@@ -58,6 +59,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+          submodules: true
 
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
@@ -72,6 +74,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
+
+      - name: Verify pinned maintenance skill Git Submodule
+        run: python scripts/check_autonomous_maintainer_dependency.py
 
       - name: Run cross-platform runtime tests
         run: >-

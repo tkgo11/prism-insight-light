@@ -1,52 +1,61 @@
-# Autonomous Maintainer skill integration
+# Autonomous Maintainer (Git Submodule dependency)
 
-This repository includes **two project-local Codex skills** mirrored from
-[tkgo11/autonomous-maintainer](https://github.com/tkgo11/autonomous-maintainer):
+The authoritative skill source is the public repository
+[tkgo11/autonomous-maintainer](https://github.com/tkgo11/autonomous-maintainer).
 
-- `.agents/skills/autonomous-maintainer/`: OMX orchestration (`$autonomous-maintainer`)
-- `.agents/skills/autonomous-maintainer-standalone/`: built-in Codex workflow (`$autonomous-maintainer-standalone`)
+This project uses **one pinned Git Submodule**, rather than copying upstream
+skill content or running a custom synchronization workflow:
 
-Use the standalone variant unless the agent environment has Oh My Codex installed.
-The snapshot source, full upstream commit and file SHA-256 digests are recorded in
-`.agents/skills/.autonomous-maintainer-source.json`.
+- \`.agents/skills/autonomous-maintainer/\` is a Git Submodule with the **OMX**
+  \`SKILL.md\` and its complete upstream package.
+- \`.agents/skills/autonomous-maintainer-standalone/SKILL.md\` is a small,
+  platform-neutral adapter that loads the original
+  \`../autonomous-maintainer/standalone/SKILL.md\` from that same submodule.
+  Its local UI metadata/icon are kept for Codex skill discovery.
+- Both variants follow the **same pinned upstream commit**. The current commit
+  is recorded by the parent repository's gitlink, not a copied version manifest.
 
-## Safety and scope
+## Clone and initialize
 
-Installing the skills does **not** start autonomous maintenance. Invoke a skill
-only for an explicitly authorized repository-wide maintenance request. PRISM's
-trading-safety contracts, demo/dry-run defaults, stop-loss safeguards, test gates,
-branch policies and approval requirements remain mandatory. Skills do not authorize
-placing live trades, committing secrets, disabling tests, merging trading PRs, or
-starting unattended live trading.
+\`\`\`bash
+git clone --recurse-submodules https://github.com/tkgo11/prism-insight-light.git
+\`\`\`
+
+For an existing checkout, run:
+
+\`\`\`bash
+git submodule update --init --recursive
+python scripts/check_autonomous_maintainer_dependency.py
+\`\`\`
+
+A plain \`git clone\` without submodule initialization will not populate the
+skill and Codex will not be able to use it. Do not use
+\`git submodule update --remote\` as an unattended deployment mechanism; it
+advances the gitlink without a reviewable dependency PR.
 
 ## Automatic updates
 
-`.github/workflows/sync-autonomous-maintainer.yml` checks the upstream `main`
-branch each day at 04:17 UTC and supports manual `workflow_dispatch` runs.
+GitHub **Dependabot** checks the Git Submodule daily according to
+\`.github/dependabot.yml\` (13:17 Asia/Seoul). When upstream \`main\` advances,
+Dependabot can propose a normal pull request to update the **one pinned gitlink**.
+This does not require GitHub Actions write permissions or an API key.
 
-When the tracked upstream version changes, the workflow validates source SHA-256
-digests against upstream `CHECKSUMS.txt`, copies only the six skill resources,
-verifies the installed snapshot, runs local updater regression tests, and opens a
-dedicated GitHub pull request. It never executes downloaded upstream scripts or
-edits trading code. If existing skill files were modified outside the updater, it
-**fails closed** rather than overwriting them.
+CI performs a recursive submodule checkout, checks the pinned commit, validates
+upstream skill identities and SHA-256 checksums, and runs the repository tests.
+The old daily file-copying GitHub Actions workflow is removed.
 
-The workflow **does not auto-merge**: review and required repository checks must
-pass before merging. GitHub Actions must be allowed to create pull requests in the
-repository settings; otherwise the workflow can push its branch but GitHub will
-reject the PR creation. See Settings → Actions → General → Workflow permissions →
-“Allow GitHub Actions to create and approve pull requests”. PR-created workflow
-runs may require approval depending on the account's Actions settings.
+Dependency updates are **not automatically merged** by this integration.
+Review the incoming upstream changes, validate the relevant CI checks, and
+merge the update PR only after review. A Git Submodule is pinned to a specific
+commit; simply updating upstream does not change this repository until that
+dependency PR is merged.
 
-For local/manual updates:
+## Trading safety
 
-```bash
-git clone --depth 1 https://github.com/tkgo11/autonomous-maintainer.git /tmp/prism-maintainer-source
-python3 scripts/sync_autonomous_maintainer.py \
-  --source /tmp/prism-maintainer-source \
-  --revision "$(git -C /tmp/prism-maintainer-source rev-parse HEAD)"
-python3 scripts/sync_autonomous_maintainer.py --verify-installed
-python3 tests/test_autonomous_maintainer_sync.py -q
-```
-
-The updater is not an AI agent; it only refreshes the Codex skill definitions.
+Installing these skills does not launch an autonomous agent run.
+Use the standalone variant unless Oh My Codex is available. Any agent must
+explicitly receive a repository-wide maintenance request and must preserve
+accepted PRISM trading-safety behavior, stop-loss guarantees, fail-closed order
+handling, demo/dry-run defaults, secrecy controls, and required approvals.
+No skill or dependency update authorizes live trades, trading deployments, or
+automatically merging finance-related changes.
