@@ -7,16 +7,17 @@
     "id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
     "previous_run_id": "prism-sync-hourly-2026-11-03T23-17-KST-turn4",
     "started_at": "2026-11-03T15:18:53Z",
-    "completed_at": "2026-11-03T15:19:59Z",
+    "completed_at": "2026-11-03T15:24:38.913Z",
     "status": "RELEASED",
     "lock_owner": null,
-    "lock_expected_state_branch_sha": "2d31ead3c4fbdb3867cdddd26193cf4b50711fab",
+    "lock_expected_state_branch_sha": "e0a93db7bfdf3f01dac589322e0e58e82b8c7ec9",
     "lock_expected_pr_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
     "lock_expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
     "lock_expected_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
     "final_pr_head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
     "related_pass": false,
-    "full_pass": false
+    "full_pass": false,
+    "state_reference_correction": "CAS corrected manifest hashes"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -114,7 +115,7 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "INCOMPLETE_CURRENT_HEAD",
-    "checksum": "2009e095f98f9237f75e447b19e9bbb2e57e30c0",
+    "checksum": "5c87208d9ed5adaff3a1c1f254ad9124daf5902b",
     "checksum_kind": "git_blob_sha1",
     "scope_estimate": 167,
     "files_fully_audited": 10,
@@ -128,7 +129,7 @@
   },
   "full_manifest": {
     "status": "INCOMPLETE_CURRENT_HEAD",
-    "checksum": "75b66fe75e72e144973f180b814cf29c01e3aa57",
+    "checksum": "0629a676b1768053ca0c529017326057e9dfcf91",
     "checksum_kind": "git_blob_sha1",
     "sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
     "files_checked": 99,
@@ -10180,8 +10181,8 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "related_manifest_sha": "2009e095f98f9237f75e447b19e9bbb2e57e30c0",
-  "full_manifest_sha": "75b66fe75e72e144973f180b814cf29c01e3aa57",
+  "related_manifest_sha": "5c87208d9ed5adaff3a1c1f254ad9124daf5902b",
+  "full_manifest_sha": "0629a676b1768053ca0c529017326057e9dfcf91",
   "run5_candidate_inventory": [
     {
       "candidate_id": "T5-01",
