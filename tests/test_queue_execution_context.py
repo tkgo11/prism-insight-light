@@ -260,8 +260,8 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     replay.execution_dedupe = True
     monkeypatch.setattr(
         replay.execution_ledger, "claim",
-        lambda identity, *, aliases=(), with_token=False, order_intent=None: (
-            claims.append(identity) or True, None, "mock-claim-token"
+        lambda identity, *, aliases=(), with_token=False, order_intent=None, order_side=None: (
+            claims.append((identity, order_side, order_intent)) or True, None, "mock-claim-token"
         ) if with_token else (True, None),
     )
     monkeypatch.setattr(
@@ -281,7 +281,9 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     assert result.status == "executed"
     assert calls == [resolved]
     assert len(claims) == 1
-    assert finals == [(claims[0], "executed", "mock-claim-token")]
+    assert claims[0][1] is None  # BUY must carry intent, never SELL-only provenance
+    assert claims[0][2]["kind"] == "buy_unresolved"
+    assert finals == [(claims[0][0], "executed", "mock-claim-token")]
 
 
 @pytest.mark.asyncio

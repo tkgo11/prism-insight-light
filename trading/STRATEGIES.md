@@ -527,11 +527,11 @@ Use this when news, market stress, or another event should temporarily stop new 
 ### What it does
 
 - Tracks positions purchased with a positive `stop_loss` in `runtime/stop_loss_positions.json`.
-- Automatically clears tracked positions when any SELL signal for that ticker is executed.
+- Does **not** clear protection when a SELL order is merely accepted. A fresh confirmed zero holding and no unresolved BUY attribution are required before cleanup.
 - Polls current market prices via KIS API during market hours (KR & US).
 - Protects KIS API rate limits by enforcing an interval delay (`request_interval_seconds: 0.2`) between ticker price queries.
 - Reuses one trader per market across poll cycles and only queries the account balance (`inquire-balance`) when a stop is hit or every `holding_check_interval_seconds` (default: 60) to reconcile already-sold positions, instead of on every 5-second poll.
-- When `current_price <= stop_loss`, automatically generates an internal `SELL` signal with `sell_reason="stop_loss"` and dispatches it through the configured trading pipeline.
+- When `current_price <= stop_loss`, the watcher may generate an internal `SELL` signal with `sell_reason="stop_loss"` only for an explicitly confirmed tracker and only when the durable ledger contains no unresolved or un-attributable BUY risk. A broker receipt is not a fill.
 
 ### Configuration
 
@@ -556,3 +556,29 @@ Users should be able to open this guide and understand every available strategy 
 An inbound signal's `signal_id` and `sell_reason` are **not** proof that it came from the internal stop-loss watcher. Only a runtime-only marker set by `StopLossWatcher` after its persisted-position checks may bypass configured signal strategies for an emergency market SELL. The JSON parser deliberately ignores any publisher-supplied `internal_watcher_stop` field. Broker order acceptance still does not prove a fill; unresolved BUY attribution remains blocked pending authoritative reconciliation.
 
 The watcher `stop_loss_<market>_<ticker>_<20-hex>` signal-ID namespace is reserved across `signal_id`, `event_id`, and legacy `id`. Inbound BUY/SELL/EVENT payloads cannot reserve or replay this namespace; the internal watcher must supply the trusted runtime marker. This also prevents a publisher from poisoning a future watcher's durable deduplication claim.
+
+
+### Legacy opaque execution-ledger quarantine (broker fill safety)
+
+Historical ledger entries created before per-order BUY intent provenance may contain
+only an opaque execution identity and a protected status (`in_progress`,
+`unknown`, `executed`, etc.). Such a record cannot establish whether an old
+BUY will fill later, which instrument it affected, or which account owns it.
+**Do not infer that an absent `order_intent` means no pending BUY.** The
+stop-loss watcher and its dispatch preflight conservatively block automatic
+stop SELL and zero-holdings tracker deletion for *all* instruments while any
+protected opaque legacy record remains. This is an availability limitation,
+not automatic fill reconciliation or proof of protected exposure.
+
+New SELL attempts persist `order_side="SELL"` in the same atomic pre-submit
+claim so that their protected ledger entries do not trigger this global
+legacy-BUY quarantine. New BUY attempts continue to persist non-actionable
+`order_intent` with hashed account scope. No legacy record is silently
+migrated to SELL, cleared, or treated as broker-authoritatively filled.
+
+Before enabling automated trading on an upgraded installation, an operator
+must reconcile each historical opaque protected order with broker order IDs,
+fills, cancellations, remaining quantities and account-specific holdings,
+then follow a separately reviewed recovery procedure. Never delete ledger
+claims or re-enable automatic stops solely because a timeout has elapsed.
+No real/demo KIS broker integration is established by mock-only tests.
