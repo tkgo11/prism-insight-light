@@ -312,6 +312,88 @@ class StopLossTracker:
             if temporary_path is not None and temporary_path.exists():
                 temporary_path.unlink()
 
+    def _assert_rearmable(
+        self, positions: dict[str, Any], market: str, ticker: str, key: str,
+    ) -> None:
+        """Shared fail-closed validation for pre-submit checks and durable updates."""
+        # Never silently overwrite or duplicate a legacy case-variant or
+        # quarantined instrument. Its original evidence must be reconciled
+        # by an operator before a new stop level can become actionable.
+        for stored_key, stored in positions.items():
+            if not isinstance(stored, dict):
+                continue
+            stored_market, stored_ticker = stored.get("market"), stored.get("ticker")
+            if not isinstance(stored_market, str) or not isinstance(stored_ticker, str):
+                continue
+            if (stored_market.strip().upper() == market
+                    and stored_ticker.strip().upper() == ticker.upper()
+                    and stored_key != key):
+                raise ValueError(
+                    "Conflicting stop-loss instrument requires operator reconciliation"
+                )
+        existing = positions.get(key)
+        if key in positions:
+            # A corrupt canonical record is quarantined by get_positions().
+            # A later BUY registration must not overwrite it and destroy
+            # the evidence an operator needs to reconcile a possible fill.
+            # Use the same structural/price/provenance rules as the reader,
+            # while allowing valid pre-upgrade records with absent metadata.
+            if not isinstance(existing, dict):
+                raise ValueError(
+                    "Malformed existing stop-loss record; operator reconciliation required"
+                )
+            stored_market = existing.get("market")
+            stored_ticker = existing.get("ticker")
+            if (
+                not isinstance(stored_market, str)
+                or not isinstance(stored_ticker, str)
+                or not stored_market.strip()
+                or not stored_ticker.strip()
+                or stored_market.strip().upper() not in {"KR", "US"}
+                or stored_ticker != stored_ticker.strip()
+                or any(ord(ch) < 32 or ord(ch) == 127
+                       for ch in stored_market + stored_ticker)
+                or self._key(stored_market, stored_ticker) != key
+                or not _valid_stored_price(existing.get("stop_loss"), positive=True)
+                or not _valid_stored_price(existing.get("entry_price", 0))
+                or (
+                    existing.get("target_price") is not None
+                    and not _valid_stored_price(existing["target_price"])
+                )
+                or (
+                    "pending_buy" in existing
+                    and not isinstance(existing["pending_buy"], bool)
+                )
+                or (
+                    "stop_loss_signal_id" in existing
+                    and not _valid_stop_loss_signal_id(
+                        existing["stop_loss_signal_id"],
+                        stored_market.strip().upper(), stored_ticker,
+                    )
+                )
+            ):
+                raise ValueError(
+                    "Corrupt existing stop-loss record; operator reconciliation required"
+                )
+
+    def assert_registration_safe(self, market: str, ticker: str) -> None:
+        """Check whether a new BUY can safely preserve existing stop evidence.
+
+        Read-only: never register a phantom position before broker acceptance.
+        """
+        if (
+            not isinstance(market, str)
+            or market.strip().upper() not in {"KR", "US"}
+            or not isinstance(ticker, str)
+            or not ticker.strip()
+            or any(ord(ch) < 32 or ord(ch) == 127 for ch in market + ticker)
+        ):
+            raise ValueError("Invalid stop-loss instrument; operator reconciliation required")
+        market = market.strip().upper()
+        ticker = ticker.strip().upper() if market == "US" else ticker.strip()
+        with FileLock(self.lock_path):
+            self._assert_rearmable(self._load(), market, ticker, self._key(market, ticker))
+
     def record_position(
         self,
         market: str,
@@ -364,65 +446,8 @@ class StopLossTracker:
         key = self._key(market, ticker)
         with FileLock(self.lock_path):
             positions = self._load()
-            # Never silently overwrite or duplicate a legacy case-variant or
-            # quarantined instrument. Its original evidence must be reconciled
-            # by an operator before a new stop level can become actionable.
-            for stored_key, stored in positions.items():
-                if not isinstance(stored, dict):
-                    continue
-                stored_market, stored_ticker = stored.get("market"), stored.get("ticker")
-                if not isinstance(stored_market, str) or not isinstance(stored_ticker, str):
-                    continue
-                if (stored_market.strip().upper() == market
-                        and stored_ticker.strip().upper() == ticker.upper()
-                        and stored_key != key):
-                    raise ValueError(
-                        "Conflicting stop-loss instrument requires operator reconciliation"
-                    )
+            self._assert_rearmable(positions, market, ticker, key)
             existing = positions.get(key)
-            if key in positions:
-                # A corrupt canonical record is quarantined by get_positions().
-                # A later BUY registration must not overwrite it and destroy
-                # the evidence an operator needs to reconcile a possible fill.
-                # Use the same structural/price/provenance rules as the reader,
-                # while allowing valid pre-upgrade records with absent metadata.
-                if not isinstance(existing, dict):
-                    raise ValueError(
-                        "Malformed existing stop-loss record; operator reconciliation required"
-                    )
-                stored_market = existing.get("market")
-                stored_ticker = existing.get("ticker")
-                if (
-                    not isinstance(stored_market, str)
-                    or not isinstance(stored_ticker, str)
-                    or not stored_market.strip()
-                    or not stored_ticker.strip()
-                    or stored_market.strip().upper() not in {"KR", "US"}
-                    or stored_ticker != stored_ticker.strip()
-                    or any(ord(ch) < 32 or ord(ch) == 127
-                           for ch in stored_market + stored_ticker)
-                    or self._key(stored_market, stored_ticker) != key
-                    or not _valid_stored_price(existing.get("stop_loss"), positive=True)
-                    or not _valid_stored_price(existing.get("entry_price", 0))
-                    or (
-                        existing.get("target_price") is not None
-                        and not _valid_stored_price(existing["target_price"])
-                    )
-                    or (
-                        "pending_buy" in existing
-                        and not isinstance(existing["pending_buy"], bool)
-                    )
-                    or (
-                        "stop_loss_signal_id" in existing
-                        and not _valid_stop_loss_signal_id(
-                            existing["stop_loss_signal_id"],
-                            stored_market.strip().upper(), stored_ticker,
-                        )
-                    )
-                ):
-                    raise ValueError(
-                        "Corrupt existing stop-loss record; operator reconciliation required"
-                    )
             if isinstance(existing, dict):
                 # A stop-price update cannot clear unresolved BUY provenance.
                 # Older records without the field are ambiguous and protected.

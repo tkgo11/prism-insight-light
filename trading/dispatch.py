@@ -921,6 +921,29 @@ class TradeDispatcher:
                     signal.signal_type, signal.market,
                 )
 
+        # A corrupt existing stop tracker must block a NEW BUY before it
+        # reaches KIS. Rejecting only the post-acceptance tracker update would
+        # leave a potentially filled position without reliable protection.
+        # This read-only preflight applies to KR/US, strategy, queued and
+        # multi-account broker paths (the latter may already hold a claim).
+        if signal.signal_type == "BUY" and isinstance(self.stop_loss_tracker, StopLossTracker):
+            try:
+                await asyncio.to_thread(
+                    self.stop_loss_tracker.assert_registration_safe,
+                    signal.market, signal.ticker,
+                )
+            except (ValueError, RuntimeError, OSError) as exc:
+                logger.critical(
+                    "Blocking BUY %s %s before broker submission: corrupt "
+                    "stop-loss tracker requires operator reconciliation: %s",
+                    signal.market, signal.ticker, exc,
+                )
+                return DispatchResult(
+                    "rejected",
+                    "Existing stop-loss tracker requires operator reconciliation",
+                    signal.signal_type, signal.market,
+                )
+
         identity = None
         claim_token = None
         if account is None and self.execution_dedupe:
