@@ -121,6 +121,15 @@ def _account_id(account_key: str) -> str:
     return hashlib.sha256(account_key.encode("utf-8")).hexdigest()[:24]
 
 
+def _is_stop_loss_sell(signal: SignalMessage) -> bool:
+    """Recognize the semantic stop-loss reason independent of letter case."""
+    return (
+        signal.signal_type == "SELL"
+        and isinstance(signal.sell_reason, str)
+        and signal.sell_reason.strip().casefold() == "stop_loss"
+    )
+
+
 def _buy_stop_loss_intent(signal: SignalMessage, account_selector: str) -> dict[str, Any] | None:
     """Persist non-actionable reconciliation hints, not a filled position.
 
@@ -606,8 +615,7 @@ class TradeDispatcher:
         try:
             async with _serialized_broker_workflow():
                 if (
-                    signal.signal_type == "SELL"
-                    and signal.sell_reason == "stop_loss"
+                    _is_stop_loss_sell(signal)
                     and not self.dry_run
                 ):
                     # The watcher checks its snapshot before dispatch, but a
@@ -1035,7 +1043,7 @@ class TradeDispatcher:
                     # tracking across a pre-fill zero-holdings inquiry.
                     pending_buy=True,
                 )
-            elif signal.signal_type == "SELL" and signal.sell_reason != "stop_loss":
+            elif signal.signal_type == "SELL" and not _is_stop_loss_sell(signal):
                 # An accepted broker order (including a full-size SELL) is not
                 # evidence that the shares were filled. Do not drop durable
                 # protection based on an order-acceptance status or an account
@@ -1204,7 +1212,7 @@ class TradeDispatcher:
         self, signal: SignalMessage, *, account: dict[str, Any] | None = None
     ) -> DispatchResult:
         is_stop_loss = (
-            getattr(signal, "sell_reason", None) == "stop_loss"
+            _is_stop_loss_sell(signal)
             or getattr(signal, "type", None) == "STOP_LOSS"
             or getattr(signal, "signal_type", None) == "STOP_LOSS"
         )
