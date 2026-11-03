@@ -7,6 +7,7 @@ import json
 import logging
 import math
 import os
+import re
 import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -148,6 +149,10 @@ def market_base_amount(signal: SignalMessage, *, krw: float, usd: float) -> floa
 
 
 async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount: float | None = None, limit_price: float | None = None, sell_fraction: float | None = None, trader_kwargs: dict[str, Any] | None = None) -> dict[str, Any]:
+    if _is_watcher_generated_stop_sell(signal):
+        # The automatic watcher needs a market SELL; an unfilled protective
+        # limit would leave exposure while durable dedupe blocks replay.
+        limit_price = None
     kwargs = {"mode": trading_mode, **(trader_kwargs or {})}
     if signal.market == "US":
         trader = USStockTrading(**kwargs)
@@ -180,6 +185,10 @@ async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount:
 def execution_from_result(signal: SignalMessage, result: dict[str, Any], message_prefix: str, **details: Any) -> StrategyExecution:
     broker_message = str(result.get("message", ""))
     message = f"{message_prefix}: {broker_message}" if broker_message else message_prefix
+    if _is_watcher_generated_stop_sell(signal):
+        # Report the submitted order type, not the discarded strategy limit.
+        details["limit_price"] = None
+        details["order_type"] = "market"
     return StrategyExecution(
         status=classify_broker_result(result),
         message=message,

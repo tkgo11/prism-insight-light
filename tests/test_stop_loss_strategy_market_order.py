@@ -69,6 +69,8 @@ async def test_automated_stop_sell_never_submits_unfilled_limit_order(
     result = await strategy.execute(signal, trading_mode="demo")
     assert result.status == "executed"
     assert CALLS == [(market, ticker, None)]
+    assert result.details["limit_price"] is None
+    assert result.details["order_type"] == "market"
 
 
 @pytest.mark.asyncio
