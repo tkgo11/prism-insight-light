@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from trading.execution_ledger import ExecutionLedger
-from trading.execution_outcome import classify_broker_result
+from trading.execution_outcome import classify_broker_result, rejection_is_ambiguous
 
 
 _EXCEPTION_NAMES = (
@@ -75,3 +75,45 @@ def test_clean_verified_rejection_control_is_still_retryable():
         "success": False, "outcome_unknown": False,
         "message": "APBK0918: verified KIS business rejection",
     }) == "failed"
+
+
+class _MockKISBusinessResponse:
+    """A canonical-looking business code cannot override a transport error."""
+
+    def __init__(self, status, message):
+        self.status = status
+        self.message = message
+
+    def getResCode(self):
+        return self.status
+
+    def getErrorCode(self):
+        return "APBK0918"
+
+    def getErrorMessage(self):
+        return self.message
+
+
+@pytest.mark.parametrize("http_status", (200, 400))
+@pytest.mark.parametrize("exception_name", _EXCEPTION_NAMES)
+def test_broker_wrapper_rejection_flag_must_preserve_exception_provenance(
+    http_status, exception_name
+):
+    response = _MockKISBusinessResponse(
+        http_status, f"{exception_name}: lost broker response after submit"
+    )
+    assert rejection_is_ambiguous(response) is True
+
+
+def test_broker_wrapper_clean_business_rejection_control():
+    assert rejection_is_ambiguous(
+        _MockKISBusinessResponse(400, "APBK0918 - market closed")
+    ) is False
+
+
+def test_broker_wrapper_error_message_accessor_failure_is_ambiguous():
+    class _BrokenMessage(_MockKISBusinessResponse):
+        def getErrorMessage(self):
+            raise OSError("response body could not be read")
+
+    assert rejection_is_ambiguous(_BrokenMessage(200, "")) is True
