@@ -69,7 +69,7 @@ async def validate_signal(request: Request, body: SignalRequest):
     """Validate JSON without allowing FastAPI's decoder to discard duplicate keys."""
 
     try:
-        load_signal_json((await request.body()).decode("utf-8"))
+        load_signal_json(await request.body())
     except (SignalValidationError, json.JSONDecodeError) as exc:
         return {"ok": False, "signal": None, "error": str(exc)}
 
