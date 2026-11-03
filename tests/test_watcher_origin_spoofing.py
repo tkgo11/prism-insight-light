@@ -112,3 +112,43 @@ def test_real_watcher_marks_internal_origin_only_after_snapshot_preflight(
     outcome = watcher._trigger_sell(market, ticker, 85, pos)
     assert outcome["status"] == "deferred"
     dispatcher.dispatch.assert_awaited_once()
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker,other", [
+    ("KR", "005930", "000660"), ("US", "AAPL", "MSFT"),
+])
+@pytest.mark.parametrize("action", ["BUY", "SELL"])
+async def test_untrusted_reserved_watcher_id_cannot_poison_future_internal_claim(
+    tmp_path, monkeypatch, market, ticker, other, action
+):
+    """A forged signal ID must not reserve a future watcher's dedupe identity."""
+    from unittest.mock import AsyncMock
+    from types import SimpleNamespace
+    from trading.dispatch import DispatchResult
+
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    dispatcher = TradeDispatcher(
+        dry_run=False, trading_mode="demo", fresh_quote_enabled=False,
+        strategy_config={"name": ""}, execution_ledger_path=tmp_path / "ledger.json",
+    )
+    dispatcher._execute_legacy_trade = AsyncMock(return_value=DispatchResult(
+        "executed", "mock broker acceptance only", action, market,
+    ))
+    monkeypatch.setattr(
+        dispatcher.signal_gate, "evaluate_execution",
+        lambda *args, **kwargs: SimpleNamespace(outcome="allow", fresh_quote=None),
+    )
+    # The payload's instrument differs from the reserved ID's instrument:
+    # matching only the current ticker would miss cross-instrument poisoning.
+    signal = parse_signal_payload({
+        "signal_id": f"stop_loss_{market}_{other}_{'a' * 20}",
+        "type": action, "market": market, "ticker": ticker,
+        "price": 100, "stop_loss": 90, "sell_reason": "stop_loss",
+        "internal_watcher_stop": True,
+    })
+    assert not signal.internal_watcher_stop
+    result = await dispatcher.dispatch(signal, allow_queue=False)
+    assert result.status == "rejected"
+    dispatcher._execute_legacy_trade.assert_not_awaited()
+    assert not dispatcher.execution_ledger.path.exists()
