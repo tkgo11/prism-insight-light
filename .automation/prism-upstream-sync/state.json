@@ -1,17 +1,17 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "ACTIVE_DRAFT_MOCK_FENCE_CI_SUCCESS_AUDIT_BLOCKED",
+  "state": "ACTIVE_DRAFT_MOCK_CI_SUCCESS_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T11-19-KST-turn11",
-    "lock_owner": null,
-    "previous_run_id": "prism-sync-hourly-2026-11-03T10-15-KST-turn10",
-    "result": "MOCK_FENCES_VERIFIED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE_LOCK_RELEASED",
-    "last_mutation_commit": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
-    "previous_state_branch_sha": "875141fcc4a44f8c42e5b758235a8b0ab7248cdb",
-    "started_at": "2026-11-03T02:19:54Z",
-    "completed_at": "2026-11-03T02:26:59.829Z"
+    "id": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
+    "lock_owner": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T11-19-KST-turn11",
+    "result": "LEGACY_COOLDOWN_FENCE_PATCHED_CI_SUCCESS_EVIDENCE_WRITTEN_LOCK_HELD",
+    "last_mutation_commit": "077e101357e3e560eda1492c9d660ce21787dce1",
+    "previous_state_branch_sha": "8410ca08ce4025b6e99f1412736687932e1a1531",
+    "started_at": "2026-11-03T03:20:56Z",
+    "completed_at": null
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -30,7 +30,7 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
+    "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
     "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
@@ -107,26 +107,26 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "087d3c630a8d03072db5a7186d0917a965ccf21a",
+    "checksum": null,
     "checksum_kind": "git_blob_sha1",
     "scope_estimate": 92,
-    "files_fully_audited": 19,
-    "files_file_level_inspected": 19,
-    "head_sha": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
+    "files_fully_audited": 0,
+    "files_file_level_inspected": 30,
+    "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "git_tree_sha": "cc68ee8091b1ce3b622ed813a85e4bbc4f92fa54",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T11-19-KST-related.json"
+    "git_tree_sha": "32f19a394503b725217ee21bd7b46f1a8c152b01",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T12-20-KST-related.json"
   },
   "full_manifest": {
     "status": "REBUILT_INCOMPLETE",
-    "checksum": "4819a8888858d0c57da9d96f84a1b01ffa9cffb9",
+    "checksum": null,
     "checksum_kind": "git_blob_sha1",
-    "sha": "6e94bd7487c07bdf9d92e25a36cede4b28a0253f",
-    "files_checked": 19,
-    "fully_audited_files": 19,
+    "sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+    "files_checked": 31,
+    "fully_audited_files": 0,
     "file_count": 181,
-    "git_tree_sha": "cc68ee8091b1ce3b622ed813a85e4bbc4f92fa54",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T11-19-KST-full.json"
+    "git_tree_sha": "32f19a394503b725217ee21bd7b46f1a8c152b01",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T12-20-KST-full.json"
   },
   "checks": [
     {
@@ -1619,6 +1619,25 @@
       "docker_build": "success",
       "snyk": "success",
       "qlty": "success status, 93 blocking issues unresolved"
+    },
+    {
+      "run_id": 41571894890,
+      "head_sha": "fc5ff8083321e16958cc32deb24692ff20f1d176",
+      "status": "completed",
+      "conclusion": "failure",
+      "classification": "2_INTENDED_LEGACY_COOLDOWN_REPRODUCTIONS_AND_6_TEST_EXPECTATION_ERRORS",
+      "linux_pytest": "8 failed, 1444 passed"
+    },
+    {
+      "run_id": 41572020004,
+      "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "status": "completed",
+      "conclusion": "success",
+      "linux_pytest": "1452 passed",
+      "windows_pytest": "167 passed",
+      "docker_build": "success",
+      "snyk": "success",
+      "qlty": "success status; 93 blocking issues uninspected"
     }
   ],
   "upstream_changes": [
@@ -5136,6 +5155,40 @@
       "whole_file_level": 19,
       "independent_passes": "0/2 + 0/2",
       "broker_demo": "NOT_RUN"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
+      "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "kind": "MOCK_REPRODUCED_ROOT_CAUSE_AND_FILE_LEVEL_INSPECTION_NOT_INDEPENDENT_PASS",
+      "root_cause_id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
+      "test_first_ci": [
+        41571894890
+      ],
+      "final_ci": [
+        41572020004
+      ],
+      "paths": [
+        "tests/test_cooldown_pending_reconciliation.py",
+        "tests/test_partial_exit_stop_loss_safety.py",
+        "tests/test_durable_state_directory_sync.py",
+        "tests/test_multi_account_empty_balance_fail_closed.py",
+        "tests/test_stop_loss_signal_identity.py",
+        "tests/test_strategy_semantic_state_safety.py",
+        "tests/test_strategy_runtime_fail_closed.py",
+        "trading/strategies/cooldown.py",
+        "trading/strategies/event_risk_off.py",
+        "trading/strategies/__init__.py",
+        "trading/strategies/common.py",
+        ".github/workflows/tests.yml"
+      ],
+      "related_scope": 92,
+      "related_file_level": 30,
+      "whole_scope": 181,
+      "whole_file_level": 31,
+      "independent_passes": "0/2 + 0/2",
+      "real_orders": 0,
+      "demo_orders": 0,
+      "notes": "2 verified mock legacy pending-fence failures, 6 separate mistaken mock assertions; fix quarantines legacy missing pending, corrected UNKNOWN BUY blocked expectations; no authoritative KIS fill attribution"
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5156,13 +5209,12 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "Broker-authoritative order ID/fill ID/partial/cancel/remaining attribution and UNKNOWN BUY stop activation absent; mock fences do not activate stop",
-    "Related 19/92 and whole 19/181 file-level inspection; independent PASS 0/2 + 0/2",
-    "Qlty 93 blocking issues untriaged; Snyk status success; independent PR review absent",
+    "Related 30/92 and whole 31/181 file-level inspected; complete independent 2+2 PASS = 0/2 + 0/2",
+    "Qlty check success but 93 blocking issues uninspected; Snyk success; human review absent",
     "Branch protection API 403 Resource not accessible by integration; rulesets []",
-    "No real/demo KIS orders; no merge"
+    "Broker-authoritative order ID/fill ID/partial/cancel/remaining reconciliation and demo KIS evidence absent; live trading prohibited"
   ],
-  "next_action": "Implement/test authoritative KIS per-account order/fill/cancel/remaining attribution only after confirming adapter contracts; inspect next related files, triage 93 qlty issues and policy/review, preserve 2+2 independent audit gates.",
+  "next_action": "Verify missing broker fill/cancel/remaining attribution with mock adapter and per-account ledger; inspect Qlty 93 findings and expand transitive file-level audit, retain Draft and 0/2+0/2",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -5818,6 +5870,18 @@
       "full_pass": false,
       "reason": "19/92 related and 19/181 whole files file-level inspected; KIS broker attribution, 93 qlty issues, human review, branch protection 403 block PASS",
       "manifest_tree_sha": "cc68ee8091b1ce3b622ed813a85e4bbc4f92fa54"
+    },
+    {
+      "slot": "2026-11-03T12-20-KST",
+      "run_id": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
+      "phase": "related_code_audit",
+      "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+      "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "30/92 related and 31/181 whole file-level inspected; new production patch and KIS/review/qlty blockers prevent PASS",
+      "manifest_tree_sha": "32f19a394503b725217ee21bd7b46f1a8c152b01"
     }
   ],
   "discovered_defects": [
@@ -7397,6 +7461,30 @@
         41559555569,
         41559562982
       ]
+    },
+    {
+      "id": "cooldown-legacy-missing-pending-fence-20261103",
+      "root_cause_id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
+      "severity": "HIGH",
+      "status": "MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_PENDING",
+      "description": "Expired legacy cooldown record lacking pending provenance was treated as resolved, enabling broker replay without fill/cancel evidence",
+      "test_first_commit": "fc5ff8083321e16958cc32deb24692ff20f1d176",
+      "test_first_run_id": 41571894890,
+      "expected_failures": 2,
+      "fix_commit": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "final_ci_run_id": 41572020004
+    },
+    {
+      "id": "unknown-buy-test-assertion-commented-20261103",
+      "root_cause_id": "RC-TEST-ASSERTION-INTEGRITY",
+      "severity": "TEST_COVERAGE",
+      "status": "TEST_CORRECTED_EXACT_HEAD_CI_SUCCESS",
+      "description": "Literal backslash-n after inline comment swallowed 6 assertions in mock UNKNOWN BUY late-holding test; first correction expected [] but watcher safely reports blocked; fixed to verify blocked result and no broker submission",
+      "fix_commits": [
+        "eb8cecd6a9f5e742a0537102c1db31f931a9e412",
+        "077e101357e3e560eda1492c9d660ce21787dce1"
+      ],
+      "test_expectation_failure_run_id": 41571894890
     }
   ],
   "risks": [
@@ -7662,10 +7750,22 @@
         "cooldown-ambiguous-order-unfenced-2026-11-02",
         "trailing-buy-accepted-or-unknown-unfenced-2026-11-02",
         "trailing-untracked-sell-unfenced-2026-11-02",
-        "cooldown-accepted-order-expired-before-fill-2026-11-02"
+        "cooldown-accepted-order-expired-before-fill-2026-11-02",
+        "cooldown-legacy-missing-pending-fence-20261103"
       ],
-      "classification": "CODE_PATCHED_CI_SUCCESS_AUDIT_PENDING",
-      "last_checked_head": "5b65c5a47e0323b6cb66c1b9452def45d4db2f2c"
+      "classification": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_PENDING",
+      "last_checked_head": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "fix_commits": [
+        "077e101357e3e560eda1492c9d660ce21787dce1"
+      ],
+      "subcases": [
+        {
+          "id": "COOLDOWN_LEGACY_MISSING_PENDING",
+          "status": "2_MOCK_REPRODUCTIONS_PATCHED_EXACT_HEAD_CI_SUCCESS",
+          "test_first_sha": "fc5ff8083321e16958cc32deb24692ff20f1d176",
+          "fix_sha": "077e101357e3e560eda1492c9d660ce21787dce1"
+        }
+      ]
     },
     {
       "root_cause_id": "RC-STRATEGY-CONSTRAINT-DEFAULT-BYPASS",
@@ -8506,6 +8606,15 @@
       "description": "Watcher emergency stop strategy interception mock-reproduced and patched; 1440 Linux/167 Windows tests passed; KIS demo and full audits outstanding",
       "head_sha": "b9da896c81132a1ae7460a5e31ce8e25afbb48b6",
       "fix_commit": "7eecaaed027fc0f7e700ffdf1dd9246b2ecf431e"
+    },
+    {
+      "id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE-LEGACY-MISSING-PENDING",
+      "severity": "HIGH",
+      "status": "CODE_PATCHED_MOCK_CI_SUCCESS_AUDIT_AND_DEMO_PENDING",
+      "description": "Legacy cooldown missing pending field can expire into duplicate order; KR/US test-first failure observed, code now quarantines until operator reconciliation",
+      "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "fix_commit": "077e101357e3e560eda1492c9d660ce21787dce1",
+      "ci_run_id": 41572020004
     }
   ],
   "previous_active_pr_at_manual_merge": {

@@ -1,0 +1,63 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-03T12-20-KST-turn11",
+  "slot": "2026-11-03T12-20-KST",
+  "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+  "base_sha": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
+  "git_tree_sha": "32f19a394503b725217ee21bd7b46f1a8c152b01",
+  "upstream_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "upstream_pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+  "root_cause_id": "RC-STRATEGY-PRESUBMIT-ORDER-FENCE",
+  "subcase": "COOLDOWN_LEGACY_MISSING_PENDING",
+  "test_first": {
+    "commit": "fc5ff8083321e16958cc32deb24692ff20f1d176",
+    "ci_run_id": 41571894890,
+    "real_reproduced_failures": 2,
+    "test_expectation_errors": 6,
+    "passed": 1444
+  },
+  "patch": {
+    "commit": "077e101357e3e560eda1492c9d660ce21787dce1",
+    "files": [
+      "trading/strategies/cooldown.py",
+      "tests/test_cooldown_pending_reconciliation.py",
+      "tests/test_unknown_buy_delayed_fill_fence.py",
+      "trading/STRATEGIES.md"
+    ]
+  },
+  "final_ci": {
+    "run_id": 41572020004,
+    "head_sha": "077e101357e3e560eda1492c9d660ce21787dce1",
+    "status": "completed",
+    "conclusion": "success",
+    "linux": "1452 passed",
+    "windows": "167 passed",
+    "docker": "success"
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success with 93 blocking issues",
+    "reviews": 0,
+    "branch_protection": "403 Resource not accessible by integration",
+    "rulesets": []
+  },
+  "audits": {
+    "related_scope": 92,
+    "related_file_level": 30,
+    "whole_scope": 181,
+    "whole_file_level": 31,
+    "related_passes": 0,
+    "full_passes": 0
+  },
+  "residual": [
+    "UNKNOWN BUY delayed fill has no authoritative per-order attribution; automatic stop remains nonactionable",
+    "Partial fills, cancellation, remaining quantities and multi-account reconciliation not broker-verified",
+    "Qlty 93 blocking findings, branch protection 403 and no human review"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "cas": {
+    "acquired_commit": "8410ca08ce4025b6e99f1412736687932e1a1531",
+    "status": "ACQUIRED_EVIDENCE_WRITING",
+    "expected_pr_head": "077e101357e3e560eda1492c9d660ce21787dce1"
+  }
+}
