@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
   "slot": "2026-11-03T15-20-KST",
-  "status": "ACQUIRED",
+  "status": "RELEASED",
   "expected_state_head": "25f7a014d68685803c82bf11a0eccba995eaa963",
   "expected_pr_head": "b082b161650863eee8f79d510afdef0c2d379ca9",
   "expected_base_head": "53d4b8ecaefba0bd164c0b15fb872765fafff254",
@@ -9,5 +9,16 @@
   "real_orders": 0,
   "demo_orders": 0,
   "lock_acquisition": "GIT_REF_EXPECTED_SHA_CAS",
-  "purpose": "unknown BUY delayed/partial fill mock reproduction and scoped audit"
+  "purpose": "unknown BUY delayed/partial fill mock reproduction and scoped audit",
+  "released_at": "2026-11-03T06:29:03.651Z",
+  "release_parent_sha": "4cfaba5876686be8bed0c17e438798b393b9175c",
+  "final_pr_head": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
+  "final_ci": [
+    41589812317,
+    41589818296
+  ],
+  "audit_passes": {
+    "related": 0,
+    "full": 0
+  }
 }

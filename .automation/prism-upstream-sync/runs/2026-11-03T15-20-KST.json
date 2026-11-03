@@ -142,6 +142,8 @@
   "cas": {
     "acquired_commit": "d351d794424c678a5ee9f9c8be3863430d09e2e5",
     "state_parent": "10f7fbf34cc10748110d41cea7f1cc77cc9415bc",
-    "release": "PENDING_COMMIT"
-  }
+    "release": "RELEASED",
+    "release_parent_sha": "4cfaba5876686be8bed0c17e438798b393b9175c"
+  },
+  "released_at": "2026-11-03T06:29:03.651Z"
 }

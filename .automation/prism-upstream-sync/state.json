@@ -5,15 +5,15 @@
   "phase": "related_code_audit",
   "run": {
     "id": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
-    "lock_owner": "prism-sync-hourly-2026-11-03T15-20-KST-turn11",
+    "lock_owner": null,
     "previous_run_id": "prism-sync-hourly-2026-11-03T14-19-KST-turn11",
     "result": "LEGACY_OPAQUE_LEDGER_MOCK_REPRODUCED_PATCHED_EXACT_HEAD_CI_SUCCESS_AUDIT_INCOMPLETE",
     "last_mutation_commit": "186d3f37c7c3827fa531a71e4c9bfe57d375fef5",
     "previous_state_branch_sha": "25f7a014d68685803c82bf11a0eccba995eaa963",
     "started_at": "2026-11-03T06:20:32Z",
     "completed_at": "2026-11-03T06:28:47.369Z",
-    "evidence_commit": "74e29c529dbfd9de157c0309010d1225d15efe0a",
-    "released_at": "2026-11-03T05:30:07.719Z",
+    "evidence_commit": "4cfaba5876686be8bed0c17e438798b393b9175c",
+    "released_at": "2026-11-03T06:29:03.651Z",
     "evidence_path": ".automation/prism-upstream-sync/runs/2026-11-03T15-20-KST.json"
   },
   "source": {
