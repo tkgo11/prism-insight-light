@@ -582,3 +582,16 @@ fills, cancellations, remaining quantities and account-specific holdings,
 then follow a separately reviewed recovery procedure. Never delete ledger
 claims or re-enable automatic stops solely because a timeout has elapsed.
 No real/demo KIS broker integration is established by mock-only tests.
+
+### WebUI manual-order durable intent (mock-tested only)
+
+An explicitly armed WebUI order receives a server-generated, per-ticket signal ID
+so a second intentional manual ticket is not suppressed as a replay of the first.
+The WebUI uses the same durable execution claim and per-account BUY intent
+fencing as the automatic dispatcher; disabling automatic signal deduplication
+must never bypass the pre-submit BUY provenance write. A failed ledger write
+blocks broker submission. A timeout or accepted order remains unresolved even
+if aggregate holdings are zero or positive; no automatic stop SELL is justified
+without broker-authoritative fill attribution. Manual re-arming is a new order
+and may duplicate an unresolved broker order: reconcile first. These rules do
+not constitute real or demo KIS fill verification or permission for live trading.
