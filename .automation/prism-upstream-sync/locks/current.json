@@ -1,12 +1,23 @@
 {
   "run_id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
   "slot": "2026-11-04T00-18-KST",
-  "status": "ACQUIRED",
-  "expected_state_head": "b3a9bfc380bc91a414def293223d6d34e0a74a66",
+  "status": "RELEASED",
+  "expected_state_head": "2d31ead3c4fbdb3867cdddd26193cf4b50711fab",
   "expected_pr_head": "329911a126ae072606ff2ac72c494a79088fb3f9",
   "expected_base_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
   "expected_upstream_head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+  "acquisition_commit": "2d31ead3c4fbdb3867cdddd26193cf4b50711fab",
   "created_at": "2026-11-03T15:18:53Z",
+  "released_at": "2026-11-03T15:19:59Z",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "final_pr_head": "329911a126ae072606ff2ac72c494a79088fb3f9",
+  "final_ci": [
+    41644186314,
+    41644194933
+  ],
+  "audit_passes": {
+    "related": 0,
+    "full": 0
+  }
 }

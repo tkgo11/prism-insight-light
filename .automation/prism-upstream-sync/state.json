@@ -4,13 +4,13 @@
   "state": "ACTIVE_DRAFT_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T23-17-KST-turn4",
-    "previous_run_id": "prism-sync-hourly-2026-11-03T22-17-KST-turn3",
-    "started_at": "2026-11-03T14:17:02Z",
-    "completed_at": "2026-11-03T14:24:04.555Z",
+    "id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T23-17-KST-turn4",
+    "started_at": "2026-11-03T15:18:53Z",
+    "completed_at": "2026-11-03T15:19:59Z",
     "status": "RELEASED",
     "lock_owner": null,
-    "lock_expected_state_branch_sha": "a0f8c1c6113627203378ebb4f193d54aed2b943f",
+    "lock_expected_state_branch_sha": "2d31ead3c4fbdb3867cdddd26193cf4b50711fab",
     "lock_expected_pr_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
     "lock_expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
     "lock_expected_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
@@ -117,13 +117,13 @@
     "checksum": "2009e095f98f9237f75e447b19e9bbb2e57e30c0",
     "checksum_kind": "git_blob_sha1",
     "scope_estimate": 167,
-    "files_fully_audited": 4,
-    "files_file_level_inspected": 92,
+    "files_fully_audited": 10,
+    "files_file_level_inspected": 98,
     "files_targeted_path_review": 13,
     "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
     "source_head_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
     "git_tree_sha": "9187d3264febb9112810b423f56217bb4a73e44e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T23-17-KST-related.json",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T00-18-KST-related.json",
     "sha": "329911a126ae072606ff2ac72c494a79088fb3f9"
   },
   "full_manifest": {
@@ -131,12 +131,12 @@
     "checksum": "75b66fe75e72e144973f180b814cf29c01e3aa57",
     "checksum_kind": "git_blob_sha1",
     "sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
-    "files_checked": 93,
-    "fully_audited_files": 4,
+    "files_checked": 99,
+    "fully_audited_files": 10,
     "file_count": 214,
     "files_targeted_path_review": 13,
     "git_tree_sha": "9187d3264febb9112810b423f56217bb4a73e44e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-03T23-17-KST-full.json",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T00-18-KST-full.json",
     "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9"
   },
   "checks": [
@@ -5822,6 +5822,31 @@
       "related_pass": false,
       "full_pass": false,
       "notes": "Broker-authoritative UNKNOWN BUY fill/cancel/remaining attribution still STALLED; mock fence green not proof of automatic stop activation; no new test-first failing scenario added. Main advanced six commits; Qlty 93 untriaged; branch protection 403; no merge."
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
+      "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "kind": "14_DISTINCT_CANDIDATE_RECHECK_6_NEW_COMPLETE_FILE_REVIEWS_NO_NEW_RED",
+      "candidate_count": 14,
+      "verified_existing_candidates": 7,
+      "unverified_candidates": 7,
+      "attempted_new_reproductions": 0,
+      "reproduced_defects": 0,
+      "actual_code_fixes": 0,
+      "new_regression_tests": 0,
+      "prior_exact_head_ci": [
+        41644186314,
+        41644194933
+      ],
+      "complete_related_files": 10,
+      "complete_full_files": 10,
+      "related_total": 167,
+      "full_total": 214,
+      "related_pass": false,
+      "full_pass": false,
+      "stalled_root_cause": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "notes": "No new test-first mock scenario this run. Prior mock fences are not broker-authoritative order fill reconciliation. Current head unchanged. Qlty 93 blocking issues; human review absent; branch policy 403; merge result untested; no demo credentials."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -5849,7 +5874,7 @@
     "PR base snapshot 4a5c3c6 differs from current main e17032ba; no unverified rebase",
     "Related 2/167 and full 2/214 complete file audits, independent 0/2 + 0/2"
   ],
-  "next_action": "Construct deterministic test-first mock for broker-authoritative per-order BUY fill/partial/cancel/remainder reconciliation, keeping pending BUY non-actionable; inspect current main merge-result compatibility and Qlty 93 issues. Continue complete file audits without optional refactors.",
+  "next_action": "Build deterministic test-first mock for order-ID/fill-ID/partial/cancel/remainder reconciliation; review main merge-result compatibility and Qlty 93 findings; continue remaining 157 related/204 total full-file audits. Do not infer fills from aggregate balances.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -6649,6 +6674,16 @@
       "related_manifest_sha": "2009e095f98f9237f75e447b19e9bbb2e57e30c0",
       "full_manifest_sha": "75b66fe75e72e144973f180b814cf29c01e3aa57",
       "reason": "4/167 related, 4/214 full audited; broker attribution unverified, main drift 6 commits, qlty 93, review 0, branch protection 403"
+    },
+    {
+      "run_id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
+      "phase": "related_code_audit",
+      "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "related_pass": false,
+      "full_pass": false,
+      "reason": "Only 10/167 related and 10/214 full file audits; no authoritative fill attribution, Qlty 93, review and policy unresolved",
+      "manifest_tree_sha": "9187d3264febb9112810b423f56217bb4a73e44e"
     }
   ],
   "discovered_defects": [
@@ -10146,5 +10181,200 @@
   "related_passes": 0,
   "full_passes": 0,
   "related_manifest_sha": "2009e095f98f9237f75e447b19e9bbb2e57e30c0",
-  "full_manifest_sha": "75b66fe75e72e144973f180b814cf29c01e3aa57"
+  "full_manifest_sha": "75b66fe75e72e144973f180b814cf29c01e3aa57",
+  "run5_candidate_inventory": [
+    {
+      "candidate_id": "T5-01",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "function": "guard_unresolved_buy",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "hypothesis": "UNKNOWN BUY late partial fill cannot activate attributable stop",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_NO_ORDER_FILL_ID_RECONCILIATION",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-02",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/stop_loss_watcher.py",
+      "function": "_trigger_sell",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "hypothesis": "accepted SELL/cancel remainder not equivalent to confirmed fill",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_KIS_REMAINDER",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-03",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/dispatch.py",
+      "function": "MultiAccountTradeDispatcher.dispatch",
+      "blob_sha": "b7e6dc1eb9add17005133a3120c4a0f66cb2706d",
+      "hypothesis": "per-account fill attribution and cancellation isolation",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "MOCK_FENCE_PRESENT_KIS_UNVERIFIED",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-04",
+      "root_cause_id": "RC-LEDGER-ATTEMPT-FENCING",
+      "path": "trading/execution_ledger.py",
+      "function": "finalize/release",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "hypothesis": "late retry callback must not release current claim",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "EXISTING_MOCK_TEST_PRESENT",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-05",
+      "root_cause_id": "RC-MANUAL-HTTP-RETRY-IDEMPOTENCY",
+      "path": "webui/services/trade_service.py",
+      "function": "dispatch_manual_order",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "hypothesis": "network retry of one armed request generates new manual ticket",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_RISK_INTENTIONAL_NEW_TICKETS_DISTINCT",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-06",
+      "root_cause_id": "RC-US-BALANCE-DUPLICATE-ATTRIBUTION",
+      "path": "trading/us.py",
+      "function": "get_portfolio",
+      "blob_sha": "8455e8fba6e9b261547f08d59074b90f1700fe87",
+      "hypothesis": "same ticker across exchange responses selects preferred entry",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_KIS_SEMANTICS_NO_SUM_ASSUMED",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-07",
+      "root_cause_id": "RC-KR-BALANCE-DUPLICATE-ATTRIBUTION",
+      "path": "trading/domestic.py",
+      "function": "get_holding_quantity",
+      "blob_sha": "27057931e7e40270bb8c6d8c37c99dea70436eda",
+      "hypothesis": "first matching row selected if same instrument appears twice",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_KIS_ROW_SEMANTICS",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-08",
+      "root_cause_id": "RC-STOPLOSS-SNAPSHOT-TOCTOU",
+      "path": "trading/stop_loss_watcher.py",
+      "function": "_trigger_sell",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "hypothesis": "snapshot checked before cross-process broker workflow lock",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "EXISTING_MOCK_PREFLIGHT_TEST_NOT_ATOMIC_BROKER_PROOF",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-09",
+      "root_cause_id": "RC-DURABLE-FILE-LOCK",
+      "path": "trading/file_lock.py",
+      "function": "FileLock/fsync_parent_directory",
+      "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+      "hypothesis": "lock contention and directory sync durability",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "EXISTING_MOCK_CI_PRESENT",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-10",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/portfolio_pagination.py",
+      "function": "next_balance_cursor",
+      "blob_sha": "cf8b0f12836a6b5000e31689ea36aace7f38b66b",
+      "hypothesis": "malformed/missing header cannot prove zero",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "PREVIOUS_PATCH_MOCK_CI_SUCCESS",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-11",
+      "root_cause_id": "RC-QUEUED-ACCOUNT-SCOPE",
+      "path": "trading/dispatch.py",
+      "function": "_dispatch_serialized",
+      "blob_sha": "b7e6dc1eb9add17005133a3120c4a0f66cb2706d",
+      "hypothesis": "queued account identity must not rotate before broker",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "STATIC_FENCE_PRESENT_NOT_NEW_DEFECT",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-12",
+      "root_cause_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+      "path": ".github/workflows/tests.yml",
+      "function": "workflow config",
+      "blob_sha": null,
+      "hypothesis": "current main diverged from PR; merged result not tested",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_MERGE_TREE",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-13",
+      "root_cause_id": "RC-EXTERNAL-QUALITY-GATES",
+      "path": ".github/workflows/tests.yml",
+      "function": "external checks",
+      "blob_sha": null,
+      "hypothesis": "Qlty green check still reports 93 blocking issues",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "BLOCKED_EXTERNAL_TRIAGE",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-14",
+      "root_cause_id": "RC-STOPLOSS-TRACKER-QUARANTINE",
+      "path": "trading/stop_loss_watcher.py",
+      "function": "_assert_rearmable",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "hypothesis": "corrupt canonical tracker must block new BUY",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "PREVIOUS_PATCH_MOCK_CI_SUCCESS",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    }
+  ],
+  "run5_carry_forward": [
+    {
+      "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "STALLED_BROKER_ATTRIBUTION_NO_NEW_REPRO",
+      "last_reproduction_run": "41644194933 prior mock suite only",
+      "unverified_transitions": [
+        "UNKNOWN -> delayed fill",
+        "partial fill -> remaining",
+        "cancel -> confirmed final remainder",
+        "confirmed fill -> actionable stop"
+      ],
+      "blocker": "No broker-authoritative KIS order/fill/cancel/remaining integration; deterministic new mock not added in this run",
+      "delta": "six additional full-file audits; zero new test-first reproductions"
+    },
+    {
+      "carry_forward_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+      "status": "UNVERIFIED",
+      "blocker": "Current main e17032ba differs from PR base 4a5c3c6c; no merge-result CI"
+    },
+    {
+      "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
+      "status": "BLOCKED",
+      "blocker": "Qlty 93 blocking issues untriaged; human reviews zero; branch protection 403"
+    }
+  ]
 }

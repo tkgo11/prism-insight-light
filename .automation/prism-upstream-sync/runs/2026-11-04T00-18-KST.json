@@ -1,0 +1,373 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-04T00-18-KST-turn5",
+  "pr": {
+    "number": 43,
+    "head_sha": "329911a126ae072606ff2ac72c494a79088fb3f9",
+    "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+    "draft": true
+  },
+  "source": {
+    "head": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
+    "upstream_changes": 47
+  },
+  "target": {
+    "main": "e17032bac72c0aebac8a1e4710b2c4b018abc986"
+  },
+  "metrics": {
+    "candidate_count": 14,
+    "attempted_new_reproductions": 0,
+    "reproduced_defects": 0,
+    "actual_code_fixes": 0,
+    "regression_tests_added_and_run": 0,
+    "complete_related_files": 10,
+    "related_total": 167,
+    "complete_full_files": 10,
+    "full_total": 214,
+    "related_pass": "0/2",
+    "full_pass": "0/2"
+  },
+  "audited_files": [
+    {
+      "path": "trading/file_lock.py",
+      "sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+      "functions": [
+        "FileLock.__enter__",
+        "FileLock._is_contention_error",
+        "FileLock._acquire",
+        "FileLock.__exit__",
+        "fsync_parent_directory"
+      ],
+      "invariants": [
+        "OS-backed exclusive advisory lock",
+        "release handle on exit",
+        "directory fsync failure propagates"
+      ],
+      "tests": [
+        "tests/test_durable_state_directory_sync.py",
+        "tests/test_execution_ledger_retention.py"
+      ]
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "functions": [
+        "_identity_source",
+        "execution_identities",
+        "_validated_order_intent",
+        "ExecutionLedger._load",
+        "_save",
+        "_prune",
+        "guard_unresolved_buy",
+        "claim",
+        "finalize",
+        "release"
+      ],
+      "invariants": [
+        "pre-submit claim persists before broker",
+        "UNKNOWN and accepted identities never expire",
+        "per-attempt token blocks stale callbacks",
+        "unresolved BUY cannot be attributed from aggregate holdings"
+      ],
+      "tests": [
+        "tests/test_execution_ledger_retention.py",
+        "tests/test_unknown_buy_delayed_fill_fence.py",
+        "tests/test_webui_manual_buy_durable_intent.py"
+      ]
+    },
+    {
+      "path": "tests/test_execution_ledger_retention.py",
+      "sha": "5f11a8322caaec8945fb8ecf422f928f8f8be721",
+      "functions": [
+        "test_old_accepted_unknown_and_in_progress_claims_never_expire",
+        "test_capacity_failure_preserves_every_protected_identity",
+        "test_late_retryable_finalize_cannot_downgrade_protected_order",
+        "test_corrupt_retryable_claim_timestamp_blocks_all_replays_without_rewrite",
+        "test_stale_callback_cannot_finalize_new_tokenized_attempt"
+      ],
+      "invariants": [
+        "duplicate replay suppressed",
+        "malformed JSON cannot erase evidence",
+        "old callback cannot release new attempt"
+      ],
+      "tests": [
+        "tests/test_execution_ledger_retention.py"
+      ]
+    },
+    {
+      "path": "tests/test_durable_state_directory_sync.py",
+      "sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+      "functions": [
+        "test_atomic_state_writer_fsyncs_parent_directory_after_replace",
+        "test_failed_directory_fsync_blocks_claim_without_discarding_protection"
+      ],
+      "invariants": [
+        "four atomic writers fsync directory on POSIX",
+        "post-rename fsync failure cannot authorize broker"
+      ],
+      "tests": [
+        "tests/test_durable_state_directory_sync.py"
+      ]
+    },
+    {
+      "path": "tests/test_webui_manual_buy_durable_intent.py",
+      "sha": "eb7c816267b8b08e899e84fd752bde67d07de93e",
+      "functions": [
+        "test_manual_unknown_buy_persists_fence_before_broker_and_restart",
+        "test_manual_buy_durable_claim_write_failure_prevents_broker",
+        "test_separately_armed_manual_orders_have_distinct_durable_identities",
+        "test_manual_multi_account_unknown_buy_has_separate_durable_intents"
+      ],
+      "invariants": [
+        "manual KR/US pre-submit BUY fence",
+        "multi-account scope isolation",
+        "disk failure blocks submission"
+      ],
+      "tests": [
+        "tests/test_webui_manual_buy_durable_intent.py"
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_snapshot_preflight.py",
+      "sha": "e5227529f3ae172150702cddc56915b85258c5ee",
+      "functions": [
+        "test_direct_trigger_rejects_stale_stop_snapshot_after_edit",
+        "test_direct_trigger_rejects_removed_position_snapshot",
+        "test_direct_trigger_rejects_legacy_snapshot_rewrite",
+        "test_direct_trigger_rejects_newly_pending_record",
+        "test_direct_trigger_fails_closed_on_unreadable_tracker",
+        "test_direct_trigger_allows_unchanged_confirmed_snapshot"
+      ],
+      "invariants": [
+        "stale snapshot blocked before dispatch",
+        "unreadable tracker fails closed"
+      ],
+      "tests": [
+        "tests/test_stop_loss_snapshot_preflight.py"
+      ]
+    }
+  ],
+  "inspection_only": [
+    "webui/services/trade_service.py",
+    "trading/domestic.py",
+    "trading/us.py",
+    "trading/dispatch.py",
+    "trading/stop_loss_watcher.py",
+    "trading/portfolio_pagination.py"
+  ],
+  "candidates": [
+    {
+      "candidate_id": "T5-01",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "function": "guard_unresolved_buy",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "hypothesis": "UNKNOWN BUY late partial fill cannot activate attributable stop",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_NO_ORDER_FILL_ID_RECONCILIATION",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-02",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/stop_loss_watcher.py",
+      "function": "_trigger_sell",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "hypothesis": "accepted SELL/cancel remainder not equivalent to confirmed fill",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_KIS_REMAINDER",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-03",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/dispatch.py",
+      "function": "MultiAccountTradeDispatcher.dispatch",
+      "blob_sha": "b7e6dc1eb9add17005133a3120c4a0f66cb2706d",
+      "hypothesis": "per-account fill attribution and cancellation isolation",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "MOCK_FENCE_PRESENT_KIS_UNVERIFIED",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-04",
+      "root_cause_id": "RC-LEDGER-ATTEMPT-FENCING",
+      "path": "trading/execution_ledger.py",
+      "function": "finalize/release",
+      "blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba",
+      "hypothesis": "late retry callback must not release current claim",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "EXISTING_MOCK_TEST_PRESENT",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-05",
+      "root_cause_id": "RC-MANUAL-HTTP-RETRY-IDEMPOTENCY",
+      "path": "webui/services/trade_service.py",
+      "function": "dispatch_manual_order",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "hypothesis": "network retry of one armed request generates new manual ticket",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_RISK_INTENTIONAL_NEW_TICKETS_DISTINCT",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-06",
+      "root_cause_id": "RC-US-BALANCE-DUPLICATE-ATTRIBUTION",
+      "path": "trading/us.py",
+      "function": "get_portfolio",
+      "blob_sha": "8455e8fba6e9b261547f08d59074b90f1700fe87",
+      "hypothesis": "same ticker across exchange responses selects preferred entry",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_KIS_SEMANTICS_NO_SUM_ASSUMED",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-07",
+      "root_cause_id": "RC-KR-BALANCE-DUPLICATE-ATTRIBUTION",
+      "path": "trading/domestic.py",
+      "function": "get_holding_quantity",
+      "blob_sha": "27057931e7e40270bb8c6d8c37c99dea70436eda",
+      "hypothesis": "first matching row selected if same instrument appears twice",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_KIS_ROW_SEMANTICS",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-08",
+      "root_cause_id": "RC-STOPLOSS-SNAPSHOT-TOCTOU",
+      "path": "trading/stop_loss_watcher.py",
+      "function": "_trigger_sell",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "hypothesis": "snapshot checked before cross-process broker workflow lock",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "EXISTING_MOCK_PREFLIGHT_TEST_NOT_ATOMIC_BROKER_PROOF",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-09",
+      "root_cause_id": "RC-DURABLE-FILE-LOCK",
+      "path": "trading/file_lock.py",
+      "function": "FileLock/fsync_parent_directory",
+      "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+      "hypothesis": "lock contention and directory sync durability",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "EXISTING_MOCK_CI_PRESENT",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-10",
+      "root_cause_id": "RC-KIS-BALANCE-COMPLETENESS",
+      "path": "trading/portfolio_pagination.py",
+      "function": "next_balance_cursor",
+      "blob_sha": "cf8b0f12836a6b5000e31689ea36aace7f38b66b",
+      "hypothesis": "malformed/missing header cannot prove zero",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "PREVIOUS_PATCH_MOCK_CI_SUCCESS",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-11",
+      "root_cause_id": "RC-QUEUED-ACCOUNT-SCOPE",
+      "path": "trading/dispatch.py",
+      "function": "_dispatch_serialized",
+      "blob_sha": "b7e6dc1eb9add17005133a3120c4a0f66cb2706d",
+      "hypothesis": "queued account identity must not rotate before broker",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "STATIC_FENCE_PRESENT_NOT_NEW_DEFECT",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    },
+    {
+      "candidate_id": "T5-12",
+      "root_cause_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+      "path": ".github/workflows/tests.yml",
+      "function": "workflow config",
+      "blob_sha": null,
+      "hypothesis": "current main diverged from PR; merged result not tested",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "UNVERIFIED_MERGE_TREE",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-13",
+      "root_cause_id": "RC-EXTERNAL-QUALITY-GATES",
+      "path": ".github/workflows/tests.yml",
+      "function": "external checks",
+      "blob_sha": null,
+      "hypothesis": "Qlty green check still reports 93 blocking issues",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "BLOCKED_EXTERNAL_TRIAGE",
+      "decision": "CARRY_FORWARD_UNVERIFIED"
+    },
+    {
+      "candidate_id": "T5-14",
+      "root_cause_id": "RC-STOPLOSS-TRACKER-QUARANTINE",
+      "path": "trading/stop_loss_watcher.py",
+      "function": "_assert_rearmable",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "hypothesis": "corrupt canonical tracker must block new BUY",
+      "inspection": "CURRENT_BLOB_CODE_READ_AND_PRIOR_EXACT_HEAD_TEST_EVIDENCE_CHECKED",
+      "reproduction_attempt": "NO_NEW_TEST_FIRST_REPRO; EXISTING_CI_AND_CODE_REVIEW_ONLY",
+      "result": "PREVIOUS_PATCH_MOCK_CI_SUCCESS",
+      "decision": "EXISTING_EVIDENCE_NO_DUPLICATE_PATCH"
+    }
+  ],
+  "carry_forward": [
+    {
+      "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "STALLED_BROKER_ATTRIBUTION_NO_NEW_REPRO",
+      "last_reproduction_run": "41644194933 prior mock suite only",
+      "unverified_transitions": [
+        "UNKNOWN -> delayed fill",
+        "partial fill -> remaining",
+        "cancel -> confirmed final remainder",
+        "confirmed fill -> actionable stop"
+      ],
+      "blocker": "No broker-authoritative KIS order/fill/cancel/remaining integration; deterministic new mock not added in this run",
+      "delta": "six additional full-file audits; zero new test-first reproductions"
+    },
+    {
+      "carry_forward_id": "RC-PR-MERGE-TREE-COMPATIBILITY",
+      "status": "UNVERIFIED",
+      "blocker": "Current main e17032ba differs from PR base 4a5c3c6c; no merge-result CI"
+    },
+    {
+      "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
+      "status": "BLOCKED",
+      "blocker": "Qlty 93 blocking issues untriaged; human reviews zero; branch protection 403"
+    }
+  ],
+  "checks": {
+    "exact_head_previous_runs": [
+      41644186314,
+      41644194933
+    ],
+    "conclusion": "success",
+    "new_ci_runs": 0,
+    "qlty": "success with 93 blocking issues",
+    "snyk": "success",
+    "branch_policy": "403",
+    "human_reviews": 0
+  },
+  "limits": [
+    "No new mock reproduction/test commit; highest priority risk remains stalled",
+    "No local repository test runner accessible via connected GitHub fetch",
+    "KIS demo credentials absent",
+    "PR merge result unverified"
+  ],
+  "next_exact_action": "Build deterministic test-first mock for order-ID/fill-ID/partial/cancel/remainder reconciliation; review main merge-result compatibility and Qlty 93 findings; continue remaining 157 related/204 total full-file audits. Do not infer fills from aggregate balances.",
+  "real_orders": 0,
+  "demo_orders": 0
+}
