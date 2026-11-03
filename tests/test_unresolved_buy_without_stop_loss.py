@@ -140,3 +140,43 @@ async def test_no_stop_buy_intent_disk_failure_blocks_mock_broker(
     with pytest.raises(RuntimeError, match="simulated persistence failure"):
         await dispatcher.dispatch(signal)
     assert calls == []
+
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+def test_confirmed_old_stop_must_not_sell_unattributed_unknown_buy_holdings(
+    tmp_path, market, ticker
+):
+    from trading.dispatch import DispatchResult
+
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position(market, ticker, 90, entry_price=100, pending_buy=False)
+    pos = tracker.get_position(market, ticker)
+    intent = {
+        "kind": "buy_stop_loss", "market": market, "ticker": ticker,
+        "stop_loss": 85.0, "account_scope": "b" * 64,
+    }
+    claimed, _, token = ledger.claim(
+        "unknown-new-buy", with_token=True, order_intent=intent,
+    )
+    assert claimed
+    ledger.finalize("unknown-new-buy", "unknown", claim_token=token)
+    dispatcher = MagicMock()
+    dispatcher.execution_ledger = ExecutionLedger(ledger.path)
+    dispatcher.trading_mode = "demo"
+    dispatcher.multi_account_enabled = False
+    dispatcher.dispatch = AsyncMock(return_value=DispatchResult(
+        "executed", "mock SELL accepted", "SELL", market,
+    ))
+    watcher = StopLossWatcher(
+        dispatcher,
+        StopLossWatcherConfig(enabled=True, storage_path=tracker.path),
+        tracker=tracker,
+    )
+    trader = MagicMock()
+    trader.get_holding_quantity.return_value = 5
+    watcher._get_trader = MagicMock(return_value=trader)
+    outcome = watcher._trigger_sell(market, ticker, 85, pos)
+    assert outcome["status"] == "blocked"
+    dispatcher.dispatch.assert_not_called()
+    assert tracker.get_position(market, ticker) == pos
