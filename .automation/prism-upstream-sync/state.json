@@ -15,7 +15,8 @@
     "final_pr_head_sha": "b056e733467a9e2f784271bedb99479100322781",
     "related_pass": false,
     "full_pass": false,
-    "id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7"
+    "id": "prism-sync-hourly-2026-11-04T02-20-KST-turn7",
+    "schema_correction": "Qlty changed from pending to success/90 blocking issues before run finalization; CAS corrected."
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -1898,6 +1899,14 @@
         "Windows runtime smoke",
         "Docker build"
       ]
+    },
+    {
+      "run_id": "external-qlty-2026-11-04T02-30-KST",
+      "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+      "status": "completed",
+      "conclusion": "success",
+      "context": "qlty check",
+      "description": "90 blocking issues; not independently triaged; not a merge PASS"
     }
   ],
   "upstream_changes": [
@@ -5987,7 +5996,7 @@
   },
   "blockers": [
     "Broker-authoritative UNKNOWN BUY delayed/partial fill, cancel/remainder and stop activation not implemented; no KIS demo credentials",
-    "Qlty exact-head pending; prior 93 blocking issues untriaged",
+    "Qlty exact-head status SUCCESS but 90 blocking issues remain untriaged (prior 93)",
     "Independent human review absent",
     "Branch protection endpoint HTTP 403; empty ruleset listing not proof",
     "PR base behind current main; merge-result CI unverified",
@@ -11235,7 +11244,7 @@
       "hypothesis": "Green Actions cannot prove external review and branch policy compliance",
       "priority": "HIGH",
       "reproduction_attempt": "Latest commit status, reviews and branch protection GET",
-      "result": "SNYK_SUCCESS_QLTY_PENDING_REVIEWS_ZERO_PROTECTION_403",
+      "result": "SNYK_SUCCESS_QLTY_SUCCESS_WITH_90_BLOCKING_ISSUES_REVIEWS_ZERO_PROTECTION_403",
       "decision": "BLOCKED_NOT_PASS"
     }
   ],
@@ -11263,7 +11272,7 @@
     {
       "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
       "status": "BLOCKED",
-      "blocker": "Qlty pending exact-head (prior 93 issues untriaged); Snyk success; human reviews 0; protection read 403",
+      "blocker": "Qlty check success but 90 blocking issues (prior 93) untriaged; Snyk success; reviews 0; protection read 403",
       "delta": "Fresh exact-head statuses and review list read"
     }
   ],
@@ -11455,13 +11464,13 @@
       "windows": "success",
       "docker": "success",
       "snyk": "success",
-      "qlty": "pending"
+      "qlty": "success_with_90_blocking_issues"
     },
     "external": {
       "review_count": 0,
       "branch_protection": "HTTP_403",
       "qlty_prior_blocking_issues": 93,
-      "qlty_current_blocking_issues": "UNVERIFIED_PENDING"
+      "qlty_current_blocking_issues": 90
     },
     "candidates": [
       {
@@ -11752,7 +11761,7 @@
         "hypothesis": "Green Actions cannot prove external review and branch policy compliance",
         "priority": "HIGH",
         "reproduction_attempt": "Latest commit status, reviews and branch protection GET",
-        "result": "SNYK_SUCCESS_QLTY_PENDING_REVIEWS_ZERO_PROTECTION_403",
+        "result": "SNYK_SUCCESS_QLTY_SUCCESS_WITH_90_BLOCKING_ISSUES_REVIEWS_ZERO_PROTECTION_403",
         "decision": "BLOCKED_NOT_PASS"
       }
     ],
@@ -11780,7 +11789,7 @@
       {
         "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
         "status": "BLOCKED",
-        "blocker": "Qlty pending exact-head (prior 93 issues untriaged); Snyk success; human reviews 0; protection read 403",
+        "blocker": "Qlty check success but 90 blocking issues (prior 93) untriaged; Snyk success; reviews 0; protection read 403",
         "delta": "Fresh exact-head statuses and review list read"
       }
     ],
@@ -11915,7 +11924,7 @@
     "demo_orders": 0,
     "limits": [
       "No broker-authoritative order/fill query integrated; mock-only fail-closed",
-      "Qlty pending exact-head",
+      "Qlty check green but 90 blocking issues remain untriaged",
       "branch protection 403",
       "human reviews absent",
       "full manifest incomplete"
