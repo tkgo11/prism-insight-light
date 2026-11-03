@@ -4,20 +4,16 @@
   "state": "ACTIVE_DRAFT_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "id": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
-    "lock_owner": null,
-    "previous_run_id": "manual-prism-state-resync-2026-11-03T10-25-35-554Z",
-    "started_at": "2026-11-03T11:16:17Z",
-    "lock_expected_pr_sha": "5a5a1990e6eb18fac40db155e77d41820209fbf5",
-    "lock_expected_main_sha": "d9d68ae2c96cf9e609376aaee1b21c811240ca35",
+    "id": "prism-sync-hourly-2026-11-03T21-17-KST-turn2",
+    "lock_owner": "prism-sync-hourly-2026-11-03T21-17-KST-turn2",
+    "previous_run_id": "prism-sync-hourly-2026-11-03T20-16-KST-turn1",
+    "started_at": "2026-11-03T12:17:10Z",
+    "lock_expected_pr_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
+    "lock_expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
     "lock_expected_upstream_sha": "2b034d60f619de8cd3617ebfe0b719ba5f36f7b3",
-    "lock_expected_state_branch_sha": "b178d8db9edbce5b13f99c44dedb1567f53d4be0",
-    "status": "RELEASED",
-    "completed_at": "2026-11-03T11:29:31Z",
-    "final_pr_sha": "3c65bed52718e7a6ed04c9783cd2cd7ecd5ea24f",
-    "final_state_expected_parent_sha": "9d6cab4085a70fb73dae1b84d13abf89b66ede74",
-    "cas_release_verified": "REF_READBACK_VERIFIED",
-    "cas_release_ref_sha": "89c31faea0e552c789c6036a73eee0b8cd35fac7"
+    "lock_expected_state_branch_sha": "d32da1fb93c8ca8e4c34393c9e70fbd2a6ae690f",
+    "status": "LOCKED",
+    "previous_main_moved_from": "d9d68ae2c96cf9e609376aaee1b21c811240ca35"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -30,8 +26,8 @@
   "target": {
     "repository": "tkgo11/prism-insight-light",
     "default_branch": "main",
-    "base_sha": "d9d68ae2c96cf9e609376aaee1b21c811240ca35",
-    "main_head_sha": "d9d68ae2c96cf9e609376aaee1b21c811240ca35"
+    "base_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+    "main_head_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986"
   },
   "active_pr": {
     "number": 43,
