@@ -57,7 +57,7 @@ def validated_source(source: Path, revision: str) -> tuple[dict[str, bytes], dic
     checksums = {}
     try:
         for line in manifest.decode("utf-8").splitlines():
-            match = re.fullmatch(r"([0-9a-f]{64})  \\./(.+)", line)
+            match = re.fullmatch(r"([0-9a-f]{64})  \./(.+)", line)
             if not match:
                 raise SyncError(f"invalid upstream checksum entry: {line!r}")
             checksum, name = match.groups()
@@ -67,7 +67,7 @@ def validated_source(source: Path, revision: str) -> tuple[dict[str, bytes], dic
         version = require_regular_file(source / "VERSION", "upstream version").decode("utf-8").strip()
     except UnicodeDecodeError as exc:
         raise SyncError("upstream metadata is not UTF-8") from exc
-    if not re.fullmatch(r"\\d+\\.\\d+\\.\\d+", version):
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
         raise SyncError(f"invalid upstream version: {version}")
     payload = {}
     for src, dest in FILES.items():
@@ -76,7 +76,7 @@ def validated_source(source: Path, revision: str) -> tuple[dict[str, bytes], dic
             raise SyncError(f"upstream checksum mismatch or missing entry: {src}")
         if src.endswith("SKILL.md"):
             name = "autonomous-maintainer-standalone" if src.startswith("standalone/") else "autonomous-maintainer"
-            if not contents.startswith(f"---\\nname: {name}\\n".encode()):
+            if not contents.startswith(f"---\nname: {name}\n".encode()):
                 raise SyncError(f"upstream skill identity mismatch: {src}")
         if src.endswith("openai.yaml") and b"./assets/icon.svg" not in contents:
             raise SyncError(f"unexpected icon metadata: {src}")
@@ -152,7 +152,7 @@ def synchronize(root: Path, source: Path, revision: str) -> bool:
         require_safe_destination(root, path)
         atomic_write(path, data)
     state_file = root / STATE_PATH
-    atomic_write(state_file, (json.dumps(desired, sort_keys=True, indent=2) + "\\n").encode("utf-8"))
+    atomic_write(state_file, (json.dumps(desired, sort_keys=True, indent=2) + "\n").encode("utf-8"))
     print(f"synced {len(payload)} skill files from {REPOSITORY}@{revision}")
     return True
 

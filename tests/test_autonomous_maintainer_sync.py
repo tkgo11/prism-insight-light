@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import sys
 import tempfile
@@ -28,21 +27,21 @@ class SkillSyncTests(unittest.TestCase):
         for src in FILES:
             if src.endswith("SKILL.md"):
                 name = "autonomous-maintainer-standalone" if src.startswith("standalone/") else "autonomous-maintainer"
-                data = f"---\\nname: {name}\\ndescription: test\\n---\\n# test\\n".encode()
+                data = f"---\nname: {name}\ndescription: test\n---\n# test\n".encode()
             elif src.endswith("openai.yaml"):
-                data = b'interface:\\n  icon_small: "./assets/icon.svg"\\n'
+                data = b'interface:\n  icon_small: "./assets/icon.svg"\n'
             else:
-                data = b"<svg></svg>\\n"
+                data = b"<svg></svg>\n"
             path = self.source / src
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(data)
             self.payload[src] = data
-        (self.source / "VERSION").write_text("2.3.0\\n", encoding="utf-8")
+        (self.source / "VERSION").write_text("2.3.0\n", encoding="utf-8")
         entries = [
             f"{hashlib.sha256(self.payload[src]).hexdigest()}  ./{src}"
             for src in sorted(FILES)
         ]
-        (self.source / "CHECKSUMS.txt").write_text("\\n".join(entries) + "\\n", encoding="utf-8")
+        (self.source / "CHECKSUMS.txt").write_text("\n".join(entries) + "\n", encoding="utf-8")
 
     def test_sync_is_idempotent_and_verifiable(self):
         self.assertTrue(synchronize(self.target, self.source, self.rev))
