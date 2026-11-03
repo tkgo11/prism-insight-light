@@ -621,6 +621,49 @@ class TradeDispatcher:
                 quote_provider=provider,
             )
 
+    async def _stop_sell_unresolved_buy_block(
+        self, signal: SignalMessage
+    ) -> DispatchResult | None:
+        """Check durable BUY provenance inside the shared broker workflow lock.
+
+        Called by both immediate dispatch and the queued multi-account fast
+        path. A queue replay must not bypass the same stop-loss SELL fence.
+        The caller holds _serialized_broker_workflow throughout the check and
+        subsequent broker dispatch; no fill is inferred from aggregate holdings.
+        """
+        if not _is_stop_loss_sell(signal) or self.dry_run:
+            return None
+
+        def unresolved_buy_before_stop_sell() -> bool:
+            with self.execution_ledger.guard_unresolved_buy(
+                signal.market, signal.ticker
+            ) as unresolved:
+                return unresolved
+
+        try:
+            unresolved = await asyncio.to_thread(unresolved_buy_before_stop_sell)
+        except Exception:
+            logger.exception(
+                "Blocking automatic stop SELL for %s %s: BUY intent "
+                "ledger cannot be verified", signal.market, signal.ticker,
+            )
+            return DispatchResult(
+                "deferred",
+                "BUY intent ledger unavailable; operator reconciliation required",
+                signal.signal_type, signal.market,
+            )
+        if unresolved:
+            logger.critical(
+                "Blocking automatic stop SELL for %s %s: "
+                "unresolved BUY fill attribution", signal.market, signal.ticker,
+            )
+            return DispatchResult(
+                "deferred",
+                "Unresolved BUY; broker-authoritative fill reconciliation required",
+                signal.signal_type, signal.market,
+            )
+        return None
+
     async def dispatch(
         self,
         signal: SignalMessage,
@@ -639,47 +682,11 @@ class TradeDispatcher:
                         "rejected", "Reserved internal watcher identity; publisher order rejected",
                         signal.signal_type, signal.market,
                     )
-                if (
-                    _is_stop_loss_sell(signal)
-                    and not self.dry_run
-                ):
-                    # The watcher checks its snapshot before dispatch, but a
-                    # second BUY can acquire a durable claim between that check
-                    # and broker serialization. Re-check *inside* the shared
-                    # broker workflow lock, before any KR/US/account SELL path.
-                    # Other automatic dispatchers cannot register a new BUY
-                    # while this lock is held. No aggregate balance is proof
-                    # of per-order fill attribution.
-                    def unresolved_buy_before_stop_sell() -> bool:
-                        with self.execution_ledger.guard_unresolved_buy(
-                            signal.market, signal.ticker
-                        ) as unresolved:
-                            return unresolved
-
-                    try:
-                        unresolved = await asyncio.to_thread(
-                            unresolved_buy_before_stop_sell
-                        )
-                    except Exception:
-                        logger.exception(
-                            "Blocking automatic stop SELL for %s %s: BUY intent "
-                            "ledger cannot be verified", signal.market, signal.ticker,
-                        )
-                        return DispatchResult(
-                            "deferred",
-                            "BUY intent ledger unavailable; operator reconciliation required",
-                            signal.signal_type, signal.market,
-                        )
-                    if unresolved:
-                        logger.critical(
-                            "Blocking automatic stop SELL for %s %s: "
-                            "unresolved BUY fill attribution", signal.market, signal.ticker,
-                        )
-                        return DispatchResult(
-                            "deferred",
-                            "Unresolved BUY; broker-authoritative fill reconciliation required",
-                            signal.signal_type, signal.market,
-                        )
+                # Check under the cross-process broker lock before any KR/US
+                # single-account or multi-account stop-loss SELL submission.
+                stop_block = await self._stop_sell_unresolved_buy_block(signal)
+                if stop_block is not None:
+                    return stop_block
                 if self.multi_account_enabled:
                     result = await self.multi_account_dispatcher.dispatch(
                         signal,
@@ -1007,6 +1014,12 @@ class TradeDispatcher:
                         or len(set(requested_ids)) != len(requested_ids)
                     ):
                         return DispatchResult("failed", "Queued multi-account targets are invalid", signal.signal_type, signal.market)
+                    # Queued multi-account replay bypasses dispatch(), so it
+                    # must perform the same durable pending-BUY preflight
+                    # before forwarding a stop-loss SELL to any account.
+                    stop_block = await self._stop_sell_unresolved_buy_block(signal)
+                    if stop_block is not None:
+                        return stop_block
                     result = await self.multi_account_dispatcher.dispatch(
                         signal,
                         allow_queue=False,
