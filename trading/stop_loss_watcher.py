@@ -402,11 +402,11 @@ class StopLossTracker:
                     or any(ord(ch) < 32 or ord(ch) == 127
                            for ch in stored_market + stored_ticker)
                     or self._key(stored_market, stored_ticker) != key
-                    or not __valid_stored_price(existing.get("stop_loss"), positive=True)
-                    or not __valid_stored_price(existing.get("entry_price", 0))
+                    or not _valid_stored_price(existing.get("stop_loss"), positive=True)
+                    or not _valid_stored_price(existing.get("entry_price", 0))
                     or (
                         existing.get("target_price") is not None
-                        and not __valid_stored_price(existing["target_price"])
+                        and not _valid_stored_price(existing["target_price"])
                     )
                     or (
                         "pending_buy" in existing
