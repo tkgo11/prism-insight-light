@@ -7,7 +7,7 @@
     "run_id": "prism-sync-hourly-2026-11-04T04-20-KST-turn9",
     "previous_run_id": "prism-sync-hourly-2026-11-04T03-20-KST-turn8",
     "started_at": "2026-11-03T19:19:00Z",
-    "completed_at": "2026-11-03T19:21:48.865Z",
+    "completed_at": "2026-11-03T19:23:17.450Z",
     "status": "RELEASED",
     "lock_owner": null,
     "lock_acquired_commit": "818cfd3f8aee1f179addea6120c432e0d5b1891c",
@@ -6015,7 +6015,7 @@
     "PR base behind current main; merge-result CI unverified",
     "Related 18/169 and full 18/216; independent 0/2 + 0/2"
   ],
-  "next_action": "Write KR/US account-scoped read-only Mock KIS order inquiry contract regression for fill IDs, pagination, cumulative and remaining quantity; observe red before production change.",
+  "next_action": "Test-first: KR /inquire-daily-ccld and US /inquire-ccnl read-only Mock KIS pagination, with US ODNO blank and local account/order matching; assert cumulative fill/remaining, fail-closed on incomplete pages; observe red before implementation.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -12552,8 +12552,8 @@
         "confirmed fill -> actionable stop"
       ],
       "blocker": "No integrated read-only KIS order/fill/cancel/remainder inquiry or demo credentials; new mock contract not implemented",
-      "delta": "+12 fully audited current-blob files (29→41); +0 new tests, +0 authoritative fill proof",
-      "next_exact_action": "Write KR/US account-scoped read-only Mock KIS order inquiry contract regression for fill IDs, pagination, cumulative and remaining quantity; observe red before production change."
+      "delta": "+12 fully audited current-blob files (29→41); +0 new tests, +0 authoritative fill proof; +official KR/US read-only inquiry API field and demo-pagination contract evidence (no execution-ID confirmation).",
+      "next_exact_action": "Test-first: KR /inquire-daily-ccld and US /inquire-ccnl read-only Mock KIS pagination, with US ODNO blank and local account/order matching; assert cumulative fill/remaining, fail-closed on incomplete pages; observe red before implementation."
     },
     {
       "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
@@ -12693,5 +12693,81 @@
     "tests_run_this_slot": 0,
     "previous_exact_head_ci": 41684488536,
     "all_passes": 0
+  },
+  "run9_broker_contract_evidence": {
+    "source_repository": "koreainvestment/open-trading-api",
+    "source_commit": "3a9be59a3ed8745720dc3aa9d584bdf3b7830362",
+    "read_only_only": true,
+    "domestic": {
+      "path": "examples_llm/domestic_stock/inquire_daily_ccld/inquire_daily_ccld.py",
+      "blob_sha": "38d5f5444c19dc3102389b023c558992e3eaec55",
+      "check_example_blob": "b3c4fbd257e643c86da1ab5df2dbaa17ff9c0ed5",
+      "endpoint": "/uapi/domestic-stock/v1/trading/inquire-daily-ccld",
+      "tr_ids": {
+        "real": "TTTC0081R",
+        "demo": "VTTC0081R"
+      },
+      "request_fields": [
+        "CANO",
+        "ACNT_PRDT_CD",
+        "INQR_STRT_DT",
+        "INQR_END_DT",
+        "ODNO",
+        "CTX_AREA_FK100",
+        "CTX_AREA_NK100"
+      ],
+      "response_fields_from_official_check": [
+        "ord_dt",
+        "odno",
+        "ord_qty",
+        "tot_ccld_qty",
+        "rmn_qty",
+        "cncl_yn",
+        "rjct_qty"
+      ],
+      "pagination": "tr_cont F/M and FK100/NK100; official sample recursion cap 10 is not proof of complete result",
+      "demo_limit": "15 rows/page in official example",
+      "real_limit": "100 rows/page in official example"
+    },
+    "overseas": {
+      "path": "examples_llm/overseas_stock/inquire_ccnl/inquire_ccnl.py",
+      "blob_sha": "046fa3a144204a7378d6a6bbb4ae674bc75d0ecc",
+      "check_example_blob": "844a8b979c6c10bfce21cdca8419286410ca5dde",
+      "endpoint": "/uapi/overseas-stock/v1/trading/inquire-ccnl",
+      "tr_ids": {
+        "real": "TTTS3035R",
+        "demo": "VTTS3035R"
+      },
+      "request_fields": [
+        "CANO",
+        "ACNT_PRDT_CD",
+        "ORD_STRT_DT",
+        "ORD_END_DT",
+        "ODNO",
+        "CTX_AREA_FK200",
+        "CTX_AREA_NK200"
+      ],
+      "response_fields_from_official_check": [
+        "ord_dt",
+        "odno",
+        "ft_ord_qty",
+        "ft_ccld_qty",
+        "nccs_qty",
+        "rjct_rson",
+        "rvse_cncl_dvsn"
+      ],
+      "critical_constraint": "US example explicitly requires ODNO blank (cannot filter by order ID at API), and demo requires broad unfiltered query; must paginate then locally match account+date+order+instrument",
+      "pagination": "tr_cont F/M and FK200/NK200; depth cap must not silently yield partial authoritative snapshot"
+    },
+    "contract_caveat": "Official examples expose order-level cumulative fill quantities; no per-execution fill-ID field confirmed in inspected examples. Do not invent fill IDs or infer confirmed fill from acceptance. API error/partial pagination must raise UNKNOWN, not return empty success.",
+    "test_plan": [
+      "KR order receipt != fill; query all pages and match CANO/product/date/ODNO, verify cumulative fill and remainder",
+      "US demo query with ODNO empty and permitted filters, paginate all pages and locally match account/order/symbol/date",
+      "Monotonic cumulative fill, duplicate snapshot idempotency, partial/cancel/rejected and remaining quantity",
+      "Missing/ambiguous IDs, empty/error pages, repeated/missing cursors, rate-limit/timeouts, restart and multi-account isolation",
+      "Persist confirmed quantity before activating any stop; no automatic sell of unrelated holdings",
+      "Test-first red on current HEAD, then safe root-cause-scoped implementation and exact-head CI"
+    ],
+    "verified": "OFFICIAL_SAMPLE_CODE_READ_ONLY; NOT_TESTED_AGAINST_KIS"
   }
 }
