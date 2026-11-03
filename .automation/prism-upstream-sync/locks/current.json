@@ -1,10 +1,11 @@
 {
   "run_id": "prism-sync-hourly-2026-11-04T05-23-KST-turn10",
-  "status": "ACTIVE_GATE_RECHECK",
-  "expected_state_head": "4e85216a25e179baf9e00c4a18f9d72391a06c92",
+  "status": "RELEASED",
+  "expected_state_head": "907d68d8bf8878e13d8d4deee068cd1fc0bf5e66",
   "expected_pr_head": "126ef3545dd386b6dc8c761f51c9342dd242c141",
   "created_at": "2026-11-03T20:33:00Z",
-  "reason": "Final exact-head Qlty status arrived after initial CAS evidence commit",
+  "released_at": "2026-11-03T20:33:00Z",
+  "reason": "Final Qlty 90 issues and Snyk success recorded, no gate PASS",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {

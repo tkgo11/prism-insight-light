@@ -238,7 +238,7 @@
     {
       "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
       "status": "BLOCKED",
-      "blocker": "Qlty latest status pending (previously 90 untriaged); Snyk success, review 0, branch protection 403, rulesets empty",
+      "blocker": "Qlty status success but 90 blocking issues untriaged; Snyk success; review 0; branch protection 403; rulesets []",
       "delta": "Rechecked latest HEAD; no external gate PASS"
     },
     {
@@ -431,13 +431,15 @@
     "snyk": {
       "state": "success",
       "required": "UNVERIFIED",
-      "issue_count": "NOT_READ"
+      "issue_count": "NOT_READ",
+      "description": "1 security test has passed"
     },
     "qlty": {
-      "state": "PENDING_AT_LAST_READ",
-      "previous_blocking_issues": 90,
+      "state": "success",
+      "blocking_issues": 90,
+      "triaged": 0,
       "required": "UNVERIFIED",
-      "triaged": 0
+      "description": "90 blocking issues"
     },
     "reviews": {
       "count": 0
@@ -455,7 +457,7 @@
   "demo_orders": 0,
   "limits": [
     "No new KIS order-history read-only mock; core reconciliation remains STALLED",
-    "Qlty latest pending and previous issues untriaged",
+    "Qlty 90 blocking issues not individually triaged",
     "Branch protection API 403 and independent review absent",
     "128 related files and 175 full files not fully audited"
   ],
@@ -464,6 +466,6 @@
     "lease_acquired_commit": "51e1b38de2f5d154481317df5018027100ad8b7f",
     "expected_pr_head": "126ef3545dd386b6dc8c761f51c9342dd242c141",
     "lock_release_intent": "RELEASED",
-    "state_commit": "RETURNED_AFTER_CAS_UPDATE"
+    "state_commit": "POST_GATE_RECHECK_CAS_RELEASED"
   }
 }
