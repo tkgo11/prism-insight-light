@@ -36,8 +36,12 @@ def test_accepts_canonical_frontmatter():
 @pytest.mark.parametrize("content", [
     b"",
     b"---\nname: another-skill\n---\n",
-    b"---\r\nname: autonomous-maintainer\r\n---\r\n",
+    b"---\r\nname: another-skill\r\n---\r\n",
 ])
 def test_rejects_invalid_frontmatter(content):
     with pytest.raises(DependencyError):
         check_header(content, "autonomous-maintainer")
+
+
+def test_accepts_windows_line_endings():
+    check_header(b"---\r\nname: autonomous-maintainer\r\n---\r\n", "autonomous-maintainer")

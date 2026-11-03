@@ -50,7 +50,7 @@ def parse_gitlink(text: str) -> str:
 
 def check_header(data: bytes, name: str) -> None:
     expected = f"---\nname: {name}\n".encode()
-    if not data.startswith(expected):
+    if not data.replace(b"\r\n", b"\n").startswith(expected):
         raise DependencyError(f"unexpected or missing skill identity: {name}")
 
 
