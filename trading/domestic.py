@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any
 
 from . import yaml_compat as yaml
-from .config_paths import active_kis_config_path
+from .config_paths import active_kis_config_path, implicit_example_kis_config_active
 
 # Path to directory where current file is located
 TRADING_DIR = Path(__file__).parent
@@ -146,7 +146,7 @@ class DomesticStockTrading:
     # Auto trading enabled flag
     AUTO_TRADING = _cfg.get("auto_trading", True)
     # Default trading environment
-    DEFAULT_MODE = _cfg.get("default_mode", "demo")
+    DEFAULT_MODE = "demo" if implicit_example_kis_config_active() else _cfg.get("default_mode", "demo")
 
     def __init__(
         self,
@@ -1987,7 +1987,7 @@ class AsyncTradingContext:
     # Auto trading operation status
     AUTO_TRADING = _cfg.get("auto_trading", True)
     # Default trading environment
-    DEFAULT_MODE = _cfg.get("default_mode", "demo")
+    DEFAULT_MODE = "demo" if implicit_example_kis_config_active() else _cfg.get("default_mode", "demo")
 
     def __init__(
         self,

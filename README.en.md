@@ -104,6 +104,12 @@ cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 chmod 600 trading/config/kis_devlp.yaml
 ```
 
+The bundled example defaults to **demo**, but `auto_trading: true` can still
+submit **paper** orders. Use `--dry-run` or set `auto_trading: false`
+until ready. If no operator KIS configuration exists, the runtime will not
+infer live trading from the example. An explicitly missing config path is an
+error; real trading requires an explicit configuration selecting `real`.
+
 Recommended first-run flow:
 
 1. keep `default_mode: demo`;
