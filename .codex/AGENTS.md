@@ -7,6 +7,7 @@ This supplements any root `AGENTS.md` with repo-local guidance for `prism-insigh
 - Codex-facing skill: `.agents/skills/prism-insight-light/SKILL.md`
 - Claude-facing companion skill: `.claude/skills/prism-insight-light/SKILL.md`
 - The skill is the canonical agent summary for architecture, safety defaults, testing, and collaboration patterns.
+- Updated repository maintenance skills: `.agents/skills/autonomous-maintainer/SKILL.md` (OMX) and `.agents/skills/autonomous-maintainer-standalone/SKILL.md` (native). Invoke only with explicit repository-wide authorization. See `docs/AUTONOMOUS_MAINTAINER.md`.
 
 ## Safety Baseline
 
