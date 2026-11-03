@@ -164,6 +164,9 @@ class SignalMessage:
     event_source: str = ""
     event_description: str = ""
     raw: dict[str, Any] = field(default_factory=dict)
+    # Trusted runtime-only provenance: never populated from inbound JSON/raw.
+    # The watcher sets this after its persisted-position preflight.
+    internal_watcher_stop: bool = field(default=False, repr=False, compare=False)
 
     @property
     def is_trade(self) -> bool:

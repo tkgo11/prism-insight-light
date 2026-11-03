@@ -33,6 +33,7 @@ def test_watcher_generated_stop_sell_bypasses_optional_signal_strategy(
         "price": 85, "stop_loss": 90, "target_price": 120,
         "sell_reason": "StOp_LoSs",
     })
+    signal.internal_watcher_stop = True  # trusted watcher path, not publisher JSON
     assert dispatcher._resolve_strategy(signal) is None
 
 
@@ -106,6 +107,7 @@ async def test_watcher_dispatch_uses_market_broker_adapter_despite_strategy(
         "type": "SELL", "market": market, "ticker": ticker,
         "price": 85, "stop_loss": 90, "sell_reason": "StOp_LoSs",
     })
+    signal.internal_watcher_stop = True  # trusted watcher path, not publisher JSON
     result = await dispatcher.dispatch(signal, allow_queue=False)
     assert result.status == "executed"
     assert calls == [(market, ticker, None)]

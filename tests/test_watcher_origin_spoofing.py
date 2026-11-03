@@ -77,3 +77,38 @@ async def test_forged_watcher_identity_preserves_strategy_limit_order(
     result = await strategy.execute(signal, trading_mode="demo")
     assert result.status == "executed"
     assert calls == [(market, ticker, 90)], "Publisher must not force market SELL"
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+def test_real_watcher_marks_internal_origin_only_after_snapshot_preflight(
+    tmp_path, market, ticker
+):
+    """No broker call: verify the watcher itself grants trusted origin."""
+    from unittest.mock import AsyncMock, MagicMock
+    from trading.dispatch import DispatchResult
+    from trading.execution_ledger import ExecutionLedger
+    from trading.stop_loss_watcher import (
+        StopLossTracker, StopLossWatcher, StopLossWatcherConfig,
+    )
+
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position(market, ticker, 90, entry_price=100, pending_buy=False)
+    pos = tracker.get_position(market, ticker)
+    dispatcher = MagicMock()
+    dispatcher.trading_mode = "demo"
+    dispatcher.multi_account_enabled = False
+    dispatcher.execution_ledger = ExecutionLedger(tmp_path / "ledger.json")
+
+    async def assert_trusted(signal, **kwargs):
+        assert signal.internal_watcher_stop is True
+        assert signal.raw.get("internal_watcher_stop") is None
+        return DispatchResult("deferred", "mock broker not called", "SELL", market)
+
+    dispatcher.dispatch = AsyncMock(side_effect=assert_trusted)
+    watcher = StopLossWatcher(
+        dispatcher, StopLossWatcherConfig(enabled=True, storage_path=tracker.path),
+        tracker=tracker,
+    )
+    watcher._get_cached_trader = MagicMock(return_value=MagicMock())
+    outcome = watcher._trigger_sell(market, ticker, 85, pos)
+    assert outcome["status"] == "deferred"
+    dispatcher.dispatch.assert_awaited_once()

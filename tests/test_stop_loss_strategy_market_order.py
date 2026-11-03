@@ -58,6 +58,7 @@ async def test_automated_stop_sell_never_submits_unfilled_limit_order(
         "sell_reason": "StOp_LoSs",
         "signal_id": f"stop_loss_{market}_{ticker}_{'a' * 20}",
     })
+    signal.internal_watcher_stop = True  # trusted watcher path, not publisher JSON
     if strategy_name == "stop_loss_sell":
         strategy = StopLossSellStrategy(
             config=StopLossSellStrategyConfig.from_mapping({"name": strategy_name})

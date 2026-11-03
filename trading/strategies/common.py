@@ -159,6 +159,9 @@ def _is_watcher_generated_stop_sell(signal: SignalMessage) -> bool:
         or not isinstance(signal.sell_reason, str)
         or signal.sell_reason.strip().casefold() != "stop_loss"
         or not isinstance(signal.raw, dict)
+        # A publisher controls signal_id and sell_reason; neither authenticates
+        # a watcher-origin emergency SELL. Only the internal watcher sets this.
+        or signal.internal_watcher_stop is not True
     ):
         return False
     signal_id = signal.raw.get("signal_id")

@@ -951,6 +951,9 @@ class StopLossWatcher:
             "sell_reason": "stop_loss",
         }
         signal = parse_signal_payload(signal_payload)
+        # Internal-only origin is granted after the durable tracker snapshot
+        # and unresolved-BUY preflight, never from publisher-controlled JSON.
+        signal.internal_watcher_stop = True
 
         try:
             result = asyncio.run(self.dispatcher.dispatch(signal, allow_queue=False))
