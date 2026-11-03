@@ -126,3 +126,65 @@ def test_finalize_persistence_failure_after_unknown_buy_claim_keeps_fence(
     assert restarted.claim(identity) == (False, "in_progress")
     with restarted.guard_unresolved_buy(market, ticker) as unresolved:
         assert unresolved is True
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+def test_cancelled_unattributed_buy_with_late_holdings_stays_fenced(
+    tmp_path, market, ticker
+):
+    """A cancelled order can have a partial fill; aggregate shares prove no attribution.
+
+    This is a mock-only fail-closed contract, not KIS cancellation/fill evidence.
+    One account is rejected; the other has an unverified cancelled BUY.
+    """
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position(market, ticker, 90, entry_price=100, pending_buy=False)
+    before = tracker.get_position(market, ticker)
+    for account_scope, status in (("a" * 64, "rejected"), ("b" * 64, "cancelled")):
+        identity = f"{market}-{status}-{account_scope}"
+        claimed, _, token = ledger.claim(
+            identity, with_token=True,
+            order_intent=_intent(market, ticker, account_scope),
+        )
+        assert claimed and token
+        ledger.finalize(identity, status, claim_token=token)
+
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.claim(f"{market}-cancelled-{'b' * 64}") == (False, "cancelled")
+    with restarted.guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
+    watcher, dispatcher = _watcher(
+        tmp_path, restarted, tracker, market, [0, 2],
+    )
+    with patch("trading.stop_loss_watcher.is_market_open",
+               side_effect=lambda candidate: candidate == market):
+        assert watcher.check_stop_loss_once() == []
+        blocked = watcher.check_stop_loss_once()
+        assert len(blocked) == 1 and blocked[0]["status"] == "blocked"
+    assert watcher._trigger_sell(market, ticker, 80, before)["status"] == "blocked"
+    dispatcher.dispatch.assert_not_called()
+    assert StopLossTracker(tracker.path).get_position(market, ticker) == before
+
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+def test_cancelled_buy_finalize_disk_failure_preserves_pre_submit_fence(
+    tmp_path, monkeypatch, market, ticker
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    identity = "cancelled-disk-failure-" + market
+    claimed, _, token = ledger.claim(
+        identity, with_token=True,
+        order_intent=_intent(market, ticker, "d" * 64),
+    )
+    assert claimed and token
+
+    def disk_failure(_entries):
+        raise OSError("simulated cancelled-finalize persistence failure")
+
+    monkeypatch.setattr(ledger, "_save", disk_failure)
+    with pytest.raises(OSError, match="cancelled-finalize persistence failure"):
+        ledger.finalize(identity, "cancelled", claim_token=token)
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.claim(identity) == (False, "in_progress")
+    with restarted.guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
