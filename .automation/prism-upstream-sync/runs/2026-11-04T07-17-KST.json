@@ -1,0 +1,462 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-04T07-17-KST-turn10",
+  "slot": "2026-11-04T07-17-KST",
+  "observed_at": "2026-11-03T22:17:11Z",
+  "pr": {
+    "number": 43,
+    "draft": true,
+    "head": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
+    "base_ref": "main",
+    "api_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+    "current_main": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+    "merge_result_sha": "8fa5982d14e53fb84edc024926577cde099c5164",
+    "merge_tree_sha": "dfc0feb3440dc7aa0d8903ff16f88c4f233543dd"
+  },
+  "source": {
+    "pinned": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "head": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
+    "ahead_commits": 48,
+    "changed_files": 41,
+    "imported": 0,
+    "decision": "NO_UNVERIFIED_IMPORT"
+  },
+  "metrics": {
+    "candidate_count": 12,
+    "candidate_target": 10,
+    "verified_candidates": 10,
+    "deferred_candidates": 2,
+    "attempted_reproductions": 0,
+    "reproduced_defects": 0,
+    "actual_code_fixes": 0,
+    "regression_tests_added_and_run": 0,
+    "existing_tests_verified": "41721915580: 1853 Linux, 167 Windows, Docker success",
+    "verified_paths": [
+      ".github/workflows/tests.yml",
+      "webui/services/trade_service.py",
+      "trading/strategies/stop_loss_sell.py",
+      "trading/strategies/balanced_risk.py",
+      "trading/strategies/limit_buffer.py",
+      "trading/strategies/profit_ladder.py",
+      "trading/strategies/protective_exit.py",
+      "trading/strategies/score_weighted.py",
+      "trading/strategies/bracket_exit.py",
+      "trading/strategies/cooldown.py"
+    ],
+    "unverified_paths": [
+      "KR/US order history and per-order fill/cancel/remainder",
+      "UNKNOWN delayed/partial fill -> actionable stop",
+      "risk bracket accepted metadata consumer",
+      "event risk-off raw buy amount boundary",
+      "Windows new tests excluded",
+      "Qlty 90 issues",
+      "branch protection 403",
+      "KIS demo",
+      "submodule contents"
+    ],
+    "complete_related_files": 53,
+    "related_total": 176,
+    "complete_all_files": 53,
+    "full_total": 208,
+    "related_pass": "0/2",
+    "full_pass": "0/2"
+  },
+  "candidates": [
+    {
+      "candidate_id": "C12-01",
+      "root_cause_id": "RC-CI-WINDOWS-COVERAGE",
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "d1a5accbcb60fc8de07aa1170578fd8eb97614a3",
+      "function_or_path": "pytest; windows-runtime",
+      "hypothesis": "Windows smoke selects five modules, excludes newer KR/US order and ledger tests",
+      "expected_impact": "Windows-specific coverage not proven",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "CONFIRMED_COVERAGE_LIMIT_NO_UNJUSTIFIED_CHANGE",
+      "verification_method": "41721915580 Linux 1853 passed; 41721915580 Windows 167 passed",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-02",
+      "root_cause_id": "RC-WEBUI-MANUAL-ORDER-FENCE",
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "function_or_path": "live_trading_enabled; trading_guard_status; dispatch_manual_order",
+      "hypothesis": "Manual re-arm, CSRF, nonce or direct service bypass may duplicate broker orders",
+      "expected_impact": "Manual order duplication/unauthorized live dispatch",
+      "priority": "HIGH",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "EXISTING_MOCK_GUARDS_REVIEWED_NO_NEW_DEFECT",
+      "verification_method": "tests/test_webui_manual_buy_durable_intent.py; tests/test_webui_routes.py::test_live_manual_order_nonce_blocks_replay; tests/test_webui_routes.py::test_live_manual_order_nonce_is_atomic_under_concurrent_submit",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-03",
+      "root_cause_id": "RC-STOPLOSS-STRATEGY-LIMIT",
+      "path": "trading/strategies/stop_loss_sell.py",
+      "blob_sha": "51da4cd995adc32a0ee0ab97a5ce3e31160cd870",
+      "function_or_path": "StopLossSellStrategyConfig.from_mapping; StopLossSellStrategy.execute; _should_use_signal_price",
+      "hypothesis": "Stop-loss SELL could submit stale unmarketable limit or publisher bypass watcher origin",
+      "expected_impact": "Unfilled protective SELL",
+      "priority": "HIGH",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "EXISTING_MOCK_GUARDS_REVIEWED_NO_NEW_DEFECT",
+      "verification_method": "tests/test_stop_loss_strategy_market_order.py; tests/test_watcher_strategy_bypass.py",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-04",
+      "root_cause_id": "RC-BALANCED-RISK-DELEGATION",
+      "path": "trading/strategies/balanced_risk.py",
+      "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+      "function_or_path": "BalancedRiskStrategyConfig.from_mapping; BalancedRiskStrategy.execute",
+      "hypothesis": "BUY/SELL may be routed to wrong risk strategy or bypass validation",
+      "expected_impact": "Wrong order sizing/exit",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "EXISTING_MOCK_GUARDS_REVIEWED_NO_NEW_DEFECT",
+      "verification_method": "tests/test_balanced_risk_strategy.py::test_balanced_risk_dispatches_buy_and_sell; tests/test_balanced_risk_strategy.py::test_balanced_risk_builds_both_strategy_legs",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-05",
+      "root_cause_id": "RC-LIMIT-BUFFER-ROUNDING",
+      "path": "trading/strategies/limit_buffer.py",
+      "blob_sha": "d61848090f664b45155be1efbf017030de08eacd",
+      "function_or_path": "LimitBufferStrategyConfig.from_mapping; LimitBufferStrategy._price; LimitBufferStrategy.execute",
+      "hypothesis": "KR tick rounding or US decimals may cross intended buy/sell limit",
+      "expected_impact": "Bad limit price or overpay",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "EXISTING_MOCK_GUARDS_REVIEWED_NO_NEW_DEFECT",
+      "verification_method": "tests/test_strategy_suite.py::test_limit_buffer_uses_conservative_kr_tick_rounding; tests/test_strategy_suite.py::test_limit_buffer_uses_automatic_krx_tick_rounding; tests/test_strategy_suite.py::test_limit_buffer_rejects_invalid_sell_buffer",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-06",
+      "root_cause_id": "RC-PROFIT-LADDER-EXIT-FRACTION",
+      "path": "trading/strategies/profit_ladder.py",
+      "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+      "function_or_path": "ProfitLadderStrategyConfig.from_mapping; ProfitLadderStrategy.execute",
+      "hypothesis": "Full-exit reason and stop-loss override may misapply partial profit bands",
+      "expected_impact": "Over/under-selling",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "EXISTING_MOCK_GUARDS_REVIEWED_NO_NEW_DEFECT",
+      "verification_method": "tests/test_strategy_suite.py::test_profit_ladder_full_exit_reason_overrides_profit_band; tests/test_strategy_suite.py::test_profit_ladder_rejects_invalid_fractions; tests/test_strategy_partial_matrix.py",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-07",
+      "root_cause_id": "RC-PROTECTIVE-EXIT-PRICE",
+      "path": "trading/strategies/protective_exit.py",
+      "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+      "function_or_path": "ProtectiveExitStrategyConfig.from_mapping; ProtectiveExitStrategy._sell_fraction; _limit_price; execute",
+      "hypothesis": "Stop-loss SELL may select non-marketable price or incorrect staged fraction",
+      "expected_impact": "Unfilled or excessive SELL",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "EXISTING_MOCK_GUARDS_REVIEWED_NO_NEW_DEFECT",
+      "verification_method": "tests/test_balanced_risk_strategy.py::test_protective_exit_sells_stop_loss_fully_at_marketable_price; tests/test_balanced_risk_strategy.py::test_protective_exit_takes_profit_in_steps",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-08",
+      "root_cause_id": "RC-SCORE-WEIGHTED-BAND-SIZING",
+      "path": "trading/strategies/score_weighted.py",
+      "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+      "function_or_path": "ScoreWeightedStrategyConfig.from_mapping; ScoreWeightedStrategy.execute",
+      "hypothesis": "Duplicate/nonfinite band or multiplication overflow could submit unsafe BUY budget",
+      "expected_impact": "Overbuy/incorrect sizing",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "EXISTING_MOCK_GUARDS_REVIEWED_NO_NEW_DEFECT",
+      "verification_method": "tests/test_strategy_suite.py::test_score_weighted_finite_fields_multiplication_overflow_rejects_before_broker; tests/test_strategy_suite.py::test_score_weighted_fractional_band_without_base_rejects_broker_default; tests/test_score_band_config_integrity.py",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-09",
+      "root_cause_id": "RC-BRACKET-EXIT-TRIGGER",
+      "path": "trading/strategies/bracket_exit.py",
+      "blob_sha": "7355e0a20212f77926e8d856b7d0539b9dc670c0",
+      "function_or_path": "BracketExitStrategyConfig.from_mapping; BracketExitStrategy._sell_decision; _limit_price; execute",
+      "hypothesis": "Target and stop trigger precedence may send wrong SELL fraction/limit",
+      "expected_impact": "Unwanted or missed exit",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "EXISTING_MOCK_GUARDS_REVIEWED_NO_NEW_DEFECT",
+      "verification_method": "tests/test_signal_exit_strategies.py::test_bracket_exit_prioritizes_stop_loss_and_uses_marketable_limit_price; tests/test_signal_exit_strategies.py::test_bracket_exit_rejects_signal_inside_brackets; tests/test_stop_loss_strategy_market_order.py",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-10",
+      "root_cause_id": "RC-COOLDOWN-PENDING-FENCE",
+      "path": "trading/strategies/cooldown.py",
+      "blob_sha": "824afe8cd6f71f43a937c3684f3bf97264627bee",
+      "function_or_path": "CooldownStrategyConfig.from_mapping; CooldownStrategy._key; _validate_records; execute",
+      "hypothesis": "Accepted/UNKNOWN orders may be retried after cooldown expiry or crash",
+      "expected_impact": "Duplicate broker orders",
+      "priority": "HIGH",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "EXISTING_EXACT_HEAD_MOCK_CI_PASS_NO_NEW_DEFECT",
+      "decision": "EXISTING_MOCK_GUARDS_REVIEWED_NO_NEW_DEFECT",
+      "verification_method": "tests/test_cooldown_pending_reconciliation.py; tests/test_strategy_semantic_state_safety.py; tests/test_strategy_suite.py::test_cooldown_serializes_concurrent_duplicate_execution",
+      "full_file_audit_complete": true
+    },
+    {
+      "candidate_id": "C12-11",
+      "root_cause_id": "RC-RISK-BRACKET-METADATA",
+      "path": "trading/strategies/risk_bracket.py",
+      "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf",
+      "function_or_path": "RiskBracketStrategyConfig.from_mapping; RiskBracketStrategy.execute",
+      "hypothesis": "Accepted BUY metadata may be mistaken for filled position and hard cap may fallback",
+      "expected_impact": "False position metadata or overbuy",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "UNVERIFIED_PARTIAL_REVIEW",
+      "decision": "PARTIAL_REVIEW_METADATA_CONSUMERS_NOT_TRACED",
+      "verification_method": "tests/test_strategy_suite.py::test_risk_bracket_constraints_never_fall_back_to_broker_default; tests/test_strategy_suite.py::test_risk_bracket_valid_cap_and_upstream_fraction_still_execute",
+      "full_file_audit_complete": false
+    },
+    {
+      "candidate_id": "C12-12",
+      "root_cause_id": "RC-EVENT-RISK-OFF-STATE",
+      "path": "trading/strategies/event_risk_off.py",
+      "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
+      "function_or_path": "EventRiskOffStrategyConfig.from_mapping; _validate_records; execute",
+      "hypothesis": "Malformed persisted risk-off event or nonfinite buy_amount could bypass BUY block",
+      "expected_impact": "BUY despite risk-off",
+      "priority": "MEDIUM",
+      "reproduction_attempt": "CURRENT_BLOB_AND_EXISTING_TEST_CONTRACT_INSPECTION; NO_NEW_ISOLATED_REPRO_EXECUTED",
+      "result": "UNVERIFIED_PARTIAL_REVIEW",
+      "decision": "PARTIAL_REVIEW_BUY_AMOUNT_BOUNDARY_NOT_REPRODUCED",
+      "verification_method": "tests/test_strategy_semantic_state_safety.py::test_corrupt_riskoff_record_cannot_enable_buy; tests/test_strategy_suite.py::test_event_risk_off_records_event_and_blocks_buy",
+      "full_file_audit_complete": false
+    }
+  ],
+  "carry_forward": [
+    {
+      "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "STALLED_NO_NEW_ORDER_HISTORY_MOCK",
+      "last_reproduction_run": "2026-11-04T06-25-KST: existing fence tests only; no new per-order read-only history test this slot",
+      "unverified_transitions": [
+        "UNKNOWN -> delayed/partial fill",
+        "cancel -> final remaining quantity",
+        "confirmed fill -> stop activation",
+        "KR/US multi-account order-ID/fill-ID attribution"
+      ],
+      "blocker": "No implemented KR/US per-order history reconciliation; no isolated mock history test added; KIS demo unavailable",
+      "delta": "0 new order-history tests, 0 code fixes, +10 unrelated complete file audits",
+      "next_exact_action": "Test-first KR inquire-daily-ccld and US inquire-ccnl read-only paginated mock with account/date/order/symbol matching; US ODNO must be blank per official sample"
+    },
+    {
+      "carry_forward_id": "RC-CI-WINDOWS-COVERAGE",
+      "status": "CONFIRMED_SUBSET_UNCHANGED",
+      "last_reproduction_run": "41721915580 Windows 167 tests; Linux full 1853",
+      "unverified_transitions": [
+        "Windows-specific newer ledger and order-history test execution"
+      ],
+      "blocker": "Workflow selects only five Windows test modules; no Windows-only failure reproduced",
+      "delta": "CI workflow full source audit +1; no workflow patch to avoid resetting 2+2 without reproduced platform defect"
+    },
+    {
+      "carry_forward_id": "RC-EXTERNAL-QUALITY-GATES",
+      "status": "BLOCKED",
+      "blocker": "Qlty 90 blocking issues untriaged; Snyk success not proof of zero issues; reviews zero; branch protection 403; rulesets []",
+      "delta": "Current exact-head statuses and protection read reconfirmed, no PASS"
+    }
+  ],
+  "financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_outcome.py",
+      "mock_result": "MOCK_PASS; no fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No KIS demo/live broker fill proof",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "UNKNOWN",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_transport_ambiguity_fence.py; tests/test_broker_exception_class_ambiguity.py",
+      "mock_result": "MOCK_PASS new compact exception name + KIS wrapper 73 tests; no order fill proof",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No KIS demo/live broker fill proof",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "지연 체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_FENCE_PASS; actual fill attribution BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "부분체결",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_FENCE_PASS; fill IDs/quantities BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "취소/거절",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_delayed_fill_fence.py; tests/test_broker_http_rejection_safety.py",
+      "mock_result": "MOCK_PASS; final cancel remainder BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "중복 통지",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS; KIS duplicate events BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "잔여량",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_partial_exit_stop_loss_safety.py",
+      "mock_result": "MOCK_GUARD_PASS; authoritative remaining BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_pending_buy_stop_loss_safety.py; tests/test_stop_loss_signal_identity.py",
+      "mock_result": "MOCK_FAIL_CLOSED_PASS; activation on confirmed fills BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "다계좌 격리",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unknown_buy_intent_durability.py; tests/test_broker_transport_ambiguity_fence.py; tests/test_multi_account_malformed_balance_fail_closed.py",
+      "mock_result": "MOCK_PASS: 18 new KR/US real-parser multi-account cases; per-order fill attribution remains BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "재시작",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_broker_transport_ambiguity_fence.py; tests/test_execution_ledger_retention.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No KIS demo/live broker fill proof",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_durable_state_directory_sync.py; tests/test_unknown_buy_delayed_fill_fence.py",
+      "mock_result": "MOCK_PASS",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No KIS demo/live broker fill proof",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    },
+    {
+      "transition": "복구·재조정",
+      "applicability": "KR/US; single/multi where supported",
+      "test_ids": "tests/test_unresolved_buy_without_stop_loss.py",
+      "mock_result": "MOCK_FENCE_PASS; KIS authoritative recovery BLOCKED",
+      "kis_demo": "NOT_RUN_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS order/fill/cancel/remaining proof absent",
+      "latest_verified_mock_ci": "41721915580 (PR HEAD 303d4dbb): Linux 1853 passed; Windows 167 passed; Docker succeeded. Existing tests only; no new order-history mock or KIS demo this run."
+    }
+  ],
+  "remediation": {
+    "changed_files": [],
+    "production_fixes": 0,
+    "tests_added": 0,
+    "new_defects_reproduced": 0,
+    "mock_only": true,
+    "reason": "No new reproduced defect; avoid speculative changes or audit PASS reset"
+  },
+  "ci": {
+    "run_id": 41721915580,
+    "head_sha": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
+    "status": "completed",
+    "conclusion": "success",
+    "linux_pytest": "1853 passed",
+    "windows_pytest": "167 passed",
+    "docker": "success",
+    "new_tests_run_this_slot": 0
+  },
+  "external": {
+    "qlty": {
+      "state": "success",
+      "unresolved": 90,
+      "description": "90 blocking issues",
+      "required": "UNKNOWN_PROTECTION_403"
+    },
+    "snyk": {
+      "state": "success",
+      "description": "1 security test has passed",
+      "required": "UNKNOWN_PROTECTION_403"
+    },
+    "reviews": {
+      "count": 0,
+      "required": "UNKNOWN_PROTECTION_403"
+    },
+    "branch_protection": {
+      "lookup": "403 Resource not accessible by integration",
+      "required": "UNKNOWN"
+    },
+    "rulesets": {
+      "lookup": "SUCCESS",
+      "count": 0
+    }
+  },
+  "official_kis_contract_sources": [
+    "https://github.com/koreainvestment/open-trading-api/blob/main/examples_llm/domestic_stock/inquire_daily_ccld/inquire_daily_ccld.py",
+    "https://github.com/koreainvestment/open-trading-api/blob/main/examples_user/overseas_stock/overseas_stock_functions.py"
+  ],
+  "real_orders": 0,
+  "demo_orders": 0,
+  "limits": [
+    "container git ls-remote: Could not resolve host github.com",
+    "No KIS demo credentials",
+    "No new mock test authored; core STALLED",
+    "GitHub branch protection 403",
+    "Qlty issue detail not triaged"
+  ],
+  "next_exact_action": "Test-first read-only KR/US order history mock pagination and local account/date/order/symbol matching, US ODNO blank; do not infer fill from accepted order",
+  "cas": {
+    "lock_acquired_commit": "b28d4b00f4d5d629a0b131c624adb99a6b9ed135",
+    "evidence_commit": "PENDING",
+    "release_commit": "PENDING",
+    "lock_status": "LOCKED"
+  }
+}
