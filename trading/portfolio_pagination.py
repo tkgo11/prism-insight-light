@@ -6,6 +6,7 @@ balance APIs use F/M to announce additional pages and D/E for terminal pages.
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
+import re
 from typing import Any
 
 from .execution_outcome import PortfolioInquiryError
@@ -62,6 +63,13 @@ def validated_balance_quantity(value: Any) -> int:
         return 0
     if isinstance(value, bool):
         raise PortfolioInquiryError("KIS holding quantity must not be boolean")
+    # Decimal accepts Python-style underscores and exponent syntax such as
+    # "0_0" and "0e999999". Those are not canonical KIS decimal holding
+    # counts; interpreting them as zero could erase an active stop-loss.
+    # Keep integer/decimal-zero representations used by KIS, but fail closed
+    # on malformed or ambiguous strings before Decimal normalization.
+    if isinstance(value, str) and re.fullmatch(r"[0-9]+(?:\\.[0-9]+)?", value) is None:
+        raise PortfolioInquiryError("KIS holding quantity is not canonical decimal text")
     try:
         number = Decimal(str(value))
     except (InvalidOperation, ValueError, TypeError, OverflowError) as exc:
