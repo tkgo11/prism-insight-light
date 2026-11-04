@@ -143,12 +143,19 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
             # authoritative order, fill, cancel, or remaining-quantity evidence.
             # Treat malformed and contradictory status aliases as unverified.
             missing = object()
+            business_status_seen = False
             for status_key in ("rt_cd", "RT_CD"):
                 business_status = _get(body, status_key, missing)
-                if business_status is not missing and (
-                    type(business_status) is not str or business_status != "0"
-                ):
+                if business_status is missing:
+                    continue
+                business_status_seen = True
+                if type(business_status) is not str or business_status != "0":
                     return result
+            # A successful HTTP/SDK wrapper and plausible fill rows do not
+            # establish KIS business success if the body omits rt_cd entirely.
+            # Reject the entire inquiry, including previously collected pages.
+            if not business_status_seen:
+                return result
             rows = _get(body, output)
             if isinstance(rows, dict):
                 rows = [rows]
