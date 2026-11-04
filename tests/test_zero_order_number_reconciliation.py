@@ -45,12 +45,11 @@ def test_exact_history_zero_order_number_is_not_evidence(market, order_no):
         trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
         _request=read_only_request,
     )
-    result = read_order_history(
-        trader, market=market, order_no=order_no,
-        order_date="20261104", ticker=ticker,
-    )
-    assert result["can_activate_stop"] is False
-    assert result["status"] == "UNVERIFIED"
-    assert result["complete"] is False
-    assert result["matches"] == []
+    # Match the existing public API contract: malformed exact-order
+    # identifiers raise ValueError before any broker query is made.
+    with pytest.raises(ValueError, match="invalid order number"):
+        read_order_history(
+            trader, market=market, order_no=order_no,
+            order_date="20261104", ticker=ticker,
+        )
     assert calls == []
