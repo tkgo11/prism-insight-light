@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-05T06-25-KST-core-risk",
-  "status": "LOCKED",
+  "status": "RELEASED",
   "expected_state_head": "a2d5310f58e70efc62a1ff1775800cc33dbe5c57",
-  "expected_pr_head": "4e03c57152a990010e673d7b9cd7bcd2353cdb3a",
+  "expected_pr_head": "18c59f10a04a75023ace09abdcfecfb52d0a9f74",
   "created_at": "2026-11-04T21:25:55Z",
   "purpose": "Read-only KR/US order-history payload alias contradiction mock-first verification; no live or demo orders",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "released_at": "2026-11-04T21:35:29Z",
+  "evidence_commit": "7b3c25e122aa0b43f89155a35515bcc463ff660f",
+  "reason": "16 genuine output alias baseline red fixed; 2191 exact-head PR pytest PASS; UNKNOWN attribution remains unverified, independent 2+2 zero"
 }

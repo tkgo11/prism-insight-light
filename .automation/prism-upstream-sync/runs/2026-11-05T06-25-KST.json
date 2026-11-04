@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-2026-11-05T06-25-KST-core-risk",
   "started_at": "2026-11-04T21:25:24Z",
-  "completed_at": "2026-11-04T21:34:33Z",
+  "completed_at": "2026-11-04T21:35:29Z",
   "status": "PROGRESSED_REPRODUCED_HISTORY_OUTPUT_ALIAS_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
   "core_risk_gate": {
     "prior_stalled_count": 0,
@@ -272,9 +272,10 @@
   "full_manifest_sha": "ee819616c263f92accc3a04175051902cba78d55",
   "cas": {
     "lock_acquired_commit": "39543ed1a29c527b08b00d8dbf8ccb47a8af6e4b",
-    "lock_released": false,
-    "state_commit": null,
-    "release_status": "PENDING_SEPARATE_CAS_RELEASE"
+    "lock_released": true,
+    "state_commit": "7b3c25e122aa0b43f89155a35515bcc463ff660f",
+    "release_status": "CAS_RELEASED_AFTER_EVIDENCE_COMMIT",
+    "release_time": "2026-11-04T21:35:29Z"
   },
   "next_exact_action": "Add/reuse read-only KR/US Mock that binds UNKNOWN BUY durable intent to account+date+order ID+execution ID, cumulative/remaining and partial-cancel finality without allowing aggregate balance to activate stop; test-first red before any implementation."
 }
