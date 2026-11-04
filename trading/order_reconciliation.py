@@ -177,6 +177,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
     cursors, records, matches, versions, order_quantities = set(), set(), [], {}, set()
     execution_quantities, total_execution_quantity = {}, 0
     cumulative_execution_ids, max_cumulative_quantity = set(), None
+    total_rows = 0
     for page in range(max_pages):
         try:
             response = trader._request(path, tr_id, dict(params), tr_cont="N" if page else "")
@@ -204,8 +205,11 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
             rows = _get(body, output)
             if isinstance(rows, dict):
                 rows = [rows]
-            if not isinstance(rows, list):
+            if not isinstance(rows, list) or len(rows) > 2000 - total_rows:
+                # The complete inquiry must be bounded, not just each page.
+                # Discard all earlier matches on an oversized later page.
                 return result
+            total_rows += len(rows)
             for row in rows:
                 match = _matched(row, order_no=order_no, order_date=order_date,
                                  ticker=ticker, account=account, product=product)
