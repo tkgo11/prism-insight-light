@@ -234,3 +234,61 @@ def test_distinct_executions_consistent_sum_remains_read_only(market):
     assert result["complete"] is True
     assert len(result["matches"]) == 2
     assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_distinct_execution_sum_cannot_exceed_latest_cumulative_fill(market):
+    """A complete per-order history cannot sum to more than its largest
+    broker-reported cumulative fill. Reject contradictory KR/US page evidence
+    without ledger mutation, broker submission, or stop-loss activation.
+    """
+    first = _row(market, ccld_no="EXEC01", ord_qty="10",
+                 tot_ccld_qty="6", ccld_qty="6", rmn_qty="4")
+    second = _row(market, ccld_no="EXEC02", ord_qty="10",
+                  tot_ccld_qty="6", ccld_qty="4", rmn_qty="4")
+    result, calls = _read(market, [
+        HistoryResponse(market, [first], more=True),
+        HistoryResponse(market, [second]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_unknown_buy_without_order_number_cannot_query_or_clear_restart_fence(
+    tmp_path, market
+):
+    """An UNKNOWN BUY has no trustworthy ODNO to reconcile after restart.
+
+    Mock order history must reject missing IDs before making any inquiry,
+    while the durable account-scoped intent remains unresolved.
+    """
+    from trading.execution_ledger import ExecutionLedger
+
+    ticker = "005930" if market == "KR" else "AAPL"
+    identity = "unknown-without-odno-" + market
+    scope = "a" * 64
+    ledger = ExecutionLedger(tmp_path / ("ledger-" + market + ".json"))
+    claimed, previous, token = ledger.claim(
+        identity, with_token=True,
+        order_intent={
+            "kind": "buy_stop_loss", "market": market, "ticker": ticker,
+            "stop_loss": 90.0, "account_scope": scope,
+        },
+    )
+    assert claimed is True and previous is None and token
+    ledger.finalize(identity, "unknown", claim_token=token)
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.claim(identity) == (False, "unknown")
+    with restarted.guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
+    trader, calls = _trader(market, [], scope="account-a")
+    with pytest.raises(ValueError, match="invalid order number"):
+        trader.get_order_history_for_reconciliation(
+            order_no="", order_date="20261104", ticker=ticker,
+        )
+    assert calls == []
+    assert restarted.claim(identity) == (False, "unknown")
