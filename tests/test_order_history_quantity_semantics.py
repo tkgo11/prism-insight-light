@@ -285,7 +285,18 @@ def test_unknown_buy_without_order_number_cannot_query_or_clear_restart_fence(
     assert restarted.claim(identity) == (False, "unknown")
     with restarted.guard_unresolved_buy(market, ticker) as unresolved:
         assert unresolved is True
-    trader, calls = _trader(market, [], scope="account-a")
+    cls = DomesticStockTrading if market == "KR" else USStockTrading
+    trader = object.__new__(cls)
+    trader.mode = "demo"
+    trader.account_key = "account-a"
+    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+    calls = []
+
+    def no_order_query(*args, **kwargs):
+        calls.append((args, kwargs))
+        raise AssertionError("UNKNOWN without ODNO must not query or submit")
+
+    trader._request = no_order_query
     with pytest.raises(ValueError, match="invalid order number"):
         trader.get_order_history_for_reconciliation(
             order_no="", order_date="20261104", ticker=ticker,

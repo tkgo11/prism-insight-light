@@ -131,6 +131,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
         fk, nk, output = "CTX_AREA_FK200", "CTX_AREA_NK200", "output"
     cursors, records, matches, versions, order_quantities = set(), set(), [], {}, set()
     execution_quantities, total_execution_quantity = {}, 0
+    cumulative_execution_ids, max_cumulative_quantity = set(), None
     for page in range(max_pages):
         try:
             response = trader._request(path, tr_id, dict(params), tr_cont="N" if page else "")
@@ -178,6 +179,14 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                     # check remains read-only and never authorizes a SELL.
                     execution_id = match["execution_id"]
                     execution_qty = match["execution_quantity"]
+                    cumulative_qty = match["filled_quantity"]
+                    if cumulative_qty is not None:
+                        max_cumulative_quantity = (
+                            cumulative_qty if max_cumulative_quantity is None
+                            else max(max_cumulative_quantity, cumulative_qty)
+                        )
+                    if execution_id is not None and execution_qty is not None and cumulative_qty is not None:
+                        cumulative_execution_ids.add(execution_id)
                     if (execution_id is not None and execution_qty is not None
                             and execution_id not in execution_quantities):
                         execution_quantities[execution_id] = execution_qty
@@ -191,6 +200,16 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                         matches.append(match)
             continuation = _get(header, "tr_cont", None)
             if continuation in ("", "D", "E"):
+                # Only at the final page can we compare distinct execution
+                # quantities against the largest cumulative broker snapshot.
+                # A later page may legitimately report a newer total. Require
+                # cumulative evidence for every counted execution, otherwise
+                # leave missing data non-actionable rather than guessing.
+                if (execution_quantities
+                        and len(cumulative_execution_ids) == len(execution_quantities)
+                        and max_cumulative_quantity is not None
+                        and total_execution_quantity > max_cumulative_quantity):
+                    return result
                 result.update(status="EVIDENCE_ONLY", complete=True, matches=matches)
                 return result
             if continuation not in ("M", "F"):
