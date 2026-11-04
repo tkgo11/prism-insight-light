@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-05T07-22-KST-core-risk",
-  "status": "LOCKED",
+  "status": "RELEASED",
   "expected_state_head": "30ae26b96a573ebdbe3be2e6334b9ee121bd3988",
   "expected_pr_head": "18c59f10a04a75023ace09abdcfecfb52d0a9f74",
   "created_at": "2026-11-04T22:23:00Z",
   "purpose": "Mock-first uppercase fill/remaining aliases and UNKNOWN BUY ledger read-only safety",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "released_at": "2026-11-04T22:30:18.046Z",
+  "evidence_commit": "d056813f789999aaf50851d9a189ba88af5717c4",
+  "reason": "60 baseline product assertions fixed; final exact-head PR CI 2291 PASS, Windows 167 PASS, Docker success; core attribution still unverified, independent 2+2 zero"
 }

@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-2026-11-05T07-22-KST-core-risk",
   "started_at": "2026-11-04T22:23:00Z",
-  "completed_at": "2026-11-04T22:30:00Z",
+  "completed_at": "2026-11-04T22:30:18.046Z",
   "status": "PROGRESSED_REPRODUCED_ROW_ALIAS_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
   "core_risk_gate": {
     "prior_stalled_count": 0,
@@ -252,9 +252,10 @@
   "full_manifest_sha": "afde75613847b623e782e9430372fd8d17ce0e99",
   "cas": {
     "lock_acquired_commit": "237324e6204acd89845bd2dc85e9928b12f17fe8",
-    "lock_released": false,
-    "state_commit": null,
-    "release_status": "PENDING_SEPARATE_CAS_RELEASE"
+    "lock_released": true,
+    "state_commit": "d056813f789999aaf50851d9a189ba88af5717c4",
+    "release_status": "CAS_RELEASED_AFTER_EVIDENCE_COMMIT",
+    "release_time": "2026-11-04T22:30:18.046Z"
   },
   "next_exact_action": "Build test-first read-only KR/US UNKNOWN BUY account+date+order+execution attribution to durable ledger with partial-cancel residual and restart, then safe stop activation only on broker-authoritative attributable fill."
 }

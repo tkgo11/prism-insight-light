@@ -58,12 +58,12 @@
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-04T22:30:00Z",
+  "last_updated_at": "2026-11-04T22:30:18.046Z",
   "next_exact_action": "Build test-first read-only KR/US UNKNOWN BUY account+date+order+execution attribution to durable ledger with partial-cancel residual and restart, then safe stop activation only on broker-authoritative attributable fill.",
   "related_manifest_sha": "2436149b6216b1dd8557a56e6e28526df0b661e3",
   "full_manifest_sha": "afde75613847b623e782e9430372fd8d17ce0e99",
   "cas": {
-    "lock_status": "LOCKED",
-    "evidence_commit": "PENDING"
+    "evidence_commit": "d056813f789999aaf50851d9a189ba88af5717c4",
+    "lock_status": "RELEASED"
   }
 }
