@@ -394,9 +394,22 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
         # A single account/date/order number cannot identify two instruments
         # or both BUY and SELL. Inspect the entire page set, not just rows
         # encountered after a candidate was first seen.
+        candidate_order_numbers = {number for number, _ in candidate_keys}
         for row in all_rows:
-            identity = (_first(row, "odno", "ODNO"),
-                        _first(row, "ord_dt", "ORD_DT"))
+            row_number = _first(row, "odno", "ODNO")
+            row_date = _first(row, "ord_dt", "ORD_DT")
+            # The same ODNO may recur on a DIFFERENT VALID trading date.
+            # Missing/malformed dates cannot establish that a contradictory
+            # ticker/side row belongs to another order. Poison all candidates.
+            if row_number in candidate_order_numbers:
+                if (not isinstance(row_date, str)
+                        or re.fullmatch(r"[0-9]{8}", row_date) is None):
+                    return result
+                try:
+                    datetime.strptime(row_date, "%Y%m%d")
+                except ValueError:
+                    return result
+            identity = (row_number, row_date)
             if identity in candidate_keys and (
                 _first(row, "pdno", "PDNO", "ovrs_pdno") != ticker
                 or _first(row, *side_fields) != "02"
