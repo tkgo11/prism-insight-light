@@ -543,10 +543,13 @@ class MultiAccountTradeDispatcher:
                             self.ledger.release, identity, claim_token=claim_token
                         )
                     else:
+                        receipt = _durable_buy_receipt(signal, result)
+                        finalize_kwargs = {"claim_token": claim_token}
+                        if receipt is not None:
+                            finalize_kwargs["order_receipt"] = receipt
                         await asyncio.to_thread(
                             self.ledger.finalize, identity, result.status,
-                            claim_token=claim_token,
-                            order_receipt=_durable_buy_receipt(signal, result),
+                            **finalize_kwargs,
                         )
                 results.append(
                     AccountDispatchResult(
@@ -1039,10 +1042,13 @@ class TradeDispatcher:
             raise
 
         if identity is not None:
+            receipt = _durable_buy_receipt(signal, result)
+            finalize_kwargs = {"claim_token": claim_token}
+            if receipt is not None:
+                finalize_kwargs["order_receipt"] = receipt
             await asyncio.to_thread(
                 self.execution_ledger.finalize, identity, result.status,
-                claim_token=claim_token,
-                order_receipt=_durable_buy_receipt(signal, result),
+                **finalize_kwargs,
             )
         return result
 
