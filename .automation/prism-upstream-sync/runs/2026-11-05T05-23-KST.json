@@ -1,0 +1,277 @@
+{
+  "run_id": "prism-sync-2026-11-05T05-23-KST-core-risk",
+  "started_at": "2026-11-04T20:25:01Z",
+  "completed_at": "2026-11-04T20:31:18.364Z",
+  "status": "PROGRESSED_ONE_VERIFIED_READ_ONLY_CURSOR_INTEGRITY_DEFECT_FIXED_ATTRIBUTION_UNVERIFIED",
+  "core_risk_gate": {
+    "prior_stalled_count": "0 consecutive; previous run PROGRESSED",
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_order_history_cursor_alias_integrity.py::test_conflicting_cursor_aliases_discard_partial_cancel_history_and_keep_fence (16 KR/US x exact/discovery x 2 account scopes x FK/NK)",
+    "baseline_fail_observed": "YES: 16 genuine product assertion failures, 2127 passed, test-first SHA 5b05ccaa, Actions 41906516734 and 41906528781",
+    "mock_result": "FIXED_GREEN: b26a6722 push 2133 passed, PR merge 2143 passed, Windows 167 each, Docker success",
+    "code_fix_commit": "b26a672208ce695371dea14febc87d0ff76e7890",
+    "latest_head_CI": [
+      {
+        "id": 41906799771,
+        "event": "push",
+        "sha": "b26a672208ce695371dea14febc87d0ff76e7890",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2133 passed",
+        "windows": "167 passed"
+      },
+      {
+        "id": 41906810223,
+        "event": "pull_request",
+        "sha": "b26a672208ce695371dea14febc87d0ff76e7890",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2143 passed",
+        "windows": "167 passed"
+      }
+    ],
+    "unverified_transitions": [
+      "UNKNOWN BUY account/date/order attribution",
+      "Durable fill-ID cumulative/remaining/cancel ledger binding",
+      "Partial cancel finality and residual exposure",
+      "Confirmed fill to stop-loss activation",
+      "KR/US multi-account broker E2E",
+      "KIS demo integration"
+    ],
+    "exact_blocker": "Authoritative broker fill/cancel/remaining-to-ledger attribution and safe stop activation not implemented/verified; KIS demo credentials unavailable only for integration; branch protection 403; Qlty 89 blocking issues untriaged; reviews and independent 2+2 missing",
+    "evidence_delta": "New 24 Mock tests (16 red, 8 control green), common pagination alias helper fix in KR/US exact/discovery, 2143 PR merge tests green; new test complete audit, source reaudited, related 69/190, full 69/222",
+    "next_exact_action": "Test authoritative UNKNOWN BUY account/date/order/execution-ID association and partial-cancel remaining reconciliation using KR/US read-only Mock; preserve durable pending fence; baseline red before any production change."
+  },
+  "candidate_count": 1,
+  "validated_candidates": 1,
+  "reproduced_defects": 1,
+  "actual_code_fixes": 1,
+  "deferred_candidates": 0,
+  "candidate_count_reason": "Prioritize unresolved UNKNOWN BUY reconciliation before unrelated 10-candidate exploration; no fabricated candidates.",
+  "candidate_inventory": [
+    {
+      "candidate_id": "CAND-20261105-0523-01",
+      "root_cause_id": "RC-KIS-HISTORY-PAGINATION-CURSOR-ALIAS-CONFLICT",
+      "parent_risk": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/order_reconciliation.py::_cursor_component/read_order_history/discover_buy_order_candidates",
+      "previous_blob_sha": "29fdfeac386ca7b1f1782151c6c8cd56f6fba2f1",
+      "current_blob_sha": "500ec38568aebe26e930cd0748142f80e8d6b958",
+      "hypothesis": "Conflicting lower/upper KIS continuation cursors are silently accepted and allow later partial-fill/cancel evidence to be labelled EVIDENCE_ONLY/CANDIDATES_ONLY",
+      "priority": "HIGH",
+      "reproduction": "16 genuine assertion failures (2 markets x 2 lookups x 2 scopes x 2 aliases)",
+      "decision": "FIXED_MOCK_VERIFIED_ONLY"
+    }
+  ],
+  "attempted_reproductions": {
+    "baseline_failed_cases": 16,
+    "baseline_passed": 2127
+  },
+  "regression_tests_added_and_run": {
+    "added": 24,
+    "baseline_red": 16,
+    "boundary_green": 8,
+    "final_push_green": 2133,
+    "final_pr_merge_green": 2143,
+    "windows_green": 167
+  },
+  "verified_paths": [
+    "KR/US exact/discovery conflicting FK/NK cursor aliases discard earlier partial-fill and later cancellation evidence",
+    "Two account scopes, order/date/ticker/execution IDs, remaining quantities, ledger restart UNKNOWN pending fence",
+    "Identical aliases preserve bounded read-only candidate/evidence results",
+    "Latest exact-HEAD Actions 41906799771 and 41906810223 success; Windows and Docker success"
+  ],
+  "unverified_paths": [
+    "UNKNOWN BUY account/date/order attribution",
+    "Durable fill-ID cumulative/remaining/cancel ledger binding",
+    "Partial cancel finality and residual exposure",
+    "Confirmed fill to stop-loss activation",
+    "KR/US multi-account broker E2E",
+    "KIS demo integration",
+    "Qlty 89 blocking issues details",
+    "Branch protection 403",
+    "Human review and independent 2+2"
+  ],
+  "financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_unknown_buy_ledger_remains_fenced_after_discovery_and_restart",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "UNKNOWN",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_conflicting_cursor_aliases_discard_partial_cancel_history_and_keep_fence",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "지연 체결",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "부분체결",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_distinct_partial_executions_cannot_exceed_broker_cumulative",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "취소/거절",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_conflicting_cursor_aliases_discard_partial_cancel_history_and_keep_fence",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "중복 통지",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_duplicate_page_execution_is_not_double_counted",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "잔여량",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_missing_ordered_quantity_cannot_bypass_cross_row_order_bound",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "다계좌 격리",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_conflicting_cursor_aliases_discard_partial_cancel_history_and_keep_fence",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "재시작",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_conflicting_cursor_aliases_discard_partial_cancel_history_and_keep_fence",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_finalize_persistence_failure_after_unknown_buy_claim_keeps_fence",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    },
+    {
+      "transition": "복구 및 재조정",
+      "scope": "KR/US single/multi where applicable",
+      "mock_test_ids": "test_reused_order_number_without_valid_date_poisoning_discards_candidates",
+      "mock_result": "PASS_FAIL_CLOSED_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative order/fill attribution, ledger reconciliation and safe stop-loss activation"
+    }
+  ],
+  "complete_related_files": 69,
+  "total_related_files": 190,
+  "complete_all_files": 69,
+  "total_all_files": 222,
+  "audit_PASS": {
+    "related": "0/2",
+    "full": "0/2"
+  },
+  "current_pr": 43,
+  "pr_draft": true,
+  "current_HEAD": "b26a672208ce695371dea14febc87d0ff76e7890",
+  "current_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "upstream_head": "6437aac71699c2ce565202263ad8f94ce6e59940",
+  "merge_result_commit": "04b5eb36932821f5ebb31e13f7c65ced1cda14d7",
+  "merge_result_tree": "073fd434526d3516dd6330c41686b616e0f792ae",
+  "test_first_commit": "5b05ccaa5873b1bf74ec997e1e2775ae770c2c6c",
+  "fix_commit": "b26a672208ce695371dea14febc87d0ff76e7890",
+  "changed_files": [
+    "tests/test_order_history_cursor_alias_integrity.py",
+    "trading/order_reconciliation.py"
+  ],
+  "CI": [
+    {
+      "id": 41906516734,
+      "event": "push",
+      "sha": "5b05ccaa5873b1bf74ec997e1e2775ae770c2c6c",
+      "status": "completed",
+      "conclusion": "failure",
+      "pytest": "16 failed, 2127 passed"
+    },
+    {
+      "id": 41906528781,
+      "event": "pull_request",
+      "sha": "5b05ccaa5873b1bf74ec997e1e2775ae770c2c6c",
+      "status": "completed",
+      "conclusion": "failure",
+      "pytest": "16 failed, 2127 passed"
+    },
+    {
+      "id": 41906799771,
+      "event": "push",
+      "sha": "b26a672208ce695371dea14febc87d0ff76e7890",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2133 passed"
+    },
+    {
+      "id": 41906810223,
+      "event": "pull_request",
+      "sha": "b26a672208ce695371dea14febc87d0ff76e7890",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2143 passed"
+    }
+  ],
+  "external": {
+    "snyk": "success, 1 security test passed; not proof of zero issues",
+    "qlty": "success status but 89 blocking issues in status description",
+    "branch_protection": "403 Resource not accessible by integration",
+    "rulesets": "[]",
+    "reviews": 0,
+    "kis_demo": "BLOCKED_NO_CREDENTIALS",
+    "real_orders": 0,
+    "demo_orders": 0
+  },
+  "related_manifest_sha": "b297327e8e46f881fd89d268a661275fb43aa585",
+  "full_manifest_sha": "74f3ee54ace55904990a4801ec44741b64bdecbe",
+  "cas": {
+    "lock_acquired_commit": "86af08e967e5dd9419dfd3d1a098811c9587428b",
+    "lock_released": false,
+    "state_commit": "THIS_ATOMIC_CAS_COMMIT"
+  },
+  "next_exact_action": "Test KR/US UNKNOWN BUY account/date/order/execution-ID attribution and partial-cancel remaining durable ledger reconciliation using read-only Mock; do not activate stop from candidates."
+}
