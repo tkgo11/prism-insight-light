@@ -303,3 +303,42 @@ def test_unknown_buy_without_order_number_cannot_query_or_clear_restart_fence(
         )
     assert calls == []
     assert restarted.claim(identity) == (False, "unknown")
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("account_field,bad_value", [
+    ("cano", "87654321"),
+    ("acnt_prdt_cd", "99"),
+])
+def test_target_order_cross_account_page_poisoning_fails_closed(market, account_field, bad_value):
+    """A target BUY history polluted by a foreign account/product cannot be
+    considered complete evidence, even if an earlier page matched the account.
+    No fill is booked, no order is submitted and no stop-loss is activated.
+    """
+    first = _row(market, ccld_no="EXEC01", tot_ccld_qty="4",
+                 ccld_qty="4", rmn_qty="6")
+    foreign = _row(market, ccld_no="EXEC02", tot_ccld_qty="8",
+                   ccld_qty="4", rmn_qty="2", **{account_field: bad_value})
+    result, calls = _read(market, [
+        HistoryResponse(market, [first], more=True),
+        HistoryResponse(market, [foreign]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_unrelated_order_history_rows_remain_skippable(market):
+    """A different order number is not a contradictory target-order account."""
+    other = _row(market, odno="99998888", cano="87654321")
+    matching = _row(market, tot_ccld_qty="4", ccld_qty="4", rmn_qty="6")
+    result, calls = _read(market, [
+        HistoryResponse(market, [other, matching]),
+    ])
+    assert len(calls) == 1
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert result["complete"] is True
+    assert len(result["matches"]) == 1
+    assert result["can_activate_stop"] is False
