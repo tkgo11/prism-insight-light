@@ -1,13 +1,14 @@
 {
   "run_id": "prism-sync-2026-11-05T05-23-KST-core-risk",
-  "status": "RELEASED",
-  "expected_state_head": "dd869fa82454938e97b6fa5095e8cbd62a571807",
-  "expected_pr_head": "7af124efaf32cd815ecbac256670985b537a7a04",
+  "status": "ACTIVE",
+  "expected_state_head": "a67330e45039088ed8077f570fbc209a10f6136b",
+  "expected_pr_head": "b26a672208ce695371dea14febc87d0ff76e7890",
   "created_at": "2026-11-04T20:25:01Z",
-  "purpose": "KR/US mock-first contradictory continuation cursor integrity; UNKNOWN BUY pending fence; no broker orders",
+  "purpose": "Second related-path reproduction: contradictory TR_CONT header aliases after FK/NK cursor fix; KR/US mock-only",
   "real_orders": 0,
   "demo_orders": 0,
   "released_at": "2026-11-04T20:31:41.340Z",
   "evidence_commit": "ba77eaeed2b6d949a708741a8ce51b04061618ad",
-  "reason": "16 baseline red -> 2143 PR merge green; 69/190 and 69/222 audited; independent 2+2 zero; attribution unverified"
+  "reason": "16 baseline red -> 2143 PR merge green; 69/190 and 69/222 audited; independent 2+2 zero; attribution unverified",
+  "reacquired_at": "2026-11-04T20:32:36.085Z"
 }
