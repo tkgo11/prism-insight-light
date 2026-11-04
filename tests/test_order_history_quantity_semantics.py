@@ -369,3 +369,22 @@ def test_same_account_order_identity_poisoning_invalidates_prior_page(market, co
     assert result["complete"] is False
     assert result["matches"] == []
     assert result["can_activate_stop"] is False
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_reused_order_number_on_different_date_does_not_poison_target(market):
+    """Order IDs may be reused across dates; only same-day contradictions poison."""
+    target = _row(market, cano="12345678", acnt_prdt_cd="01",
+                  ccld_qty="2", tot_ccld_qty="2", rmn_qty="8")
+    prior_day = _row(market, ord_dt="20261103",
+                     pdno="000660" if market == "KR" else "MSFT",
+                     cano="12345678", acnt_prdt_cd="01")
+    result, calls = _read(market, [
+        HistoryResponse(market, [target], more=True),
+        HistoryResponse(market, [prior_day]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert result["complete"] is True
+    assert len(result["matches"]) == 1
+    assert result["matches"][0]["ticker"] == ("005930" if market == "KR" else "AAPL")
+    assert result["can_activate_stop"] is False
