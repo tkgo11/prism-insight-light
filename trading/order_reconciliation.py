@@ -42,10 +42,14 @@ def _exceeds_known_order_bound(match, known_order_quantity):
     account/date/order can still establish the submitted quantity. Never
     promote such an inconsistent snapshot to read-only evidence.
     """
+    # An execution without an ID or cumulative snapshot cannot be counted
+    # reliably with other executions, but it still cannot individually exceed
+    # a submitted quantity proven by another row of the same order.
     return (
-        (match["filled_quantity"] or 0)
-        + (match["remaining_quantity"] or 0)
-        > known_order_quantity
+        (match["execution_quantity"] is not None
+         and match["execution_quantity"] > known_order_quantity)
+        or (match["filled_quantity"] or 0)
+        + (match["remaining_quantity"] or 0) > known_order_quantity
     )
 
 
