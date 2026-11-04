@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-2026-11-05T05-23-KST-core-risk",
   "started_at": "2026-11-04T20:25:01Z",
-  "completed_at": "2026-11-04T20:31:18.364Z",
+  "completed_at": "2026-11-04T20:31:41.340Z",
   "status": "PROGRESSED_ONE_VERIFIED_READ_ONLY_CURSOR_INTEGRITY_DEFECT_FIXED_ATTRIBUTION_UNVERIFIED",
   "core_risk_gate": {
     "prior_stalled_count": "0 consecutive; previous run PROGRESSED",
@@ -270,8 +270,9 @@
   "full_manifest_sha": "74f3ee54ace55904990a4801ec44741b64bdecbe",
   "cas": {
     "lock_acquired_commit": "86af08e967e5dd9419dfd3d1a098811c9587428b",
-    "lock_released": false,
-    "state_commit": "THIS_ATOMIC_CAS_COMMIT"
+    "lock_released": true,
+    "state_commit": "ba77eaeed2b6d949a708741a8ce51b04061618ad",
+    "release_status": "CAS_RELEASED_AFTER_EVIDENCE_COMMIT"
   },
   "next_exact_action": "Test KR/US UNKNOWN BUY account/date/order/execution-ID attribution and partial-cancel remaining durable ledger reconciliation using read-only Mock; do not activate stop from candidates."
 }
