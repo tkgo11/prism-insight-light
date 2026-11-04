@@ -1,13 +1,10 @@
 {
-  "run_id": "prism-sync-2026-11-05T04-19-KST-core-risk",
-  "status": "RELEASED",
-  "expected_state_head": "fcb42c2dce9083cd54f42f5787926abb979a0665",
+  "run_id": "prism-sync-2026-11-05T05-23-KST-core-risk",
+  "status": "ACTIVE",
+  "expected_state_head": "dd869fa82454938e97b6fa5095e8cbd62a571807",
   "expected_pr_head": "7af124efaf32cd815ecbac256670985b537a7a04",
-  "created_at": "2026-11-04T19:19:30Z",
-  "released_at": "2026-11-04T19:26:03Z",
-  "purpose": "KR/US read-only mock test-first integer quantity validation",
+  "created_at": "2026-11-04T20:25:01Z",
+  "purpose": "KR/US mock-first contradictory continuation cursor integrity; UNKNOWN BUY pending fence; no broker orders",
   "real_orders": 0,
-  "demo_orders": 0,
-  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
-  "reason": "32 red -> 2119 green; attribution remains unverified; independent 2+2 zero"
+  "demo_orders": 0
 }
