@@ -268,3 +268,80 @@ def test_equal_history_output_aliases_remain_read_only(market, lookup, scope):
     assert result["complete"] is True
     assert result["can_activate_stop"] is False
     assert len(result["matches" if lookup == "exact" else "candidates"]) == 2
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+def test_later_page_conflicting_output_alias_discards_earlier_fill_evidence(
+    tmp_path, market, lookup, scope,
+):
+    """An ambiguous final page must invalidate earlier partial-fill evidence."""
+    ticker = "005930" if market == "KR" else "AAPL"
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    identity = f"later-output-alias-{market}-{lookup}-{scope}"
+    claimed, _, token = ledger.claim(
+        identity, with_token=True,
+        order_intent={
+            "kind": "buy_stop_loss", "market": market, "ticker": ticker,
+            "stop_loss": 85.0, "account_scope": scope,
+        },
+    )
+    assert claimed and token
+    ledger.finalize(identity, "unknown", claim_token=token)
+    before = ledger.path.read_bytes()
+    first = HistoryPage(market, [
+        history_row(market, "FILL1", cumulative=4, remaining=6),
+    ], more=True)
+    second = HistoryPage(market, [
+        history_row(market, "FILL2", cumulative=8, remaining=0, cancel="Y"),
+    ])
+    original_body = second.getBody
+
+    def conflicting_final_body():
+        body = original_body()
+        changed = dict(body["output1" if market == "KR" else "output"][0])
+        changed["ccld_no"] = "DIFFERENT"
+        body["OUTPUT1" if market == "KR" else "OUTPUT"] = [changed]
+        return body
+
+    second.getBody = conflicting_final_body
+    result, calls = inquiry(market, lookup, [first, second], scope)
+    assert len(calls) == 2
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result.get("matches", result.get("candidates", [])) == []
+    assert result["can_activate_stop"] is False
+    assert ledger.path.read_bytes() == before
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.claim(identity) == (False, "unknown")
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+def test_uppercase_only_history_output_alias_stays_nonactionable(
+    market, lookup, scope,
+):
+    """A sole uppercase wrapper key may be read, but never authorize a SELL."""
+    page = HistoryPage(market, [
+        history_row(market, "FILL1", cumulative=4, remaining=6),
+    ])
+    original_body = page.getBody
+
+    def uppercase_only_body():
+        body = original_body()
+        body["OUTPUT1" if market == "KR" else "OUTPUT"] = body.pop(
+            "output1" if market == "KR" else "output"
+        )
+        return body
+
+    page.getBody = uppercase_only_body
+    result, calls = inquiry(market, lookup, [page], scope)
+    assert len(calls) == 1
+    assert result["status"] == (
+        "EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY"
+    )
+    assert result["complete"] is True
+    assert result["can_activate_stop"] is False
+    assert len(result["matches" if lookup == "exact" else "candidates"]) == 1
