@@ -1,17 +1,14 @@
 {
-  "run_id": "prism-sync-2026-11-04T16-22-KST-turn9",
-  "status": "RELEASED",
-  "expected_state_head": "71e3fd79f349f4571e205af5d567199ca00728bd",
+  "run_id": "prism-sync-2026-11-04T17-22-KST-turn10",
+  "status": "ACQUIRED",
+  "expected_state_head": "b9f6c29716ba16f2450c10eaa8eff3fa965e2cde",
   "expected_pr_head": "7f57740b72bab1434d3c3053b9093d1d5911caf6",
-  "created_at": "2026-11-04T07:22:37Z",
-  "purpose": "KR/US read-only Mock cross-execution fill quantity integrity test-first; no live/demo orders",
+  "created_at": "2026-11-04T08:22:33Z",
+  "purpose": "Priority KR/US read-only Mock UNKNOWN BUY/order-history reconciliation, test-first; no real/demo orders",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
     "related": 0,
     "full": 0
-  },
-  "released_at": "2026-11-04T07:29:27Z",
-  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
-  "reason": "2 KR/US product assertion failures test-first, fixed; 4 Mock cases green and latest-head CI success; 60/182 related and 60/214 whole files audited; core fill-to-stop attribution unresolved"
+  }
 }
