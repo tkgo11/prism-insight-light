@@ -4,19 +4,19 @@
   "state": "ACTIVE_DRAFT_AUDIT_BLOCKED",
   "phase": "related_code_audit",
   "run": {
-    "run_id": "prism-sync-2026-11-04T17-22-KST-turn10",
-    "previous_run_id": "prism-sync-2026-11-04T16-22-KST-turn9",
-    "started_at": "2026-11-04T08:22:33Z",
-    "completed_at": "2026-11-04T08:29:32.100Z",
-    "status": "RELEASED",
-    "lock_owner": null,
-    "lock_acquired_commit": "3d02459b1e7dbf0049e79bc417fe02f1d1a6520c",
-    "lock_expected_pr_sha": "7f57740b72bab1434d3c3053b9093d1d5911caf6",
-    "final_pr_head_sha": "b634dfecd117ae8210c59d07eeb5d599046ce4e1",
+    "run_id": "prism-sync-2026-11-04T18-18-KST-turn11",
+    "previous_run_id": "prism-sync-2026-11-04T17-22-KST-turn10",
+    "started_at": "2026-11-04T09:18:30Z",
+    "completed_at": null,
+    "status": "LOCKED",
+    "lock_owner": "prism-sync-2026-11-04T18-18-KST-turn11",
+    "lock_acquired_commit": null,
+    "lock_expected_pr_sha": "b634dfecd117ae8210c59d07eeb5d599046ce4e1",
+    "final_pr_head_sha": null,
     "related_pass": false,
     "full_pass": false,
-    "lock_released": true,
-    "evidence_commit": "THIS_ATOMIC_CAS_COMMIT"
+    "lock_released": false,
+    "evidence_commit": null
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -6308,7 +6308,7 @@
     "Related 61/182 and full 61/214; independent 0/2 + 0/2",
     "Broker-authoritative UNKNOWN ODNO recovery, fill/cancel/remaining to durable account ledger and stop activation not implemented; Qlty 89 issues, reviews 0, protection 403; KIS demo not run"
   ],
-  "next_action": "Design/test-first account-bound UNKNOWN order-number recovery and verified fill/cancel/remaining reconciliation; keep all pending stop-loss nonactionable until independently verified.",
+  "next_action": "Priority: KR/US read-only Mock test for absent broker rt_cd status; red-before-fix, fail-closed patch, exact HEAD CI. UNKNOWN BUY fill attribution remains blocked.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
