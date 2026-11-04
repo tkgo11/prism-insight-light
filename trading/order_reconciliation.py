@@ -128,23 +128,23 @@ def _matched(row, *, order_no, order_date, ticker, account, product):
     # A single account/date/order identity cannot be both a BUY and SELL,
     # or refer to different instruments. Silently skipping a conflicting
     # later page would incorrectly preserve earlier EVIDENCE_ONLY matches.
-    if (_first(row, "pdno", "PDNO", "ovrs_pdno") != ticker
+    if (_first(row, "pdno", "PDNO", "ovrs_pdno", "OVRS_PDNO") != ticker
             or _first(row, "sll_buy_dvsn_cd", "sll_buy_dvsn", "SLL_BUY_DVSN_CD", "SLL_BUY_DVSN") != "02"):
         raise ValueError("target order ticker/side provenance mismatch")
-    ordered = _qty(_first(row, "ord_qty", "ORD_QTY", "ft_ord_qty"))
+    ordered = _qty(_first(row, "ord_qty", "ORD_QTY", "ft_ord_qty", "FT_ORD_QTY"))
     # Cumulative filled quantity and this execution's quantity are distinct KIS
     # facts. ccld_qty must not masquerade as a cumulative total or conflict
     # with a valid tot_ccld_qty / ft_ccld_qty on the same history row.
-    filled = _qty(_first(row, "tot_ccld_qty", "ft_ccld_qty"))
+    filled = _qty(_first(row, "tot_ccld_qty", "TOT_CCLD_QTY", "ft_ccld_qty", "FT_CCLD_QTY"))
     execution_qty = _qty(_first(row, "ccld_qty", "CCLD_QTY"))
-    remaining = _qty(_first(row, "rmn_qty", "nccs_qty", "ord_remn_qty"))
+    remaining = _qty(_first(row, "rmn_qty", "RMN_QTY", "nccs_qty", "NCCS_QTY", "ord_remn_qty", "ORD_REMN_QTY"))
     if execution_qty is not None and (
             (filled is not None and execution_qty > filled)
             or (ordered is not None and execution_qty > ordered)):
         raise ValueError("execution quantity exceeds cumulative or ordered quantity")
     if ordered is not None and ((filled or 0) + (remaining or 0) > ordered):
         raise ValueError("contradictory quantities")
-    execution_id = _first(row, "ccld_no", "ccld_seq", "CCLD_NO")
+    execution_id = _first(row, "ccld_no", "CCLD_NO", "ccld_seq", "CCLD_SEQ")
     if execution_id is not None and (
             not isinstance(execution_id, str)
             or re.fullmatch(r"[A-Za-z0-9]{1,40}", execution_id) is None):
@@ -447,7 +447,7 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
             "SLL_BUY_DVSN_CD", "SLL_BUY_DVSN",
         )
         for row in all_rows:
-            row_ticker = _first(row, "pdno", "PDNO", "ovrs_pdno")
+            row_ticker = _first(row, "pdno", "PDNO", "ovrs_pdno", "OVRS_PDNO")
             row_side = _first(row, *side_fields)
             if row_ticker != ticker or row_side != "02":
                 continue
@@ -491,7 +491,7 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
                     return result
             identity = (row_number, row_date)
             if identity in candidate_keys and (
-                _first(row, "pdno", "PDNO", "ovrs_pdno") != ticker
+                _first(row, "pdno", "PDNO", "ovrs_pdno", "OVRS_PDNO") != ticker
                 or _first(row, *side_fields) != "02"
             ):
                 return result
