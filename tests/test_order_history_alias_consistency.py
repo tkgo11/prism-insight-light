@@ -20,7 +20,7 @@ class _HistoryResponse:
         return True
 
     def getBody(self):
-        return SimpleNamespace(**{"output1" if self.market == "KR" else "output": [self.row]})
+        return SimpleNamespace(rt_cd="0", **{"output1" if self.market == "KR" else "output": [self.row]})
 
     def getHeader(self):
         return SimpleNamespace(tr_cont="")

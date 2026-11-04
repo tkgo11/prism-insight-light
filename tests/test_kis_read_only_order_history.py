@@ -24,6 +24,7 @@ class MockHistoryResponse:
 
     def getBody(self):
         data = {
+            "rt_cd": "0",
             "ctx_area_fk100": self.cursor if self.more else "",
             "ctx_area_nk100": self.cursor if self.more else "",
             "ctx_area_fk200": self.cursor if self.more else "",
