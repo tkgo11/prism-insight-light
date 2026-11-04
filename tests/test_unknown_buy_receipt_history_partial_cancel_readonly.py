@@ -165,7 +165,7 @@ def test_partial_cancel_residual_contradiction_discards_prior_page_and_keeps_fen
     assert result["status"] == "UNVERIFIED"
     assert result["complete"] is False
     assert result["can_activate_stop"] is False
-    assert (result.get("matches") or result.get("candidates")) == []
+    assert result["matches" if lookup == "exact" else "candidates"] == []
     assert ledger.path.read_bytes() == before
     assert ExecutionLedger(ledger.path).claim("pending") == (False, "unknown")
 
