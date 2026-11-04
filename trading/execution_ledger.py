@@ -215,6 +215,30 @@ class ExecutionLedger:
             raise RuntimeError("Automatic-trading execution ledger is unreadable")
         if not isinstance(data, dict) or not all(isinstance(value, dict) for value in data.values()):
             raise RuntimeError("Automatic-trading execution ledger has an invalid format")
+        for entry in data.values():
+            if "order_receipt" not in entry:
+                continue  # Legacy claims remain supported and fail closed elsewhere.
+            receipt = entry["order_receipt"]
+            try:
+                if not isinstance(receipt, dict) or set(receipt) != {"order_no", "observed_at"}:
+                    raise ValueError("Malformed persisted BUY receipt")
+                _validated_order_receipt({"order_no": receipt["order_no"]})
+                observed_at = receipt["observed_at"]
+                if not isinstance(observed_at, str):
+                    raise ValueError("Malformed receipt timestamp")
+                parsed_at = datetime.fromisoformat(observed_at)
+                if parsed_at.tzinfo is None or parsed_at.utcoffset() is None:
+                    raise ValueError("Receipt timestamp must be timezone-aware")
+                _validated_order_intent(entry["order_intent"])
+                # A recovered receipt proves possible broker acceptance.
+                # Never allow a retryable status, missing BUY provenance, or
+                # contradictory in-progress state to bypass the pending fence.
+                if entry.get("status") not in ("executed", "unknown") or entry.get("order_side") is not None:
+                    raise ValueError("Contradictory BUY receipt and ledger status")
+            except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                raise RuntimeError(
+                    "Automatic-trading ledger BUY receipt requires operator reconciliation"
+                ) from exc
         return data
 
     def _save(self, entries: dict[str, dict[str, Any]]) -> None:
