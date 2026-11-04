@@ -1,0 +1,239 @@
+{
+  "run_id": "prism-sync-2026-11-05T03-15-KST-core-risk",
+  "started_at": "2026-11-04T18:15:41Z",
+  "completed_at": "2026-11-04T18:20:00Z",
+  "status": "PROGRESSED_ONE_VERIFIED_DEFECT_FIXED_CORE_RISK_REMAINS_UNVERIFIED",
+  "core_risk_gate": {
+    "prior_stalled_count": "previous 02:21 run STALLED; historical >=2",
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_read_only_history_page_size_bound.py::test_exact_history_excess_rows_discard_all_partial_fill_evidence[KR/US x single/multi-page]",
+    "baseline_fail_observed": "YES: 4 genuine KR/US assertion failures on ef27731a, Actions 41877262273 push and 41877272358 PR; 2079 passed",
+    "mock_result": "FIXED_GREEN: 2083 passed on b3ee268a, Actions 41885719005 push and 41885732800 PR; Windows smoke + Docker success",
+    "code_fix_commit": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+    "latest_head_CI": [
+      {
+        "id": 41885719005,
+        "event": "push",
+        "sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 41885732800,
+        "event": "pull_request",
+        "sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "unverified_transitions": [
+      "UNKNOWN BUY to account/date/order attribution",
+      "Durable account-scoped fill-ID cumulative/remaining/cancel binding",
+      "Partial cancel finality",
+      "Confirmed fill to stop-loss activation",
+      "KR/US multi-account broker E2E",
+      "KIS demo integration"
+    ],
+    "exact_blocker": "Authoritative reconciliation path not implemented/verified; no KIS demo credentials for demo only; no independent 2+2 audit/review; protection read not verified (anonymous 401; prior authenticated 403)",
+    "evidence_delta": "4 actual red assertions (2079 pass) -> 2083 exact-head pytest PASS after single production guard fix; source blob 7fefd4->078dec; 1 additional test file fully audited; 220-file merge tree compared to prior manifest with exactly 1 changed blob",
+    "next_exact_action": "Write/read-only KR/US Mock for account+date+order+execution-ID binding and cancellation/remaining reconciliation after UNKNOWN BUY, prove red before any new production changes; preserve durable pending fence and never auto-activate stop on unverified fills"
+  },
+  "candidate_count": 1,
+  "validated_candidates": 1,
+  "reproduced_defects": 1,
+  "actual_code_fixes": 1,
+  "deferred_candidates": 0,
+  "candidate_count_reason": "Core risk still has unverified order-to-fill-to-stop-loss transitions; prioritized verified exact-history overflow fix over unrelated 10-candidate search.",
+  "attempted_reproductions": {
+    "baseline_failed_cases": 4,
+    "baseline_passed": 2079,
+    "green_tests_passed": 2083
+  },
+  "regression_tests_added_and_run": {
+    "added_this_run": 0,
+    "prior_run_added": 6,
+    "run_this_run": 6,
+    "full_suite_passed": 2083
+  },
+  "changed_files": [
+    "trading/order_reconciliation.py"
+  ],
+  "source_blob_sha": "078dec1b9e71e4e6862932bb500afdc671c99786",
+  "test_blob_sha": "b4095ae9fbde16cd67020214b7a14b43dd371793",
+  "verified_paths": [
+    "Exact KR/US read-only history 2001 single-page/1200+801 multi-page overflow rejects all evidence",
+    "Exact KR/US 1200+800 boundary remains non-actionable evidence only",
+    "GitHub Actions current HEAD 2083 pytest, Windows runtime smoke, Docker build success",
+    "Merge-result tree 220 tracked files; only trading/order_reconciliation.py blob changed from previous manifest"
+  ],
+  "unverified_paths": [
+    "UNKNOWN signal to authoritative account/date/order/fill attribution",
+    "Durable fill-ID/cumulative/remaining/cancel reconciliation",
+    "Confirmed partial fill to safe stop-loss activation",
+    "KR/US multi-account broker E2E",
+    "KIS demo integration",
+    "Branch protection requirements and Qlty issue count"
+  ],
+  "financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "UNKNOWN",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "지연 체결",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "부분체결",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "취소/거절",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "중복 통지",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "잔여량",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "다계좌 격리",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "재시작",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    },
+    {
+      "transition": "복구 및 재조정",
+      "scope": "KR/US, single/multi account where applicable",
+      "current_head_mock": "2083 pytest PASS includes existing fail-closed tests; does not prove broker fill attribution",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified": "Authoritative durable order/fill/cancel/remaining attribution and safe stop-loss activation not end-to-end verified"
+    }
+  ],
+  "complete_related_files": 67,
+  "total_related_files": 188,
+  "complete_all_files": 67,
+  "total_all_files": 220,
+  "audit_PASS": {
+    "related": "0/2",
+    "full": "0/2"
+  },
+  "current_pr": 43,
+  "pr_draft": true,
+  "current_HEAD": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+  "current_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "upstream_head": "6437aac71699c2ce565202263ad8f94ce6e59940",
+  "merge_result_commit": "be74bf9f25a12c081e7778af8c7fe4cb55abb84e",
+  "merge_result_tree": "0f017dffdfd36252cdede33159b1d7fe902e123f",
+  "CI": [
+    {
+      "id": 41877262273,
+      "sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+      "conclusion": "failure",
+      "kind": "baseline push"
+    },
+    {
+      "id": 41877272358,
+      "sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+      "conclusion": "failure",
+      "kind": "baseline PR"
+    },
+    {
+      "id": 41885719005,
+      "sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+      "conclusion": "success",
+      "kind": "fix push"
+    },
+    {
+      "id": 41885732800,
+      "sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+      "conclusion": "success",
+      "kind": "fix PR"
+    }
+  ],
+  "external": {
+    "snyk": "status success on current SHA; issue count not independently confirmed",
+    "qlty": "status success on current SHA; unresolved issue count not independently confirmed",
+    "review": "0 submitted reviews",
+    "branch_protection": "not verified: unauthenticated API 401, prior authenticated 403",
+    "kis_demo": "BLOCKED_NO_CREDENTIALS_ONLY_FOR_DEMO",
+    "live_orders": "NOT_RUN_PROHIBITED"
+  },
+  "CAS": {
+    "lock_acquired_commit": "4eaec0cc205fa707ed6666a5cb70ebfbce3f1869",
+    "lock_owner": "prism-sync-2026-11-05T03-15-KST-core-risk",
+    "expected_pr_head": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+    "lock_release": "SAME_ATOMIC_CAS_COMMIT"
+  },
+  "unresolved_blockers": [
+    "Durable broker order/fill/cancel attribution unverified",
+    "Confirmed fill to stop-loss activation unverified",
+    "Qlty/Snyk issue counts not verified",
+    "Branch protection read unavailable",
+    "Independent review and 2+2 audit missing",
+    "KIS demo credentials for demo integration only"
+  ],
+  "next_exact_action": "Add Mock regression of UNKNOWN BUY -> authoritative account-scoped order/date/execution-ID partial/cancel/remaining proof -> persistent ledger -> safe stop-loss activation; prove baseline red, then fix full affected graph without real orders."
+}

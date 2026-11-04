@@ -1,20 +1,22 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "ACTIVE_DRAFT_CORE_RISK_BASELINE_RED_REMEDIATION",
+  "state": "ACTIVE_DRAFT_CORE_RISK_EXACT_HISTORY_GUARD_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
   "phase": "related_code_audit",
   "run": {
     "run_id": "prism-sync-2026-11-05T03-15-KST-core-risk",
     "previous_run_id": "prism-sync-2026-11-05T02-21-KST-core-risk",
     "started_at": "2026-11-04T18:15:41Z",
-    "completed_at": null,
-    "status": "RUNNING",
-    "lock_owner": "prism-sync-2026-11-05T03-15-KST-core-risk",
-    "lock_acquired_commit": "THIS_ATOMIC_CAS_COMMIT",
+    "completed_at": "2026-11-04T18:20:00Z",
+    "status": "RELEASED",
+    "lock_owner": null,
+    "lock_acquired_commit": "4eaec0cc205fa707ed6666a5cb70ebfbce3f1869",
     "lock_expected_pr_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
-    "lock_released": false,
+    "lock_released": true,
     "related_pass": false,
-    "full_pass": false
+    "full_pass": false,
+    "final_pr_head_sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+    "evidence_commit": "THIS_ATOMIC_CAS_COMMIT"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -34,11 +36,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+    "head_sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_BASELINE_RED_FIX_IN_PROGRESS",
+    "status": "DRAFT_MOCK_CI_GREEN_CORE_ATTRIBUTION_UNVERIFIED",
     "base_ref": "main"
   },
   "candidates": [
@@ -52,33 +54,33 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "INCOMPLETE_TEST_FIRST_CI_QUEUED",
-    "checksum": "f04b8f34232ccdfac0a05b0cb901619b8d58e493",
+    "status": "INCOMPLETE_CORE_ATTRIBUTION_UNVERIFIED",
+    "checksum": "b7d2460929b600643b46a66faed2973b89100050",
     "checksum_kind": "git_blob_sha1",
     "scope_estimate": 188,
-    "files_fully_audited": 66,
+    "files_fully_audited": 67,
     "files_file_level_inspected": 184,
     "files_targeted_path_review": 25,
-    "head_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+    "head_sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
     "source_head_sha": "6437aac71699c2ce565202263ad8f94ce6e59940",
-    "git_tree_sha": "2837643f577b879868a2e84ec05fd158ebbb2f59",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T02-21-KST-related.json",
-    "sha": "f04b8f34232ccdfac0a05b0cb901619b8d58e493",
-    "merge_result_sha": "2837643f577b879868a2e84ec05fd158ebbb2f59"
+    "git_tree_sha": "0f017dffdfd36252cdede33159b1d7fe902e123f",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T03-15-KST-related.json",
+    "sha": "b7d2460929b600643b46a66faed2973b89100050",
+    "merge_result_sha": "be74bf9f25a12c081e7778af8c7fe4cb55abb84e"
   },
   "full_manifest": {
-    "status": "INCOMPLETE_TEST_FIRST_CI_QUEUED",
-    "checksum": "d73e8d0df8004eb8da60cf53a51057f42f8865a5",
+    "status": "INCOMPLETE_CORE_ATTRIBUTION_UNVERIFIED",
+    "checksum": "2758ea2eee145d567a870da6593fbf61b236cb55",
     "checksum_kind": "git_blob_sha1",
-    "sha": "d73e8d0df8004eb8da60cf53a51057f42f8865a5",
+    "sha": "2758ea2eee145d567a870da6593fbf61b236cb55",
     "files_checked": 207,
-    "fully_audited_files": 66,
+    "fully_audited_files": 67,
     "file_count": 220,
     "files_targeted_path_review": 25,
-    "git_tree_sha": "2837643f577b879868a2e84ec05fd158ebbb2f59",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T02-21-KST-full.json",
-    "head_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
-    "merge_result_sha": "2837643f577b879868a2e84ec05fd158ebbb2f59",
+    "git_tree_sha": "0f017dffdfd36252cdede33159b1d7fe902e123f",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T03-15-KST-full.json",
+    "head_sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+    "merge_result_sha": "be74bf9f25a12c081e7778af8c7fe4cb55abb84e",
     "files_file_level_inspected": 208
   },
   "checks": [
@@ -2211,6 +2213,28 @@
           "state": "success",
           "description": "89 blocking issues"
         }
+      ]
+    },
+    {
+      "run_id": 41885719005,
+      "head_sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite 2083 passed",
+        "Windows runtime smoke success",
+        "Docker build success"
+      ]
+    },
+    {
+      "run_id": 41885732800,
+      "head_sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite 2083 passed",
+        "Windows runtime smoke success",
+        "Docker build success"
       ]
     }
   ],
@@ -20991,5 +21015,41 @@
       "decision": "DEFERRED_PENDING_CI",
       "test_first_commit": "ef27731a20bbd478f06247045cb3fc3992ae9646"
     }
-  ]
+  ],
+  "last_run_report_path": ".automation/prism-upstream-sync/runs/2026-11-05T03-15-KST.json",
+  "last_core_risk_gate": {
+    "prior_stalled_count": "previous 02:21 run STALLED; historical >=2",
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_read_only_history_page_size_bound.py::test_exact_history_excess_rows_discard_all_partial_fill_evidence[KR/US x single/multi-page]",
+    "baseline_fail_observed": "YES: 4 genuine KR/US assertion failures on ef27731a, Actions 41877262273 push and 41877272358 PR; 2079 passed",
+    "mock_result": "FIXED_GREEN: 2083 passed on b3ee268a, Actions 41885719005 push and 41885732800 PR; Windows smoke + Docker success",
+    "code_fix_commit": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+    "latest_head_CI": [
+      {
+        "id": 41885719005,
+        "event": "push",
+        "sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 41885732800,
+        "event": "pull_request",
+        "sha": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "unverified_transitions": [
+      "UNKNOWN BUY to account/date/order attribution",
+      "Durable account-scoped fill-ID cumulative/remaining/cancel binding",
+      "Partial cancel finality",
+      "Confirmed fill to stop-loss activation",
+      "KR/US multi-account broker E2E",
+      "KIS demo integration"
+    ],
+    "exact_blocker": "Authoritative reconciliation path not implemented/verified; no KIS demo credentials for demo only; no independent 2+2 audit/review; protection read not verified (anonymous 401; prior authenticated 403)",
+    "evidence_delta": "4 actual red assertions (2079 pass) -> 2083 exact-head pytest PASS after single production guard fix; source blob 7fefd4->078dec; 1 additional test file fully audited; 220-file merge tree compared to prior manifest with exactly 1 changed blob",
+    "next_exact_action": "Write/read-only KR/US Mock for account+date+order+execution-ID binding and cancellation/remaining reconciliation after UNKNOWN BUY, prove red before any new production changes; preserve durable pending fence and never auto-activate stop on unverified fills"
+  }
 }
