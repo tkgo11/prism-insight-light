@@ -7,6 +7,26 @@ def _get(obj, key, default=None):
     return obj.get(key, default) if isinstance(obj, dict) else getattr(obj, key, default)
 
 
+def _cursor_component(body, lower_key, upper_key):
+    """Reject contradictory pagination cursor spellings before using a page.
+
+    KIS wrapper responses may expose lower/upper-case cursor fields. Two
+    different values cannot identify a trustworthy next page, even when the
+    lower-case value happens to lead to plausible fill/cancel records.
+    """
+    missing = object()
+    lower = _get(body, lower_key, missing)
+    upper = _get(body, upper_key, missing)
+    if (lower is not missing and upper is not missing
+            and (type(lower) is not type(upper) or lower != upper)):
+        raise ValueError("conflicting KIS pagination cursor aliases")
+    if lower is not missing:
+        return lower
+    if upper is not missing:
+        return upper
+    return ""
+
+
 def _first(row, *keys):
     """Read a broker field without silently preferring contradictory aliases.
 
@@ -280,7 +300,8 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                 return result
             if continuation not in ("M", "F"):
                 return result
-            cursor = (_get(body, fk.lower(), ""), _get(body, nk.lower(), ""))
+            cursor = (_cursor_component(body, fk.lower(), fk),
+                      _cursor_component(body, nk.lower(), nk))
             if not all(isinstance(c, str) for c in cursor) or not any(cursor) or cursor in cursors:
                 return result
             cursors.add(cursor)
@@ -386,7 +407,8 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
                 break
             if continuation not in ("M", "F"):
                 return result
-            cursor = (_get(body, fk.lower(), ""), _get(body, nk.lower(), ""))
+            cursor = (_cursor_component(body, fk.lower(), fk),
+                      _cursor_component(body, nk.lower(), nk))
             if (not all(isinstance(c, str) for c in cursor)
                     or not any(cursor) or cursor in cursors):
                 return result
