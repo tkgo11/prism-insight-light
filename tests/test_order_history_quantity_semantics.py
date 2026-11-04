@@ -131,3 +131,28 @@ def test_restart_and_account_scope_remain_nonactionable(market):
     assert a["matches"] == b["matches"]
     assert a["account_scope"] != b["account_scope"]
     assert a["can_activate_stop"] is b["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("fields", [
+    {"tot_ccld_qty": "1", "ccld_qty": "2"},
+    {"ord_qty": "1", "ccld_qty": "2"},
+    {"ccld_qty": "-1"},
+    {"ccld_qty": "２"},
+    {"ccld_qty": True},
+    {"ccld_qty": "NaN"},
+])
+def test_invalid_per_execution_quantity_never_becomes_fill_evidence(market, fields):
+    row = _row(market, **fields)
+    result, _ = _read(market, [HistoryResponse(market, [row])])
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["matches"] == []
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_conflicting_execution_quantity_aliases_fail_closed(market):
+    row = _row(market, tot_ccld_qty="6", ccld_qty="2", CCLD_QTY="3")
+    result, _ = _read(market, [HistoryResponse(market, [row])])
+    assert result["status"] == "UNVERIFIED"
+    assert result["matches"] == []
