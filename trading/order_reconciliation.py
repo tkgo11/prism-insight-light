@@ -46,7 +46,11 @@ def _matched(row, *, order_no, order_date, ticker, account, product):
     for key, value in (("cano", account), ("CANO", account),
                        ("acnt_prdt_cd", product), ("ACNT_PRDT_CD", product)):
         if key in row and row[key] != value:
-            return None
+            # The row already identifies the requested BUY order.  A foreign
+            # account or account-product code is contradictory broker evidence,
+            # not an unrelated row that may be silently skipped.  Invalidate
+            # the entire paginated inquiry, including earlier matches.
+            raise ValueError("target order account/product provenance mismatch")
     ordered = _qty(_first(row, "ord_qty", "ORD_QTY", "ft_ord_qty"))
     # Cumulative filled quantity and this execution's quantity are distinct KIS
     # facts. ccld_qty must not masquerade as a cumulative total or conflict
