@@ -35,6 +35,20 @@ def _qty(value):
     return int(value)
 
 
+def _exceeds_known_order_bound(match, known_order_quantity):
+    """Cross-row quantity evidence must respect the order's known bound.
+
+    Some broker history snapshots omit ord_qty. A different row for the same
+    account/date/order can still establish the submitted quantity. Never
+    promote such an inconsistent snapshot to read-only evidence.
+    """
+    return (
+        (match["filled_quantity"] or 0)
+        + (match["remaining_quantity"] or 0)
+        > known_order_quantity
+    )
+
+
 def _matched(row, *, order_no, order_date, ticker, account, product):
     if not isinstance(row, dict):
         raise ValueError("malformed history row")
@@ -239,6 +253,13 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                         and max_cumulative_quantity is not None
                         and total_execution_quantity > max_cumulative_quantity):
                     return result
+                # A snapshot omitting ord_qty must still obey a submitted
+                # quantity established by another row of this exact order.
+                if order_quantities:
+                    known_order_quantity = next(iter(order_quantities))
+                    if any(_exceeds_known_order_bound(match, known_order_quantity)
+                           for match in matches):
+                        return result
                 result.update(status="EVIDENCE_ONLY", complete=True, matches=matches)
                 return result
             if continuation not in ("M", "F"):
@@ -420,7 +441,9 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
             identity = (match["order_no"], match["order_date"])
             state = per_order.setdefault(identity, dict(
                 ordered=set(), executions={}, cumulative_ids=set(), max_cum=None,
+                snapshots=[],
             ))
+            state["snapshots"].append(match)
             ordered = match["order_quantity"]
             if ordered is not None:
                 state["ordered"].add(ordered)
@@ -448,6 +471,13 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
                 signatures.add(signature)
                 candidates.append(match)
         for state in per_order.values():
+            # A known submitted quantity applies to every snapshot of this
+            # account/date/order, even when an individual row omits ord_qty.
+            if state["ordered"]:
+                known_order_quantity = next(iter(state["ordered"]))
+                if any(_exceeds_known_order_bound(match, known_order_quantity)
+                       for match in state["snapshots"]):
+                    return result
             total = sum(state["executions"].values())
             if state["ordered"] and total > next(iter(state["ordered"])):
                 return result
