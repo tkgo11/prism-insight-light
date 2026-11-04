@@ -75,11 +75,13 @@
       "conclusion": "success"
     }
   ],
-  "last_updated_at": "2026-11-04T23:28:30.239Z",
+  "last_updated_at": "2026-11-04T23:28:56.138Z",
   "next_exact_action": "Test-first read-only broker-authoritative account+date+order+execution correlation against durable UNKNOWN BUY intent; do not clear fence or activate stop without authoritative proof",
   "related_manifest_sha": "e6de8e3b3fa98499721cb1b2ba422ecd697012be",
   "full_manifest_sha": "fb95aca24368f8ca522b33eb6b8936bc413f6251",
   "cas": {
-    "lock_status": "ACTIVE_PENDING_RELEASE"
+    "evidence_commit": "d9abe0fdb02a7770085f451a4f7f8074a440e474",
+    "lock_status": "RELEASED",
+    "released_at": "2026-11-04T23:28:56.138Z"
   }
 }

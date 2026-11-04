@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-2026-11-05T08-21-KST-core-risk",
   "started_at": "2026-11-04T23:23:00.445Z",
-  "completed_at": "2026-11-04T23:28:30.239Z",
+  "completed_at": "2026-11-04T23:28:56.138Z",
   "status": "PROGRESSED_MOCK_EVIDENCE_CORE_ATTRIBUTION_UNVERIFIED",
   "core_risk_gate": {
     "prior_stalled_count": 0,
@@ -363,8 +363,10 @@
   "full_manifest_sha": "fb95aca24368f8ca522b33eb6b8936bc413f6251",
   "cas": {
     "lock_acquired_commit": "598688b7ae14327219148b53365fdbba047c14ca",
-    "lock_released": false,
-    "state_commit": null
+    "evidence_commit": "d9abe0fdb02a7770085f451a4f7f8074a440e474",
+    "lock_released": true,
+    "release_time": "2026-11-04T23:28:56.138Z",
+    "release_status": "CAS_RELEASED_AFTER_EVIDENCE_COMMIT"
   },
   "next_exact_action": "Test-first read-only broker-authoritative account+date+order+execution correlation against durable UNKNOWN BUY intent; do not clear fence or activate stop without authoritative proof"
 }

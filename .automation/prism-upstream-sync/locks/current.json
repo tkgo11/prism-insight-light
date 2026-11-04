@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-05T08-21-KST-core-risk",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "expected_state_head": "a08b75b16fc280252233bb1c6e4d10298921eee3",
   "expected_pr_head": "398bd17fe76f61bf17524d127383891e199ac2f1",
   "created_at": "2026-11-04T23:23:00.445Z",
   "purpose": "KR/US read-only UNKNOWN BUY receipt/history/partial-cancel/restart mock evidence",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "released_at": "2026-11-04T23:28:56.138Z",
+  "evidence_commit": "d9abe0fdb02a7770085f451a4f7f8074a440e474",
+  "reason": "24 KR/US mock cases passed after 4 test-only assertion errors corrected; 2315 exact-HEAD pytest, 167 Windows, Docker PASS; no product fix; core broker attribution remains unverified; independent 2+2 zero"
 }
