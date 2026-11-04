@@ -154,3 +154,29 @@ def test_identical_cursor_aliases_remain_bounded_and_nonactionable(
     assert result["complete"] is True
     assert result["can_activate_stop"] is False
     assert len(result["matches" if lookup == "exact" else "candidates"]) == 2
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+def test_conflicting_continuation_header_aliases_discard_history(
+    market, lookup, scope,
+):
+    """tr_cont=M and TR_CONT=D cannot both describe one broker page.
+
+    A contradiction must stop before fetching the next partial/cancel page,
+    even if the lower-case alias would otherwise produce plausible evidence.
+    """
+    first = HistoryPage(market, [
+        history_row(market, "FILL1", cumulative=4, remaining=6),
+    ], more=True)
+    first.getHeader = lambda: SimpleNamespace(tr_cont="M", TR_CONT="D")
+    second = HistoryPage(market, [
+        history_row(market, "FILL2", cumulative=8, remaining=0, cancel="Y"),
+    ])
+    result, calls = inquiry(market, lookup, [first, second], scope)
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result.get("matches", result.get("candidates", [])) == []
+    assert result["can_activate_stop"] is False
+    assert len(calls) == 1
