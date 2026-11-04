@@ -251,3 +251,199 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
         except (AttributeError, TypeError, ValueError, RuntimeError, OSError, KeyError):
             return result
     return result
+
+
+def discover_buy_order_candidates(trader, *, market, ticker, start_date,
+                                  end_date, max_pages=5):
+    """Bounded account-scoped UNKNOWN BUY history discovery, strictly read-only.
+
+    Returns possible order IDs and execution/cancel/remaining evidence, NEVER
+    broker-authoritative attribution of an unknown signal. Even one candidate
+    is insufficient to clear an UNKNOWN ledger fence or activate a stop-loss.
+    Dates are caller-supplied; no local/server clock is used to infer a KIS
+    trading date. No broker order or ledger/tracker mutation is performed.
+    """
+    if market not in ("KR", "US"):
+        raise ValueError("unknown market")
+    ticker_pattern = r"[0-9]{6}" if market == "KR" else r"[A-Z0-9.]{1,16}"
+    if not isinstance(ticker, str) or re.fullmatch(ticker_pattern, ticker) is None:
+        raise ValueError("invalid ticker")
+    if type(max_pages) is not int or not 1 <= max_pages <= 20:
+        raise ValueError("invalid page limit")
+    parsed_dates = []
+    for value in (start_date, end_date):
+        if not isinstance(value, str) or re.fullmatch(r"[0-9]{8}", value) is None:
+            raise ValueError("invalid discovery date")
+        try:
+            parsed_dates.append(datetime.strptime(value, "%Y%m%d"))
+        except ValueError as exc:
+            raise ValueError("invalid discovery date") from exc
+    if not 0 <= (parsed_dates[1] - parsed_dates[0]).days <= 6:
+        raise ValueError("discovery window must be 1 to 7 inclusive days")
+    env = getattr(trader, "trenv", None)
+    account, product, scope = (
+        getattr(env, "my_acct", None), getattr(env, "my_prod", None),
+        getattr(trader, "account_key", None),
+    )
+    if not all(isinstance(x, str) and x for x in (account, product, scope)):
+        raise ValueError("missing account provenance")
+    mode = getattr(trader, "mode", None)
+    if mode not in ("demo", "real"):
+        raise ValueError("unknown broker mode")
+    result = dict(
+        market=market, account_scope=scope, ticker=ticker,
+        start_date=start_date, end_date=end_date,
+        status="UNVERIFIED", complete=False, can_activate_stop=False,
+        candidates=[],
+    )
+    if market == "KR":
+        path = "/uapi/domestic-stock/v1/trading/inquire-daily-ccld"
+        tr_id = "VTTC0081R" if mode == "demo" else "TTTC0081R"
+        params = dict(
+            CANO=account, ACNT_PRDT_CD=product,
+            INQR_STRT_DT=start_date, INQR_END_DT=end_date,
+            SLL_BUY_DVSN_CD="02", PDNO=ticker, CCLD_DVSN="00",
+            INQR_DVSN="00", INQR_DVSN_3="00", ORD_GNO_BRNO="",
+            ODNO="", INQR_DVSN_1="", CTX_AREA_FK100="", CTX_AREA_NK100="",
+        )
+        fk, nk, output = "CTX_AREA_FK100", "CTX_AREA_NK100", "output1"
+    else:
+        path = "/uapi/overseas-stock/v1/trading/inquire-ccnl"
+        tr_id = "VTTS3035R" if mode == "demo" else "TTTS3035R"
+        params = dict(
+            CANO=account, ACNT_PRDT_CD=product,
+            PDNO="" if mode == "demo" else "%",
+            ORD_STRT_DT=start_date, ORD_END_DT=end_date,
+            SLL_BUY_DVSN="00" if mode == "demo" else "02",
+            CCLD_NCCS_DVSN="00", SORT_SQN="DS", ORD_DT="",
+            ORD_GNO_BRNO="", ODNO="",
+            OVRS_EXCG_CD="" if mode == "demo" else "%",
+            CTX_AREA_FK200="", CTX_AREA_NK200="",
+        )
+        fk, nk, output = "CTX_AREA_FK200", "CTX_AREA_NK200", "output"
+    cursors, all_rows = set(), []
+    for page in range(max_pages):
+        try:
+            response = trader._request(
+                path, tr_id, dict(params), tr_cont="N" if page else "",
+            )
+            if not response.isOK():
+                return result
+            body, header = response.getBody(), response.getHeader()
+            missing = object()
+            statuses = [_get(body, key, missing) for key in ("rt_cd", "RT_CD")]
+            statuses = [value for value in statuses if value is not missing]
+            if not statuses or any(type(value) is not str or value != "0"
+                                   for value in statuses):
+                return result
+            rows = _get(body, output)
+            if isinstance(rows, dict):
+                rows = [rows]
+            if not isinstance(rows, list) or len(all_rows) + len(rows) > 2000:
+                return result
+            if not all(isinstance(row, dict) for row in rows):
+                return result
+            all_rows.extend(rows)
+            continuation = _get(header, "tr_cont")
+            if continuation in ("", "D", "E"):
+                break
+            if continuation not in ("M", "F"):
+                return result
+            cursor = (_get(body, fk.lower(), ""), _get(body, nk.lower(), ""))
+            if (not all(isinstance(c, str) for c in cursor)
+                    or not any(cursor) or cursor in cursors):
+                return result
+            cursors.add(cursor)
+            params[fk], params[nk] = cursor
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError, KeyError):
+            return result
+    else:
+        return result
+
+    try:
+        candidate_keys, matched = set(), []
+        side_fields = (
+            "sll_buy_dvsn_cd", "sll_buy_dvsn",
+            "SLL_BUY_DVSN_CD", "SLL_BUY_DVSN",
+        )
+        for row in all_rows:
+            row_ticker = _first(row, "pdno", "PDNO", "ovrs_pdno")
+            row_side = _first(row, *side_fields)
+            if row_ticker != ticker or row_side != "02":
+                continue
+            order_no = _first(row, "odno", "ODNO")
+            order_date = _first(row, "ord_dt", "ORD_DT")
+            if (not isinstance(order_no, str)
+                    or re.fullmatch(r"[0-9]{1,20}", order_no) is None
+                    or not order_no.strip("0")):
+                return result
+            if (not isinstance(order_date, str)
+                    or re.fullmatch(r"[0-9]{8}", order_date) is None):
+                return result
+            parsed_date = datetime.strptime(order_date, "%Y%m%d")
+            if not parsed_dates[0] <= parsed_date <= parsed_dates[1]:
+                return result
+            match = _matched(
+                row, order_no=order_no, order_date=order_date,
+                ticker=ticker, account=account, product=product,
+            )
+            if match is None:
+                return result
+            candidate_keys.add((order_no, order_date))
+            matched.append(match)
+        # A single account/date/order number cannot identify two instruments
+        # or both BUY and SELL. Inspect the entire page set, not just rows
+        # encountered after a candidate was first seen.
+        for row in all_rows:
+            identity = (_first(row, "odno", "ODNO"),
+                        _first(row, "ord_dt", "ORD_DT"))
+            if identity in candidate_keys and (
+                _first(row, "pdno", "PDNO", "ovrs_pdno") != ticker
+                or _first(row, *side_fields) != "02"
+            ):
+                return result
+        versions, signatures, candidates, per_order = {}, set(), [], {}
+        for match in matched:
+            identity = (match["order_no"], match["order_date"])
+            state = per_order.setdefault(identity, dict(
+                ordered=set(), executions={}, cumulative_ids=set(), max_cum=None,
+            ))
+            ordered = match["order_quantity"]
+            if ordered is not None:
+                state["ordered"].add(ordered)
+                if len(state["ordered"]) > 1:
+                    return result
+            execution_id = match["execution_id"]
+            key = (*identity, execution_id)
+            if key in versions and versions[key] != match:
+                return result
+            versions[key] = match
+            qty, cumulative = (
+                match["execution_quantity"], match["filled_quantity"],
+            )
+            if cumulative is not None:
+                state["max_cum"] = (
+                    cumulative if state["max_cum"] is None
+                    else max(state["max_cum"], cumulative)
+                )
+            if execution_id is not None and qty is not None:
+                state["executions"][execution_id] = qty
+                if cumulative is not None:
+                    state["cumulative_ids"].add(execution_id)
+            signature = tuple(match.values())
+            if signature not in signatures:
+                signatures.add(signature)
+                candidates.append(match)
+        for state in per_order.values():
+            total = sum(state["executions"].values())
+            if state["ordered"] and total > next(iter(state["ordered"])):
+                return result
+            if (state["executions"]
+                    and len(state["cumulative_ids"]) == len(state["executions"])
+                    and state["max_cum"] is not None
+                    and total > state["max_cum"]):
+                return result
+        result.update(status="CANDIDATES_ONLY", complete=True, candidates=candidates)
+        return result
+    except (AttributeError, TypeError, ValueError, RuntimeError, OSError, KeyError):
+        return result
