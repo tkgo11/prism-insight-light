@@ -1,6 +1,6 @@
 {
   "run_id": "prism-sync-2026-11-04T23-21-KST-turn11",
-  "status": "RUNNING",
+  "status": "RELEASED",
   "expected_state_head": "0138aa0daeb3fbb7452bd1d5d27a3b7e0c15f728",
   "expected_pr_head": "9714e65283a02f3df98ca29b8c275578cb10f11b",
   "created_at": "2026-11-04T14:23:07.964Z",
@@ -10,5 +10,8 @@
   "audit_passes": {
     "related": 0,
     "full": 0
-  }
+  },
+  "released_at": "2026-11-04T14:31:25.230Z",
+  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
+  "reason": "12 KR/US genuine read-only order-history quantity assertions fixed; 16 new mock cases; exact-head 2059/2069 CI green; 64/185 related, 64/217 full; 0/2+0/2, no real/demo orders"
 }

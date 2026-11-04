@@ -4,15 +4,15 @@
   "state": "ACTIVE_DRAFT_CORE_RISK_UNVERIFIED",
   "phase": "related_code_audit",
   "run": {
-    "run_id": "prism-sync-2026-11-04T22-22-KST-gpt6",
-    "previous_run_id": "prism-sync-2026-11-04T21-18-KST-turn11",
-    "started_at": "2026-11-04T13:23:52.297Z",
-    "completed_at": "2026-11-04T13:35:02.295Z",
+    "run_id": "prism-sync-2026-11-04T23-21-KST-turn11",
+    "previous_run_id": "prism-sync-2026-11-04T22-22-KST-gpt6",
+    "started_at": "2026-11-04T14:23:07.964Z",
+    "completed_at": "2026-11-04T14:31:20.715Z",
     "status": "RELEASED",
     "lock_owner": null,
-    "lock_acquired_commit": "c8bf8e424b9009b83f99f2d42f2aca214472ed19",
-    "lock_expected_pr_sha": "c52e7eadc06e71206f58b660b40d7a36a1858f6f",
-    "final_pr_head_sha": "9714e65283a02f3df98ca29b8c275578cb10f11b",
+    "lock_acquired_commit": "bd6ccb37ecc769c66e66f65d26caf5f13b7526e1",
+    "lock_expected_pr_sha": "9714e65283a02f3df98ca29b8c275578cb10f11b",
+    "final_pr_head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
     "related_pass": false,
     "full_pass": false,
     "lock_released": true,
@@ -39,11 +39,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "9714e65283a02f3df98ca29b8c275578cb10f11b",
+    "head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_READ_ONLY_UNKNOWN_CANDIDATE_DISCOVERY_CI_GREEN_ATTRIBUTION_UNVERIFIED",
+    "status": "DRAFT_CROSS_ROW_BOUNDS_MOCK_PATCHED_ATTRIBUTION_UNVERIFIED",
     "base_ref": "main"
   },
   "candidates": [
@@ -57,33 +57,33 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "INCOMPLETE_CURRENT_MERGE_TREE_READ_ONLY_DISCOVERY_PATCHED",
-    "checksum": "7591bfd3efaa79fbf51fce76bafb785257ed1633",
+    "status": "INCOMPLETE_CURRENT_MERGE_TREE_CROSS_ROW_BOUND_PATCHED",
+    "checksum": "ee966269c71a50aace4c2243915f01a139b9b798",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 184,
-    "files_fully_audited": 63,
-    "files_file_level_inspected": 180,
-    "files_targeted_path_review": 20,
-    "head_sha": "9714e65283a02f3df98ca29b8c275578cb10f11b",
+    "scope_estimate": 185,
+    "files_fully_audited": 64,
+    "files_file_level_inspected": 181,
+    "files_targeted_path_review": 22,
+    "head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
     "source_head_sha": "6437aac71699c2ce565202263ad8f94ce6e59940",
-    "git_tree_sha": "31e131e1019f2fc05b9a1e53eba1bbd44623782e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T22-22-KST-related.json",
-    "sha": "7591bfd3efaa79fbf51fce76bafb785257ed1633",
-    "merge_result_sha": "b0a4a91c33e005bee511f70a9d15fb335c25d2a4"
+    "git_tree_sha": "7d77f9cfe9e58a5870191704688c62b065eb86b7",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T23-21-KST-related.json",
+    "sha": "ee966269c71a50aace4c2243915f01a139b9b798",
+    "merge_result_sha": "b28c1ff653521f90273ce48faa968ddba38ac289"
   },
   "full_manifest": {
-    "status": "INCOMPLETE_CURRENT_MERGE_TREE_READ_ONLY_DISCOVERY_PATCHED",
-    "checksum": "ebc50b75325a3508c646e2ba47b8930c05a492ff",
+    "status": "INCOMPLETE_CURRENT_MERGE_TREE_CROSS_ROW_BOUND_PATCHED",
+    "checksum": "46daafbc3634a988710747d42a3e97947b3e1a47",
     "checksum_kind": "git_blob_sha1",
-    "sha": "ebc50b75325a3508c646e2ba47b8930c05a492ff",
-    "files_checked": 204,
-    "fully_audited_files": 63,
-    "file_count": 216,
-    "files_targeted_path_review": 20,
-    "git_tree_sha": "31e131e1019f2fc05b9a1e53eba1bbd44623782e",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T22-22-KST-full.json",
-    "head_sha": "9714e65283a02f3df98ca29b8c275578cb10f11b",
-    "merge_result_sha": "b0a4a91c33e005bee511f70a9d15fb335c25d2a4"
+    "sha": "46daafbc3634a988710747d42a3e97947b3e1a47",
+    "files_checked": 205,
+    "fully_audited_files": 64,
+    "file_count": 217,
+    "files_targeted_path_review": 22,
+    "git_tree_sha": "7d77f9cfe9e58a5870191704688c62b065eb86b7",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-04T23-21-KST-full.json",
+    "head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+    "merge_result_sha": "b28c1ff653521f90273ce48faa968ddba38ac289"
   },
   "checks": [
     {
@@ -2159,6 +2159,39 @@
         "Docker build"
       ],
       "note": "Mock-only candidate discovery, no KIS demo"
+    },
+    {
+      "run_ids": [
+        41847700870,
+        41847711828
+      ],
+      "head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        "Full pytest suite: push 2059, PR 2069 passed, Docker success",
+        "Windows runtime smoke: 167 passed each"
+      ],
+      "external_statuses": {
+        "qlty": {
+          "state": "success",
+          "blocking_issues": 89,
+          "issues_resolved": false
+        },
+        "snyk": {
+          "state": "success",
+          "tests_passed": 1
+        },
+        "branch_protection": {
+          "state": "UNKNOWN",
+          "error": "403 Resource not accessible by integration"
+        },
+        "reviews": 0,
+        "kis_demo": "BLOCKED_NO_CREDENTIALS",
+        "real_orders": 0,
+        "demo_orders": 0
+      },
+      "evidence": "GitHub Actions 41847700870 and 41847711828"
     }
   ],
   "upstream_changes": [
@@ -6446,6 +6479,13 @@
       "full_pass": false,
       "real_orders": 0,
       "demo_orders": 0
+    },
+    {
+      "run_id": "prism-sync-2026-11-04T23-21-KST-turn11",
+      "kind": "CURRENT_BLOB_FULL_FILE_AUDIT_PROGRESS",
+      "related_pass": false,
+      "full_pass": false,
+      "notes": "Reaudited order_reconciliation.py 65fb8623 and newly audited test_unknown_buy_cross_row_bounds.py 00ffa9d8; 64/185 related, 64/217 full; 0/2 + 0/2"
     }
   ],
   "last_merged_upstream_sha": null,
@@ -6466,13 +6506,13 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "UNKNOWN BUY order-number/date recovery and durable per-account fill/cancel/remaining attribution missing",
-    "Confirmed BUY stop activation and multi-account broker E2E unverified",
-    "Qlty 89 blocking issues, independent review 0, branch protection 403",
-    "Related 62/183, full 62/215, independent 0/2 + 0/2",
-    "KIS demo credentials unavailable for integration only; no live/demo orders"
+    "UNKNOWN BUY signal -> broker-authoritative order-ID/date attribution missing",
+    "Durable per-account fill-ID/cancel/remaining ledger and safe stop activation missing",
+    "KIS demo credentials unavailable for demo only",
+    "Qlty 89 blocking issues unresolved; branch protection read 403; independent review absent",
+    "Related/full independent 2+2 audit incomplete"
   ],
-  "next_action": "Mock operator-confirmed per-account order/date attribution with fill ID/remaining durable ledger; never infer fill from candidate list",
+  "next_action": "Mock-only operator-confirmed per-account order-ID+date association and durable fill-ID/cancel/remaining attribution; verify UNKNOWN fence across restart and multi-account KR/US before any stop activation.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -7365,6 +7405,19 @@
       "full_fully_audited": 61,
       "reason": "KR/US test-first cumulative cross-execution contradiction fixed; UNKNOWN no-order-ID restart fence green but broker attribution unresolved; 2+2/review/policy incomplete",
       "manifest_tree_sha": "51f658f1202fb686f347a3bef917618978ee6f8c"
+    },
+    {
+      "run_id": "prism-sync-2026-11-04T23-21-KST-turn11",
+      "slot": "2026-11-04T23-21-KST",
+      "phase": "related_code_audit",
+      "head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+      "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+      "related_pass": false,
+      "full_pass": false,
+      "related_fully_audited": 64,
+      "full_fully_audited": 64,
+      "reason": "Cross-row KR/US red 12 fixed, green exact-head CI; broker authoritative attribution and independent 2+2 remain incomplete",
+      "manifest_tree_sha": "7d77f9cfe9e58a5870191704688c62b065eb86b7"
     }
   ],
   "discovered_defects": [
@@ -9494,6 +9547,40 @@
         }
       ],
       "status": "FIXED_MOCK_ONLY_BROKER_ATTRIBUTION_UNVERIFIED"
+    },
+    {
+      "root_cause_id": "RC-KIS-HISTORY-CROSS-ROW-ORDER-BOUNDS",
+      "parent_risk": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase_id": "MISSING_ORDER_QTY_CROSS_ROW_BOUNDS",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha_before": "f2cb65fa0ab62ba324d8e27e32d9288afd21982c",
+      "blob_sha_after": "65fb8623916eb33aaff7f27cca47c6150d54b969",
+      "test_first_commit": "2359d836f0e3117d296d1728517359321c66217d",
+      "expanded_test_first_commit": "42ad4a7e669f8b381a3e9d8e24f64b03f8b3eb09",
+      "fix_commit": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+      "verification": [
+        {
+          "run_id": 41847700870,
+          "event": "push",
+          "head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+          "status": "completed",
+          "conclusion": "success",
+          "linux_pytest_passed": 2059,
+          "windows_passed": 167,
+          "docker": "success"
+        },
+        {
+          "run_id": 41847711828,
+          "event": "pull_request",
+          "head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+          "status": "completed",
+          "conclusion": "success",
+          "linux_pytest_passed": 2069,
+          "windows_passed": 167,
+          "docker": "success"
+        }
+      ],
+      "status": "FIXED_MOCK_ONLY_BROKER_ATTRIBUTION_UNVERIFIED"
     }
   ],
   "risks": [
@@ -10240,6 +10327,16 @@
         "multi-account facade E2E",
         "KIS demo integration"
       ]
+    },
+    {
+      "root_cause_id": "RC-KIS-HISTORY-CROSS-ROW-ORDER-BOUNDS",
+      "parent_risk": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "description": "Rows omitting ord_qty bypass known same-order submitted quantity bounds in KR/US read-only candidate and exact-order history",
+      "classification": "REPRODUCED_AND_FIXED_MOCK_ONLY",
+      "first_red_sha": "2359d836f0e3117d296d1728517359321c66217d",
+      "fix_commit": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+      "head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+      "remaining": "Broker attribution and durable fill/cancel ledger unverified"
     }
   ],
   "root_cause_matrix": {
@@ -10688,7 +10785,8 @@
         "CONFIRMED_STOP_SELLS_UNATTRIBUTED_UNKNOWN_BUY_HOLDINGS",
         "STOP_SELL_BROKER_LOCK_TOCTOU_AND_REASON_CASE_BYPASS",
         "LEGACY_PROTECTED_LEDGER_MISSING_BUY_INTENT",
-        "TARGET_ORDER_TICKER_SIDE_CONTRADICTION"
+        "TARGET_ORDER_TICKER_SIDE_CONTRADICTION",
+        "MISSING_ORDER_QTY_CROSS_ROW_BOUNDS"
       ],
       "intent_fix_commit": "b0054b010d3b0ae696255fe3a1204b51f3bb824c",
       "intent_mock_ci": "41481126172/41481135393",
@@ -10702,8 +10800,8 @@
         "Historical opaque protected entries may block unrelated automatic stops until operator reconciliation",
         "Manual WebUI execution_dedupe=False BUY path lacks verified durable intent; requires mock reproduction before any patch"
       ],
-      "latest_patch_commit": "e66805509dd7e873a38a84752b2a74f3158d7fe9",
-      "last_checked_head": "96a9ab33fd9a8c65e073f1bb3fdcac206a06cdda",
+      "latest_patch_commit": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+      "last_checked_head": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
       "mock_evidence": {
         "run_ids": [
           41820976486,
@@ -10712,10 +10810,10 @@
         "test": "test_same_account_order_identity_poisoning_invalidates_prior_page[KR/US x ticker/side]",
         "coverage": "read-only target identity contradiction fails closed, no ledger or stop activation"
       },
-      "latest_head_sha": "7f57740b72bab1434d3c3053b9093d1d5911caf6",
+      "latest_head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
       "latest_mock_ci": [
-        41792205282,
-        41792213352
+        41847700870,
+        41847711828
       ],
       "remaining": [
         "UNKNOWN BUY without order ID",
@@ -11186,8 +11284,8 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "related_manifest_sha": "7591bfd3efaa79fbf51fce76bafb785257ed1633",
-  "full_manifest_sha": "ebc50b75325a3508c646e2ba47b8930c05a492ff",
+  "related_manifest_sha": "ee966269c71a50aace4c2243915f01a139b9b798",
+  "full_manifest_sha": "46daafbc3634a988710747d42a3e97947b3e1a47",
   "run5_candidate_inventory": [
     {
       "candidate_id": "T5-01",
@@ -19984,5 +20082,398 @@
     "rulesets": "EMPTY_NOT_PROOF_OF_NO_POLICY",
     "kis_demo": "BLOCKED_NO_CREDENTIALS"
   },
-  "run25_next_exact_action": "Mock operator-confirmed per-account order/date attribution with fill ID/remaining durable ledger; never infer fill from candidate list"
+  "run25_next_exact_action": "Mock operator-confirmed per-account order/date attribution with fill ID/remaining durable ledger; never infer fill from candidate list",
+  "run26_candidate_inventory": [
+    {
+      "candidate_id": "C26-01",
+      "root_cause_id": "RC-KIS-HISTORY-CROSS-ROW-ORDER-BOUNDS",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha_before": "f2cb65fa0ab62ba324d8e27e32d9288afd21982c",
+      "blob_sha": "65fb8623916eb33aaff7f27cca47c6150d54b969",
+      "hypothesis": "Missing ord_qty in later row bypasses known order quantity upper bound for cumulative fill and remaining",
+      "impact": "KR/US read-only candidate and exact-order history; unsafe provenance of partial/cancel evidence, not permission to trade",
+      "priority": "HIGH",
+      "verification_method": "test_missing_ordered_quantity_cannot_bypass_cross_row_order_bound; test_exact_order_history_missing_quantity_cannot_bypass_known_order_bound [3 x KR/US each]",
+      "result": "12_REPRODUCED_ASSERTIONS_FIXED",
+      "decision": "FIXED",
+      "source": "THIS_RUN"
+    },
+    {
+      "candidate_id": "C25-03",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a8703bbb3d128ffa9fb7e5d63de693eadf5534ff",
+      "hypothesis": "UNKNOWN BUY cannot be automatically attributed to candidate order IDs without broker-authoritative correlation",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_unknown_buy_ledger_remains_fenced_after_discovery_and_restart[KR/US]",
+      "result": "DEFERRED_UNVERIFIED",
+      "decision": "DEFERRED_UNVERIFIED",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    },
+    {
+      "candidate_id": "C25-04",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a8703bbb3d128ffa9fb7e5d63de693eadf5534ff",
+      "hypothesis": "No per-account durable fill ID and cumulative quantity reconciliation",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_distinct_partial_executions_cannot_exceed_broker_cumulative[KR/US]",
+      "result": "DEFERRED_UNVERIFIED",
+      "decision": "DEFERRED_UNVERIFIED",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    },
+    {
+      "candidate_id": "C25-05",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "65fb8623916eb33aaff7f27cca47c6150d54b969",
+      "hypothesis": "Partial cancellation does not prove final remaining quantity",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_unknown_order_discovers_bounded_candidates_without_attributing_fill[KR/US]",
+      "result": "DEFERRED_UNVERIFIED",
+      "decision": "DEFERRED_UNVERIFIED",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    },
+    {
+      "candidate_id": "C25-06",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "hypothesis": "Confirmed new BUY fills cannot activate stop without verified attribution",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop[KR/US]",
+      "result": "DEFERRED_UNVERIFIED",
+      "decision": "DEFERRED_UNVERIFIED",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    },
+    {
+      "candidate_id": "C25-07",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/dispatch.py",
+      "blob_sha": "61e571eed5898087b335974776327a57a24607bc",
+      "hypothesis": "Multi-account broker reconciliation and stop activation not E2E verified",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_multi_unknown_buy_persists_distinct_account_intents",
+      "result": "DEFERRED_UNVERIFIED",
+      "decision": "DEFERRED_UNVERIFIED",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    },
+    {
+      "candidate_id": "C25-08",
+      "root_cause_id": "RC-KIS-HISTORY-DUPLICATE-EXECUTION",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "65fb8623916eb33aaff7f27cca47c6150d54b969",
+      "hypothesis": "Duplicate execution IDs across pages must not double count",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_duplicate_page_execution_is_not_double_counted[KR/US]",
+      "result": "EXISTING_GUARD_MOCK_PASS",
+      "decision": "EXISTING_GUARD_MOCK_PASS",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    },
+    {
+      "candidate_id": "C25-09",
+      "root_cause_id": "RC-KIS-HISTORY-ACCOUNT-PROVENANCE",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "65fb8623916eb33aaff7f27cca47c6150d54b969",
+      "hypothesis": "Cross-account/product row must poison candidate evidence",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_cross_account_history_row_cannot_become_candidate[KR/US]",
+      "result": "MOCK_PASS",
+      "decision": "MOCK_PASS",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    },
+    {
+      "candidate_id": "C25-10",
+      "root_cause_id": "RC-LEDGER-PERSISTENCE-FENCE",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a8703bbb3d128ffa9fb7e5d63de693eadf5534ff",
+      "hypothesis": "UNKNOWN ledger fence must survive read-only inquiry and restart",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_unknown_buy_ledger_remains_fenced_after_discovery_and_restart[KR/US]",
+      "result": "MOCK_PASS",
+      "decision": "MOCK_PASS",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    },
+    {
+      "candidate_id": "C25-11",
+      "root_cause_id": "RC-KIS-HISTORY-QUANTITY-CONSISTENCY",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "65fb8623916eb33aaff7f27cca47c6150d54b969",
+      "hypothesis": "Distinct execution sum and order quantities must reject contradictions",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_distinct_partial_executions_cannot_exceed_broker_cumulative;test_same_order_conflicting_submitted_quantities_fail_closed[KR/US]",
+      "result": "MOCK_PASS",
+      "decision": "MOCK_PASS",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    },
+    {
+      "candidate_id": "C25-12",
+      "root_cause_id": "RC-KIS-HISTORY-BUSINESS-STATUS",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "65fb8623916eb33aaff7f27cca47c6150d54b969",
+      "hypothesis": "Later-page KIS business failure must discard all candidates",
+      "impact": "KR/US read-only history, account-scoped BUY intent, fill/cancel/remaining and stop-loss safety",
+      "priority": "HIGH",
+      "verification_method": "test_broker_failure_on_later_page_discards_candidates[KR/US]",
+      "result": "MOCK_PASS",
+      "decision": "MOCK_PASS",
+      "source": "REUSED_PRIOR_CANDIDATE",
+      "verified_this_run": "NO_NEW_INDEPENDENT_REPRODUCTION; relevant existing CI suite passed"
+    }
+  ],
+  "run26_carry_forward": {
+    "prior_stalled_count": ">=2 historically; immediately previous run PROGRESSED",
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "test_missing_ordered_quantity_cannot_bypass_cross_row_order_bound[3 x KR/US]; test_exact_order_history_missing_quantity_cannot_bypass_known_order_bound[3 x KR/US]",
+    "baseline_fail_observed": "2359d836 push 41847101009: 6 genuine product assertions failed, 2045 passed; 42ad4a7e push 41847413692: 12 genuine product assertions failed, 2047 passed. Not environment/fixture/import failures.",
+    "mock_result": "fed423dd exact-head push 41847700870: 2059 pytest passed; PR 41847711828: 2069 pytest passed; Windows 167 each; Docker success; 16 new parameterized cases.",
+    "code_fix_commit": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+    "latest_head_CI": [
+      41847700870,
+      41847711828
+    ],
+    "unverified_transitions": [
+      "UNKNOWN signal -> authoritative per-account ODNO/date attribution",
+      "Durable fill-ID cumulative/remaining/cancel ledger binding",
+      "Partial cancel finality",
+      "Confirmed fill -> safe stop-loss activation",
+      "KR/US multi-account broker E2E",
+      "KIS demo integration"
+    ],
+    "exact_blocker": "Order history remains nonactionable: no broker-authoritative mapping from UNKNOWN signal to order date/ID and fill/cancel/remaining event ledger. KIS demo credentials block demo only; policy read 403 and independent review/2+2 incomplete.",
+    "evidence_delta": "New 16 KR/US Mock cases; 12 red product assertions in two read-only functions; one root-cause fix, exact-head full CI green; one new fully audited test file, modified module reaudited; related 64/185, full 64/217.",
+    "next_exact_action": "Mock-only operator-confirmed per-account order-ID+date association and durable fill-ID/cancel/remaining attribution; verify UNKNOWN fence across restart and multi-account KR/US before any stop activation."
+  },
+  "run26_financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_accepted_buy_receipt_survives_restart_but_stays_unresolved[KR/US]",
+      "mock_result": "MOCK_PASS_NONACTIONABLE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "Receipt not fill",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "UNKNOWN",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_unknown_buy_ledger_remains_fenced_after_discovery_and_restart[KR/US]",
+      "mock_result": "MOCK_PASS_FENCE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No authoritative order correlation",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "지연 체결",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop[KR/US]",
+      "mock_result": "MOCK_PASS_BLOCK",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "Late fill not ledger-attributed",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "부분체결",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_distinct_partial_executions_cannot_exceed_broker_cumulative[KR/US]; test_missing_ordered_quantity_cannot_bypass_cross_row_order_bound[KR/US x3]; test_exact_order_history_missing_quantity_cannot_bypass_known_order_bound[KR/US x3]",
+      "mock_result": "MOCK_PASS_CROSS_ROW_BOUNDS_NONACTIONABLE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No durable fill ID attribution; authoritative fill/cancel binding still absent",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "취소/거절",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_unknown_order_discovers_bounded_candidates_without_attributing_fill[KR/US]",
+      "mock_result": "MOCK_PASS_CANDIDATES_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No final cancellation proof",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "중복 통지",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_duplicate_page_execution_is_not_double_counted[KR/US]",
+      "mock_result": "MOCK_PASS_DEDUP",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No persistent fill-event ledger",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "잔여량",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_same_order_conflicting_submitted_quantities_fail_closed[KR/US]; test_missing_ordered_quantity_cannot_bypass_cross_row_order_bound[KR/US x3]; test_exact_order_history_missing_quantity_cannot_bypass_known_order_bound[KR/US x3]",
+      "mock_result": "MOCK_PASS_CROSS_ROW_BOUNDS_NONACTIONABLE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No final broker reconciliation; authoritative fill/cancel binding still absent",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_unknown_buy_ledger_remains_fenced_after_discovery_and_restart[KR/US]",
+      "mock_result": "MOCK_PASS_NONACTIONABLE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "Confirmed fill activation unimplemented",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "다계좌 격리",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_distinct_account_scopes_keep_independent_nonactionable_candidates[KR/US]",
+      "mock_result": "MOCK_PASS_SCOPE_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "Broker E2E unverified",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "재시작",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_unknown_buy_ledger_remains_fenced_after_discovery_and_restart[KR/US]",
+      "mock_result": "MOCK_PASS_RESTART_FENCE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No order-to-intent binding",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_intent_persistence_failure_blocks_broker",
+      "mock_result": "EXISTING_MOCK_PASS",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "No KIS demo",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    },
+    {
+      "transition": "복구 및 재조정",
+      "applicability": "KR/US mock; account-scoped; multi-account broker E2E separate",
+      "test_ids": "test_reused_order_number_without_valid_date_poisoning_discards_candidates[KR/US]; test_missing_ordered_quantity_cannot_bypass_cross_row_order_bound[KR/US x3]; test_exact_order_history_missing_quantity_cannot_bypass_known_order_bound[KR/US x3]",
+      "mock_result": "MOCK_PASS_CROSS_ROW_BOUNDS_NONACTIONABLE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "Manual/authoritative reconciliation unimplemented; authoritative fill/cancel binding still absent",
+      "latest_head_mock_ci": [
+        41847700870,
+        41847711828
+      ]
+    }
+  ],
+  "run26_audit_progress": {
+    "related_complete": 64,
+    "related_total": 185,
+    "full_complete": 64,
+    "full_total": 217,
+    "related_pass": "0/2",
+    "full_pass": "0/2",
+    "merge_result_sha": "b28c1ff653521f90273ce48faa968ddba38ac289",
+    "git_tree_sha": "7d77f9cfe9e58a5870191704688c62b065eb86b7",
+    "changed_current_blobs": [
+      "trading/order_reconciliation.py",
+      "tests/test_unknown_buy_cross_row_bounds.py"
+    ]
+  },
+  "run26_remediation": {
+    "test_first_commit": "2359d836f0e3117d296d1728517359321c66217d",
+    "expanded_test_first_commit": "42ad4a7e669f8b381a3e9d8e24f64b03f8b3eb09",
+    "fix_commit": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+    "regression_tests": 16,
+    "baseline_product_failures": 12,
+    "root_cause_id": "RC-KIS-HISTORY-CROSS-ROW-ORDER-BOUNDS",
+    "changed_files": [
+      "trading/order_reconciliation.py",
+      "tests/test_unknown_buy_cross_row_bounds.py"
+    ],
+    "exact_head_CI": {
+      "push_run_id": 41847700870,
+      "pr_run_id": 41847711828,
+      "head_sha": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+      "push_pytest_passed": 2059,
+      "pr_pytest_passed": 2069,
+      "windows_each": 167,
+      "docker": "SUCCESS",
+      "conclusion": "SUCCESS"
+    }
+  },
+  "run26_external": {
+    "qlty": {
+      "state": "success",
+      "blocking_issues": 89,
+      "issues_resolved": false
+    },
+    "snyk": {
+      "state": "success",
+      "tests_passed": 1
+    },
+    "branch_protection": {
+      "state": "UNKNOWN",
+      "error": "403 Resource not accessible by integration"
+    },
+    "reviews": 0,
+    "kis_demo": "BLOCKED_NO_CREDENTIALS",
+    "real_orders": 0,
+    "demo_orders": 0
+  },
+  "run26_next_exact_action": "Mock-only operator-confirmed per-account order-ID+date association and durable fill-ID/cancel/remaining attribution; verify UNKNOWN fence across restart and multi-account KR/US before any stop activation."
 }
