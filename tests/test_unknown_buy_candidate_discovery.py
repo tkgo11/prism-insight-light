@@ -205,3 +205,90 @@ def test_pagination_limit_does_not_expose_partial_candidates(market):
     assert len(calls) == 1
     assert result["status"] == "UNVERIFIED"
     assert result["candidates"] == []
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("contradiction", [
+    "missing_date_foreign_ticker",
+    "missing_date_sell_side",
+    "invalid_date_foreign_ticker",
+])
+def test_reused_order_number_without_valid_date_poisoning_discards_candidates(
+    market, contradiction,
+):
+    """An untrusted later row with the SAME ODNO and unknown date cannot be
+    proved to be a different order, even if ticker or side differs.
+    Earlier candidate evidence must not survive this ambiguity.
+    """
+    later = row(market, order="00001234", ccld_no="EXEC2")
+    if contradiction == "invalid_date_foreign_ticker":
+        later["ord_dt"] = "20261340"
+    else:
+        later.pop("ord_dt")
+    if contradiction.endswith("foreign_ticker"):
+        later["pdno"] = "000660" if market == "KR" else "MSFT"
+    else:
+        later["sll_buy_dvsn_cd" if market == "KR" else "sll_buy_dvsn"] = "01"
+    result, calls = query(market, [
+        Page(market, [row(market)], more=True),
+        Page(market, [later]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["candidates"] == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_unrelated_order_number_with_missing_date_remains_skippable(market):
+    unrelated = row(
+        market, order="99999999", date=None,
+        pdno="000660" if market == "KR" else "MSFT",
+    )
+    result, calls = query(market, [
+        Page(market, [row(market)], more=True),
+        Page(market, [unrelated]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "CANDIDATES_ONLY"
+    assert len(result["candidates"]) == 1
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_distinct_partial_executions_cannot_exceed_broker_cumulative(market):
+    first = row(market, ccld_no="EXEC1", tot_ccld_qty="6",
+                ccld_qty="6", rmn_qty="4")
+    second = row(market, ccld_no="EXEC2", tot_ccld_qty="6",
+                 ccld_qty="4", rmn_qty="4")
+    result, _ = query(market, [
+        Page(market, [first], more=True),
+        Page(market, [second]),
+    ])
+    assert result["status"] == "UNVERIFIED"
+    assert result["candidates"] == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_same_order_conflicting_submitted_quantities_fail_closed(market):
+    first = row(market, ccld_no="EXEC1", ord_qty="10")
+    second = row(market, ccld_no="EXEC2", ord_qty="12",
+                 tot_ccld_qty="8", ccld_qty="4", rmn_qty="4")
+    result, _ = query(market, [
+        Page(market, [first], more=True),
+        Page(market, [second]),
+    ])
+    assert result["status"] == "UNVERIFIED"
+    assert result["candidates"] == []
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_distinct_account_scopes_keep_independent_nonactionable_candidates(market):
+    pages = [Page(market, [row(market)])]
+    a, _ = query(market, pages, scope="account-a")
+    b, _ = query(market, pages, scope="account-b")
+    assert a["account_scope"] != b["account_scope"]
+    assert a["candidates"] == b["candidates"]
+    assert a["can_activate_stop"] is b["can_activate_stop"] is False
