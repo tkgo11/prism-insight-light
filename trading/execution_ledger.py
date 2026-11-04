@@ -160,6 +160,20 @@ def _validated_order_intent(value: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _validated_order_receipt(value: dict[str, Any]) -> dict[str, str]:
+    """Validate non-actionable broker acceptance evidence, never a fill."""
+    if not isinstance(value, dict) or set(value) != {"order_no"}:
+        raise ValueError("BUY receipt must contain only an order number")
+    order_no = value["order_no"]
+    if (
+        not isinstance(order_no, str)
+        or re.fullmatch(r"[0-9]{1,20}", order_no) is None
+        or not order_no.strip("0")
+    ):
+        raise ValueError("BUY receipt order number is not canonical")
+    return {"order_no": order_no}
+
+
 class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
@@ -384,10 +398,19 @@ class ExecutionLedger:
         return (True, previous_status, claim_token) if with_token else (True, previous_status)
 
     def finalize(
-        self, identity: str, status: str, *, claim_token: str | None = None
+        self, identity: str, status: str, *, claim_token: str | None = None,
+        order_receipt: dict[str, str] | None = None,
     ) -> None:
-        """Record a non-sensitive terminal status for an already claimed identity."""
+        """Persist terminal claim and optional BUY receipt atomically.
 
+        An accepted receipt is NOT an execution, balance, or stop-loss
+        authorization.  No broker query or trading action occurs here.
+        """
+        validated_receipt = (
+            _validated_order_receipt(order_receipt) if order_receipt is not None else None
+        )
+        if validated_receipt is not None and status not in ("executed", "unknown"):
+            raise ValueError("A broker receipt cannot authorize a retryable outcome")
         now = datetime.now(timezone.utc)
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
@@ -404,6 +427,14 @@ class ExecutionLedger:
                 # Only open or provably pre-submission claims may transition.
                 if existing_status != "in_progress" and existing_status not in _RETRYABLE_STATUSES:
                     return
+                if validated_receipt is not None:
+                    if "order_intent" not in entries[identity] or entries[identity].get("order_side") is not None:
+                        raise ValueError("BUY receipt requires a durable BUY intent")
+                    # Preserve the opaque account-scoped claim and original
+                    # receipt; no fill attribution is inferred from acceptance.
+                    entries[identity]["order_receipt"] = {
+                        **validated_receipt, "observed_at": now.isoformat(),
+                    }
                 entries[identity]["status"] = str(status)
                 entries[identity]["finished_at"] = now.isoformat()
                 self._save(entries)
