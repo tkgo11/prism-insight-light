@@ -143,3 +143,43 @@ def test_uppercase_only_broker_failure_is_unverified(market):
     assert result["status"] == "UNVERIFIED"
     assert result["matches"] == []
     assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_missing_broker_business_status_cannot_prove_order_history(market):
+    """Transport success with plausible fill/cancel rows but no rt_cd is not KIS success."""
+    response = _Response(market)
+    original = response.getBody
+
+    def body_without_status():
+        values = vars(original())
+        del values["rt_cd"]
+        return SimpleNamespace(**values)
+
+    response.getBody = body_without_status
+    result, calls = _read(market, [response])
+    assert len(calls) == 1
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_missing_broker_business_status_on_later_page_discards_fill_evidence(market):
+    """A valid earlier page must not launder an unverified later page."""
+    later = _Response(market)
+    original = later.getBody
+
+    def body_without_status():
+        values = vars(original())
+        del values["rt_cd"]
+        return SimpleNamespace(**values)
+
+    later.getBody = body_without_status
+    result, calls = _read(market, [_Response(market, more=True), later])
+    assert len(calls) == 2
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False
