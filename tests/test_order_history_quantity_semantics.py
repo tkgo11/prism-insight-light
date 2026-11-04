@@ -156,3 +156,42 @@ def test_conflicting_execution_quantity_aliases_fail_closed(market):
     result, _ = _read(market, [HistoryResponse(market, [row])])
     assert result["status"] == "UNVERIFIED"
     assert result["matches"] == []
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_distinct_execution_ids_cannot_hide_conflicting_order_quantities(market):
+    """One broker order cannot have two unrelated submitted-quantity claims.
+
+    These are two separate execution IDs, so per-execution dedup alone is
+    insufficient.  Neither row is permission to finalize a ledger or SELL.
+    """
+    first = _row(market, ccld_no="EXEC01", ord_qty="10",
+                 tot_ccld_qty="4", ccld_qty="4", rmn_qty="6")
+    second = _row(market, ccld_no="EXEC02", ord_qty="12",
+                  tot_ccld_qty="8", ccld_qty="4", rmn_qty="4")
+    result, calls = _read(market, [
+        HistoryResponse(market, [first], more=True),
+        HistoryResponse(market, [second]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_distinct_execution_ids_with_consistent_order_quantity_remain_evidence_only(market):
+    first = _row(market, ccld_no="EXEC01", ord_qty="10",
+                 tot_ccld_qty="4", ccld_qty="4", rmn_qty="6")
+    second = _row(market, ccld_no="EXEC02", ord_qty="10",
+                  tot_ccld_qty="8", ccld_qty="4", rmn_qty="2")
+    result, calls = _read(market, [
+        HistoryResponse(market, [first], more=True),
+        HistoryResponse(market, [second]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert result["complete"] is True
+    assert len(result["matches"]) == 2
+    assert {m["execution_id"] for m in result["matches"]} == {"EXEC01", "EXEC02"}
+    assert result["can_activate_stop"] is False
