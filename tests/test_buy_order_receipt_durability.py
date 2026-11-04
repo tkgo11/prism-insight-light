@@ -218,3 +218,43 @@ def test_receipt_extraction_never_invents_authoritative_order_id(status, order_n
     signal = SignalMessage(signal_type="BUY", market="US", ticker="AAPL")
     result = DispatchResult(status, "mock only", "BUY", "US", order_no=order_no)
     assert _durable_buy_receipt(signal, result) is None
+
+
+@pytest.mark.parametrize("status", [
+    "failed", "rejected", "dry-run", "deferred", "queued", "skipped",
+])
+def test_recovered_receipt_with_retryable_status_fails_closed(tmp_path, status):
+    """A recovered/tampered ledger must not retry an already accepted BUY."""
+    path = tmp_path / "ledger.json"
+    ledger = ExecutionLedger(path)
+    ledger.claim("buy", order_intent=_intent("US", "AAPL", "a"))
+    entries = json.loads(path.read_text(encoding="utf-8"))
+    entries["buy"]["status"] = status
+    entries["buy"]["order_receipt"] = {
+        "order_no": "00001234",
+        "observed_at": datetime.now().astimezone().isoformat(),
+    }
+    path.write_text(json.dumps(entries), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="receipt|ledger|reconciliation"):
+        ExecutionLedger(path).claim("buy")
+    with pytest.raises(RuntimeError, match="receipt|ledger|reconciliation"):
+        with ExecutionLedger(path).guard_unresolved_buy("US", "AAPL"):
+            pass
+
+
+@pytest.mark.parametrize("receipt", [
+    {"order_no": "00000000", "observed_at": "2026-11-04T02:00:00+00:00"},
+    {"order_no": "00001234", "observed_at": "not-a-date"},
+    {"order_no": "00001234", "observed_at": "2026-11-04T02:00:00"},
+    {"order_no": "00001234"},
+])
+def test_corrupted_persisted_receipt_requires_operator_reconciliation(tmp_path, receipt):
+    path = tmp_path / "ledger.json"
+    ledger = ExecutionLedger(path)
+    ledger.claim("buy", order_intent=_intent("KR", "005930", "a"))
+    entries = json.loads(path.read_text(encoding="utf-8"))
+    entries["buy"]["status"] = "unknown"
+    entries["buy"]["order_receipt"] = receipt
+    path.write_text(json.dumps(entries), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="receipt|ledger|reconciliation"):
+        ExecutionLedger(path).claim("other-buy")
