@@ -140,3 +140,94 @@ def test_uppercase_only_quantity_alias_preserves_nonactionable_value(
     matches = result["matches"] if lookup == "exact" else result["candidates"]
     assert len(matches) == 1
     assert matches[0][expected] == int(row[alias])
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+def test_uppercase_execution_id_conflict_keeps_unknown_ledger_fence(
+    tmp_path, market, lookup, scope,
+):
+    ticker = "005930" if market == "KR" else "AAPL"
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    identity = f"exec-{market}-{lookup}-{scope}"
+    claimed, _, token = ledger.claim(
+        identity, with_token=True,
+        order_intent={
+            "kind": "buy_stop_loss", "market": market,
+            "ticker": ticker, "stop_loss": 85.0, "account_scope": scope,
+        },
+    )
+    assert claimed and token
+    ledger.finalize(identity, "unknown", claim_token=token)
+    before = ledger.path.read_bytes()
+    row = _row(market, "FILL1", 4, 6)
+    row["CCLD_SEQ"] = "DIFFERENT"
+    result, calls = _inquiry(market, lookup, scope, [MockPage(market, [row])])
+    assert len(calls) == 1
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result.get("matches", result.get("candidates", [])) == []
+    assert result["can_activate_stop"] is False
+    assert ledger.path.read_bytes() == before
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.claim(identity) == (False, "unknown")
+    with restarted.guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
+
+
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+def test_us_uppercase_ticker_alias_conflict_discards_history(lookup):
+    row = _row("US", "FILL1", 4, 6)
+    row["OVRS_PDNO"] = "MSFT"
+    result, calls = _inquiry("US", lookup, "a" * 64, [MockPage("US", [row])])
+    assert len(calls) == 1
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result.get("matches", result.get("candidates", [])) == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+def test_uppercase_only_execution_id_stays_nonactionable(market, lookup):
+    row = _row(market, "FILL1", 4, 6)
+    row["CCLD_SEQ"] = row.pop("ccld_no")
+    result, calls = _inquiry(market, lookup, "a" * 64, [MockPage(market, [row])])
+    assert len(calls) == 1
+    assert result["status"] == ("EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY")
+    assert result["can_activate_stop"] is False
+    matches = result["matches"] if lookup == "exact" else result["candidates"]
+    assert matches[0]["execution_id"] == "FILL1"
+
+
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+def test_us_uppercase_only_ticker_stays_nonactionable(lookup):
+    row = _row("US", "FILL1", 4, 6)
+    row["OVRS_PDNO"] = row.pop("pdno")
+    result, calls = _inquiry("US", lookup, "a" * 64, [MockPage("US", [row])])
+    assert len(calls) == 1
+    assert result["status"] == ("EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY")
+    assert result["can_activate_stop"] is False
+    matches = result["matches"] if lookup == "exact" else result["candidates"]
+    assert matches[0]["ticker"] == "AAPL"
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("alias,lower", [
+    ("TOT_CCLD_QTY", "tot_ccld_qty"),
+    ("FT_CCLD_QTY", "tot_ccld_qty"),
+    ("RMN_QTY", "rmn_qty"),
+    ("NCCS_QTY", "rmn_qty"),
+    ("ORD_REMN_QTY", "rmn_qty"),
+    ("FT_ORD_QTY", "ord_qty"),
+])
+def test_equal_uppercase_quantity_aliases_remain_read_only(market, lookup, alias, lower):
+    row = _row(market, "FILL1", 4, 6)
+    row[alias] = row[lower]
+    result, calls = _inquiry(market, lookup, "a" * 64, [MockPage(market, [row])])
+    assert len(calls) == 1
+    assert result["status"] == ("EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY")
+    assert result["complete"] is True
+    assert result["can_activate_stop"] is False
