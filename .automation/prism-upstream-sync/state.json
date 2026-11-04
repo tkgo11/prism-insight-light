@@ -1,21 +1,21 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "ACTIVE_DRAFT_CORE_RISK_UNVERIFIED",
+  "state": "ACTIVE_DRAFT_CORE_RISK_TEST_FIRST_CI_QUEUED",
   "phase": "related_code_audit",
   "run": {
-    "run_id": "prism-sync-2026-11-05T01-19-KST-core-risk",
-    "previous_run_id": "prism-sync-2026-11-05T00-16-KST-core-risk",
-    "started_at": "2026-11-04T16:19:53Z",
+    "run_id": "prism-sync-2026-11-05T02-21-KST-core-risk",
+    "previous_run_id": "prism-sync-2026-11-05T01-19-KST-core-risk",
+    "started_at": "2026-11-04T17:21:54Z",
+    "completed_at": "2026-11-04T17:30:00Z",
     "status": "RELEASED",
     "lock_owner": null,
-    "lock_acquired_commit": "e5239acb58964df24b7e7a8197ce8d4f6cefa2fb",
-    "lock_expected_pr_sha": "98b8fef7465a9eb2b56febeee9ad3ec16977b3d8",
+    "lock_acquired_commit": "91dd6e8b1aae051c647a5985f71f9c87a45a6c19",
+    "lock_expected_pr_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
     "lock_released": true,
     "related_pass": false,
     "full_pass": false,
-    "completed_at": "2026-11-04T16:30:00Z",
-    "final_pr_head_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
+    "final_pr_head_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
     "evidence_commit": "THIS_ATOMIC_CAS_COMMIT"
   },
   "source": {
@@ -36,11 +36,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
+    "head_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_ZERO_PLACEHOLDER_GUARD_MOCK_PATCHED_ATTRIBUTION_UNVERIFIED",
+    "status": "DRAFT_TEST_FIRST_MOCK_CI_QUEUED_CORE_ATTRIBUTION_UNVERIFIED",
     "base_ref": "main"
   },
   "candidates": [
@@ -54,33 +54,34 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "INCOMPLETE_CURRENT_MERGE_TREE_ZERO_PLACEHOLDER_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
-    "checksum": "9124954ded0138ecfa8c8b17c432fe39453bd835",
+    "status": "INCOMPLETE_TEST_FIRST_CI_QUEUED",
+    "checksum": "f04b8f34232ccdfac0a05b0cb901619b8d58e493",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 187,
+    "scope_estimate": 188,
     "files_fully_audited": 66,
-    "files_file_level_inspected": 183,
-    "files_targeted_path_review": 24,
-    "head_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
+    "files_file_level_inspected": 184,
+    "files_targeted_path_review": 25,
+    "head_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
     "source_head_sha": "6437aac71699c2ce565202263ad8f94ce6e59940",
-    "git_tree_sha": "c07cd8f29d85763b0afa98837b4fbe93648f36be",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T01-19-KST-related.json",
-    "sha": "9124954ded0138ecfa8c8b17c432fe39453bd835",
-    "merge_result_sha": "c07cd8f29d85763b0afa98837b4fbe93648f36be"
+    "git_tree_sha": "2837643f577b879868a2e84ec05fd158ebbb2f59",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T02-21-KST-related.json",
+    "sha": "f04b8f34232ccdfac0a05b0cb901619b8d58e493",
+    "merge_result_sha": "2837643f577b879868a2e84ec05fd158ebbb2f59"
   },
   "full_manifest": {
-    "status": "INCOMPLETE_CURRENT_MERGE_TREE_ZERO_PLACEHOLDER_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
-    "checksum": "46ac2c9458fac6995c75c6451e850459f9948ef1",
+    "status": "INCOMPLETE_TEST_FIRST_CI_QUEUED",
+    "checksum": "d73e8d0df8004eb8da60cf53a51057f42f8865a5",
     "checksum_kind": "git_blob_sha1",
-    "sha": "46ac2c9458fac6995c75c6451e850459f9948ef1",
+    "sha": "d73e8d0df8004eb8da60cf53a51057f42f8865a5",
     "files_checked": 207,
     "fully_audited_files": 66,
-    "file_count": 219,
-    "files_targeted_path_review": 24,
-    "git_tree_sha": "c07cd8f29d85763b0afa98837b4fbe93648f36be",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T01-19-KST-full.json",
-    "head_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
-    "merge_result_sha": "c07cd8f29d85763b0afa98837b4fbe93648f36be"
+    "file_count": 220,
+    "files_targeted_path_review": 25,
+    "git_tree_sha": "2837643f577b879868a2e84ec05fd158ebbb2f59",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T02-21-KST-full.json",
+    "head_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+    "merge_result_sha": "2837643f577b879868a2e84ec05fd158ebbb2f59",
+    "files_file_level_inspected": 208
   },
   "checks": [
     {
@@ -6529,6 +6530,18 @@
       "full_complete": 65,
       "full_total": 218,
       "notes": "4 genuine product assertions fixed; broker attribution still unverified, independent 2+2 PASS remains 0."
+    },
+    {
+      "run_id": "prism-sync-2026-11-05T02-21-KST-core-risk",
+      "kind": "CORE_RISK_TEST_FIRST_CI_QUEUED",
+      "related_pass": false,
+      "full_pass": false,
+      "head_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+      "commit_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+      "run_path": ".automation/prism-upstream-sync/runs/2026-11-05T02-21-KST.json",
+      "related_manifest": ".automation/prism-upstream-sync/manifests/2026-11-05T02-21-KST-related.json",
+      "full_manifest": ".automation/prism-upstream-sync/manifests/2026-11-05T02-21-KST-full.json",
+      "notes": "4 expected red cases and 2 boundary controls committed; zero executed due queued GitHub Actions; no production fix, no live/demo orders."
     }
   ],
   "last_merged_upstream_sha": null,
@@ -6549,13 +6562,14 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "UNKNOWN BUY signal -> broker-authoritative order-ID/date attribution missing",
-    "Durable per-account fill-ID/cancel/remaining ledger and safe stop activation missing",
-    "KIS demo credentials unavailable for demo only",
-    "Qlty 89 blocking issues unresolved; branch protection read 403; independent review absent",
-    "Related/full independent 2+2 audit incomplete"
+    "GitHub Actions current HEAD queued",
+    "Broker order/fill/cancel authoritative attribution missing",
+    "Qlty prior 89 blocking issues and current HEAD unresolved",
+    "Branch protection read 403",
+    "Independent review and 2+2 audit missing",
+    "KIS demo credentials for demo only"
   ],
-  "next_action": "Implement Mock-only operator-confirmed per-account order-ID+date and fill-ID/remaining/cancel binding to durable ledger; verify restart, partial cancellation and multi-account before stop activation.",
+  "next_action": "On next run inspect 41877262273/41877272358, verify actual red, then patch total-row guard and re-run CI before unrelated candidates.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -11328,8 +11342,8 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "related_manifest_sha": "ee966269c71a50aace4c2243915f01a139b9b798",
-  "full_manifest_sha": "46daafbc3634a988710747d42a3e97947b3e1a47",
+  "related_manifest_sha": "f04b8f34232ccdfac0a05b0cb901619b8d58e493",
+  "full_manifest_sha": "d73e8d0df8004eb8da60cf53a51057f42f8865a5",
   "run5_candidate_inventory": [
     {
       "candidate_id": "T5-01",
@@ -20932,5 +20946,52 @@
     "demo_orders": 0
   },
   "run27_next_exact_action": "Implement Mock-only operator-confirmed per-account order-ID+date and fill-ID/remaining/cancel binding to durable ledger; verify restart, partial cancellation and multi-account before stop activation.",
-  "last_run_evidence_path": ".automation/prism-upstream-sync/runs/2026-11-05T01-19-KST.json"
+  "last_run_evidence_path": ".automation/prism-upstream-sync/runs/2026-11-05T02-21-KST.json",
+  "run_2026_11_05_0221_carry_forward": {
+    "prior_stalled_count": "historically >=2; immediately previous run PROGRESSED",
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_read_only_history_page_size_bound.py::test_exact_history_excess_rows_discard_all_partial_fill_evidence[KR/US x single/multi-page]",
+    "baseline_fail_observed": "NOT_OBSERVED: exact-HEAD Actions 41877262273 push and 41877272358 PR remain QUEUED",
+    "mock_result": "NOT_RUN: GitHub-hosted runner queued; prior HEAD 5a264c5c Mock CI PASS is not current HEAD evidence",
+    "code_fix_commit": null,
+    "latest_head_CI": [
+      {
+        "run_id": 41877262273,
+        "sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+        "event": "push",
+        "status": "queued"
+      },
+      {
+        "run_id": 41877272358,
+        "sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+        "event": "pull_request",
+        "status": "queued"
+      }
+    ],
+    "unverified_transitions": [
+      "UNKNOWN BUY to account/date/order attribution",
+      "Per-account durable fill-ID cumulative/remaining/cancel ledger binding",
+      "Partial cancel finality",
+      "Confirmed fill to stop-loss activation",
+      "KR/US multi-account broker E2E",
+      "KIS demo integration"
+    ],
+    "exact_blocker": "GitHub Actions queued at 2026-11-04T17:24:16/20Z; local container git ls-remote failed DNS 'Could not resolve host: github.com'; Desktop Commander device WIN-RNE7EJ57GGV Offline (last seen 147h); no executable local clone. No KIS demo credentials blocks demo only.",
+    "evidence_delta": "New test-first commit ef27731a with 4 KR/US oversized-history mock assertions plus 2 boundary controls, not executed. Current merge-result tree e14c3964/2837643f has 220 tracked files, all 219 previous blob SHAs unchanged; new test blob b4095ae9.",
+    "next_exact_action": "Inspect Actions 41877262273/41877272358; distinguish 4 expected assertion failures from fixture/import/environment failures. If genuine red, add total-row cap to read_order_history; run latest-HEAD CI, then resume per-account order/fill/cancel binding tests."
+  },
+  "run_2026_11_05_0221_candidate_inventory": [
+    {
+      "candidate_id": "C29-01",
+      "root_cause_id": "RC-KIS-HISTORY-UNBOUNDED-ROWS",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "7fefd49447def94ae985d40a8f2644d5a012148c",
+      "hypothesis": "Exact KR/US history permits >2000 rows while discovery rejects oversized histories",
+      "priority": "HIGH",
+      "verification_method": "test_exact_history_excess_rows_discard_all_partial_fill_evidence[KR/US x 2]",
+      "result": "CI_QUEUED_NO_BASELINE_RED",
+      "decision": "DEFERRED_PENDING_CI",
+      "test_first_commit": "ef27731a20bbd478f06247045cb3fc3992ae9646"
+    }
+  ]
 }

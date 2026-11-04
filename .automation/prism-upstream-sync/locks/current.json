@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-05T02-21-KST-core-risk",
-  "status": "HELD",
+  "status": "RELEASED",
   "expected_state_head": "09b69a2a8c08d3563678051764e468bb4fac8bd4",
   "expected_pr_head": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
   "created_at": "2026-11-04T17:21:54Z",
   "purpose": "KR/US read-only mock history bounded pagination and quantity evidence test-first; no broker orders",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "released_at": "2026-11-04T17:30:00Z",
+  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
+  "reason": "Test-first 6 KR/US mock cases committed; Actions queued, no baseline red observed; no production fix; independent 2+2 zero, no real/demo orders."
 }
