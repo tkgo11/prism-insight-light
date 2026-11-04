@@ -1,17 +1,14 @@
 {
-  "run_id": "prism-sync-hourly-2026-11-04T13-21-KST-turn9",
-  "status": "RELEASED",
-  "expected_state_head": "6cacbebbce649e4dfdfad6ef363600af665c1419",
+  "run_id": "prism-sync-hourly-2026-11-04T14-23-KST-turn9",
+  "status": "LOCKED",
+  "expected_state_head": "90f51edc2f4e4e64c540779d0c4ccbca462c8e56",
   "expected_pr_head": "377fcd7df7da8a3f848ff8c8e5ee0191d80bcec3",
-  "created_at": "2026-11-04T04:21:56Z",
-  "released_at": "2026-11-04T04:28:20.874Z",
-  "purpose": "Mock-first KR/US KIS body business status evidence; no live/demo orders",
+  "created_at": "2026-11-04T05:23:46Z",
+  "purpose": "Test-first KR/US read-only per-fill vs cumulative fill quantity semantics; no live/demo orders",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
     "related": 0,
     "full": 0
-  },
-  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
-  "reason": "10 red product assertions fixed, exact-head CI green, core fill attribution unresolved, 2+2 no PASS"
+  }
 }
