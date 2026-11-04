@@ -1,0 +1,2710 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-04T12-18-KST-turn9",
+  "observed_at": "2026-11-04T03:24:20.940Z",
+  "head_sha": "0cdcf83ee141face9e5b0c0555810c30a426efd9",
+  "merge_result_sha": "f2a1a0b94de6bc460c39871574faa0ff17cc6159",
+  "git_tree_sha": "426a7404cfc7891178fe42b96fd514c3ffbce44b",
+  "upstream_head_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
+  "status": "INCOMPLETE_CURRENT_MERGE_TREE_57_FULL_FILE_AUDITS",
+  "independent_audit_slot_passes": 0,
+  "audit_pass": false,
+  "files_fully_audited": 57,
+  "scope_closure_verified": false,
+  "evidence_rule": "Current merge-result blob SHA, actual full-file review and exact-head Mock CI; no broker integration or independent 2+2 PASS",
+  "kind": "related",
+  "selection_rule": "Previous 170 related files plus new test and merged CI/submodule dependency paths",
+  "files_file_level_inspected": 121,
+  "files_targeted_path_review": 18,
+  "files": [
+    {
+      "path": ".agents/skills/autonomous-maintainer",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "status": "EXTERNAL_SUBMODULE_CONTENT_UNAUDITED",
+      "evidence_status": "PINNED_SHA_ONLY",
+      "inspection": "NOT_VERIFIED_CURRENT_BLOB",
+      "blob_sha": "452c0d740c35db7a5f68e13d7eddbeb203ac467e"
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current .github/workflows/tests.yml source; verified pytest, windows-runtime; failure contract: Windows 5-module subset cannot certify Windows-only behavior of newer tests; mock-only CI 41721915580, no KIS orders.",
+      "blob_sha": "d1a5accbcb60fc8de07aa1170578fd8eb97614a3",
+      "reviewed_functions": [
+        "pytest",
+        "windows-runtime"
+      ],
+      "invariants": [
+        "Linux all tests, Docker, Windows subset are separately reported",
+        "CI status is SHA-scoped, not KIS fill proof"
+      ],
+      "test_evidence": [
+        "41721915580 Linux 1853 passed",
+        "41721915580 Windows 167 passed"
+      ],
+      "review_evidence": "Source blob d1a5accbcb60fc8de07aa1170578fd8eb97614a3, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "Windows 5-module subset cannot certify Windows-only behavior of newer tests",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": ".gitmodules",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "status": "NOT_FULLY_AUDITED",
+      "evidence_status": "NEW_OR_CHANGED_BLOB_REQUIRES_AUDIT",
+      "inspection": "NOT_VERIFIED_CURRENT_BLOB",
+      "blob_sha": "1094da9b46e2728d07cd8a4644848f5f34c83a03"
+    },
+    {
+      "path": "Dockerfile",
+      "blob_sha": "61a4fdf8b5d4c1efbf06d33a6a640e3fb8ad1160",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "NEW_OR_CHANGED_BLOB_REQUIRES_AUDIT",
+      "inspection": "NOT_VERIFIED_CURRENT_BLOB",
+      "file_audit_complete": false
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "32ccef1a4a5604cb0137009b5fff991d1f8a8290",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "README.en.md",
+      "blob_sha": "7913fbf06c349d84023cf14e663e6c871fc45464",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "targeted_path_review": "First-run KIS setup paragraph checked against demo default, paper order warning and explicit real opt-in; whole document not audited.",
+      "previous_blob_sha": "a5e4a350a30dec91375e54467b7c52321f2631b1",
+      "file_audit_complete": false
+    },
+    {
+      "path": "README.ko.md",
+      "blob_sha": "48c97d0cbe0ae86766ab445e5155aa51749e3cf6",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "targeted_path_review": "First-run KIS setup paragraph checked against demo default, paper order warning and explicit real opt-in; whole document not audited.",
+      "previous_blob_sha": "d918dec9381736ad0dda2839fc89da6820437604",
+      "file_audit_complete": false
+    },
+    {
+      "path": "requirements-dev.txt",
+      "blob_sha": "90aee653b4f09cb5667daa34e804a9c88d8b8b76",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "requirements.txt",
+      "blob_sha": "1d15064ec7aaae11fecb249b09ec862e0e8b3e88",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "scripts/check_autonomous_maintainer_dependency.py",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "status": "NOT_FULLY_AUDITED",
+      "evidence_status": "NEW_OR_CHANGED_BLOB_REQUIRES_AUDIT",
+      "inspection": "NOT_VERIFIED_CURRENT_BLOB",
+      "blob_sha": "cdfdb189c6c2b63f7241fc79f48364cf20d5e98b"
+    },
+    {
+      "path": "subscriber.py",
+      "blob_sha": "5e919d3afa3e71a15863ff0a0310c14dbceb12e4",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/conftest.py",
+      "blob_sha": "b35b9f428d5a66510ed8abdab2052361f1a181ff",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Entire 87-line test bootstrap reviewed: temp config, synthetic credentials, isolated runtime, asyncio fixture.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "pytest_configure/pytest_pyfunc_call/_isolated_runtime_dir"
+      ],
+      "invariants": [
+        "Fake demo config and per-test runtime isolation prevent accidental real-state mutation; coroutine test runner may be brittle"
+      ],
+      "failure_modes_reviewed": "fixture isolation; async marker; malformed fixture failure",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "pytest configuration, temporary demo credentials, autouse runtime directory, async invocation",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_autonomous_maintainer_dependency.py",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "status": "NOT_FULLY_AUDITED",
+      "evidence_status": "NEW_OR_CHANGED_BLOB_REQUIRES_AUDIT",
+      "inspection": "NOT_VERIFIED_CURRENT_BLOB",
+      "blob_sha": "dea74ea3c048072280802e6c111747beef8eb634"
+    },
+    {
+      "path": "tests/test_balance_split_strategy.py",
+      "blob_sha": "209fda023339f96b178c7e97058806e7ff5cd743",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "blob_sha": "a8f4729ed0fd40f8e41449f341b4473910e735ef",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "targeted_path_review": "Specific stale assertion at example default_mode corrected from real to demo after exact-head 1-failure CI; rest not fully audited.",
+      "previous_blob_sha": "bf10730694946dd6ed0cdf3f8cdb11f2da155e21",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_broker_exception_class_ambiguity.py",
+      "blob_sha": "c0821c386ca9a8ceff4ba7c098c8e989516381f3",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "reviewed_functions": [
+        "test_transport_exception_name_cannot_authorize_retry_or_acceptance",
+        "test_exception_name_keeps_buy_intent_nonretryable_after_restart",
+        "test_broker_wrapper_rejection_flag_must_preserve_exception_provenance",
+        "test_broker_wrapper_clean_business_rejection_control",
+        "test_broker_wrapper_error_message_accessor_failure_is_ambiguous"
+      ],
+      "invariants": [
+        "11 distinct compact exception types tested under two contradiction states and two response fields",
+        "KR/US single/multi account durable claim remains nonretryable after restart",
+        "HTTP 200/400 canonical code plus transport exception remains UNKNOWN",
+        "clean verified rejection control remains retryable"
+      ],
+      "test_evidence": [
+        "red1 41683768616",
+        "red2 41684227617",
+        "green push 41684476397",
+        "green PR 41684488536"
+      ],
+      "inspection": "Read complete newly added 104-line test module, verified red failures are product assertions rather than fixture/import errors."
+    },
+    {
+      "path": "tests/test_broker_http_rejection_safety.py",
+      "blob_sha": "8603c39807bdb6075ca319310d10928fed81dd41",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "reviewed_functions": [
+        "test_ambiguous_http_response_cannot_release_order_replay_fence",
+        "test_valid_business_rejection_control_remains_retryable",
+        "test_noncanonical_http_status_cannot_prove_business_rejection",
+        "test_nonstandard_2xx_cannot_release_durable_replay_fence"
+      ],
+      "invariants": [
+        "HTTP 408/409/425/429/499 ambiguous",
+        "noncanonical and nonstandard 2xx statuses cannot prove rejection",
+        "verified clean 200/400/422 business rejection control"
+      ],
+      "test_evidence": [
+        "green push 41684476397",
+        "green PR 41684488536"
+      ],
+      "inspection": "Read complete 84-line mock HTTP response regression module."
+    },
+    {
+      "path": "tests/test_broker_portfolio_header_fail_closed.py",
+      "blob_sha": "c3d3f74c04c728d3c44af3dc109fa98b48adf84f",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "FULL 80-line test audit: 17 parameterized mock cases cover missing header, malformed header, missing tr_cont, valid terminal values, KR/US no false zero; exact-head push 41644186314 and PR 41644194933 success; no live broker.",
+      "file_audit_complete": true,
+      "test_evidence": [
+        "41644186314",
+        "41644194933"
+      ]
+    },
+    {
+      "path": "tests/test_broker_portfolio_pagination_safety.py",
+      "blob_sha": "9b97b9eb7428f589ca912f158cea9b27a0735781",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Entire 278-line KIS pagination mock suite reviewed; 8 test-first assertion failures (1555 other passes), 20 new boundary cases, latest-head 1573 pytest passed.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_kr_holding_on_later_page_is_not_reported_as_zero",
+        "test_repeated_pagination_cursor_fails_closed",
+        "test_malformed_balance_quantity_must_not_prove_zero"
+      ],
+      "invariants": [
+        "Incomplete KIS balance pages must not be treated as flat positions"
+      ],
+      "failure_modes_reviewed": "KR/US, continuation cursor, invalid quantity, missing ticker, empty placeholder",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "mock pagination proves zero-balance false-positive fence; order fill-ID reconciliation separate",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_broker_transport_ambiguity_fence.py",
+      "blob_sha": "b1f9f50cbd82864a4fbc79e22a49e3353b345c5c",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "file_audit_complete": true,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "FULL_FILE_REVIEWED",
+      "reviewed_functions": [
+        "test_transport_failure_cannot_become_retryable_or_accepted",
+        "test_transport_failure_preserves_mock_buy_fence_after_restart",
+        "test_transport_error_propagates_unknown_through_strategy_result",
+        "test_verified_clean_broker_rejection_remains_retryable_control"
+      ],
+      "invariants": [
+        "six transport error forms across four wrapper fields and contradictory statuses remain UNKNOWN",
+        "KR/US single and multi account mock ledger survives restart",
+        "clean verified rejection remains retryable"
+      ],
+      "test_evidence": [
+        "test-first c662? actual 6629238e39e252b049881a256b4c72e4cda23360; Actions 41674168975/41674180595 56 expected assertion failures",
+        "fixed PR HEAD c1077e46fb71ad65d57e00adedbf35ebe8fef285; Actions 41674457223/41674466354 green"
+      ]
+    },
+    {
+      "path": "tests/test_buy_order_receipt_durability.py",
+      "blob_sha": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "evidence_status": "FULL_SOURCE_REVIEW_AND_CI",
+      "inspection": "Entire newly authored mock-only test file reviewed: receipt durability/restart, account isolation, stale callbacks, duplicate finalize, invalid IDs, disk failure, KR/US dispatch, corrupt recovered statuses/receipts; no KIS order calls.",
+      "reviewed_functions": [
+        "test_accepted_buy_receipt_survives_restart_but_stays_unresolved[KR/US]",
+        "test_unknown_buy_receipt_is_evidence_only_after_restart",
+        "test_receipts_are_scoped_to_distinct_account_claims",
+        "test_late_finalize_cannot_attach_receipt_to_new_attempt",
+        "test_terminal_duplicate_finalize_cannot_rotate_receipt",
+        "test_noncanonical_receipt_cannot_be_persisted",
+        "test_receipt_persistence_failure_does_not_claim_fill",
+        "test_single_account_dispatch_persists_broker_receipt_without_fill_proof[KR/US,executed/unknown]",
+        "test_receipt_extraction_never_invents_authoritative_order_id",
+        "test_recovered_receipt_with_retryable_status_fails_closed[6]",
+        "test_corrupted_persisted_receipt_requires_operator_reconciliation[4]"
+      ],
+      "invariants": [
+        "acceptance != fill",
+        "no automatic stop activation",
+        "no real/demo orders",
+        "per-account durable fence",
+        "corrupted receipt requires operator reconciliation"
+      ],
+      "test_evidence": [
+        "12 feature-gap failures at 41760791461; 10 recovered-ledger safety failures at 41761480432; 1903 push tests at 41761643544; 1913 PR merge tests at 41761650279"
+      ]
+    },
+    {
+      "path": "tests/test_buy_sizing.py",
+      "blob_sha": "b3ef619dfee6ed59920bcaeab54ef29efcf1d76e",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "All 109 lines inspected; valid asset-percent cap, fixed sizing, nonfinite/boolean config and trader construction controls",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_check_pubsub_readiness.py",
+      "blob_sha": "e0765d4513357ff046a5bcf7aeb567d8e4d10859",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_cooldown_pending_reconciliation.py",
+      "blob_sha": "722173fa7eb4c1018facbe515a0ba020eaad841a",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Full 170-line suite; test-first 2 real failures on 30-day legacy missing-pending records, KR/US; final assertions verify no broker calls, state unchanged; CI 1452 pass",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_ambiguous_cooldown_order_remains_blocked_across_restart_and_expiry",
+        "test_accepted_cooldown_order_stays_pending_until_verified_fill"
+      ],
+      "invariants": [
+        "Accepted order remains pending without authoritative final fill/cancel proof"
+      ],
+      "failure_modes_reviewed": "timeout, crash, rejection, disk-full, missing order ID, legacy state",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "mock pending fence survives expiry and restart; manual reconciliation simulated, not KIS confirmed",
+      "remaining_limitations": "No authoritative broker fill-ID, cumulative fill or remainder proof"
+    },
+    {
+      "path": "tests/test_direct_cron_script.py",
+      "blob_sha": "d14481c2a3dbe1c591a4134a28fd4c5901cf505a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_dispatch_cancellation_safety.py",
+      "blob_sha": "4064f0c775f8dd76f5567fde1452ea5b5c1b15b7",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Entire 102-line mock suite read: repeated caller cancellation retains broker serialization until worker and tracking finish; queued/immediate and worker-failure cases; not live KIS.",
+      "reviewed_functions": [
+        "test_cancelled_dispatch_keeps_broker_lock_until_worker_and_tracking_finish"
+      ],
+      "invariants": [
+        "Repeated coroutine cancellation cannot release lock while worker still submits"
+      ],
+      "file_audit_complete": true,
+      "failure_modes_reviewed": "queued/single, worker success/failure, competing task, double cancellation",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "thread events and competitor gate assert serialization; cross-process behavior not established",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_dispatch.py",
+      "blob_sha": "4ee5e6dc26144c865e52f98d47c39ec445aa4def",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 567-line dispatch mock suite inspected; KR/US receipts, timeout, duplicate suppression, exception fence, stop tracker failure and queue paths. Latest-head full pytest covers cases.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_docker_installer_smoke.py",
+      "blob_sha": "b649c7713a170b89733861a5e82487b1e585a765",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_durable_state_directory_sync.py",
+      "blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "Reviewed test_atomic_state_writer_fsyncs_parent_directory_after_replace, test_failed_directory_fsync_blocks_claim_without_discarding_protection; failure contracts: four atomic writers fsync directory on POSIX; post-rename fsync failure cannot authorize broker; unresolved external broker semantics not treated as proven.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_atomic_state_writer_fsyncs_parent_directory_after_replace",
+        "test_failed_directory_fsync_blocks_claim_without_discarding_protection"
+      ],
+      "invariants": [
+        "four atomic writers fsync directory on POSIX",
+        "post-rename fsync failure cannot authorize broker"
+      ],
+      "test_evidence": [
+        "tests/test_durable_state_directory_sync.py",
+        "41644194933 exact-head 1689 pass"
+      ]
+    },
+    {
+      "path": "tests/test_effective_order_metadata.py",
+      "blob_sha": "cdb0a523f5a94e606b77ac0b6f1518dd4c03ea84",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 146-line strategy metadata mock suite inspected; BUY effective amount and SELL fraction labels, not broker fill proof. Latest-head full pytest covers cases.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_execution_ledger_retention.py",
+      "blob_sha": "5f11a8322caaec8945fb8ecf422f928f8f8be721",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "Reviewed test_old_accepted_unknown_and_in_progress_claims_never_expire, test_capacity_failure_preserves_every_protected_identity, test_late_retryable_finalize_cannot_downgrade_protected_order, test_corrupt_retryable_claim_timestamp_blocks_all_replays_without_rewrite, test_stale_callback_cannot_finalize_new_tokenized_attempt; failure contracts: duplicate replay suppressed; malformed JSON cannot erase evidence; old callback cannot release new attempt; unresolved external broker semantics not treated as proven.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_old_accepted_unknown_and_in_progress_claims_never_expire",
+        "test_capacity_failure_preserves_every_protected_identity",
+        "test_late_retryable_finalize_cannot_downgrade_protected_order",
+        "test_corrupt_retryable_claim_timestamp_blocks_all_replays_without_rewrite",
+        "test_stale_callback_cannot_finalize_new_tokenized_attempt"
+      ],
+      "invariants": [
+        "duplicate replay suppressed",
+        "malformed JSON cannot erase evidence",
+        "old callback cannot release new attempt"
+      ],
+      "test_evidence": [
+        "tests/test_execution_ledger_retention.py",
+        "41644194933 exact-head 1689 pass"
+      ]
+    },
+    {
+      "path": "tests/test_execution_outcome.py",
+      "blob_sha": "e87b7a346750ef7ce5d0f9df4e39506a7e440917",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "reviewed_functions": [
+        "test_explicit_unknown_overrides_contradictory_success_flag",
+        "test_unverified_broker_failure_keeps_durable_duplicate_suppression",
+        "test_missing_broker_receipt_remains_nonretryable_across_restart",
+        "test_nonascii_or_noncanonical_order_receipt_cannot_confirm_acceptance",
+        "test_contradictory_success_timeout_keeps_replay_fence_after_restart"
+      ],
+      "invariants": [
+        "receipt syntax != fill",
+        "contradictory flags UNKNOWN",
+        "malformed receipts fail closed",
+        "restart preserves durable UNKNOWN claim"
+      ],
+      "test_evidence": [
+        "green push 41684476397",
+        "green PR 41684488536"
+      ],
+      "inspection": "Read complete 258-line regression module and classifier dependencies."
+    },
+    {
+      "path": "tests/test_financial_sizing_audit.py",
+      "blob_sha": "3f311e0f82bf704231ec008894bc661dd53084de",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Lines 1-112 and remaining test inventory inspected; existing fractional budget controls did not cover direct KR/US _resolve_buy_amount invalid KIS summaries",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_implicit_live_config_safety.py",
+      "blob_sha": "bb8921553e8855fcf6e7f46d44ffd311f64c00c6",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 84-line test read; seven test functions, isolated temp config and subprocess defaults; explicit real control. Test mock only.",
+      "reviewed_functions": [
+        "test_implicit_example_cannot_select_real_mode",
+        "test_explicit_missing_config_does_not_silently_arm_real",
+        "test_explicit_config_without_mode_defaults_to_demo",
+        "test_explicit_real_mode_remains_operator_controlled",
+        "test_implicit_example_cannot_set_direct_broker_real_defaults",
+        "test_shipped_example_never_defaults_to_real",
+        "test_direct_broker_default_without_live_config_is_not_real"
+      ],
+      "invariants": [
+        "bundled example cannot implicitly authorize real trading",
+        "explicit real config remains operator opt-in",
+        "missing explicit config raises"
+      ],
+      "file_audit_complete": true,
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "tests/test_inbound_json_duplicate_keys.py",
+      "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 67-line suite and WebUI signal parser inspected; no real broker side effects.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_pubsub_rejects_duplicate_json_keys",
+        "test_telegram_rejects_ambiguous_json_before_labeled_fallback",
+        "test_webui_json_input_rejects_duplicate_sizing_keys",
+        "test_telegram_polling_skips_ambiguous_json_without_executing",
+        "test_distinct_nested_json_objects_are_not_false_duplicates"
+      ],
+      "invariants": [
+        "duplicate financial JSON keys reject across PubSub/Telegram/WebUI",
+        "valid nested distinct keys accepted"
+      ],
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "tests/test_kis_auth_token_paths.py",
+      "blob_sha": "2aad283cf196af6ceaaa302bac51baad2d70eadf",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 24-line token-path test reviewed: per-account SHA prefix and round-trip; test suite passes, broader collision/token lifecycle unverified.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_kis_noncanonical_holding_quantity.py",
+      "blob_sha": "0ed8659a458701807f52e2a8ef655e4552fceaab",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_RED_GREEN_EXACT_HEAD_MOCK_CI",
+      "inspection": "Entire 120-line mock-only test module reviewed: 4 noncanonical parser inputs, 4 KR/US parser failures, 4 canonical controls, 4 KR/US watcher end-to-end cleanup fences; no broker calls",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_noncanonical_kis_quantity_is_unknown_not_confirmed_zero",
+        "test_noncanonical_zero_cannot_prove_flat_in_real_portfolio_parser",
+        "test_canonical_kis_decimal_quantities_still_work",
+        "test_malformed_zero_does_not_remove_confirmed_stop_loss_after_restart"
+      ],
+      "invariants": [
+        "Malformed KIS zero must not establish flat position or delete confirmed stop-loss"
+      ],
+      "failure_modes_reviewed": "KR/US; zero underscore; zero exponent; restart; no actual broker orders",
+      "test_evidence": {
+        "red_push": 41712651185,
+        "red_sha": "2c70b05762b7f2964867b9c25d0911e30d7136c1",
+        "red": "8 failed, 1813 passed",
+        "green_push": 41713005297,
+        "green_pr": 41713014909,
+        "green_head": "126ef3545dd386b6dc8c761f51c9342dd242c141",
+        "green_merge_sha": "6f9b9a1b9b67f404b444333179cb12183bad9e7a",
+        "linux_push": "1825 passed",
+        "linux_pr": "1835 passed",
+        "windows": "167 passed"
+      },
+      "review_evidence": "KIS response mocked only; no credential/network/real or demo orders"
+    },
+    {
+      "path": "tests/test_kis_read_only_order_history.py",
+      "blob_sha": "f81e5fbd02c513c0afac9fd15eb5c8409a560c8d",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_RED_GREEN_MOCK_CI",
+      "inspection": "Full current source read; code/test contract, failure modes and safe no-order side effects reviewed",
+      "reviewed_functions": [
+        "MockHistoryResponse",
+        "_trader",
+        "_row",
+        "_read",
+        "17 base test cases",
+        "14 edge test cases"
+      ],
+      "invariants": [
+        "mock _request permits inquiry endpoint only",
+        "KR/US account scopes isolated",
+        "never infer fill/activate stop",
+        "pagination and duplicate/conflict fail closed"
+      ],
+      "test_evidence": [
+        "17 red 41738181175",
+        "4 red 41738763529",
+        "31 pass final 41738962086/41738969895"
+      ],
+      "review_evidence": "Full 31-case test source authored and reviewed; red assertions distinguish missing feature from two genuine response parser ambiguities."
+    },
+    {
+      "path": "tests/test_legacy_unattributed_buy_fence.py",
+      "blob_sha": "a98fa4b0fd2a45e29c8389f35a2868f5d59f7075",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Entire 22-case mock-only suite reviewed: legacy KR/US unknown/in_progress/executed, watcher cleanup, modern SELL, malformed side, single/multi dispatch",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_legacy_protected_claim_without_intent_must_fence_unattributed_buy",
+        "test_real_single_dispatch_persists_sell_side_before_mock_broker"
+      ],
+      "invariants": [
+        "Opaque legacy claims and invalid provenance must not authorize SELL or deletion"
+      ],
+      "failure_modes_reviewed": "KR/US, legacy restart, corrupt side, SELL provenance, multi-account",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "legacy global fail-closed fence and modern SELL-side specificity; broker calls mocked",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_market_hours.py",
+      "blob_sha": "7e140a732dcd94b75fbdcd65cd0ea3476ad49364",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 52-line market-hours suite read: KR/US sessions, weekend, US early close, KST reserved windows and maintenance; reserved-weekend semantics not proven.",
+      "reviewed_functions": [
+        "test_kr_market_closed_on_weekend",
+        "test_us_market_honors_nyse_early_close_session",
+        "test_us_reserved_order_maintenance_window_is_unavailable"
+      ],
+      "invariants": [
+        "regular market calendar and reserved windows are distinct"
+      ],
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_multi_account_dispatch.py",
+      "blob_sha": "f62a91164f46ce7a103e419b10fdc60be611ac3f",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 347-line account dispatch suite inspected; per-account failure isolation, scoped identities, queue target migration, disabled accounts and replay. Latest-head full pytest covers cases.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_multi_account_domestic.py",
+      "blob_sha": "17bc20fe8ef1cc399cf1dde6d9a1f85e6cf3415d",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_multi_account_empty_balance_fail_closed.py",
+      "blob_sha": "c569088f272834d3e20829d7b15fc1dfa8ce0964",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Full 22-line KR/US empty account configuration regression; missing account is not zero holdings",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_empty_multi_account_holdings_fail_closed"
+      ],
+      "invariants": [
+        "No configured accounts cannot imply zero holdings"
+      ],
+      "failure_modes_reviewed": "KR/US, missing account configuration",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "constructors bypassed; get_holding_quantity must raise rather than erase stops",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_multi_account_kis_auth.py",
+      "blob_sha": "a46c30438ab16495e1780f9a47d3e02cf096e718",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_multi_account_malformed_balance_fail_closed.py",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "evidence_status": "FULL_SOURCE_READ_REAL_PARSER_MULTIACCOUNT_MOCK_CI",
+      "inspection": "Entire 3021-byte test read, fixtures checked; 16 malformed KR/US first/second-account cases + 2 legitimate-zero controls; no network",
+      "blob_sha": "7d97a580899d56cd85f4a6099af182bf86d25b5e",
+      "contracts": [
+        "Malformed quantity in any account leg must not prove aggregate flat",
+        "Two verified zero legs may prove flat"
+      ],
+      "failure_paths": [
+        "0_0",
+        "0e999999",
+        "1_0",
+        "1e1",
+        "first and second account leg"
+      ],
+      "tests": [
+        "tests/test_multi_account_malformed_balance_fail_closed.py::test_one_corrupt_account_leg_cannot_confirm_flat_balance",
+        "tests/test_multi_account_malformed_balance_fail_closed.py::test_two_verified_zero_account_legs_are_confirmed_flat"
+      ],
+      "review_evidence": "PR merge Actions 41721915580: Linux 1853 passed, Windows 167 passed, Docker success; mock only",
+      "reviewed_head_sha": "303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589",
+      "reviewed_merge_sha": "8fa5982d14e53fb84edc024926577cde099c5164"
+    },
+    {
+      "path": "tests/test_multi_account_us.py",
+      "blob_sha": "fd078dbc723634021d05ff9cd347d2664223261f",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Two stale headerless synthetic Response fixtures corrected to explicit terminal tr_cont D; code-path tests verified on current HEAD; full 27k file not audited.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_off_hours_policy.py",
+      "blob_sha": "4b456a6973113ac26c27972923e16fde247e9fb2",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 290-line queue suite read: persistence, corrupt timestamp/JSON, capacity, failure quarantine, concurrent enqueue, duplicate-key safety; no KIS.",
+      "reviewed_functions": [
+        "test_queue_preserves_enqueue_that_races_with_drain",
+        "test_duplicate_json_queue_fields_fail_closed_without_execution"
+      ],
+      "invariants": [
+        "queue survives corrupt entries and concurrent persistence without duplicate execution"
+      ],
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_order_history_alias_consistency.py",
+      "blob_sha": "c7897ad6c387f30a31934d6b015f87b9e11d4462",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "evidence_status": "FULL_SOURCE_REVIEW_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Read full newly authored 20-case KR/US Mock-only alias suite: 9 contradictory alias dimensions x 2 markets, 2 positive controls, no broker order calls.",
+      "reviewed_functions": [
+        "test_conflicting_history_aliases_fail_closed[9 fields x KR/US]",
+        "test_identical_history_aliases_preserve_read_only_evidence[KR/US]"
+      ],
+      "invariants": [
+        "Conflicting order/quantity/fill/cancel aliases cannot become attributed evidence",
+        "History inquiries are read-only and cannot activate stops",
+        "Mock results do not prove KIS execution"
+      ],
+      "failure_modes_reviewed": "conflicting aliases, cross-market, duplicate execution evidence, ambiguous quantity, pagination, account provenance",
+      "test_evidence": [
+        "test-first fce30305183cd2f68dfacd0cbb0d00396861b832 Actions 41766433174: 18 assertion failures, 1915 passed",
+        "fix 0cdcf83ee141face9e5b0c0555810c30a426efd9 Actions 41766593225: 1923 passed; 41766598619: 1933 passed; Windows 167; Docker success"
+      ],
+      "review_evidence": "Full current blob and code diff checked; red-to-green product assertion path; KIS demo not run",
+      "limitations": [
+        "No authoritative fill-ID to durable ledger or stop activation",
+        "Independent 2+2 audit incomplete"
+      ]
+    },
+    {
+      "path": "tests/test_partial_exit_stop_loss_safety.py",
+      "blob_sha": "b99e699d9c376654c50ca640524840d5c851166e",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 77-line suite and _trigger_sell implementation reviewed; US positive/zero, KR inquiry failure; receipt is acceptance not fill; KR positive/zero matrix not established by this test.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_watcher_strategy_partial_execution_requires_verified_flat",
+        "test_watcher_preserves_protection_when_balance_query_fails"
+      ],
+      "invariants": [
+        "positive post-SELL holdings retain tracker",
+        "zero verified holding removes tracker only for nonpending position",
+        "failed holdings query retains tracker"
+      ],
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+      "blob_sha": "5653e71c581605e39e223801ec88d2156f10d71b",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Full revised 191-line suite inspected; direct zero cleanup and unresolved BUY stop SELL fence",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_unresolved_buy_survives_restart_and_prevents_zero_cleanup",
+        "test_cancelled_without_authoritative_fill_attribution_is_not_proven_flat"
+      ],
+      "invariants": [
+        "Zero holding snapshot cannot erase confirmed tracker while unresolved BUY remains"
+      ],
+      "failure_modes_reviewed": "KR/US, status variants, corrupt ledger, case variants, account legs, cancel",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "watcher and ledger mock tests assert no SELL and no deletion; fill-ID integration missing",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_pending_buy_stop_loss_safety.py",
+      "blob_sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 208-line pending BUY suite reviewed: zero holdings/restart, unrelated positive holdings, manual confirmed controls, multi-account partial acceptance, no automatic SELL for unresolved BUY",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_percent_buy_account_summary_finite.py",
+      "blob_sha": "d12d25430518753c31e3fed197ea743360ff4b8a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 118-line new mock-only regression suite inspected: 31 test-first failures on KR/US adapter paths, additional zero-USD auto-exchange and huge finite assets boundary controls; final CI pending",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_profit_band_config_integrity.py",
+      "blob_sha": "b9219d4918af9788b5913f1f579da2595e17de9a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "All 49 lines read; duplicate profit thresholds, malformed shape and pre-broker rejection.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_pubsub_readiness.py",
+      "blob_sha": "cda94ccff0897c4228793cde03bd0d6cb5f5a006",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_queue_and_account_sizing.py",
+      "blob_sha": "1f2765d5f033f4eb01a6f0a5f02a35e0d6dcaf21",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "All 74 lines read; queue signal fractions and per-account mock budget checks.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_queue_corrupt_entry_recovery.py",
+      "blob_sha": "1f4fac4e9857bc59156e50de1d780de989b51026",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 41-line parametrized six-case test; queue recovery tested with in-memory callback only; no broker call.",
+      "reviewed_functions": [
+        "record",
+        "test_corrupt_entry_is_quarantined_without_wedging_queue"
+      ],
+      "invariants": [
+        "six malformed queue records quarantined",
+        "valid pending record drains once",
+        "failed record retained"
+      ],
+      "file_audit_complete": true,
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "tests/test_queue_execution_context.py",
+      "blob_sha": "be2b011657ada3eb7adffbbf700bd665660659bf",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "All 312 lines inspected including queued pinned account mock claim signature and BUY intent assertion",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_queued_single_account_never_switches_trading_mode",
+        "test_queued_single_account_pins_broker_account_without_losing_dedupe",
+        "test_queued_multi_account_cannot_switch_demo_to_real"
+      ],
+      "invariants": [
+        "Queued order must preserve demo/real environment and account identity"
+      ],
+      "failure_modes_reviewed": "mode switch, primary account rotation, tampered legacy scope, pinned account, multi-account",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "mock queue replay rejects context drift and validates account-bound ledger claim",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_run_script.py",
+      "blob_sha": "4cb4b3da37835ae97579547010e632f781590509",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 49-line shell fake-bin test reviewed: no real pull/install, dirty/pull/install failure boundaries.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_runtime_paths.py",
+      "blob_sha": "cd12299bb5d5f037484087ee1cf98f5f1a557ef7",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 151-line runtime relocation and isolated dry-run tests inspected; exact-head Linux CI green",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_schema.py",
+      "blob_sha": "fa42823b5396ef94551ba85a63336bfa0f7a02da",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 35-line schema inference test module read; KR numeric and US alpha market inference plus explicit override.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_score_band_config_integrity.py",
+      "blob_sha": "354910f908f6f05d7ce856f26efa088bf5d6aadb",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "All 79 lines read; duplicate numeric threshold aliases, boolean and range rejection.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_score_max_capital_strategy.py",
+      "blob_sha": "22c6a7382015fc5376cc05ffb56df4e9f3fe4633",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_signal_exit_strategies.py",
+      "blob_sha": "9f4a3ecd43942b220e7ae302dbfd1460dff23246",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_signal_integer_precision.py",
+      "blob_sha": "7f149439d02cc84c0fda7e7d3dcab0b5f6060180",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 88-line suite read: 2**53 precision and fractional decimal rejection across Pub/Sub, Telegram and WebUI; valid price/fraction control.",
+      "reviewed_functions": [
+        "test_financial_integer_rejects_unsafe_float_precision",
+        "test_pubsub_decimal_literal_cannot_round_fraction_to_integer",
+        "test_webui_text_rejects_inexact_decimal_integer"
+      ],
+      "invariants": [
+        "financial integer fields cannot round unsafe inputs"
+      ],
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_signal_safety.py",
+      "blob_sha": "faf586e4764459a9379ff86d79bd15f5a954e823",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_signal_schema.py",
+      "blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_stop_loss_account_selection.py",
+      "blob_sha": "f3e992bb83678d3c60d920f7ec36816f98820ca4",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Entire 39-line mock suite read: KR/US named/index single-account and multi-account stop-loss inquiry constructors; no real KIS holdings.",
+      "reviewed_functions": [
+        "test_watcher_passes_selected_single_account_to_broker",
+        "test_watcher_multi_account_inquiry_still_covers_all_accounts"
+      ],
+      "invariants": [
+        "Stop watcher must query configured account selector not unrelated default"
+      ],
+      "file_audit_complete": true,
+      "failure_modes_reviewed": "KR/US, account name/index, multi-account",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "constructor kwargs captured; no actual KIS account or per-order fill attribution",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_stop_loss_legacy_quarantine.py",
+      "blob_sha": "97657edc424b61e1789034de08e6bf69b2ebc695",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Entire original mock suite and 14 added KR/US corrupt-rearm and pre-submit tests read; red 12+2; final exact-head 1662/1672 CI.",
+      "previous_blob_sha": "fdfcb6b42acf6e3035387b91307f4363bd2fafa9",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_legacy_list_quarantine_survives_remove_and_new_position",
+        "test_duplicate_json_keys_block_orders_and_preserve_original_file",
+        "test_corrupt_stop_tracker_blocks_buy_before_mock_broker"
+      ],
+      "invariants": [
+        "Malformed legacy positions must remain preserved and non-actionable"
+      ],
+      "failure_modes_reviewed": "duplicate keys, case variants, invalid prices, atomic replace, corrupt canonical records",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "lossless quarantine, read-only conflict checks, atomic failure preservation, no broker calls",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_stop_loss_mismatched_key_quarantine.py",
+      "blob_sha": "3ac8519a8bb699d499b891b6fa0d78ec7955265d",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Entire new 102-line offline regression module reviewed; five mock/edge tests; test-first 2 failed then exact-head 1314 passed",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_mismatched_key_for_same_instrument_quarantines_both_snapshots",
+        "test_direct_trigger_cannot_bypass_mismatched_key_quarantine"
+      ],
+      "invariants": [
+        "Canonical and noncanonical records for same symbol cannot generate competing stops"
+      ],
+      "failure_modes_reviewed": "mismatched storage key, direct trigger bypass, case-variant key, unrelated MSFT",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "tests assert no automatic SELL, no rearm and no evidence loss",
+      "remaining_limitations": null
+    },
+    {
+      "path": "tests/test_stop_loss_signal_identity.py",
+      "blob_sha": "82be94f9dff37d58d5f333b33297309b332b03e8",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 72-line tests, watcher stable-id logic and direct dispatch path inspected; mock unknown response, not broker fills.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_stop_loss_identity_does_not_rotate_after_threshold_or_entry_edit",
+        "test_legacy_stop_record_migrates_original_id_before_edit",
+        "test_invalid_persisted_stop_signal_id_blocks_automated_order",
+        "test_legacy_from_dict_preserves_reconcilable_signal_identity"
+      ],
+      "invariants": [
+        "persistent SELL identity stable after edit/restart",
+        "legacy identity migration before threshold changes",
+        "invalid ID quarantined"
+      ],
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "tests/test_stop_loss_snapshot_preflight.py",
+      "blob_sha": "e5227529f3ae172150702cddc56915b85258c5ee",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "Reviewed test_direct_trigger_rejects_stale_stop_snapshot_after_edit, test_direct_trigger_rejects_removed_position_snapshot, test_direct_trigger_rejects_legacy_snapshot_rewrite, test_direct_trigger_rejects_newly_pending_record, test_direct_trigger_fails_closed_on_unreadable_tracker, test_direct_trigger_allows_unchanged_confirmed_snapshot; failure contracts: stale snapshot blocked before dispatch; unreadable tracker fails closed; unresolved external broker semantics not treated as proven.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_direct_trigger_rejects_stale_stop_snapshot_after_edit",
+        "test_direct_trigger_rejects_removed_position_snapshot",
+        "test_direct_trigger_rejects_legacy_snapshot_rewrite",
+        "test_direct_trigger_rejects_newly_pending_record",
+        "test_direct_trigger_fails_closed_on_unreadable_tracker",
+        "test_direct_trigger_allows_unchanged_confirmed_snapshot"
+      ],
+      "invariants": [
+        "stale snapshot blocked before dispatch",
+        "unreadable tracker fails closed"
+      ],
+      "test_evidence": [
+        "tests/test_stop_loss_snapshot_preflight.py",
+        "41644194933 exact-head 1689 pass"
+      ]
+    },
+    {
+      "path": "tests/test_stop_loss_strategy_market_order.py",
+      "blob_sha": "64ac3bb603c87a4fbce01a6694830487d1783ce8",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full KR/US market/limit strategy regression reviewed; internal marker added to trusted fixture; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_stop_loss_watcher.py",
+      "blob_sha": "4a01653810a0e5758da7a925dadc30e06652347f",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Targeted changed old rearm-corrupt test: now requires explicit operator reconciliation and preserves bytes; not whole module.",
+      "previous_blob_sha": "6d3b312ec8f0e974c1aeb543ee730ac4dbd387bd",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_strategy_partial_matrix.py",
+      "blob_sha": "a57d37d6acf86f34b0334793d135a02af7d53d9f",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 122-line suite read: 10 BUY and 9 SELL strategies with mock fraction/denominator checks; direct strategy calls disable dedupe, no broker fill attribution.",
+      "reviewed_functions": [
+        "test_strategy_partially_buys_once_from_own_budget",
+        "test_strategy_partial_sell_respects_publisher_denominator"
+      ],
+      "invariants": [
+        "partial budget/fraction propagated consistently; receipt is not a fill"
+      ],
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_strategy_runtime_fail_closed.py",
+      "blob_sha": "cb4120f4c6cb765de42765655773166f0c909f75",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full 152-line invalid JSON, nonfinite, corrupt timestamp, trailing/riskoff state and disk failure tests",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_strategy_semantic_state_safety.py",
+      "blob_sha": "ab1e6b1ab76b96f5f8c9d05bb94a06e4f544e9c4",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full 101-line invalid cooldown/risk-off record cases; duplicate and malformed scopes fail closed",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "blob_sha": "a76728d36349b4d36f47d1a2629a43f8e5f39692",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_subscriber_smoke.py",
+      "blob_sha": "baaad276d08c5ff7fde4f413401bf75e2282a45a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_telegram_fetch.py",
+      "blob_sha": "2fc3284381b3690b87f0da591582bc71cdf127e9",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_telegram_signal_worker.py",
+      "blob_sha": "a2f30413b66c9fdf71b350b56af3cc001b431669",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "blob_sha": "6a2325723a1b58e63fb3e78475fc118f3d860583",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "reviewed_functions": [
+        "test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop",
+        "test_multi_account_one_unknown_leg_survives_rejected_other_leg_restart",
+        "test_finalize_persistence_failure_after_unknown_buy_claim_keeps_fence",
+        "test_cancelled_unattributed_buy_with_late_holdings_stays_fenced",
+        "test_cancelled_buy_finalize_disk_failure_preserves_pre_submit_fence"
+      ],
+      "invariants": [
+        "UNKNOWN or cancelled BUY remains fenced despite later aggregate holdings",
+        "KR/US multi-account and restart fail closed",
+        "ledger persistence failure retains pre-submit fence",
+        "mock safety does not establish fill ID attribution"
+      ],
+      "test_evidence": [
+        "green push 41684476397",
+        "green PR 41684488536"
+      ],
+      "inspection": "Read complete 191-line Mock UNKNOWN/delayed/partial/cancel/restart test module; still no broker-authoritative reconciliation."
+    },
+    {
+      "path": "tests/test_unknown_buy_intent_durability.py",
+      "blob_sha": "067f69b773d7d1a17a8f51fc6e04a02684d0c83a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 183-line mock suite reviewed: UNKNOWN BUY pre-submit durable intent, restart, per-account separation, no secret leakage, persistence failure prevents broker call",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_unresolved_buy_without_stop_loss.py",
+      "blob_sha": "7751ce96f23a336c8ed5a5dd15aac35e6f505deb",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Full 424-line mock suite including new 10 queued KR/US multi-account cases; 8 expected red assertions, 2 rejected controls green, 1583 exact-head tests green; no broker fills attributed",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_unresolved_buy_without_new_stop_preserves_confirmed_tracker",
+        "test_queued_multi_account_stop_sell_rechecks_unknown_buy_before_mock_broker"
+      ],
+      "invariants": [
+        "BUY without stop still creates durable intent and blocks ambiguous stop SELL"
+      ],
+      "failure_modes_reviewed": "KR/US, disk failure, partial account ambiguity, queue replay, corrupt ledger",
+      "test_evidence": {
+        "workflow_id": 41684488536,
+        "head_sha": "b056e733467a9e2f784271bedb99479100322781",
+        "merge_sha": "e79378a9f5a7e957a98d958de41644fcbc9dee12",
+        "linux_pytest": "1819 passed (previous exact-head run)",
+        "windows": "167 passed (previous exact-head run)",
+        "new_tests_executed_this_slot": 0
+      },
+      "review_evidence": "tests prove pre-broker fences; cannot activate confirmed-fill stop without broker proof",
+      "remaining_limitations": "No authoritative broker fill-ID, cumulative fill or remainder proof"
+    },
+    {
+      "path": "tests/test_upstream_signal_sizing.py",
+      "blob_sha": "b4e98d37f1708ef203be0263172e795e9a94e075",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_upstream_strategy_compatibility.py",
+      "blob_sha": "c60e3d868f8ee231dac4caf23a0fd5a0b2f4782a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_watcher_origin_spoofing.py",
+      "blob_sha": "d51905a710f75ac1403eef339e2a202f61b64d6b",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full mock regression reviewed: forged publisher ID, aliases, cross-ticker, whitespace, restart and legitimate watcher; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_watcher_strategy_bypass.py",
+      "blob_sha": "49ec5a4c90a67d731fb62b2db997957a4550824b",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full KR/US strategy routing regression reviewed; internal marker added to watcher-only fixtures; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_wave4_execution_safety.py",
+      "blob_sha": "38ecc2cffd3a21f6bfdc78f9d17a4e1d8e6abd59",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_webui_console.py",
+      "blob_sha": "378b6a6da0bf820e39faa300d9a1448febbcacdf",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_webui_dry_run_service.py",
+      "blob_sha": "17960df01e1b1e675a813ce34e861d9c4a10331e",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 83-line tests and dry-run service reviewed; mock constructor traps verify isolation.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_dry_run_result_is_dispatch_result_like_without_live_execution",
+        "test_dry_run_invalid_payload_has_no_traceback",
+        "test_create_app_has_no_live_client_import_side_effect",
+        "test_dry_run_rejects_ambiguous_raw_signal_in_api_and_form",
+        "test_dry_run_api_rejects_duplicate_outer_payload_keys"
+      ],
+      "invariants": [
+        "KIS/dispatcher constructors must not be called in dry-run",
+        "invalid/duplicate raw JSON rejects in API and form",
+        "app creation has no live client"
+      ],
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "tests/test_webui_log_service.py",
+      "blob_sha": "91a863e2e5f81ce0f73ada7d7ac43d0bcf5c6b11",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 58-line log tests reviewed: path allowlist, byte/line limits, truncated private-key redaction.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_webui_manual_buy_durable_intent.py",
+      "blob_sha": "eb7c816267b8b08e899e84fd752bde67d07de93e",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "Reviewed test_manual_unknown_buy_persists_fence_before_broker_and_restart, test_manual_buy_durable_claim_write_failure_prevents_broker, test_separately_armed_manual_orders_have_distinct_durable_identities, test_manual_multi_account_unknown_buy_has_separate_durable_intents; failure contracts: manual KR/US pre-submit BUY fence; multi-account scope isolation; disk failure blocks submission; unresolved external broker semantics not treated as proven.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_manual_unknown_buy_persists_fence_before_broker_and_restart",
+        "test_manual_buy_durable_claim_write_failure_prevents_broker",
+        "test_separately_armed_manual_orders_have_distinct_durable_identities",
+        "test_manual_multi_account_unknown_buy_has_separate_durable_intents"
+      ],
+      "invariants": [
+        "manual KR/US pre-submit BUY fence",
+        "multi-account scope isolation",
+        "disk failure blocks submission"
+      ],
+      "test_evidence": [
+        "tests/test_webui_manual_buy_durable_intent.py",
+        "41644194933 exact-head 1689 pass"
+      ]
+    },
+    {
+      "path": "tests/test_webui_queue_service.py",
+      "blob_sha": "eb9f2b0207d83c7f45540f64473bbd89c0c36138",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 90-line queue summary test module read; missing/malformed/oversized files, masked failure, 500 display cap.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_webui_readiness_service.py",
+      "blob_sha": "344cadc082a6b7a10fa66da01d2ce8344b6626de",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 42-line tests and readiness service reviewed; no live PubSub access.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_config_status_is_allowlisted_and_masked",
+        "test_readiness_summary_static_does_not_run_live_check",
+        "test_config_status_treats_whitespace_required_values_as_missing"
+      ],
+      "invariants": [
+        "allowlisted readiness masks secret path",
+        "static view never calls PubSub",
+        "whitespace-only required values missing"
+      ],
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "tests/test_webui_routes.py",
+      "blob_sha": "64b568e9bb566b053e8e4f7f753162777f0b2cfc",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_webui_security.py",
+      "blob_sha": "d25e2cdba7c6ea5c5279ab032cfe4d30d99f43fa",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 57-line masking tests reviewed: private key, bearer, account, YAML/JSON secret masking.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_webui_signal_service.py",
+      "blob_sha": "3b4aa6628f88c9b415e01ee86eb9941a73787547",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 24-line tests and full signal_service.py inspected; no dispatch.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_parse_signal_input_reuses_existing_schema_for_valid_kr_buy",
+        "test_parse_signal_input_returns_safe_error_for_invalid_payload",
+        "test_parse_signal_text_json_path"
+      ],
+      "invariants": [
+        "valid KR BUY DTO, invalid price error, US SELL JSON parsing"
+      ],
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "tests/test_webui_startup.py",
+      "blob_sha": "999f9a3cd0ac77e3ff9003e95e7c0b6b288b3f63",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/test_webui_telegram_service.py",
+      "blob_sha": "556d9084efb712c5adca05c6366c85d4a7134481",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 33-line preview mock reviewed: no broker side effects, post source field and parsed flag.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/webui_browser_smoke.cjs",
+      "blob_sha": "53aec023f1b2e3d3148853d02a35f2a0804df34e",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "tests/webui_fixture_server.py",
+      "blob_sha": "9e2ee38cb00c41375f1f7cc0711106aebe483639",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 25-line synthetic server reviewed: isolated temporary runtime, dry-run app, synthetic queue and ledger.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/__init__.py",
+      "blob_sha": "a0326b8406920998e8dbe830d120148840ddfe01",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 55-line lazy import/export routing reviewed against dispatch/schema/market hours; no direct trading side effects.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/buy_sizing.py",
+      "blob_sha": "bae6cd582801b40d70ad8054e3eb2de189fb746b",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full 130-line helper inspected after 31 expected KR/US mock failures: finite account summary, missing/boolean fields, negative cash, nonfinite fallback; percent auto-exchange zero-cash contract preserved; final CI pending",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/config_paths.py",
+      "blob_sha": "64e9ac586681ab5144cf6de6582d027ee9abf21e",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "FULL 69-line current-blob audit: all six path helpers, explicit KIS override, safe example fallback, runtime dir relocation, missing explicit config; call sites market_hours.get_trading_mode and KR/US constructors inspected. Mock tests test_runtime_paths.py and test_implicit_live_config_safety.py covered by exact-head 41644194933 rerun 1689 pass; no real KIS.",
+      "reviewed_functions": [
+        "configured_kis_config_path",
+        "writable_kis_config_path",
+        "implicit_example_kis_config_active",
+        "active_kis_config_path",
+        "configured_runtime_dir",
+        "runtime_file_path"
+      ],
+      "invariants": [
+        "example fallback is not implicit real-order authorization"
+      ],
+      "previous_blob_sha": "578fec77b343c894898937dda04d8819e215d1a6",
+      "file_audit_complete": true,
+      "test_evidence": [
+        "tests/test_runtime_paths.py",
+        "tests/test_implicit_live_config_safety.py",
+        "41644194933 attempt 2 job 125975112746"
+      ]
+    },
+    {
+      "path": "trading/config/kis_devlp.yaml.example",
+      "blob_sha": "0f9ffd629f9c96cf55ad068a143c77364d748016",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "targeted_path_review": "Default mode switched real to demo, auto_trading true intentionally unchanged (paper orders possible); remaining example fields not fully audited.",
+      "previous_blob_sha": "1379c70fefdcb41ede63ff0bbd00eb4d9ef417e9",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "61e571eed5898087b335974776327a57a24607bc",
+      "status": "TARGETED_REVIEW_NOT_FULL_FILE_AUDIT",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_TARGETED_REVIEW",
+      "inspection": "Current 1400+ line dispatcher targeted: multi-account per-account finalize, single-account claim/finalize, _durable_buy_receipt, broker result mapping, safety gate; remaining functions not fully audited.",
+      "targeted_path_review": "Reviewed broker lock, pre-submit ledger claims, queued KR/US stop fence and tracking; entire 1382 lines not fully audited.",
+      "previous_blob_sha": "b7e6dc1eb9add17005133a3120c4a0f66cb2706d",
+      "file_audit_complete": false,
+      "test_evidence": [
+        "test_single_account_dispatch_persists_broker_receipt_without_fill_proof",
+        "tests/test_queue_execution_context.py (legacy mock compatibility regression fixed)",
+        "Actions 41761643544/41761650279"
+      ]
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "ec19985fac743a140f1197ef4ecec1280cd4d804",
+      "status": "CHANGED_BLOB_REQUIRES_FULL_REAUDIT",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NEW_BLOB_REQUIRES_REAUDIT",
+      "targeted_path_review": "Import-time KR single/multi DEFAULT_MODE changed to demo only for implicit example; other 2000+ lines not fully audited.",
+      "previous_blob_sha": "9ff73ff4357ddcc6e9fd2473c91058fc9990c6a9",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a8703bbb3d128ffa9fb7e5d63de693eadf5534ff",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "REVIEWED_CURRENT_BLOB_AND_CI",
+      "inspection": "Full 470-line ledger reviewed: identity hashing and aliases, intent/receipt canonicalization, strict JSON load, atomic save, prune, unresolved BUY guard, claim, token-scoped finalize/release; new receipt cannot imply fill; contradictory recovered receipt/status blocks all automatic ledger mutations. Mock baseline 10 actual red -> final 1903 push and 1913 PR merge tests green.",
+      "targeted_path_review": "Reviewed intent validation, durable claim, finalization, prune and pending guard; entire 435 lines not fully audited.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "_identity_source",
+        "execution_identities",
+        "execution_identity",
+        "_validated_order_intent",
+        "_validated_order_receipt",
+        "ExecutionLedger.__init__",
+        "_load",
+        "_save",
+        "_prune",
+        "guard_unresolved_buy",
+        "claim",
+        "finalize",
+        "release"
+      ],
+      "invariants": [
+        "accepted receipt is not a fill",
+        "account-scoped claim and immutable order number",
+        "UNKNOWN cannot auto-retry",
+        "stale token cannot mutate receipt",
+        "recovered receipt with retryable status fails closed",
+        "atomic save failure leaves pending claim"
+      ],
+      "test_evidence": [
+        "tests/test_buy_order_receipt_durability.py",
+        "test_accepted_buy_receipt_survives_restart_but_stays_unresolved[KR/US]",
+        "test_unknown_buy_receipt_is_evidence_only_after_restart",
+        "test_receipts_are_scoped_to_distinct_account_claims",
+        "test_late_finalize_cannot_attach_receipt_to_new_attempt",
+        "test_terminal_duplicate_finalize_cannot_rotate_receipt",
+        "test_noncanonical_receipt_cannot_be_persisted",
+        "test_receipt_persistence_failure_does_not_claim_fill",
+        "test_single_account_dispatch_persists_broker_receipt_without_fill_proof[KR/US,executed/unknown]",
+        "test_receipt_extraction_never_invents_authoritative_order_id",
+        "test_recovered_receipt_with_retryable_status_fails_closed[6]",
+        "test_corrupted_persisted_receipt_requires_operator_reconciliation[4]",
+        "Actions push 41761643544: 1903 passed; PR merge 41761650279: 1913 passed; Windows and Docker success"
+      ],
+      "previous_blob_sha": "85e21badeb5a02adb13b990e72e45d2a7d82abba"
+    },
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MOCK_CI",
+      "reviewed_functions": [
+        "rejection_is_ambiguous",
+        "classify_broker_result",
+        "valid_receipt"
+      ],
+      "invariants": [
+        "compact exception class names cannot override ambiguous transport",
+        "KIS business-code syntax does not override getErrorMessage transport exceptions",
+        "accepted order is not a fill",
+        "clean business rejection control stays retryable"
+      ],
+      "test_evidence": [
+        "red1 41683768616: 48 expected failures, 1737 pass",
+        "red2 41684227617: 23 expected failures, 1786 pass",
+        "green push 41684476397: 1809 pass",
+        "green PR 41684488536: 1819 pass"
+      ],
+      "inspection": "Read full 200-line module, KR/US wrapper callers, strategy execution_from_result, durable ledger contract; KIS actual fill not proven."
+    },
+    {
+      "path": "trading/file_lock.py",
+      "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "Reviewed FileLock.__enter__, FileLock._is_contention_error, FileLock._acquire, FileLock.__exit__, fsync_parent_directory; failure contracts: OS-backed exclusive advisory lock; release handle on exit; directory fsync failure propagates; unresolved external broker semantics not treated as proven.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "FileLock.__enter__",
+        "FileLock._is_contention_error",
+        "FileLock._acquire",
+        "FileLock.__exit__",
+        "fsync_parent_directory"
+      ],
+      "invariants": [
+        "OS-backed exclusive advisory lock",
+        "release handle on exit",
+        "directory fsync failure propagates"
+      ],
+      "test_evidence": [
+        "tests/test_durable_state_directory_sync.py",
+        "tests/test_execution_ledger_retention.py",
+        "41644194933 exact-head 1689 pass"
+      ]
+    },
+    {
+      "path": "trading/kis_auth.py",
+      "blob_sha": "5b2113b2439bed4d06b18217e9a575fff8f14319",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/market_hours.py",
+      "blob_sha": "931a5689ac00ae81b1c7ae3958bae295119a5cb9",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 218-line module read after patch: get_trading_mode demo fallback, missing explicit config error, KR/US calendars/reserved windows; final exact-head CI success.",
+      "reviewed_functions": [
+        "get_trading_mode",
+        "is_market_open",
+        "is_off_hours_order_available",
+        "next_market_open"
+      ],
+      "invariants": [
+        "missing/default mode never silently selects real"
+      ],
+      "previous_blob_sha": "170d8a7ff22ce4e40dcdecda865515ad7670fb9f",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/modes.py",
+      "blob_sha": "49caad45c48992394cc00b090495cb1bc4cbbd85",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "FULL_FILE_REVIEWED",
+      "reviewed_functions": [
+        "normalize_trading_mode",
+        "_ALIASES"
+      ],
+      "invariants": [
+        "only explicitly normalized demo/real aliases accepted",
+        "unknown mode raises rather than silently selecting real"
+      ],
+      "file_audit_complete": true,
+      "test_evidence": [
+        "tests/test_implicit_live_config_safety.py",
+        "tests/test_strategy_suite.py",
+        "PR exact-head full pytest 1746 pass"
+      ]
+    },
+    {
+      "path": "trading/off_hours_queue.py",
+      "blob_sha": "dadfd7915786004cf54d59f0837075b8746d8e07",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "FULL 349-line source read: queue identity, parse/quarantine, atomic save, enqueue, drain_due and account context; queue-context tests reviewed; downstream broker execution and recovery not fully audited.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "evidence_status": "FULL_SOURCE_REVIEW_AND_EXACT_HEAD_MOCK_CI",
+      "inspection": "Read full 180-line read-only KIS reconciliation source; checked strict account/order/date/side matching, quantity validation, pagination, duplicate snapshots, conflicting aliases and no stop activation. 18 red assertion failures then exact-head green mock CI.",
+      "reviewed_functions": [
+        "_get",
+        "_first",
+        "_qty",
+        "_matched",
+        "read_order_history"
+      ],
+      "invariants": [
+        "Conflicting order/quantity/fill/cancel aliases cannot become attributed evidence",
+        "History inquiries are read-only and cannot activate stops",
+        "Mock results do not prove KIS execution"
+      ],
+      "test_evidence": [
+        "test-first fce30305183cd2f68dfacd0cbb0d00396861b832 Actions 41766433174: 18 assertion failures, 1915 passed",
+        "fix 0cdcf83ee141face9e5b0c0555810c30a426efd9 Actions 41766593225: 1923 passed; 41766598619: 1933 passed; Windows 167; Docker success"
+      ],
+      "review_evidence": "Full current blob and code diff checked; red-to-green product assertion path; KIS demo not run",
+      "failure_modes_reviewed": "conflicting aliases, cross-market, duplicate execution evidence, ambiguous quantity, pagination, account provenance",
+      "limitations": [
+        "No authoritative fill-ID to durable ledger or stop activation",
+        "Independent 2+2 audit incomplete"
+      ]
+    },
+    {
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cb8e36b0dc69e02296c93a611fb859bb7f884c4f",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_RED_GREEN_EXACT_HEAD_MOCK_CI",
+      "inspection": "Full 113-line current blob reviewed; canonical ASCII decimal gate prevents Decimal('0_0')/Decimal('0e999999') false zero, existing cursor/row fail-closed unchanged",
+      "file_audit_complete": true,
+      "test_evidence": {
+        "red_push": 41712651185,
+        "red_sha": "2c70b05762b7f2964867b9c25d0911e30d7136c1",
+        "red": "8 failed, 1813 passed",
+        "green_push": 41713005297,
+        "green_pr": 41713014909,
+        "green_head": "126ef3545dd386b6dc8c761f51c9342dd242c141",
+        "green_merge_sha": "6f9b9a1b9b67f404b444333179cb12183bad9e7a",
+        "linux_push": "1825 passed",
+        "linux_pr": "1835 passed",
+        "windows": "167 passed"
+      },
+      "reviewed_functions": [
+        "validated_balance_quantity",
+        "validated_balance_row",
+        "next_balance_cursor"
+      ],
+      "invariants": [
+        "Only canonical nonnegative integral KIS holdings may prove zero",
+        "KR/US fail closed on malformed holdings"
+      ],
+      "failure_modes_reviewed": "KR/US underscore and exponent zero, positive quantity, canonical 12.0000, partial balance, tracker cleanup",
+      "review_evidence": "Red 8 targeted failures on 2c70b057; green exact head push/PR; no KIS demo"
+    },
+    {
+      "path": "trading/schema.py",
+      "blob_sha": "034488d3d5dba31cad65e632e1dc95fbc4094265",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full signal schema and parse_signal_bytes reviewed; inbound JSON cannot set internal origin; numeric and duplicate-key validators inspected; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/signal_safety.py",
+      "blob_sha": "2a30edf46e86b295c8e1f1b599511f28146884fb",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/signal_sizing.py",
+      "blob_sha": "fc8f49e52be2544528c676444cfdeb24e31b771d",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "All 94 lines inspected: configured_buy_budget, scaled_buy_amount and adjusted_sell_fraction; fractional BUY already validates cash; direct broker percent path was missing same validation",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Targeted methods _load/_save/_assert_rearmable/assert_registration_safe/record_position/get_positions/remove_position/guard; corrupt canonical record cannot be overwritten; preflight read-only; not full 1090-line audit.",
+      "targeted_path_review": "Reviewed zero-balance, UNKNOWN BUY fence, direct stop SELL and post-order retention; entire 1049 lines not fully audited.",
+      "previous_blob_sha": "b4983acfc4b7f9467a73238e637cf4637f28b674",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/STRATEGIES.md",
+      "blob_sha": "65adb322efb0bcd103045ad122d1d5d0d3f3d758",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/__init__.py",
+      "blob_sha": "f5ce41bce6f6c9fc314ebcd401df0df376e79232",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full 73-line strategy export and cooldown dispatch registration checked",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/balance_split.py",
+      "blob_sha": "a3e3c7375f17788325451b45e4212866930d3596",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/balanced_risk.py",
+      "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current trading/strategies/balanced_risk.py source; verified BalancedRiskStrategyConfig.from_mapping, BalancedRiskStrategy.execute; failure contract: Underlying broker order fills not reconciled; mock-only CI 41721915580, no KIS orders.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "BalancedRiskStrategyConfig.from_mapping",
+        "BalancedRiskStrategy.execute"
+      ],
+      "invariants": [
+        "BUY delegates ScoreRisk",
+        "SELL delegates ProtectiveExit",
+        "other types rejected"
+      ],
+      "test_evidence": [
+        "tests/test_balanced_risk_strategy.py::test_balanced_risk_dispatches_buy_and_sell",
+        "tests/test_balanced_risk_strategy.py::test_balanced_risk_builds_both_strategy_legs"
+      ],
+      "review_evidence": "Source blob 51162a7406a69e9b81cd27ce81cf74c5ea690220, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "Underlying broker order fills not reconciled",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": "trading/strategies/bracket_exit.py",
+      "blob_sha": "7355e0a20212f77926e8d856b7d0539b9dc670c0",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current trading/strategies/bracket_exit.py source; verified BracketExitStrategyConfig.from_mapping, BracketExitStrategy._sell_decision, _limit_price, execute; failure contract: KIS fills/partial fills remain unverified; mock-only CI 41721915580, no KIS orders.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "BracketExitStrategyConfig.from_mapping",
+        "BracketExitStrategy._sell_decision",
+        "_limit_price",
+        "execute"
+      ],
+      "invariants": [
+        "SELL-only",
+        "full-exit reason then stop then target",
+        "inside bracket fallback",
+        "internal watcher market override only"
+      ],
+      "test_evidence": [
+        "tests/test_signal_exit_strategies.py::test_bracket_exit_prioritizes_stop_loss_and_uses_marketable_limit_price",
+        "tests/test_signal_exit_strategies.py::test_bracket_exit_rejects_signal_inside_brackets",
+        "tests/test_stop_loss_strategy_market_order.py"
+      ],
+      "review_evidence": "Source blob 7355e0a20212f77926e8d856b7d0539b9dc670c0, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "KIS fills/partial fills remain unverified",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "12960b7ef2de28cb3427e659208bcd0d5b556ff4",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full shared strategy helpers and runtime-state writers reviewed; watcher origin and reserved stable-ID aliases checked; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/cooldown.py",
+      "blob_sha": "824afe8cd6f71f43a937c3684f3bf97264627bee",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current trading/strategies/cooldown.py source; verified CooldownStrategyConfig.from_mapping, CooldownStrategy._key, _validate_records, execute; failure contract: Pending cannot safely clear without broker order/fill/cancel reconciliation; mock-only CI 41721915580, no KIS orders.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "CooldownStrategyConfig.from_mapping",
+        "CooldownStrategy._key",
+        "_validate_records",
+        "execute"
+      ],
+      "invariants": [
+        "pre-submit durable pending record",
+        "unresolved pending survives expiry",
+        "invalid legacy pending quarantined",
+        "verified failed release only"
+      ],
+      "test_evidence": [
+        "tests/test_cooldown_pending_reconciliation.py",
+        "tests/test_strategy_semantic_state_safety.py",
+        "tests/test_strategy_suite.py::test_cooldown_serializes_concurrent_duplicate_execution"
+      ],
+      "review_evidence": "Source blob 824afe8cd6f71f43a937c3684f3bf97264627bee, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "Pending cannot safely clear without broker order/fill/cancel reconciliation",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": "trading/strategies/event_risk_off.py",
+      "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full 89-line event/BUY path; validated state, expiration and configured risk multiplier; distinct from order pending fence",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/limit_buffer.py",
+      "blob_sha": "d61848090f664b45155be1efbf017030de08eacd",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current trading/strategies/limit_buffer.py source; verified LimitBufferStrategyConfig.from_mapping, LimitBufferStrategy._price, LimitBufferStrategy.execute; failure contract: KIS exchange/tick execution not demo-tested; mock-only CI 41721915580, no KIS orders.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "LimitBufferStrategyConfig.from_mapping",
+        "LimitBufferStrategy._price",
+        "LimitBufferStrategy.execute"
+      ],
+      "invariants": [
+        "KR BUY ceil SELL floor",
+        "US configured decimal rounding",
+        "finite positive final price",
+        "SELL buffer below 100"
+      ],
+      "test_evidence": [
+        "tests/test_strategy_suite.py::test_limit_buffer_uses_conservative_kr_tick_rounding",
+        "tests/test_strategy_suite.py::test_limit_buffer_uses_automatic_krx_tick_rounding",
+        "tests/test_strategy_suite.py::test_limit_buffer_rejects_invalid_sell_buffer"
+      ],
+      "review_evidence": "Source blob d61848090f664b45155be1efbf017030de08eacd, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "KIS exchange/tick execution not demo-tested",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": "trading/strategies/profit_ladder.py",
+      "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current trading/strategies/profit_ladder.py source; verified ProfitLadderStrategyConfig.from_mapping, ProfitLadderStrategy.execute; failure contract: No per-order fill/remaining verification; mock-only CI 41721915580, no KIS orders.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "ProfitLadderStrategyConfig.from_mapping",
+        "ProfitLadderStrategy.execute"
+      ],
+      "invariants": [
+        "SELL-only",
+        "validated 0..1 fractions",
+        "stop-loss and full exit precedence",
+        "publisher fraction adjustment once"
+      ],
+      "test_evidence": [
+        "tests/test_strategy_suite.py::test_profit_ladder_full_exit_reason_overrides_profit_band",
+        "tests/test_strategy_suite.py::test_profit_ladder_rejects_invalid_fractions",
+        "tests/test_strategy_partial_matrix.py"
+      ],
+      "review_evidence": "Source blob c2982be1a6cd5f961cb86c84279b51bf83e9158c, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "No per-order fill/remaining verification",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": "trading/strategies/protective_exit.py",
+      "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current trading/strategies/protective_exit.py source; verified ProtectiveExitStrategyConfig.from_mapping, ProtectiveExitStrategy._sell_fraction, _limit_price, execute; failure contract: Accepted SELL remains unfilled until broker confirms; mock-only CI 41721915580, no KIS orders.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "ProtectiveExitStrategyConfig.from_mapping",
+        "ProtectiveExitStrategy._sell_fraction",
+        "_limit_price",
+        "execute"
+      ],
+      "invariants": [
+        "full-exit precedence",
+        "stop-loss lower of signal and stop price",
+        "validated fraction and SELL-only"
+      ],
+      "test_evidence": [
+        "tests/test_balanced_risk_strategy.py::test_protective_exit_sells_stop_loss_fully_at_marketable_price",
+        "tests/test_balanced_risk_strategy.py::test_protective_exit_takes_profit_in_steps"
+      ],
+      "review_evidence": "Source blob 178c42275cacd8d8bcac5aaed879199a6733bb09, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "Accepted SELL remains unfilled until broker confirms",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": "trading/strategies/README.md",
+      "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/risk_bracket.py",
+      "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Full BUY risk-budget and broker submission path read; finite units and position cap checks inspected; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/score_max_capital.py",
+      "blob_sha": "8b8480cf9578380a1c69022318737f3c970e9c5a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/score_risk.py",
+      "blob_sha": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/score_weighted.py",
+      "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current trading/strategies/score_weighted.py source; verified ScoreWeightedStrategyConfig.from_mapping, ScoreWeightedStrategy.execute; failure contract: KIS actual available budget not demo-tested; mock-only CI 41721915580, no KIS orders.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "ScoreWeightedStrategyConfig.from_mapping",
+        "ScoreWeightedStrategy.execute"
+      ],
+      "invariants": [
+        "finite nonnegative band weights",
+        "unique normalized thresholds",
+        "no broker default for non-unit band",
+        "reject overflow"
+      ],
+      "test_evidence": [
+        "tests/test_strategy_suite.py::test_score_weighted_finite_fields_multiplication_overflow_rejects_before_broker",
+        "tests/test_strategy_suite.py::test_score_weighted_fractional_band_without_base_rejects_broker_default",
+        "tests/test_score_band_config_integrity.py"
+      ],
+      "review_evidence": "Source blob 82cb7fa8af78b47b666f777005acbc0c0674e6af, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "KIS actual available budget not demo-tested",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": "trading/strategies/signal_trailing_stop.py",
+      "blob_sha": "796593dc47c9202b5c0b0e429006265fb5de0157",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "All 423 lines inspected: durable entry/exit pending fence, state validation, broker receipt recording, rejection rollback; broker-authoritative partial fill reconciliation still absent",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/strategies/stop_loss_sell.py",
+      "blob_sha": "51da4cd995adc32a0ee0ab97a5ce3e31160cd870",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current trading/strategies/stop_loss_sell.py source; verified StopLossSellStrategyConfig.from_mapping, StopLossSellStrategy.execute, _should_use_signal_price; failure contract: Order accepted is not a confirmed fill; mock-only CI 41721915580, no KIS orders.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "StopLossSellStrategyConfig.from_mapping",
+        "StopLossSellStrategy.execute",
+        "_should_use_signal_price"
+      ],
+      "invariants": [
+        "SELL-only strategy",
+        "stop/signal price fallback",
+        "watcher market override restricted to internal origin in common execution"
+      ],
+      "test_evidence": [
+        "tests/test_stop_loss_strategy_market_order.py",
+        "tests/test_watcher_strategy_bypass.py"
+      ],
+      "review_evidence": "Source blob 51da4cd995adc32a0ee0ab97a5ce3e31160cd870, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "Order accepted is not a confirmed fill",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": "trading/strategy_names.py",
+      "blob_sha": "2fbd9fd37b9b37c6fd1fdf532de5c09809e94705",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "FULL_FILE_REVIEWED",
+      "reviewed_functions": [
+        "SUPPORTED_STRATEGY_NAMES",
+        "WEBUI_EDITABLE_STRATEGY_NAMES"
+      ],
+      "invariants": [
+        "strategy registry remains dependency-light",
+        "WebUI editable names constrained to supported balance_split"
+      ],
+      "file_audit_complete": true,
+      "test_evidence": [
+        "tests/test_strategy_suite.py",
+        "tests/test_webui_routes.py",
+        "PR exact-head full pytest 1746 pass"
+      ]
+    },
+    {
+      "path": "trading/telegram_fetch.py",
+      "blob_sha": "a78875c325fadb7745734897406468cebb6ce61a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "30e7e6ed731fb60fe97d6eb329aa5a0ad8edee0c",
+      "status": "CHANGED_BLOB_REQUIRES_FULL_REAUDIT",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NEW_BLOB_REQUIRES_REAUDIT",
+      "targeted_path_review": "Import-time US single/multi DEFAULT_MODE changed to demo only for implicit example; other 2300+ lines not fully audited.",
+      "previous_blob_sha": "4232d7f49dc2ad68b36c00063b44f1d033e438f0",
+      "file_audit_complete": false
+    },
+    {
+      "path": "trading/yaml_compat.py",
+      "blob_sha": "d28beb4d042ec631409ebe17d01588fe3b00c2a6",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "IDENTICAL_BLOB_PREVIOUS_FULL_AUDIT_RETAINED_NO_SLOT_PASS",
+      "inspection": "FULL_FILE_REVIEWED",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "safe_load",
+        "safe_dump",
+        "PyYAML import guard"
+      ],
+      "invariants": [
+        "safe YAML parser/dumper only",
+        "missing PyYAML raises actionable error"
+      ],
+      "test_evidence": [
+        "tests/test_implicit_live_config_safety.py",
+        "tests/test_profit_band_config_integrity.py",
+        "PR exact-head full pytest 1746 pass (indirect YAML integration)"
+      ]
+    },
+    {
+      "path": "webui/__init__.py",
+      "blob_sha": "7a80de1688e723fec4a0cbb96ca21e005525a4ea",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/__main__.py",
+      "blob_sha": "fcabfa185168eac19da0b2ac5dd6110afc5858b9",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/app.py",
+      "blob_sha": "0a9576bb59e01e131250b5ab06ac5baf57e8ef76",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/__init__.py",
+      "blob_sha": "ddddf4858bec829a4cc1770e3728a84068f44322",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/activity.py",
+      "blob_sha": "d003a105c30d2a70934f447d6f0f73c794e82f8a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/dashboard.py",
+      "blob_sha": "93ad8dffab06496b5ab3ea85596144e3c30adbc5",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/dry_run.py",
+      "blob_sha": "fd8269d909fbc06d8f38a1c693dafb6f4b7dd1be",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/guards.py",
+      "blob_sha": "902d3029c3c3ca2990f43cf46dcf816663471e98",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 115-line CSRF, one-time nonce and loopback mutation guards read; form field/body bounds, compare_digest; no direct broker calls.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/logs.py",
+      "blob_sha": "e2d680f356062a1d3ad9027b08a90beffe30e481",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/queue.py",
+      "blob_sha": "eba37a4c0e4bc58c9d077432ff9944bbee5b6d14",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 23-line read-only queue page/API routes reviewed; both delegate to bounded masked queue summary.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/readiness.py",
+      "blob_sha": "17b9e8c143a1901169cbb8e8d15f41ff43a14e56",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/signals.py",
+      "blob_sha": "54e65e576cde8b3455494c81233c994093293c42",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 79-line validation routes read; raw JSON duplicate-key check before validation; CSRF guards; no order dispatch.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/telegram.py",
+      "blob_sha": "652624391aa1752cd3453432d56aff036a6fb79d",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/routes/trading.py",
+      "blob_sha": "1c7aefddb3bc1b5a893942d47a68c054c99f7b43",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 187-line WebUI trading route read; CSRF, local mutation, nonce consumption, manual dispatch and dry-run boundaries inspected",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/services/account_service.py",
+      "blob_sha": "586aee6b00713da80a49b3d366afffda554df94f",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/services/activity_service.py",
+      "blob_sha": "67fb004425f6f59b06227a59c5263409276c6170",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/services/dry_run_service.py",
+      "blob_sha": "01e94a72fb3c3dcfd481bcddfdb9463eeb00976a",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 40-line service and matching tests/test_webui_dry_run_service.py read; constructors monkeypatched to raise, API/form ambiguous JSON cases covered.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "DryRunResult",
+        "simulate_dispatch"
+      ],
+      "invariants": [
+        "dry-run parses only, never constructs dispatcher/KIS or mutates queue",
+        "invalid signal returns bounded error"
+      ],
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "webui/services/log_service.py",
+      "blob_sha": "164e7ca0e1b66a9042b0be20c784c6a34e95af2b",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/services/masking.py",
+      "blob_sha": "0214b94b9acf52f6668cd2dedfbf6edde5921b81",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/services/queue_service.py",
+      "blob_sha": "5676ec357f18e38a65e212bd8de957c1c29527eb",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "Entire 95-line bounded 1MiB read-only queue summary reviewed: display cap 500, failure status counts, masking and malformed JSON fail-closed; mock tests read.",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/services/readiness_service.py",
+      "blob_sha": "472da75058b3a852760e33731476390777f6e6e8",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 47-line service and tests/test_webui_readiness_service.py read; read-only status, masked exception; no live check executed.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "get_config_status",
+        "get_readiness_summary"
+      ],
+      "invariants": [
+        "static status avoids network",
+        "live-check exception becomes masked indeterminate result",
+        "required PubSub env names allowlisted"
+      ],
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "webui/services/signal_service.py",
+      "blob_sha": "2cd96c0143da8d1d9194500031a74158b7571135",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_HEAD",
+      "audit_pass": false,
+      "evidence_status": "FULL_CURRENT_BLOB_READ_CONTRACT_AND_EXACT_HEAD_MERGE_CI",
+      "inspection": "Full 49-line parser and tests/test_webui_signal_service.py plus duplicate-key regressions reviewed; Telegram labeled fallback inspected by call path.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "_signal_to_dto",
+        "parse_signal_input",
+        "parse_signal_text"
+      ],
+      "invariants": [
+        "reuses strict trading schema and duplicate-key loader",
+        "omits raw payload from DTO",
+        "parse errors do not dispatch orders"
+      ],
+      "test_evidence": [
+        "Actions 41684488536 merge e79378a9f5a7e957a98d958de41644fcbc9dee12 Linux 1819 passed, Windows 167 passed",
+        "Actions 41684476397 exact branch head b056e733467a9e2f784271bedb99479100322781"
+      ],
+      "reviewed_at": "2026-11-03T18:25:04Z"
+    },
+    {
+      "path": "webui/services/telegram_service.py",
+      "blob_sha": "8bf1ad38fbc48d319e432a71a2872f46bac9e536",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
+      "audit_pass": false,
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXISTING_EXACT_HEAD_CI_NO_NEW_REPRO",
+      "inspection": "Read complete current webui/services/trade_service.py source; verified live_trading_enabled, trading_guard_status, dispatch_manual_order; failure contract: Network retry outside nonce route and KIS authoritative fills remain unverified; mock-only CI 41721915580, no KIS orders.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "live_trading_enabled",
+        "trading_guard_status",
+        "dispatch_manual_order"
+      ],
+      "invariants": [
+        "explicit live arm and SELL phrase",
+        "unique per-ticket signal_id, execution_dedupe=True",
+        "dry-run and shutdown fences",
+        "safe error masking"
+      ],
+      "test_evidence": [
+        "tests/test_webui_manual_buy_durable_intent.py",
+        "tests/test_webui_routes.py::test_live_manual_order_nonce_blocks_replay",
+        "tests/test_webui_routes.py::test_live_manual_order_nonce_is_atomic_under_concurrent_submit"
+      ],
+      "review_evidence": "Source blob ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c, merge tree dfc0feb3440dc7aa0d8903ff16f88c4f233543dd, PR HEAD 303d4dbb9ad1a00d2fdbdfcc8d4abe288bce8589; code and existing mock test contracts inspected; no new isolated reproduction",
+      "limitations": [
+        "Network retry outside nonce route and KIS authoritative fills remain unverified",
+        "No 2+2 independent audit PASS"
+      ]
+    },
+    {
+      "path": "webui/static/console.css",
+      "blob_sha": "b5ec46d0a14289d17d667199fc9e414096da0f92",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/static/console.js",
+      "blob_sha": "8fab1f7b73a604c4182098604dcbc1b33df8ecc6",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/static/favicon.svg",
+      "blob_sha": "41aaeecbbda6c7a0da6429f73f250091af2e228a",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/static/style.css",
+      "blob_sha": "1a640490eaf214467390987595ddc6d58fba8c6d",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/activity.html",
+      "blob_sha": "6a656b2262c26d38f80a73aeed24d666fa1c4c94",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/base.html",
+      "blob_sha": "94d9feaed645f8fb06c35e22d44228dc1787afde",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/dashboard.html",
+      "blob_sha": "e4c4d3d2c9467320451c13d3849bc64d1eecbae0",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/dry_run.html",
+      "blob_sha": "b322d66efea7dac30998e5a9d591a0b860ca6744",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/logs.html",
+      "blob_sha": "df8c3a5a9dabb71fe22ea2c2e8b4934000c43726",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/queue.html",
+      "blob_sha": "e141d1a4901feab19ac900f71abad43e0fa7bac0",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/readiness.html",
+      "blob_sha": "7326ceeea4400cb06d6d050790dd01965725afb1",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/signals.html",
+      "blob_sha": "80065293abffc797fae9e5c58c3396c6f64fd4b6",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/telegram.html",
+      "blob_sha": "dce3410f1e3e7922ba2393e6cb8d0add520b5a98",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    },
+    {
+      "path": "webui/templates/trading.html",
+      "blob_sha": "6c9bbc9bec5dd0f30b557e2c2f7459bb4774f91b",
+      "status": "NOT_FULLY_AUDITED",
+      "audit_pass": false,
+      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
+      "inspection": "NOT_VERIFIED_AT_CURRENT_HEAD",
+      "file_audit_complete": false
+    }
+  ]
+}

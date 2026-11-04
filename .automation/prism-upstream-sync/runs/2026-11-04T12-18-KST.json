@@ -1,0 +1,513 @@
+{
+  "run_id": "prism-sync-hourly-2026-11-04T12-18-KST-turn9",
+  "started_at": "2026-11-04T03:18:21Z",
+  "completed_at": "2026-11-04T03:24:20.940Z",
+  "carry_forward": {
+    "prior_stalled_count": ">=2 historically; previous slot progressed",
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_order_history_alias_consistency.py; red Actions 41766433174; green 41766593225/41766598619",
+    "baseline_fail_observed": "18 genuine product assertion failures, 1915 passed at fce30305183cd2f68dfacd0cbb0d00396861b832",
+    "mock_result": "20 new KR/US Mock tests pass; push Linux 1923; PR merge Linux 1933; Windows 167; Docker success",
+    "code_fix_commit": "0cdcf83ee141face9e5b0c0555810c30a426efd9",
+    "latest_head_CI": [
+      41766593225,
+      41766598619
+    ],
+    "unverified_transitions": [
+      "UNKNOWN BUY without order ID",
+      "delayed/partial fill execution ID to per-account ledger attribution",
+      "cancelled order final remaining quantity",
+      "verified BUY fill to automatic stop activation",
+      "multi-account facade end-to-end",
+      "broker order-date provenance"
+    ],
+    "exact_blocker": "Read-only KIS history remains disconnected from authoritative per-order fill/remaining quantity, account balance provenance and durable stop activation. KIS demo credentials absent only for integration. Qlty 89 issues, review 0, protection 403, 2+2 incomplete.",
+    "evidence_delta": "+20 new Mock tests, 18 red product assertions then green, 1 root cause patched; related/full fully audited 56->57; no live/demo orders",
+    "next_exact_action": "Test-first authoritative per-account order-date/execution-ID/cumulative fill/cancel/remaining matching against durable ledger; preserve UNKNOWN without ODNO; only broker-proven attributable positions can authorize stop",
+    "status": "PROGRESSED_READ_ONLY_ALIAS_HARDENING_CORE_FILL_ATTRIBUTION_UNRESOLVED"
+  },
+  "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+  "candidate_count": 16,
+  "validated_candidates": 14,
+  "actual_code_fixes": 1,
+  "reproduced_root_causes": 1,
+  "attempted_reproductions": 20,
+  "regression_tests_added_and_run": 20,
+  "red_assertion_failures": 18,
+  "baseline_test_first_commit": "fce30305183cd2f68dfacd0cbb0d00396861b832",
+  "fix_commit": "0cdcf83ee141face9e5b0c0555810c30a426efd9",
+  "changed_files": [
+    "tests/test_order_history_alias_consistency.py",
+    "trading/order_reconciliation.py"
+  ],
+  "verified_paths": [
+    "KR/US contradictory order/ticker/date/side/order_qty/filled_qty/remaining_qty/execution_id/cancel aliases",
+    "identical alias positive control",
+    "existing account scope/pagination/duplicate/restart read-only Mock tests"
+  ],
+  "unverified_paths": [
+    "UNKNOWN BUY without order ID",
+    "delayed/partial fill execution ID to per-account ledger attribution",
+    "cancelled order final remaining quantity",
+    "verified BUY fill to automatic stop activation",
+    "multi-account facade end-to-end",
+    "broker order-date provenance"
+  ],
+  "financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_accepted_buy_receipt_survives_restart_but_stays_unresolved",
+      "mock_result": "MOCK_PASS_ACCEPTED_NOT_FILLED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "broker receipt cannot activate stop",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "UNKNOWN",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_unknown_buy_receipt_is_evidence_only_after_restart",
+      "mock_result": "MOCK_PASS_FENCE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "UNKNOWN without ODNO remains unreconcilable",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "지연 체결",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_restart_requery_remains_non_actionable",
+      "mock_result": "MOCK_PASS_NONACTIONABLE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "late execution ID attribution absent",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "부분체결",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_partial_fill_and_cancel_are_evidence_only",
+      "mock_result": "MOCK_PASS_EVIDENCE_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "no confirmed cumulative fill mapping",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "취소/거절",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_recovered_receipt_with_retryable_status_fails_closed",
+      "mock_result": "MOCK_PASS_FAIL_CLOSED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "cancel remainder not reconciled",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "중복 통지",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_duplicate_history_row_is_not_double_counted",
+      "mock_result": "MOCK_PASS_READ_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "broker event IDs not persisted",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "잔여량",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_partial_fill_and_cancel_are_evidence_only",
+      "mock_result": "MOCK_PASS_EVIDENCE_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "broker remaining quantity not ledger-matched",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_accepted_buy_receipt_survives_restart_but_stays_unresolved",
+      "mock_result": "MOCK_PASS_FENCE",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "confirmed BUY fill cannot activate stop automatically",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "다계좌 격리",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_receipts_are_scoped_to_distinct_account_claims",
+      "mock_result": "MOCK_PASS_LEDGER_ONLY",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "multi-account facade E2E unverified",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "재시작",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_accepted_buy_receipt_survives_restart_but_stays_unresolved",
+      "mock_result": "MOCK_PASS_RESTART",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "UNKNOWN no-order-ID recovery unverified",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_receipt_persistence_failure_does_not_claim_fill",
+      "mock_result": "MOCK_PASS_FAIL_CLOSED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "KIS demo not run",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    },
+    {
+      "transition": "복구·재조정",
+      "applicability": "KR/US; single account where tested; multi-account end-to-end not proven",
+      "test_ids": "test_recovered_receipt_with_retryable_status_fails_closed",
+      "mock_result": "MOCK_PASS_FAIL_CLOSED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED",
+      "unverified_reason": "authoritative broker reconciliation not wired",
+      "latest_head_mock_ci": [
+        41766593225,
+        41766598619
+      ],
+      "new_alias_evidence": "18 contradictory alias KR/US red assertions fixed; does not establish fill or stop authority"
+    }
+  ],
+  "inventory": [
+    {
+      "candidate_id": "C15-01",
+      "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+      "subcase": "ODNO",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "hypothesis": "Conflicting broker field aliases can silently choose one value",
+      "impact": "Ambiguous read-only fill/cancel/order evidence could be attributed to a BUY",
+      "priority": "HIGH",
+      "test_id": "test_conflicting_history_aliases_fail_closed[ODNO-KR/US]",
+      "reproduction_attempt": "Actions 41766433174 red; 41766593225/41766598619 green",
+      "result": "2 PRODUCT ASSERTIONS RED THEN PASS",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C15-02",
+      "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+      "subcase": "PDNO",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "hypothesis": "Conflicting broker field aliases can silently choose one value",
+      "impact": "Ambiguous read-only fill/cancel/order evidence could be attributed to a BUY",
+      "priority": "HIGH",
+      "test_id": "test_conflicting_history_aliases_fail_closed[PDNO-KR/US]",
+      "reproduction_attempt": "Actions 41766433174 red; 41766593225/41766598619 green",
+      "result": "2 PRODUCT ASSERTIONS RED THEN PASS",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C15-03",
+      "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+      "subcase": "ORD_DT",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "hypothesis": "Conflicting broker field aliases can silently choose one value",
+      "impact": "Ambiguous read-only fill/cancel/order evidence could be attributed to a BUY",
+      "priority": "HIGH",
+      "test_id": "test_conflicting_history_aliases_fail_closed[ORD_DT-KR/US]",
+      "reproduction_attempt": "Actions 41766433174 red; 41766593225/41766598619 green",
+      "result": "2 PRODUCT ASSERTIONS RED THEN PASS",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C15-04",
+      "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+      "subcase": "SLL_BUY_DVSN",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "hypothesis": "Conflicting broker field aliases can silently choose one value",
+      "impact": "Ambiguous read-only fill/cancel/order evidence could be attributed to a BUY",
+      "priority": "HIGH",
+      "test_id": "test_conflicting_history_aliases_fail_closed[SLL_BUY_DVSN-KR/US]",
+      "reproduction_attempt": "Actions 41766433174 red; 41766593225/41766598619 green",
+      "result": "2 PRODUCT ASSERTIONS RED THEN PASS",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C15-05",
+      "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+      "subcase": "ORD_QTY",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "hypothesis": "Conflicting broker field aliases can silently choose one value",
+      "impact": "Ambiguous read-only fill/cancel/order evidence could be attributed to a BUY",
+      "priority": "HIGH",
+      "test_id": "test_conflicting_history_aliases_fail_closed[ORD_QTY-KR/US]",
+      "reproduction_attempt": "Actions 41766433174 red; 41766593225/41766598619 green",
+      "result": "2 PRODUCT ASSERTIONS RED THEN PASS",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C15-06",
+      "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+      "subcase": "ft_ccld_qty",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "hypothesis": "Conflicting broker field aliases can silently choose one value",
+      "impact": "Ambiguous read-only fill/cancel/order evidence could be attributed to a BUY",
+      "priority": "HIGH",
+      "test_id": "test_conflicting_history_aliases_fail_closed[ft_ccld_qty-KR/US]",
+      "reproduction_attempt": "Actions 41766433174 red; 41766593225/41766598619 green",
+      "result": "2 PRODUCT ASSERTIONS RED THEN PASS",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C15-07",
+      "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+      "subcase": "nccs_qty",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "hypothesis": "Conflicting broker field aliases can silently choose one value",
+      "impact": "Ambiguous read-only fill/cancel/order evidence could be attributed to a BUY",
+      "priority": "HIGH",
+      "test_id": "test_conflicting_history_aliases_fail_closed[nccs_qty-KR/US]",
+      "reproduction_attempt": "Actions 41766433174 red; 41766593225/41766598619 green",
+      "result": "2 PRODUCT ASSERTIONS RED THEN PASS",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C15-08",
+      "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+      "subcase": "CCLD_NO",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "hypothesis": "Conflicting broker field aliases can silently choose one value",
+      "impact": "Ambiguous read-only fill/cancel/order evidence could be attributed to a BUY",
+      "priority": "HIGH",
+      "test_id": "test_conflicting_history_aliases_fail_closed[CCLD_NO-KR/US]",
+      "reproduction_attempt": "Actions 41766433174 red; 41766593225/41766598619 green",
+      "result": "2 PRODUCT ASSERTIONS RED THEN PASS",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C15-09",
+      "root_cause_id": "RC-ORDER-HISTORY-ALIAS-CONFLICT",
+      "subcase": "CNCL_YN",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "c4793b02909e3e4630679108c41a2a3c39fcede2",
+      "hypothesis": "Conflicting broker field aliases can silently choose one value",
+      "impact": "Ambiguous read-only fill/cancel/order evidence could be attributed to a BUY",
+      "priority": "HIGH",
+      "test_id": "test_conflicting_history_aliases_fail_closed[CNCL_YN-KR/US]",
+      "reproduction_attempt": "Actions 41766433174 red; 41766593225/41766598619 green",
+      "result": "2 PRODUCT ASSERTIONS RED THEN PASS",
+      "decision": "FIXED"
+    },
+    {
+      "candidate_id": "C15-10",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "IDENTICAL_ALIASES_CONTROL",
+      "path": "tests/test_kis_read_only_order_history.py",
+      "blob_sha": "f81e5fbd02c513c0afac9fd15eb5c8409a560c8d",
+      "hypothesis": "Validate read-only order evidence boundaries and unverified state transitions",
+      "impact": "Avoid wrong fill attribution and stop activation",
+      "priority": "HIGH",
+      "test_id": "test_identical_history_aliases_preserve_read_only_evidence",
+      "reproduction_attempt": "Existing test reused in exact-head full CI",
+      "result": "MOCK_PASS",
+      "decision": "MOCK_VERIFIED"
+    },
+    {
+      "candidate_id": "C15-11",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "PAGINATION_BOUNDARY",
+      "path": "tests/test_kis_read_only_order_history.py",
+      "blob_sha": "f81e5fbd02c513c0afac9fd15eb5c8409a560c8d",
+      "hypothesis": "Validate read-only order evidence boundaries and unverified state transitions",
+      "impact": "Avoid wrong fill attribution and stop activation",
+      "priority": "HIGH",
+      "test_id": "test_read_only_pagination_and_exact_local_order_match",
+      "reproduction_attempt": "Existing test reused in exact-head full CI",
+      "result": "EXISTING_MOCK_PASS",
+      "decision": "MOCK_VERIFIED"
+    },
+    {
+      "candidate_id": "C15-12",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "DUPLICATE_ROW",
+      "path": "tests/test_kis_read_only_order_history.py",
+      "blob_sha": "f81e5fbd02c513c0afac9fd15eb5c8409a560c8d",
+      "hypothesis": "Validate read-only order evidence boundaries and unverified state transitions",
+      "impact": "Avoid wrong fill attribution and stop activation",
+      "priority": "HIGH",
+      "test_id": "test_duplicate_history_row_is_not_double_counted",
+      "reproduction_attempt": "Existing test reused in exact-head full CI",
+      "result": "EXISTING_MOCK_PASS",
+      "decision": "MOCK_VERIFIED"
+    },
+    {
+      "candidate_id": "C15-13",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "ACCOUNT_ISOLATION",
+      "path": "tests/test_kis_read_only_order_history.py",
+      "blob_sha": "f81e5fbd02c513c0afac9fd15eb5c8409a560c8d",
+      "hypothesis": "Validate read-only order evidence boundaries and unverified state transitions",
+      "impact": "Avoid wrong fill attribution and stop activation",
+      "priority": "HIGH",
+      "test_id": "test_account_scopes_are_isolated",
+      "reproduction_attempt": "Existing test reused in exact-head full CI",
+      "result": "EXISTING_MOCK_PASS",
+      "decision": "MOCK_VERIFIED"
+    },
+    {
+      "candidate_id": "C15-14",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "RESTART_NONACTIONABLE",
+      "path": "tests/test_kis_read_only_order_history.py",
+      "blob_sha": "f81e5fbd02c513c0afac9fd15eb5c8409a560c8d",
+      "hypothesis": "Validate read-only order evidence boundaries and unverified state transitions",
+      "impact": "Avoid wrong fill attribution and stop activation",
+      "priority": "HIGH",
+      "test_id": "test_restart_requery_remains_non_actionable",
+      "reproduction_attempt": "Existing test reused in exact-head full CI",
+      "result": "EXISTING_MOCK_PASS",
+      "decision": "MOCK_VERIFIED"
+    },
+    {
+      "candidate_id": "C15-15",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "UNKNOWN_WITHOUT_ODNO",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a8703bbb3d128ffa9fb7e5d63de693eadf5534ff",
+      "hypothesis": "Validate read-only order evidence boundaries and unverified state transitions",
+      "impact": "Avoid wrong fill attribution and stop activation",
+      "priority": "HIGH",
+      "test_id": "test_order_number_must_be_canonical_before_query",
+      "reproduction_attempt": "Existing mock negative control; no authoritative KIS proof",
+      "result": "UNVERIFIED_NO_BROKER_ORDER_ID",
+      "decision": "DEFERRED_UNVERIFIED"
+    },
+    {
+      "candidate_id": "C15-16",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "subcase": "FILL_TO_STOP_ACTIVATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a8703bbb3d128ffa9fb7e5d63de693eadf5534ff",
+      "hypothesis": "Validate read-only order evidence boundaries and unverified state transitions",
+      "impact": "Avoid wrong fill attribution and stop activation",
+      "priority": "HIGH",
+      "test_id": "test_partial_fill_and_cancel_are_evidence_only",
+      "reproduction_attempt": "Existing mock negative control; no authoritative KIS proof",
+      "result": "UNVERIFIED_NO_AUTHORITATIVE_FILL",
+      "decision": "DEFERRED_UNVERIFIED"
+    }
+  ],
+  "related_complete": "57/180",
+  "full_complete": "57/212",
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "qlty": {
+      "state": "success",
+      "blocking_issues": 89,
+      "triaged": 0,
+      "required": "UNKNOWN_PROTECTION_403"
+    },
+    "snyk": {
+      "state": "success",
+      "description": "1 security test passed",
+      "required": "UNKNOWN_PROTECTION_403"
+    },
+    "reviews": {
+      "count": 0
+    },
+    "branch_protection": {
+      "read": "403 Resource not accessible by integration",
+      "required": "UNKNOWN"
+    },
+    "actions": {
+      "push": {
+        "id": 41766593225,
+        "head_sha": "0cdcf83ee141face9e5b0c0555810c30a426efd9",
+        "linux_pytest": 1923,
+        "windows": 167,
+        "docker": "success"
+      },
+      "pull_request": {
+        "id": 41766598619,
+        "head_sha": "0cdcf83ee141face9e5b0c0555810c30a426efd9",
+        "merge_sha": "f2a1a0b94de6bc460c39871574faa0ff17cc6159",
+        "linux_pytest": 1933,
+        "windows": 167,
+        "docker": "success"
+      }
+    }
+  },
+  "pr": {
+    "number": 43,
+    "head_sha": "0cdcf83ee141face9e5b0c0555810c30a426efd9",
+    "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+    "current_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+    "merge_result_sha": "f2a1a0b94de6bc460c39871574faa0ff17cc6159",
+    "draft": true,
+    "merged": false
+  },
+  "source": {
+    "head_sha": "afc6a6d21eebb0faca2e503e156360579c26ef9b",
+    "pinned_sha": "9355e434535556e2811a3d1ab9ed8b43df2f6f62",
+    "ahead_commits": 48,
+    "changed_files": 41,
+    "safe_imports": 0
+  },
+  "real_orders": 0,
+  "demo_orders": 0,
+  "lock_released": true,
+  "cas_expected_previous_sha": "aef35abd479429332e9c44903a7d150bd482bc74"
+}
