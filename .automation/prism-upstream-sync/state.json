@@ -1,22 +1,20 @@
 {
   "schema_version": 2,
   "automation_key": "prism-upstream-sync",
-  "state": "ACTIVE_DRAFT_CORE_RISK_TEST_FIRST_CI_QUEUED",
+  "state": "ACTIVE_DRAFT_CORE_RISK_BASELINE_RED_REMEDIATION",
   "phase": "related_code_audit",
   "run": {
-    "run_id": "prism-sync-2026-11-05T02-21-KST-core-risk",
-    "previous_run_id": "prism-sync-2026-11-05T01-19-KST-core-risk",
-    "started_at": "2026-11-04T17:21:54Z",
-    "completed_at": "2026-11-04T17:30:00Z",
-    "status": "RELEASED",
-    "lock_owner": null,
-    "lock_acquired_commit": "91dd6e8b1aae051c647a5985f71f9c87a45a6c19",
-    "lock_expected_pr_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
-    "lock_released": true,
+    "run_id": "prism-sync-2026-11-05T03-15-KST-core-risk",
+    "previous_run_id": "prism-sync-2026-11-05T02-21-KST-core-risk",
+    "started_at": "2026-11-04T18:15:41Z",
+    "completed_at": null,
+    "status": "RUNNING",
+    "lock_owner": "prism-sync-2026-11-05T03-15-KST-core-risk",
+    "lock_acquired_commit": "THIS_ATOMIC_CAS_COMMIT",
+    "lock_expected_pr_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
+    "lock_released": false,
     "related_pass": false,
-    "full_pass": false,
-    "final_pr_head_sha": "ef27731a20bbd478f06247045cb3fc3992ae9646",
-    "evidence_commit": "THIS_ATOMIC_CAS_COMMIT"
+    "full_pass": false
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -40,7 +38,7 @@
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_TEST_FIRST_MOCK_CI_QUEUED_CORE_ATTRIBUTION_UNVERIFIED",
+    "status": "DRAFT_BASELINE_RED_FIX_IN_PROGRESS",
     "base_ref": "main"
   },
   "candidates": [
