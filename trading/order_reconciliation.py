@@ -48,8 +48,16 @@ def _matched(row, *, order_no, order_date, ticker, account, product):
         if key in row and row[key] != value:
             return None
     ordered = _qty(_first(row, "ord_qty", "ORD_QTY", "ft_ord_qty"))
-    filled = _qty(_first(row, "tot_ccld_qty", "ft_ccld_qty", "ccld_qty"))
+    # Cumulative filled quantity and this execution's quantity are distinct KIS
+    # facts. ccld_qty must not masquerade as a cumulative total or conflict
+    # with a valid tot_ccld_qty / ft_ccld_qty on the same history row.
+    filled = _qty(_first(row, "tot_ccld_qty", "ft_ccld_qty"))
+    execution_qty = _qty(_first(row, "ccld_qty", "CCLD_QTY"))
     remaining = _qty(_first(row, "rmn_qty", "nccs_qty", "ord_remn_qty"))
+    if execution_qty is not None and (
+            (filled is not None and execution_qty > filled)
+            or (ordered is not None and execution_qty > ordered)):
+        raise ValueError("execution quantity exceeds cumulative or ordered quantity")
     if ordered is not None and ((filled or 0) + (remaining or 0) > ordered):
         raise ValueError("contradictory quantities")
     execution_id = _first(row, "ccld_no", "ccld_seq", "CCLD_NO")
@@ -62,7 +70,8 @@ def _matched(row, *, order_no, order_date, ticker, account, product):
         raise ValueError("invalid cancel flag")
     return dict(order_no=order_no, order_date=order_date, ticker=ticker,
                 order_quantity=ordered, filled_quantity=filled,
-                remaining_quantity=remaining, execution_id=execution_id,
+                execution_quantity=execution_qty, remaining_quantity=remaining,
+                execution_id=execution_id,
                 cancel_flag=cancel_flag or None)
 
 
