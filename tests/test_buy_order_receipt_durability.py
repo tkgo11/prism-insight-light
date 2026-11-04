@@ -158,3 +158,63 @@ def test_receipt_persistence_failure_does_not_claim_fill(tmp_path, monkeypatch):
             order_receipt={"order_no": "00001234"},
         )
     assert _entry(path, "buy")["status"] == "in_progress"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("outcome", ["executed", "unknown"])
+async def test_single_account_dispatch_persists_broker_receipt_without_fill_proof(
+    tmp_path, monkeypatch, market, ticker, outcome
+):
+    """Mock dispatch producer -> durable ledger consumer; no KIS order."""
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+
+    from trading.dispatch import DispatchResult, TradeDispatcher
+    from trading.schema import parse_signal_payload
+
+    path = tmp_path / "dispatch-ledger.json"
+    dispatcher = TradeDispatcher(
+        trading_mode="demo",
+        strategy_config={"name": ""},
+        execution_ledger_path=path,
+    )
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: True)
+    monkeypatch.setattr(
+        dispatcher.signal_gate,
+        "evaluate_execution",
+        lambda *args, **kwargs: SimpleNamespace(outcome="allow", fresh_quote=None),
+    )
+    fake_broker = AsyncMock(return_value=DispatchResult(
+        outcome, "mock acceptance (NOT fill)", "BUY", market, order_no="00001234"
+    ))
+    monkeypatch.setattr(dispatcher, "_execute_legacy_trade", fake_broker)
+    signal = parse_signal_payload({
+        "signal_id": f"receipt-{market}-{outcome}",
+        "type": "BUY", "market": market, "ticker": ticker, "price": 100,
+    })
+    result = await dispatcher._dispatch_serialized(signal, allow_queue=False)
+    assert result.status == outcome
+    fake_broker.assert_awaited_once()
+    entries = json.loads(path.read_text(encoding="utf-8"))
+    assert len(entries) == 1
+    entry = next(iter(entries.values()))
+    assert entry["status"] == outcome
+    assert entry["order_intent"]["market"] == market
+    assert entry["order_receipt"]["order_no"] == "00001234"
+    with ExecutionLedger(path).guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
+
+
+@pytest.mark.parametrize("status,order_no", [
+    ("executed", "KIS-123"),
+    ("unknown", None),
+    ("rejected", "00001234"),
+])
+def test_receipt_extraction_never_invents_authoritative_order_id(status, order_no):
+    from trading.dispatch import DispatchResult, _durable_buy_receipt
+    from trading.schema import SignalMessage
+
+    signal = SignalMessage(signal_type="BUY", market="US", ticker="AAPL")
+    result = DispatchResult(status, "mock only", "BUY", "US", order_no=order_no)
+    assert _durable_buy_receipt(signal, result) is None
