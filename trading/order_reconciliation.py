@@ -28,7 +28,10 @@ def _qty(value):
         return None
     if isinstance(value, bool):
         raise ValueError("boolean quantity")
-    if isinstance(value, int) and value >= 0:
+    # JSON integer quantities must obey the same 18-digit canonical bound
+    # as broker-provided numeric strings.  Reject oversized values before
+    # they can become even read-only order/fill/cancel evidence.
+    if isinstance(value, int) and 0 <= value < 10**18:
         return value
     if not isinstance(value, str) or re.fullmatch(r"[0-9]{1,18}", value) is None:
         raise ValueError("noncanonical quantity")
