@@ -195,3 +195,42 @@ def test_distinct_execution_ids_with_consistent_order_quantity_remain_evidence_o
     assert len(result["matches"]) == 2
     assert {m["execution_id"] for m in result["matches"]} == {"EXEC01", "EXEC02"}
     assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_distinct_executions_cannot_exceed_submitted_order_quantity(market):
+    """Separate execution IDs cannot jointly fill more than one BUY order.
+
+    An individually plausible page must not hide cross-page overfills.  The
+    result is read-only and must never authorize a ledger finalize or SELL.
+    """
+    first = _row(market, ccld_no="EXEC01", ord_qty="10",
+                 tot_ccld_qty="6", ccld_qty="6", rmn_qty="4")
+    second = _row(market, ccld_no="EXEC02", ord_qty="10",
+                  tot_ccld_qty="10", ccld_qty="6", rmn_qty="0")
+    result, calls = _read(market, [
+        HistoryResponse(market, [first], more=True),
+        HistoryResponse(market, [second]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_distinct_executions_consistent_sum_remains_read_only(market):
+    first = _row(market, ccld_no="EXEC01", ord_qty="10",
+                 tot_ccld_qty="6", ccld_qty="6", rmn_qty="4")
+    second = _row(market, ccld_no="EXEC02", ord_qty="10",
+                  tot_ccld_qty="10", ccld_qty="4", rmn_qty="0")
+    result, calls = _read(market, [
+        HistoryResponse(market, [first], more=True),
+        HistoryResponse(market, [second]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert result["complete"] is True
+    assert len(result["matches"]) == 2
+    assert result["can_activate_stop"] is False
