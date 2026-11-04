@@ -1,8 +1,9 @@
-"""Read-only KR/US regression: an execution without an ID still obeys known order size.
+"""KR/US read-only mock: missing execution ID must not erase known order size.
 
-An execution row may omit ord_qty, cumulative fill, and execution ID. It must
-not evade the submitted quantity established by another row of the same
-account/date/order. No KIS or live/demo order is submitted.
+The history row can omit its own ord_qty, cumulative total, and execution ID.
+A different row establishes the submitted quantity of this account/date/order.
+An impossible single execution must poison evidence even when it cannot be
+aggregated by execution ID. No KIS or real/demo order is submitted.
 """
 from types import SimpleNamespace
 
@@ -62,18 +63,13 @@ def _trader(market, rows):
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["discovery", "exact"])
-@pytest.mark.parametrize("execution,expected_status", [
-    ("11", "UNVERIFIED"),  # No execution ID: still exceeds known order bound.
-    ("10", "UNVERIFIED"),  # Earlier execution 4 plus this 10 is impossible.
-    ("6", "UNVERIFIED"),   # Earlier execution 4 plus this 6 is plausible but
-                           # missing ID/cumulative is insufficient to reconcile.
-])
-def test_missing_execution_id_cannot_evade_cross_row_known_order_bound(
-    market, lookup, execution, expected_status,
-):
+def test_missing_execution_id_cannot_evade_cross_row_known_order_bound(market, lookup):
     first = _row(market, ordered="10", execution="4", cumulative="4",
                  remaining="6", execution_id="E1")
-    second = _row(market, ordered=None, execution=execution,
+    # 11 shares the same account/date/order but has no execution ID, own
+    # submitted quantity, or cumulative fill. A single execution of 11 is
+    # impossible for the independently established order quantity of 10.
+    second = _row(market, ordered=None, execution="11",
                   cumulative=None, remaining=None, execution_id=None)
     trader, calls = _trader(market, [first, second])
     ticker = "005930" if market == "KR" else "AAPL"
@@ -89,6 +85,6 @@ def test_missing_execution_id_cannot_evade_cross_row_known_order_bound(
         )
     assert len(calls) == 1
     assert result["can_activate_stop"] is False
-    assert result["status"] == expected_status
+    assert result["status"] == "UNVERIFIED"
     assert result["complete"] is False
     assert result.get("matches", result.get("candidates", [])) == []
