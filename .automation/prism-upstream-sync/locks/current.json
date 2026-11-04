@@ -1,17 +1,14 @@
 {
-  "run_id": "prism-sync-2026-11-04T15-17-KST-turn9",
-  "status": "RELEASED",
-  "expected_state_head": "4c80b6e236e2fff7686fb8c738b06a683f998a1a",
+  "run_id": "prism-sync-2026-11-04T16-22-KST-turn9",
+  "status": "ACTIVE",
+  "expected_state_head": "71e3fd79f349f4571e205af5d567199ca00728bd",
   "expected_pr_head": "7dccae2a140a4ba0075f6b4672e8ae8fc723d01f",
-  "created_at": "2026-11-04T06:19:05.717Z",
-  "released_at": "2026-11-04T06:24:53.231Z",
-  "purpose": "KR/US cross-execution order quantity mock red-green; no live/demo orders",
+  "created_at": "2026-11-04T07:22:37Z",
+  "purpose": "KR/US read-only Mock cross-execution fill quantity integrity test-first; no live/demo orders",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
     "related": 0,
     "full": 0
-  },
-  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
-  "reason": "2 product assertions red, fixed, 4 Mock cases green and exact-head CI success; core fill-to-stop attribution unresolved"
+  }
 }
