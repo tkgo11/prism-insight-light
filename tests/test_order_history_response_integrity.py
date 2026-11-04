@@ -108,3 +108,38 @@ def test_canonical_body_success_remains_non_actionable(market):
     assert result["matches"][0]["remaining_quantity"] == 6
     assert result["matches"][0]["cancel_flag"] == "Y"
     assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_conflicting_broker_body_status_aliases_fail_closed(market):
+    response = _Response(market, rt_cd="0")
+    original = response.getBody
+
+    def body():
+        values = vars(original())
+        values["RT_CD"] = "1"
+        return SimpleNamespace(**values)
+
+    response.getBody = body
+    result, _ = _read(market, [response])
+    assert result["status"] == "UNVERIFIED"
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_uppercase_only_broker_failure_is_unverified(market):
+    response = _Response(market, rt_cd="0")
+    original = response.getBody
+
+    def body():
+        values = vars(original())
+        del values["rt_cd"]
+        values["RT_CD"] = "1"
+        return SimpleNamespace(**values)
+
+    response.getBody = body
+    result, _ = _read(market, [response])
+    assert result["status"] == "UNVERIFIED"
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False

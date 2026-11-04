@@ -127,6 +127,17 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
             if not response.isOK():
                 return result
             body, header = response.getBody(), response.getHeader()
+            # A wrapper can report transport success while the KIS response
+            # body reports a business failure. Never accept such rows as
+            # authoritative order, fill, cancel, or remaining-quantity evidence.
+            # Treat malformed and contradictory status aliases as unverified.
+            missing = object()
+            for status_key in ("rt_cd", "RT_CD"):
+                business_status = _get(body, status_key, missing)
+                if business_status is not missing and (
+                    type(business_status) is not str or business_status != "0"
+                ):
+                    return result
             rows = _get(body, output)
             if isinstance(rows, dict):
                 rows = [rows]
