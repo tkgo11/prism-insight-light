@@ -130,6 +130,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                       CTX_AREA_FK200="", CTX_AREA_NK200="")
         fk, nk, output = "CTX_AREA_FK200", "CTX_AREA_NK200", "output"
     cursors, records, matches, versions, order_quantities = set(), set(), [], {}, set()
+    execution_quantities, total_execution_quantity = {}, 0
     for page in range(max_pages):
         try:
             response = trader._request(path, tr_id, dict(params), tr_cont="N" if page else "")
@@ -170,6 +171,20 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                     if key in versions and versions[key] != match:
                         return result
                     versions[key] = match
+                    # Each distinct broker execution contributes at most once.
+                    # Independently plausible fills cannot jointly exceed the
+                    # submitted order quantity, even across separate pages.
+                    # Missing execution IDs are not safe to aggregate; this
+                    # check remains read-only and never authorizes a SELL.
+                    execution_id = match["execution_id"]
+                    execution_qty = match["execution_quantity"]
+                    if (execution_id is not None and execution_qty is not None
+                            and execution_id not in execution_quantities):
+                        execution_quantities[execution_id] = execution_qty
+                        total_execution_quantity += execution_qty
+                    if (order_quantities and
+                            total_execution_quantity > next(iter(order_quantities))):
+                        return result
                     signature = tuple(match.values())
                     if signature not in records:
                         records.add(signature)
