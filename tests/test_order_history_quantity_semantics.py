@@ -342,3 +342,30 @@ def test_unrelated_order_history_rows_remain_skippable(market):
     assert result["complete"] is True
     assert len(result["matches"]) == 1
     assert result["can_activate_stop"] is False
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("contradiction", ["ticker", "side"])
+def test_same_account_order_identity_poisoning_invalidates_prior_page(market, contradiction):
+    """A single account/date/order ID cannot identify two BUY instruments/sides.
+
+    An unrelated order number remains skippable; contradictory metadata on
+    the *target* order must not leave earlier partial-fill evidence trusted.
+    Mock responses only: no broker submission or stop-loss activation.
+    """
+    first = _row(market, cano="12345678", acnt_prdt_cd="01",
+                 ccld_qty="2", tot_ccld_qty="2", rmn_qty="8")
+    bad = _row(market, cano="12345678", acnt_prdt_cd="01",
+               ccld_no="EXEC02", ccld_qty="1", tot_ccld_qty="3", rmn_qty="7")
+    if contradiction == "ticker":
+        bad["pdno"] = "000660" if market == "KR" else "MSFT"
+    else:
+        bad["sll_buy_dvsn_cd" if market == "KR" else "sll_buy_dvsn"] = "01"
+    result, calls = _read(market, [
+        HistoryResponse(market, [first], more=True),
+        HistoryResponse(market, [bad]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["matches"] == []
+    assert result["can_activate_stop"] is False
