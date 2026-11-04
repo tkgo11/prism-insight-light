@@ -1,14 +1,17 @@
 {
   "run_id": "prism-sync-2026-11-05T00-16-KST-core-risk",
-  "status": "LOCKED",
-  "expected_state_head": "818a5a432a160ee90a74d445089f72758acb3099",
-  "expected_pr_head": "fed423ddac7ddcf887a054ff2fd1439c8dfb0690",
+  "status": "RELEASED",
+  "expected_state_head": "ef9cab2afb337b33edb9fb3aa8eb208351e7ea2a",
+  "expected_pr_head": "98b8fef7465a9eb2b56febeee9ad3ec16977b3d8",
   "created_at": "2026-11-04T15:17:13Z",
-  "purpose": "KR/US mock test-first execution identity missing-order-quantity reconciliation; no broker orders",
+  "released_at": "2026-11-04T15:23:00Z",
+  "purpose": "KR/US read-only Mock unnumbered execution bound test-first",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
     "related": 0,
     "full": 0
-  }
+  },
+  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
+  "reason": "4 genuine KR/US product assertions red-green; exact-head CI success; 65/186 related and 65/218 full files audited, 0/2+0/2, no real/demo orders"
 }
