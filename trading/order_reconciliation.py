@@ -41,8 +41,19 @@ def _matched(row, *, order_no, order_date, ticker, account, product):
     # Order numbers can be reused on different trading dates, so first
     # identify the target by both number and date. A different order is
     # skippable; a contradictory target-order identity is not.
-    if (_first(row, "odno", "ODNO") != order_no
-            or _first(row, "ord_dt", "ORD_DT") != order_date):
+    if _first(row, "odno", "ODNO") != order_no:
+        return None
+    # An order number may recur on another *valid* trading date, but a
+    # matching number with a missing/malformed date cannot be established as
+    # unrelated. Invalidate earlier paginated evidence rather than skipping it.
+    row_date = _first(row, "ord_dt", "ORD_DT")
+    if not isinstance(row_date, str) or re.fullmatch(r"[0-9]{8}", row_date) is None:
+        raise ValueError("target order has missing or invalid trading date")
+    try:
+        datetime.strptime(row_date, "%Y%m%d")
+    except ValueError as exc:
+        raise ValueError("target order has invalid calendar date") from exc
+    if row_date != order_date:
         return None
     for key, value in (("cano", account), ("CANO", account),
                        ("acnt_prdt_cd", product), ("ACNT_PRDT_CD", product)):
