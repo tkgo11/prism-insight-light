@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "run_id": "prism-sync-2026-11-05T04-19-KST-core-risk",
+  "status": "PROGRESSED_ONE_VERIFIED_DEFECT_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
+  "head_sha": "7af124efaf32cd815ecbac256670985b537a7a04",
+  "pr": 43,
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "merge_result_sha": "e9560690973d2b28a0f8f882a71cc27f071990e8",
+  "merge_tree_sha": "0dea6c19d2a5dce17e764aff6fc88c7143989bce",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T04-19-KST.json",
+  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T04-19-KST-related.json",
+  "related_manifest_sha": "01afc964d50aed939f4c7ffab1e83474b5abcd7f",
+  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T04-19-KST-full.json",
+  "full_manifest_sha": "faecda1b76ffef783f8ee322444031db71a476fc",
+  "related_complete": "68/189",
+  "full_complete": "68/221",
+  "related_passes": 0,
+  "full_passes": 0,
+  "core_risk_gate": {
+    "prior_stalled_count": "0 consecutive; prior PROGRESSED, historical >=2",
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_history_integer_overflow.py::test_integer_overflow_in_later_cancelled_partial_history_poison_all_evidence (32 KR/US x exact/discovery x 4 fields x 2 accounts)",
+    "baseline_fail_observed": "YES: 32 genuine assertion failures, 2087 passed on 2ee49371, Actions 41896163356 and 41896174179",
+    "mock_result": "FIXED_GREEN: 7af124ef push 2109 passed, PR merge 2119 passed, Windows 167 and Docker success",
+    "code_fix_commit": "7af124efaf32cd815ecbac256670985b537a7a04",
+    "latest_head_CI": [
+      {
+        "id": 41896417618,
+        "event": "push",
+        "sha": "7af124efaf32cd815ecbac256670985b537a7a04",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2109 passed"
+      },
+      {
+        "id": 41896427362,
+        "event": "pull_request",
+        "sha": "7af124efaf32cd815ecbac256670985b537a7a04",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2119 passed"
+      }
+    ],
+    "unverified_transitions": [
+      "UNKNOWN BUY to account/date/order attribution",
+      "Durable account-scoped fill-ID cumulative/remaining/cancel binding",
+      "Partial cancel finality and residual exposure",
+      "Confirmed fill to stop-loss activation",
+      "KR/US multi-account broker E2E",
+      "KIS demo integration"
+    ],
+    "exact_blocker": "Authoritative fill/cancel/remaining reconciliation and stop activation unverified; KIS demo credentials unavailable for demo only; branch protection 403; Qlty 89 blocking issues untriaged; no reviews or 2+2 PASS",
+    "evidence_delta": "36 new tests (32 red, 4 valid-bound green), shared _qty fix, 2119 exact-PR-head merge tests pass; new test fully audited, 68/189 related and 68/221 full; merge tree changed one source blob and added one test",
+    "next_exact_action": "Execute KR/US read-only Mock for authoritative account/date/order/execution-ID binding, partial-cancel final remaining and durable ledger reconciliation after UNKNOWN BUY. Observe baseline red before production changes; never activate stop from read-only evidence."
+  },
+  "ci_latest": [
+    {
+      "id": 41896417618,
+      "event": "push",
+      "sha": "7af124efaf32cd815ecbac256670985b537a7a04",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2109 passed"
+    },
+    {
+      "id": 41896427362,
+      "event": "pull_request",
+      "sha": "7af124efaf32cd815ecbac256670985b537a7a04",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2119 passed"
+    }
+  ],
+  "last_updated_at": "2026-11-04T19:26:03Z",
+  "next_exact_action": "Execute KR/US read-only Mock for authoritative account/date/order/execution-ID binding, partial-cancel final remaining and durable ledger reconciliation after UNKNOWN BUY. Observe baseline red before production changes; never activate stop from read-only evidence.",
+  "note": "Historical state.json is a legacy snapshot; use this latest-run pointer and run report as most recent CAS evidence."
+}

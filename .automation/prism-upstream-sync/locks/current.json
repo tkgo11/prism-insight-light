@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-05T04-19-KST-core-risk",
-  "status": "ACTIVE",
-  "expected_state_head": "5ca347fe8c3613f2db04be62f606adc8152c44a5",
-  "expected_pr_head": "b3ee268a386a3e53af7ff0b9f141f7228ae293a5",
+  "status": "RELEASED",
+  "expected_state_head": "fcb42c2dce9083cd54f42f5787926abb979a0665",
+  "expected_pr_head": "7af124efaf32cd815ecbac256670985b537a7a04",
   "created_at": "2026-11-04T19:19:30Z",
-  "purpose": "First code write: KR/US read-only mock order-history quantity/attribution boundary tests; no broker orders",
+  "released_at": "2026-11-04T19:26:03Z",
+  "purpose": "KR/US read-only mock test-first integer quantity validation",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
+  "reason": "32 red -> 2119 green; attribution remains unverified; independent 2+2 zero"
 }
