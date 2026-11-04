@@ -123,7 +123,12 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
     """
     if market not in ("KR", "US"):
         raise ValueError("unknown market")
-    if not isinstance(order_no, str) or re.fullmatch(r"[0-9]{1,20}", order_no) is None:
+    # An all-zero ODNO is a broker placeholder, not an attributable order.
+    # Keep exact history lookup aligned with durable BUY receipt validation and
+    # discovery; never query or promote a placeholder to read-only evidence.
+    if (not isinstance(order_no, str)
+            or re.fullmatch(r"[0-9]{1,20}", order_no) is None
+            or not order_no.strip("0")):
         raise ValueError("invalid order number")
     if not isinstance(order_date, str) or re.fullmatch(r"[0-9]{8}", order_date) is None:
         raise ValueError("invalid date")
