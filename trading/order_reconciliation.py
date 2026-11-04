@@ -7,7 +7,7 @@ def _get(obj, key, default=None):
     return obj.get(key, default) if isinstance(obj, dict) else getattr(obj, key, default)
 
 
-def _cursor_component(body, lower_key, upper_key):
+def _cursor_component(body, lower_key, upper_key, default=""):
     """Reject contradictory pagination cursor spellings before using a page.
 
     KIS wrapper responses may expose lower/upper-case cursor fields. Two
@@ -24,7 +24,7 @@ def _cursor_component(body, lower_key, upper_key):
         return lower
     if upper is not missing:
         return upper
-    return ""
+    return default
 
 
 def _first(row, *keys):
@@ -277,7 +277,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                     if signature not in records:
                         records.add(signature)
                         matches.append(match)
-            continuation = _get(header, "tr_cont", None)
+            continuation = _cursor_component(header, "tr_cont", "TR_CONT", None)
             if continuation in ("", "D", "E"):
                 # Only at the final page can we compare distinct execution
                 # quantities against the largest cumulative broker snapshot.
@@ -402,7 +402,7 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
             if not all(isinstance(row, dict) for row in rows):
                 return result
             all_rows.extend(rows)
-            continuation = _get(header, "tr_cont")
+            continuation = _cursor_component(header, "tr_cont", "TR_CONT", None)
             if continuation in ("", "D", "E"):
                 break
             if continuation not in ("M", "F"):
