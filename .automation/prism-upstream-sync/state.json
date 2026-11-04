@@ -7,13 +7,16 @@
     "run_id": "prism-sync-2026-11-05T01-19-KST-core-risk",
     "previous_run_id": "prism-sync-2026-11-05T00-16-KST-core-risk",
     "started_at": "2026-11-04T16:19:53Z",
-    "status": "LOCKED",
-    "lock_owner": "prism-sync-2026-11-05T01-19-KST-core-risk",
+    "status": "RELEASED",
+    "lock_owner": null,
     "lock_acquired_commit": "e5239acb58964df24b7e7a8197ce8d4f6cefa2fb",
     "lock_expected_pr_sha": "98b8fef7465a9eb2b56febeee9ad3ec16977b3d8",
-    "lock_released": false,
+    "lock_released": true,
     "related_pass": false,
-    "full_pass": false
+    "full_pass": false,
+    "completed_at": "2026-11-04T16:30:00Z",
+    "final_pr_head_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
+    "evidence_commit": "THIS_ATOMIC_CAS_COMMIT"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -33,11 +36,11 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "98b8fef7465a9eb2b56febeee9ad3ec16977b3d8",
+    "head_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
-    "status": "DRAFT_UNNUMBERED_EXECUTION_BOUND_MOCK_PATCHED_ATTRIBUTION_UNVERIFIED",
+    "status": "DRAFT_ZERO_PLACEHOLDER_GUARD_MOCK_PATCHED_ATTRIBUTION_UNVERIFIED",
     "base_ref": "main"
   },
   "candidates": [
@@ -51,33 +54,33 @@
   "related_consecutive_passes": 0,
   "full_consecutive_passes": 0,
   "related_manifest": {
-    "status": "INCOMPLETE_CURRENT_MERGE_TREE_MISSING_EXECUTION_ID_BOUND_PATCHED",
-    "checksum": "a4316941d0c4aab25d0a7c98f5cbc18c809f37c0",
+    "status": "INCOMPLETE_CURRENT_MERGE_TREE_ZERO_PLACEHOLDER_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
+    "checksum": "9124954ded0138ecfa8c8b17c432fe39453bd835",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 186,
-    "files_fully_audited": 65,
-    "files_file_level_inspected": 182,
-    "files_targeted_path_review": 23,
-    "head_sha": "98b8fef7465a9eb2b56febeee9ad3ec16977b3d8",
+    "scope_estimate": 187,
+    "files_fully_audited": 66,
+    "files_file_level_inspected": 183,
+    "files_targeted_path_review": 24,
+    "head_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
     "source_head_sha": "6437aac71699c2ce565202263ad8f94ce6e59940",
-    "git_tree_sha": "9b92e3bbb1dee04a108129bb4c68c1f225e911d7",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T00-16-KST-related.json",
-    "sha": "a4316941d0c4aab25d0a7c98f5cbc18c809f37c0",
-    "merge_result_sha": "8011a278bdeef5d8e768e1084e574bbdffc06808"
+    "git_tree_sha": "c07cd8f29d85763b0afa98837b4fbe93648f36be",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T01-19-KST-related.json",
+    "sha": "9124954ded0138ecfa8c8b17c432fe39453bd835",
+    "merge_result_sha": "c07cd8f29d85763b0afa98837b4fbe93648f36be"
   },
   "full_manifest": {
-    "status": "INCOMPLETE_CURRENT_MERGE_TREE_MISSING_EXECUTION_ID_BOUND_PATCHED",
-    "checksum": "e53d69c10bfb8d68e3d9380cbd39b56018075e08",
+    "status": "INCOMPLETE_CURRENT_MERGE_TREE_ZERO_PLACEHOLDER_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
+    "checksum": "46ac2c9458fac6995c75c6451e850459f9948ef1",
     "checksum_kind": "git_blob_sha1",
-    "sha": "e53d69c10bfb8d68e3d9380cbd39b56018075e08",
-    "files_checked": 206,
-    "fully_audited_files": 65,
-    "file_count": 218,
-    "files_targeted_path_review": 23,
-    "git_tree_sha": "9b92e3bbb1dee04a108129bb4c68c1f225e911d7",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T00-16-KST-full.json",
-    "head_sha": "98b8fef7465a9eb2b56febeee9ad3ec16977b3d8",
-    "merge_result_sha": "8011a278bdeef5d8e768e1084e574bbdffc06808"
+    "sha": "46ac2c9458fac6995c75c6451e850459f9948ef1",
+    "files_checked": 207,
+    "fully_audited_files": 66,
+    "file_count": 219,
+    "files_targeted_path_review": 24,
+    "git_tree_sha": "c07cd8f29d85763b0afa98837b4fbe93648f36be",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T01-19-KST-full.json",
+    "head_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
+    "merge_result_sha": "c07cd8f29d85763b0afa98837b4fbe93648f36be"
   },
   "checks": [
     {
@@ -2186,6 +2189,30 @@
         "demo_orders": 0
       },
       "evidence": "GitHub Actions 41847700870 and 41847711828"
+    },
+    {
+      "head_sha": "5a264c5c4db5bd42288b9effa884f2f7fbcec88f",
+      "run_ids": [
+        41867270035,
+        41867278907
+      ],
+      "status": "PUSH_SUCCESS_PR_QUEUED",
+      "conclusion": "NOT_ALL_COMPLETE",
+      "jobs": [
+        "Push 2067 pytest PASS, Windows 167 PASS, Docker PASS",
+        "PR queued"
+      ],
+      "external_statuses": [
+        {
+          "context": "security/snyk (tkgo11)",
+          "state": "success"
+        },
+        {
+          "context": "qlty check",
+          "state": "success",
+          "description": "89 blocking issues"
+        }
+      ]
     }
   ],
   "upstream_changes": [
@@ -20904,5 +20931,6 @@
     "real_orders": 0,
     "demo_orders": 0
   },
-  "run27_next_exact_action": "Implement Mock-only operator-confirmed per-account order-ID+date and fill-ID/remaining/cancel binding to durable ledger; verify restart, partial cancellation and multi-account before stop activation."
+  "run27_next_exact_action": "Implement Mock-only operator-confirmed per-account order-ID+date and fill-ID/remaining/cancel binding to durable ledger; verify restart, partial cancellation and multi-account before stop activation.",
+  "last_run_evidence_path": ".automation/prism-upstream-sync/runs/2026-11-05T01-19-KST.json"
 }
