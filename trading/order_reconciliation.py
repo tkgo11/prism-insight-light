@@ -8,7 +8,19 @@ def _get(obj, key, default=None):
 
 
 def _first(row, *keys):
-    return next((row[k] for k in keys if k in row), None)
+    """Read a broker field without silently preferring contradictory aliases.
+
+    KIS wrappers may expose alternate spellings.  A single row containing
+    different order, fill, quantity, or cancel values under those spellings
+    is ambiguous, not evidence that may be attributed to a BUY.
+    """
+    present = [row[key] for key in keys if key in row]
+    if not present:
+        return None
+    first = present[0]
+    if any(type(value) is not type(first) or value != first for value in present[1:]):
+        raise ValueError("conflicting KIS order-history field aliases")
+    return first
 
 
 def _qty(value):
