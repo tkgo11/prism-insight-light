@@ -1,69 +1,85 @@
 {
   "schema_version": 1,
-  "run_id": "prism-sync-2026-11-05T07-22-KST-core-risk",
-  "status": "PROGRESSED_REPRODUCED_ROW_ALIAS_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
-  "head_sha": "398bd17fe76f61bf17524d127383891e199ac2f1",
+  "run_id": "prism-sync-2026-11-05T08-21-KST-core-risk",
+  "status": "PROGRESSED_MOCK_EVIDENCE_CORE_ATTRIBUTION_UNVERIFIED",
+  "head_sha": "c0c71c197d9747816c316b1260381140c94e1403",
   "pr": 43,
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
   "actual_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "merge_result_sha": "d64364904eefb65c8a19b3cb8bbdb51ae1e0b41b",
-  "merge_tree_sha": "c226449864dd9d2516b4bd196c8b25bc2f300c33",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T07-22-KST.json",
-  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T07-22-KST-related.json",
-  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T07-22-KST-full.json",
-  "related_complete": "70/191",
-  "full_complete": "70/223",
+  "merge_result_sha": "acae240b5a5d247a6fe48bf89e0e82ea75d6c727",
+  "merge_tree_sha": "bb69c039b597541a4973c4cb55bba19b491c0a80",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T08-21-KST.json",
+  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T08-21-KST-related.json",
+  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T08-21-KST-full.json",
+  "related_complete": "71/192",
+  "full_complete": "71/224",
   "related_passes": 0,
   "full_passes": 0,
   "core_risk_gate": {
     "prior_stalled_count": 0,
     "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-    "latest_attempt_command_or_test_id": "tests/test_order_history_uppercase_row_alias_integrity.py::test_later_page_conflicting_uppercase_quantity_alias_invalidates_all_evidence (48 KR/US x exact/discovery x 2 scopes x 6 aliases); 52 additional controls/ID/ticker cases",
-    "baseline_fail_observed": "YES: test-first 32d697cd Actions 41925020925, 60 genuine assertion failures and 2191 existing passes; EVIDENCE_ONLY/CANDIDATES_ONLY and missing uppercase-only parsed quantities, not test infra errors",
-    "mock_result": "FIXED_GREEN_READ_ONLY: final 398bd17f PR Actions 41925359521 completed success, 2291 pytest PASS, Windows 167 PASS, Docker success; no fill attribution",
-    "code_fix_commit": "0e751c3a45ded41516cb2a0b68fdfab0386dc0bc",
+    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py (24 KR/US mock cases, five test functions)",
+    "baseline_fail_observed": "NO_PRODUCT_DEFECT: initial Actions 41933371836 4 false failures due test assertion [] or None; 2311 pass. Test corrected c0c71c1; not a product defect.",
+    "mock_result": "24/24 PASS; 2315 total pytest PASS at exact PR HEAD, 167 Windows smoke PASS, Docker success",
+    "code_fix_commit": null,
+    "test_commits": [
+      "72e2658c68f0137184c378758d03eb2d46bfa8f4",
+      "c0c71c197d9747816c316b1260381140c94e1403"
+    ],
     "latest_head_CI": [
       {
-        "id": 41925359521,
+        "id": 41933604678,
         "event": "pull_request",
-        "sha": "398bd17fe76f61bf17524d127383891e199ac2f1",
+        "sha": "c0c71c197d9747816c316b1260381140c94e1403",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2291 passed",
+        "pytest": "2315 passed",
         "windows": "167 passed",
         "docker": "success"
+      },
+      {
+        "id": 41933599456,
+        "event": "push",
+        "sha": "c0c71c197d9747816c316b1260381140c94e1403",
+        "status": "completed",
+        "conclusion": "success"
       }
     ],
     "unverified_transitions": [
-      "UNKNOWN BUY account/date/order/execution-ID attribution",
-      "Durable fill/cancel/remaining ledger binding",
+      "UNKNOWN BUY account/date/order/execution-ID authoritative attribution",
+      "Durable fill/cancel/remaining ledger binding and idempotency",
       "Partial cancel finality and residual exposure",
-      "Confirmed fill to stop-loss activation",
-      "KR/US multi-account broker E2E",
-      "KIS demo integration"
+      "Confirmed fill-to-stop-loss activation and multi-account holding attribution",
+      "KIS demo broker integration"
     ],
-    "exact_blocker": "No authoritative broker-to-durable-ledger UNKNOWN BUY fill/cancel/remaining binding or safe stop activation; KIS demo credentials absent only for integration; branch protection policy unverified (prior 403); Qlty issue count untriaged; independent review and 2+2 missing",
-    "evidence_delta": "100 new KR/US read-only Mock cases, 60 genuine baseline red, 40 further controls, one root-cause production fix, final 2291 PR PASS; one additional complete file audit; 0 independent PASS",
-    "next_exact_action": "Build test-first read-only KR/US UNKNOWN BUY account+date+order+execution attribution to durable ledger with partial-cancel residual and restart, then safe stop activation only on broker-authoritative attributable fill."
+    "exact_blocker": "No broker-authoritative UNKNOWN BUY order/date/execution attribution and durable fill/cancel/remaining binding; KIS demo credentials absent for integration only; branch protection API 403; Qlty success reports 89 blocking issues (untriaged); reviews and independent 2+2 absent",
+    "evidence_delta": "24 new mock cases, 4 test-only assertion failures diagnosed and corrected, 2315 exact-head green, one fully inspected test file added; no production defect reproduced or fixed",
+    "next_exact_action": "Test-first read-only broker-authoritative account+date+order+execution correlation against durable UNKNOWN BUY intent; do not clear fence or activate stop without authoritative proof"
   },
   "ci_latest": [
     {
-      "id": 41925359521,
+      "id": 41933604678,
       "event": "pull_request",
-      "sha": "398bd17fe76f61bf17524d127383891e199ac2f1",
+      "sha": "c0c71c197d9747816c316b1260381140c94e1403",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2291 passed",
+      "pytest": "2315 passed",
       "windows": "167 passed",
       "docker": "success"
+    },
+    {
+      "id": 41933599456,
+      "event": "push",
+      "sha": "c0c71c197d9747816c316b1260381140c94e1403",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
-  "last_updated_at": "2026-11-04T22:30:18.046Z",
-  "next_exact_action": "Build test-first read-only KR/US UNKNOWN BUY account+date+order+execution attribution to durable ledger with partial-cancel residual and restart, then safe stop activation only on broker-authoritative attributable fill.",
-  "related_manifest_sha": "2436149b6216b1dd8557a56e6e28526df0b661e3",
-  "full_manifest_sha": "afde75613847b623e782e9430372fd8d17ce0e99",
+  "last_updated_at": "2026-11-04T23:28:30.239Z",
+  "next_exact_action": "Test-first read-only broker-authoritative account+date+order+execution correlation against durable UNKNOWN BUY intent; do not clear fence or activate stop without authoritative proof",
+  "related_manifest_sha": "e6de8e3b3fa98499721cb1b2ba422ecd697012be",
+  "full_manifest_sha": "fb95aca24368f8ca522b33eb6b8936bc413f6251",
   "cas": {
-    "evidence_commit": "d056813f789999aaf50851d9a189ba88af5717c4",
-    "lock_status": "RELEASED"
+    "lock_status": "ACTIVE_PENDING_RELEASE"
   }
 }
