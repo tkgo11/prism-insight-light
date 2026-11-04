@@ -1,0 +1,133 @@
+"""Mock-only KR/US per-execution versus cumulative fill evidence regression.
+
+KIS ccld_qty is a per-execution quantity; tot_ccld_qty is cumulative.
+They must never be treated as interchangeable. Every result stays read-only:
+no ledger finalization, stop-loss activation, or order submission is allowed.
+"""
+from types import SimpleNamespace
+
+import pytest
+
+from trading.domestic import DomesticStockTrading
+from trading.us import USStockTrading
+
+
+class HistoryResponse:
+    def __init__(self, market, rows, *, more=False, cursor="next"):
+        self.market, self.rows, self.more, self.cursor = market, rows, more, cursor
+
+    def isOK(self):
+        return True
+
+    def getBody(self):
+        values = {"rt_cd": "0",
+                  "output1" if self.market == "KR" else "output": self.rows}
+        suffix = "100" if self.market == "KR" else "200"
+        values["ctx_area_fk" + suffix] = self.cursor if self.more else ""
+        values["ctx_area_nk" + suffix] = self.cursor if self.more else ""
+        return SimpleNamespace(**values)
+
+    def getHeader(self):
+        return SimpleNamespace(tr_cont="M" if self.more else "")
+
+
+def _row(market, **changes):
+    row = {"odno": "00001234",
+           "pdno": "005930" if market == "KR" else "AAPL",
+           "ord_dt": "20261104",
+           "sll_buy_dvsn_cd" if market == "KR" else "sll_buy_dvsn": "02",
+           "ord_qty": "10", "rmn_qty": "4", "ccld_no": "EXEC01"}
+    row.update(changes)
+    return row
+
+
+def _read(market, pages, *, scope="account-a"):
+    cls = DomesticStockTrading if market == "KR" else USStockTrading
+    trader = object.__new__(cls)
+    trader.mode = "demo"
+    trader.env = "vps"
+    trader.account_key = scope
+    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+    calls = []
+    responses = iter(pages)
+
+    def request(path, tr_id, params, **kwargs):
+        assert "/inquire-" in path, "read-only mock must never submit an order"
+        assert params["CANO"] == "12345678"
+        assert params["ACNT_PRDT_CD"] == "01"
+        calls.append((path, dict(params)))
+        return next(responses)
+
+    trader._request = request
+    result = trader.get_order_history_for_reconciliation(
+        order_no="00001234", order_date="20261104",
+        ticker="005930" if market == "KR" else "AAPL", max_pages=3)
+    assert result["can_activate_stop"] is False
+    assert result["account_scope"] == scope
+    return result, calls
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_single_execution_quantity_cannot_be_claimed_as_cumulative(market):
+    row = _row(market, ccld_qty="2")
+    result, calls = _read(market, [HistoryResponse(market, [row])])
+    assert len(calls) == 1
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert result["complete"] is True
+    assert result["matches"][0]["filled_quantity"] is None
+    assert result["matches"][0]["execution_quantity"] == 2
+    assert result["matches"][0]["remaining_quantity"] == 4
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_distinct_cumulative_and_per_execution_fields_coexist(market):
+    row = _row(market, tot_ccld_qty="6", ccld_qty="2")
+    result, _ = _read(market, [HistoryResponse(market, [row])])
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert result["complete"] is True
+    assert len(result["matches"]) == 1
+    assert result["matches"][0]["filled_quantity"] == 6
+    assert result["matches"][0]["execution_quantity"] == 2
+    assert result["matches"][0]["remaining_quantity"] == 4
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_partial_cancel_keeps_both_quantity_semantics_nonactionable(market):
+    row = _row(market, tot_ccld_qty="6", ccld_qty="2", cncl_yn="Y")
+    result, _ = _read(market, [HistoryResponse(market, [row])])
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert result["matches"][0]["cancel_flag"] == "Y"
+    assert result["matches"][0]["filled_quantity"] == 6
+    assert result["matches"][0]["execution_quantity"] == 2
+    assert result["matches"][0]["remaining_quantity"] == 4
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_duplicate_paginated_execution_does_not_double_count(market):
+    row = _row(market, tot_ccld_qty="6", ccld_qty="2")
+    result, calls = _read(market, [
+        HistoryResponse(market, [row], more=True),
+        HistoryResponse(market, [dict(row)]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert len(result["matches"]) == 1
+    assert result["matches"][0]["execution_quantity"] == 2
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_conflicting_cumulative_aliases_remain_unverified(market):
+    row = _row(market, tot_ccld_qty="6", ft_ccld_qty="5", ccld_qty="2")
+    result, _ = _read(market, [HistoryResponse(market, [row])])
+    assert result["status"] == "UNVERIFIED"
+    assert result["matches"] == []
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_restart_and_account_scope_remain_nonactionable(market):
+    row = _row(market, tot_ccld_qty="6", ccld_qty="2")
+    a, _ = _read(market, [HistoryResponse(market, [row])], scope="account-a")
+    b, _ = _read(market, [HistoryResponse(market, [dict(row)])], scope="account-b")
+    assert a["matches"] == b["matches"]
+    assert a["account_scope"] != b["account_scope"]
+    assert a["can_activate_stop"] is b["can_activate_stop"] is False
