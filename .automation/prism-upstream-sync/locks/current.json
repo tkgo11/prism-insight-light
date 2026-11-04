@@ -1,14 +1,17 @@
 {
   "run_id": "prism-sync-hourly-2026-11-04T14-23-KST-turn9",
-  "status": "LOCKED",
-  "expected_state_head": "90f51edc2f4e4e64c540779d0c4ccbca462c8e56",
-  "expected_pr_head": "377fcd7df7da8a3f848ff8c8e5ee0191d80bcec3",
+  "status": "RELEASED",
+  "expected_state_head": "9b8171077848631ef11d2d5899f3dd1b60af43a7",
+  "expected_pr_head": "e24f4b6ac057fbc1defc2380c93986dbc8e27e56",
   "created_at": "2026-11-04T05:23:46Z",
-  "purpose": "Test-first KR/US read-only per-fill vs cumulative fill quantity semantics; no live/demo orders",
+  "released_at": "2026-11-04T05:29:00Z",
+  "purpose": "KR/US per-execution versus cumulative Mock red-green; no live/demo orders",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
     "related": 0,
     "full": 0
-  }
+  },
+  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
+  "reason": "8 product assertions red then 26 Mock cases and exact-head CI green; core attribution remains unresolved"
 }
