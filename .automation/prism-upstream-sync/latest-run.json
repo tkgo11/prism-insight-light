@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "run_id": "prism-sync-2026-11-05T05-23-KST-core-risk",
-  "status": "PROGRESSED_ONE_VERIFIED_READ_ONLY_CURSOR_INTEGRITY_DEFECT_FIXED_ATTRIBUTION_UNVERIFIED",
-  "head_sha": "b26a672208ce695371dea14febc87d0ff76e7890",
+  "status": "PROGRESSED_TWO_REPRODUCED_CURSOR_HEADER_SUBCASES_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
+  "head_sha": "4e03c57152a990010e673d7b9cd7bcd2353cdb3a",
   "pr": 43,
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
-  "merge_result_sha": "04b5eb36932821f5ebb31e13f7c65ced1cda14d7",
-  "merge_tree_sha": "073fd434526d3516dd6330c41686b616e0f792ae",
+  "merge_result_sha": "d0f948d3834ac05b59f3bb1585e90b4eddf37aa7",
+  "merge_tree_sha": "3fd36464ec05f9fcaa480ae4fccc6843e545bce2",
   "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T05-23-KST.json",
   "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T05-23-KST-related.json",
-  "related_manifest_sha": "b297327e8e46f881fd89d268a661275fb43aa585",
+  "related_manifest_sha": "5bad846c8e9ef668b36e8088dc22d0aaa3e66ad0",
   "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T05-23-KST-full.json",
-  "full_manifest_sha": "74f3ee54ace55904990a4801ec44741b64bdecbe",
+  "full_manifest_sha": "b3083f2ed61c293b878f508ca913dbe49b36082e",
   "related_complete": "69/190",
   "full_complete": "69/222",
   "related_passes": 0,
@@ -19,28 +19,30 @@
   "core_risk_gate": {
     "prior_stalled_count": "0 consecutive; previous run PROGRESSED",
     "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-    "latest_attempt_command_or_test_id": "tests/test_order_history_cursor_alias_integrity.py::test_conflicting_cursor_aliases_discard_partial_cancel_history_and_keep_fence (16 KR/US x exact/discovery x 2 account scopes x FK/NK)",
-    "baseline_fail_observed": "YES: 16 genuine product assertion failures, 2127 passed, test-first SHA 5b05ccaa, Actions 41906516734 and 41906528781",
-    "mock_result": "FIXED_GREEN: b26a6722 push 2133 passed, PR merge 2143 passed, Windows 167 each, Docker success",
-    "code_fix_commit": "b26a672208ce695371dea14febc87d0ff76e7890",
+    "latest_attempt_command_or_test_id": "tests/test_order_history_cursor_alias_integrity.py::test_conflicting_continuation_header_aliases_discard_history (8 KR/US x exact/discovery x 2 account scopes), plus 16 FK/NK cursor alias cases",
+    "baseline_fail_observed": "YES: 16 genuine FK/NK alias failures / 2127 pass on 5b05ccaa; 8 genuine TR_CONT header alias failures / 2143 pass on 8e98d1c0, Actions 41906528781 and 41907663768",
+    "mock_result": "FIXED_GREEN: 4e03c571 push 2141 pass, PR merge 2151 pass, Windows 167 each, Docker success; still read-only, no KIS attribution",
+    "code_fix_commit": "4e03c57152a990010e673d7b9cd7bcd2353cdb3a",
     "latest_head_CI": [
       {
-        "id": 41906799771,
+        "id": 41907951955,
         "event": "push",
-        "sha": "b26a672208ce695371dea14febc87d0ff76e7890",
+        "sha": "4e03c57152a990010e673d7b9cd7bcd2353cdb3a",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2133 passed",
-        "windows": "167 passed"
+        "pytest": "2141 passed",
+        "windows": "167 passed",
+        "docker": "success"
       },
       {
-        "id": 41906810223,
+        "id": 41907964978,
         "event": "pull_request",
-        "sha": "b26a672208ce695371dea14febc87d0ff76e7890",
+        "sha": "4e03c57152a990010e673d7b9cd7bcd2353cdb3a",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2143 passed",
-        "windows": "167 passed"
+        "pytest": "2151 passed",
+        "windows": "167 passed",
+        "docker": "success"
       }
     ],
     "unverified_transitions": [
@@ -52,30 +54,36 @@
       "KIS demo integration"
     ],
     "exact_blocker": "Authoritative broker fill/cancel/remaining-to-ledger attribution and safe stop activation not implemented/verified; KIS demo credentials unavailable only for integration; branch protection 403; Qlty 89 blocking issues untriaged; reviews and independent 2+2 missing",
-    "evidence_delta": "New 24 Mock tests (16 red, 8 control green), common pagination alias helper fix in KR/US exact/discovery, 2143 PR merge tests green; new test complete audit, source reaudited, related 69/190, full 69/222",
-    "next_exact_action": "Test authoritative UNKNOWN BUY account/date/order/execution-ID association and partial-cancel remaining reconciliation using KR/US read-only Mock; preserve durable pending fence; baseline red before any production change."
+    "evidence_delta": "32 new KR/US Mock tests (24 genuine baseline red across two related subcases, 8 equal-alias controls green), two production commits in one reconciliation module, 2151 PR merge tests green; 69/190 related and 69/222 full files complete, independent 2+2 zero.",
+    "next_exact_action": "Test authoritative UNKNOWN BUY account/date/order/execution-ID association and partial-cancel remaining reconciliation using KR/US read-only Mock; preserve durable pending fence; baseline red before any production change.",
+    "code_fix_commits": [
+      "b26a672208ce695371dea14febc87d0ff76e7890",
+      "4e03c57152a990010e673d7b9cd7bcd2353cdb3a"
+    ]
   },
   "ci_latest": [
     {
-      "id": 41906799771,
+      "id": 41907951955,
       "event": "push",
-      "sha": "b26a672208ce695371dea14febc87d0ff76e7890",
+      "sha": "4e03c57152a990010e673d7b9cd7bcd2353cdb3a",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2133 passed",
-      "windows": "167 passed"
+      "pytest": "2141 passed",
+      "windows": "167 passed",
+      "docker": "success"
     },
     {
-      "id": 41906810223,
+      "id": 41907964978,
       "event": "pull_request",
-      "sha": "b26a672208ce695371dea14febc87d0ff76e7890",
+      "sha": "4e03c57152a990010e673d7b9cd7bcd2353cdb3a",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2143 passed",
-      "windows": "167 passed"
+      "pytest": "2151 passed",
+      "windows": "167 passed",
+      "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-04T20:31:18.364Z",
+  "last_updated_at": "2026-11-04T20:38:15.405Z",
   "next_exact_action": "Test KR/US UNKNOWN BUY account/date/order/execution-ID attribution and partial-cancel remaining durable ledger reconciliation using read-only Mock; do not activate stop from candidates.",
   "note": "Historical state.json is a legacy snapshot; use latest-run pointer and this run report for CAS evidence."
 }

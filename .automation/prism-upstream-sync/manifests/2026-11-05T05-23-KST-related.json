@@ -1,16 +1,16 @@
 {
   "run_id": "prism-sync-2026-11-05T05-23-KST-core-risk",
-  "observed_at": "2026-11-04T20:31:18.364Z",
-  "head_sha": "b26a672208ce695371dea14febc87d0ff76e7890",
-  "merge_result_sha": "04b5eb36932821f5ebb31e13f7c65ced1cda14d7",
-  "git_tree_sha": "073fd434526d3516dd6330c41686b616e0f792ae",
+  "observed_at": "2026-11-04T20:37:50.798Z",
+  "head_sha": "4e03c57152a990010e673d7b9cd7bcd2353cdb3a",
+  "merge_result_sha": "d0f948d3834ac05b59f3bb1585e90b4eddf37aa7",
+  "git_tree_sha": "3fd36464ec05f9fcaa480ae4fccc6843e545bce2",
   "upstream_head_sha": "6437aac71699c2ce565202263ad8f94ce6e59940",
   "status": "INCOMPLETE_CORE_RISK_ATTRIBUTION_UNVERIFIED",
   "independent_audit_slot_passes": 0,
   "audit_pass": false,
   "files_fully_audited": 69,
   "scope_closure_verified": false,
-  "evidence_rule": "16 genuine KR/US cursor-alias mock regressions observed red before implementation, 2143 PR merge tests green at exact HEAD; only current-blob complete files count, independent 2+2 remains zero.",
+  "evidence_rule": "24 genuine baseline failures (16 FK/NK cursor, 8 TR_CONT header) before two fixes; 2151 PR merge pytest pass and 167 Windows at exact HEAD; no KIS fill attribution or independent audit PASS.",
   "kind": "related",
   "selection_rule": "Prior 189 related transitive audit files plus new KR/US order-history cursor-alias test; pending authoritative reconciliation still blocks scope closure.",
   "files_file_level_inspected": 186,
@@ -834,29 +834,32 @@
     },
     {
       "path": "tests/test_order_history_cursor_alias_integrity.py",
-      "blob_sha": "41a2f35e40dfcf8c22f6316a886c03c3e9ee80bc",
+      "blob_sha": "281d7187e69b7488adfa256ee7f929c01665a930",
       "file_audit_complete": true,
       "audit_pass": false,
       "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
-      "evidence_status": "BASELINE_16_RED_FIXED_GREEN_EXACT_HEAD_CI",
-      "inspection": "Entire 157-line KR/US Mock suite reviewed: 2 markets x 2 lookup paths x 2 account scopes x 2 contradictory FK/NK cursor aliases, partial fills, final cancellation and remaining quantity, UNKNOWN ledger restart. Eight equal-alias controls. Only inquiry endpoint; no order, ledger finalize or stop activation.",
+      "evidence_status": "TWO_SUBCASES_24_RED_FIXED_GREEN_EXACT_HEAD_CI",
+      "inspection": "Entire 157-line KR/US Mock suite reviewed: 2 markets x 2 lookup paths x 2 account scopes x 2 contradictory FK/NK cursor aliases, partial fills, final cancellation and remaining quantity, UNKNOWN ledger restart. Eight equal-alias controls. Only inquiry endpoint; no order, ledger finalize or stop activation. Added 8 contradictory tr_cont/TR_CONT first-page tests (KR/US x exact/discovery x two account scopes); complete 183-line test module inspected.",
       "reviewed_functions": [
         "HistoryPage",
         "history_row",
         "inquiry",
         "test_conflicting_cursor_aliases_discard_partial_cancel_history_and_keep_fence",
-        "test_identical_cursor_aliases_remain_bounded_and_nonactionable"
+        "test_identical_cursor_aliases_remain_bounded_and_nonactionable",
+        "test_conflicting_continuation_header_aliases_discard_history"
       ],
       "invariants": [
         "Contradictory continuation cursor aliases invalidate all paginated history evidence",
         "KR/US exact and discovery never activate stop or clear UNKNOWN BUY fence",
-        "Identical cursor aliases preserve bounded pagination, execution identity and account isolation"
+        "Identical cursor aliases preserve bounded pagination, execution identity and account isolation",
+        "Contradictory header continuation aliases discard all evidence without querying page two"
       ],
       "test_evidence": [
         "Test-first 5b05ccaa: PR Actions 41906528781 16 genuine assertion failures, 2127 passes; no fixture/import errors",
-        "Fix b26a6722: push 41906799771 2133 passed; PR 41906810223 2143 passed; Windows 167 each; Docker success"
+        "Fix b26a6722: push 41906799771 2133 passed; PR 41906810223 2143 passed; Windows 167 each; Docker success",
+        "8 baseline assertion failures on 8e98d1c0, 2143 pass; 4e03c571 PR 2151 pass and Windows 167"
       ],
-      "review_evidence": "Test-first 16 failures are status mismatch EVIDENCE_ONLY/CANDIDATES_ONLY vs UNVERIFIED, not infrastructure failures. After helper fix 2143 PR tests pass. Source/test blob SHA verified in PR merge tree.",
+      "review_evidence": "Test-first 16 failures are status mismatch EVIDENCE_ONLY/CANDIDATES_ONLY vs UNVERIFIED, not infrastructure failures. After helper fix 2143 PR tests pass. Source/test blob SHA verified in PR merge tree. Second 8-case baseline red from EVIDENCE_ONLY/CANDIDATES_ONLY vs UNVERIFIED, not infrastructure errors; all fixed at exact merge tree 3fd36464ec05f9fcaa480ae4fccc6843e545bce2",
       "limitations": [
         "Read-only mock only, no broker-authoritative fill attribution",
         "KIS demo not run",
@@ -2208,12 +2211,12 @@
     },
     {
       "path": "trading/order_reconciliation.py",
-      "blob_sha": "500ec38568aebe26e930cd0748142f80e8d6b958",
+      "blob_sha": "8d30eaecbe37928169cb729de3850809174bbd16",
       "file_audit_complete": true,
       "audit_pass": false,
       "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
-      "evidence_status": "BASELINE_16_RED_FIXED_GREEN_EXACT_HEAD_CI",
-      "inspection": "Full current 493-line module reviewed, including _matched, _exceeds_known_order_bound, read_order_history and discover_buy_order_candidates. Prior complete audit revalidated against 1-line helper contract change: single unnumbered execution cannot exceed known order size. Both KR/US lookup paths remain read-only; no stop activation, ledger finalization or broker order submission. Latest re-review: exact read_order_history now rejects all-zero ODNO consistently with discovery and durable BUY receipt. All KR/US history remains read-only; no ledger finalize or stop activation. Current 2026-11-05 03:15 KST: full module re-read, read_order_history now enforces cumulative <=2000 raw rows before matching each page, discarding prior matches when overflow occurs; discovery bound unchanged. No ledger/stop mutation. 2026-11-05 04:19: full module re-reviewed; integer quantities now enforce same <10**18 bound as numeric strings, with 32 baseline red and 2119 PR merge tests green. 2026-11-05 05:23: complete 531-line source re-read and _cursor_component FK/NK case-alias contract audited for both exact/discovery and KR/US, 16 genuine baseline red then 2143 PR merge green; read-only and pending ledger unchanged.",
+      "evidence_status": "TWO_SUBCASES_24_RED_FIXED_GREEN_EXACT_HEAD_CI",
+      "inspection": "Full current 493-line module reviewed, including _matched, _exceeds_known_order_bound, read_order_history and discover_buy_order_candidates. Prior complete audit revalidated against 1-line helper contract change: single unnumbered execution cannot exceed known order size. Both KR/US lookup paths remain read-only; no stop activation, ledger finalization or broker order submission. Latest re-review: exact read_order_history now rejects all-zero ODNO consistently with discovery and durable BUY receipt. All KR/US history remains read-only; no ledger finalize or stop activation. Current 2026-11-05 03:15 KST: full module re-read, read_order_history now enforces cumulative <=2000 raw rows before matching each page, discarding prior matches when overflow occurs; discovery bound unchanged. No ledger/stop mutation. 2026-11-05 04:19: full module re-reviewed; integer quantities now enforce same <10**18 bound as numeric strings, with 32 baseline red and 2119 PR merge tests green. 2026-11-05 05:23: complete 531-line source re-read and _cursor_component FK/NK case-alias contract audited for both exact/discovery and KR/US, 16 genuine baseline red then 2143 PR merge green; read-only and pending ledger unchanged. Second independent related-path subcase: contradictory tr_cont/TR_CONT header on first page now fails closed in both KR/US lookup paths; complete 531-line source reviewed after fix; 8 baseline red and 2151 PR green.",
       "reviewed_functions": [
         "_get",
         "_first",
@@ -2233,7 +2236,8 @@
         "Exact KR/US lookup rejects zero-placeholder order numbers before any broker request.",
         "KR/US exact history rejects >2000 total raw rows across all pages, including after earlier matching partial fills",
         "KR/US integer quantities over 18 digits fail closed across exact/discovery order history.",
-        "Contradictory lower/upper-case pagination cursors must fail closed before second page and discard all earlier evidence"
+        "Contradictory lower/upper-case pagination cursors must fail closed before second page and discard all earlier evidence",
+        "Contradictory tr_cont/TR_CONT header aliases must not be treated as a valid pagination instruction"
       ],
       "failure_modes_reviewed": "4 genuine KR/US assertions reproduced at 00b16a18; 2059 existing pass; fix 98b8fef exact-head push 2063 and PR 2073 pytest PASS, Windows 167, Docker PASS. All-zero ODNO previously accepted as exact-order evidence; four KR/US mock cases red then green.",
       "test_evidence": [
@@ -2246,9 +2250,11 @@
         "Baseline ef27731a Actions 41877272358/41877262273: 4 expected KR/US >2000-row assertion failures, 2079 pass. Fix b3ee268a Actions 41885732800 PR and 41885719005 push: 2083 passed, Windows smoke and Docker success.",
         "2ee49371 32 failed, 2087 passed; 7af124ef 2109 push and 2119 PR merge passed, Windows 167 and Docker success.",
         "Test-first 5b05ccaa: PR Actions 41906528781 16 genuine assertion failures, 2127 passes; no fixture/import errors",
-        "Fix b26a6722: push 41906799771 2133 passed; PR 41906810223 2143 passed; Windows 167 each; Docker success"
+        "Fix b26a6722: push 41906799771 2133 passed; PR 41906810223 2143 passed; Windows 167 each; Docker success",
+        "Header test-first 8e98d1c0 Actions 41907663768: 8 failed, 2143 passed",
+        "Header fix 4e03c571 Actions 41907951955 push 2141 pass; 41907964978 PR merge 2151 pass; Windows 167 each, Docker success"
       ],
-      "review_evidence": "Current blob and helper diff reviewed, exact-head CI confirmed; 4 failure assertions isolate missing execution-ID known-bound leak; no KIS demo. Reviewed current validation guard and its callers; no real/demo KIS invoked. New cumulative raw-row cap checked against 2000-row boundary and multi-page overflow; current exact-HEAD CI green, no KIS integration. 2026-11-05: source blob 500ec38568aebe26e930cd0748142f80e8d6b958 exact PR merge tree 073fd434526d3516dd6330c41686b616e0f792ae; FK/NK conflict and equal-alias controls checked; no broker order, ledger finalize or stop activation.",
+      "review_evidence": "Current blob and helper diff reviewed, exact-head CI confirmed; 4 failure assertions isolate missing execution-ID known-bound leak; no KIS demo. Reviewed current validation guard and its callers; no real/demo KIS invoked. New cumulative raw-row cap checked against 2000-row boundary and multi-page overflow; current exact-HEAD CI green, no KIS integration. 2026-11-05: source blob 500ec38568aebe26e930cd0748142f80e8d6b958 exact PR merge tree 073fd434526d3516dd6330c41686b616e0f792ae; FK/NK conflict and equal-alias controls checked; no broker order, ledger finalize or stop activation. Header alias helper accepts explicit None default to preserve missing-header fail-closed behavior; exact/discovery path review, source SHA 8d30eaec.",
       "limitations": [
         "UNKNOWN signal to order attribution remains unverified",
         "Durable fill/cancel/remaining and safe stop activation not implemented",
