@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import logging
 import math
+import re
 import threading
 import time
 from contextlib import asynccontextmanager
@@ -305,6 +306,24 @@ class DispatchResult:
     order_no: str | None = None
 
 
+def _durable_buy_receipt(signal: SignalMessage, result: DispatchResult) -> dict[str, str] | None:
+    """Extract canonical broker order identity without inferring any fill.
+
+    Unknown/no-receipt orders remain durably fenced for manual reconciliation.
+    Noncanonical mock/legacy IDs are never persisted as KIS query keys.
+    """
+    order_no = result.order_no
+    if (
+        signal.signal_type != "BUY"
+        or result.status not in ("executed", "unknown")
+        or not isinstance(order_no, str)
+        or re.fullmatch(r"[0-9]{1,20}", order_no) is None
+        or not order_no.strip("0")
+    ):
+        return None
+    return {"order_no": order_no}
+
+
 class MultiAccountTradeDispatcher:
     """Resolve, execute, and aggregate one validated signal across eligible accounts.
 
@@ -527,6 +546,7 @@ class MultiAccountTradeDispatcher:
                         await asyncio.to_thread(
                             self.ledger.finalize, identity, result.status,
                             claim_token=claim_token,
+                            order_receipt=_durable_buy_receipt(signal, result),
                         )
                 results.append(
                     AccountDispatchResult(
@@ -1022,6 +1042,7 @@ class TradeDispatcher:
             await asyncio.to_thread(
                 self.execution_ledger.finalize, identity, result.status,
                 claim_token=claim_token,
+                order_receipt=_durable_buy_receipt(signal, result),
             )
         return result
 
