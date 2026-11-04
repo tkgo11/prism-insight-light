@@ -27,6 +27,27 @@ def _cursor_component(body, lower_key, upper_key, default=""):
     return default
 
 
+
+def _history_output(body, output):
+    """Reject contradictory lower/upper KIS history payload aliases.
+
+    A successful response with two different execution/cancel/remaining lists
+    cannot be trusted as complete order evidence. A single uppercase payload
+    is accepted when the lowercase spelling is absent.
+    """
+    missing = object()
+    lower = _get(body, output, missing)
+    upper = _get(body, output.upper(), missing)
+    if (lower is not missing and upper is not missing
+            and (type(lower) is not type(upper) or lower != upper)):
+        raise ValueError("conflicting KIS order-history output aliases")
+    if lower is not missing:
+        return lower
+    if upper is not missing:
+        return upper
+    return None
+
+
 def _first(row, *keys):
     """Read a broker field without silently preferring contradictory aliases.
 
@@ -225,7 +246,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
             # Reject the entire inquiry, including previously collected pages.
             if not business_status_seen:
                 return result
-            rows = _get(body, output)
+            rows = _history_output(body, output)
             if isinstance(rows, dict):
                 rows = [rows]
             if not isinstance(rows, list) or len(rows) > 2000 - total_rows:
@@ -394,7 +415,7 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
             if not statuses or any(type(value) is not str or value != "0"
                                    for value in statuses):
                 return result
-            rows = _get(body, output)
+            rows = _history_output(body, output)
             if isinstance(rows, dict):
                 rows = [rows]
             if not isinstance(rows, list) or len(all_rows) + len(rows) > 2000:
