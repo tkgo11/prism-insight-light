@@ -38,10 +38,11 @@ def _qty(value):
 def _matched(row, *, order_no, order_date, ticker, account, product):
     if not isinstance(row, dict):
         raise ValueError("malformed history row")
+    # Order numbers can be reused on different trading dates, so first
+    # identify the target by both number and date. A different order is
+    # skippable; a contradictory target-order identity is not.
     if (_first(row, "odno", "ODNO") != order_no
-            or _first(row, "pdno", "PDNO", "ovrs_pdno") != ticker
-            or _first(row, "ord_dt", "ORD_DT") != order_date
-            or _first(row, "sll_buy_dvsn_cd", "sll_buy_dvsn", "SLL_BUY_DVSN_CD", "SLL_BUY_DVSN") != "02"):
+            or _first(row, "ord_dt", "ORD_DT") != order_date):
         return None
     for key, value in (("cano", account), ("CANO", account),
                        ("acnt_prdt_cd", product), ("ACNT_PRDT_CD", product)):
@@ -51,6 +52,12 @@ def _matched(row, *, order_no, order_date, ticker, account, product):
             # not an unrelated row that may be silently skipped.  Invalidate
             # the entire paginated inquiry, including earlier matches.
             raise ValueError("target order account/product provenance mismatch")
+    # A single account/date/order identity cannot be both a BUY and SELL,
+    # or refer to different instruments. Silently skipping a conflicting
+    # later page would incorrectly preserve earlier EVIDENCE_ONLY matches.
+    if (_first(row, "pdno", "PDNO", "ovrs_pdno") != ticker
+            or _first(row, "sll_buy_dvsn_cd", "sll_buy_dvsn", "SLL_BUY_DVSN_CD", "SLL_BUY_DVSN") != "02"):
+        raise ValueError("target order ticker/side provenance mismatch")
     ordered = _qty(_first(row, "ord_qty", "ORD_QTY", "ft_ord_qty"))
     # Cumulative filled quantity and this execution's quantity are distinct KIS
     # facts. ccld_qty must not masquerade as a cumulative total or conflict
