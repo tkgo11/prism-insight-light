@@ -68,7 +68,7 @@ def _history(market, later_row):
 
 
 @pytest.mark.parametrize("market", ["KR", "US"])
-@pytest.mark.parametrize("missing_date", ["absent", "blank"])
+@pytest.mark.parametrize("missing_date", ["absent", "blank", "noncanonical", "invalid_calendar", "integer"])
 def test_same_order_number_missing_date_on_later_page_invalidates_prior_evidence(
     market, missing_date,
 ):
@@ -77,6 +77,12 @@ def test_same_order_number_missing_date_on_later_page_invalidates_prior_evidence
            "sll_buy_dvsn_cd" if market == "KR" else "sll_buy_dvsn": "02"}
     if missing_date == "blank":
         row["ord_dt"] = ""
+    elif missing_date == "noncanonical":
+        row["ord_dt"] = "2026-11-03"
+    elif missing_date == "invalid_calendar":
+        row["ord_dt"] = "20261303"
+    elif missing_date == "integer":
+        row["ord_dt"] = 20261103
     result = _history(market, row)
     assert result["status"] == "UNVERIFIED"
     assert result["complete"] is False
