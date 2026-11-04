@@ -1,14 +1,17 @@
 {
-  "run_id": "prism-sync-2026-11-04T13-21-KST-turn9",
-  "status": "ACTIVE",
-  "expected_state_head": "9f381b9cc545c80ec419215e37c36e1969ea85a0",
-  "expected_pr_head": "0cdcf83ee141face9e5b0c0555810c30a426efd9",
+  "run_id": "prism-sync-hourly-2026-11-04T13-21-KST-turn9",
+  "status": "RELEASED",
+  "expected_state_head": "6cacbebbce649e4dfdfad6ef363600af665c1419",
+  "expected_pr_head": "377fcd7df7da8a3f848ff8c8e5ee0191d80bcec3",
   "created_at": "2026-11-04T04:21:56Z",
-  "purpose": "Mock-first KR/US read-only KIS response integrity; no live/demo orders",
+  "released_at": "2026-11-04T04:28:20.874Z",
+  "purpose": "Mock-first KR/US KIS body business status evidence; no live/demo orders",
   "real_orders": 0,
   "demo_orders": 0,
   "audit_passes": {
     "related": 0,
     "full": 0
-  }
+  },
+  "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
+  "reason": "10 red product assertions fixed, exact-head CI green, core fill attribution unresolved, 2+2 no PASS"
 }
