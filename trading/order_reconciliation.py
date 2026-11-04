@@ -129,7 +129,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                       OVRS_EXCG_CD="" if mode == "demo" else "%",
                       CTX_AREA_FK200="", CTX_AREA_NK200="")
         fk, nk, output = "CTX_AREA_FK200", "CTX_AREA_NK200", "output"
-    cursors, records, matches, versions = set(), set(), [], {}
+    cursors, records, matches, versions, order_quantities = set(), set(), [], {}, set()
     for page in range(max_pages):
         try:
             response = trader._request(path, tr_id, dict(params), tr_cont="N" if page else "")
@@ -156,6 +156,14 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                 match = _matched(row, order_no=order_no, order_date=order_date,
                                  ticker=ticker, account=account, product=product)
                 if match is not None:
+                    # Separate execution IDs still belong to one order. A
+                    # contradictory submitted quantity across its history
+                    # cannot be trusted for partial-fill/cancel reconciliation.
+                    # This is read-only evidence: never finalize or SELL here.
+                    if match["order_quantity"] is not None:
+                        order_quantities.add(match["order_quantity"])
+                        if len(order_quantities) > 1:
+                            return result
                     # Repeated pages may duplicate rows. Conflicting snapshots
                     # for the same execution identity cannot prove final fills.
                     key = (match["order_no"], match["execution_id"])
