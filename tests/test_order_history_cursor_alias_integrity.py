@@ -180,3 +180,91 @@ def test_conflicting_continuation_header_aliases_discard_history(
     assert result.get("matches", result.get("candidates", [])) == []
     assert result["can_activate_stop"] is False
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("conflict", ["execution_id", "remaining_quantity"])
+def test_conflicting_history_output_aliases_discard_partial_cancel_and_keep_fence(
+    tmp_path, market, lookup, scope, conflict,
+):
+    """Conflicting output1/OUTPUT1 or output/OUTPUT is not trustworthy evidence.
+
+    The response can otherwise look like a valid paginated partial fill and
+    cancellation. Only mocked read-only inquiries are permitted.
+    """
+    ticker = "005930" if market == "KR" else "AAPL"
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    identity = f"output-alias-{market}-{lookup}-{scope}-{conflict}"
+    claimed, _, token = ledger.claim(
+        identity, with_token=True,
+        order_intent={
+            "kind": "buy_stop_loss", "market": market, "ticker": ticker,
+            "stop_loss": 85.0, "account_scope": scope,
+        },
+    )
+    assert claimed and token
+    ledger.finalize(identity, "unknown", claim_token=token)
+    before = ledger.path.read_bytes()
+    first = HistoryPage(market, [
+        history_row(market, "FILL1", cumulative=4, remaining=6),
+    ], more=True)
+    original_body = first.getBody
+
+    def conflicting_body():
+        body = original_body()
+        contradictory = dict(body["output1" if market == "KR" else "output"][0])
+        if conflict == "execution_id":
+            contradictory["ccld_no"] = "FILLALT"
+        else:
+            contradictory["rmn_qty"] = "5"
+        body["OUTPUT1" if market == "KR" else "OUTPUT"] = [contradictory]
+        return body
+
+    first.getBody = conflicting_body
+    second = HistoryPage(market, [
+        history_row(market, "FILL2", cumulative=8, remaining=0, cancel="Y"),
+    ])
+    result, calls = inquiry(market, lookup, [first, second], scope)
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result.get("matches", result.get("candidates", [])) == []
+    assert result["can_activate_stop"] is False
+    assert len(calls) == 1, "contradictory payload aliases must halt pagination"
+    assert ledger.path.read_bytes() == before
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.claim(identity) == (False, "unknown")
+    with restarted.guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+def test_equal_history_output_aliases_remain_read_only(market, lookup, scope):
+    """Identical wrapper payload aliases must not cause false rejection."""
+    first = HistoryPage(market, [
+        history_row(market, "FILL1", cumulative=4, remaining=6),
+    ], more=True)
+    original_body = first.getBody
+
+    def equal_body():
+        body = original_body()
+        body["OUTPUT1" if market == "KR" else "OUTPUT"] = [
+            dict(row) for row in body["output1" if market == "KR" else "output"]
+        ]
+        return body
+
+    first.getBody = equal_body
+    second = HistoryPage(market, [
+        history_row(market, "FILL2", cumulative=8, remaining=0, cancel="Y"),
+    ])
+    result, calls = inquiry(market, lookup, [first, second], scope)
+    assert len(calls) == 2
+    assert result["status"] == (
+        "EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY"
+    )
+    assert result["complete"] is True
+    assert result["can_activate_stop"] is False
+    assert len(result["matches" if lookup == "exact" else "candidates"]) == 2
