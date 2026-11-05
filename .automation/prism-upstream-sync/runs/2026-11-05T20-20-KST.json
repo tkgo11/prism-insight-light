@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-2026-11-05T20-20-KST-core-risk",
   "started_at": "2026-11-05T11:20:27Z",
-  "completed_at": "2026-11-05T11:26:47.277Z",
+  "completed_at": "2026-11-05T11:27:18.294Z",
   "status": "PROGRESSED_MOCK_DISCOVERY_PASS_CORE_ATTRIBUTION_UNVERIFIED",
   "core_risk_gate": {
     "prior_stalled_count": 0,
@@ -346,9 +346,12 @@
     "demo_orders": 0
   },
   "cas": {
-    "lock_status": "HELD_UNTIL_EVIDENCE_COMMIT",
+    "lock_status": "RELEASED",
     "lock_acquired_commit": "0b0e892e94ce93200425af5ff3dfafdce324344c",
-    "expected_state_sha": "0b0e892e94ce93200425af5ff3dfafdce324344c"
+    "expected_state_sha": "0b0e892e94ce93200425af5ff3dfafdce324344c",
+    "evidence_commit": "7421e36142316198b42a9d13d3fa0258a86b0561",
+    "lock_released_at": "2026-11-05T11:27:18.294Z",
+    "lock_release_expected_sha": "7421e36142316198b42a9d13d3fa0258a86b0561"
   },
   "next_exact_action": "Obtain broker-authenticated acceptance trading date and per-execution ID plus account-scoped fill/cancel/remaining finality via non-trading KIS demo inquiry or operator-confirmed evidence; write fail-closed durable fill-to-stop activation tests before any production change. Never clear UNKNOWN or sell from read-only candidate history."
 }
