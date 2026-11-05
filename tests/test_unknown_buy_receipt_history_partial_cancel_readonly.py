@@ -212,3 +212,29 @@ def test_same_order_receipt_number_in_two_scopes_cannot_clear_either_fence(
     ticker = "005930" if market == "KR" else "AAPL"
     with restarted.guard_unresolved_buy(market, ticker) as unresolved:
         assert unresolved is True
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+def test_zero_submitted_quantity_is_not_reconcilable_history_after_restart(
+    tmp_path, market, lookup,
+):
+    """A zero-share BUY cannot establish a valid receipt-to-fill history."""
+    scope = "a" * 64
+    ledger = _claim(tmp_path / "ledger.json", market, scope, identity="pending")
+    before = ledger.path.read_bytes()
+    row = _row(market, cumulative=0, remaining=0)
+    row["ord_qty"] = "0"
+    row["ccld_qty"] = "0"
+    result, calls = _inquire(market, lookup, scope, [MockPage(market, [row])])
+    assert len(calls) == 1
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["can_activate_stop"] is False
+    assert result["matches" if lookup == "exact" else "candidates"] == []
+    assert ledger.path.read_bytes() == before
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.claim("pending") == (False, "unknown")
+    with restarted.guard_unresolved_buy(
+        market, "005930" if market == "KR" else "AAPL",
+    ) as unresolved:
+        assert unresolved is True

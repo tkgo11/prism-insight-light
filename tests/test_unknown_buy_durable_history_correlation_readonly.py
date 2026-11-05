@@ -294,3 +294,27 @@ def test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match
     assert result["requires_operator"] is True
     assert ledger.path.read_bytes() == before
     assert ExecutionLedger(ledger.path).claim("buy-one") == (False, "unknown")
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_caller_supplied_zero_order_quantity_cannot_be_possible_receipt_match(
+    tmp_path, market,
+):
+    """A cached or forged zero-share snapshot cannot pass ledger triage."""
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    scope = "a" * 64
+    _claim(ledger, "buy-one", market, scope)
+    before = ledger.path.read_bytes()
+    history = _history(market, scope)
+    row = history["matches"][0]
+    row["order_quantity"] = 0
+    row["filled_quantity"] = 0
+    row["execution_quantity"] = 0
+    row["remaining_quantity"] = 0
+    inspected = ExecutionLedger(ledger.path).inspect_unresolved_buy_history(
+        "buy-one", history,
+    )
+    assert inspected["status"] == "UNVERIFIED"
+    assert inspected["can_activate_stop"] is False
+    assert inspected["fill_attributed"] is False
+    assert ledger.path.read_bytes() == before
+    assert ExecutionLedger(ledger.path).claim("buy-one") == (False, "unknown")
