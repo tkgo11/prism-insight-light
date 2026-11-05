@@ -1,13 +1,10 @@
 {
-  "run_id": "prism-sync-2026-11-06T00-17-KST-real-mode-mock",
-  "status": "RELEASED",
-  "expected_state_head": "eb5734f1d5db454ea89bd24a838f7d4d14156fac",
+  "run_id": "prism-sync-2026-11-06T01-18-KST-terminal-cancel-mock",
+  "status": "ACTIVE",
+  "expected_state_head": "6a6bb2da2a563fb0021cd240941c357d40f227aa",
   "expected_pr_head": "c0431f2e64745916f4742cfb97fd685d5806922a",
-  "created_at": "2026-11-05T15:19:36.957Z",
-  "purpose": "KR/US real-mode simulated read-only order history and stop-loss nonactivation; no real/demo requests",
+  "created_at": "2026-11-05T16:21:47.948Z",
+  "purpose": "KR/US real-mode mocked read-only terminal partial-cancel zero residual and cursor-progression coverage; no real/demo broker request",
   "real_orders": 0,
-  "demo_orders": 0,
-  "evidence_commit": "eb5734f1d5db454ea89bd24a838f7d4d14156fac",
-  "released_at": "2026-11-05T15:24:19.495Z",
-  "reason": "16 real-mode KR/US Mock PASS, exact-head CI PASS; authenticated fill-to-stop remains unverified; Draft 0/2+0/2"
+  "demo_orders": 0
 }
