@@ -303,7 +303,10 @@ def test_late_page_poison_cannot_preserve_partial_fill_or_clear_unknown_buy(
     elif late_corruption == "reused_execution_id_changed_remaining":
         late["rmn_qty"] = "5"
     elif late_corruption == "reused_execution_id_changed_cumulative":
+        # Keep the individual row arithmetically valid; isolate the
+        # cross-page reused-execution-ID conflict rather than row bounds.
         late["tot_ccld_qty"] = "5"
+        late["rmn_qty"] = "5"
     else:
         late["ord_dt"] = "20261140"
     result, calls = _inquire(market, lookup, scope, [
