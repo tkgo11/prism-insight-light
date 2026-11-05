@@ -277,6 +277,9 @@ def test_positive_fill_without_execution_id_is_unverified_after_restart(
 @pytest.mark.parametrize("late_corruption", [
     "foreign_account",
     "reused_execution_id_changed_quantity",
+    "reused_execution_id_changed_cancel",
+    "reused_execution_id_changed_remaining",
+    "reused_execution_id_changed_cumulative",
     "invalid_broker_order_date",
 ])
 def test_late_page_poison_cannot_preserve_partial_fill_or_clear_unknown_buy(
@@ -295,6 +298,12 @@ def test_late_page_poison_cannot_preserve_partial_fill_or_clear_unknown_buy(
         late["cano"] = "87654321" if scope.startswith("a") else "12345678"
     elif late_corruption == "reused_execution_id_changed_quantity":
         late["ccld_qty"] = "3"
+    elif late_corruption == "reused_execution_id_changed_cancel":
+        late["cncl_yn"] = "Y"
+    elif late_corruption == "reused_execution_id_changed_remaining":
+        late["rmn_qty"] = "5"
+    elif late_corruption == "reused_execution_id_changed_cumulative":
+        late["tot_ccld_qty"] = "5"
     else:
         late["ord_dt"] = "20261140"
     result, calls = _inquire(market, lookup, scope, [
