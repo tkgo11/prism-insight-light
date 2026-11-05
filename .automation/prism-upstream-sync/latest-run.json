@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "run_id": "prism-sync-2026-11-05T10-16-KST-core-risk",
-  "status": "PROGRESSED_READONLY_TRIAGE_DEFECT_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
-  "head_sha": "c6f0622f08b60567b7811b201f9722be51045675",
+  "run_id": "prism-sync-2026-11-05T11-24-KST-core-risk",
+  "status": "PROGRESSED_ZERO_QUANTITY_EVIDENCE_DEFECT_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
+  "head_sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
   "pr": 43,
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
   "actual_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "merge_result_sha": "055e316d6d20ce1259f9c44b1e837be78a1f717b",
-  "merge_tree_sha": "d680e0fe01ff75ad73bf1d9bfa33331d1bb44043",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T10-16-KST.json",
-  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T10-16-KST-related.json",
-  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T10-16-KST-full.json",
+  "merge_result_sha": "327b8dc3dd1e6e94a9b40420cb60222f20768be2",
+  "merge_tree_sha": "e613b4bdadff44baf6aded79b9b33407115897f3",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T11-24-KST.json",
+  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T11-24-KST-related.json",
+  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T11-24-KST-full.json",
   "related_complete": "72/193",
   "full_complete": "72/225",
   "related_passes": 0,
@@ -18,28 +18,28 @@
   "core_risk_gate": {
     "prior_stalled_count": 0,
     "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_durable_history_correlation_readonly.py::test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[KR/US x 10] (20 Mock cases)",
-    "baseline_fail_observed": "EXISTING_READONLY_TRIAGE_DEFECT: test-first SHA 58517d795c27f516873f607d7087f3a61d08b71c, Actions 41947486120: 20 expected assertion failures (POSSIBLE_RECEIPT_MATCH vs UNVERIFIED), 2325 passed. This is triage evidence integrity, NOT proof of erroneous actual broker fill/stop execution.",
-    "mock_result": "20/20 new Mock PASS; exact final HEAD push 2345 pytest PASS, PR merge 2355 pytest PASS, Windows 167 each, Docker success; no real/demo broker transactions",
-    "code_fix_commit": "c6f0622f08b60567b7811b201f9722be51045675",
+    "latest_attempt_command_or_test_id": "test_zero_submitted_quantity_is_not_reconcilable_history_after_restart[exact/discovery x KR/US] + test_caller_supplied_zero_order_quantity_cannot_be_possible_receipt_match[KR/US]",
+    "baseline_fail_observed": "test-first SHA c1c01de09adff7b877f55e60d6a595848bc6ecad; Actions 41955253595 Full pytest: 6 actual assertion failures, 2345 passed. Exact/discovery/triage misclassified zero-share BUY; no fixture/import error.",
+    "mock_result": "6/6 new Mock PASS at fix HEAD; 2351 push and 2361 PR pytest PASS, Windows 167 each, Docker success; KIS demo NOT_RUN",
+    "code_fix_commit": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
     "latest_head_CI": [
       {
-        "id": 41947668931,
+        "id": 41955415923,
         "event": "push",
-        "sha": "c6f0622f08b60567b7811b201f9722be51045675",
+        "sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2345 passed",
+        "pytest": "2351 passed",
         "windows": "167 passed",
         "docker": "success"
       },
       {
-        "id": 41947673611,
+        "id": 41955420954,
         "event": "pull_request",
-        "sha": "c6f0622f08b60567b7811b201f9722be51045675",
+        "sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2355 passed",
+        "pytest": "2361 passed",
         "windows": "167 passed",
         "docker": "success"
       }
@@ -47,45 +47,46 @@
     "unverified_transitions": [
       "Durable acceptance receipt has no broker-authenticated trading date",
       "UNKNOWN BUY without receipt has no unique broker order binding",
-      "Per-execution-ID fill/cancel/remaining quantities are not durably attributed",
-      "Partial cancellation finality and residual exposure not reconciled",
+      "Execution-ID fills, cancellations, cumulative and remaining quantities are not durably attributed",
+      "Partial cancel finality and residual stop-loss exposure unverified",
       "Confirmed attributable fill does not safely activate account-scoped stop-loss",
-      "Watcher cross-process stop-loss race/TOCTOU not fully reproduced",
-      "KIS demo integration blocked only by missing credentials; live trading prohibited"
+      "Cross-process watcher/dispatcher TOCTOU not fully reproduced",
+      "KIS demo integration credentials absent; real trading prohibited"
     ],
-    "exact_blocker": "No broker-authenticated order date or fill IDs persisted with BUY receipt; no durable fill/cancel/remaining attribution or stop activation proof. Branch protection 403, Qlty 89 blocking issues, independent review 0, related/full 0/2; KIS demo credentials missing for integration only.",
-    "evidence_delta": "20 new KR/US Mock cases, all 20 failed on pre-fix triage classification, then passed after fix; 10 distinct evidence-corruption subcases grouped under 1 verified root cause; no trading or stop-loss activation changes.",
-    "next_exact_action": "Test-first broker-authenticated order-date and execution-ID durable attribution with idempotent cumulative fill/cancel/remaining reconciliation across KR/US multi-account and restart; preserve UNKNOWN pending fence until independently proven."
+    "exact_blocker": "No broker-authenticated trading date and execution-ID fill/cancel/remaining ledger attribution; 89 Qlty blocking issues; branch protection 403; no independent reviews; related/full audit 0/2; demo credentials missing for integration only.",
+    "evidence_delta": "Six KR/US Mock tests newly reproduced zero-quantity evidence defect (4 reader exact/discovery, 2 durable triage) and passed after coordinated fix in order_reconciliation and execution_ledger. Existing stop-loss activation unchanged.",
+    "next_exact_action": "Test-first durable broker-authenticated order-date and execution-ID fill/cancel/remaining reconciliation with idempotency across KR/US, multi-account, restart and partial cancel; keep UNKNOWN fence until independently proven."
   },
   "ci_latest": [
     {
-      "id": 41947668931,
+      "id": 41955415923,
       "event": "push",
-      "sha": "c6f0622f08b60567b7811b201f9722be51045675",
+      "sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2345 passed",
+      "pytest": "2351 passed",
       "windows": "167 passed",
       "docker": "success"
     },
     {
-      "id": 41947673611,
+      "id": 41955420954,
       "event": "pull_request",
-      "sha": "c6f0622f08b60567b7811b201f9722be51045675",
+      "sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2355 passed",
+      "pytest": "2361 passed",
       "windows": "167 passed",
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T01:22:45.707Z",
-  "next_exact_action": "Test-first broker-authenticated order-date and execution-ID durable attribution with idempotent cumulative fill/cancel/remaining reconciliation across KR/US multi-account and restart; preserve UNKNOWN pending fence until independently proven.",
+  "last_updated_at": "2026-11-05T02:33:00Z",
+  "next_exact_action": "Test-first durable broker-authenticated order-date and execution-ID fill/cancel/remaining reconciliation with idempotency across KR/US, multi-account, restart and partial cancel; keep UNKNOWN fence until independently proven.",
   "cas": {
     "lock_status": "RELEASED",
-    "evidence_commit": "6509e137e294db51c305490488df27df5cd1c8c3",
-    "released_at": "2026-11-05T01:22:45.707Z"
+    "lock_acquired_commit": "b5650814c8d5db5f65fb3e062d8183be916e74a5",
+    "evidence_report_blob_sha": "15f12abb1639e99c062cf572685bbbf2348dfba2",
+    "released_at": "2026-11-05T02:33:00Z"
   },
-  "related_manifest_sha": "9b1a56c0e7ddd49b60b35db45d671b54f50f78d7",
-  "full_manifest_sha": "280bf034398f46fb4255d871b04f13b412bec541"
+  "related_manifest_sha": "509261d3ced57d432c1a545b0101c4b5c82990ab",
+  "full_manifest_sha": "3c43d99c1c2b16c5305a85cb873dac02cb37f811"
 }

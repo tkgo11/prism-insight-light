@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-05T11-24-KST-core-risk",
-  "status": "ACQUIRED",
+  "status": "RELEASED",
   "expected_state_head": "7f8de39a0693f1621198f9def94ae8a17c226cbb",
   "expected_pr_head": "c6f0622f08b60567b7811b201f9722be51045675",
   "created_at": "2026-11-05T02:26:12Z",
   "purpose": "test-first KR/US zero-quantity broker history rejection; UNKNOWN BUY remains nonactionable",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "released_at": "2026-11-05T02:33:00Z",
+  "reason": "6 test-first KR/US zero-order quantity failures fixed; 2351 push/2361 PR exact-head pytest, Windows 167, Docker; core fill attribution remains unverified; 2+2 0",
+  "evidence_report_blob_sha": "15f12abb1639e99c062cf572685bbbf2348dfba2"
 }
