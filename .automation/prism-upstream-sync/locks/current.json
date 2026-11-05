@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-06T03-18-KST-cross-process-buy-fence",
-  "status": "LOCKED",
+  "status": "RELEASED",
   "expected_state_head": "b1e519f0678898e1118c511a0c630a4ad31f3f56",
-  "expected_pr_head": "8b9a1d25d210cb7a47505969917488d0fd3ac1cc",
+  "expected_pr_head": "43ff7d6a667a347ac3cd75a0497a3e49cc7077c7",
   "created_at": "2026-11-05T18:19:45.192Z",
   "purpose": "Cross-process KR/US mock BUY claim interleaving and stop-loss dispatch safety; no real or demo orders",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "released_at": "2026-11-05T18:31:45.870Z",
+  "reason": "24/24 mock PASS exact HEAD, verified post-dispatch outcome fix; broker fill attribution/independent audit remain open",
+  "evidence_report_path": ".automation/prism-upstream-sync/runs/2026-11-06T03-18-KST.json"
 }
