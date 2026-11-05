@@ -1,0 +1,169 @@
+"""Non-actionable UNKNOWN BUY receipt/history correlation against durable intents.
+
+Only mocked read-only KIS history; no broker order, stop activation, ledger
+finalization, or fill attribution. Receipt observed_at is NOT a trading date.
+"""
+import json
+from types import SimpleNamespace
+
+import pytest
+
+from trading.execution_ledger import ExecutionLedger
+from trading.order_reconciliation import read_order_history
+
+
+class Page:
+    def __init__(self, market, rows):
+        self.market, self.rows = market, rows
+
+    def isOK(self):
+        return True
+
+    def getBody(self):
+        return {"rt_cd": "0", "output1" if self.market == "KR" else "output": self.rows}
+
+    def getHeader(self):
+        return SimpleNamespace(tr_cont="")
+
+
+def _claim(ledger, identity, market, scope, *, ticker=None, receipt=True):
+    ticker = ticker or ("005930" if market == "KR" else "AAPL")
+    claimed, _, token = ledger.claim(
+        identity, with_token=True,
+        order_intent={
+            "kind": "buy_stop_loss", "market": market, "ticker": ticker,
+            "stop_loss": 85.0, "account_scope": scope,
+        },
+    )
+    assert claimed and token
+    ledger.finalize(
+        identity, "unknown", claim_token=token,
+        order_receipt={"order_no": "00001234"} if receipt else None,
+    )
+
+
+def _history(market, scope, *, ticker=None, order_no="00001234", date="20261104"):
+    ticker = ticker or ("005930" if market == "KR" else "AAPL")
+    row = {
+        "odno": order_no, "ord_dt": date, "pdno": ticker,
+        "sll_buy_dvsn_cd" if market == "KR" else "sll_buy_dvsn": "02",
+        "ord_qty": "10", "tot_ccld_qty": "4", "ccld_qty": "4",
+        "rmn_qty": "6", "ccld_no": "E1", "cncl_yn": "N",
+    }
+    calls = []
+
+    def request(path, tr_id, params, **kwargs):
+        assert "/inquire-" in path and "/order" not in path
+        assert params["CANO"] == "12345678"
+        calls.append((path, params))
+        return Page(market, [row])
+
+    trader = SimpleNamespace(
+        mode="demo", account_key=scope,
+        trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
+        _request=request,
+    )
+    result = read_order_history(
+        trader, market=market, order_no=order_no, order_date=date, ticker=ticker,
+    )
+    assert len(calls) == 1
+    assert result["status"] == "EVIDENCE_ONLY"
+    assert result["complete"] is True
+    assert result["can_activate_stop"] is False
+    return result
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+def test_single_matching_receipt_is_only_a_possible_nonactionable_match(
+    tmp_path, market, scope,
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    _claim(ledger, "buy-one", market, scope)
+    before = ledger.path.read_bytes()
+    history = _history(market, scope)
+    inspected = ExecutionLedger(ledger.path).inspect_unresolved_buy_history(
+        "buy-one", history,
+    )
+    assert inspected["status"] == "POSSIBLE_RECEIPT_MATCH"
+    assert inspected["can_activate_stop"] is False
+    assert inspected["fill_attributed"] is False
+    assert inspected["requires_operator"] is True
+    assert inspected["reason"] == "NO_BROKER_ORDER_DATE_OR_EXECUTION_ATTRIBUTION"
+    assert ledger.path.read_bytes() == before
+    assert ExecutionLedger(ledger.path).claim("buy-one") == (False, "unknown")
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_history_from_other_scope_or_instrument_never_matches_durable_intent(
+    tmp_path, market,
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    scope = "a" * 64
+    _claim(ledger, "buy-one", market, scope)
+    before = ledger.path.read_bytes()
+    foreign_scope = _history(market, "b" * 64)
+    other_ticker = "000660" if market == "KR" else "MSFT"
+    foreign_ticker = _history(market, scope, ticker=other_ticker)
+    for history in (foreign_scope, foreign_ticker):
+        result = ExecutionLedger(ledger.path).inspect_unresolved_buy_history(
+            "buy-one", history,
+        )
+        assert result["status"] == "UNVERIFIED"
+        assert result["can_activate_stop"] is False
+        assert result["fill_attributed"] is False
+    assert ledger.path.read_bytes() == before
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_same_account_duplicate_receipt_never_selects_arbitrary_unknown_buy(
+    tmp_path, market,
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    scope = "a" * 64
+    _claim(ledger, "buy-one", market, scope)
+    _claim(ledger, "buy-two", market, scope)
+    before = ledger.path.read_bytes()
+    result = ledger.inspect_unresolved_buy_history("buy-one", _history(market, scope))
+    assert result["status"] == "UNVERIFIED"
+    assert result["reason"] == "AMBIGUOUS_DURABLE_RECEIPT"
+    assert result["can_activate_stop"] is False
+    assert ledger.path.read_bytes() == before
+    assert ExecutionLedger(ledger.path).claim("buy-two") == (False, "unknown")
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_unknown_buy_without_receipt_cannot_be_attributed_from_one_candidate(
+    tmp_path, market,
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    scope = "a" * 64
+    _claim(ledger, "buy-one", market, scope, receipt=False)
+    before = ledger.path.read_bytes()
+    result = ledger.inspect_unresolved_buy_history("buy-one", _history(market, scope))
+    assert result["status"] == "UNVERIFIED"
+    assert result["can_activate_stop"] is False
+    assert result["fill_attributed"] is False
+    assert ledger.path.read_bytes() == before
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_incomplete_history_or_forged_actionable_flag_cannot_clear_pending_fence(
+    tmp_path, market,
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    scope = "a" * 64
+    _claim(ledger, "buy-one", market, scope)
+    before = ledger.path.read_bytes()
+    history = _history(market, scope)
+    for changes in (
+        {"complete": False}, {"status": "UNVERIFIED"},
+        {"can_activate_stop": True}, {"matches": []},
+        {"order_no": "00009999"}, {"order_date": "20261103"},
+    ):
+        bad = dict(history, **changes)
+        result = ledger.inspect_unresolved_buy_history("buy-one", bad)
+        assert result["status"] == "UNVERIFIED"
+        assert result["can_activate_stop"] is False
+    assert ledger.path.read_bytes() == before
+    assert json.loads(before)["buy-one"]["status"] == "unknown"
