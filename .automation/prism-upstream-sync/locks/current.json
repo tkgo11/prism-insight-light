@@ -1,13 +1,10 @@
 {
-  "run_id": "prism-sync-2026-11-06T01-18-KST-terminal-cancel-mock",
-  "status": "RELEASED",
-  "expected_state_head": "6a6bb2da2a563fb0021cd240941c357d40f227aa",
+  "run_id": "prism-sync-2026-11-06T02-18-KST-watch-race-mock",
+  "status": "LOCKED",
+  "expected_state_head": "56014455c954d587c941023b16bd19034b3121f3",
   "expected_pr_head": "5152fbf732e584b541aa19a7720250b97ffd348e",
-  "created_at": "2026-11-05T16:21:47.948Z",
-  "purpose": "KR/US real-mode mocked zero-residual partial cancel and cursor-progression coverage",
+  "created_at": "2026-11-05T17:18:10.193Z",
+  "purpose": "KR/US watcher preflight→BUY claim→SELL dispatch deterministic mock",
   "real_orders": 0,
-  "demo_orders": 0,
-  "evidence_commit": "0f99075725b9219c3a1d9bba9ee079756bd87607",
-  "released_at": "2026-11-05T16:27:02.508Z",
-  "reason": "32 real-mode KR/US Mock PASS, exact-head CI PASS; fill-to-stop remains unverified; Draft 0/2+0/2"
+  "demo_orders": 0
 }
