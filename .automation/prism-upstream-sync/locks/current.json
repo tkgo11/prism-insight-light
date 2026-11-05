@@ -1,13 +1,10 @@
 {
-  "run_id": "prism-sync-2026-11-05T10-16-KST-core-risk",
-  "status": "RELEASED",
-  "expected_state_head": "7fc060b3c6bb5e3befc6492a93b83ddd530fe967",
-  "expected_pr_head": "64c2e9df8128cb15cb12fa0d4f328aea55674792",
-  "created_at": "2026-11-05T01:16:49.466Z",
-  "purpose": "test-first KR/US read-only execution history integrity and durable UNKNOWN BUY triage",
+  "run_id": "prism-sync-2026-11-05T11-24-KST-core-risk",
+  "status": "ACQUIRED",
+  "expected_state_head": "7f8de39a0693f1621198f9def94ae8a17c226cbb",
+  "expected_pr_head": "c6f0622f08b60567b7811b201f9722be51045675",
+  "created_at": "2026-11-05T02:26:12Z",
+  "purpose": "test-first KR/US zero-quantity broker history rejection; UNKNOWN BUY remains nonactionable",
   "real_orders": 0,
-  "demo_orders": 0,
-  "released_at": "2026-11-05T01:22:45.707Z",
-  "evidence_commit": "6509e137e294db51c305490488df27df5cd1c8c3",
-  "reason": "20 test-first failures corrected, exact HEAD 2345 push/2355 PR pytest, Windows167, Docker, core fill attribution unverified; 2+2 0"
+  "demo_orders": 0
 }
