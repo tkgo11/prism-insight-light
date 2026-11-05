@@ -81,14 +81,14 @@
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T10:23:26.526Z",
+  "last_updated_at": "2026-11-05T10:23:57.735Z",
   "next_exact_action": "Obtain broker-authenticated acceptance order date + per-execution ID provenance and account-scoped fill/cancel/remaining finality via non-trading KIS demo inquiry or operator reconciliation; then write fail-closed stop-activation transition tests. Never clear UNKNOWN or sell based only on history.",
   "cas": {
-    "lock_status": "ACQUIRED_PENDING_RELEASE",
+    "lock_status": "RELEASED",
     "lock_owner": "prism-sync-2026-11-05T19-16-KST-core-risk",
     "lock_acquired_commit": "c2e9cec19ab5a065aa7f278a642992e0202078bd",
-    "evidence_commit": null,
-    "released_at": null
+    "evidence_commit": "be1bccf8c5368206dde2e850eab5baef00679f95",
+    "released_at": "2026-11-05T10:23:57.735Z"
   },
   "manifest_blob_shas": {
     "related": "6cb14b85c69285e098773b65c61dccf652891f79",
