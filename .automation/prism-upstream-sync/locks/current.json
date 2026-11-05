@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-05T12-18-KST-core-risk",
-  "status": "ACQUIRED",
+  "status": "RELEASED",
   "expected_state_head": "af3eb0109178e68487be0bae035cab4c31251532",
   "expected_pr_head": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
   "created_at": "2026-11-05T03:19:53.848Z",
   "purpose": "test-first read-only KR/US missing execution-ID fill history, preserve UNKNOWN pending fence; no real orders",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "released_at": "2026-11-05T03:27:50.777Z",
+  "reason": "20 KR/US missing execution-ID positive-fill Mock assertion failures fixed; exact-head 2371 push/2381 PR tests, Windows 167, Docker; core broker attribution still unverified, 2+2 0",
+  "evidence_report_blob_sha": "263d5a1d90ff1222e5b447bf2bf55b6e0bb31c1c"
 }

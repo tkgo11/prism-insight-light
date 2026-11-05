@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "run_id": "prism-sync-2026-11-05T11-24-KST-core-risk",
-  "status": "PROGRESSED_ZERO_QUANTITY_EVIDENCE_DEFECT_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
-  "head_sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
+  "run_id": "prism-sync-2026-11-05T12-18-KST-core-risk",
+  "status": "PROGRESSED_MISSING_EXECUTION_ID_EVIDENCE_DEFECT_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
+  "head_sha": "bb8a5ef364a0256d38ae8c7a2fbb6cb3b5c53697",
   "pr": 43,
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
   "actual_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "merge_result_sha": "327b8dc3dd1e6e94a9b40420cb60222f20768be2",
-  "merge_tree_sha": "e613b4bdadff44baf6aded79b9b33407115897f3",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T11-24-KST.json",
-  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T11-24-KST-related.json",
-  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T11-24-KST-full.json",
+  "merge_result_sha": "c8ff378789caa672ed9af25f84b36ad421c7d68f",
+  "merge_tree_sha": "07bad4d5fe4179ff2bf8394416b1be23440f1076",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T12-18-KST.json",
+  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T12-18-KST-related.json",
+  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T12-18-KST-full.json",
   "related_complete": "72/193",
   "full_complete": "72/225",
   "related_passes": 0,
@@ -18,28 +18,28 @@
   "core_risk_gate": {
     "prior_stalled_count": 0,
     "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-    "latest_attempt_command_or_test_id": "test_zero_submitted_quantity_is_not_reconcilable_history_after_restart[exact/discovery x KR/US] + test_caller_supplied_zero_order_quantity_cannot_be_possible_receipt_match[KR/US]",
-    "baseline_fail_observed": "test-first SHA c1c01de09adff7b877f55e60d6a595848bc6ecad; Actions 41955253595 Full pytest: 6 actual assertion failures, 2345 passed. Exact/discovery/triage misclassified zero-share BUY; no fixture/import error.",
-    "mock_result": "6/6 new Mock PASS at fix HEAD; 2351 push and 2361 PR pytest PASS, Windows 167 each, Docker success; KIS demo NOT_RUN",
-    "code_fix_commit": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
+    "latest_attempt_command_or_test_id": "test_positive_fill_without_execution_id_is_unverified_after_restart[KR/US x exact/discovery x 2 accounts x single/late pages] + test_cached_positive_fill_without_execution_id_is_not_possible_match[KR/US x 2 accounts] (20 Mock cases)",
+    "baseline_fail_observed": "Test-first 9f6f7a066246038d123868aa25d1d6f4912397c6, Actions 41960976083: 6 actual assertions failed, 2351 passed; expanded test-first 8e655e9657a8492c1e49f5c4e4a37eb06ac3138b, Actions 41961138014: 20 actual product assertions failed, 2351 passed. Missing broker execution ID was classified EVIDENCE_ONLY/CANDIDATES_ONLY/POSSIBLE_RECEIPT_MATCH. No import/fixture failures.",
+    "mock_result": "20/20 new Mock PASS at fix HEAD; 2371 push and 2381 PR pytest PASS, Windows 167 each, Docker success. KIS demo NOT_RUN.",
+    "code_fix_commit": "bb8a5ef364a0256d38ae8c7a2fbb6cb3b5c53697",
     "latest_head_CI": [
       {
-        "id": 41955415923,
+        "id": 41961305192,
         "event": "push",
-        "sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
+        "sha": "bb8a5ef364a0256d38ae8c7a2fbb6cb3b5c53697",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2351 passed",
+        "pytest": "2371 passed",
         "windows": "167 passed",
         "docker": "success"
       },
       {
-        "id": 41955420954,
+        "id": 41961310274,
         "event": "pull_request",
-        "sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
+        "sha": "bb8a5ef364a0256d38ae8c7a2fbb6cb3b5c53697",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2361 passed",
+        "pytest": "2381 passed",
         "windows": "167 passed",
         "docker": "success"
       }
@@ -53,40 +53,40 @@
       "Cross-process watcher/dispatcher TOCTOU not fully reproduced",
       "KIS demo integration credentials absent; real trading prohibited"
     ],
-    "exact_blocker": "No broker-authenticated trading date and execution-ID fill/cancel/remaining ledger attribution; 89 Qlty blocking issues; branch protection 403; no independent reviews; related/full audit 0/2; demo credentials missing for integration only.",
-    "evidence_delta": "Six KR/US Mock tests newly reproduced zero-quantity evidence defect (4 reader exact/discovery, 2 durable triage) and passed after coordinated fix in order_reconciliation and execution_ledger. Existing stop-loss activation unchanged.",
-    "next_exact_action": "Test-first durable broker-authenticated order-date and execution-ID fill/cancel/remaining reconciliation with idempotency across KR/US, multi-account, restart and partial cancel; keep UNKNOWN fence until independently proven."
+    "exact_blocker": "No broker-authenticated trading date or durable execution-ID fill/cancel/remaining attribution; stop activation for confirmed BUY still unimplemented; cross-process TOCTOU unverified; Qlty 89 blocking issues; branch protection API 403; 0 independent reviews; related/full 0/2 audits; KIS demo credentials absent only for real demo integration.",
+    "evidence_delta": "20 KR/US read-only Mock assertions reproduced positive per-execution quantity without execution ID (single/late page, two account scopes, cached durable triage); same 20 PASS after coordinated reader+ledger validation fix. No ledger mutation, stop activation, or broker order.",
+    "next_exact_action": "Implement test-first, non-actionable broker-authenticated trading-date/order-number/execution-ID durable fill/cancel/remaining correlation with KR/US multi-account, restart and partial-cancel idempotency; only then consider confirmed fill-to-stop activation. Keep UNKNOWN fence and live trading disabled."
   },
   "ci_latest": [
     {
-      "id": 41955415923,
+      "id": 41961305192,
       "event": "push",
-      "sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
+      "sha": "bb8a5ef364a0256d38ae8c7a2fbb6cb3b5c53697",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2351 passed",
+      "pytest": "2371 passed",
       "windows": "167 passed",
       "docker": "success"
     },
     {
-      "id": 41955420954,
+      "id": 41961310274,
       "event": "pull_request",
-      "sha": "5b73a9f948b7b9d1402f81b69533f7c83f225701",
+      "sha": "bb8a5ef364a0256d38ae8c7a2fbb6cb3b5c53697",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2361 passed",
+      "pytest": "2381 passed",
       "windows": "167 passed",
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T02:33:00Z",
-  "next_exact_action": "Test-first durable broker-authenticated order-date and execution-ID fill/cancel/remaining reconciliation with idempotency across KR/US, multi-account, restart and partial cancel; keep UNKNOWN fence until independently proven.",
+  "last_updated_at": "2026-11-05T03:27:50.777Z",
+  "next_exact_action": "Implement test-first, non-actionable broker-authenticated trading-date/order-number/execution-ID durable fill/cancel/remaining correlation with KR/US multi-account, restart and partial-cancel idempotency; only then consider confirmed fill-to-stop activation. Keep UNKNOWN fence and live trading disabled.",
   "cas": {
     "lock_status": "RELEASED",
-    "lock_acquired_commit": "b5650814c8d5db5f65fb3e062d8183be916e74a5",
-    "evidence_report_blob_sha": "15f12abb1639e99c062cf572685bbbf2348dfba2",
-    "released_at": "2026-11-05T02:33:00Z"
+    "lock_acquired_commit": "baa5bbe7bbc2480b527370db0df41b0dfc87195b",
+    "evidence_report_blob_sha": "263d5a1d90ff1222e5b447bf2bf55b6e0bb31c1c",
+    "released_at": "2026-11-05T03:27:50.777Z"
   },
-  "related_manifest_sha": "509261d3ced57d432c1a545b0101c4b5c82990ab",
-  "full_manifest_sha": "3c43d99c1c2b16c5305a85cb873dac02cb37f811"
+  "related_manifest_sha": "acda14eff4c85a9a8344e937604fd58580bc224c",
+  "full_manifest_sha": "a9e3016eafbafdfd9865794d3ddc96d678e62920"
 }
