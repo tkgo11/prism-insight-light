@@ -325,3 +325,78 @@ def test_late_page_poison_cannot_preserve_partial_fill_or_clear_unknown_buy(
         market, "005930" if market == "KR" else "AAPL",
     ) as unresolved:
         assert unresolved is True
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_same_receipt_cross_account_partial_cancel_replay_stays_fenced(
+    tmp_path, market,
+):
+    """Same ODNO/fill IDs in different accounts are not shared fill authority.
+
+    Both exact and discovery inquiries are mocked and read-only. A reordered
+    partial-cancel history is idempotent across ledger restart, and no account
+    gains permission to SELL merely because the other has matching evidence.
+    """
+    path = tmp_path / "ledger.json"
+    ticker = "005930" if market == "KR" else "AAPL"
+    for scope, account in (("a" * 64, "12345678"),
+                           ("b" * 64, "87654321")):
+        identity = f"unknown-{scope[0]}"
+        ledger = _claim(path, market, scope, identity=identity)
+        first = _row(market, execution="FILL1", cumulative=4, remaining=6)
+        second = _row(
+            market, execution="FILL2", cumulative=8, remaining=2, cancel="Y",
+        )
+        for row in (first, second):
+            row["cano"] = account
+            row["acnt_prdt_cd"] = "01"
+
+        def inquire(lookup, ordered_rows):
+            result, calls = _inquire(market, lookup, scope, [
+                MockPage(market, [ordered_rows[0]], more=True),
+                MockPage(market, [ordered_rows[1]]),
+            ])
+            assert len(calls) == 2
+            assert result["complete"] is True
+            assert result["can_activate_stop"] is False
+            assert result["account_scope"] == scope
+            return result
+
+        discovery = inquire("discovery", [first, second])
+        assert discovery["status"] == "CANDIDATES_ONLY"
+        assert len(discovery["candidates"]) == 2
+        assert ledger.inspect_unresolved_buy_history(identity, discovery)[
+            "status"
+        ] == "UNVERIFIED"
+
+        exact = inquire("exact", [first, second])
+        assert exact["status"] == "EVIDENCE_ONLY"
+        assert {row["execution_id"] for row in exact["matches"]} == {
+            "FILL1", "FILL2",
+        }
+        assert ledger.record_read_only_buy_history(identity, exact)[
+            "reason"
+        ] == "READ_ONLY_HISTORY_SAVED_FOR_OPERATOR"
+
+        before_replay = path.read_bytes()
+        restarted = ExecutionLedger(path)
+        replay = inquire("exact", [second, first])
+        assert restarted.record_read_only_buy_history(identity, replay)[
+            "reason"
+        ] == "READ_ONLY_HISTORY_ALREADY_SAVED"
+        assert path.read_bytes() == before_replay
+        assert restarted.claim(identity) == (False, "unknown")
+        with restarted.guard_unresolved_buy(market, ticker) as unresolved:
+            assert unresolved is True
+
+    persisted = json.loads(path.read_text())
+    assert set(persisted) == {"unknown-a", "unknown-b"}
+    for scope in ("a" * 64, "b" * 64):
+        entry = persisted[f"unknown-{scope[0]}"]
+        assert entry["status"] == "unknown"
+        assert entry["order_receipt"]["order_no"] == "00001234"
+        assert entry["order_intent"]["account_scope"] == scope
+        snapshots = entry["reconciliation_evidence"]
+        assert len(snapshots) == 1
+        assert snapshots[0]["account_scope"] == scope
+        assert snapshots[0]["date_provenance"] == "HISTORY_ONLY_UNATTRIBUTED"
+        assert len(snapshots[0]["matches"]) == 2
