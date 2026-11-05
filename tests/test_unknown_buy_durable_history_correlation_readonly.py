@@ -235,3 +235,62 @@ def test_unknown_or_missing_claim_identity_is_never_selected(
         assert result["status"] == "UNVERIFIED"
         assert result["can_activate_stop"] is False
     assert ledger.path.read_bytes() == before
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("corruption", [
+    "filled_exceeds_order",
+    "filled_plus_remaining_exceeds_order",
+    "execution_exceeds_cumulative",
+    "negative_filled",
+    "boolean_remaining",
+    "invalid_execution_id",
+    "invalid_cancel_flag",
+    "duplicate_execution_id_conflicts",
+    "conflicting_order_quantities",
+    "execution_sum_exceeds_cumulative",
+])
+def test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match(
+    tmp_path, market, corruption,
+):
+    """Operator triage must not label contradictory per-fill evidence a possible match.
+
+    Mock-only: no broker orders, fill attribution, stop activation, or ledger mutation.
+    """
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    scope = "a" * 64
+    _claim(ledger, "buy-one", market, scope)
+    before = ledger.path.read_bytes()
+    history = _history(market, scope)
+    row = history["matches"][0]
+    if corruption == "filled_exceeds_order":
+        row["filled_quantity"] = 11
+    elif corruption == "filled_plus_remaining_exceeds_order":
+        row["remaining_quantity"] = 9
+    elif corruption == "execution_exceeds_cumulative":
+        row["execution_quantity"] = 5
+    elif corruption == "negative_filled":
+        row["filled_quantity"] = -1
+    elif corruption == "boolean_remaining":
+        row["remaining_quantity"] = True
+    elif corruption == "invalid_execution_id":
+        row["execution_id"] = "BAD/ID"
+    elif corruption == "invalid_cancel_flag":
+        row["cancel_flag"] = "UNKNOWN"
+    elif corruption == "duplicate_execution_id_conflicts":
+        history["matches"].append(dict(row, execution_quantity=3))
+    elif corruption == "conflicting_order_quantities":
+        history["matches"].append(dict(row, order_quantity=11))
+    elif corruption == "execution_sum_exceeds_cumulative":
+        history["matches"].append(dict(
+            row, execution_id="E2", execution_quantity=4,
+            filled_quantity=4, remaining_quantity=6,
+        ))
+    result = ExecutionLedger(ledger.path).inspect_unresolved_buy_history(
+        "buy-one", history,
+    )
+    assert result["status"] == "UNVERIFIED"
+    assert result["can_activate_stop"] is False
+    assert result["fill_attributed"] is False
+    assert result["requires_operator"] is True
+    assert ledger.path.read_bytes() == before
+    assert ExecutionLedger(ledger.path).claim("buy-one") == (False, "unknown")
