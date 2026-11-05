@@ -39,7 +39,7 @@
       "Confirmed fill to account-scoped stop activation",
       "KIS demo integration credentials unavailable"
     ],
-    "exact_blocker": "KIS-authenticated per-order fill/cancel/remaining evidence unavailable. Qlty latest pending (historical 89 blocking issues untriaged), branch protection API 403, human reviews 0, independent related/full audit 0/2+0/2.",
+    "exact_blocker": "KIS-authenticated per-order fill/cancel/remaining evidence unavailable; Qlty success status still reports 89 untriaged blocking issues; branch protection 403, human review 0, independent related/full audit 0/2+0/2.",
     "evidence_delta": "NEW real OS cross-process lock + durable BUY claim Mock (8 cases) and 16 status-preservation Mock cases. New verified root cause post-dispatch trader init, 12 expected RED then production fix, exact-head push/PR/Windows/Docker green. No KIS fill attribution proof.",
     "next_exact_action": "Obtain authenticated KIS read-only per-order acceptance-date, execution ID, fill/cancel/remaining evidence and test stop activation without real orders; triage Qlty, policy/review, finish separate-slot 2+2 audits; no merge."
   },
@@ -378,13 +378,15 @@
     }
   ],
   "qlty": {
-    "state": "pending",
-    "blocking_issues_current": "UNVERIFIED",
-    "last_known_blocking_issues": 89,
-    "triaged": false
+    "state": "success",
+    "blocking_issues_current": 89,
+    "triaged": false,
+    "description": "89 blocking issues despite success status; individual findings not inspected",
+    "observed_at": "2026-11-05T18:30:56Z"
   },
   "snyk": {
     "state": "success",
+    "description": "1 security test has passed",
     "findings_unverified": true
   },
   "reviews": {
@@ -413,5 +415,6 @@
   ],
   "next_exact_action": "Obtain authenticated KIS read-only per-order acceptance-date, execution ID, fill/cancel/remaining evidence and test stop activation without real orders; triage Qlty, policy/review, finish separate-slot 2+2 audits; no merge.",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "post_release_status_recheck": "Exact HEAD GitHub status read: Snyk success 1 security test, Qlty success but 89 blocking issues. No audit PASS or merge."
 }
