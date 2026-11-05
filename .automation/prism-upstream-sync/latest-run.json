@@ -79,11 +79,12 @@
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T01:22:12.970Z",
+  "last_updated_at": "2026-11-05T01:22:45.707Z",
   "next_exact_action": "Test-first broker-authenticated order-date and execution-ID durable attribution with idempotent cumulative fill/cancel/remaining reconciliation across KR/US multi-account and restart; preserve UNKNOWN pending fence until independently proven.",
   "cas": {
-    "lock_status": "LOCKED_PENDING_RELEASE",
-    "lock_acquired_commit": "65921f4fd32852c9c874322f92ff0928561ffbf9"
+    "lock_status": "RELEASED",
+    "evidence_commit": "6509e137e294db51c305490488df27df5cd1c8c3",
+    "released_at": "2026-11-05T01:22:45.707Z"
   },
   "related_manifest_sha": "9b1a56c0e7ddd49b60b35db45d671b54f50f78d7",
   "full_manifest_sha": "280bf034398f46fb4255d871b04f13b412bec541"

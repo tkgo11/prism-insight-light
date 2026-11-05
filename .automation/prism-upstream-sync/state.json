@@ -7,15 +7,17 @@
     "run_id": "prism-sync-2026-11-05T10-16-KST-core-risk",
     "previous_run_id": "prism-sync-2026-11-05T09-16-KST-core-risk",
     "started_at": "2026-11-05T01:16:49.466Z",
-    "completed_at": "2026-11-05T01:22:12.970Z",
-    "status": "EVIDENCE_WRITTEN_LOCKED",
-    "lock_owner": "prism-sync-2026-11-05T10-16-KST-core-risk",
+    "completed_at": "2026-11-05T01:22:45.707Z",
+    "status": "RELEASED",
+    "lock_owner": null,
     "lock_acquired_commit": "65921f4fd32852c9c874322f92ff0928561ffbf9",
     "lock_expected_pr_sha": "64c2e9df8128cb15cb12fa0d4f328aea55674792",
-    "lock_released": false,
+    "lock_released": true,
     "related_pass": false,
     "full_pass": false,
-    "final_pr_head_sha": "c6f0622f08b60567b7811b201f9722be51045675"
+    "final_pr_head_sha": "c6f0622f08b60567b7811b201f9722be51045675",
+    "evidence_commit": "6509e137e294db51c305490488df27df5cd1c8c3",
+    "lock_released_at": "2026-11-05T01:22:45.707Z"
   },
   "source": {
     "repository": "dragon1086/prism-insight",
