@@ -1,0 +1,420 @@
+{
+  "run_id": "prism-sync-2026-11-05T10-16-KST-core-risk",
+  "started_at": "2026-11-05T01:16:49.466Z",
+  "completed_at": "2026-11-05T01:22:12.970Z",
+  "status": "PROGRESSED_READONLY_TRIAGE_DEFECT_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
+  "core_risk_gate": {
+    "prior_stalled_count": 0,
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_durable_history_correlation_readonly.py::test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[KR/US x 10] (20 Mock cases)",
+    "baseline_fail_observed": "EXISTING_READONLY_TRIAGE_DEFECT: test-first SHA 58517d795c27f516873f607d7087f3a61d08b71c, Actions 41947486120: 20 expected assertion failures (POSSIBLE_RECEIPT_MATCH vs UNVERIFIED), 2325 passed. This is triage evidence integrity, NOT proof of erroneous actual broker fill/stop execution.",
+    "mock_result": "20/20 new Mock PASS; exact final HEAD push 2345 pytest PASS, PR merge 2355 pytest PASS, Windows 167 each, Docker success; no real/demo broker transactions",
+    "code_fix_commit": "c6f0622f08b60567b7811b201f9722be51045675",
+    "latest_head_CI": [
+      {
+        "id": 41947668931,
+        "event": "push",
+        "sha": "c6f0622f08b60567b7811b201f9722be51045675",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2345 passed",
+        "windows": "167 passed",
+        "docker": "success"
+      },
+      {
+        "id": 41947673611,
+        "event": "pull_request",
+        "sha": "c6f0622f08b60567b7811b201f9722be51045675",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2355 passed",
+        "windows": "167 passed",
+        "docker": "success"
+      }
+    ],
+    "unverified_transitions": [
+      "Durable acceptance receipt has no broker-authenticated trading date",
+      "UNKNOWN BUY without receipt has no unique broker order binding",
+      "Per-execution-ID fill/cancel/remaining quantities are not durably attributed",
+      "Partial cancellation finality and residual exposure not reconciled",
+      "Confirmed attributable fill does not safely activate account-scoped stop-loss",
+      "Watcher cross-process stop-loss race/TOCTOU not fully reproduced",
+      "KIS demo integration blocked only by missing credentials; live trading prohibited"
+    ],
+    "exact_blocker": "No broker-authenticated order date or fill IDs persisted with BUY receipt; no durable fill/cancel/remaining attribution or stop activation proof. Branch protection 403, Qlty 89 blocking issues, independent review 0, related/full 0/2; KIS demo credentials missing for integration only.",
+    "evidence_delta": "20 new KR/US Mock cases, all 20 failed on pre-fix triage classification, then passed after fix; 10 distinct evidence-corruption subcases grouped under 1 verified root cause; no trading or stop-loss activation changes.",
+    "next_exact_action": "Test-first broker-authenticated order-date and execution-ID durable attribution with idempotent cumulative fill/cancel/remaining reconciliation across KR/US multi-account and restart; preserve UNKNOWN pending fence until independently proven."
+  },
+  "candidate_count": 10,
+  "validated_candidates": 10,
+  "reproduced_defects": 1,
+  "root_causes_reproduced": [
+    "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY"
+  ],
+  "actual_code_fixes": 1,
+  "deferred_candidates": 0,
+  "candidate_inventory": [
+    {
+      "candidate_id": "CAND-20261105-1016-01",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "filled_exceeds_order",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[filled_exceeds_order-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    },
+    {
+      "candidate_id": "CAND-20261105-1016-02",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "filled_plus_remaining_exceeds_order",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[filled_plus_remaining_exceeds_order-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    },
+    {
+      "candidate_id": "CAND-20261105-1016-03",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "execution_exceeds_cumulative",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[execution_exceeds_cumulative-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    },
+    {
+      "candidate_id": "CAND-20261105-1016-04",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "negative_filled",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[negative_filled-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    },
+    {
+      "candidate_id": "CAND-20261105-1016-05",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "boolean_remaining",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[boolean_remaining-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    },
+    {
+      "candidate_id": "CAND-20261105-1016-06",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "invalid_execution_id",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[invalid_execution_id-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    },
+    {
+      "candidate_id": "CAND-20261105-1016-07",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "invalid_cancel_flag",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[invalid_cancel_flag-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    },
+    {
+      "candidate_id": "CAND-20261105-1016-08",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "duplicate_execution_id_conflicts",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[duplicate_execution_id_conflicts-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    },
+    {
+      "candidate_id": "CAND-20261105-1016-09",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "conflicting_order_quantities",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[conflicting_order_quantities-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    },
+    {
+      "candidate_id": "CAND-20261105-1016-10",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/TRIAGE-UNVALIDATED-HISTORY",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "a38654bfe0dd12e7d395bff7a94b35221d2710ba",
+      "test_path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "test_blob_sha": "86b6497314e5ee760f9b728baf4f18755e6c070b",
+      "hypothesis": "execution_sum_exceeds_cumulative",
+      "priority": "HIGH",
+      "verification_method": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match[execution_sum_exceeds_cumulative-KR/US]",
+      "baseline": "FAIL_X2",
+      "after": "PASS_X2",
+      "decision": "FIXED_ONE_SHARED_ROOT_CAUSE",
+      "independent_defect": false
+    }
+  ],
+  "attempted_reproductions": {
+    "test_first_cases": 20,
+    "product_failures": 20,
+    "baseline_workflow": 41947486120,
+    "baseline_sha": "58517d795c27f516873f607d7087f3a61d08b71c",
+    "baseline_pytest": "20 failed, 2325 passed"
+  },
+  "regression_tests_added_and_run": {
+    "added": 20,
+    "passed": 20,
+    "push_pytest": 2345,
+    "pr_pytest": 2355,
+    "windows": 167,
+    "docker": "success"
+  },
+  "verified_paths": [
+    "Read-only filled_exceeds_order must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS",
+    "Read-only filled_plus_remaining_exceeds_order must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS",
+    "Read-only execution_exceeds_cumulative must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS",
+    "Read-only negative_filled must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS",
+    "Read-only boolean_remaining must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS",
+    "Read-only invalid_execution_id must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS",
+    "Read-only invalid_cancel_flag must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS",
+    "Read-only duplicate_execution_id_conflicts must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS",
+    "Read-only conflicting_order_quantities must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS",
+    "Read-only execution_sum_exceeds_cumulative must remain UNVERIFIED and not mutate durable UNKNOWN BUY; KR/US Mock PASS"
+  ],
+  "unverified_paths": [
+    "Durable acceptance receipt has no broker-authenticated trading date",
+    "UNKNOWN BUY without receipt has no unique broker order binding",
+    "Per-execution-ID fill/cancel/remaining quantities are not durably attributed",
+    "Partial cancellation finality and residual exposure not reconciled",
+    "Confirmed attributable fill does not safely activate account-scoped stop-loss",
+    "Watcher cross-process stop-loss race/TOCTOU not fully reproduced",
+    "KIS demo integration blocked only by missing credentials; live trading prohibited"
+  ],
+  "financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "EXISTING_MOCK_ONLY_NO_NEW_ATTRIBUTION",
+      "test_id": "existing tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py and tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "UNKNOWN",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "EXISTING_MOCK_ONLY_NO_NEW_ATTRIBUTION",
+      "test_id": "existing tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py and tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "지연 체결",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "EXISTING_MOCK_ONLY_NO_NEW_ATTRIBUTION",
+      "test_id": "existing tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py and tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "부분체결",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "NEW_20_CASE_TRIAGE_FAIL_CLOSED_PASS",
+      "test_id": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "취소/거절",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "NEW_20_CASE_TRIAGE_FAIL_CLOSED_PASS",
+      "test_id": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "중복 통지",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "NEW_20_CASE_TRIAGE_FAIL_CLOSED_PASS",
+      "test_id": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "잔여량",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "NEW_20_CASE_TRIAGE_FAIL_CLOSED_PASS",
+      "test_id": "test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "손절 활성화·중복",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "EXISTING_MOCK_ONLY_NO_NEW_ATTRIBUTION",
+      "test_id": "existing tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py and tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "다계좌 격리",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "EXISTING_MOCK_ONLY_NO_NEW_ATTRIBUTION",
+      "test_id": "existing tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py and tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "재시작",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "EXISTING_MOCK_ONLY_NO_NEW_ATTRIBUTION",
+      "test_id": "existing tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py and tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "원장 영속화 실패",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "EXISTING_MOCK_ONLY_NO_NEW_ATTRIBUTION",
+      "test_id": "existing tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py and tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    },
+    {
+      "transition": "복구 및 재조정",
+      "scope": "KR/US; single/multi where applicable",
+      "mock_result": "EXISTING_MOCK_ONLY_NO_NEW_ATTRIBUTION",
+      "test_id": "existing tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py and tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "broker_attribution": "UNVERIFIED",
+      "kis_demo": "BLOCKED_NO_CREDENTIALS",
+      "real_broker": "NOT_RUN_PROHIBITED"
+    }
+  ],
+  "complete_related_files": 72,
+  "total_related_files": 193,
+  "complete_all_files": 72,
+  "total_all_files": 225,
+  "audit_PASS": {
+    "related": "0/2",
+    "full": "0/2",
+    "independent": false
+  },
+  "current_pr": 43,
+  "other_open_prs": [
+    39
+  ],
+  "pr_draft": true,
+  "current_HEAD": "c6f0622f08b60567b7811b201f9722be51045675",
+  "current_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "actual_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "upstream_head": "6437aac71699c2ce565202263ad8f94ce6e59940",
+  "merge_result_commit": "055e316d6d20ce1259f9c44b1e837be78a1f717b",
+  "merge_result_tree": "d680e0fe01ff75ad73bf1d9bfa33331d1bb44043",
+  "changed_files": [
+    "trading/execution_ledger.py",
+    "tests/test_unknown_buy_durable_history_correlation_readonly.py"
+  ],
+  "test_first_commit": "58517d795c27f516873f607d7087f3a61d08b71c",
+  "fix_commit": "c6f0622f08b60567b7811b201f9722be51045675",
+  "CI": [
+    {
+      "id": 41947668931,
+      "event": "push",
+      "sha": "c6f0622f08b60567b7811b201f9722be51045675",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2345 passed",
+      "windows": "167 passed",
+      "docker": "success"
+    },
+    {
+      "id": 41947673611,
+      "event": "pull_request",
+      "sha": "c6f0622f08b60567b7811b201f9722be51045675",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2355 passed",
+      "windows": "167 passed",
+      "docker": "success"
+    }
+  ],
+  "external": {
+    "snyk": "SUCCESS exact HEAD, 1 security test passed",
+    "qlty": "SUCCESS status but 89 blocking issues untriaged",
+    "branch_protection": "403 Resource not accessible by integration",
+    "rulesets": "[]",
+    "reviews": 0,
+    "kis_demo": "BLOCKED_NO_CREDENTIALS",
+    "real_orders": 0,
+    "demo_orders": 0
+  },
+  "cas": {
+    "lock_acquired_commit": "65921f4fd32852c9c874322f92ff0928561ffbf9",
+    "lock_status": "LOCKED_PENDING_RELEASE",
+    "expected_state_sha": "65921f4fd32852c9c874322f92ff0928561ffbf9"
+  },
+  "next_exact_action": "Test-first broker-authenticated order-date and execution-ID durable attribution with idempotent cumulative fill/cancel/remaining reconciliation across KR/US multi-account and restart; preserve UNKNOWN pending fence until independently proven.",
+  "related_manifest_sha": "9b1a56c0e7ddd49b60b35db45d671b54f50f78d7",
+  "full_manifest_sha": "280bf034398f46fb4255d871b04f13b412bec541"
+}
