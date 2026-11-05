@@ -13,7 +13,7 @@ import time
 
 import pytest
 
-from trading.dispatch import TradeDispatcher
+from trading.dispatch import DispatchResult, TradeDispatcher
 from trading.stop_loss_watcher import StopLossTracker, StopLossWatcher, StopLossWatcherConfig
 
 
@@ -137,3 +137,39 @@ def test_cross_process_late_buy_claim_blocks_stop_sell(
         if child.poll() is None:
             child.kill()
         child.communicate(timeout=5)
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("broker_status", ["executed", "partial_success"])
+def test_post_sell_holdings_auth_error_preserves_broker_result(
+    tmp_path, market, ticker, broker_status
+):
+    """A failed *post*-order inquiry must not turn accepted SELL into failed.
+
+    The broker is an in-memory fake. No order or KIS authentication is made.
+    """
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position(market, ticker, 90, entry_price=100, pending_buy=False)
+    snapshot = tracker.get_position(market, ticker)
+
+    class FakeDispatcher:
+        execution_ledger = None
+
+        async def dispatch(self, _signal, *, allow_queue=False):
+            assert allow_queue is False
+            return DispatchResult(
+                broker_status, "mock broker accepted; fill unverified", "SELL", market,
+            )
+
+    watcher = StopLossWatcher(
+        FakeDispatcher(), StopLossWatcherConfig(enabled=True, storage_path=tracker.path),
+        tracker=tracker,
+    )
+
+    def failed_post_order_inquiry(_market):
+        raise RuntimeError("mock post-order holdings auth unavailable")
+
+    watcher._get_cached_trader = failed_post_order_inquiry
+    result = watcher._trigger_sell(market, ticker, 85, snapshot)
+    assert result["status"] == broker_status
+    assert result["message"] == "mock broker accepted; fill unverified"
+    assert tracker.get_position(market, ticker) == snapshot
