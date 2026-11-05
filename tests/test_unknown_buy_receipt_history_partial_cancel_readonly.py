@@ -241,20 +241,23 @@ def test_zero_submitted_quantity_is_not_reconcilable_history_after_restart(
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("page_mode", ["single", "late"])
 def test_positive_fill_without_execution_id_is_unverified_after_restart(
-    tmp_path, market, lookup,
+    tmp_path, market, lookup, scope, page_mode,
 ):
     """Positive fills without broker execution identity cannot be deduplicated.
 
     Read-only KIS mock only; never infer a fill, clear UNKNOWN, or sell.
     """
-    scope = "a" * 64
     ledger = _claim(tmp_path / "ledger.json", market, scope, identity="pending")
     before = ledger.path.read_bytes()
-    row = _row(market)
+    row = _row(market, execution="FILL2", cumulative=8, remaining=2)
     row.pop("ccld_no")
-    result, calls = _inquire(market, lookup, scope, [MockPage(market, [row])])
-    assert len(calls) == 1
+    pages = ([MockPage(market, [_row(market)], more=True), MockPage(market, [row])]
+             if page_mode == "late" else [MockPage(market, [row])])
+    result, calls = _inquire(market, lookup, scope, pages)
+    assert len(calls) == (2 if page_mode == "late" else 1)
     assert result["status"] == "UNVERIFIED"
     assert result["complete"] is False
     assert result["can_activate_stop"] is False

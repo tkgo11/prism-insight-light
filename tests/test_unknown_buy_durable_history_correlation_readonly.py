@@ -320,11 +320,11 @@ def test_caller_supplied_zero_order_quantity_cannot_be_possible_receipt_match(
     assert ExecutionLedger(ledger.path).claim("buy-one") == (False, "unknown")
 
 @pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
 def test_cached_positive_fill_without_execution_id_is_not_possible_match(
-    tmp_path, market,
+    tmp_path, market, scope,
 ):
     """Caller-supplied cached history must not bypass execution-ID validation."""
-    scope = "a" * 64
     ledger = ExecutionLedger(tmp_path / "ledger.json")
     _claim(ledger, "buy-one", market, scope)
     before = ledger.path.read_bytes()
