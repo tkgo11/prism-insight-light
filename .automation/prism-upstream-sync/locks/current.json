@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-05T23-16-KST-core-risk",
-  "status": "ACQUIRED",
-  "expected_state_head": "a2b9077cb6975bf6802ca177737968b48ff9bca0",
-  "expected_pr_head": "b8535e5b3b3e7d9edb36f3804cefb1723987c991",
+  "status": "RELEASED",
+  "expected_state_head": "7fa78aaec6f1a45fefc8a3970a752b171a701509",
+  "expected_pr_head": "15e834564fba1bdd9c8a2a0fda9d38f1f3111d33",
   "created_at": "2026-11-05T14:16:56Z",
   "purpose": "Mock-only KR/US malformed wrapper success and partial-fill/cancel reconciliation; no orders",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "evidence_commit": "7fa78aaec6f1a45fefc8a3970a752b171a701509",
+  "released_at": "2026-11-05T14:25:03.349Z",
+  "reason": "24 genuine Mock failures fixed, exact HEAD push/PR CI PASS; core authenticated fill-to-stop still unverified; Draft 0/2+0/2"
 }

@@ -497,8 +497,10 @@
   },
   "cas": {
     "lock_acquired_commit": "cbeb61f3e60da6caa99209dca898421f87a2fcc8",
-    "lock_release": "PENDING_EVIDENCE_COMMIT",
-    "state_expected_sha": "cbeb61f3e60da6caa99209dca898421f87a2fcc8"
+    "evidence_commit": "7fa78aaec6f1a45fefc8a3970a752b171a701509",
+    "lock_release": "RELEASED",
+    "released_at": "2026-11-05T14:25:03.349Z",
+    "state_expected_sha": "7fa78aaec6f1a45fefc8a3970a752b171a701509"
   },
   "manifest_blob_shas": {
     "related": "8a5310051c0a490ed484a0ee365c50a493dbe34f",

@@ -80,11 +80,13 @@
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T14:24:34.195Z",
+  "last_updated_at": "2026-11-05T14:25:03.349Z",
   "next_exact_action": "Obtain broker-authenticated acceptance trading date and execution IDs using read-only KIS inquiry or operator-confirmed evidence; write test-first fill-to-stop attribution and partial-cancel residual reconciliation, observe baseline before any production change. No live orders.",
   "cas": {
-    "lock_status": "HELD_PENDING_RELEASE",
-    "lock_acquired_commit": "cbeb61f3e60da6caa99209dca898421f87a2fcc8"
+    "lock_status": "RELEASED",
+    "lock_acquired_commit": "cbeb61f3e60da6caa99209dca898421f87a2fcc8",
+    "evidence_commit": "7fa78aaec6f1a45fefc8a3970a752b171a701509",
+    "released_at": "2026-11-05T14:25:03.349Z"
   },
   "manifest_blob_shas": {
     "related": "8a5310051c0a490ed484a0ee365c50a493dbe34f",
