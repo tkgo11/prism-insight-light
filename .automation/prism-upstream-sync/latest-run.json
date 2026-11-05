@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "run_id": "prism-sync-2026-11-05T15-24-KST-core-risk",
-  "status": "PROGRESSED_NONACTIONABLE_DURABLE_HISTORY_CORE_ATTRIBUTION_UNVERIFIED",
+  "run_id": "prism-sync-2026-11-05T16-22-KST-core-risk",
+  "status": "RUNNING_LOCKED_REORDERED_HISTORY_REPRODUCED",
   "head_sha": "411eaaa807969475bb14827bbe6d19fd1bf04815",
   "pr": 43,
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
@@ -83,13 +83,17 @@
   "last_updated_at": "2026-11-05T06:31:44.631Z",
   "next_exact_action": "Identify broker-authenticated order-date and execution-ID provenance in verified KIS response or require explicit operator reconciliation; design safe durable per-order fill/cancel/remaining attribution and residual stop tests without clearing UNKNOWN or placing orders.",
   "cas": {
-    "lock_status": "RELEASED",
-    "lock_acquired_commit": "adfc224ca716bec26bdeb6f9801e04847b05d42d",
-    "released_at": "2026-11-05T06:31:44.631Z"
+    "lock_status": "LOCKED",
+    "lock_owner": "prism-sync-2026-11-05T16-22-KST-core-risk",
+    "lock_acquired_at": "2026-11-05T07:25:29.297Z",
+    "expected_pr_head": "411eaaa807969475bb14827bbe6d19fd1bf04815",
+    "previous_state_sha": "8fdc92468bd8fd0023b4a22142012a8293bb4804",
+    "previous_lock_release": "2026-11-05T06:31:44.631Z"
   },
   "manifest_blob_shas": {
     "related": "9cfe74b63837f00d1fe13a9b136a1b8a9232c780",
     "full": "f56f51dde0151d6e6cac99e8cd2b7e8679d20a0c"
   },
-  "state_json_updated": true
+  "state_json_updated": true,
+  "previous_run_id": "prism-sync-2026-11-05T15-24-KST-core-risk"
 }
