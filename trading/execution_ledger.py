@@ -273,6 +273,24 @@ def _history_evidence_material(snapshot: dict[str, Any]) -> dict[str, Any]:
     )}
 
 
+def _canonical_read_only_history_material(material: dict[str, Any]) -> dict[str, Any]:
+    """History pagination order cannot create a distinct fill-evidence version.
+
+    Sorting copies only; persisted legacy snapshots keep their original
+    fingerprint and remain readable after upgrade.
+    """
+    return {
+        **material,
+        "matches": sorted(
+            material["matches"],
+            key=lambda row: json.dumps(
+                row, sort_keys=True, separators=(",", ":"),
+                ensure_ascii=False, allow_nan=False,
+            ),
+        ),
+    }
+
+
 def _validate_read_only_history_snapshot(
     snapshot: dict[str, Any], intent: dict[str, Any], receipt: dict[str, Any],
 ) -> None:
@@ -638,6 +656,7 @@ class ExecutionLedger:
                 allow_nan=False,
             )),
         }
+        material = _canonical_read_only_history_material(material)
         encoded = json.dumps(
             material, sort_keys=True, separators=(",", ":"),
             ensure_ascii=False, allow_nan=False,
@@ -687,7 +706,14 @@ class ExecutionLedger:
             existing = entry.get("reconciliation_evidence", [])
             if not isinstance(existing, list):
                 raise RuntimeError("Invalid durable reconciliation evidence")
-            if any(item.get("fingerprint") == digest for item in existing):
+            if any(
+                _canonical_read_only_history_material(
+                    _history_evidence_material(item)
+                ) == material
+                for item in existing
+            ):
+                # Includes snapshots saved by earlier versions in broker page
+                # order. Never rewrite them just to normalize their fingerprint.
                 return {**refused, "reason": "READ_ONLY_HISTORY_ALREADY_SAVED"}
             if len(existing) >= _MAX_READ_ONLY_HISTORY_SNAPSHOTS:
                 raise RuntimeError(

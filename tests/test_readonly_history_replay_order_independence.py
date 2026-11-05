@@ -3,6 +3,7 @@
 Broker pagination/sort order is not an execution identity. These tests make
 only mocked inquiry calls; no broker order, ledger release, or stop activation.
 """
+import hashlib
 import json
 from types import SimpleNamespace
 
@@ -95,3 +96,28 @@ def test_reordered_execution_history_is_one_durable_snapshot_after_restart(
     assert ExecutionLedger(path).claim("unknown-buy") == (False, "unknown")
     with ExecutionLedger(path).guard_unresolved_buy(market, ticker) as unresolved:
         assert unresolved is True
+
+    # Upgrade compatibility: a pre-fix ledger may have saved the same
+    # complete execution set in broker pagination order. Preserve its original
+    # fingerprint and bytes; do not consume another of the 16 evidence slots.
+    saved = json.loads(path.read_text())
+    old_snapshot = saved["unknown-buy"]["reconciliation_evidence"][0]
+    old_snapshot["matches"].reverse()
+    old_material = {key: old_snapshot[key] for key in (
+        "market", "ticker", "account_scope", "order_no", "order_date", "matches",
+    )}
+    old_snapshot["fingerprint"] = hashlib.sha256(
+        json.dumps(
+            old_material, sort_keys=True, separators=(",", ":"),
+            ensure_ascii=False, allow_nan=False,
+        ).encode("utf-8")
+    ).hexdigest()
+    path.write_text(json.dumps(saved), encoding="utf-8")
+    legacy_before = path.read_bytes()
+    legacy_replay = ExecutionLedger(path).record_read_only_buy_history(
+        "unknown-buy", history(rows),
+    )
+    assert legacy_replay["reason"] == "READ_ONLY_HISTORY_ALREADY_SAVED"
+    assert legacy_replay["can_activate_stop"] is False
+    assert path.read_bytes() == legacy_before
+    assert ExecutionLedger(path).claim("unknown-buy") == (False, "unknown")
