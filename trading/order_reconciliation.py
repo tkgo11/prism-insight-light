@@ -132,6 +132,10 @@ def _matched(row, *, order_no, order_date, ticker, account, product):
             or _first(row, "sll_buy_dvsn_cd", "sll_buy_dvsn", "SLL_BUY_DVSN_CD", "SLL_BUY_DVSN") != "02"):
         raise ValueError("target order ticker/side provenance mismatch")
     ordered = _qty(_first(row, "ord_qty", "ORD_QTY", "ft_ord_qty", "FT_ORD_QTY"))
+    if ordered == 0:
+        # Zero submitted shares cannot establish a BUY order, even if every
+        # other fill/cancel/remaining field is numerically self-consistent.
+        raise ValueError("zero-quantity order is not reconcilable evidence")
     # Cumulative filled quantity and this execution's quantity are distinct KIS
     # facts. ccld_qty must not masquerade as a cumulative total or conflict
     # with a valid tot_ccld_qty / ft_ccld_qty on the same history row.

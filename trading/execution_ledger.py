@@ -203,6 +203,10 @@ def _history_matches_consistent_for_triage(matches: list[dict[str, Any]]) -> boo
             ):
                 return False
         order_qty = match["order_quantity"]
+        if order_qty == 0:
+            # Cached/caller-supplied snapshots bypass the broker reader;
+            # do not promote a zero-share order to a possible receipt match.
+            return False
         filled = match["filled_quantity"]
         executed = match["execution_quantity"]
         remaining = match["remaining_quantity"]
