@@ -174,6 +174,86 @@ def _validated_order_receipt(value: dict[str, Any]) -> dict[str, str]:
     return {"order_no": order_no}
 
 
+
+def _history_matches_consistent_for_triage(matches: list[dict[str, Any]]) -> bool:
+    """Recheck caller-supplied normalized history before operator triage.
+
+    The broker history reader validates these invariants, but a cached,
+    reconstructed, or accidentally modified history dictionary can bypass its
+    validation. This is evidence validation only, NEVER fill attribution.
+    """
+    expected_fields = {
+        "order_no", "order_date", "ticker", "order_quantity",
+        "filled_quantity", "execution_quantity", "remaining_quantity",
+        "execution_id", "cancel_flag",
+    }
+    ordered_quantities: set[int] = set()
+    execution_versions: dict[str | None, dict[str, Any]] = {}
+    execution_quantities: dict[str, int] = {}
+    cumulative_execution_ids: set[str] = set()
+    max_cumulative: int | None = None
+    for match in matches:
+        if not isinstance(match, dict) or set(match) != expected_fields:
+            return False
+        for field in ("order_quantity", "filled_quantity",
+                      "execution_quantity", "remaining_quantity"):
+            quantity = match[field]
+            if quantity is not None and (
+                type(quantity) is not int or not 0 <= quantity < 10**18
+            ):
+                return False
+        order_qty = match["order_quantity"]
+        filled = match["filled_quantity"]
+        executed = match["execution_quantity"]
+        remaining = match["remaining_quantity"]
+        execution_id = match["execution_id"]
+        if execution_id is not None and (
+            not isinstance(execution_id, str)
+            or re.fullmatch(r"[A-Za-z0-9]{1,40}", execution_id) is None
+        ):
+            return False
+        if match["cancel_flag"] not in (None, "Y", "N"):
+            return False
+        if executed is not None and (
+            (filled is not None and executed > filled)
+            or (order_qty is not None and executed > order_qty)
+        ):
+            return False
+        if order_qty is not None:
+            ordered_quantities.add(order_qty)
+            if len(ordered_quantities) > 1:
+                return False
+            if (filled or 0) + (remaining or 0) > order_qty:
+                return False
+        if execution_id in execution_versions and execution_versions[execution_id] != match:
+            return False
+        execution_versions[execution_id] = match
+        if execution_id is not None and executed is not None:
+            execution_quantities[execution_id] = executed
+            if filled is not None:
+                cumulative_execution_ids.add(execution_id)
+        if filled is not None:
+            max_cumulative = filled if max_cumulative is None else max(max_cumulative, filled)
+    total_executed = sum(execution_quantities.values())
+    if ordered_quantities:
+        known_order_qty = next(iter(ordered_quantities))
+        if total_executed > known_order_qty:
+            return False
+        for match in matches:
+            if ((match["execution_quantity"] or 0) > known_order_qty
+                or (match["filled_quantity"] or 0)
+                + (match["remaining_quantity"] or 0) > known_order_qty):
+                return False
+    if (execution_quantities
+        and len(cumulative_execution_ids) == len(execution_quantities)
+        and max_cumulative is not None
+        and total_executed > max_cumulative):
+        return False
+    return True
+
+
+
+
 class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
@@ -394,6 +474,8 @@ class ExecutionLedger:
                     or match.get("order_date") != order_date
                     or match.get("ticker") != history.get("ticker")):
                 return verdict
+        if not _history_matches_consistent_for_triage(matches):
+            return verdict
         with FileLock(self.lock_path):
             entries = self._load()
             entry = entries.get(identity)
