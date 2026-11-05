@@ -352,6 +352,88 @@ class ExecutionLedger:
                     break
             yield unresolved
 
+    def inspect_unresolved_buy_history(
+        self, identity: str, history: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Compare durable BUY intent with read-only history for operator triage.
+
+        Even a matching receipt and a complete broker history inquiry cannot
+        establish fill attribution: the persisted acceptance receipt lacks a
+        broker-authenticated trading date and execution IDs. This method never
+        mutates the ledger, clears a pending fence, or authorizes a SELL.
+        """
+        verdict = {
+            "status": "UNVERIFIED",
+            "can_activate_stop": False,
+            "fill_attributed": False,
+            "requires_operator": True,
+            "reason": "UNTRUSTED_OR_INCOMPLETE_EVIDENCE",
+        }
+        if not isinstance(identity, str) or not identity or not isinstance(history, dict):
+            return verdict
+        if (history.get("status") != "EVIDENCE_ONLY"
+                or history.get("complete") is not True
+                or history.get("can_activate_stop") is not False):
+            return verdict
+        order_no = history.get("order_no")
+        order_date = history.get("order_date")
+        matches = history.get("matches")
+        if (not isinstance(order_no, str)
+                or not isinstance(order_date, str)
+                or re.fullmatch(r"[0-9]{8}", order_date) is None
+                or not isinstance(matches, list) or not 0 < len(matches) <= 2000):
+            return verdict
+        try:
+            _validated_order_receipt({"order_no": order_no})
+            datetime.strptime(order_date, "%Y%m%d")
+        except (TypeError, ValueError):
+            return verdict
+        for match in matches:
+            if (not isinstance(match, dict)
+                    or match.get("order_no") != order_no
+                    or match.get("order_date") != order_date
+                    or match.get("ticker") != history.get("ticker")):
+                return verdict
+        with FileLock(self.lock_path):
+            entries = self._load()
+            entry = entries.get(identity)
+            if (not isinstance(entry, dict)
+                    or entry.get("status") not in ("unknown", "executed")
+                    or entry.get("order_side") is not None):
+                return verdict
+            receipt = entry.get("order_receipt")
+            if not isinstance(receipt, dict) or receipt.get("order_no") != order_no:
+                return verdict
+            try:
+                intent = _validated_order_intent(entry.get("order_intent"))
+            except ValueError:
+                return verdict
+            if (history.get("market") != intent["market"]
+                    or history.get("ticker") != intent["ticker"]
+                    or history.get("account_scope") != intent["account_scope"]):
+                return verdict
+            # Order numbers can be reused. If two unresolved BUY claims in
+            # the same account/market have the same receipt, selecting one
+            # would invent an attribution that the receipt does not prove.
+            for other_identity, other in entries.items():
+                if other_identity == identity or not isinstance(other, dict):
+                    continue
+                other_receipt = other.get("order_receipt")
+                if (not isinstance(other_receipt, dict)
+                        or other_receipt.get("order_no") != order_no):
+                    continue
+                try:
+                    other_intent = _validated_order_intent(other.get("order_intent"))
+                except ValueError:
+                    return verdict
+                if (other_intent["market"] == intent["market"]
+                        and other_intent["account_scope"] == intent["account_scope"]):
+                    verdict["reason"] = "AMBIGUOUS_DURABLE_RECEIPT"
+                    return verdict
+        verdict["status"] = "POSSIBLE_RECEIPT_MATCH"
+        verdict["reason"] = "NO_BROKER_ORDER_DATE_OR_EXECUTION_ATTRIBUTION"
+        return verdict
+
     def claim(
         self, identity: str, *, aliases: Iterable[str] = (), with_token: bool = False,
         order_intent: dict[str, Any] | None = None,
