@@ -139,11 +139,14 @@ def test_cross_process_late_buy_claim_blocks_stop_sell(
         child.communicate(timeout=5)
 
 @pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
-@pytest.mark.parametrize("broker_status", ["executed", "partial_success"])
+@pytest.mark.parametrize(
+    "broker_status",
+    ["executed", "partial_success", "unknown", "deferred", "rejected", "failed", "queued", "skipped"],
+)
 def test_post_sell_holdings_auth_error_preserves_broker_result(
     tmp_path, market, ticker, broker_status
 ):
-    """A failed *post*-order inquiry must not turn accepted SELL into failed.
+    """A failed or unnecessary holdings inquiry must not rewrite a SELL outcome.
 
     The broker is an in-memory fake. No order or KIS authentication is made.
     """
@@ -157,7 +160,7 @@ def test_post_sell_holdings_auth_error_preserves_broker_result(
         async def dispatch(self, _signal, *, allow_queue=False):
             assert allow_queue is False
             return DispatchResult(
-                broker_status, "mock broker accepted; fill unverified", "SELL", market,
+                broker_status, "mock broker outcome; fill unverified", "SELL", market,
             )
 
     watcher = StopLossWatcher(
