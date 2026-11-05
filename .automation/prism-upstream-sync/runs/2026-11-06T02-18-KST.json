@@ -41,7 +41,7 @@
       "Actual sibling-process scheduling and shared lock coordination",
       "KIS demo integration credentials absent"
     ],
-    "exact_blocker": "KIS-authenticated per-order fill identity and acceptance date unavailable; real sibling-process concurrency not exercised. Qlty pending, branch protection 403, human review 0, 2+2 independent audit 0.",
+    "exact_blocker": "KIS-authenticated per-order fill identity and acceptance date unavailable; real sibling-process concurrency not exercised. Qlty 89 blocking issues (status success but unresolved), branch protection 403, human review 0, 2+2 independent audit 0.",
     "evidence_delta": "New 8-case deterministic KR/US single/multi in_progress/unknown interleaving Mock; exact-head push and PR Actions SUCCESS; 1 new fully reviewed test file, no production fix or broker attribution.",
     "next_exact_action": "Run separate-process broker lock/BUY claim interleaving Mock; obtain authenticated KIS read-only fill/date/execution evidence before considering pending-BUY stop activation. Recheck Qlty, review and branch policy; no merge."
   },
@@ -337,10 +337,10 @@
     }
   ],
   "qlty": {
-    "state": "pending",
-    "previous_blocking_issues": 89,
-    "latest_count": "UNVERIFIED",
-    "triaged": false
+    "state": "success",
+    "blocking_issues": 89,
+    "triaged": false,
+    "description": "89 blocking issues despite successful status"
   },
   "snyk": {
     "state": "success"
@@ -352,9 +352,11 @@
   },
   "cas": {
     "lock_acquired_commit": "1b0c6ce479f0882b905de42c5b3f705306f93a57",
-    "lock_status": "LOCKED_UNTIL_RELEASE_COMMIT",
+    "lock_status": "RELEASED",
     "state_json_updated": false,
-    "state_json_blocker": "GitHub fetch rejected 1.16MB state.json as too large; separate CAS manifests/latest-run/report used; prior state.json unchanged"
+    "state_json_blocker": "GitHub fetch rejected 1.16MB state.json as too large; separate CAS manifests/latest-run/report used; prior state.json unchanged",
+    "evidence_commit": "57fc614ff1ee9c3fc412d76c0197471659adbd1f",
+    "released_at": "2026-11-05T17:22:49.531Z"
   },
   "unresolved_blockers": [
     "Authenticated KIS acceptance date and execution IDs",
