@@ -250,7 +250,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
     for page in range(max_pages):
         try:
             response = trader._request(path, tr_id, dict(params), tr_cont="N" if page else "")
-            if not response.isOK():
+            # SDK transport success must be an actual boolean True. A truthy\n            # string/integer is not authenticated evidence of a successful\n            # history inquiry, even if the body contains plausible fills.\n            if response.isOK() is not True:
                 return result
             body, header = response.getBody(), response.getHeader()
             # A wrapper can report transport success while the KIS response
@@ -439,7 +439,7 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
             response = trader._request(
                 path, tr_id, dict(params), tr_cont="N" if page else "",
             )
-            if not response.isOK():
+            # SDK transport success must be an actual boolean True. A truthy\n            # string/integer is not authenticated evidence of a successful\n            # history inquiry, even if the body contains plausible fills.\n            if response.isOK() is not True:
                 return result
             body, header = response.getBody(), response.getHeader()
             missing = object()
