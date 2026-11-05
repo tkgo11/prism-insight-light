@@ -1,14 +1,10 @@
 {
-  "run_id": "prism-sync-2026-11-05T20-20-KST-core-risk",
-  "status": "RELEASED",
-  "expected_state_head": "e4720b68c627ecf47d62e1d7ceffddf7339ec5fc",
-  "expected_pr_head": "3da97e12ccd2c532e467efc0827e5773fca27017",
-  "created_at": "2026-11-05T11:20:27Z",
-  "purpose": "Mock-only KR/US two-date order discovery and cancel/remaining pagination; no broker orders",
+  "run_id": "prism-sync-2026-11-05T22-24-KST-core-risk",
+  "status": "HELD",
+  "expected_state_head": "fa4d749f0e92762ca45e5ce349d3a2de6ac9fc8c",
+  "expected_pr_head": "7eb1dd0ee3afec1f0ce7ba1220cb954cc2af7f15",
+  "created_at": "2026-11-05T13:24:30Z",
+  "purpose": "Read-only Mock KR/US order fill/cancel/remaining pagination/restart regression; no broker orders",
   "real_orders": 0,
-  "demo_orders": 0,
-  "evidence_commit": "7421e36142316198b42a9d13d3fa0258a86b0561",
-  "evidence_report_blob_sha": "5a6fcd7047cadb1d2c31c6707d30c02ff509fa15",
-  "released_at": "2026-11-05T11:27:18.294Z",
-  "reason": "8 KR/US cross-date discovery Mock PASS; exact HEAD CI SUCCESS; broker fill attribution unresolved; Draft, 0/2+0/2"
+  "demo_orders": 0
 }
