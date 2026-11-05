@@ -4,21 +4,21 @@
   "state": "DRAFT_AUDIT_PENDING",
   "phase": "RELATED_CODE_AUDIT_INCOMPLETE_CORE_FILL_ATTRIBUTION_UNVERIFIED",
   "run": {
-    "run_id": "prism-sync-2026-11-05T19-16-KST-core-risk",
-    "previous_run_id": "prism-sync-2026-11-05T18-23-KST-core-risk",
-    "started_at": "2026-11-05T10:16:52Z",
-    "completed_at": "2026-11-05T10:23:57.735Z",
-    "status": "RELEASED",
-    "lock_owner": null,
-    "lock_acquired_commit": "c2e9cec19ab5a065aa7f278a642992e0202078bd",
-    "lock_expected_pr_sha": "b1bc53afca363b4f73c2476fe196fdc260a9ff53",
-    "lock_released": true,
+    "run_id": "prism-sync-2026-11-05T20-20-KST-core-risk",
+    "previous_run_id": "prism-sync-2026-11-05T19-16-KST-core-risk",
+    "started_at": "2026-11-05T11:20:27Z",
+    "completed_at": "2026-11-05T11:26:47.277Z",
+    "status": "EVIDENCE_COMMITTED_PENDING_RELEASE",
+    "lock_owner": "prism-sync-2026-11-05T20-20-KST-core-risk",
+    "lock_acquired_commit": "0b0e892e94ce93200425af5ff3dfafdce324344c",
+    "lock_expected_pr_sha": "3da97e12ccd2c532e467efc0827e5773fca27017",
+    "lock_released": false,
     "related_pass": false,
     "full_pass": false,
-    "final_pr_head_sha": "3da97e12ccd2c532e467efc0827e5773fca27017",
-    "evidence_report_blob_sha": "e12a0b83a1358209aa1b3767598391422ab77351",
-    "evidence_commit": "be1bccf8c5368206dde2e850eab5baef00679f95",
-    "lock_released_at": "2026-11-05T10:23:57.735Z"
+    "final_pr_head_sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
+    "evidence_report_blob_sha": "5a6fcd7047cadb1d2c31c6707d30c02ff509fa15",
+    "evidence_commit": null,
+    "lock_released_at": null
   },
   "source": {
     "repository": "dragon1086/prism-insight",
@@ -38,14 +38,14 @@
     "number": 43,
     "url": "https://github.com/tkgo11/prism-insight-light/pull/43",
     "head_ref": "fix/broker-rejection-proof-20261102",
-    "head_sha": "3da97e12ccd2c532e467efc0827e5773fca27017",
+    "head_sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
     "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
     "draft": true,
     "authorized_scope": "USER_DIRECTED_REMEDIATION_FOLLOWUP",
     "status": "DRAFT_MOCK_GREEN_CORE_ATTRIBUTION_UNVERIFIED",
     "base_ref": "main",
-    "merge_result_sha": "8d78246ebdc15e0de26e468e89a18bf47928f449",
-    "merge_tree_sha": "e74fdb3ea7114591933873dc0f8ef8ebbbaf84eb"
+    "merge_result_sha": "077b13b606078cf31cd909e8c387560c7b6ccd11",
+    "merge_tree_sha": "4d2768c3f47db9fea74645e1933f4096697a0cdb"
   },
   "candidates": [
     {
@@ -59,33 +59,33 @@
   "full_consecutive_passes": 0,
   "related_manifest": {
     "status": "INCOMPLETE_AUTHENTICATED_FILL_ATTRIBUTION_UNVERIFIED",
-    "checksum": "6cb14b85c69285e098773b65c61dccf652891f79",
+    "checksum": "c099f2f6e9eec287e6b8c66349b621a1fcf4e357",
     "checksum_kind": "git_blob_sha1",
-    "scope_estimate": 197,
-    "files_fully_audited": 82,
-    "files_file_level_inspected": 82,
+    "scope_estimate": 198,
+    "files_fully_audited": 83,
+    "files_file_level_inspected": 83,
     "files_targeted_path_review": 29,
-    "head_sha": "3da97e12ccd2c532e467efc0827e5773fca27017",
+    "head_sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
     "source_head_sha": "e925932c1fed8f83c21b3f69fffcbd616234ead3",
-    "git_tree_sha": "e74fdb3ea7114591933873dc0f8ef8ebbbaf84eb",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T19-16-KST-related.json",
-    "sha": "6cb14b85c69285e098773b65c61dccf652891f79",
-    "merge_result_sha": "8d78246ebdc15e0de26e468e89a18bf47928f449"
+    "git_tree_sha": "4d2768c3f47db9fea74645e1933f4096697a0cdb",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T20-20-KST-related.json",
+    "sha": "c099f2f6e9eec287e6b8c66349b621a1fcf4e357",
+    "merge_result_sha": "077b13b606078cf31cd909e8c387560c7b6ccd11"
   },
   "full_manifest": {
     "status": "INCOMPLETE_AUTHENTICATED_FILL_ATTRIBUTION_UNVERIFIED",
-    "checksum": "2f6a53825189c1d10711e3fe138c6cc10233d551",
+    "checksum": "e23501204c6a6013a041fca7f610444ce6fdb439",
     "checksum_kind": "git_blob_sha1",
-    "sha": "2f6a53825189c1d10711e3fe138c6cc10233d551",
-    "files_checked": 229,
-    "fully_audited_files": 82,
-    "file_count": 229,
+    "sha": "e23501204c6a6013a041fca7f610444ce6fdb439",
+    "files_checked": 230,
+    "fully_audited_files": 83,
+    "file_count": 230,
     "files_targeted_path_review": 29,
-    "git_tree_sha": "e74fdb3ea7114591933873dc0f8ef8ebbbaf84eb",
-    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T19-16-KST-full.json",
-    "head_sha": "3da97e12ccd2c532e467efc0827e5773fca27017",
-    "merge_result_sha": "8d78246ebdc15e0de26e468e89a18bf47928f449",
-    "files_file_level_inspected": 82
+    "git_tree_sha": "4d2768c3f47db9fea74645e1933f4096697a0cdb",
+    "manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T20-20-KST-full.json",
+    "head_sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
+    "merge_result_sha": "077b13b606078cf31cd909e8c387560c7b6ccd11",
+    "files_file_level_inspected": 83
   },
   "checks": [
     {
@@ -6829,10 +6829,9 @@
     "notes": "Direct user request superseded earlier self-imposed merge gating. Outstanding brokerage reconciliation and audits carry into new Draft PR; no live trading performed."
   },
   "blockers": [
-    "No authenticated KIS acceptance order-date/execution-ID attribution or verified per-order fill-to-stop contract",
-    "KIS credentials block demo integration only. Branch-protection API 403, independent reviews 0, Qlty 89 blocking issues, 0/2+0/2 audits."
+    "Broker-authenticated order acceptance date/execution IDs and fill-to-stop provenance absent; KIS demo credentials unavailable only for integration. Qlty 89 blocking issues, no independent review, branch-protection API 403, 2+2 audit 0/2+0/2."
   ],
-  "next_action": "Obtain broker-authenticated acceptance order date + per-execution ID provenance and account-scoped fill/cancel/remaining finality via non-trading KIS demo inquiry or operator reconciliation; then write fail-closed stop-activation transition tests. Never clear UNKNOWN or sell based only on history.",
+  "next_action": "Obtain broker-authenticated acceptance trading date and per-execution ID plus account-scoped fill/cancel/remaining finality via non-trading KIS demo inquiry or operator-confirmed evidence; write fail-closed durable fill-to-stop activation tests before any production change. Never clear UNKNOWN or sell from read-only candidate history.",
   "audit_slots": [
     {
       "run_id": "prism-sync-hourly-2026-11-01T05:24:12+09:00",
@@ -11155,7 +11154,7 @@
     {
       "id": "RC-STOPLOSS-ORDER-RECONCILIATION",
       "severity": "HIGH",
-      "status": "READONLY_REUSED_DATE_MOCK_PASS_CORE_FILL_ATTRIBUTION_UNVERIFIED",
+      "status": "READONLY_DISCOVERY_REUSED_DATE_MOCK_PASS_CORE_FILL_ATTRIBUTION_UNVERIFIED",
       "description": "Accepted broker order is not confirmed fill; partial fills/cancels and remaining quantities lack authoritative reconciliation",
       "subcases": [
         "UNKNOWN_BUY_WITHOUT_ACCEPTED_RECEIPT_HAS_NO_DURABLE_STOP_TRACKER",
@@ -11182,28 +11181,28 @@
         "Manual WebUI execution_dedupe=False BUY path lacks verified durable intent; requires mock reproduction before any patch"
       ],
       "latest_patch_commit": "bb8a5ef364a0256d38ae8c7a2fbb6cb3b5c53697",
-      "last_checked_head": "3da97e12ccd2c532e467efc0827e5773fca27017",
+      "last_checked_head": "6661b77b8206f3ba3289c5750a7913504bba9df0",
       "mock_evidence": {
         "run_ids": [
-          42002464263,
-          42002472609
+          42018447581,
+          42018459065
         ],
-        "test": "tests/test_unknown_buy_cross_market_order_collision_readonly.py",
-        "coverage": "4 KR/US cross-market ODNO/execution-ID collision and poisoned partial-cancel Mock variants, fail-closed only"
+        "test": "tests/test_unknown_buy_discovery_date_reuse_readonly.py",
+        "coverage": "8 KR/US cross-date discovery, duplicate fill IDs, partial cancel, conflict, account scopes, restart; fail-closed only"
       },
-      "latest_head_sha": "b1bc53afca363b4f73c2476fe196fdc260a9ff53",
+      "latest_head_sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
       "latest_mock_ci": [
         41961305192,
         41961310274
       ],
       "remaining": [
-        "Durable acceptance receipt has no broker-authenticated trading date",
-        "UNKNOWN BUY without receipt has no unique broker order binding",
-        "Execution-ID fills, cancellations, cumulative and remaining quantities are not durably attributed",
-        "Partial cancel finality and residual stop-loss exposure unverified",
-        "Confirmed attributable fill does not safely activate account-scoped stop-loss",
-        "Cross-process watcher/dispatcher TOCTOU not fully reproduced",
-        "KIS demo integration credentials absent; real trading prohibited"
+        "Broker-authenticated acceptance trading date and per-execution ID mapping absent; official KIS samples only ODNO/ORD_TMD",
+        "Receiptless UNKNOWN BUY not uniquely attributable to a broker order",
+        "Per-order fill/cancel/remaining quantities not broker-authoritatively bound to durable claim",
+        "Partial cancellation finality and residual stop-loss exposure unverified",
+        "Attributable fill-to-account-scoped stop-loss activation not implemented",
+        "Cross-process watcher preflight-to-order TOCTOU not independently reproduced",
+        "KIS demo integration not run: credentials unavailable"
       ]
     },
     {
@@ -11666,8 +11665,8 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "related_manifest_sha": "6cb14b85c69285e098773b65c61dccf652891f79",
-  "full_manifest_sha": "2f6a53825189c1d10711e3fe138c6cc10233d551",
+  "related_manifest_sha": "c099f2f6e9eec287e6b8c66349b621a1fcf4e357",
+  "full_manifest_sha": "e23501204c6a6013a041fca7f610444ce6fdb439",
   "run5_candidate_inventory": [
     {
       "candidate_id": "T5-01",
@@ -21270,7 +21269,7 @@
     "demo_orders": 0
   },
   "run27_next_exact_action": "Implement Mock-only operator-confirmed per-account order-ID+date and fill-ID/remaining/cancel binding to durable ledger; verify restart, partial cancellation and multi-account before stop activation.",
-  "last_run_evidence_path": ".automation/prism-upstream-sync/runs/2026-11-05T19-16-KST.json",
+  "last_run_evidence_path": ".automation/prism-upstream-sync/runs/2026-11-05T20-20-KST.json",
   "run_2026_11_05_0221_carry_forward": {
     "prior_stalled_count": "historically >=2; immediately previous run PROGRESSED",
     "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
@@ -21318,49 +21317,49 @@
       "test_first_commit": "ef27731a20bbd478f06247045cb3fc3992ae9646"
     }
   ],
-  "last_run_report_path": ".automation/prism-upstream-sync/runs/2026-11-05T19-16-KST.json",
+  "last_run_report_path": ".automation/prism-upstream-sync/runs/2026-11-05T20-20-KST.json",
   "last_core_risk_gate": {
     "prior_stalled_count": 0,
     "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_receipt_date_reuse_readonly.py::test_reused_receipt_two_dates_partial_cancel_stays_unattributed_after_restart[KR/US x 2 account scopes] (4 variants)",
-    "baseline_fail_observed": "NO. All four new Mock cases passed on first test-only commit; no reproduced product defect.",
-    "mock_result": "4/4 NEW read-only KR/US reused ODNO/exec IDs across two trading dates, two-page partial-fill/cancel, two account scopes and restart/reversed replay PASS. Exact-HEAD push 2457, PR 2467 pytest, Windows 167 each, Docker PASS. No KIS integration.",
+    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_discovery_date_reuse_readonly.py::test_discovery_reused_odno_and_fill_ids_across_dates_stays_nonactionable (8 KR/US x account x contradiction variants)",
+    "baseline_fail_observed": "NO: all eight new Mock tests passed on first test-only commit, no reproduced product defect",
+    "mock_result": "8/8 new KR/US two-date ODNO and execution-ID reuse discovery, paginated partial/cancel, overlap, same-date contradictory replay, two accounts, durable UNKNOWN restart PASS; exact-HEAD push 2465 and PR 2475 tests, Windows 167, Docker PASS. Mock only.",
     "code_fix_commit": null,
-    "test_only_commit": "3da97e12ccd2c532e467efc0827e5773fca27017",
+    "test_only_commit": "6661b77b8206f3ba3289c5750a7913504bba9df0",
     "latest_head_CI": [
       {
-        "id": 42009801092,
+        "id": 42018447581,
         "event": "push",
-        "sha": "3da97e12ccd2c532e467efc0827e5773fca27017",
+        "sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2457 passed",
+        "pytest": "2465 passed",
         "windows": "167 passed",
         "docker": "success"
       },
       {
-        "id": 42009808074,
+        "id": 42018459065,
         "event": "pull_request",
-        "sha": "3da97e12ccd2c532e467efc0827e5773fca27017",
+        "sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2467 passed",
+        "pytest": "2475 passed",
         "windows": "167 passed",
         "docker": "success"
       }
     ],
     "unverified_transitions": [
-      "Broker-authenticated acceptance trading date and execution-ID mapping absent: official KR/US KIS order samples show ODNO and ORD_TMD, not ORD_DT",
-      "Receiptless UNKNOWN BUY cannot be uniquely attributed to a broker order",
-      "Per-order fill/cancel/remaining quantities not broker-authoritatively linked to durable claim",
+      "Broker-authenticated acceptance trading date and per-execution ID mapping absent; official KIS samples only ODNO/ORD_TMD",
+      "Receiptless UNKNOWN BUY not uniquely attributable to a broker order",
+      "Per-order fill/cancel/remaining quantities not broker-authoritatively bound to durable claim",
       "Partial cancellation finality and residual stop-loss exposure unverified",
-      "Confirmed attributable fill-to-account-scoped stop-loss activation unimplemented",
+      "Attributable fill-to-account-scoped stop-loss activation not implemented",
       "Cross-process watcher preflight-to-order TOCTOU not independently reproduced",
       "KIS demo integration not run: credentials unavailable"
     ],
-    "exact_blocker": "Official KIS KR/US order examples expose ODNO and ORD_TMD, not broker-authenticated order date/exec ID; no safe per-order fill-to-stop attribution. KIS demo credentials unavailable only for integration. Branch protection API 403; Qlty 89 blocking issues; 0 independent reviews; audits 0/2+0/2.",
-    "evidence_delta": "New 4 Mock cases establish same ODNO and execution IDs can coexist as two distinct date-scoped partial-fill/cancel histories without resolving one UNKNOWN BUY; both snapshots remain HISTORY_ONLY_UNATTRIBUTED and byte-idempotent across restart. Official KIS KR/US order sample schema checked. Two 151/148-line test modules reviewed for file-level audit.",
-    "next_exact_action": "Obtain broker-authenticated acceptance order date + per-execution ID provenance and account-scoped fill/cancel/remaining finality via non-trading KIS demo inquiry or operator reconciliation; then write fail-closed stop-activation transition tests. Never clear UNKNOWN or sell based only on history."
+    "exact_blocker": "Broker-authenticated order acceptance date/execution IDs and fill-to-stop provenance absent; KIS demo credentials unavailable only for integration. Qlty 89 blocking issues, no independent review, branch-protection API 403, 2+2 audit 0/2+0/2.",
+    "evidence_delta": "8 new exact-HEAD Mock cases: discovery across two valid dates with same ODNO and fill IDs keeps four distinct non-actionable candidates; contradictory same-date ID invalidates all candidates. Existing exact-date 4-case Mock reused; no product defect reproduced. One additional current-blob full-file audit completed.",
+    "next_exact_action": "Obtain broker-authenticated acceptance trading date and per-execution ID plus account-scoped fill/cancel/remaining finality via non-trading KIS demo inquiry or operator-confirmed evidence; write fail-closed durable fill-to-stop activation tests before any production change. Never clear UNKNOWN or sell from read-only candidate history."
   },
   "run_2026_11_05_0821_carry_forward": {
     "prior_stalled_count": 0,
@@ -24240,6 +24239,304 @@
     "reviews": 0,
     "kis_demo": "BLOCKED_CREDENTIALS_ONLY",
     "live_orders": 0,
+    "demo_orders": 0
+  },
+  "run_2026_11_05_2020_candidate_inventory": {
+    "candidate_count": 10,
+    "validated": 8,
+    "reused": 6,
+    "deferred": 2,
+    "candidates": [
+      {
+        "candidate_id": "CAND-20261105-2020-01",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/CROSS-DATE-DISCOVERY",
+        "path": "tests/test_unknown_buy_discovery_date_reuse_readonly.py",
+        "blob_sha": "48e583568b414abcfc61556c2fb1324ee4cd3372",
+        "hypothesis": "Two date-scoped partial-fill/cancel orders reuse ODNO and fill IDs; discovery must not merge identities",
+        "priority": "P0",
+        "verification_method": "4 new Mock variants PASS",
+        "decision": "VERIFIED_TEST_ONLY",
+        "actual_product_defect_reproduced": false
+      },
+      {
+        "candidate_id": "CAND-20261105-2020-02",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/SAME-DATE-EXECUTION-CONFLICT",
+        "path": "tests/test_unknown_buy_discovery_date_reuse_readonly.py",
+        "blob_sha": "48e583568b414abcfc61556c2fb1324ee4cd3372",
+        "hypothesis": "Later page changes a same-date execution ID's fill quantity; all discovery evidence must fail closed",
+        "priority": "P0",
+        "verification_method": "4 new Mock variants PASS",
+        "decision": "VERIFIED_TEST_ONLY",
+        "actual_product_defect_reproduced": false
+      },
+      {
+        "candidate_id": "CAND-20261105-2020-03",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/CROSS-MARKET-COLLISION",
+        "path": "tests/test_unknown_buy_cross_market_order_collision_readonly.py",
+        "blob_sha": "4cb0c6a6b931fd641cab3e8c50f2ac0c7bebce7b",
+        "hypothesis": "Same account and receipt across KR/US must not cross-attribute",
+        "priority": "P0",
+        "verification_method": "Existing full-suite Mock PASS",
+        "decision": "REUSED_COVERAGE",
+        "actual_product_defect_reproduced": false
+      },
+      {
+        "candidate_id": "CAND-20261105-2020-04",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/CROSS-ACCOUNT-COLLISION",
+        "path": "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py",
+        "blob_sha": "e529bfe146b89bd859832f4b9fef7af69d4186c0",
+        "hypothesis": "Same ODNO across distinct account scopes must remain isolated after restart",
+        "priority": "P0",
+        "verification_method": "Existing full-suite Mock PASS",
+        "decision": "REUSED_COVERAGE",
+        "actual_product_defect_reproduced": false
+      },
+      {
+        "candidate_id": "CAND-20261105-2020-05",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/MISSING-FILL-ID",
+        "path": "tests/test_unknown_buy_missing_execution_id_bound.py",
+        "blob_sha": "f19969ddd0cfe13b4f21b685a0577268156206bf",
+        "hypothesis": "Positive execution lacking ID must not evade cross-row quantity bound",
+        "priority": "P0",
+        "verification_method": "Existing full-suite Mock PASS",
+        "decision": "REUSED_COVERAGE",
+        "actual_product_defect_reproduced": false
+      },
+      {
+        "candidate_id": "CAND-20261105-2020-06",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/PARTIAL-CANCEL-REMAINING",
+        "path": "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py",
+        "blob_sha": "e529bfe146b89bd859832f4b9fef7af69d4186c0",
+        "hypothesis": "Contradictory cancellation and remaining quantities must discard earlier pages",
+        "priority": "P0",
+        "verification_method": "Existing full-suite Mock PASS",
+        "decision": "REUSED_COVERAGE",
+        "actual_product_defect_reproduced": false
+      },
+      {
+        "candidate_id": "CAND-20261105-2020-07",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/PERSISTENCE-FAILURE",
+        "path": "tests/test_unknown_buy_delayed_fill_fence.py",
+        "blob_sha": "6a2325723a1b58e63fb3e78475fc118f3d860583",
+        "hypothesis": "Failed ledger finalize/save must preserve in-progress pending fence after restart",
+        "priority": "P0",
+        "verification_method": "Existing full-suite Mock PASS",
+        "decision": "REUSED_COVERAGE",
+        "actual_product_defect_reproduced": false
+      },
+      {
+        "candidate_id": "CAND-20261105-2020-08",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/LATE-FILL-WATCHER",
+        "path": "tests/test_unknown_buy_delayed_fill_fence.py",
+        "blob_sha": "6a2325723a1b58e63fb3e78475fc118f3d860583",
+        "hypothesis": "Late aggregate holding cannot authorize stop SELL against unrelated shares",
+        "priority": "P0",
+        "verification_method": "Existing full-suite Mock PASS; actionable activation not proven",
+        "decision": "REUSED_COVERAGE",
+        "actual_product_defect_reproduced": false
+      },
+      {
+        "candidate_id": "CAND-20261105-2020-09",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/AUTHENTICATED-ACCEPTANCE-DATE",
+        "path": "trading/order_reconciliation.py",
+        "blob_sha": "1010ae7d347adc02e7902d88e21f6dca447410aa",
+        "hypothesis": "KIS receipt lacks authenticated trading date and execution provenance; safe attribution not established",
+        "priority": "P0",
+        "verification_method": "KIS official sample contract reviewed in prior slot; demo not run",
+        "decision": "DEFER_BROKER_EVIDENCE",
+        "actual_product_defect_reproduced": false
+      },
+      {
+        "candidate_id": "CAND-20261105-2020-10",
+        "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION/WATCHER-TOCTOU",
+        "path": "trading/stop_loss_watcher.py",
+        "blob_sha": "94b6099fea18feb89ef1c21a73f5dc371ab7e854",
+        "hypothesis": "Cross-process tracker preflight-to-order race may leave residual exposure",
+        "priority": "P0",
+        "verification_method": "Existing snapshot-preflight Mock coverage; cross-process execution unverified",
+        "decision": "DEFER_CROSS_PROCESS_TEST",
+        "actual_product_defect_reproduced": false
+      }
+    ]
+  },
+  "run_2026_11_05_2020_carry_forward": {
+    "prior_stalled_count": 0,
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_discovery_date_reuse_readonly.py::test_discovery_reused_odno_and_fill_ids_across_dates_stays_nonactionable (8 KR/US x account x contradiction variants)",
+    "baseline_fail_observed": "NO: all eight new Mock tests passed on first test-only commit, no reproduced product defect",
+    "mock_result": "8/8 new KR/US two-date ODNO and execution-ID reuse discovery, paginated partial/cancel, overlap, same-date contradictory replay, two accounts, durable UNKNOWN restart PASS; exact-HEAD push 2465 and PR 2475 tests, Windows 167, Docker PASS. Mock only.",
+    "code_fix_commit": null,
+    "test_only_commit": "6661b77b8206f3ba3289c5750a7913504bba9df0",
+    "latest_head_CI": [
+      {
+        "id": 42018447581,
+        "event": "push",
+        "sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2465 passed",
+        "windows": "167 passed",
+        "docker": "success"
+      },
+      {
+        "id": 42018459065,
+        "event": "pull_request",
+        "sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2475 passed",
+        "windows": "167 passed",
+        "docker": "success"
+      }
+    ],
+    "unverified_transitions": [
+      "Broker-authenticated acceptance trading date and per-execution ID mapping absent; official KIS samples only ODNO/ORD_TMD",
+      "Receiptless UNKNOWN BUY not uniquely attributable to a broker order",
+      "Per-order fill/cancel/remaining quantities not broker-authoritatively bound to durable claim",
+      "Partial cancellation finality and residual stop-loss exposure unverified",
+      "Attributable fill-to-account-scoped stop-loss activation not implemented",
+      "Cross-process watcher preflight-to-order TOCTOU not independently reproduced",
+      "KIS demo integration not run: credentials unavailable"
+    ],
+    "exact_blocker": "Broker-authenticated order acceptance date/execution IDs and fill-to-stop provenance absent; KIS demo credentials unavailable only for integration. Qlty 89 blocking issues, no independent review, branch-protection API 403, 2+2 audit 0/2+0/2.",
+    "evidence_delta": "8 new exact-HEAD Mock cases: discovery across two valid dates with same ODNO and fill IDs keeps four distinct non-actionable candidates; contradictory same-date ID invalidates all candidates. Existing exact-date 4-case Mock reused; no product defect reproduced. One additional current-blob full-file audit completed.",
+    "next_exact_action": "Obtain broker-authenticated acceptance trading date and per-execution ID plus account-scoped fill/cancel/remaining finality via non-trading KIS demo inquiry or operator-confirmed evidence; write fail-closed durable fill-to-stop activation tests before any production change. Never clear UNKNOWN or sell from read-only candidate history."
+  },
+  "run_2026_11_05_2020_financial_transition_coverage": {
+    "transitions": [
+      {
+        "transition": "접수≠체결",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_discovery_reused_odno_and_fill_ids_across_dates_stays_nonactionable",
+        "result": "NEW_MOCK_PASS_8_OF_8; NONACTIONABLE",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "UNKNOWN",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_unknown_receipt_late_partial_cancel_is_evidence_only_after_restart",
+        "result": "REUSED_MOCK_PASS; FENCE_REMAINS",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "지연 체결",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop",
+        "result": "REUSED_MOCK_PASS; ACTIVATION_UNVERIFIED",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "부분체결",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_discovery_reused_odno_and_fill_ids_across_dates_stays_nonactionable",
+        "result": "NEW_MOCK_PASS; DATE_SCOPED",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "취소/거절",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_partial_cancel_residual_contradiction_discards_prior_page_and_keeps_fence",
+        "result": "REUSED_MOCK_PASS; BROKER_FINALITY_UNVERIFIED",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "중복 통지",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_duplicate_execution_page_never_duplicates_a_pending_buy",
+        "result": "REUSED_PLUS_NEW_OVERLAP_MOCK_PASS",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "잔여량",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_discovery_reused_odno_and_fill_ids_across_dates_stays_nonactionable",
+        "result": "NEW_MOCK_PASS; NO_AUTHORITATIVE_RESIDUAL",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "손절 활성화·중복",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_unknown_buy_zero_then_late_partial_holding_cannot_trigger_old_stop",
+        "result": "REUSED_MOCK_PASS_FAIL_CLOSED; ACTIVATION_UNVERIFIED",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "다계좌 격리",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_same_order_receipt_number_in_two_scopes_cannot_clear_either_fence",
+        "result": "REUSED_PLUS_NEW_2_SCOPES_MOCK_PASS",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "재시작",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_discovery_reused_odno_and_fill_ids_across_dates_stays_nonactionable",
+        "result": "NEW_MOCK_PASS; DURABLE_UNKNOWN",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "원장 영속화 실패",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_finalize_persistence_failure_after_unknown_buy_claim_keeps_fence",
+        "result": "REUSED_MOCK_PASS",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      },
+      {
+        "transition": "복구 및 재조정",
+        "scope": "KR/US and single/multi-account where applicable",
+        "test_id": "test_single_matching_receipt_is_only_a_possible_nonactionable_match",
+        "result": "REUSED_MOCK_PASS; BROKER_ATTRIBUTION_UNVERIFIED",
+        "kis_demo": "BLOCKED_CREDENTIALS_ONLY"
+      }
+    ]
+  },
+  "run_2026_11_05_2020_audit_progress": {
+    "related": "83/198",
+    "full": "83/230",
+    "related_passes": 0,
+    "full_passes": 0,
+    "manifest_shas": {
+      "related": "c099f2f6e9eec287e6b8c66349b621a1fcf4e357",
+      "full": "e23501204c6a6013a041fca7f610444ce6fdb439"
+    }
+  },
+  "run_2026_11_05_2020_remediation": {
+    "test_only_commit": "6661b77b8206f3ba3289c5750a7913504bba9df0",
+    "new_mock_cases": 8,
+    "reproduced_product_defects": 0,
+    "actual_product_fixes": 0,
+    "ci": [
+      {
+        "id": 42018447581,
+        "event": "push",
+        "sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2465 passed",
+        "windows": "167 passed",
+        "docker": "success"
+      },
+      {
+        "id": 42018459065,
+        "event": "pull_request",
+        "sha": "6661b77b8206f3ba3289c5750a7913504bba9df0",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2475 passed",
+        "windows": "167 passed",
+        "docker": "success"
+      }
+    ],
+    "real_orders": 0,
+    "demo_orders": 0
+  },
+  "run_2026_11_05_2020_external": {
+    "snyk": "SUCCESS 1 security test",
+    "qlty": "STATUS_SUCCESS_WITH_89_BLOCKING_ISSUES_UNRESOLVED",
+    "review_count": 0,
+    "branch_protection": "403 Resource not accessible by integration",
+    "kis_demo": "BLOCKED_CREDENTIALS_ONLY",
+    "real_orders": 0,
     "demo_orders": 0
   }
 }
