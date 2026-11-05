@@ -7,7 +7,6 @@ No KIS credentials, broker requests, orders, or synthetic fills are used.
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
-from types import SimpleNamespace
 import subprocess
 import sys
 import time
@@ -79,11 +78,12 @@ def test_cross_process_late_buy_claim_blocks_stop_sell(
         dispatcher, StopLossWatcherConfig(enabled=True, storage_path=tracker.path),
         tracker=tracker,
     )
-    # A deferred SELL still performs a post-dispatch holdings inquiry.
-    # Mock it explicitly: the test must never attempt KIS authentication.
-    watcher._get_cached_trader = lambda _market: SimpleNamespace(
-        get_holding_quantity=lambda _ticker: 3
-    )
+    # A deferred SELL must not construct a KIS trader or attempt auth:
+    # no broker execution happened and there is no post-order balance to check.
+    def forbidden_post_deferred_trader(_market):
+        raise AssertionError("Deferred SELL must not initialize KIS trader")
+
+    watcher._get_cached_trader = forbidden_post_deferred_trader
     broker_calls = []
 
     async def forbidden_broker_order(*args, **kwargs):
