@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-2026-11-05T18-23-KST-core-risk",
   "started_at": "2026-11-05T09:23:42Z",
-  "completed_at": "2026-11-05T09:30:30.481Z",
+  "completed_at": "2026-11-05T09:31:03.646Z",
   "status": "PROGRESSED_MOCK_CROSS_MARKET_COLLISION_PASS_CORE_FILL_ATTRIBUTION_UNVERIFIED",
   "core_risk_gate": {
     "prior_stalled_count": 0,
@@ -286,9 +286,12 @@
   "cas": {
     "lock_acquired_commit": "25c0df06618da87d2eed6af47b05a3f88ba9ad10",
     "expected_pr_head": "e1531c3a63a29308345028f7b67f6dc4de968321",
-    "status": "EVIDENCE_WRITE_PENDING_RELEASE",
+    "status": "RELEASED",
     "real_orders": 0,
-    "demo_orders": 0
+    "demo_orders": 0,
+    "lock_status": "RELEASED",
+    "evidence_commit": "51fcbe6ec77a359e5daaf10439566e713661ec6b",
+    "released_at": "2026-11-05T09:31:03.646Z"
   },
   "unresolved_blockers": "No authenticated KIS acceptance order-date/execution-ID attribution or verified per-order fill-to-stop contract; KIS credentials block demo integration only. Branch-protection API 403, independent reviews 0, Qlty 89 blocking issues, 0/2+0/2 audits.",
   "next_exact_action": "Identify broker-authenticated acceptance order date + per-execution ID provenance from official KIS contract and a non-trading demo inquiry; if not available, require operator reconciliation. Only then add fail-closed fill/cancel/remaining-to-account-scoped stop transition tests; never auto-sell or clear UNKNOWN from read-only history.",
