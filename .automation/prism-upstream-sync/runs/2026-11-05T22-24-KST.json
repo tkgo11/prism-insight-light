@@ -386,7 +386,9 @@
   },
   "cas": {
     "lock_acquired_commit": "ac0e235b3e15e5a84af59788676c483d58198083",
-    "lock_release": "PENDING_NEXT_CAS_COMMIT"
+    "evidence_commit": "13c5bfc08c983fc6cb6b655f4dd9464fb0e12af2",
+    "lock_release": "RELEASED",
+    "released_at": "2026-11-05T13:32:50Z"
   },
   "next_exact_action": "Obtain authenticated acceptance trading date and execution IDs through read-only KIS inquiry or operator-confirmed evidence; write test-first fill-to-stop attribution and partial-cancel residual reconciliation, then verify before any production change. No live orders.",
   "manifest_blob_shas": {
