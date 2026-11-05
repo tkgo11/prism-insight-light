@@ -174,5 +174,5 @@ def test_post_sell_holdings_auth_error_preserves_broker_result(
     watcher._get_cached_trader = failed_post_order_inquiry
     result = watcher._trigger_sell(market, ticker, 85, snapshot)
     assert result["status"] == broker_status
-    assert result["message"] == "mock broker accepted; fill unverified"
+    assert result["message"] == "mock broker outcome; fill unverified"
     assert tracker.get_position(market, ticker) == snapshot
