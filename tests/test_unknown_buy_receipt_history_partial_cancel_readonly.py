@@ -269,3 +269,47 @@ def test_positive_fill_without_execution_id_is_unverified_after_restart(
         market, "005930" if market == "KR" else "AAPL",
     ) as unresolved:
         assert unresolved is True
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("late_corruption", [
+    "foreign_account",
+    "reused_execution_id_changed_quantity",
+    "invalid_broker_order_date",
+])
+def test_late_page_poison_cannot_preserve_partial_fill_or_clear_unknown_buy(
+    tmp_path, market, lookup, scope, late_corruption,
+):
+    """A later page cannot rescue or silently discard contradictory order evidence.
+
+    Read-only Mock KIS, no real credentials, orders, stop activation, or ledger mutation.
+    The same order number/ID is checked across KR/US and distinct account scopes.
+    """
+    identity = f"late-{market}-{lookup}-{scope}-{late_corruption}"
+    ledger = _claim(tmp_path / "ledger.json", market, scope, identity=identity)
+    before = ledger.path.read_bytes()
+    late = _row(market)
+    if late_corruption == "foreign_account":
+        late["cano"] = "87654321" if scope.startswith("a") else "12345678"
+    elif late_corruption == "reused_execution_id_changed_quantity":
+        late["ccld_qty"] = "3"
+    else:
+        late["ord_dt"] = "20261140"
+    result, calls = _inquire(market, lookup, scope, [
+        MockPage(market, [_row(market)], more=True),
+        MockPage(market, [late]),
+    ])
+    assert len(calls) == 2
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["can_activate_stop"] is False
+    assert not result["matches" if lookup == "exact" else "candidates"]
+    assert ledger.path.read_bytes() == before
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.claim(identity) == (False, "unknown")
+    with restarted.guard_unresolved_buy(
+        market, "005930" if market == "KR" else "AAPL",
+    ) as unresolved:
+        assert unresolved is True
