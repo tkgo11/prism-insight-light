@@ -17,10 +17,11 @@ from trading.order_reconciliation import (
 
 
 class _Page:
-    def __init__(self, market, rows, *, more=False, business_status="0"):
+    def __init__(self, market, rows, *, more=False, cursor="", business_status="0"):
         self.market = market
         self.rows = rows
         self.more = more
+        self.cursor = cursor
         self.business_status = business_status
 
     def isOK(self):
@@ -31,7 +32,7 @@ class _Page:
         return {
             "rt_cd": self.business_status,
             "output1" if self.market == "KR" else "output": self.rows,
-            "ctx_area_fk" + suffix: "NEXT" if self.more else "",
+            "ctx_area_fk" + suffix: self.cursor if self.more else "",
             "ctx_area_nk" + suffix: "NEXT" if self.more else "",
         }
 
@@ -86,8 +87,8 @@ def test_real_mode_mock_partial_cancel_history_never_activates_stop(
         cumulative=7, remaining=3, cancelled="Y",
     )
     pages = iter([
-        _Page(market, [partial], more=True),
-        _Page(market, [dict(partial)], more=True),
+        _Page(market, [partial], more=True, cursor="NEXT1"),
+        _Page(market, [dict(partial)], more=True, cursor="NEXT2"),
         _Page(market, [cancelled], business_status=late_status),
     ])
     calls = []
