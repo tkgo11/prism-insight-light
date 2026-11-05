@@ -167,3 +167,71 @@ def test_incomplete_history_or_forged_actionable_flag_cannot_clear_pending_fence
         assert result["can_activate_stop"] is False
     assert ledger.path.read_bytes() == before
     assert json.loads(before)["buy-one"]["status"] == "unknown"
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_same_receipt_number_in_two_accounts_isolated_without_fill_attribution(
+    tmp_path, market,
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    a, b = "a" * 64, "b" * 64
+    _claim(ledger, "buy-a", market, a)
+    _claim(ledger, "buy-b", market, b)
+    before = ledger.path.read_bytes()
+    for identity, scope in (("buy-a", a), ("buy-b", b)):
+        result = ledger.inspect_unresolved_buy_history(identity, _history(market, scope))
+        assert result["status"] == "POSSIBLE_RECEIPT_MATCH"
+        assert result["fill_attributed"] is False
+        assert result["can_activate_stop"] is False
+    assert ledger.path.read_bytes() == before
+    assert ExecutionLedger(ledger.path).claim("buy-a") == (False, "unknown")
+    assert ExecutionLedger(ledger.path).claim("buy-b") == (False, "unknown")
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_same_account_receipt_reused_for_other_ticker_is_ambiguous(
+    tmp_path, market,
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    scope = "a" * 64
+    _claim(ledger, "buy-one", market, scope)
+    _claim(ledger, "buy-other", market, scope,
+           ticker="000660" if market == "KR" else "MSFT")
+    before = ledger.path.read_bytes()
+    result = ledger.inspect_unresolved_buy_history("buy-one", _history(market, scope))
+    assert result["status"] == "UNVERIFIED"
+    assert result["reason"] == "AMBIGUOUS_DURABLE_RECEIPT"
+    assert result["can_activate_stop"] is False
+    assert ledger.path.read_bytes() == before
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_corrupt_persisted_receipt_blocks_readonly_triage_without_repair(
+    tmp_path, market,
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    scope = "a" * 64
+    _claim(ledger, "buy-one", market, scope)
+    data = json.loads(ledger.path.read_text())
+    data["buy-one"]["order_receipt"]["order_no"] = "00000000"
+    ledger.path.write_text(json.dumps(data))
+    before = ledger.path.read_bytes()
+    with pytest.raises(RuntimeError, match="operator reconciliation"):
+        ledger.inspect_unresolved_buy_history("buy-one", _history(market, scope))
+    assert ledger.path.read_bytes() == before
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_unknown_or_missing_claim_identity_is_never_selected(
+    tmp_path, market,
+):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    scope = "a" * 64
+    _claim(ledger, "buy-one", market, scope)
+    before = ledger.path.read_bytes()
+    history = _history(market, scope)
+    for identity in ("not-in-ledger", ""):
+        result = ledger.inspect_unresolved_buy_history(identity, history)
+        assert result["status"] == "UNVERIFIED"
+        assert result["can_activate_stop"] is False
+    assert ledger.path.read_bytes() == before
