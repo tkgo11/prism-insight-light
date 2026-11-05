@@ -1,13 +1,10 @@
 {
-  "run_id": "prism-sync-2026-11-06T02-18-KST-watch-race-mock",
-  "status": "RELEASED",
-  "expected_state_head": "56014455c954d587c941023b16bd19034b3121f3",
-  "expected_pr_head": "5152fbf732e584b541aa19a7720250b97ffd348e",
-  "created_at": "2026-11-05T17:18:10.193Z",
-  "purpose": "KR/US watcher preflight→BUY claim→SELL dispatch deterministic mock",
+  "run_id": "prism-sync-2026-11-06T03-18-KST-cross-process-buy-fence",
+  "status": "LOCKED",
+  "expected_state_head": "b1e519f0678898e1118c511a0c630a4ad31f3f56",
+  "expected_pr_head": "8b9a1d25d210cb7a47505969917488d0fd3ac1cc",
+  "created_at": "2026-11-05T18:19:45.192Z",
+  "purpose": "Cross-process KR/US mock BUY claim interleaving and stop-loss dispatch safety; no real or demo orders",
   "real_orders": 0,
-  "demo_orders": 0,
-  "evidence_commit": "57fc614ff1ee9c3fc412d76c0197471659adbd1f",
-  "released_at": "2026-11-05T17:22:49.531Z",
-  "reason": "8/8 deterministic Mock PASS; exact-head push+PR CI SUCCESS; KIS fill attribution, Qlty 89, review, 2+2 audits remain unresolved"
+  "demo_orders": 0
 }
