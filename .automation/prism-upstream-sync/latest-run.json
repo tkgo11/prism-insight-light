@@ -1,98 +1,96 @@
 {
   "schema_version": 1,
-  "run_id": "prism-sync-2026-11-05T21-15-KST-core-risk",
-  "status": "PROGRESSED_US_VENUE_MOCK_REPRODUCED_FIXED_CORE_ATTRIBUTION_UNVERIFIED",
-  "head_sha": "7eb1dd0ee3afec1f0ce7ba1220cb954cc2af7f15",
+  "run_id": "prism-sync-2026-11-05T22-24-KST-core-risk",
+  "status": "MOCK_REGRESSION_EXPANDED_CORE_FILL_ATTRIBUTION_UNVERIFIED",
+  "head_sha": "b8535e5b3b3e7d9edb36f3804cefb1723987c991",
   "pr": 43,
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
   "actual_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "merge_result_sha": "f0200e0b540e44a0baf14dd766b0b1a72449f252",
-  "merge_tree_sha": "f30ee139d533b1a35f0b4f8f1d46d78b23d3707b",
-  "upstream_head_sha": "e925932c1fed8f83c21b3f69fffcbd616234ead3",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T21-15-KST.json",
-  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T21-15-KST-related.json",
-  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T21-15-KST-full.json",
-  "related_complete": "87/199",
-  "full_complete": "87/231",
+  "merge_result_sha": "fc4979289f8761780f6db8bae2b12041e9f0984a",
+  "merge_tree_sha": "d6bd2fb29f164d0358fcc7b4289b9321d536ec05",
+  "upstream_head_sha": "0b2ce8dc6975a98b67abd17af3e40001f0a6e185",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T22-24-KST.json",
+  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T22-24-KST-related.json",
+  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T22-24-KST-full.json",
+  "related_complete": "88/200",
+  "full_complete": "88/232",
   "related_passes": 0,
   "full_passes": 0,
   "core_risk_gate": {
     "prior_stalled_count": 0,
     "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_us_venue_provenance_readonly.py (8 conflict/control + 2 cross-date US Mock)",
-    "baseline_fail_observed": "YES: a341e3dc; Actions 42026137973/42026148196, 4 genuine assertion failures and 2469 passed; no import/fixture errors",
-    "mock_result": "10/10 new US Mock cases PASS at 7eb1dd0e, push 2475/PR 2485 pytest, Windows 167 each, Docker PASS. KR/US prior regression suite reused; mock only.",
-    "code_fix_commit": "1d0be0f5fe827ff3fa990be114f00145acf763ea",
-    "test_first_commit": "a341e3dc044679838dd0d43eb67e874224b283cf",
-    "final_test_commit": "7eb1dd0ee3afec1f0ce7ba1220cb954cc2af7f15",
+    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_three_page_reconciliation_readonly.py::test_three_page_date_reuse_duplicate_and_late_cancel_never_authorizes_stop [32 cases]",
+    "baseline_fail_observed": "NO: all 32 new test-first assertions PASS on preexisting product; no product defect claimed",
+    "mock_result": "32/32 new KR/US three-page read-only Mock cases PASS; push 2507/PR 2517 pytest, Windows 167 each, Docker PASS; not real KIS",
+    "code_fix_commit": null,
+    "test_commit": "b8535e5b3b3e7d9edb36f3804cefb1723987c991",
     "latest_head_CI": [
       {
-        "id": 42026475107,
+        "id": 42036018932,
         "event": "push",
-        "sha": "7eb1dd0ee3afec1f0ce7ba1220cb954cc2af7f15",
+        "sha": "b8535e5b3b3e7d9edb36f3804cefb1723987c991",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2475 passed",
+        "pytest": "2507 passed",
         "windows": "167 passed",
         "docker": "success"
       },
       {
-        "id": 42026484525,
+        "id": 42036028371,
         "event": "pull_request",
-        "sha": "7eb1dd0ee3afec1f0ce7ba1220cb954cc2af7f15",
+        "sha": "b8535e5b3b3e7d9edb36f3804cefb1723987c991",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2485 passed",
+        "pytest": "2517 passed",
         "windows": "167 passed",
         "docker": "success"
       }
     ],
     "unverified_transitions": [
-      "KIS-authenticated BUY acceptance date and per-execution IDs",
-      "Receiptless UNKNOWN BUY unique order attribution",
+      "KIS-authenticated acceptance trading date and per-execution IDs",
+      "Receiptless UNKNOWN BUY unique broker-order attribution",
       "Per-order fill/cancel/remaining finality",
       "Partial-cancel residual stop-loss exposure",
       "Confirmed fill to account-scoped stop activation",
       "Cross-process watcher preflight-to-order TOCTOU",
       "KIS demo integration credentials absent"
     ],
-    "exact_blocker": "Authenticated broker acceptance date/exec IDs and fill-to-stop attribution unavailable; demo credentials absent only for integration. Qlty 89 blocking issues untriaged; 0 human reviews; branch protection 403; independent 2+2 audit 0/2+0/2.",
-    "evidence_delta": "4 actual US venue read-only evidence assertion failures fixed; 10 new US mock cases PASS; 4 new full-file current-blob audits (87/199 related, 87/231 full); still no fill-to-stop attribution.",
-    "next_exact_action": "Acquire broker-authenticated acceptance date and execution IDs with account-scoped fill/cancel/remaining finality using non-trading KIS inquiry or operator-confirmed evidence; test fail-closed fill-to-stop activation before production changes. Continue file audits and independently triage Qlty 89; no live orders."
+    "exact_blocker": "No broker-authenticated acceptance date and per-execution IDs to attribute UNKNOWN BUY fills to stop protection; KIS demo credentials block only integration. Qlty 89 blocking issues; no reviews; branch protection 403; independent 0/2+0/2.",
+    "evidence_delta": "32 new three-page KR/US Mock cases passed; 1 new complete current-blob file audit; no reproduced product defect and no authoritative fill-to-stop progress.",
+    "next_exact_action": "Obtain authenticated acceptance trading date and execution IDs through read-only KIS inquiry or operator-confirmed evidence; write test-first fill-to-stop attribution and partial-cancel residual reconciliation, then verify before any production change. No live orders."
   },
   "ci_latest": [
     {
-      "id": 42026475107,
+      "id": 42036018932,
       "event": "push",
-      "sha": "7eb1dd0ee3afec1f0ce7ba1220cb954cc2af7f15",
+      "sha": "b8535e5b3b3e7d9edb36f3804cefb1723987c991",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2475 passed",
+      "pytest": "2507 passed",
       "windows": "167 passed",
       "docker": "success"
     },
     {
-      "id": 42026484525,
+      "id": 42036028371,
       "event": "pull_request",
-      "sha": "7eb1dd0ee3afec1f0ce7ba1220cb954cc2af7f15",
+      "sha": "b8535e5b3b3e7d9edb36f3804cefb1723987c991",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2485 passed",
+      "pytest": "2517 passed",
       "windows": "167 passed",
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T12:27:18.522Z",
-  "next_exact_action": "Acquire broker-authenticated acceptance date and execution IDs with account-scoped fill/cancel/remaining finality using non-trading KIS inquiry or operator-confirmed evidence; test fail-closed fill-to-stop activation before production changes. Continue file audits and independently triage Qlty 89; no live orders.",
+  "last_updated_at": "2026-11-05T13:30:36Z",
+  "next_exact_action": "Obtain authenticated acceptance trading date and execution IDs through read-only KIS inquiry or operator-confirmed evidence; write test-first fill-to-stop attribution and partial-cancel residual reconciliation, then verify before any production change. No live orders.",
   "cas": {
-    "lock_status": "RELEASED",
-    "lock_acquired_commit": "3f7ff4f07de907d497c0729e1baa4aedcde1ad70",
-    "evidence_commit": "0680d7679ed1b1877fab10ae808b879f44025ad4",
-    "released_at": "2026-11-05T12:27:18.522Z"
+    "lock_status": "HELD_EVIDENCE_RECORDED",
+    "lock_acquired_commit": "ac0e235b3e15e5a84af59788676c483d58198083",
+    "release": "PENDING"
   },
   "manifest_blob_shas": {
-    "related": "058b0ac49c21789925eb62258b9fe28c3004174b",
-    "full": "32cb8d3b7e688501db6eebccd56bb5ee8d20b534"
+    "related": "c4ba53c3e4a9f0ae59218240deb24fbb7c56affd",
+    "full": "f0a37a9ee77291938082770d352f1b0f9cb1ea54"
   },
   "state_json_updated": true
 }
