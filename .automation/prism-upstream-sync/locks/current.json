@@ -1,12 +1,10 @@
 {
-  "run_id": "prism-sync-2026-11-05T14-20-KST-core-risk",
-  "status": "RELEASED",
-  "expected_state_head": "4ee126762b2fad46e383afe1d292ddd2c24d29b6",
+  "run_id": "prism-sync-2026-11-05T15-24-KST-core-risk",
+  "status": "LOCKED",
+  "expected_state_head": "a7a8201c03f15746efb0417b6c2a60999049553e",
   "expected_pr_head": "b59e96a9c3be43c0355e24a415c2f31ab5ad3df0",
-  "created_at": "2026-11-05T05:21:39.208Z",
-  "released_at": "2026-11-05T05:26:58.220Z",
-  "purpose": "Read-only KR/US mock execution-ID cancel/remaining/cumulative pagination conflict tests, no live/demo orders",
+  "created_at": "2026-11-05T06:24:56.093Z",
+  "purpose": "Read-only KR/US mock reconciliation evidence durability tests before any implementation; no live/demo orders",
   "real_orders": 0,
-  "demo_orders": 0,
-  "reason": "24 new Mock PASS; exact HEAD CI 2419 push / 2429 PR, Windows167 each, Docker success; +3 complete file audits, core attribution unverified, 0/2+0/2"
+  "demo_orders": 0
 }
