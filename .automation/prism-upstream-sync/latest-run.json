@@ -1,46 +1,47 @@
 {
   "schema_version": 1,
-  "run_id": "prism-sync-2026-11-06T00-17-KST-real-mode-mock",
+  "run_id": "prism-sync-2026-11-06T01-18-KST-terminal-cancel-mock",
   "status": "CORE_RISK_OPEN_NEW_MOCK_EVIDENCE_NO_PRODUCT_DEFECT",
-  "head_sha": "c0431f2e64745916f4742cfb97fd685d5806922a",
+  "head_sha": "5152fbf732e584b541aa19a7720250b97ffd348e",
   "pr": 43,
   "base_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
   "actual_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
   "upstream_head_sha": "a426de8e1f6d06c1bef2f57255a672ec11337303",
-  "merge_result_sha": "204081bf72c11416aad7dee6f80e80134941cda2",
-  "merge_tree_sha": "aa190b9377b68f8ccfc1bb7a2643da9dc6b951c7",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-06T00-17-KST.json",
-  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-06T00-17-KST-related.json",
-  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-06T00-17-KST-full.json",
-  "related_complete": "89/202",
-  "full_complete": "89/234",
+  "merge_result_sha": "80f7fc981747a638be5ccf557bb28c9afd3f48d5",
+  "merge_tree_sha": "c69ba22ae1f55f3a99598f011a54bd5614eb68d8",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-06T01-18-KST.json",
+  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-06T01-18-KST-related.json",
+  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-06T01-18-KST-full.json",
+  "related_complete": "91/202",
+  "full_complete": "91/234",
   "related_passes": 0,
   "full_passes": 0,
   "core_risk_gate": {
     "prior_stalled_count": 0,
     "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_real_mode_readonly.py::test_real_mode_mock_partial_cancel_history_never_activates_stop [16 KR/US real-mode mock cases]",
-    "baseline_fail_observed": "NO product defect baseline: 16 test-fixture failures at c127015e due reused pagination cursor, corrected at c0431f2; never count as production defect",
-    "mock_result": "16/16 new mocked real-mode KR/US 3-page partial/cancel cases PASS; push 2555 and PR merge 2565 total pytest; never actual KIS",
+    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_real_mode_readonly.py::test_real_mode_mock_partial_cancel_history_never_activates_stop [32 KR/US real-mode fake-_request cases]",
+    "baseline_fail_observed": "NO new product baseline failure: this is test-coverage hardening; earlier 16 fixture cursor failures at c127015e were fixture defects, not production defects.",
+    "mock_result": "32/32 KR/US real-mode mocked read-only three-page cases PASS; 16 new zero-residual terminal cancel variants; exact-head push 2571 and PR merge 2581 pytest PASS; never KIS authenticated.",
     "code_fix_commit": null,
+    "test_only_commit": "5152fbf732e584b541aa19a7720250b97ffd348e",
     "latest_head_CI": [
       {
-        "id": 42054020957,
+        "id": 42063735336,
         "event": "push",
-        "sha": "c0431f2e64745916f4742cfb97fd685d5806922a",
+        "sha": "5152fbf732e584b541aa19a7720250b97ffd348e",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2555 passed",
+        "pytest": "2571 passed",
         "windows": "167 passed",
         "docker": "success"
       },
       {
-        "id": 42054029829,
+        "id": 42063746468,
         "event": "pull_request",
-        "sha": "c0431f2e64745916f4742cfb97fd685d5806922a",
+        "sha": "5152fbf732e584b541aa19a7720250b97ffd348e",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2565 passed",
+        "pytest": "2581 passed",
         "windows": "167 passed",
         "docker": "success"
       }
@@ -54,43 +55,50 @@
       "Cross-process watcher preflight-to-order TOCTOU",
       "KIS demo integration credentials absent"
     ],
-    "exact_blocker": "No broker-authenticated receipt trading date/execution ID provenance for automated fill-to-stop linkage. Demo credentials block KIS integration only; 89 Qlty blocking findings, no reviews, branch-protection 403, independent audits 0/2+0/2.",
-    "evidence_delta": "New real-mode (mode='real' with fully mocked _request, NO network) KR/US order-history/partial cancel/duplicate/multi-account/restart tests added and 16 PASS. No new broker fill attribution; first 16 failures were fixture cursor reuse, not product defect.",
-    "next_exact_action": "Obtain broker-authenticated order acceptance date and execution identity via safe read-only KIS/confirmed operator evidence; design test-first account-scoped fill-to-stop and partial-cancel residual reconciliation; do not enable live orders."
+    "exact_blocker": "Broker-authenticated acceptance date/execution ID missing for fill-to-stop; no verified safe cross-process watcher/BUY fence protocol. KIS demo credentials block integration only; Qlty 89 blocking issues, 0 reviews, branch-protection 403, independent 2+2 audits 0.",
+    "evidence_delta": "16 additional parameterized real-mode Mock cases (cancel remaining 0 vs 3) and explicit page-cursor propagation checks; 32/32 pass on exact HEAD. File-level complete audit +2 (89→91) without claiming broker fill attribution or product fix.",
+    "next_exact_action": "Design and run deterministic Mock interleaving test for watcher guard release→BUY claim→SELL dispatch; only then implement safe atomic broker/ledger fence if proven. Independently obtain authenticated KIS acceptance trading date/execution identity via read-only/operator evidence before any fill-to-stop activation."
   },
   "ci_latest": [
     {
-      "id": 42054020957,
+      "id": 42063735336,
       "event": "push",
-      "sha": "c0431f2e64745916f4742cfb97fd685d5806922a",
+      "sha": "5152fbf732e584b541aa19a7720250b97ffd348e",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2555 passed",
+      "pytest": "2571 passed",
       "windows": "167 passed",
       "docker": "success"
     },
     {
-      "id": 42054029829,
+      "id": 42063746468,
       "event": "pull_request",
-      "sha": "c0431f2e64745916f4742cfb97fd685d5806922a",
+      "sha": "5152fbf732e584b541aa19a7720250b97ffd348e",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2565 passed",
+      "pytest": "2581 passed",
       "windows": "167 passed",
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T15:24:19.495Z",
-  "next_exact_action": "Obtain broker-authenticated order acceptance date and execution identity via safe read-only KIS/confirmed operator evidence; design test-first account-scoped fill-to-stop and partial-cancel residual reconciliation; do not enable live orders.",
+  "candidate_count": 10,
+  "new_candidate_count": 2,
+  "validated_candidates": 9,
+  "deferred_candidates": 1,
+  "attempted_reproductions": 32,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "last_updated_at": "2026-11-05T16:27:02.508Z",
+  "next_exact_action": "Design and run deterministic Mock interleaving test for watcher guard release→BUY claim→SELL dispatch; only then implement safe atomic broker/ledger fence if proven. Independently obtain authenticated KIS acceptance trading date/execution identity via read-only/operator evidence before any fill-to-stop activation.",
   "cas": {
     "lock_status": "RELEASED",
-    "lock_acquired_commit": "34eab6a0eeb8cb5fa3837707d4542831ee432ffd",
-    "evidence_commit": "eb5734f1d5db454ea89bd24a838f7d4d14156fac",
-    "released_at": "2026-11-05T15:24:19.495Z"
+    "lock_acquired_commit": "4e0bd0977e001063a1b6d48e8b52e9222f9a37ee",
+    "evidence_commit": "0f99075725b9219c3a1d9bba9ee079756bd87607",
+    "released_at": "2026-11-05T16:27:02.508Z"
   },
   "manifest_blob_shas": {
-    "related": "33401714880e45ce6ceddcea148e9dfd9d41b1c3",
-    "full": "0f418d95a329b237e7955bb4a8e844a481b701da"
+    "related": "19fab514d30f1309f1a5e590623f560e24aef810",
+    "full": "be8b04bc1e2b2c7c95a860599cf9f0e94b86c082"
   },
   "state_json_updated": true
 }

@@ -8,12 +8,12 @@
   "status": "CORE_RISK_OPEN_NEW_REAL_MODE_MOCK_EVIDENCE_NO_BROKER_ATTRIBUTION",
   "independent_audit_slot_passes": 0,
   "audit_pass": false,
-  "files_fully_audited": 90,
+  "files_fully_audited": 91,
   "scope_closure_verified": false,
   "evidence_rule": "32/32 KR/US real-mode fake-_request cases PASS on exact HEAD; 16 new zero-residual terminal cancel variants plus explicit cursor progression checks; no KIS-authenticated fill or automatic stop proof; 2+2 independent audits 0.",
   "kind": "related",
   "selection_rule": "Existing transitive related scope plus new US venue Mock and schema/test full reviews; broker fill attribution unresolved.",
-  "files_file_level_inspected": 90,
+  "files_file_level_inspected": 91,
   "files_targeted_path_review": 30,
   "files": [
     {
@@ -2164,11 +2164,36 @@
     {
       "path": "tests/test_watcher_strategy_bypass.py",
       "blob_sha": "49ec5a4c90a67d731fb62b2db997957a4550824b",
-      "status": "NOT_FULLY_AUDITED",
+      "status": "FULL_FILE_AUDIT_COMPLETE_CURRENT_MERGE_TREE",
       "audit_pass": false,
-      "evidence_status": "CARRIED_IDENTICAL_BLOB_NOT_FULLY_AUDITED",
-      "inspection": "Full KR/US strategy routing regression reviewed; internal marker added to watcher-only fixtures; exact-head mock CI 1490 Linux and 167 Windows pass; NOT independent audit PASS",
-      "file_audit_complete": false
+      "evidence_status": "CURRENT_BLOB_FULL_SOURCE_REVIEW_PLUS_EXACT_HEAD_CI",
+      "inspection": "Reviewed all 114 lines and 3 parameterized tests: 2 markets x 7 strategy bypasses, 2 publisher-stop controls, and 2 mocked adapter dispatch paths. Cross-checked TradeDispatcher._resolve_strategy/_dispatch_serialized/_dispatch_legacy and strategies.common._is_watcher_generated_stop_sell internal-only origin contract. Fake KR AsyncTradingContext and USStockTrading prevent KIS network; test dry_run=False uses mock adapters and execution_dedupe=False, so it proves strategy routing only, not durable ledger, broker fill, or stop-loss safety. Exact HEAD full CI 2571 push/2581 PR merge passed. Not independent 2+2 audit PASS.",
+      "file_audit_complete": true,
+      "reviewed_functions": [
+        "test_watcher_generated_stop_sell_bypasses_optional_signal_strategy",
+        "test_publisher_stop_reason_preserves_configured_strategy",
+        "test_watcher_dispatch_uses_market_broker_adapter_despite_strategy",
+        "TradeDispatcher._resolve_strategy",
+        "_is_watcher_generated_stop_sell"
+      ],
+      "invariants": [
+        "Trusted internal watcher SELL bypasses optional strategy",
+        "Publisher stop_loss reason alone does not impersonate watcher",
+        "KR/US mocked broker SELL remains market order",
+        "Test with execution_dedupe=False does not certify ledger safety"
+      ],
+      "test_evidence": [
+        "42063735336 exact HEAD 2571 pytest PASS",
+        "42063746468 exact HEAD 2581 pytest PASS",
+        "Windows 167 and Docker build PASS in both runs"
+      ],
+      "review_evidence": "Blob 49ec5a4c90a67d731fb62b2db997957a4550824b; dispatch 61e571eed5898087b335974776327a57a24607bc; common 12960b7ef2de28cb3427e659208bcd0d5b556ff4; merge tree c69ba22ae1f55f3a99598f011a54bd5614eb68d8",
+      "limitations": [
+        "No live or demo KIS",
+        "No fill-to-stop reconciliation",
+        "execution_dedupe=False mock dispatch is not duplicate-suppression evidence",
+        "No independent audit PASS"
+      ]
     },
     {
       "path": "tests/test_wave4_execution_safety.py",
@@ -3790,6 +3815,7 @@
     "tests/test_unknown_buy_three_page_reconciliation_readonly.py",
     "tests/test_unknown_buy_us_venue_provenance_readonly.py",
     "tests/test_unresolved_buy_without_stop_loss.py",
+    "tests/test_watcher_strategy_bypass.py",
     "tests/test_webui_dry_run_service.py",
     "tests/test_webui_manual_buy_durable_intent.py",
     "tests/test_webui_readiness_service.py",

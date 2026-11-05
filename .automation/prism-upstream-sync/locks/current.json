@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-06T01-18-KST-terminal-cancel-mock",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "expected_state_head": "6a6bb2da2a563fb0021cd240941c357d40f227aa",
-  "expected_pr_head": "c0431f2e64745916f4742cfb97fd685d5806922a",
+  "expected_pr_head": "5152fbf732e584b541aa19a7720250b97ffd348e",
   "created_at": "2026-11-05T16:21:47.948Z",
-  "purpose": "KR/US real-mode mocked read-only terminal partial-cancel zero residual and cursor-progression coverage; no real/demo broker request",
+  "purpose": "KR/US real-mode mocked zero-residual partial cancel and cursor-progression coverage",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "evidence_commit": "0f99075725b9219c3a1d9bba9ee079756bd87607",
+  "released_at": "2026-11-05T16:27:02.508Z",
+  "reason": "32 real-mode KR/US Mock PASS, exact-head CI PASS; fill-to-stop remains unverified; Draft 0/2+0/2"
 }
