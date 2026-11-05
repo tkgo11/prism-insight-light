@@ -262,6 +262,63 @@ def _history_matches_consistent_for_triage(matches: list[dict[str, Any]]) -> boo
 
 
 
+
+_MAX_READ_ONLY_HISTORY_SNAPSHOTS = 16
+
+
+def _history_evidence_material(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Only approved non-sensitive, NON-ACTIONABLE history facts are hashed."""
+    return {key: snapshot[key] for key in (
+        "market", "ticker", "account_scope", "order_no", "order_date", "matches",
+    )}
+
+
+def _validate_read_only_history_snapshot(
+    snapshot: dict[str, Any], intent: dict[str, Any], receipt: dict[str, Any],
+) -> None:
+    """Corrupt/forged cached history must never survive as trustworthy evidence."""
+    expected = {
+        "market", "ticker", "account_scope", "order_no", "order_date",
+        "matches", "date_provenance", "captured_at", "fingerprint",
+    }
+    if not isinstance(snapshot, dict) or set(snapshot) != expected:
+        raise ValueError("Malformed read-only history snapshot")
+    if (snapshot["market"] != intent["market"]
+            or snapshot["ticker"] != intent["ticker"]
+            or snapshot["account_scope"] != intent["account_scope"]
+            or snapshot["order_no"] != receipt["order_no"]
+            or snapshot["date_provenance"] != "HISTORY_ONLY_UNATTRIBUTED"):
+        raise ValueError("History snapshot has inconsistent order provenance")
+    date = snapshot["order_date"]
+    if not isinstance(date, str) or re.fullmatch(r"[0-9]{8}", date) is None:
+        raise ValueError("Invalid history snapshot date")
+    datetime.strptime(date, "%Y%m%d")
+    matches = snapshot["matches"]
+    if not isinstance(matches, list) or not 0 < len(matches) <= 2000:
+        raise ValueError("Missing or oversized history snapshot")
+    if any(
+        not isinstance(row, dict)
+        or row.get("order_no") != receipt["order_no"]
+        or row.get("order_date") != date
+        or row.get("ticker") != intent["ticker"]
+        for row in matches
+    ) or not _history_matches_consistent_for_triage(matches):
+        raise ValueError("Contradictory cached fill/cancel/remaining evidence")
+    captured_at = snapshot["captured_at"]
+    if not isinstance(captured_at, str):
+        raise ValueError("Invalid history capture timestamp")
+    parsed = datetime.fromisoformat(captured_at)
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError("History capture timestamp must be timezone-aware")
+    encoded = json.dumps(
+        _history_evidence_material(snapshot), sort_keys=True,
+        separators=(",", ":"), ensure_ascii=False, allow_nan=False,
+    )
+    expected_digest = hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+    if snapshot["fingerprint"] != expected_digest:
+        raise ValueError("History snapshot fingerprint mismatch")
+
+
 class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
@@ -326,6 +383,33 @@ class ExecutionLedger:
             except (KeyError, TypeError, ValueError, OverflowError) as exc:
                 raise RuntimeError(
                     "Automatic-trading ledger BUY receipt requires operator reconciliation"
+                ) from exc
+
+        # Read-only evidence never authorizes a trade, but malformed evidence
+        # must not be silently accepted after crash/restart or manual editing.
+        for entry in data.values():
+            if "reconciliation_evidence" not in entry:
+                continue
+            try:
+                intent = _validated_order_intent(entry["order_intent"])
+                receipt = entry["order_receipt"]
+                if (entry.get("status") not in ("unknown", "executed")
+                        or not isinstance(receipt, dict)):
+                    raise ValueError("Read-only evidence requires unresolved BUY")
+                snapshots = entry["reconciliation_evidence"]
+                if (not isinstance(snapshots, list)
+                        or not 1 <= len(snapshots) <= _MAX_READ_ONLY_HISTORY_SNAPSHOTS):
+                    raise ValueError("Invalid read-only history snapshot count")
+                seen: set[str] = set()
+                for snapshot in snapshots:
+                    _validate_read_only_history_snapshot(snapshot, intent, receipt)
+                    fingerprint = snapshot["fingerprint"]
+                    if fingerprint in seen:
+                        raise ValueError("Duplicate read-only history snapshot")
+                    seen.add(fingerprint)
+            except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                raise RuntimeError(
+                    "Automatic-trading reconciliation evidence requires operator reconciliation"
                 ) from exc
         return data
 
@@ -523,6 +607,95 @@ class ExecutionLedger:
         verdict["status"] = "POSSIBLE_RECEIPT_MATCH"
         verdict["reason"] = "NO_BROKER_ORDER_DATE_OR_EXECUTION_ATTRIBUTION"
         return verdict
+
+
+    def record_read_only_buy_history(
+        self, identity: str, history: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Atomically retain operator-triage snapshots, NEVER fill attribution.
+
+        The history date is NOT an authenticated date from the original BUY
+        acceptance. No broker order, tracker mutation, pending-claim release,
+        fill finalization, or SELL authorization can occur here.
+        """
+        refused = {
+            "status": "UNVERIFIED", "can_activate_stop": False,
+            "fill_attributed": False, "requires_operator": True,
+            "reason": "UNTRUSTED_OR_INCOMPLETE_EVIDENCE",
+        }
+        # Reuse the existing strict, non-mutating broker history triage.
+        # An absent receipt, ambiguous claim, or malformed/cached snapshot
+        # cannot become durable evidence merely by calling this method.
+        inspected = self.inspect_unresolved_buy_history(identity, history)
+        if inspected["status"] != "POSSIBLE_RECEIPT_MATCH":
+            return inspected
+        material = {
+            "market": history["market"], "ticker": history["ticker"],
+            "account_scope": history["account_scope"],
+            "order_no": history["order_no"], "order_date": history["order_date"],
+            "matches": json.loads(json.dumps(
+                history["matches"], sort_keys=True, ensure_ascii=False,
+                allow_nan=False,
+            )),
+        }
+        encoded = json.dumps(
+            material, sort_keys=True, separators=(",", ":"),
+            ensure_ascii=False, allow_nan=False,
+        )
+        digest = hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+        with FileLock(self.lock_path):
+            entries = self._load()
+            entry = entries.get(identity)
+            if (not isinstance(entry, dict)
+                    or entry.get("status") not in ("unknown", "executed")
+                    or entry.get("order_side") is not None):
+                return refused
+            try:
+                intent = _validated_order_intent(entry.get("order_intent"))
+            except ValueError:
+                return refused
+            receipt = entry.get("order_receipt")
+            if (not isinstance(receipt, dict)
+                    or receipt.get("order_no") != material["order_no"]
+                    or intent["market"] != material["market"]
+                    or intent["ticker"] != material["ticker"]
+                    or intent["account_scope"] != material["account_scope"]):
+                return refused
+            # Repeat the unique-claim check while holding the write lock:
+            # a second BUY may have been claimed since initial triage.
+            for other_identity, other in entries.items():
+                if other_identity == identity or not isinstance(other, dict):
+                    continue
+                other_receipt = other.get("order_receipt")
+                if (not isinstance(other_receipt, dict)
+                        or other_receipt.get("order_no") != material["order_no"]):
+                    continue
+                try:
+                    other_intent = _validated_order_intent(other.get("order_intent"))
+                except ValueError:
+                    return refused
+                if (other_intent["market"] == intent["market"]
+                        and other_intent["account_scope"] == intent["account_scope"]):
+                    return refused
+            snapshot = {
+                **material,
+                "date_provenance": "HISTORY_ONLY_UNATTRIBUTED",
+                "captured_at": datetime.now(timezone.utc).isoformat(),
+                "fingerprint": digest,
+            }
+            _validate_read_only_history_snapshot(snapshot, intent, receipt)
+            existing = entry.get("reconciliation_evidence", [])
+            if not isinstance(existing, list):
+                raise RuntimeError("Invalid durable reconciliation evidence")
+            if any(item.get("fingerprint") == digest for item in existing):
+                return {**refused, "reason": "READ_ONLY_HISTORY_ALREADY_SAVED"}
+            if len(existing) >= _MAX_READ_ONLY_HISTORY_SNAPSHOTS:
+                raise RuntimeError(
+                    "Read-only history evidence capacity reached; operator reconciliation required"
+                )
+            entry["reconciliation_evidence"] = [*existing, snapshot]
+            self._save(entries)
+        return {**refused, "reason": "READ_ONLY_HISTORY_SAVED_FOR_OPERATOR"}
 
     def claim(
         self, identity: str, *, aliases: Iterable[str] = (), with_token: bool = False,
