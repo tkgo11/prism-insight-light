@@ -1,99 +1,97 @@
 {
   "schema_version": 1,
   "run_id": "prism-sync-2026-11-05T16-22-KST-core-risk",
-  "status": "RUNNING_LOCKED_REORDERED_HISTORY_REPRODUCED",
-  "head_sha": "411eaaa807969475bb14827bbe6d19fd1bf04815",
+  "status": "PROGRESSED_REORDERED_EVIDENCE_IDEMPOTENCE_CORE_ATTRIBUTION_UNVERIFIED",
+  "head_sha": "1ce41ad795e12f6504df16f4decd7662e17bd3a1",
   "pr": 43,
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
   "actual_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "merge_result_sha": "545c2d649863567f82ba51803fb6fffc0a697ae0",
-  "merge_tree_sha": "78e29188e337800f8115ca67f5c095503c1ae6d3",
+  "merge_result_sha": "0b5cb5d01d0dff19d22d9290f429bdb136ac69c6",
+  "merge_tree_sha": "21a3a9ba7f50e6210ea0b8d26f88fc40ed05b92f",
   "upstream_head_sha": "e925932c1fed8f83c21b3f69fffcbd616234ead3",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T15-24-KST.json",
-  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T15-24-KST-related.json",
-  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T15-24-KST-full.json",
-  "related_complete": "77/194",
-  "full_complete": "77/226",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-05T16-22-KST.json",
+  "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T16-22-KST-related.json",
+  "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-05T16-22-KST-full.json",
+  "related_complete": "80/195",
+  "full_complete": "80/227",
   "related_passes": 0,
   "full_passes": 0,
   "core_risk_gate": {
     "prior_stalled_count": 0,
     "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-    "latest_attempt_command_or_test_id": "tests/test_readonly_buy_history_evidence_durability.py (24 KR/US read-only Mock cases), test-first 73432ea and fixed 411eaaa",
-    "baseline_fail_observed": "24 expected missing-capability AttributeError failures, 2419 existing PASS on test-first HEAD 73432ea; Actions 41980375106/41980380124; not a proven unsafe broker product defect",
-    "mock_result": "24/24 NEW PASS; 2443 push/2453 PR pytest, Windows 167 each, Docker PASS",
-    "code_fix_commit": "411eaaa807969475bb14827bbe6d19fd1bf04815 (non-actionable evidence durability feature, not fill attribution)",
+    "latest_attempt_command_or_test_id": "tests/test_readonly_history_replay_order_independence.py::test_reordered_execution_history_is_one_durable_snapshot_after_restart (4 KR/US x account cases)",
+    "baseline_fail_observed": "Local 4 failed on old HEAD 411eaaa; test-first Actions 41987198958: 4 assertion failures and 2443 passed, Windows 167 PASS. Product evidence-dedup defect, not KIS fill defect.",
+    "mock_result": "4/4 new tests PASS including legacy snapshot compatibility; exact HEAD Linux 2447 push/2457 PR pytest, Windows 167 each, Docker PASS",
+    "code_fix_commit": "1ce41ad795e12f6504df16f4decd7662e17bd3a1",
     "latest_head_CI": [
       {
-        "id": 41980570694,
+        "id": 41987898636,
         "event": "push",
-        "sha": "411eaaa807969475bb14827bbe6d19fd1bf04815",
+        "sha": "1ce41ad795e12f6504df16f4decd7662e17bd3a1",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2443 passed",
+        "pytest": "2447 passed",
         "windows": "167 passed",
         "docker": "success"
       },
       {
-        "id": 41980576539,
+        "id": 41987906572,
         "event": "pull_request",
-        "sha": "411eaaa807969475bb14827bbe6d19fd1bf04815",
+        "sha": "1ce41ad795e12f6504df16f4decd7662e17bd3a1",
         "status": "completed",
         "conclusion": "success",
-        "pytest": "2453 passed",
+        "pytest": "2457 passed",
         "windows": "167 passed",
         "docker": "success"
       }
     ],
     "unverified_transitions": [
-      "No broker-authenticated order trading date from acceptance receipt",
+      "Acceptance lacks broker-authenticated trading date",
       "Receiptless UNKNOWN cannot be uniquely attributed",
-      "Execution-ID fill/cancel/remaining not broker-authoritatively linked to durable claim",
-      "Partial cancel finality and residual stop exposure unverified",
-      "Automatic confirmed fill-to-stop activation unimplemented",
+      "Execution-ID fill/cancel/remaining not authoritatively linked to durable claim",
+      "Partial cancellation finality and residual stop exposure unverified",
+      "Automatic confirmed fill-to-stop activation not implemented",
       "Cross-process preflight/order TOCTOU unverified",
-      "KIS demo integration blocked only by credentials"
+      "KIS demo integration not run (credentials)"
     ],
-    "exact_blocker": "KIS acceptance ODNO/ORD_TMD lacks authenticated trading date; new snapshots explicitly HISTORY_ONLY_UNATTRIBUTED and cannot authorize SELL. Qlty 89 blocking issues, branch protection 403, reviews 0, independent 0/2+0/2; demo credentials only for integration.",
-    "evidence_delta": "24 new KR/US test-first RED->GREEN Mock cases; atomic non-actionable durable operator snapshots with account/date/order/execution/cancel/remaining and restart/idempotence, exact-HEAD CI SUCCESS, two complete current source audits (ledger reaudited, new test +1), 77/194 related and 77/226 full; no fill attribution or stop activation.",
-    "next_exact_action": "Identify broker-authenticated order-date and execution-ID provenance in verified KIS response or require explicit operator reconciliation; design safe durable per-order fill/cancel/remaining attribution and residual stop tests without clearing UNKNOWN or placing orders."
+    "exact_blocker": "No broker-authenticated acceptance order date or execution-ID mapping. 89 Qlty blocking issues, branch protection 403, reviews 0, independent audits 0/2+0/2; KIS credentials block only demo integration.",
+    "evidence_delta": "One reproduced evidence idempotence defect: broker page-order changes consumed duplicate durable snapshot slots; 4 KR/US/account Mock RED->GREEN, legacy unsorted digest preserved; +3 fully audited files (80/195 related and 80/227 full), latest-head CI green. Core fill-to-stop attribution still unverified.",
+    "next_exact_action": "Verify KIS acceptance ODNO/ORD_TMD and authenticated trading-date/execution-ID provenance, or require explicit operator reconciliation; design and run fail-closed per-order fill/partial-cancel/remaining-to-stop tests without authorizing SELL from history alone."
   },
   "ci_latest": [
     {
-      "id": 41980570694,
+      "id": 41987898636,
       "event": "push",
-      "sha": "411eaaa807969475bb14827bbe6d19fd1bf04815",
+      "sha": "1ce41ad795e12f6504df16f4decd7662e17bd3a1",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2443 passed",
+      "pytest": "2447 passed",
       "windows": "167 passed",
       "docker": "success"
     },
     {
-      "id": 41980576539,
+      "id": 41987906572,
       "event": "pull_request",
-      "sha": "411eaaa807969475bb14827bbe6d19fd1bf04815",
+      "sha": "1ce41ad795e12f6504df16f4decd7662e17bd3a1",
       "status": "completed",
       "conclusion": "success",
-      "pytest": "2453 passed",
+      "pytest": "2457 passed",
       "windows": "167 passed",
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T06:31:44.631Z",
-  "next_exact_action": "Identify broker-authenticated order-date and execution-ID provenance in verified KIS response or require explicit operator reconciliation; design safe durable per-order fill/cancel/remaining attribution and residual stop tests without clearing UNKNOWN or placing orders.",
+  "last_updated_at": "2026-11-05T07:37:14.488Z",
+  "next_exact_action": "Verify KIS acceptance ODNO/ORD_TMD and authenticated trading-date/execution-ID provenance, or require explicit operator reconciliation; design and run fail-closed per-order fill/partial-cancel/remaining-to-stop tests without authorizing SELL from history alone.",
   "cas": {
-    "lock_status": "LOCKED",
+    "lock_status": "RELEASED",
     "lock_owner": "prism-sync-2026-11-05T16-22-KST-core-risk",
-    "lock_acquired_at": "2026-11-05T07:25:29.297Z",
-    "expected_pr_head": "411eaaa807969475bb14827bbe6d19fd1bf04815",
-    "previous_state_sha": "8fdc92468bd8fd0023b4a22142012a8293bb4804",
-    "previous_lock_release": "2026-11-05T06:31:44.631Z"
+    "lock_acquired_commit": "880981a9139fbec0a1c1a42b2b50af1398585a5e",
+    "evidence_commit": "a275041fdbf75d624a26f64444f49a336cb31e1e",
+    "released_at": "2026-11-05T07:37:14.488Z"
   },
   "manifest_blob_shas": {
-    "related": "9cfe74b63837f00d1fe13a9b136a1b8a9232c780",
-    "full": "f56f51dde0151d6e6cac99e8cd2b7e8679d20a0c"
+    "related": "0271fd87d84f8aa0d7775917cd9ceffe80b1e751",
+    "full": "50c325adceb95673a47f5b3a8aaf31f5e3c12f30"
   },
-  "state_json_updated": true,
-  "previous_run_id": "prism-sync-2026-11-05T15-24-KST-core-risk"
+  "state_json_updated": true
 }

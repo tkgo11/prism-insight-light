@@ -423,7 +423,9 @@
   },
   "cas": {
     "lock_acquired_commit": "880981a9139fbec0a1c1a42b2b50af1398585a5e",
-    "lock_status": "LOCKED_PENDING_FINAL_CAS_RELEASE"
+    "lock_status": "RELEASED",
+    "released_at": "2026-11-05T07:37:14.488Z",
+    "evidence_commit": "a275041fdbf75d624a26f64444f49a336cb31e1e"
   },
   "unresolved_blockers": [
     "Acceptance lacks broker-authenticated trading date",
