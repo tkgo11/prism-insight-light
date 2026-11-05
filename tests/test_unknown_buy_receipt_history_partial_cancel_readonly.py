@@ -238,3 +238,31 @@ def test_zero_submitted_quantity_is_not_reconcilable_history_after_restart(
         market, "005930" if market == "KR" else "AAPL",
     ) as unresolved:
         assert unresolved is True
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+def test_positive_fill_without_execution_id_is_unverified_after_restart(
+    tmp_path, market, lookup,
+):
+    """Positive fills without broker execution identity cannot be deduplicated.
+
+    Read-only KIS mock only; never infer a fill, clear UNKNOWN, or sell.
+    """
+    scope = "a" * 64
+    ledger = _claim(tmp_path / "ledger.json", market, scope, identity="pending")
+    before = ledger.path.read_bytes()
+    row = _row(market)
+    row.pop("ccld_no")
+    result, calls = _inquire(market, lookup, scope, [MockPage(market, [row])])
+    assert len(calls) == 1
+    assert result["status"] == "UNVERIFIED"
+    assert result["complete"] is False
+    assert result["can_activate_stop"] is False
+    assert result["matches" if lookup == "exact" else "candidates"] == []
+    assert ledger.path.read_bytes() == before
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.claim("pending") == (False, "unknown")
+    with restarted.guard_unresolved_buy(
+        market, "005930" if market == "KR" else "AAPL",
+    ) as unresolved:
+        assert unresolved is True

@@ -318,3 +318,23 @@ def test_caller_supplied_zero_order_quantity_cannot_be_possible_receipt_match(
     assert inspected["fill_attributed"] is False
     assert ledger.path.read_bytes() == before
     assert ExecutionLedger(ledger.path).claim("buy-one") == (False, "unknown")
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_cached_positive_fill_without_execution_id_is_not_possible_match(
+    tmp_path, market,
+):
+    """Caller-supplied cached history must not bypass execution-ID validation."""
+    scope = "a" * 64
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    _claim(ledger, "buy-one", market, scope)
+    before = ledger.path.read_bytes()
+    history = _history(market, scope)
+    history["matches"][0]["execution_id"] = None
+    inspected = ExecutionLedger(ledger.path).inspect_unresolved_buy_history(
+        "buy-one", history,
+    )
+    assert inspected["status"] == "UNVERIFIED"
+    assert inspected["can_activate_stop"] is False
+    assert inspected["fill_attributed"] is False
+    assert ledger.path.read_bytes() == before
+    assert ExecutionLedger(ledger.path).claim("buy-one") == (False, "unknown")
