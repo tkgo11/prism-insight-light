@@ -1045,7 +1045,8 @@ class StopLossWatcher:
                 result.status,
                 result.message,
             )
-            trader = self._get_cached_trader(market)
+            # A deferred/rejected/unknown SELL has no post-order holdings to
+            # verify. Do not authenticate to KIS or rewrite its broker outcome.
             # In multi-account setups, if the sell executed on holding accounts
             # and other accounts were already satisfied or had no position,
             # or if 0 shares remain across accounts, protection is safely dropped.
@@ -1069,6 +1070,9 @@ class StopLossWatcher:
                 # flat. Preserve the durable watcher until a fresh aggregate
                 # holdings inquiry confirms exactly zero shares.
                 try:
+                    # Post-order auth/holdings failures must retain protection
+                    # without changing the broker's already returned outcome.
+                    trader = self._get_cached_trader(market)
                     remaining_qty = self._validated_holding_quantity(
                         trader.get_holding_quantity(ticker)
                     )

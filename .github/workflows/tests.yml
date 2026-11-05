@@ -78,3 +78,4 @@ jobs:
           tests/test_off_hours_policy.py
           tests/test_multi_account_kis_auth.py
           tests/test_strategy_suite.py
+          tests/test_watcher_cross_process_buy_fence_mock.py
