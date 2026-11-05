@@ -1,14 +1,10 @@
 {
-  "run_id": "prism-sync-2026-11-05T19-16-KST-core-risk",
-  "status": "RELEASED",
-  "expected_state_head": "0f594ab2a745ec947397df1962942b65b57ffac3",
-  "expected_pr_head": "b1bc53afca363b4f73c2476fe196fdc260a9ff53",
-  "created_at": "2026-11-05T10:19:13.633Z",
-  "purpose": "KR/US receipt ODNO reuse across trading dates and partial-cancel pagination mock-only regression; no orders",
+  "run_id": "prism-sync-2026-11-05T20-20-KST-core-risk",
+  "status": "HELD",
+  "expected_state_head": "e4720b68c627ecf47d62e1d7ceffddf7339ec5fc",
+  "expected_pr_head": "3da97e12ccd2c532e467efc0827e5773fca27017",
+  "created_at": "2026-11-05T11:20:27Z",
+  "purpose": "Mock-only KR/US two-date order discovery and cancel/remaining pagination; no broker orders",
   "real_orders": 0,
-  "demo_orders": 0,
-  "evidence_commit": "be1bccf8c5368206dde2e850eab5baef00679f95",
-  "evidence_report_blob_sha": "e12a0b83a1358209aa1b3767598391422ab77351",
-  "released_at": "2026-11-05T10:23:57.735Z",
-  "reason": "4 KR/US two-date reused-ODNO partial/cancel Mock cases PASS; exact HEAD CI SUCCESS, broker fill attribution unresolved; Draft and 0/2+0/2"
+  "demo_orders": 0
 }
