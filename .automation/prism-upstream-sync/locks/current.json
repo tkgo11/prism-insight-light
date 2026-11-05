@@ -1,13 +1,10 @@
 {
-  "run_id": "prism-sync-2026-11-05T18-23-KST-core-risk",
-  "status": "RELEASED",
-  "expected_state_head": "a69d756bd8be1a9da1fb424f9681e59e5458f484",
-  "expected_pr_head": "e1531c3a63a29308345028f7b67f6dc4de968321",
-  "created_at": "2026-11-05T09:23:42Z",
-  "purpose": "KR/US same-receipt cross-market multi-page partial-fill/cancel read-only Mock regression before unrelated candidate audit",
+  "run_id": "prism-sync-2026-11-05T19-16-KST-core-risk",
+  "status": "ACQUIRED",
+  "expected_state_head": "0f594ab2a745ec947397df1962942b65b57ffac3",
+  "expected_pr_head": "b1bc53afca363b4f73c2476fe196fdc260a9ff53",
+  "created_at": "2026-11-05T10:19:13.633Z",
+  "purpose": "KR/US receipt ODNO reuse across trading dates and partial-cancel pagination mock-only regression; no orders",
   "real_orders": 0,
-  "demo_orders": 0,
-  "evidence_commit": "51fcbe6ec77a359e5daaf10439566e713661ec6b",
-  "released_at": "2026-11-05T09:31:03.646Z",
-  "reason": "Four new KR/US cross-market Mock variants passed, exact HEAD push/PR CI success; core fill attribution remains unverified; 0/2+0/2 audits, Draft unmerged."
+  "demo_orders": 0
 }
