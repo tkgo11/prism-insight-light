@@ -64,6 +64,21 @@ def _first(row, *keys):
     return first
 
 
+def _us_venue(row):
+    """Optional US exchange provenance for read-only history integrity.
+
+    An order cannot have two explicit, contradictory exchange codes under
+    the same account/trading-date/order identity. Missing codes do not prove
+    a venue. This is only an evidence-consistency check, never fill authority.
+    """
+    venue = _first(row, "ovrs_excg_cd", "OVRS_EXCG_CD")
+    if venue in (None, ""):
+        return None
+    if type(venue) is not str or re.fullmatch(r"[A-Z0-9]{2,8}", venue) is None:
+        raise ValueError("invalid overseas exchange code")
+    return venue
+
+
 def _qty(value):
     if value is None or value == "":
         return None
@@ -230,6 +245,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
     cursors, records, matches, versions, order_quantities = set(), set(), [], {}, set()
     execution_quantities, total_execution_quantity = {}, 0
     cumulative_execution_ids, max_cumulative_quantity = set(), None
+    us_venues = set()
     total_rows = 0
     for page in range(max_pages):
         try:
@@ -267,6 +283,14 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                 match = _matched(row, order_no=order_no, order_date=order_date,
                                  ticker=ticker, account=account, product=product)
                 if match is not None:
+                    if market == "US":
+                        venue = _us_venue(row)
+                        if venue is not None:
+                            us_venues.add(venue)
+                            if len(us_venues) > 1:
+                                # One date/order cannot be two US venues.
+                                # Discard earlier paginated evidence as well.
+                                return result
                     # Separate execution IDs still belong to one order. A
                     # contradictory submitted quantity across its history
                     # cannot be trusted for partial-fill/cancel reconciliation.
@@ -450,7 +474,7 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
         return result
 
     try:
-        candidate_keys, matched = set(), []
+        candidate_keys, matched, candidate_venues = set(), [], {}
         side_fields = (
             "sll_buy_dvsn_cd", "sll_buy_dvsn",
             "SLL_BUY_DVSN_CD", "SLL_BUY_DVSN",
@@ -478,6 +502,17 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
             )
             if match is None:
                 return result
+            if market == "US":
+                # ODNO can be reused on different dates. Only compare
+                # explicit venue codes within the same date-scoped order.
+                venue = _us_venue(row)
+                if venue is not None:
+                    venues = candidate_venues.setdefault(
+                        (order_no, order_date), set(),
+                    )
+                    venues.add(venue)
+                    if len(venues) > 1:
+                        return result
             candidate_keys.add((order_no, order_date))
             matched.append(match)
         # A single account/date/order number cannot identify two instruments
