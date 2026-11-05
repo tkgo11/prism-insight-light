@@ -80,11 +80,13 @@
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T15:23:39.716Z",
+  "last_updated_at": "2026-11-05T15:24:19.495Z",
   "next_exact_action": "Obtain broker-authenticated order acceptance date and execution identity via safe read-only KIS/confirmed operator evidence; design test-first account-scoped fill-to-stop and partial-cancel residual reconciliation; do not enable live orders.",
   "cas": {
-    "lock_status": "HELD",
-    "lock_acquired_commit": "34eab6a0eeb8cb5fa3837707d4542831ee432ffd"
+    "lock_status": "RELEASED",
+    "lock_acquired_commit": "34eab6a0eeb8cb5fa3837707d4542831ee432ffd",
+    "evidence_commit": "eb5734f1d5db454ea89bd24a838f7d4d14156fac",
+    "released_at": "2026-11-05T15:24:19.495Z"
   },
   "manifest_blob_shas": {
     "related": "33401714880e45ce6ceddcea148e9dfd9d41b1c3",

@@ -255,8 +255,10 @@
     "status": "403 Resource not accessible by integration"
   },
   "cas": {
-    "lock_status": "HELD",
-    "lock_acquired_commit": "34eab6a0eeb8cb5fa3837707d4542831ee432ffd"
+    "lock_status": "RELEASED",
+    "lock_acquired_commit": "34eab6a0eeb8cb5fa3837707d4542831ee432ffd",
+    "evidence_commit": "eb5734f1d5db454ea89bd24a838f7d4d14156fac",
+    "released_at": "2026-11-05T15:24:19.495Z"
   },
   "unresolved_blockers": [
     "KIS-authenticated acceptance trading date and per-execution IDs",
@@ -273,5 +275,6 @@
   "notes": [
     "Initial test commit c127015e produced 16 assertion failures from duplicate fixture pagination cursors, not production defect; fixture corrected at c0431f2",
     "Old audited files retained exact blob SHA; new test unreviewed independently and does not earn PASS"
-  ]
+  ],
+  "release_time": "2026-11-05T15:24:19.495Z"
 }
