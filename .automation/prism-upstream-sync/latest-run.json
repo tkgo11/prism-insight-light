@@ -81,13 +81,14 @@
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T08:24:36.217Z",
+  "last_updated_at": "2026-11-05T08:25:13.857Z",
   "next_exact_action": "Determine verified KIS acceptance ODNO+trading date and execution-ID provenance or require explicit operator reconciliation; add broker-authenticated fail-closed per-order fill/cancel/remaining-to-stop tests without clearing UNKNOWN or selling from history alone.",
   "cas": {
-    "lock_status": "ACQUIRED_EVIDENCE_COMMIT",
+    "lock_status": "RELEASED",
     "lock_owner": "prism-sync-2026-11-05T17-18-KST-core-risk",
     "lock_acquired_commit": "e31a272168648377a5017bc5d154f7246323c2e5",
-    "lock_release": "PENDING"
+    "evidence_commit": "130d61545da65db530980f68b192e496cd49b5fa",
+    "released_at": "2026-11-05T08:25:13.857Z"
   },
   "manifest_blob_shas": {
     "related": "0aaf4b2154485ecc8db7c3de8f4ca63c682734c1",

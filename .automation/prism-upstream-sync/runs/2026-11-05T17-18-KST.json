@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-2026-11-05T17-18-KST-core-risk",
   "started_at": "2026-11-05T08:18:35Z",
-  "completed_at": "2026-11-05T08:24:36.217Z",
+  "completed_at": "2026-11-05T08:25:13.857Z",
   "status": "PROGRESSED_MOCK_CROSS_ACCOUNT_REPLAY_PASS_CORE_FILL_ATTRIBUTION_UNVERIFIED",
   "core_risk_gate": {
     "prior_stalled_count": 0,
@@ -324,9 +324,12 @@
     "demo_orders": 0
   },
   "cas": {
+    "lock_status": "RELEASED",
+    "lock_owner": "prism-sync-2026-11-05T17-18-KST-core-risk",
     "lock_acquired_commit": "e31a272168648377a5017bc5d154f7246323c2e5",
-    "status": "EVIDENCE_PENDING_CAS_COMMIT",
-    "lock_release": "PENDING"
+    "evidence_commit": "130d61545da65db530980f68b192e496cd49b5fa",
+    "released_at": "2026-11-05T08:25:13.857Z",
+    "lock_release": "CAS_RELEASE_COMMIT_BEING_WRITTEN"
   },
   "state_drift_evidence": {
     "prior_latest_run": "16:22",

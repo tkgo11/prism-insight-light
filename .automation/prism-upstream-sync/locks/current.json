@@ -1,10 +1,13 @@
 {
   "run_id": "prism-sync-2026-11-05T17-18-KST-core-risk",
-  "status": "ACQUIRED",
+  "status": "RELEASED",
   "expected_state_head": "94bb5fc5b685f8dc37f6a31dd85583c025f19d1c",
   "expected_pr_head": "1ce41ad795e12f6504df16f4decd7662e17bd3a1",
   "created_at": "2026-11-05T08:18:35Z",
   "purpose": "KR/US read-only Mock per-order fill/cancel/remaining and multi-account restart evidence before any production change",
   "real_orders": 0,
-  "demo_orders": 0
+  "demo_orders": 0,
+  "evidence_commit": "130d61545da65db530980f68b192e496cd49b5fa",
+  "released_at": "2026-11-05T08:25:13.857Z",
+  "reason": "2 KR/US new Mock variants passed, exact HEAD push/PR CI success, state.json drift repaired; core authenticated fill attribution remains unverified, independent 0/2+0/2, Draft unmerged"
 }
