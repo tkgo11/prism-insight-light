@@ -84,12 +84,13 @@
       "docker": "success"
     }
   ],
-  "last_updated_at": "2026-11-05T00:24:32.804Z",
+  "last_updated_at": "2026-11-05T00:25:03.003Z",
   "next_exact_action": "Test-first broker-authenticated order-date and per-execution-ID durable attribution contract; preserve UNKNOWN fence until account/order/date/filled/remaining/cancel evidence is complete and unambiguous; do not activate stop from possible match",
   "related_manifest_sha": "db05e7ebff9f31cf4e2749d215ecce169b608dd1",
   "full_manifest_sha": "e835274d240e100b868484e02c7e4c9fc8e25f41",
   "cas": {
-    "lock_status": "HELD_EVIDENCE_PENDING_RELEASE",
-    "lock_acquired_commit": "437c9540dca252059f5a75d81489786274f4f5be"
+    "lock_status": "RELEASED",
+    "evidence_commit": "a8de8e9435a0549e216c76024943787c406e0a46",
+    "released_at": "2026-11-05T00:25:03.003Z"
   }
 }

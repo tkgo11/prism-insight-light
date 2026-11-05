@@ -1,7 +1,7 @@
 {
   "run_id": "prism-sync-2026-11-05T09-16-KST-core-risk",
   "started_at": "2026-11-05T00:17:43.273Z",
-  "completed_at": "2026-11-05T00:24:32.804Z",
+  "completed_at": "2026-11-05T00:25:03.003Z",
   "status": "PROGRESSED_NONACTIONABLE_TRIAGE_CORE_ATTRIBUTION_UNVERIFIED",
   "core_risk_gate": {
     "prior_stalled_count": 0,
@@ -409,9 +409,10 @@
   },
   "cas": {
     "lock_acquired_commit": "437c9540dca252059f5a75d81489786274f4f5be",
-    "evidence_commit": "THIS_ATOMIC_CAS_COMMIT",
-    "lock_released": false,
-    "release_status": "PENDING_EVIDENCE_COMMIT"
+    "evidence_commit": "a8de8e9435a0549e216c76024943787c406e0a46",
+    "lock_released": true,
+    "release_status": "CAS_RELEASED_AFTER_EVIDENCE_COMMIT",
+    "release_time": "2026-11-05T00:25:03.003Z"
   },
   "next_exact_action": "Test-first broker-authenticated order-date and per-execution-ID durable attribution contract; preserve UNKNOWN fence until account/order/date/filled/remaining/cancel evidence is complete and unambiguous; do not activate stop from possible match",
   "related_manifest_sha": "db05e7ebff9f31cf4e2749d215ecce169b608dd1",
