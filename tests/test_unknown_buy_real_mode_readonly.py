@@ -62,11 +62,12 @@ def _row(market, account, *, fill_id="FILL1", fill_qty=4,
     ("a" * 64, "12345678"), ("b" * 64, "87654321"),
 ])
 @pytest.mark.parametrize("late_status", ["0", "1"])
+@pytest.mark.parametrize("cancel_remaining", [0, 3])
 def test_real_mode_mock_partial_cancel_history_never_activates_stop(
-    tmp_path, market, lookup, scope, account, late_status,
+    tmp_path, market, lookup, scope, account, late_status, cancel_remaining,
 ):
     ticker = "005930" if market == "KR" else "AAPL"
-    identity = f"real-mode-mock-{market}-{lookup}-{scope[0]}-{late_status}"
+    identity = f"real-mode-mock-{market}-{lookup}-{scope[0]}-{late_status}-{cancel_remaining}"
     ledger = ExecutionLedger(tmp_path / "ledger.json")
     claimed, _, token = ledger.claim(
         identity, with_token=True,
@@ -84,7 +85,7 @@ def test_real_mode_mock_partial_cancel_history_never_activates_stop(
     partial = _row(market, account)
     cancelled = _row(
         market, account, fill_id="FILL2", fill_qty=3,
-        cumulative=7, remaining=3, cancelled="Y",
+        cumulative=7, remaining=cancel_remaining, cancelled="Y",
     )
     pages = iter([
         _Page(market, [partial], more=True, cursor="NEXT1"),
@@ -100,6 +101,12 @@ def test_real_mode_mock_partial_cancel_history_never_activates_stop(
         assert params["CANO"] == account
         assert params["ACNT_PRDT_CD"] == "01"
         assert kwargs["tr_cont"] == ("N" if calls else "")
+        suffix = "100" if market == "KR" else "200"
+        expected_cursor = (("", "") if not calls else
+                           ("NEXT1", "NEXT") if len(calls) == 1 else
+                           ("NEXT2", "NEXT"))
+        assert (params["CTX_AREA_FK" + suffix],
+                params["CTX_AREA_NK" + suffix]) == expected_cursor
         if market == "KR":
             assert params["ODNO"] == ("00001234" if lookup == "exact" else "")
         else:
@@ -135,6 +142,14 @@ def test_real_mode_mock_partial_cancel_history_never_activates_stop(
             "EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY"
         )
         assert len(history[rows_key]) == 2
+        assert any(
+            match["execution_id"] == "FILL2"
+            and match["execution_quantity"] == 3
+            and match["filled_quantity"] == 7
+            and match["remaining_quantity"] == cancel_remaining
+            and match["cancel_flag"] == "Y"
+            for match in history[rows_key]
+        )
     else:
         assert history["complete"] is False
         assert history["status"] == "UNVERIFIED"
