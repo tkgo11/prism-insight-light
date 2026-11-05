@@ -153,6 +153,11 @@ def _matched(row, *, order_no, order_date, ticker, account, product):
             not isinstance(execution_id, str)
             or re.fullmatch(r"[A-Za-z0-9]{1,40}", execution_id) is None):
         raise ValueError("invalid execution ID")
+    if execution_qty is not None and execution_qty > 0 and execution_id is None:
+        # A positive per-fill quantity without its broker execution ID
+        # cannot be deduplicated across pages, retries, or restarts.
+        # Reject the entire read-only snapshot; never infer fill authority.
+        raise ValueError("positive execution quantity lacks execution ID")
     cancel_flag = _first(row, "cncl_yn", "CNCL_YN")
     if cancel_flag not in (None, "", "Y", "N"):
         raise ValueError("invalid cancel flag")

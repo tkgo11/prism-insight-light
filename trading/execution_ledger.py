@@ -216,6 +216,10 @@ def _history_matches_consistent_for_triage(matches: list[dict[str, Any]]) -> boo
             or re.fullmatch(r"[A-Za-z0-9]{1,40}", execution_id) is None
         ):
             return False
+        if executed is not None and executed > 0 and execution_id is None:
+            # Cached/caller-supplied evidence must satisfy the same
+            # per-execution identity contract as the broker history reader.
+            return False
         if match["cancel_flag"] not in (None, "Y", "N"):
             return False
         if executed is not None and (
