@@ -13,6 +13,7 @@ import math
 import os
 import signal
 import subprocess
+import tempfile
 import threading
 import time
 from concurrent.futures import CancelledError, TimeoutError
@@ -25,6 +26,7 @@ load_dotenv(ROOT / ".env")
 
 from trading.config_paths import DEFAULT_TELEGRAM_SEEN_POSTS_PATH, runtime_file_path  # noqa: E402 - config env must load first
 from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must load first
+from trading.file_lock import FileLock, fsync_parent_directory  # noqa: E402
 from trading.market_hours import KST  # noqa: E402 - config env must load first
 from trading.off_hours_queue import QueueCapacityError, default_queue_path  # noqa: E402
 from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E402
@@ -380,19 +382,76 @@ class TelegramSignalWorker:
         self._thread: threading.Thread | None = None
         self._stop_event = threading.Event()
         self._activity_lock = threading.Lock()
+        self._seen_state_error = False
         self._seen_post_ids: set[str] = self._load_seen_post_ids()
+
+    def _seen_channel_key(self) -> str | None:
+        from trading.telegram_fetch import normalize_channel_handle
+
+        if not self.channel_url:
+            return None
+        return normalize_channel_handle(self.channel_url).casefold()
+
+    def _read_seen_channels(self, channel: str) -> tuple[dict[str, set[str]], bool]:
+        try:
+            data = json.loads(self.seen_posts_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return {}, False
+        if isinstance(data, list):
+            # Historical files did not record a channel. Bind their suppression
+            # conservatively to the first configured channel during migration.
+            return {channel: {str(item).strip() for item in data if str(item).strip()}}, True
+        if (
+            not isinstance(data, dict)
+            or type(data.get("version")) is not int
+            or data["version"] != 1
+            or not isinstance(data.get("channels"), dict)
+        ):
+            raise ValueError("Unsupported Telegram seen-post state format")
+        channels = {}
+        for name, post_ids in data["channels"].items():
+            if not isinstance(name, str) or not name or not isinstance(post_ids, list):
+                raise ValueError("Invalid Telegram seen-post channel state")
+            if any(not isinstance(post_id, str) or not post_id.strip() for post_id in post_ids):
+                raise ValueError("Invalid Telegram seen-post ID")
+            channels[name] = set(post_ids)
+        return channels, False
+
+    def _write_seen_channels(self, channels: dict[str, set[str]]) -> None:
+        temp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=self.seen_posts_path.parent,
+                prefix=f".{self.seen_posts_path.name}.", suffix=".tmp", delete=False,
+            ) as handle:
+                temp_path = Path(handle.name)
+                json.dump(
+                    {"version": 1, "channels": {key: sorted(ids) for key, ids in channels.items()}},
+                    handle, indent=2, ensure_ascii=False,
+                )
+                handle.flush()
+                os.fsync(handle.fileno())
+            temp_path.replace(self.seen_posts_path)
+            fsync_parent_directory(self.seen_posts_path)
+        finally:
+            if temp_path is not None:
+                temp_path.unlink(missing_ok=True)
 
     def _load_seen_post_ids(self) -> set[str]:
         if not self.seen_posts_path:
             return set()
         try:
-            raw = self.seen_posts_path.read_text(encoding="utf-8")
-            data = json.loads(raw)
-            if isinstance(data, list):
-                return {str(item).strip() for item in data if str(item).strip()}
-        except FileNotFoundError:
-            pass
+            channel = self._seen_channel_key()
+            if channel is None:
+                return set()
+            with FileLock(self.seen_posts_path.with_suffix(f"{self.seen_posts_path.suffix}.lock")):
+                channels, legacy = self._read_seen_channels(channel)
+                if legacy:
+                    self._write_seen_channels(channels)
+                self._seen_state_error = False
+                return channels.get(channel, set())
         except Exception as exc:  # noqa: BLE001
+            self._seen_state_error = True
             LOGGER.warning("Could not load seen Telegram post IDs from %s: %s", self.seen_posts_path, exc)
         return set()
 
@@ -400,21 +459,23 @@ class TelegramSignalWorker:
         if not self.seen_posts_path:
             return
         try:
-            self.seen_posts_path.parent.mkdir(parents=True, exist_ok=True)
-            post_ids = list(self._seen_post_ids)
-            if len(post_ids) > 2000:
-                try:
-                    post_ids = sorted(post_ids, key=int)[-1000:]
-                except ValueError:
-                    post_ids = sorted(post_ids)[-1000:]
-                self._seen_post_ids = set(post_ids)
-            temp_path = self.seen_posts_path.with_suffix(f"{self.seen_posts_path.suffix}.tmp")
-            temp_path.write_text(
-                json.dumps(sorted(post_ids), indent=2, ensure_ascii=False),
-                encoding="utf-8",
-            )
-            temp_path.replace(self.seen_posts_path)
+            channel = self._seen_channel_key()
+            if channel is None:
+                return
+            with FileLock(self.seen_posts_path.with_suffix(f"{self.seen_posts_path.suffix}.lock")):
+                channels, _ = self._read_seen_channels(channel)
+                post_ids = channels.get(channel, set()) | self._seen_post_ids
+                if len(post_ids) > 2000:
+                    try:
+                        post_ids = set(sorted(post_ids, key=int)[-1000:])
+                    except ValueError:
+                        post_ids = set(sorted(post_ids)[-1000:])
+                channels[channel] = post_ids
+                self._write_seen_channels(channels)
+                self._seen_post_ids = post_ids
+                self._seen_state_error = False
         except Exception as exc:  # noqa: BLE001
+            self._seen_state_error = True
             LOGGER.warning("Could not save seen Telegram post IDs to %s: %s", self.seen_posts_path, exc)
 
     def start(self) -> None:
@@ -468,6 +529,13 @@ class TelegramSignalWorker:
 
         if not self.channel_url:
             return 0
+        # Refresh IDs written by another worker and check persistence before
+        # fetching any new work. This also recovers a previous failure by
+        # durably merging in-memory IDs under the same persistence lock.
+        self._save_seen_post_ids()
+        if self._seen_state_error:
+            LOGGER.warning("Telegram polling paused until seen-post state is readable and writable")
+            return 0
 
         calculated_limit = max(20, self.fetch_pages * 25)
         try:
@@ -483,6 +551,8 @@ class TelegramSignalWorker:
 
         dispatched_count = 0
         for item in candidates:
+            if self._seen_state_error:
+                break
             post_id = item.post.message_id
             if post_id and post_id in self._seen_post_ids:
                 continue

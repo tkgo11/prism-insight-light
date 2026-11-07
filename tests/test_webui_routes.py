@@ -1011,3 +1011,33 @@ def test_validation_api_rejects_rounded_integer_literal_in_raw_body():
     data = response.json()
     assert data["ok"] is False
     assert "sell_denominator" in data["error"]
+
+
+def test_non_ascii_csrf_token_is_rejected_without_server_error():
+    response = client().post("/signals/validate-form", data={"x_webui_csrf": "한"})
+    assert response.status_code == 403
+
+
+def test_configured_unicode_csrf_token_can_be_submitted():
+    c = TestClient(
+        create_app(WebUISettings(csrf_token="local-한-token")),
+        base_url="http://127.0.0.1",
+    )
+    response = c.post(
+        "/signals/validate-form",
+        data={"x_webui_csrf": "local-한-token", "payload": ""},
+    )
+    assert response.status_code == 200
+
+
+def test_validation_api_accepts_utf16_json_without_losing_duplicate_protection():
+    for raw, valid in [
+        ('{"payload":{"type":"BUY","ticker":"AAPL","price":100}}', True),
+        ('{"payload":{"type":"BUY","ticker":"AAPL","price":100,"price":200}}', False),
+    ]:
+        response = client().post(
+            "/signals/validate", content=raw.encode("utf-16"),
+            headers={"content-type": "application/json", "X-WebUI-CSRF": "local-webui"},
+        )
+        assert response.status_code == 200
+        assert response.json()["ok"] is valid

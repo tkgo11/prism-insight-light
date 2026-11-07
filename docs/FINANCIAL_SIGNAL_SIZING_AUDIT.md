@@ -257,3 +257,64 @@ responses are `unknown` and retain the execution ledger replay fence,
 including after restart. Positive zero-padded and alphanumeric mock IDs
 remain supported. A valid receipt still proves only acceptance, **not fill**;
 KIS demo reconciliation of fills/cancels/residual quantities remains blocked.
+
+
+### Broker rejection-code provenance (2026-11-02)
+
+A free-form APBK-like message is not a verified KIS rejection. Likewise, a
+non-canonical `getErrorCode()` value (numeric HTTP code, placeholder, malformed
+identifier), or a redirect/server error, cannot release a durable order claim.
+KR and US wrappers now preserve UNKNOWN for these cases; a canonical business
+code can establish rejection only when supplied by the trusted parsed broker
+response. This is fail-closed *submission-outcome* handling, **not** evidence
+of execution, partial fills, cancellation or remaining quantity. Live orders
+remain prohibited pending authoritative read-only demo reconciliation and
+independent transitive/whole-repository audits.
+
+A contradictory result carrying `success=True` and a plausible order receipt
+but also a timeout/disconnect/gateway error is UNKNOWN regardless of field
+ordering. The claim stays non-retryable after restart. This does not establish
+that the order filled or that a cancellation/remaining-quantity was verified.
+
+Receipt validation also rejects Unicode digit confusables (including full-width
+zero-only sentinels), emoji and arbitrary punctuation. The previous
+`str.isdecimal()` test was Unicode-aware and did not prove an ASCII KIS
+order number. This is a recurrence of the existing receipt-integrity root
+cause; it does not create a new independent financial defect category.
+
+
+## Accepted BUY / stop-loss zero-balance safety (2026-11-02)
+
+- Root cause `RC-BUY-ACCEPTANCE-TRACKER-ZERO-RACE`: order acceptance is not a fill. Previously an accepted BUY registered a stop-loss record, then a zero-holdings inquiry could remove it before the BUY filled. A later fill could remain unprotected.
+- Accepted automatic BUY registrations now persist `pending_buy=true`. Zero holdings, including a post-SELL zero snapshot, cannot auto-delete unresolved protection; old records missing the field are treated conservatively as unresolved. Explicitly confirmed/manual records can still be cleared at zero.
+- A stop-loss can still submit against positive, verified holdings; the pending flag is not an assertion of a fill. Invalid pending metadata is quarantined from automated trading.
+- The pending flag is intentionally not auto-cleared without authoritative broker order/fill/cancel reconciliation. This may retain stale records requiring manual reconciliation; it is a fail-closed trade-off, not proof of end-to-end safety. No KIS demo/live transactions were performed.
+- Tests: `tests/test_pending_buy_stop_loss_safety.py`. Independent file-by-file audits and actual KIS demo reconciliation remain blocked; keep PR Draft and audit counters 0/2 + 0/2.
+
+
+## Stop-loss stable execution identity across edits (2026-11-02)
+
+- Root cause `RC-STOP-LOSS-IDENTITY-ROTATION`: previously the automatic SELL `signal_id` hashed the mutable entry price and stop threshold. An edit to either field while an accepted SELL was pending produced a different dedupe identity and could allow a second SELL.
+- The tracker now stores the first stop-loss signal identity and preserves it across later edits and process restarts. Existing records without the field derive their *pre-upgrade* identity from the original persisted fields before overwriting them, preserving prior ledger claims. Invalid stored IDs are quarantined rather than used to submit orders.
+- This deliberately blocks fresh automatic stop-loss SELLs for a symbol until the prior broker order is authoritatively reconciled. Legitimate subsequent positions may require manual reconciliation and explicit reset. No broker demo fills/cancels were executed; tests only use mocked dispatch.
+- Regression: `tests/test_stop_loss_signal_identity.py`. Related/full independent audits remain 0/2 + 0/2, PR Draft.
+
+
+### Ambiguous BUY: durable non-actionable intent (2026-11-03)
+
+Automatic BUY claims with a positive stop-loss now atomically persist a strictly
+validated, non-sensitive `order_intent` alongside the pre-submission ledger
+claim. The intent contains market, ticker, intended stop-loss and an opaque
+SHA-256 account scope. It survives timeout, restart and deduplicated replay;
+a ledger write failure prevents broker submission. This is **reconciliation
+evidence only**, not a filled position, stop-loss order, or permission to SELL.
+It does not modify an existing tracked position. Legacy claims without intent
+remain protected against duplicate submission.
+
+**Still blocked / not safe for live trading:** The single-account scope may be
+a configuration selector rather than a broker-verified account identifier.
+Authoritative per-account KIS order IDs, fill IDs, cumulative and remaining
+quantity, cancel/reject state, position-delta attribution, restart recovery
+and broker demo integration are still needed before UNKNOWN BUY can be safely
+reconciled into actionable protection. Never infer fills from acceptance,
+intent or aggregate holdings; never automatically sell unrelated holdings.

@@ -38,7 +38,7 @@ jobs:
       - name: Run static smoke checks
         run: |
           python -m compileall -q subscriber.py pubsub_readiness.py trading webui tests
-          bash -n install_prism_docker.sh setup_subscriber_crontab.sh setup_subscriber_docker_crontab.sh
+          bash -n run.sh install_prism_docker.sh setup_subscriber_crontab.sh setup_subscriber_docker_crontab.sh
 
       - name: Verify pinned maintenance skill Git Submodule
         run: python scripts/check_autonomous_maintainer_dependency.py
@@ -86,3 +86,4 @@ jobs:
           tests/test_off_hours_policy.py
           tests/test_multi_account_kis_auth.py
           tests/test_strategy_suite.py
+          tests/test_watcher_cross_process_buy_fence_mock.py

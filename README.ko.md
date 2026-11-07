@@ -79,6 +79,13 @@ KIS_RATE_LIMIT_RETRY_BASE_SECONDS=1.0
 KIS_RATE_LIMIT_RETRY_MAX_SECONDS=5.0
 ```
 
+Telegram 게시물은 가져온 최신 묶음 안에서 오래된 순서로 처리합니다.
+처리한 게시물 ID는 채널별로 저장합니다. 업그레이드 시 채널 정보가 없는 기존
+ID 목록은 처음 설정된 채널에 연결되므로, 첫 시작에는 원래 채널을 유지하거나
+채널 변경 전에 처리 이력을 확인하세요. 상태를 읽거나 안전하게 저장할 수 없으면
+폴링을 중단합니다. 여러 구독자를 동시에 실행할 때 주문 중복 방지는 브로커
+실행 원장에 의존합니다.
+
 필수 Pub/Sub 식별자는 다음 두 가지입니다.
 
 - `GCP_PROJECT_ID`
@@ -94,6 +101,12 @@ KIS_RATE_LIMIT_RETRY_MAX_SECONDS=5.0
 cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 chmod 600 trading/config/kis_devlp.yaml
 ```
+
+동봉된 예시 설정은 **demo**가 기본값이지만, `auto_trading: true`이면
+**모의계좌 주문**은 전송될 수 있습니다. 준비 전에는 `--dry-run` 또는
+`auto_trading: false`를 사용하세요. 운영자가 별도 설정 파일을 만들지
+않았다면 예시 파일만으로 실거래 모드를 선택하지 않으며, 명시적으로
+지정한 설정 파일이 없으면 오류가 발생합니다.
 
 처음에는 안전하게 아래 흐름을 권장합니다.
 

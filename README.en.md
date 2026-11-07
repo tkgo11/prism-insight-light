@@ -81,6 +81,13 @@ KIS_RATE_LIMIT_RETRY_BASE_SECONDS=1.0
 KIS_RATE_LIMIT_RETRY_MAX_SECONDS=5.0
 ```
 
+Telegram posts are processed oldest first within the newest fetched batch.
+Seen-post state is scoped by channel. On upgrade, an old ID-only state file is
+bound to the first configured channel; keep the original channel for that first
+startup, or reconcile its history before switching. Polling pauses if this state
+cannot be read or durably saved. The broker execution ledger remains the order
+deduplication boundary when multiple subscribers run concurrently.
+
 The required Pub/Sub identifiers are:
 
 - `GCP_PROJECT_ID`
@@ -96,6 +103,12 @@ Copy the example KIS config to the live config path.
 cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 chmod 600 trading/config/kis_devlp.yaml
 ```
+
+The bundled example defaults to **demo**, but `auto_trading: true` can still
+submit **paper** orders. Use `--dry-run` or set `auto_trading: false`
+until ready. If no operator KIS configuration exists, the runtime will not
+infer live trading from the example. An explicitly missing config path is an
+error; real trading requires an explicit configuration selecting `real`.
 
 Recommended first-run flow:
 

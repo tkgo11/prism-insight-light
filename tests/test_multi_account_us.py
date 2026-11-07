@@ -691,6 +691,9 @@ def test_get_portfolio_normalizes_item_exchange_code():
         def getBody(self):
             return SimpleNamespace(output1=self.items)
 
+        def getHeader(self):
+            return SimpleNamespace(tr_cont="D")
+
     def fake_request(api_url, tr_id, params, **kwargs):
         # KIS returns holdings with ovrs_excg_cd='NYS' even when queried with 'NASD'
         if params["OVRS_EXCG_CD"] == "NASD":
@@ -789,6 +792,9 @@ def test_get_portfolio_falls_back_to_known_exchange_when_item_exchange_missing()
 
         def getBody(self):
             return SimpleNamespace(output1=self.items)
+
+        def getHeader(self):
+            return SimpleNamespace(tr_cont="D")
 
     def fake_request(api_url, tr_id, params, **kwargs):
         # KIS returns holdings with empty/missing ovrs_excg_cd when queried with 'NASD'

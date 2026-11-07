@@ -4,8 +4,9 @@
 # 1) 이 파일을 복사합니다.
 #      cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 # 2) [필수] 표시가 있는 값만 먼저 입력합니다.
-# 3) 이 예시는 실전 자동주문 기본값입니다. API 키·계좌·주문 금액을 모두 확인한 뒤 사용하세요.
-# 4) 모의투자로 먼저 확인하려면 default_mode를 "demo", auto_trading을 false로 바꾸세요.
+# 3) 이 예시는 모의투자(demo)로 시작합니다. 실제 주문 전에 계좌·금액을 확인하세요.
+# 4) 주문 전송 없이 검증하려면 auto_trading을 false로 바꾸거나 --dry-run을 사용하세요.
+# 5) 실전투자는 복사한 명시적 설정 파일에서만 default_mode를 "real"로 바꾸세요.
 #
 # 보안
 # - kis_devlp.yaml에는 API 키와 계좌번호가 들어가므로 Git에 올리지 마세요.
@@ -17,7 +18,7 @@
 # -----------------------------------------------------------------------------
 
 # [필수] 기본 매매 환경: "demo"(모의투자) 또는 "real"(실전투자)
-default_mode: "real"
+default_mode: "demo"
 
 # 주문 전송 스위치
 # - false: 신호·연결·설정을 확인하지만 주문은 전송하지 않습니다.

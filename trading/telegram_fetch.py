@@ -98,46 +98,74 @@ def fetch_channel_posts(
     session: requests.Session | None = None,
     timeout: float = 10.0,
 ) -> list[TelegramChannelPost]:
-    client = session or requests.Session()
+    """Return the newest posts within the requested pages, oldest first."""
+
+    if limit <= 0:
+        return []
+    handle = normalize_channel_handle(channel)
+    client = session if session is not None else requests.Session()
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
             "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
         )
     }
-    handle = normalize_channel_handle(channel)
     collected: list[TelegramChannelPost] = []
     seen_ids: set[str] = set()
     before: str | None = None
 
-    for _ in range(max(pages, 1)):
-        request_url = _build_preview_request_url(handle, before=before)
-        try:
-            response = client.get(
-                request_url,
-                timeout=timeout,
-                headers=headers,
+    try:
+        for _ in range(max(pages, 1)):
+            request_url = _build_preview_request_url(handle, before=before)
+            try:
+                response = client.get(
+                    request_url,
+                    timeout=timeout,
+                    headers=headers,
+                )
+                response.raise_for_status()
+            except requests.RequestException as exc:
+                raise TelegramFetchError(f"Failed to fetch Telegram channel preview: {request_url}") from exc
+
+            page_posts = extract_channel_posts(response.text, channel=handle)
+            if not page_posts:
+                break
+
+            for post in page_posts:
+                if post.message_id and post.message_id not in seen_ids:
+                    seen_ids.add(post.message_id)
+                    collected.append(post)
+            if len(collected) >= limit:
+                break
+
+            # Telegram renders previews oldest first; ``before`` must point to
+            # the oldest ID, regardless of the page's presentation order.
+            numeric_ids = [
+                post.message_id
+                for post in page_posts
+                if post.message_id.isascii() and post.message_id.isdecimal()
+            ]
+            if not numeric_ids:
+                break
+            next_before = min(numeric_ids, key=int)
+            if before is not None and int(next_before) >= int(before):
+                break
+            before = next_before
+
+        # Pages arrive newest first, but trading signals must execute oldest
+        # first across the entire batch. Apply the limit after sorting so a
+        # busy channel's newest signals are never hidden by older page entries.
+        collected.sort(
+            key=lambda post: (
+                int(post.message_id)
+                if post.message_id.isascii() and post.message_id.isdecimal()
+                else -1
             )
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            raise TelegramFetchError(f"Failed to fetch Telegram channel preview: {request_url}") from exc
-
-        page_posts = extract_channel_posts(response.text, channel=handle)
-        if not page_posts:
-            break
-
-        for post in page_posts:
-            if post.message_id and post.message_id not in seen_ids:
-                seen_ids.add(post.message_id)
-                collected.append(post)
-                if len(collected) >= max(limit, 0):
-                    return collected[: max(limit, 0)]
-
-        before = page_posts[-1].message_id or None
-        if not before:
-            break
-
-    return collected[: max(limit, 0)]
+        )
+        return collected[-limit:]
+    finally:
+        if session is None:
+            client.close()
 
 
 def extract_channel_posts(html: str, *, channel: str) -> list[TelegramChannelPost]:

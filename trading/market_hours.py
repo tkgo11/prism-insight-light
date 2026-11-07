@@ -7,7 +7,7 @@ import importlib
 import importlib.util
 from pathlib import Path
 
-from .config_paths import active_kis_config_path
+from .config_paths import active_kis_config_path, implicit_example_kis_config_active
 
 holidays_spec = importlib.util.find_spec("holidays")
 if holidays_spec is not None:
@@ -95,12 +95,21 @@ def _config_path() -> Path:
 
 
 def get_trading_mode() -> str:
+    # A bundled example is not an operator's consent to live trading.
+    # It may be used by import-time test fixtures, but never selects real.
+    if implicit_example_kis_config_active():
+        return "demo"
     try:
         with open(_config_path(), encoding="utf-8") as handle:
             config = yaml.safe_load(handle) or {}
-    except FileNotFoundError:
-        return "real"
-    return str(config.get("default_mode", "real")).strip().lower() or "real"
+    except FileNotFoundError as exc:
+        # An explicitly configured but missing file must not silently arm
+        # production trading (nor silently fall back to another account).
+        raise RuntimeError("KIS config file is missing; operator reconciliation required") from exc
+    if not isinstance(config, dict):
+        raise ValueError("KIS config must be a YAML mapping")
+    # Missing/blank mode is never implicit consent to real orders.
+    return str(config.get("default_mode") or "demo").strip().lower() or "demo"
 
 
 def _coerce_now(now: datetime | None, tz: pytz.BaseTzInfo) -> datetime:
