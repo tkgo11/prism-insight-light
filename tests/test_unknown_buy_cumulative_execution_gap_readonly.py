@@ -150,3 +150,59 @@ def test_cumulative_fill_requires_all_identified_executions_before_triage(
     assert restarted.claim(identity) == (False, "unknown")
     with restarted.guard_unresolved_buy(market, ticker) as unresolved:
         assert unresolved is True
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+def test_forged_complete_cached_cumulative_gap_never_becomes_operator_evidence(
+    tmp_path, market, scope,
+):
+    """Cached history must satisfy the same complete-execution invariant."""
+    ticker = "005930" if market == "KR" else "AAPL"
+    ledger_path = tmp_path / "ledger.json"
+    ledger = ExecutionLedger(ledger_path)
+    identity = "cached-gap-" + market + "-" + scope[0]
+    claimed, _, token = ledger.claim(
+        identity, with_token=True,
+        order_intent={
+            "kind": "buy_stop_loss", "market": market, "ticker": ticker,
+            "stop_loss": 85.0, "account_scope": scope,
+        },
+    )
+    assert claimed and token
+    ledger.finalize(
+        identity, "unknown", claim_token=token,
+        order_receipt={"order_no": "00001234"},
+    )
+    before = ledger_path.read_bytes()
+    history = {
+        "market": market, "ticker": ticker, "account_scope": scope,
+        "order_no": "00001234", "order_date": "20261104",
+        "status": "EVIDENCE_ONLY", "complete": True,
+        "can_activate_stop": False,
+        "matches": [
+            {
+                "order_no": "00001234", "order_date": "20261104",
+                "ticker": ticker, "order_quantity": 10,
+                "filled_quantity": 4, "execution_quantity": 4,
+                "remaining_quantity": 6, "execution_id": "FILL1",
+                "cancel_flag": "N",
+            },
+            {
+                "order_no": "00001234", "order_date": "20261104",
+                "ticker": ticker, "order_quantity": 10,
+                "filled_quantity": 7, "execution_quantity": 2,
+                "remaining_quantity": 3, "execution_id": "FILL2",
+                "cancel_flag": "Y",
+            },
+        ],
+    }
+    verdict = ledger.inspect_unresolved_buy_history(identity, history)
+    assert verdict["status"] == "UNVERIFIED"
+    assert verdict["fill_attributed"] is False
+    assert verdict["can_activate_stop"] is False
+    stored = ledger.record_read_only_buy_history(identity, history)
+    assert stored["status"] == "UNVERIFIED"
+    assert ledger_path.read_bytes() == before
+    with ExecutionLedger(ledger_path).guard_unresolved_buy(market, ticker) as blocked:
+        assert blocked is True
