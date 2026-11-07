@@ -1,11 +1,14 @@
 {
   "run_id": "prism-connector-recovery-20261107-cumulative-gap",
-  "status": "ACQUIRED",
-  "expected_state_head": "e6ea485c0f28d794ed53fe573f0c98ec495b209d",
-  "expected_pr_head": "43ff7d6a667a347ac3cd75a0497a3e49cc7077c7",
+  "status": "RELEASED",
+  "expected_state_head": "f62e3d44e46d1c6005c88d46d9ebe39b39d2570d",
+  "expected_pr_head": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
   "created_at": "2026-11-07T01:44:56.221Z",
   "purpose": "Read-only KR/US/mock cumulative vs execution IDs completeness test-first; no broker orders; CAS",
   "real_orders": 0,
   "demo_orders": 0,
-  "previous_lock_sha": "5bea4cd1a48f51682aee26552e7f45e2a26896cc"
+  "previous_lock_sha": "5bea4cd1a48f51682aee26552e7f45e2a26896cc",
+  "released_at": "2026-11-07T01:53:14.598Z",
+  "reason": "Mock test RED 12 -> fix d9122108 exact-HEAD Linux/Windows/Docker GREEN; core KIS attribution and audits remain OPEN",
+  "evidence_report_path": ".automation/prism-upstream-sync/runs/2026-11-07T10-44-KST-connector-cumulative-gap.json"
 }

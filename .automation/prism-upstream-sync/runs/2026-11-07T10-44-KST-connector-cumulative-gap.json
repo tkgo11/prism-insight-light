@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "run_id": "prism-connector-recovery-20261107-cumulative-gap",
+  "started_at": "2026-11-07T01:44:56.221Z",
+  "completed_at": "2026-11-07T01:53:14.598Z",
+  "mode": "GitHub Connector only; no local network or git",
+  "status": "CORE_RISK_PARTIAL_MOCK_REMEDIATION_VALIDATED",
+  "repository": "tkgo11/prism-insight-light",
+  "pr_number": 43,
+  "pr_draft": true,
+  "head_sha": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "previous_head_sha": "43ff7d6a667a347ac3cd75a0497a3e49cc7077c7",
+  "cas": {
+    "expected_state_head": "f62e3d44e46d1c6005c88d46d9ebe39b39d2570d",
+    "lock_acquired_commit": "f62e3d44e46d1c6005c88d46d9ebe39b39d2570d",
+    "lock_released_in_this_state_commit": true,
+    "pr_head_guarded": true
+  },
+  "core_risk_gate": {
+    "prior_stalled_count": 0,
+    "prior_stalled_note": "Last durable state counter only; repeated scheduled STALLED reports were not persisted in state",
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_unknown_buy_cumulative_execution_gap_readonly.py::test_cumulative_fill_requires_all_identified_executions_before_triage + test_forged_complete_cached_cumulative_gap_never_becomes_operator_evidence",
+    "baseline_fail_observed": "YES: 8 failing new Mock cases + 2621 passing at eb891685 (PR Actions 42325800641); 12 failing + 2621 passing at 5e2a376 (PR Actions 42325979467). Failures were product evidence-integrity mismatches, not import or fixture errors.",
+    "mock_result": "FIXED at d9122108: push 2623 pytest PASS / 191 Windows PASS / Docker PASS; pull_request 2633 pytest PASS / 191 Windows PASS / Docker PASS; 20 new KR/US read-only parametrized test cases. Mock-only.",
+    "code_fix_commit": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
+    "latest_head_CI": [
+      {
+        "id": 42326140441,
+        "event": "push",
+        "sha": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2623 passed",
+        "windows": "191 passed",
+        "docker": "success"
+      },
+      {
+        "id": 42326146006,
+        "event": "pull_request",
+        "sha": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2633 passed",
+        "windows": "191 passed",
+        "docker": "success"
+      }
+    ],
+    "unverified_transitions": [
+      "Authenticated KIS order acceptance date and order/fill ID provenance",
+      "Receiptless UNKNOWN BUY broker attribution",
+      "Confirmed partial fill/cancel/remaining to account-scoped stop-loss activation",
+      "Real KIS demo integration and operator reconciliation",
+      "Unverified end-to-end KR/US multiaccount broker execution attribution"
+    ],
+    "exact_blocker": "Mock regression fixed, but KIS-authenticated positive fill attribution/stop activation unavailable; required independent 2+2 audits 0/2, review 0, branch protection endpoint integration 403, Qlty success does not resolve historical issues.",
+    "evidence_delta": "20 new KR/US/two-account/mock test variants, RED 12 (2,621 existing GREEN) -> two-file atomic root-cause fix d9122108 -> exact-head push/PR pytest/windows/Docker GREEN. The change rejects zero-anchored cumulative fill gaps in exact history, candidate discovery and cached ledger triage. No live/demo transactions.",
+    "next_exact_action": "Validate positive KIS read-only authenticated per-order acceptance-date, fill IDs, partial/cancel/remaining attribution to stop activation with fail-closed tests; then per-file audit and independent 2+2 PASS, reviewer and branch-policy verification; do not merge."
+  },
+  "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "subcase_id": "RC-STOPLOSS-ORDER-RECONCILIATION/cumulative-fill-execution-gap",
+  "invariant": "If an identified positive first fill anchors cumulative to its own quantity, all identified executions must sum to the latest cumulative snapshot for a complete nonactionable history. Otherwise UNVERIFIED, no stop or SELL.",
+  "test_first_commits": [
+    "eb891685029893a081f13a44ff8e339d0706befa",
+    "5e2a3765881e20a89a8ff79d17ad9cb9093470ad"
+  ],
+  "fix_commit": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
+  "changed_code": [
+    "trading/order_reconciliation.py",
+    "trading/execution_ledger.py"
+  ],
+  "new_tests": [
+    "tests/test_unknown_buy_cumulative_execution_gap_readonly.py"
+  ],
+  "baseline_red": {
+    "first_run": 42325800641,
+    "first_fail": 8,
+    "first_pass": 2621,
+    "second_run": 42325979467,
+    "second_fail": 12,
+    "second_pass": 2621
+  },
+  "test_green": [
+    {
+      "id": 42326140441,
+      "event": "push",
+      "sha": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2623 passed",
+      "windows": "191 passed",
+      "docker": "success"
+    },
+    {
+      "id": 42326146006,
+      "event": "pull_request",
+      "sha": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2633 passed",
+      "windows": "191 passed",
+      "docker": "success"
+    }
+  ],
+  "coverage": {
+    "kr_us_exact_readonly_paginated": true,
+    "kr_us_discovery_readonly_paginated": true,
+    "multi_account_scopes_mocked": 2,
+    "duplicate_page_row": true,
+    "order_id": true,
+    "execution_id": true,
+    "order_date": true,
+    "cumulative_quantity": true,
+    "remaining_quantity": true,
+    "cancel_flag": true,
+    "ledger_restarted_pending_fence": true,
+    "positive_broker_stop_activation": false,
+    "kis_demo": false,
+    "live_trading": false
+  },
+  "candidate_count": 1,
+  "verified_candidates": 1,
+  "reproduced_defects": 1,
+  "actual_code_fix_groups": 1,
+  "regression_test_cases_added": 20,
+  "historical_related_complete": "93/204",
+  "historical_full_complete": "93/236",
+  "current_head_audit_complete": "Not re-counted at changed HEAD; previous file evidence not a new audit",
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "snyk": "success at latest SHA",
+    "qlty": "success status only; historical 89 blocking issues NOT verified cleared",
+    "rulesets": "[]",
+    "branch_protection": "403 Resource not accessible by integration",
+    "review": "0 submissions"
+  },
+  "unresolved_blockers": [
+    "Authenticated KIS order acceptance date and order/fill ID provenance",
+    "Receiptless UNKNOWN BUY broker attribution",
+    "Confirmed partial fill/cancel/remaining to account-scoped stop-loss activation",
+    "Real KIS demo integration and operator reconciliation",
+    "Unverified end-to-end KR/US multiaccount broker execution attribution"
+  ],
+  "no_merge": true,
+  "no_real_or_demo_orders": true
+}
