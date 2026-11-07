@@ -112,6 +112,41 @@ def _exceeds_known_order_bound(match, known_order_quantity):
     )
 
 
+
+def _has_missing_anchored_execution(matches):
+    """Detect an incomplete execution list only when a zero-based anchor exists.
+
+    A single late fill row can legitimately report a cumulative total larger
+    than its per-execution quantity. That is never actionable, but can remain
+    read-only evidence. If any identified positive execution has cumulative
+    quantity equal to its own fill quantity, however, that row anchors this
+    order's observed execution sequence at zero. A complete history must then
+    account for all shares through its latest cumulative total, deduplicated
+    by execution ID. Never infer missing fills or activate a stop.
+    """
+    anchored = False
+    execution_quantities = {}
+    max_cumulative = None
+    for match in matches:
+        cumulative = match["filled_quantity"]
+        execution = match["execution_quantity"]
+        execution_id = match["execution_id"]
+        if cumulative is not None:
+            max_cumulative = (
+                cumulative if max_cumulative is None
+                else max(max_cumulative, cumulative)
+            )
+        if execution_id is not None and execution is not None:
+            execution_quantities[execution_id] = execution
+            if execution > 0 and cumulative == execution:
+                anchored = True
+    return (
+        anchored
+        and max_cumulative is not None
+        and sum(execution_quantities.values()) < max_cumulative
+    )
+
+
 def _matched(row, *, order_no, order_date, ticker, account, product):
     if not isinstance(row, dict):
         raise ValueError("malformed history row")
@@ -353,6 +388,11 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                     if any(_exceeds_known_order_bound(match, known_order_quantity)
                            for match in matches):
                         return result
+                # A zero-based execution anchor and a larger cumulative fill
+                # prove that at least one execution ID/quantity is missing.
+                # Keep the entire snapshot UNVERIFIED and non-actionable.
+                if _has_missing_anchored_execution(matches):
+                    return result
                 result.update(status="EVIDENCE_ONLY", complete=True, matches=matches)
                 return result
             if continuation not in ("M", "F"):
@@ -595,6 +635,11 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
                     and state["max_cum"] is not None
                     and total > state["max_cum"]):
                 return result
+        # Apply the same integrity rule independently to each account/date/order
+        # discovery candidate; do not mix executions from reused order numbers.
+        if any(_has_missing_anchored_execution(state["snapshots"])
+               for state in per_order.values()):
+            return result
         result.update(status="CANDIDATES_ONLY", complete=True, candidates=candidates)
         return result
     except (AttributeError, TypeError, ValueError, RuntimeError, OSError, KeyError):

@@ -23,6 +23,7 @@ from typing import Any, Iterable
 
 from .config_paths import runtime_file_path
 from .file_lock import FileLock, fsync_parent_directory
+from .order_reconciliation import _has_missing_anchored_execution
 
 DEFAULT_LEDGER_PATH = Path("runtime") / "multi_account_execution_ledger.json"
 MAX_LEDGER_ENTRIES = 10_000
@@ -256,6 +257,10 @@ def _history_matches_consistent_for_triage(matches: list[dict[str, Any]]) -> boo
         and len(cumulative_execution_ids) == len(execution_quantities)
         and max_cumulative is not None
         and total_executed > max_cumulative):
+        return False
+    # Cached or forged EVIDENCE_ONLY snapshots must not bypass the exact same
+    # zero-anchored missing-execution check used by broker history readers.
+    if _has_missing_anchored_execution(matches):
         return False
     return True
 
