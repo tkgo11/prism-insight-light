@@ -1,8 +1,12 @@
+import pytest
+
 from trading.telegram_fetch import (
     DEFAULT_TELEGRAM_CHANNEL_URL,
     ParsedTelegramSignal,
+    TelegramFetchError,
     build_channel_preview_url,
     extract_channel_posts,
+    fetch_channel_posts,
     fetch_signal_messages,
     normalize_channel_handle,
     parse_signal_text,
@@ -41,6 +45,29 @@ class DummySession:
     def get(self, url, timeout=None, headers=None):
         self.calls.append({"url": url, "timeout": timeout, "headers": headers})
         return DummyResponse(self.text)
+
+
+@pytest.mark.parametrize("html", [
+    '<html><title>Telegram: View @channel</title><a>View in Telegram</a></html>',
+    '<html><div class="tgme_channel_info">Empty channel</div></html>',
+])
+def test_fetch_channel_posts_rejects_pages_without_readable_posts(html):
+    with pytest.raises(TelegramFetchError, match="No readable public posts"):
+        fetch_channel_posts(session=DummySession(html))
+
+
+def test_fetch_channel_posts_keeps_posts_when_later_page_is_empty():
+    class PagedSession(DummySession):
+        def get(self, url, timeout=None, headers=None):
+            response = super().get(url, timeout=timeout, headers=headers)
+            self.text = "<html>No older posts</html>"
+            return response
+
+    session = PagedSession(SAMPLE_HTML)
+    posts = fetch_channel_posts(session=session, pages=3)
+
+    assert [post.message_id for post in posts] == ["101", "102"]
+    assert len(session.calls) == 2
 
 
 def test_normalize_channel_handle_accepts_url_and_handle():

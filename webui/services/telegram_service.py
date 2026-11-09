@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from .masking import mask_text
 
 
 def preview_telegram(channel: str | None = None, *, pages: int = 1, max_posts: int = 20, timeout: float = 10.0) -> dict[str, Any]:
+    selected_channel = channel or os.environ.get("TELEGRAM_SIGNAL_CHANNEL_URL", "").strip()
     try:
         from trading.schema import SignalValidationError
         from trading.telegram_fetch import DEFAULT_TELEGRAM_CHANNEL_URL, fetch_channel_posts, parse_signal_post
 
-        selected_channel = channel or DEFAULT_TELEGRAM_CHANNEL_URL
+        selected_channel = selected_channel or DEFAULT_TELEGRAM_CHANNEL_URL
         bounded_pages = max(1, min(int(pages), 5))
         bounded_posts = max(1, min(int(max_posts), 100))
         posts = fetch_channel_posts(
@@ -45,4 +47,4 @@ def preview_telegram(channel: str | None = None, *, pages: int = 1, max_posts: i
             )
         return {"ok": True, "channel": selected_channel, "items": items, "error": None}
     except Exception as exc:  # noqa: BLE001 - safe UI diagnostic
-        return {"ok": False, "channel": channel or "default", "items": [], "error": mask_text(str(exc))}
+        return {"ok": False, "channel": selected_channel or "default", "items": [], "error": mask_text(str(exc))}

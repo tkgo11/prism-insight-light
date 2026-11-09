@@ -301,7 +301,8 @@ Notes:
 
 - The canonical validation target remains the JSON signal contract above.
 - Telegram public previews may hide post history depending on the requesting environment.
-- Live fetch results from the default channel may be empty when Telegram only exposes channel metadata.
+- If Telegram returns only channel metadata or no readable public posts, fetching raises `TelegramFetchError` and the WebUI shows **Unavailable**. Open `https://t.me/s/<channel>` in a browser to check public preview access, or select another public channel. A successful HTTP response alone does not confirm access to posts.
+- The WebUI preview uses `TELEGRAM_SIGNAL_CHANNEL_URL` when no channel override is entered, falling back to the default channel when unset or blank.
 - The Telegram post URL is treated as the canonical `source`; a message-provided `Source:` line is preserved only as additional content metadata.
 
 ## Docker usage

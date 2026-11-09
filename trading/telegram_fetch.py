@@ -124,6 +124,12 @@ def fetch_channel_posts(
 
         page_posts = extract_channel_posts(response.text, channel=handle)
         if not page_posts:
+            if not collected:
+                raise TelegramFetchError(
+                    "No readable public posts were returned by Telegram. "
+                    "The channel may be empty, unavailable, or have public previews disabled. "
+                    "Check the channel's public preview in a browser or select another channel."
+                )
             break
 
         for post in page_posts:
