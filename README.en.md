@@ -301,9 +301,30 @@ Notes:
 
 - The canonical validation target remains the JSON signal contract above.
 - Telegram public previews may hide post history depending on the requesting environment.
-- If Telegram returns only channel metadata or no readable public posts, fetching raises `TelegramFetchError` and the WebUI shows **Unavailable**. Open `https://t.me/s/<channel>` in a browser to check public preview access, or select another public channel. A successful HTTP response alone does not confirm access to posts.
+- A channel can exist in Telegram while its public web history redirects or embeds say “Please open Telegram to view this post.” In that case, configure authenticated history below. Without a configured account, fetching raises `TelegramFetchError` and the WebUI shows **Unavailable**.
 - The WebUI preview uses `TELEGRAM_SIGNAL_CHANNEL_URL` when no channel override is entered, falling back to the default channel when unset or blank.
 - The Telegram post URL is treated as the canonical `source`; a message-provided `Source:` line is preserved only as additional content metadata.
+
+### Authenticated history for channels without public web previews
+
+The fetcher can fall back to Telegram's API using a user account that can read the same public broadcast channel. Private conversations, Saved Messages, groups, and invite links are not accepted. This retrieves actual recent messages and their original timestamps; it does not use search snippets or post-description metadata as trading signals.
+
+1. Create your own Telegram application credentials at <https://my.telegram.org/apps>.
+2. Set these values in your local `.env` (keep real credentials private):
+
+   ```dotenv
+   TELEGRAM_API_ID=your-numeric-api-id
+   TELEGRAM_API_HASH=your-api-hash
+   TELEGRAM_SESSION_PATH=/absolute/private/path/telegram-history.session
+   ```
+
+3. Install the requirements, then run `python -m trading.telegram_login` in your own terminal. Complete Telegram's phone/code/2FA prompts there. This setup command signs in; it does not start the subscriber or trading runtime.
+4. Configure those same three variables on the runtime host and securely place the generated session file at `TELEGRAM_SESSION_PATH`. For Docker, mount it as a read-only secret file; never bake it into the image. Restart the WebUI/subscriber to load environment changes.
+5. Use the WebUI's read-only Telegram preview with the channel override left blank. It still uses `https://t.me/prism_insight_global_en` unless you configure another source.
+
+The session file grants access to your Telegram account. Keep it outside the repository, restrict file permissions, and never paste it, login codes, or API credentials into chat. If exposed, revoke that session in Telegram's Devices settings. Runtime fetching never prompts for login, joins channels, sends messages, or marks messages read. It reads the session into memory without rewriting the file, so the WebUI and poller can share a read-only mount. Missing authorization, inaccessible history, timeouts, and API errors fail closed. The existing subscriber still validates and handles fetched signals through its normal trading controls.
+
+Outbound connectivity to Telegram's MTProto servers is required in addition to HTTPS access to `t.me`. Authenticating a real account must be completed by the operator; automated tests use an injected client and do not establish account access.
 
 ## Docker usage
 

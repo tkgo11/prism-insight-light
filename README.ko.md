@@ -292,9 +292,23 @@ for item in signals:
 
 - 최종 검증 기준은 여전히 위 JSON 신호 계약입니다.
 - Telegram 공개 미리보기는 요청 환경에 따라 게시글 목록을 보여 주지 않을 수 있습니다.
-- 채널 정보만 표시되거나 읽을 수 있는 공개 게시글이 없으면 `TelegramFetchError`가 발생하고 WebUI에는 **Unavailable**이 표시됩니다. 브라우저에서 `https://t.me/s/<채널명>`을 열어 공개 미리보기를 확인하거나 다른 공개 채널을 선택하세요. HTTP 요청 성공만으로 게시글 접근이 확인되지는 않습니다.
+- Telegram에서 채널이 정상적으로 보여도 웹 미리보기는 채널 소개 페이지로 이동하거나 “Please open Telegram to view this post”를 표시할 수 있습니다. 이때는 아래 계정 인증 방식을 설정하세요. 인증 설정이 없으면 `TelegramFetchError`가 발생하고 WebUI에 **Unavailable**이 표시됩니다.
 - WebUI에서 채널을 따로 입력하지 않으면 `TELEGRAM_SIGNAL_CHANNEL_URL`을 사용하며, 설정이 없거나 공백이면 기본 채널을 사용합니다.
 - 게시글 안의 `Source:` 값은 보조 정보로 보관하고, 실제 출처는 Telegram 게시글 URL을 우선합니다.
+
+### 웹 미리보기가 안 되는 채널의 게시글 가져오기
+
+공개 웹 페이지에서 게시글을 읽지 못하면 같은 채널에 접근할 수 있는 Telegram 사용자 계정으로 API에서 최근 메시지와 원래 게시 시각을 가져올 수 있습니다. 검색 결과나 게시글 소개 문구를 거래 신호로 대체하지 않습니다.
+
+1. <https://my.telegram.org/apps>에서 본인의 API ID와 API Hash를 발급받습니다.
+2. 로컬 `.env`에 `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `TELEGRAM_SESSION_PATH`를 설정합니다. 세션 경로는 저장소 밖의 `/절대/비공개/경로/telegram-history.session`처럼 `.session`으로 끝나는 파일이어야 합니다.
+3. 의존성을 설치하고 본인 터미널에서 `python -m trading.telegram_login`을 실행합니다. 전화번호, 로그인 코드, 2단계 인증은 해당 터미널에서 입력합니다. 이 명령은 로그인만 수행하며 subscriber나 거래 실행을 시작하지 않습니다.
+4. 실행 서버에도 같은 환경 변수와 세션 파일을 안전하게 설정하고 WebUI/subscriber를 재시작합니다. Docker에서는 세션 파일을 읽기 전용 비밀 파일로 마운트하고 이미지에 넣지 마세요.
+5. WebUI의 읽기 전용 Telegram 미리보기에서 확인합니다. 채널을 별도로 지정하지 않으면 기본 채널 `https://t.me/prism_insight_global_en`을 그대로 사용합니다.
+
+세션 파일은 Telegram 계정 접근 권한을 담고 있습니다. 저장소 밖에 보관하고 파일 접근 권한을 제한하세요. 로그인 코드, API 자격 증명, 세션 내용을 채팅에 붙여 넣지 마세요. 노출되면 Telegram의 기기 설정에서 해당 세션을 해제하세요. 실행 중에는 로그인을 요청하거나 채널 가입, 메시지 전송, 읽음 처리를 하지 않습니다. 세션은 메모리로 읽기만 하므로 WebUI와 poller가 읽기 전용 파일을 공유할 수 있습니다. 인증, 접근, 네트워크 오류가 있으면 처리를 중단하며, subscriber의 기존 신호 검증과 거래 제어는 그대로 적용됩니다.
+
+`t.me` HTTPS뿐 아니라 Telegram MTProto 서버로의 네트워크 연결도 필요합니다. 실제 계정 로그인은 운영자가 완료해야 하며 자동화 테스트에서는 가짜 클라이언트를 사용합니다.
 
 ## Docker로 실행하기
 

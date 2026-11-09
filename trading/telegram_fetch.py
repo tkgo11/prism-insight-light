@@ -98,6 +98,29 @@ def fetch_channel_posts(
     session: requests.Session | None = None,
     timeout: float = 10.0,
 ) -> list[TelegramChannelPost]:
+    """Read public previews, falling back to a configured Telegram account."""
+    if limit <= 0:
+        return []
+    try:
+        return _fetch_public_channel_posts(
+            channel, limit=limit, pages=pages, session=session, timeout=timeout,
+        )
+    except TelegramFetchError:
+        from .telegram_history import authenticated_history_configured, fetch_authenticated_history
+
+        if not authenticated_history_configured():
+            raise
+        return fetch_authenticated_history(channel, limit=limit, timeout=timeout)
+
+
+def _fetch_public_channel_posts(
+    channel: str,
+    *,
+    limit: int,
+    pages: int,
+    session: requests.Session | None,
+    timeout: float,
+) -> list[TelegramChannelPost]:
     client = session or requests.Session()
     headers = {
         "User-Agent": (
@@ -127,8 +150,9 @@ def fetch_channel_posts(
             if not collected:
                 raise TelegramFetchError(
                     "No readable public posts were returned by Telegram. "
-                    "The channel may be empty, unavailable, or have public previews disabled. "
-                    "Check the channel's public preview in a browser or select another channel."
+                    "The channel may still exist but not expose its history on the web. "
+                    "Configure authenticated history with python -m trading.telegram_login "
+                    "to read it through a Telegram account."
                 )
             break
 
