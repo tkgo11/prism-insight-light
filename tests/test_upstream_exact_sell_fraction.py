@@ -227,3 +227,22 @@ def test_exact_fraction_precision_uses_same_normalized_signal_type():
         parse_signal_bytes(payload.encode())
     with pytest.raises(SignalValidationError, match="sell_fraction"):
         load_signal_json('{"payload":' + payload + '}')
+
+
+@pytest.mark.parametrize("field,token", [
+    ("sell_fraction", "1.0000000000000001"),
+    ("sell_denominator", "8.0000000000000001"),
+])
+def test_recovered_queue_preserves_original_numeric_precision_and_blocks_execution(tmp_path, field, token):
+    from trading.off_hours_queue import OffHoursOrderQueue
+
+    path = tmp_path / "queue.json"
+    raw = ('[{"signal":{"type":"SELL","ticker":"AAPL","price":100,"' + field + '":' + token +
+           '},"execute_at":"2020-01-01T00:00:00+00:00","created_at":"2020-01-01T00:00:00+00:00"}]').encode()
+    path.write_bytes(raw)
+    calls = []
+    queue = OffHoursOrderQueue(path)
+    with pytest.raises(SignalValidationError, match=field):
+        queue.drain_due(lambda payload: calls.append(payload) or True)
+    assert calls == []
+    assert path.read_bytes() == raw
