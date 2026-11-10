@@ -1,0 +1,450 @@
+{
+  "schema_version": 2,
+  "run_id": "prism-connector-recovery-20261110-history-watcher",
+  "observed_at": "2026-11-10T09:33:33Z",
+  "status": "CORE_RISK_PARTIAL_MOCK_REMEDIATION_VALIDATED",
+  "repository": "tkgo11/prism-insight-light",
+  "pr": 43,
+  "draft": true,
+  "head_sha": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+  "base_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "pr_api_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "base_note": "PR API base field stale; current main ref and actual merge commit parents verified e17032ba + 5a518b8.",
+  "merge_result_sha": "6775a814936f48743dc4ad115f6743b8c9b894e7",
+  "merge_tree_sha": "ddad39a213f0170ae300f8459e31ed81f9c4d136",
+  "upstream_head_sha": "4c924a53d872267c09a81f27acf4ba20ed4f8bb3",
+  "prior_run": {
+    "run_id": "prism-connector-recovery-20261107-cumulative-gap",
+    "head": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
+    "report_path": ".automation/prism-upstream-sync/runs/2026-11-07T10-44-KST-connector-cumulative-gap.json",
+    "prior_mock_cases": 20,
+    "prior_ci": [
+      42326140441,
+      42326146006
+    ],
+    "prior_related_complete": "93/204",
+    "prior_full_complete": "93/236"
+  },
+  "core_risk_gate": {
+    "prior_stalled_count": 0,
+    "prior_stalled_note": "Last durable latest-run counter only; earlier unpersisted scheduled STALLED reports are not counted.",
+    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "latest_attempt_command_or_test_id": "tests/test_readonly_broker_account_scope_provenance.py (42 unique KR/US mock cases; canonical account scope, mismatch, single-selector fail-closed, per-page drift, ledger restart and watcher)",
+    "baseline_fail_observed": "YES. 45b471ae: 16 genuine product failures (raw account key != durable SHA-256; mismatched account/product/mode accepted), push 2625/PR 2635 other passes. 6dd955a3: 16 genuine product failures (account context drift still EVIDENCE_ONLY/CANDIDATES_ONLY), push 2649/PR 2659 other passes. Intermediate 89f39cbb had 2 stale US venue fixture failures, not product; corrected at 634ddec6.",
+    "mock_result": "42 new unique cases GREEN at 5a518b8; push 2665 pytest, PR 2675 pytest, Windows 191 each, Docker success. 25 existing reconciliation test files migrated to production-shaped canonical mock keys and rerun; prior 20 cumulative-gap cases reused, not new. No KIS calls or orders.",
+    "code_fix_commit": [
+      "89f39cbb0f12900c808e1e1f62147b7235b2043c",
+      "5a518b8b5a058eb4d1b9348384e33f27273bfefa"
+    ],
+    "latest_head_CI": [
+      {
+        "id": 42791389136,
+        "event": "push",
+        "sha": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2665 passed",
+        "windows": "191 passed",
+        "docker": "success",
+        "completed_at": "2026-11-10T09:32:57Z"
+      },
+      {
+        "id": 42791398805,
+        "event": "pull_request",
+        "sha": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+        "status": "completed",
+        "conclusion": "success",
+        "pytest": "2675 passed",
+        "windows": "191 passed",
+        "docker": "success",
+        "merge_result_sha": "6775a814936f48743dc4ad115f6743b8c9b894e7",
+        "completed_at": "2026-11-10T09:32:51Z"
+      }
+    ],
+    "unverified_transitions": [
+      "Authenticated KIS order acceptance date and broker-authoritative execution IDs (history date remains HISTORY_ONLY_UNATTRIBUTED)",
+      "Receiptless UNKNOWN BUY attribution; candidate discovery is not proof",
+      "Single-account mutable selector -> actual broker account pinning; current test proves fail-closed mismatch, not positive attribution",
+      "Production orchestration of read-only history -> ledger operator evidence (core dispatch/subscriber/WebUI/watcher do not call record_read_only_buy_history)",
+      "Confirmed partial/cancel/remaining -> account-specific automatic stop activation; no positive activation path validated",
+      "Actual KIS demo integration and operator reconciliation; no credentials, no KIS calls or orders",
+      "Upstream exact sell_fraction and pyramid ticker allocation compatibility (static candidate, not reproduced)"
+    ],
+    "exact_blocker": "Positive KIS-authenticated attribution/stop activation remains unverified; demo credentials absent. Related/full independent audits 0/2 and 0/2; 0 reviews; detailed branch protection endpoint 403; branch rules endpoint 400; Qlty status success still reports 89 blocking issues. No merge.",
+    "evidence_delta": "One core risk group, two independently reproduced product failure mechanisms, 32 baseline RED cases -> 42 new GREEN cases; two production fixes in order_reconciliation.py, one fixture-only correction, 25 existing test fixture migrations. 28 current-blob file evidence revalidations plus 67 historical unchanged blob matches; 95/206 related and 95/238 full evidence, no independent PASS.",
+    "next_exact_action": "First, add a test-first production-shaped single-account dispatch scenario with mocked ka.resolve_account: pin actual canonical account key at pre-submit claim, verify mutable primary/name/index changes cannot correlate a foreign account, preserve existing dedupe identity and fail-closed UNKNOWN fence. Trace strategy/legacy/queued/WebUI/multi-account paths before any product change. Then verify an explicit read-only operator history->ledger entrypoint and authenticated KIS acceptance-date/fill-ID/partial-cancel/remaining provenance only when demo credentials exist; never auto-activate stop or submit orders from mock/history. After core evidence, test upstream exact sell_fraction and pyramid ticker allocation compatibility; continue independent related 2/2 then full 2/2 audits, reviewer/policy/Qlty verification; no merge."
+  },
+  "candidate_count": 12,
+  "new_candidate_count": 8,
+  "verified_candidates": 10,
+  "static_pending_candidates": 2,
+  "candidates": [
+    {
+      "candidate_id": "C-ACCOUNT-SCOPE-RAW",
+      "root_cause_id": "RC-READONLY-ACCOUNT-SCOPE",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+      "hypothesis": "Exact/discovery returned raw canonical KIS account key while durable multiaccount intent stored SHA-256; read-only correlation impossible and raw key exposed.",
+      "reproduction": "45b471ae 4 KR/US demo/real product failures; final 42-case suite",
+      "result": "FIXED",
+      "decision": "FIXED",
+      "priority": "P0",
+      "new_this_run": true
+    },
+    {
+      "candidate_id": "C-ACCOUNT-KEY-FOREIGN",
+      "root_cause_id": "RC-READONLY-ACCOUNT-SCOPE",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+      "hypothesis": "Foreign CANO in raw key vs request environment was not rejected before inquiry.",
+      "reproduction": "45b471ae 4 KR/US exact/discovery RED -> final GREEN",
+      "result": "FIXED_SUBCASE",
+      "decision": "FIXED_SUBCASE",
+      "priority": "P0",
+      "new_this_run": true
+    },
+    {
+      "candidate_id": "C-ACCOUNT-PRODUCT-MISMATCH",
+      "root_cause_id": "RC-READONLY-ACCOUNT-SCOPE",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+      "hypothesis": "Account product mismatch could query under inconsistent provenance.",
+      "reproduction": "45b471ae 4 RED -> final GREEN",
+      "result": "FIXED_SUBCASE",
+      "decision": "FIXED_SUBCASE",
+      "priority": "P0",
+      "new_this_run": true
+    },
+    {
+      "candidate_id": "C-ACCOUNT-MODE-MISMATCH",
+      "root_cause_id": "RC-READONLY-ACCOUNT-SCOPE",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+      "hypothesis": "prod/vps key inconsistent with demo/real mode was accepted.",
+      "reproduction": "45b471ae 4 RED -> final GREEN",
+      "result": "FIXED_SUBCASE",
+      "decision": "FIXED_SUBCASE",
+      "priority": "P0",
+      "new_this_run": true
+    },
+    {
+      "candidate_id": "C-DETACHED-SCOPE",
+      "root_cause_id": "RC-READONLY-ACCOUNT-SCOPE",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+      "hypothesis": "Detached prehashed/arbitrary labels must not impersonate authenticated account context.",
+      "reproduction": "8 additional regression cases in final suite; no separate baseline count",
+      "result": "FIXED_REGRESSION",
+      "decision": "FIXED_REGRESSION",
+      "priority": "P0",
+      "new_this_run": true
+    },
+    {
+      "candidate_id": "C-ACCOUNT-CONTEXT-DRIFT",
+      "root_cause_id": "RC-READONLY-ACCOUNT-CONTEXT-DRIFT",
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+      "hypothesis": "Adapter trenv/key changes after first/final page could preserve complete evidence under original account.",
+      "reproduction": "6dd955a3 16 genuine RED -> 5a518b8 GREEN",
+      "result": "FIXED",
+      "decision": "FIXED",
+      "priority": "P0",
+      "new_this_run": true
+    },
+    {
+      "candidate_id": "C-SAME-ODNO-ACCOUNT-ISOLATION",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711",
+      "hypothesis": "Same ODNO/exec IDs in two accounts must not cross-correlate.",
+      "reproduction": "New multiaccount test, exact/discovery, restart, foreign scope rejected; final GREEN",
+      "result": "VERIFIED_FAIL_CLOSED",
+      "decision": "VERIFIED_FAIL_CLOSED",
+      "priority": "P0",
+      "new_this_run": false
+    },
+    {
+      "candidate_id": "C-SINGLE-SELECTOR-PIN",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/dispatch.py",
+      "blob_sha": "61e571eed5898087b335974776327a57a24607bc",
+      "hypothesis": "Single-account intent hashes mutable selector, not actual broker key; cannot positively correlate safely.",
+      "reproduction": "2 new KR/US tests prove mismatch remains UNVERIFIED; actual dispatch pinning not implemented",
+      "result": "OPEN_POSITIVE_ATTRIBUTION",
+      "decision": "OPEN_POSITIVE_ATTRIBUTION",
+      "priority": "P0",
+      "new_this_run": false
+    },
+    {
+      "candidate_id": "C-ACCEPTANCE-DATE-RECEIPTLESS",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711",
+      "hypothesis": "History date/receiptless candidates cannot establish original acceptance date or fill identity.",
+      "reproduction": "Prior receipt-date reuse/durable history tests rerun; date provenance remains HISTORY_ONLY_UNATTRIBUTED",
+      "result": "OPEN_AUTHENTICATED_ATTRIBUTION",
+      "decision": "OPEN_AUTHENTICATED_ATTRIBUTION",
+      "priority": "P0",
+      "new_this_run": false
+    },
+    {
+      "candidate_id": "C-WATCHER-POSITIVE-ACTIVATION",
+      "root_cause_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+      "hypothesis": "Read-only partial/cancel/remaining evidence must not activate stop or SELL; positive account-scoped activation still absent.",
+      "reproduction": "New KR/US two-account ledger->watcher mock: holdings positive, old tracker retained, no dispatch; final GREEN",
+      "result": "VERIFIED_FAIL_CLOSED_POSITIVE_OPEN",
+      "decision": "VERIFIED_FAIL_CLOSED_POSITIVE_OPEN",
+      "priority": "P0",
+      "new_this_run": false
+    },
+    {
+      "candidate_id": "C-UPSTREAM-SELL-FRACTION",
+      "root_cause_id": "RC-UPSTREAM-SIGNAL-CONTRACT",
+      "path": "trading/schema.py",
+      "blob_sha": "034488d3d5dba31cad65e632e1dc95fbc4094265",
+      "hypothesis": "Upstream 2026-11-08 publishers emit exact sell_fraction; fork parser/sizing currently use sell_denominator only, possible quantity mismatch.",
+      "reproduction": "Static comparison upstream publisher blobs 2596037b/ebb6b728 vs fork schema/signal_sizing fc8f49e5; no test yet",
+      "result": "OPEN_TEST_FIRST_AFTER_CORE",
+      "decision": "OPEN_TEST_FIRST_AFTER_CORE",
+      "priority": "P0",
+      "new_this_run": true
+    },
+    {
+      "candidate_id": "C-UPSTREAM-PYRAMID-ALLOCATION",
+      "root_cause_id": "RC-UPSTREAM-SIGNAL-CONTRACT",
+      "path": "trading/signal_sizing.py",
+      "blob_sha": "fc8f49e52be2544528c676444cfdeb24e31b771d",
+      "hypothesis": "Upstream ticker_allocation_after/ticker_rows pyramid contract not consumed by fork; sizing compatibility needs explicit test.",
+      "reproduction": "Static upstream example a947b3b9 and guide d04fd50a vs fork schema/sizing; no test yet",
+      "result": "OPEN_TEST_FIRST_AFTER_CORE",
+      "decision": "OPEN_TEST_FIRST_AFTER_CORE",
+      "priority": "P1",
+      "new_this_run": true
+    }
+  ],
+  "attempted_reproductions": 42,
+  "reproduced_defects": 2,
+  "root_cause_groups": 1,
+  "actual_code_fixes": 2,
+  "regression_tests_added_and_run": 42,
+  "financial_transition_coverage": [
+    {
+      "transition": "접수≠체결",
+      "scope": "KR/US single/multi",
+      "test": "test_buy_order_receipt_durability + new canonical scope test",
+      "result": "MOCK_PASS",
+      "unverified": "Actual KIS acceptance/fill unverified"
+    },
+    {
+      "transition": "UNKNOWN/지연 체결",
+      "scope": "KR/US single/multi",
+      "test": "test_unknown_buy_delayed_fill_fence + new scope/drift",
+      "result": "MOCK_PASS_FAIL_CLOSED",
+      "unverified": "Receiptless positive attribution unverified"
+    },
+    {
+      "transition": "부분체결/취소/잔여량",
+      "scope": "KR/US two accounts",
+      "test": "new test E1/E2 cumulative 4/8, remaining 6/2, cancel Y; prior cumulative gap",
+      "result": "MOCK_PASS_READ_ONLY",
+      "unverified": "Broker-authoritative fill/cancel attribution unverified"
+    },
+    {
+      "transition": "거절/재전송 중복",
+      "scope": "KR/US",
+      "test": "existing execution_outcome, ledger, duplicate tests rerun",
+      "result": "MOCK_PASS",
+      "unverified": "Actual broker rejection proof not exercised"
+    },
+    {
+      "transition": "계좌 격리",
+      "scope": "KR/US demo/real labels, two accounts",
+      "test": "new same ODNO scope isolation, foreign key, product/mode mismatch, drift",
+      "result": "MOCK_PASS",
+      "unverified": "Single-account actual pinning open"
+    },
+    {
+      "transition": "손절 활성화/중복",
+      "scope": "KR/US multi",
+      "test": "new ledger->watcher mock positive holdings; blocked/no dispatch; old tracker retained",
+      "result": "MOCK_PASS_FAIL_CLOSED",
+      "unverified": "Positive account-specific activation unverified"
+    },
+    {
+      "transition": "재시작/원장 영속화 실패",
+      "scope": "KR/US",
+      "test": "new restart + prior receipt persistence and readonly evidence durability tests",
+      "result": "MOCK_PASS",
+      "unverified": "Actual crash/broker reconciliation unverified"
+    },
+    {
+      "transition": "복구/재조정",
+      "scope": "KR/US",
+      "test": "record_read_only_buy_history stores operator evidence only; date un-attributed",
+      "result": "MOCK_PASS_READ_ONLY",
+      "unverified": "Production operator entrypoint and authenticated reconciliation open"
+    }
+  ],
+  "changes": {
+    "production_files": [
+      "trading/order_reconciliation.py"
+    ],
+    "new_test_file": "tests/test_readonly_broker_account_scope_provenance.py",
+    "existing_test_fixture_files_migrated": 25,
+    "unique_new_cases": 42,
+    "baseline_product_red_cases": 32,
+    "intermediate_fixture_failures": 2,
+    "commits": [
+      {
+        "sha": "45b471aee5b720c1c2a88d85f17d9f0fada7d611",
+        "kind": "test-first RED",
+        "runs": [
+          42789961437,
+          42789973536
+        ]
+      },
+      {
+        "sha": "89f39cbb0f12900c808e1e1f62147b7235b2043c",
+        "kind": "canonical scope fix + fixture migration",
+        "runs": [
+          42790725735,
+          42790732912
+        ]
+      },
+      {
+        "sha": "634ddec6c3d4213b356ffe833ac5bd271de7c2c0",
+        "kind": "fixture-only correction GREEN",
+        "runs": [
+          42790937778,
+          42790946810
+        ]
+      },
+      {
+        "sha": "6dd955a382c23d406ebfc6d546ff43e83df4af33",
+        "kind": "context drift test-first RED",
+        "runs": [
+          42791130945,
+          42791136078
+        ]
+      },
+      {
+        "sha": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+        "kind": "context drift fix GREEN",
+        "runs": [
+          42791389136,
+          42791398805
+        ]
+      }
+    ]
+  },
+  "ci_latest": [
+    {
+      "id": 42791389136,
+      "event": "push",
+      "sha": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2665 passed",
+      "windows": "191 passed",
+      "docker": "success",
+      "completed_at": "2026-11-10T09:32:57Z"
+    },
+    {
+      "id": 42791398805,
+      "event": "pull_request",
+      "sha": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": "2675 passed",
+      "windows": "191 passed",
+      "docker": "success",
+      "merge_result_sha": "6775a814936f48743dc4ad115f6743b8c9b894e7",
+      "completed_at": "2026-11-10T09:32:51Z"
+    }
+  ],
+  "verified_paths": [
+    "KR/US exact history and discovery canonical scope",
+    "two-account same ODNO isolation",
+    "demo/real mode labels (mock only)",
+    "account/product/mode/detached-key mismatch before inquiry",
+    "context drift before/after page, no later inquiry",
+    "partial/cancel/remaining read-only evidence -> durable ledger -> restart -> watcher blocked",
+    "existing cumulative-gap and cached-history tests rerun"
+  ],
+  "unverified_paths": [
+    "Authenticated KIS order acceptance date and broker-authoritative execution IDs (history date remains HISTORY_ONLY_UNATTRIBUTED)",
+    "Receiptless UNKNOWN BUY attribution; candidate discovery is not proof",
+    "Single-account mutable selector -> actual broker account pinning; current test proves fail-closed mismatch, not positive attribution",
+    "Production orchestration of read-only history -> ledger operator evidence (core dispatch/subscriber/WebUI/watcher do not call record_read_only_buy_history)",
+    "Confirmed partial/cancel/remaining -> account-specific automatic stop activation; no positive activation path validated",
+    "Actual KIS demo integration and operator reconciliation; no credentials, no KIS calls or orders",
+    "Upstream exact sell_fraction and pyramid ticker allocation compatibility (static candidate, not reproduced)"
+  ],
+  "audit": {
+    "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-related.json",
+    "related_manifest_blob": "b9ebd0808abe0ad99d9807188ea9b980b87eeceb",
+    "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+    "full_manifest_blob": "84b6b26362f0c4b73d65046e02215c5444076099",
+    "related_complete": "95/206",
+    "full_complete": "95/238",
+    "historical_unchanged_blob_matches": 67,
+    "current_run_revalidated_complete": 28,
+    "related_passes": 0,
+    "full_passes": 0,
+    "audit_pass": false,
+    "scope_closure_verified": false,
+    "note": "Prior 93 flagged complete, 67 unchanged blob matches, 26 changed revalidated, 2 new files fully reviewed. Historical evidence is not a new independent slot PASS; current 95 file evidence entries only."
+  },
+  "upstream": {
+    "previous_pinned": "a426de8e1f6d06c1bef2f57255a672ec11337303",
+    "current_head": "4c924a53d872267c09a81f27acf4ba20ed4f8bb3",
+    "ahead_by": 229,
+    "changed_files": 277,
+    "decision": "No upstream merge in active core safety PR. Publisher exact sell_fraction and pyramid allocation contract require test-first compatibility review; independent fork preserved."
+  },
+  "external_checks": {
+    "qlty": {
+      "state": "success",
+      "description": "89 blocking issues",
+      "blocking_issues_current": 89,
+      "triaged": false,
+      "required_policy": "UNCONFIRMED"
+    },
+    "snyk": {
+      "state": "success",
+      "description": "1 security test has passed",
+      "required_policy": "UNCONFIRMED"
+    },
+    "branch_policy": {
+      "branch_metadata_protected": false,
+      "rulesets": [],
+      "detailed_protection": "403 Resource not accessible by integration",
+      "rules_endpoint": "400 URL not allowed",
+      "pass": false
+    },
+    "reviews": {
+      "count": 0,
+      "approved": 0,
+      "pass": false
+    }
+  },
+  "cas": {
+    "lock_acquired_commit": "f6729e4f3aa4471464e885e8023327e246ee672e",
+    "expected_state_parent": "f6729e4f3aa4471464e885e8023327e246ee672e",
+    "expected_pr_head": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+    "expected_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+    "force": false,
+    "lock_release_in_same_commit": true,
+    "state_json_updated": false,
+    "reason": "Authoritative latest-run/report/manifests/lock atomically updated; legacy state.json preserved."
+  },
+  "real_orders": 0,
+  "demo_orders": 0,
+  "kis_calls": 0,
+  "merge_performed": false,
+  "next_exact_action": "First, add a test-first production-shaped single-account dispatch scenario with mocked ka.resolve_account: pin actual canonical account key at pre-submit claim, verify mutable primary/name/index changes cannot correlate a foreign account, preserve existing dedupe identity and fail-closed UNKNOWN fence. Trace strategy/legacy/queued/WebUI/multi-account paths before any product change. Then verify an explicit read-only operator history->ledger entrypoint and authenticated KIS acceptance-date/fill-ID/partial-cancel/remaining provenance only when demo credentials exist; never auto-activate stop or submit orders from mock/history. After core evidence, test upstream exact sell_fraction and pyramid ticker allocation compatibility; continue independent related 2/2 then full 2/2 audits, reviewer/policy/Qlty verification; no merge.",
+  "carried_forward_candidate_count": 4,
+  "candidate_count_note": "12 distinct candidate/subcase entries; 8 new this run (6 account provenance/drift subcases + 2 upstream contract candidates), 4 carried-forward safety cases revalidated. Not 12 independent defects."
+}

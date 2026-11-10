@@ -1,12 +1,15 @@
 {
   "run_id": "prism-connector-recovery-20261110-history-watcher",
-  "status": "ACTIVE",
-  "expected_state_head": "c8b7143b75bb0288870c786f3051c4eb48b7ee03",
-  "expected_pr_head": "d9122108ff27eff55d1c13be03713bb5af5f1fcd",
+  "status": "RELEASED",
+  "acquired_commit": "f6729e4f3aa4471464e885e8023327e246ee672e",
+  "expected_state_parent": "f6729e4f3aa4471464e885e8023327e246ee672e",
+  "expected_pr_head": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
   "observed_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "created_at": "2026-11-10T09:17:15Z",
-  "purpose": "Read-only KR/US mock dispatch -> history -> durable ledger -> watcher; no KIS calls or orders; CAS",
+  "released_at": "2026-11-10T09:33:33Z",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-10T18-17-KST-connector-account-provenance.json",
+  "result": "CORE_RISK_PARTIAL_MOCK_REMEDIATION_VALIDATED",
+  "lock_release_in_same_cas_commit": true,
   "real_orders": 0,
   "demo_orders": 0,
-  "previous_lock_sha": "b8c9c618941c0e6ef415d5587b747527727cf26d"
+  "kis_calls": 0
 }
