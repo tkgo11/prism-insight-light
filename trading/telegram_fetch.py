@@ -14,8 +14,8 @@ from urllib.parse import urlparse
 import requests
 
 from .schema import SignalMessage, SignalValidationError, load_signal_json, parse_signal_payload
+from .telegram_channels import DEFAULT_TELEGRAM_CHANNEL_URL
 
-DEFAULT_TELEGRAM_CHANNEL_URL = "https://t.me/stock_ai_agent"
 _TELEGRAM_PREVIEW_BASE = "https://t.me/s/"
 _MESSAGE_BLOCK_RE = re.compile(
     r'<div class="tgme_widget_message_wrap[^>]*>(?P<body>.*?)</div>\s*</div>',

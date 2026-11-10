@@ -292,6 +292,24 @@ Korean hold notices (`매수 보류`), additional-buy updates, stop adjustments,
 
 If an existing `.env` selects the previous channel, change it to `TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/stock_ai_agent`; explicit environment settings still override the default.
 
+### Other language channels and preview backups
+
+The [upstream README](https://github.com/dragon1086/prism-insight/blob/e137c14e65690aa7bb312bad572c2ea2c7512e9e/README.md#L136-L140) lists these official channels:
+
+| Language | Channel |
+| --- | --- |
+| Korean (primary) | <https://t.me/stock_ai_agent> |
+| English | <https://t.me/prism_insight_global_en> |
+| Japanese | <https://t.me/prism_insight_ja> |
+| Chinese | <https://t.me/prism_insight_zh> |
+| Spanish | <https://t.me/prism_insight_es> |
+
+The read-only WebUI preview tries English, Japanese, Chinese, and Spanish in that order if its configured official source cannot be fetched. It selects the first readable source and reports the actual channel and whether a backup was used. It does not switch sources simply because a readable page has no recognized trading signals. An explicit channel override checks only that channel, and a custom primary does not inherit the official backups automatically.
+
+Set `TELEGRAM_PREVIEW_BACKUP_CHANNEL_URLS` to a comma-separated list to customize the order; set it blank to disable preview backups. At most four distinct backups are attempted, each with the displayed per-source page/post limits. A public-preview failure may also use the separately configured authenticated reader. This does not establish that a backup is currently available: on 2026-11-10, all four alternate public-history URLs redirected to landing pages without readable posts, while the Korean primary worked.
+
+Automatic trading ingestion remains on `TELEGRAM_SIGNAL_CHANNEL_URL`. Translated copies have different channel IDs, message IDs, text, and publication times, and no verified shared event ID was found. Automatic failover and recovery could therefore submit the same logical trade twice. The existing trade deduplication is not weakened to enable that switch. English and Korean labeled trade parsing is supported; Japanese, Chinese, and Spanish posts are available for manual preview, and unrecognized text is not translated into orders.
+
 Example:
 
 ```python

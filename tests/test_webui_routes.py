@@ -252,6 +252,21 @@ def test_telegram_landing_page_is_unavailable_in_api_and_form(monkeypatch):
     assert ">Complete</span>" not in response.text
 
 
+def test_telegram_preview_lists_language_sources_and_identifies_backup(monkeypatch):
+    from webui.services import telegram_service
+    monkeypatch.setattr(telegram_service, "preview_telegram", lambda *args, **kwargs: {
+        "ok": True, "items": [], "error": None,
+        "channel": "https://t.me/prism_insight_global_en",
+        "requested_channel": "https://t.me/stock_ai_agent", "fallback_used": True,
+    })
+    response = client().post("/telegram/preview", data={"x_webui_csrf": "local-webui"})
+    assert response.status_code == 200
+    assert "Backup source: https://t.me/prism_insight_global_en" in response.text
+    assert "prism_insight_ja" in response.text
+    assert "prism_insight_zh" in response.text
+    assert "prism_insight_es" in response.text
+
+
 def test_trading_accounts_and_guard_apis_are_safe():
     c = client()
     accounts = c.get("/trading/accounts/api")

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from webui.routes.guards import get_urlencoded_form, require_csrf_token
 from webui.services import telegram_service
+from trading.telegram_channels import TELEGRAM_LANGUAGE_CHANNELS
 
 router = APIRouter(prefix="/telegram")
 
@@ -25,6 +26,7 @@ def _page_context(
         "pages": pages,
         "max_posts": max_posts,
         "preview": preview,
+        "telegram_channels": TELEGRAM_LANGUAGE_CHANNELS,
     }
 
 
