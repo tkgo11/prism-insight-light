@@ -7,7 +7,7 @@
 1. Parse inbound `BUY.position_fraction` in (0,1], default 1.0; `SELL.sell_denominator` as a positive integer, default 1. An explicit `SELL.sell_fraction` is the upstream four-decimal exact exit share and takes precedence over the denominator. Reject invalid/contradictory explicit fractions before submission. Unsupported `ADD` **must not** become BUY.
 2. For each account, determine one **local configured order budget** before applying upstream BUY fraction. Fixed-amount settings retain their old semantics. Percent-of-assets settings use the account's `total_eval_amount` and cap by verified `available_amount`; a missing summary or zero orderable cash must reject the fractional order without broker submission.
 3. A strategy's explicit BUY notional is the base; multiply upstream fraction **exactly once**. A fractional default BUY must not silently fall back to full size.
-4. For SELL, apply the strategy-specific exit fraction divided by the upstream denominator; the broker uses `floor(verified_holding * fraction)`, never round up. Zero orderable shares produce no SELL order.
+4. For SELL, multiply the strategy-specific exit fraction by the exact publisher fraction when present; otherwise divide by the upstream denominator. The broker uses whole-share flooring of verified holdings, never round up. Zero orderable shares produce no SELL order.
 5. Execute the **same** order-sizing semantics in legacy, strategy, KR, US, and multi-account paths; each account has an independent budget, holdings, and durable execution identity.
 6. Replay and queued payloads preserve the original sizing fields. Unknown broker outcomes must never be automatically retried. Pre-submission sizing rejections must not be mistaken for broker-accepted orders.
 7. Partial exits **must not** delete trailing-stop records or stop-loss protection while holdings remain. For a configured exit strategy, the watcher retains tracking unless a fresh post-order holding check proves flat.
@@ -287,7 +287,7 @@ cause; it does not create a new independent financial defect category.
 
 - Root cause `RC-BUY-ACCEPTANCE-TRACKER-ZERO-RACE`: order acceptance is not a fill. Previously an accepted BUY registered a stop-loss record, then a zero-holdings inquiry could remove it before the BUY filled. A later fill could remain unprotected.
 - Accepted automatic BUY registrations now persist `pending_buy=true`. Zero holdings, including a post-SELL zero snapshot, cannot auto-delete unresolved protection; old records missing the field are treated conservatively as unresolved. Explicitly confirmed/manual records can still be cleared at zero.
-- A stop-loss can still submit against positive, verified holdings; the pending flag is not an assertion of a fill. Invalid pending metadata is quarantined from automated trading.
+- Superseding safety rule: a pending BUY cannot authorize an automatic stop-loss SELL even with positive aggregate holdings. A confirmed/manual position must pass the current tracker snapshot and unresolved-BUY ledger fence. Invalid pending metadata is quarantined from automated trading.
 - The pending flag is intentionally not auto-cleared without authoritative broker order/fill/cancel reconciliation. This may retain stale records requiring manual reconciliation; it is a fail-closed trade-off, not proof of end-to-end safety. No KIS demo/live transactions were performed.
 - Tests: `tests/test_pending_buy_stop_loss_safety.py`. Independent file-by-file audits and actual KIS demo reconciliation remain blocked; keep PR Draft and audit counters 0/2 + 0/2.
 
@@ -311,13 +311,19 @@ evidence only**, not a filled position, stop-loss order, or permission to SELL.
 It does not modify an existing tracked position. Legacy claims without intent
 remain protected against duplicate submission.
 
-**Still blocked / not safe for live trading:** The single-account scope may be
-a configuration selector rather than a broker-verified account identifier.
-Authoritative per-account KIS order IDs, fill IDs, cumulative and remaining
-quantity, cancel/reject state, position-delta attribution, restart recovery
-and broker demo integration are still needed before UNKNOWN BUY can be safely
-reconciled into actionable protection. Never infer fills from acceptance,
-intent or aggregate holdings; never automatically sell unrelated holdings.
+**Still blocked / not safe for live trading:** Historical single-account
+claims may contain a configuration-selector hash rather than canonical
+account provenance. New durable single-account BUY claims (2026-11-10)
+pin the resolved KIS account key in both the hashed intent and the actual
+legacy/strategy broker constructor while preserving the existing dedupe
+identity. Missing or inconsistent configuration blocks submission. This
+is mock-tested configuration provenance, not broker-authoritative fill
+attribution. Authoritative per-account KIS order IDs, acceptance dates,
+fill IDs, cumulative and remaining quantity, cancel/reject state,
+position-delta attribution, restart recovery and broker demo integration
+are still needed before UNKNOWN BUY can become actionable protection.
+Never infer fills from acceptance, intent or aggregate holdings; never
+automatically sell unrelated holdings.
 
 
 ### Exact pyramid SELL compatibility (2026-11-10)
@@ -331,3 +337,13 @@ at 100 × 0.29. The regression suite covers parser precision, exact fraction
 precedence, strategy composition, actual adapter sizing with mocked I/O,
 zero-share exits, large quantities and the deliberately unsupported ADD path.
 No broker fill or KIS integration is established by these tests.
+
+
+The exact-token guard also uses the same normalized signal type as the
+parser and is reapplied to persisted queue bytes before replay. Baseline
+`b561d0f18213108449ac82b0a893560e7ef2e94c` reproduced three failures:
+a control-character-normalized SELL type bypassed the exact fraction check,
+and recovered queue fractions/denominators rounded into valid-looking
+numbers. Invalid numeric queue evidence now blocks execution and preserves
+the original bytes for operator reconciliation; valid queue behavior and
+legacy denominator semantics remain covered by the full mock suite.

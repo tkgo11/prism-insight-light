@@ -140,8 +140,29 @@ def _as_exact_sell_fraction(value: Any) -> float:
     return float(exact)
 
 
+def validate_signal_numeric_tokens(value: Any) -> None:
+    """Check exact JSON tokens before converting them to ordinary floats."""
+    if isinstance(value, dict):
+        # Use precisely the parser's type normalization, including control
+        # characters, and cover nested WebUI/queue signal objects.
+        kind = value.get("type")
+        if (
+            isinstance(kind, str)
+            and _as_text(kind, field_name="type").upper() == "SELL"
+            and "sell_fraction" in value
+        ):
+            _as_exact_sell_fraction(value["sell_fraction"])
+        for key, item in value.items():
+            if key in {"buy_score", "sell_denominator"} and isinstance(item, Decimal):
+                _as_int(item, field_name=key)
+            validate_signal_numeric_tokens(item)
+    elif isinstance(value, list):
+        for item in value:
+            validate_signal_numeric_tokens(item)
+
+
 def load_signal_json(text: str | bytes) -> Any:
-    """Decode signal JSON without losing integer-field precision.
+    """Decode signal JSON without losing integer or exact SELL precision.
 
     json.loads normally rounds 8.0000000000000001 to 8.0 *before* the
     integer validator sees it. Inspect Decimal tokens first, then return
@@ -155,21 +176,7 @@ def load_signal_json(text: str | bytes) -> Any:
     except InvalidOperation as exc:
         raise SignalValidationError("Invalid JSON numeric literal") from exc
 
-    def check_integer_tokens(value: Any) -> None:
-        if isinstance(value, dict):
-            # Also covers WebUI's nested {"payload": {...}} transport.
-            kind = value.get("type")
-            if isinstance(kind, str) and kind.strip().upper() == "SELL" and "sell_fraction" in value:
-                _as_exact_sell_fraction(value["sell_fraction"])
-            for key, item in value.items():
-                if key in {"buy_score", "sell_denominator"} and isinstance(item, Decimal):
-                    _as_int(item, field_name=key)
-                check_integer_tokens(item)
-        elif isinstance(value, list):
-            for item in value:
-                check_integer_tokens(item)
-
-    check_integer_tokens(exact)
+    validate_signal_numeric_tokens(exact)
     return json.loads(text, object_pairs_hook=reject_duplicate_signal_keys)
 
 
