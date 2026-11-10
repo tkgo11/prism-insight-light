@@ -1,15 +1,10 @@
 {
-  "run_id": "prism-connector-recovery-20261110-history-watcher",
-  "status": "RELEASED",
-  "acquired_commit": "f6729e4f3aa4471464e885e8023327e246ee672e",
-  "expected_state_parent": "f6729e4f3aa4471464e885e8023327e246ee672e",
+  "run_id": "prism-connector-20261110-1924-single-account-pin",
+  "status": "ACTIVE",
+  "acquired_at": "2026-11-10T10:24:33Z",
+  "expected_state_parent": "4f7ea5d62105b2b03186305adc0ddb46963a94ef",
   "expected_pr_head": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
   "observed_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "released_at": "2026-11-10T09:33:33Z",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-10T18-17-KST-connector-account-provenance.json",
-  "result": "CORE_RISK_PARTIAL_MOCK_REMEDIATION_VALIDATED",
-  "lock_release_in_same_cas_commit": true,
-  "real_orders": 0,
-  "demo_orders": 0,
-  "kis_calls": 0
+  "prior_lock_status": "RELEASED",
+  "purpose": "test-first single-account account provenance; no orders/KIS calls"
 }
