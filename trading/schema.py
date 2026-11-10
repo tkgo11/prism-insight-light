@@ -125,12 +125,16 @@ def _as_exact_sell_fraction(value: Any) -> float:
         raise SignalValidationError(error)
     try:
         exact = Decimal(str(value).strip())
-        if (
-            not exact.is_finite()
-            or not 0 < exact <= 1
-            or 10_000 % exact.as_integer_ratio()[1] != 0
-        ):
+        if not exact.is_finite() or not 0 < exact <= 1:
             raise SignalValidationError(error)
+        # Do not construct an integer denominator from an untrusted decimal
+        # exponent (e.g. 1e-1000000000). Inspect the existing digit tuple;
+        # only trailing zeroes may extend the four-decimal representation.
+        parts = exact.as_tuple()
+        if parts.exponent < -4:
+            excess = -4 - parts.exponent
+            if excess >= len(parts.digits) or any(parts.digits[-excess:]):
+                raise SignalValidationError(error)
     except (InvalidOperation, ValueError, TypeError, OverflowError) as exc:
         raise SignalValidationError(error) from exc
     return float(exact)
@@ -187,7 +191,6 @@ class SignalMessage:
     buy_price: float | None = None
     position_fraction: float = 1.0
     sell_denominator: int = 1
-    sell_fraction: float | None = None
     event_type: str = ""
     event_source: str = ""
     event_description: str = ""
@@ -195,6 +198,8 @@ class SignalMessage:
     # Trusted runtime-only provenance: never populated from inbound JSON/raw.
     # The watcher sets this after its persisted-position preflight.
     internal_watcher_stop: bool = field(default=False, repr=False, compare=False)
+    # Appended to preserve positional construction of older SignalMessage callers.
+    sell_fraction: float | None = None
 
     @property
     def is_trade(self) -> bool:

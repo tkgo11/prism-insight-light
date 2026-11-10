@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from fractions import Fraction
-from .schema import SignalMessage
+from .schema import SignalMessage, _as_exact_sell_fraction
 from .buy_sizing import resolve_buy_amount
 
 
@@ -81,14 +81,8 @@ def adjusted_sell_fraction(
     publisher = None
     if signal.sell_fraction is not None:
         try:
-            if isinstance(signal.sell_fraction, bool):
-                raise ValueError("boolean fraction")
-            publisher = Fraction(str(signal.sell_fraction))
-            if (
-                not 0 < publisher <= 1
-                or 10_000 % publisher.denominator != 0
-                or (signal.sell_denominator > 1 and publisher == 1)
-            ):
+            publisher = Fraction(str(_as_exact_sell_fraction(signal.sell_fraction)))
+            if signal.sell_denominator > 1 and publisher == 1:
                 raise ValueError("invalid publisher fraction")
         except (TypeError, ValueError, OverflowError, ZeroDivisionError) as exc:
             raise SignalSizingError("Invalid publisher sell_fraction") from exc
@@ -127,7 +121,15 @@ def floor_sell_quantity(holding_quantity: int, sell_fraction: float) -> int:
     decimals (100 * 0.29 is 29, not 28). Preserve legacy recurring
     denominator-derived floats, e.g. 3 * (1/3) == 1.
     """
-    exact = Fraction(str(sell_fraction))
+    if isinstance(sell_fraction, bool):
+        raise SignalSizingError("Invalid sell fraction")
+    try:
+        fraction = float(sell_fraction)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise SignalSizingError("Invalid sell fraction") from exc
+    if not math.isfinite(fraction) or not 0 < fraction <= 1:
+        raise SignalSizingError("Invalid sell fraction")
+    exact = Fraction(str(fraction))
     if 100_000_000 % exact.denominator == 0:
         return int(holding_quantity * exact.numerator // exact.denominator)
-    return math.floor(holding_quantity * sell_fraction)
+    return math.floor(holding_quantity * fraction)

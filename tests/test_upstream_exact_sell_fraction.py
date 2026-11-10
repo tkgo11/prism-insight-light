@@ -11,7 +11,7 @@ import pytest
 from trading import domestic, us
 from trading.dispatch import TradeDispatcher
 from trading.schema import SignalValidationError, parse_signal_payload, parse_signal_bytes, load_signal_json
-from trading.signal_sizing import adjusted_sell_fraction, floor_sell_quantity
+from trading.signal_sizing import SignalSizingError, adjusted_sell_fraction, floor_sell_quantity
 from trading.signal_safety import SignalSafetyGate
 
 
@@ -192,7 +192,7 @@ async def test_decimal_boundary_does_not_lose_a_whole_share(monkeypatch, market)
     assert calls == [29]
 
 
-@pytest.mark.parametrize("token", ["0.12345", "1.0000000000000001", "0.99999999999999999", "1e-1000"])
+@pytest.mark.parametrize("token", ["0.12345", "1.0000000000000001", "0.99999999999999999", "1e-1000", "1e-1000000000"])
 def test_exact_fraction_precision_is_checked_before_json_float_rounding(token):
     payload = '{"type":"SELL","ticker":"AAPL","price":100,"sell_fraction":' + token + '}'
     with pytest.raises(SignalValidationError, match="sell_fraction"):
@@ -208,3 +208,12 @@ def test_exact_fraction_decimal_and_legacy_floor_boundaries():
     assert floor_sell_quantity(3, 1 / 3) == 1
     assert floor_sell_quantity(3, 0.3) == 0
     assert floor_sell_quantity(2**53 - 1, 0.7262) == (2**53 - 1) * 7262 // 10000
+
+
+def test_direct_sizing_cannot_allocate_unbounded_decimal_denominator():
+    signal = _signal(sell_denominator=2)
+    signal.sell_fraction = "1e-1000000000"
+    with pytest.raises(SignalSizingError, match="publisher sell_fraction"):
+        adjusted_sell_fraction(signal)
+    with pytest.raises(SignalSizingError, match="Invalid sell fraction"):
+        floor_sell_quantity(100, True)
