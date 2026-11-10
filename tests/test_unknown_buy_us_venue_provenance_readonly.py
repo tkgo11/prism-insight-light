@@ -36,8 +36,8 @@ class _Page:
 
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
 @pytest.mark.parametrize("scope,account", [
-    ("a" * 64, "12345678"),
-    ("b" * 64, "87654321"),
+    (sha256(b"vps:12345678:01").hexdigest(), "12345678"),
+    (sha256(b"vps:87654321:01").hexdigest(), "87654321"),
 ])
 @pytest.mark.parametrize("conflicting_venue", [False, True])
 def test_us_same_order_cross_page_exchange_provenance_is_fail_closed(
