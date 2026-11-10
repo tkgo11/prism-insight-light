@@ -271,7 +271,8 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
         raise ValueError("invalid ticker")
     if type(max_pages) is not int or not 1 <= max_pages <= 20:
         raise ValueError("invalid page limit")
-    account, product, scope, mode = _account_provenance(trader)
+    account_context = _account_provenance(trader)
+    account, product, scope, mode = account_context
     result = dict(market=market, account_scope=scope, order_no=order_no,
                   order_date=order_date, ticker=ticker, status="UNVERIFIED",
                   complete=False, can_activate_stop=False, matches=[])
@@ -303,7 +304,14 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
     total_rows = 0
     for page in range(max_pages):
         try:
+            # The adapters refresh trenv after each request. A changed or
+            # contradictory account context invalidates ALL pages, including
+            # a final page with otherwise plausible execution/cancel rows.
+            if _account_provenance(trader) != account_context:
+                return result
             response = trader._request(path, tr_id, dict(params), tr_cont="N" if page else "")
+            if _account_provenance(trader) != account_context:
+                return result
             # SDK transport success must be an actual boolean True. A truthy
             # string/integer is not authenticated evidence of a successful
             # history inquiry, even if the body contains plausible fills.
@@ -454,7 +462,8 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
             raise ValueError("invalid discovery date") from exc
     if not 0 <= (parsed_dates[1] - parsed_dates[0]).days <= 6:
         raise ValueError("discovery window must be 1 to 7 inclusive days")
-    account, product, scope, mode = _account_provenance(trader)
+    account_context = _account_provenance(trader)
+    account, product, scope, mode = account_context
     result = dict(
         market=market, account_scope=scope, ticker=ticker,
         start_date=start_date, end_date=end_date,
@@ -489,9 +498,16 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
     cursors, all_rows = set(), []
     for page in range(max_pages):
         try:
+            # The adapters refresh trenv after each request. A changed or
+            # contradictory account context invalidates ALL pages, including
+            # a final page with otherwise plausible execution/cancel rows.
+            if _account_provenance(trader) != account_context:
+                return result
             response = trader._request(
                 path, tr_id, dict(params), tr_cont="N" if page else "",
             )
+            if _account_provenance(trader) != account_context:
+                return result
             # SDK transport success must be an actual boolean True. A truthy
             # string/integer is not authenticated evidence of a successful
             # history inquiry, even if the body contains plausible fills.
