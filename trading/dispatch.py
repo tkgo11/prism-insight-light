@@ -1410,6 +1410,7 @@ class TradeDispatcher:
         # Automatic stop-loss sells MUST execute as market orders so liquidation
         # is immediate and not left pending as an unfilled limit order.
         limit_price = None if is_stop_loss or signal.price in (None, 0) else signal.price
+        sell_fraction = adjusted_sell_fraction(signal) if signal.signal_type != "BUY" else None
         if signal.market == "US":
             # Construction authenticates synchronously (token file scan, lock,
             # possible mint); keep it off the event loop.
@@ -1423,8 +1424,8 @@ class TradeDispatcher:
                 trade_result = await trader.async_buy_stock(**buy_kwargs)
             else:
                 sell_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
-                if signal.sell_denominator != 1:
-                    sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
+                if sell_fraction is not None:
+                    sell_kwargs["sell_fraction"] = sell_fraction
                 trade_result = await trader.async_sell_stock(**sell_kwargs)
         else:
             async with AsyncTradingContext(**self._trader_kwargs(account)) as trader:
@@ -1441,8 +1442,8 @@ class TradeDispatcher:
                         "stock_code": signal.ticker,
                         "limit_price": None if limit_price is None else int(limit_price),
                     }
-                    if signal.sell_denominator != 1:
-                        sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
+                    if sell_fraction is not None:
+                        sell_kwargs["sell_fraction"] = sell_fraction
                     trade_result = await trader.async_sell_stock(**sell_kwargs)
         status = classify_broker_result(trade_result)
         message = str(trade_result.get("message", ""))

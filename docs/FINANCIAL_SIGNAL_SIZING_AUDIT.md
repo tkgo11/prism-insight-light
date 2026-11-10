@@ -4,7 +4,7 @@
 
 ## Contract and test invariants
 
-1. Parse inbound `BUY.position_fraction` in (0,1], default 1.0; `SELL.sell_denominator` as a positive integer, default 1. Unsupported `ADD` **must not** become BUY.
+1. Parse inbound `BUY.position_fraction` in (0,1], default 1.0; `SELL.sell_denominator` as a positive integer, default 1. An explicit `SELL.sell_fraction` is the upstream four-decimal exact exit share and takes precedence over the denominator. Reject invalid/contradictory explicit fractions before submission. Unsupported `ADD` **must not** become BUY.
 2. For each account, determine one **local configured order budget** before applying upstream BUY fraction. Fixed-amount settings retain their old semantics. Percent-of-assets settings use the account's `total_eval_amount` and cap by verified `available_amount`; a missing summary or zero orderable cash must reject the fractional order without broker submission.
 3. A strategy's explicit BUY notional is the base; multiply upstream fraction **exactly once**. A fractional default BUY must not silently fall back to full size.
 4. For SELL, apply the strategy-specific exit fraction divided by the upstream denominator; the broker uses `floor(verified_holding * fraction)`, never round up. Zero orderable shares produce no SELL order.
@@ -48,7 +48,7 @@
 - **Conflicting legacy stop-loss entries:** when an old list contains multiple entries for the same market/ticker, **all** copies are quarantined under `__legacy_unverified_<index>__`; the watcher does not choose a stop price or auto-sell that instrument. Already-migrated dictionaries with a matching quarantined instrument are likewise blocked. US ticker case variants (for example, lowercase vs uppercase AAPL) are treated as one logical instrument; conflicting legacy entries are quarantined and duplicate active dictionary records block automatic selling. Original records remain on disk for human reconciliation. An operator must inspect broker holdings and outstanding orders, resolve conflicting stop levels, and remove the quarantined evidence through a deliberate backed-up recovery procedure before automatic protection can resume. Re-registering a position alone does not override unresolved quarantine. Independent instruments continue to be monitored. An error log is emitted for blocked instruments; this is a **manual intervention required** state, not evidence that the position is protected.
 - **New US stop-loss registrations (2026-11-02):** case-variant ticker inputs now use one uppercase durable identity. Existing case-variant or quarantined records are never silently overwritten; attempts to rearm an unresolved instrument raise an explicit operator-reconciliation error and preserve the original bytes. Existing legacy lower-case records remain readable but require operator review before a conflicting new registration. The stop-loss ledger now writes to unique same-directory temporary files and atomically replaces the destination; this avoids collisions when the configured filename itself ends in `.tmp`. Neither change resolves broker fill reconciliation or guarantees crash durability on every filesystem.
 - **Small fractional quantities:** an order can round to zero whole shares; the broker rejects/does not submit. This is not a full-position exit, and no share count should be inferred from a requested fraction alone.
-- **Partial publisher exits combined with strategy exits:** the effective fraction is `strategy_sell_fraction / sell_denominator`; this is deliberately conservative and may differ from the upstream standalone subscriber's exact liquidation quantity.
+- **Partial publisher exits combined with strategy exits:** the effective fraction is `strategy_sell_fraction * sell_fraction` when an exact publisher fraction is supplied; otherwise retain `strategy_sell_fraction / sell_denominator`. Exact four-decimal publisher and composed decimal fractions use integer whole-share flooring, never a round-up. A malformed explicit fraction cannot silently become a full sell.
 - **`ADD` is intentionally unsupported** pending idempotency, hold checks, and per-position caps.
 - **Do not claim formal verification or a perfect financial system:** simulations, mocks, code review and CI are necessary but insufficient for production guarantees.
 
@@ -318,3 +318,16 @@ quantity, cancel/reject state, position-delta attribution, restart recovery
 and broker demo integration are still needed before UNKNOWN BUY can be safely
 reconciled into actionable protection. Never infer fills from acceptance,
 intent or aggregate holdings; never automatically sell unrelated holdings.
+
+
+### Exact pyramid SELL compatibility (2026-11-10)
+
+Upstream `536431d04131a838e7a44e047c6f5265696ff289` publishes the exact
+micro-split row share in `sell_fraction` (four decimal places). The mock-only
+baseline `e0840703997a6162a22ff22474bfe0c3f55e998a` reproduced 29 failures:
+legacy/strategy/queued/multi-account routes ignored the exact field, malformed
+explicit values were accepted, and KR/US binary flooring lost a whole share
+at 100 × 0.29. The regression suite covers parser precision, exact fraction
+precedence, strategy composition, actual adapter sizing with mocked I/O,
+zero-share exits, large quantities and the deliberately unsupported ADD path.
+No broker fill or KIS integration is established by these tests.

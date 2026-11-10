@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from fractions import Fraction
 from .schema import SignalMessage
 from .buy_sizing import resolve_buy_amount
 
@@ -76,8 +77,24 @@ def scaled_buy_amount(signal: SignalMessage, base_amount: float | None) -> float
 def adjusted_sell_fraction(
     signal: SignalMessage, strategy_fraction: float | None = None
 ) -> float | None:
-    """Apply publisher partial exit to an optional local strategy exit fraction."""
+    """Apply the exact publisher exit, or the legacy denominator, once."""
+    publisher = None
+    if signal.sell_fraction is not None:
+        try:
+            if isinstance(signal.sell_fraction, bool):
+                raise ValueError("boolean fraction")
+            publisher = Fraction(str(signal.sell_fraction))
+            if (
+                not 0 < publisher <= 1
+                or 10_000 % publisher.denominator != 0
+                or (signal.sell_denominator > 1 and publisher == 1)
+            ):
+                raise ValueError("invalid publisher fraction")
+        except (TypeError, ValueError, OverflowError, ZeroDivisionError) as exc:
+            raise SignalSizingError("Invalid publisher sell_fraction") from exc
     if strategy_fraction is None:
+        if publisher is not None:
+            return None if publisher == 1 else float(publisher)
         return None if signal.sell_denominator == 1 else 1.0 / signal.sell_denominator
     # Reject invalid local strategy parameters *before* broker submission.
     # Raw float()/comparisons used to raise ValueError/TypeError/OverflowError,
@@ -90,4 +107,27 @@ def adjusted_sell_fraction(
         raise SignalSizingError("Strategy sell fraction must be within (0, 1]") from exc
     if not math.isfinite(fraction) or not 0 < fraction <= 1:
         raise SignalSizingError("Strategy sell fraction must be within (0, 1]")
-    return fraction / signal.sell_denominator
+    if publisher is None:
+        return fraction / signal.sell_denominator
+    combined = Fraction(str(fraction)) * publisher
+    effective = float(combined)
+    # A conversion rounded upward must not enlarge the requested exit.
+    if Fraction(str(effective)) > combined:
+        effective = math.nextafter(effective, 0.0)
+    if effective <= 0:
+        raise SignalSizingError("Combined sell fraction is below numeric precision")
+    return effective
+
+
+def floor_sell_quantity(holding_quantity: int, sell_fraction: float) -> int:
+    """Floor decimal publisher/strategy fractions without binary float drift.
+
+    The publisher emits four decimal places; composing two four-decimal
+    fractions needs at most eight. Use integer arithmetic for those exact
+    decimals (100 * 0.29 is 29, not 28). Preserve legacy recurring
+    denominator-derived floats, e.g. 3 * (1/3) == 1.
+    """
+    exact = Fraction(str(sell_fraction))
+    if 100_000_000 % exact.denominator == 0:
+        return int(holding_quantity * exact.numerator // exact.denominator)
+    return math.floor(holding_quantity * sell_fraction)

@@ -519,6 +519,6 @@ The check covers all nine pages, desktop/mobile overflow, theme persistence, nav
 
 ## Upstream signal sizing compatibility
 
-`BUY.position_fraction` (default 1.0; valid (0, 1]) scales the configured per-order budget; an unknown fractional budget never falls back to a full-size order. `SELL.sell_denominator` (default 1; positive integer) reduces the held quantity by that denominator. If an exit strategy specifies its own sell fraction, the two fractions are multiplied.
+`BUY.position_fraction` (default 1.0; valid (0, 1]) scales the configured per-order budget; an unknown fractional budget never falls back to a full-size order. `SELL.sell_denominator` (default 1; positive integer) reduces the held quantity by that denominator. When the publisher supplies `SELL.sell_fraction` (exact four-decimal share, (0, 1]), it takes precedence over the legacy denominator; an invalid explicit fraction is rejected, not treated as a full sell. A full fraction of 1 is incompatible with a denominator greater than 1. If an exit strategy specifies its own sell fraction, multiply it by the publisher fraction exactly once. Whole-share quantities are rounded down.
 
 Upstream `ADD` (micro-split position top-up) remains unsupported: without holding checks, durable signal-level idempotency and position caps, it must never be treated as a new BUY. Unsupported signals are acknowledged without placing an order. BTC trading and publisher/analysis features are outside the light fork's scope. Verify with demo and `--dry-run` before trading live.

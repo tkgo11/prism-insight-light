@@ -64,6 +64,7 @@ PROJECT_ROOT = TRADING_DIR.parent
 
 from . import kis_auth as ka
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
+from .signal_sizing import floor_sell_quantity
 from .portfolio_pagination import next_balance_cursor, validated_balance_row
 from .execution_outcome import (
     PortfolioInquiryError,
@@ -1779,7 +1780,7 @@ class USStockTrading:
                             if not 0 < sell_fraction <= 1:
                                 result['message'] = 'sell_fraction must be greater than 0 and at most 1'
                                 return result
-                            holding_quantity = math.floor(holding_quantity * sell_fraction)
+                            holding_quantity = floor_sell_quantity(holding_quantity, sell_fraction)
                             if holding_quantity <= 0:
                                 result['message'] = 'Partial sell quantity rounds down to 0 shares'
                                 return result

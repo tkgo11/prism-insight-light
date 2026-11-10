@@ -113,6 +113,29 @@ def _as_positive_float(value: Any, *, field_name: str) -> float | None:
     return number
 
 
+def _as_exact_sell_fraction(value: Any) -> float:
+    """Validate the publisher's four-decimal exact SELL fraction.
+
+    Never let a malformed explicit fraction silently fall back to the legacy
+    denominator (which can mean a full liquidation). Check the original
+    decimal token before JSON's float conversion can round it to 0 or 1.
+    """
+    error = "'sell_fraction' must be within (0, 1] with at most four decimal places"
+    if isinstance(value, bool) or not isinstance(value, (str, int, float, Decimal)):
+        raise SignalValidationError(error)
+    try:
+        exact = Decimal(str(value).strip())
+        if (
+            not exact.is_finite()
+            or not 0 < exact <= 1
+            or 10_000 % exact.as_integer_ratio()[1] != 0
+        ):
+            raise SignalValidationError(error)
+    except (InvalidOperation, ValueError, TypeError, OverflowError) as exc:
+        raise SignalValidationError(error) from exc
+    return float(exact)
+
+
 def load_signal_json(text: str | bytes) -> Any:
     """Decode signal JSON without losing integer-field precision.
 
@@ -130,6 +153,10 @@ def load_signal_json(text: str | bytes) -> Any:
 
     def check_integer_tokens(value: Any) -> None:
         if isinstance(value, dict):
+            # Also covers WebUI's nested {"payload": {...}} transport.
+            kind = value.get("type")
+            if isinstance(kind, str) and kind.strip().upper() == "SELL" and "sell_fraction" in value:
+                _as_exact_sell_fraction(value["sell_fraction"])
             for key, item in value.items():
                 if key in {"buy_score", "sell_denominator"} and isinstance(item, Decimal):
                     _as_int(item, field_name=key)
@@ -160,6 +187,7 @@ class SignalMessage:
     buy_price: float | None = None
     position_fraction: float = 1.0
     sell_denominator: int = 1
+    sell_fraction: float | None = None
     event_type: str = ""
     event_source: str = ""
     event_description: str = ""
@@ -213,6 +241,11 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
     sell_denominator = _as_int(payload.get("sell_denominator", 1), field_name="sell_denominator")
     if sell_denominator is None or sell_denominator < 1:
         raise SignalValidationError("'sell_denominator' must be a positive integer")
+    sell_fraction = None
+    if signal_type == "SELL" and "sell_fraction" in payload:
+        sell_fraction = _as_exact_sell_fraction(payload["sell_fraction"])
+        if sell_denominator > 1 and sell_fraction == 1.0:
+            raise SignalValidationError("'sell_fraction' cannot be full when other pyramid rows remain")
 
     return SignalMessage(
         signal_type=signal_type,
@@ -229,6 +262,7 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
         buy_price=_as_positive_float(payload.get("buy_price"), field_name="buy_price"),
         position_fraction=position_fraction,
         sell_denominator=sell_denominator,
+        sell_fraction=sell_fraction,
         event_type=_as_text(payload.get("event_type"), field_name="event_type"),
         event_source=_as_text(payload.get("source"), field_name="source"),
         event_description=_as_text(payload.get("event_description"), field_name="event_description"),

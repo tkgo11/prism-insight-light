@@ -4,15 +4,14 @@ Upstream 536431d0 publishes sell_fraction for micro-split pyramid exits.
 No KIS authentication, live/demo order or broker fill is performed.
 """
 import asyncio
-import json
 from types import SimpleNamespace
 
 import pytest
 
 from trading import domestic, us
 from trading.dispatch import TradeDispatcher
-from trading.schema import SignalValidationError, parse_signal_payload, parse_signal_bytes
-from trading.signal_sizing import adjusted_sell_fraction
+from trading.schema import SignalValidationError, parse_signal_payload, parse_signal_bytes, load_signal_json
+from trading.signal_sizing import adjusted_sell_fraction, floor_sell_quantity
 from trading.signal_safety import SignalSafetyGate
 
 
@@ -125,6 +124,7 @@ async def test_exact_fraction_survives_dispatch_strategy_queue_and_accounts(tmp_
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("holding,fraction,denominator,expected", [
     (100, 0.7262, 2, 72), (100, 0.29, 4, 29), (3, 0.3, 4, 0),
+    (2**53 - 1, 0.7262, 2, (2**53 - 1) * 7262 // 10000),
 ])
 async def test_actual_adapter_quantity_uses_exact_fraction_and_never_rounds_up(
     monkeypatch, market, holding, fraction, denominator, expected,
@@ -190,3 +190,21 @@ async def test_decimal_boundary_does_not_lose_a_whole_share(monkeypatch, market)
     monkeypatch.setattr(us, "get_cached_exchange", lambda _: "NASD")
     await trader._execute_sell_stock(ticker, limit_price=100, sell_fraction=0.29)
     assert calls == [29]
+
+
+@pytest.mark.parametrize("token", ["0.12345", "1.0000000000000001", "0.99999999999999999", "1e-1000"])
+def test_exact_fraction_precision_is_checked_before_json_float_rounding(token):
+    payload = '{"type":"SELL","ticker":"AAPL","price":100,"sell_fraction":' + token + '}'
+    with pytest.raises(SignalValidationError, match="sell_fraction"):
+        parse_signal_bytes(payload.encode())
+    with pytest.raises(SignalValidationError, match="sell_fraction"):
+        load_signal_json('{"payload":' + payload + '}')
+
+
+def test_exact_fraction_decimal_and_legacy_floor_boundaries():
+    assert adjusted_sell_fraction(_signal(sell_fraction="0.726200", sell_denominator=2)) == 0.7262
+    assert floor_sell_quantity(100, 0.29) == 29
+    assert floor_sell_quantity(100, 0.2899999999999999) == 28
+    assert floor_sell_quantity(3, 1 / 3) == 1
+    assert floor_sell_quantity(3, 0.3) == 0
+    assert floor_sell_quantity(2**53 - 1, 0.7262) == (2**53 - 1) * 7262 // 10000
