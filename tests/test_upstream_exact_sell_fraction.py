@@ -217,3 +217,13 @@ def test_direct_sizing_cannot_allocate_unbounded_decimal_denominator():
         adjusted_sell_fraction(signal)
     with pytest.raises(SignalSizingError, match="Invalid sell fraction"):
         floor_sell_quantity(100, True)
+
+
+def test_exact_fraction_precision_uses_same_normalized_signal_type():
+    # The parser normalizes nonprintable characters in type. The original
+    # decimal-token check must use that same normalization, not raw strip().
+    payload = r'{"type":"SELL\u0000","ticker":"AAPL","price":100,"sell_fraction":1.0000000000000001}'
+    with pytest.raises(SignalValidationError, match="sell_fraction"):
+        parse_signal_bytes(payload.encode())
+    with pytest.raises(SignalValidationError, match="sell_fraction"):
+        load_signal_json('{"payload":' + payload + '}')
