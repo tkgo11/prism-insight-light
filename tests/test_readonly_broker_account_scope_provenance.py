@@ -209,3 +209,48 @@ def test_mutable_single_account_selector_is_not_broker_account_attribution(tmp_p
     assert verdict["can_activate_stop"] is False and verdict["fill_attributed"] is False
     assert ledger.path.read_bytes() == before
     assert ExecutionLedger(ledger.path).claim("single") == (False, "unknown")
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("lookup", ["exact", "discovery"])
+@pytest.mark.parametrize("drift_after", [1, 2])
+@pytest.mark.parametrize("change", ["env_only", "key_and_env"])
+def test_account_context_drift_during_pagination_discards_all_history(
+    tmp_path, market, ticker, lookup, drift_after, change,
+):
+    """A reactivated adapter must not mix account contexts across pages."""
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    signal = SignalMessage(signal_type="BUY", market=market, ticker=ticker, stop_loss=85.0)
+    intent = _buy_stop_loss_intent(signal, "vps:12345678:01")
+    claimed, _, token = ledger.claim("pending", with_token=True, order_intent=intent)
+    assert claimed and token
+    ledger.finalize("pending", "unknown", claim_token=token,
+                    order_receipt={"order_no": "00001234"})
+    before = ledger.path.read_bytes()
+
+    trader, calls = _trader(market, "demo", "12345678")
+    original_request = trader._request
+
+    def drift_request(*args, **kwargs):
+        response = original_request(*args, **kwargs)
+        if len(calls) == drift_after:
+            # The real adapters refresh trenv after each request. Simulate a
+            # mismatched reactivation, including a self-consistent NEW key.
+            trader.trenv = SimpleNamespace(my_acct="87654321", my_prod="01")
+            if change == "key_and_env":
+                trader.account_key = "vps:87654321:01"
+        return response
+
+    trader._request = drift_request
+    history = _inquire(trader, market, lookup)
+    assert history["status"] == "UNVERIFIED"
+    assert history["complete"] is False
+    assert history["can_activate_stop"] is False
+    assert history["matches" if lookup == "exact" else "candidates"] == []
+    assert len(calls) == drift_after  # do not issue another page after drift
+    if lookup == "exact":
+        verdict = ledger.record_read_only_buy_history("pending", history)
+        assert verdict["status"] == "UNVERIFIED"
+        assert verdict["fill_attributed"] is False
+    assert ledger.path.read_bytes() == before
+    assert ExecutionLedger(ledger.path).claim("pending") == (False, "unknown")
+
