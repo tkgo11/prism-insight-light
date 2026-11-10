@@ -3,12 +3,14 @@ import pytest
 from trading.telegram_fetch import (
     DEFAULT_TELEGRAM_CHANNEL_URL,
     ParsedTelegramSignal,
+    TelegramChannelPost,
     TelegramFetchError,
     build_channel_preview_url,
     extract_channel_posts,
     fetch_channel_posts,
     fetch_signal_messages,
     normalize_channel_handle,
+    parse_signal_post,
     parse_signal_text,
 )
 
@@ -70,8 +72,109 @@ def test_fetch_channel_posts_keeps_posts_when_later_page_is_empty():
     assert len(session.calls) == 2
 
 
+def test_fetch_channel_posts_paginates_backwards_and_keeps_latest_window():
+    class HistorySession(DummySession):
+        def get(self, url, timeout=None, headers=None):
+            self.calls.append(url)
+            if "?before=103" in url:
+                return DummyResponse(SAMPLE_HTML)
+            assert "?before=" not in url
+            return DummyResponse(SAMPLE_HTML.replace("/101", "/103").replace("/102", "/104"))
+
+    session = HistorySession("")
+    posts = fetch_channel_posts(pages=3, limit=3, session=session)
+    assert [post.message_id for post in posts] == ["102", "103", "104"]
+    assert session.calls == ["https://t.me/s/stock_ai_agent", "https://t.me/s/stock_ai_agent?before=103"]
+
+
+def test_fetch_channel_posts_returns_newest_posts_within_one_page():
+    posts = fetch_channel_posts(session=DummySession(SAMPLE_HTML), limit=1)
+    assert [post.message_id for post in posts] == ["102"]
+
+
+KOREAN_BUY = """📈 신규 매수 | 대한유화 (006650)
+💵 매수가 95,600원
+🎯 목표가 111,860원 (+17.0%)
+⛔ 손절가 90,915원 (-4.9%, 장중 이탈 시 즉시 매도)
+🧩 분할 매수: 1슬롯의 24%로 시작 (재진입 첫 비중 축소, 기본 47%에서 하향)
+  • 손절 시 전량 매도
+💡 매수 근거
+기준 가격을 재돌파했습니다."""
+
+
+def test_parse_korean_buy_preserves_market_fraction_and_original_publish_time():
+    post = TelegramChannelPost("stock_ai_agent", "17438", "https://t.me/stock_ai_agent/17438", "2026-11-10T04:00:00+00:00", KOREAN_BUY)
+    parsed = parse_signal_post(post)
+    assert parsed.signal.signal_type == "BUY"
+    assert parsed.signal.ticker == "006650"
+    assert parsed.signal.company_name == "대한유화"
+    assert parsed.signal.market == "KR"
+    assert parsed.signal.price == 95600
+    assert parsed.signal.target_price == 111860
+    assert parsed.signal.stop_loss == 90915
+    assert parsed.signal.position_fraction == 0.24
+    assert parsed.signal.rationale == "기준 가격을 재돌파했습니다."
+    assert parsed.payload["published_at"] == post.published_at
+    assert parsed.payload["source"] == post.url
+
+
+def test_parse_korean_us_buy_keeps_dollar_price_and_announced_fraction():
+    text = KOREAN_BUY.replace("대한유화 (006650)", "ELF (ELF)").replace("95,600원", "$118.30").replace("111,860원", "$141.52").replace("90,915원", "$112.50").replace("24%로", "78%로")
+    parsed = parse_signal_post(TelegramChannelPost("stock_ai_agent", "17382", "https://t.me/stock_ai_agent/17382", None, text))
+    assert parsed.signal.market == "US"
+    assert parsed.signal.price == 118.30
+    assert parsed.signal.target_price == 141.52
+    assert parsed.signal.stop_loss == 112.50
+    assert parsed.signal.position_fraction == 0.78
+
+
+def test_korean_rationale_cannot_override_announced_order_fields():
+    payload = parse_signal_text(KOREAN_BUY + "\n매수가: 1원\n목표가: 2원\n손절가: 3원\n분할 매수: 1슬롯의 100%로 시작")
+    assert payload["price"] == 95600
+    assert payload["target_price"] == 111860
+    assert payload["stop_loss"] == 90915
+    assert payload["position_fraction"] == 0.24
+    assert "손절가: 3원" in payload["rationale"]
+
+
+def test_parse_korean_sell_uses_sale_price_and_unweighted_return():
+    text = """📉 매도: VeriSign, Inc.(VRSN)
+매수가: $314.57
+매도가: $302.45
+수익률(전략 기준): ⬇️ -3.85% (실제 투입 비중 90% 반영 시 -3.47%)
+매도이유: 손절선 이탈"""
+    parsed = parse_signal_post(TelegramChannelPost("stock_ai_agent", "17421", "https://t.me/stock_ai_agent/17421", None, text))
+    assert parsed.signal.signal_type == "SELL"
+    assert parsed.signal.market == "US"
+    assert parsed.signal.price == 302.45
+    assert parsed.signal.buy_price == 314.57
+    assert parsed.signal.profit_rate == -3.85
+    assert parsed.signal.sell_reason == "손절선 이탈"
+
+
+@pytest.mark.parametrize("header", [
+    "⚠️ 매수 보류: 대한유화(006650)",
+    "📈 추가 매수(비중 확대): 대한유화(006650)",
+    "🚨 포트폴리오 조정: 대한유화(006650)",
+    "📊 프리즘 시뮬레이터 | 실시간 포트폴리오",
+    "📉 부분 매도: 대한유화(006650)",
+    "📊 BTC 데모 시나리오 요약 · 운영 중",
+])
+def test_korean_non_trade_notices_are_not_executable_signals(header):
+    assert parse_signal_text(header + "\n" + "\n".join(KOREAN_BUY.splitlines()[1:])) is None
+
+
+@pytest.mark.parametrize("allocation", ["", "🧩 분할 매수: 1슬롯의 미정%로 시작", "🧩 분할 매수: 1슬롯의 0%로 시작", "🧩 분할 매수: 1슬롯의 101%로 시작"])
+def test_korean_new_buy_rejects_missing_or_invalid_allocation(allocation):
+    from trading.schema import SignalValidationError
+    text = "\n".join(allocation if "분할 매수:" in line else line for line in KOREAN_BUY.splitlines())
+    with pytest.raises(SignalValidationError):
+        parse_signal_text(text)
+
+
 def test_normalize_channel_handle_accepts_url_and_handle():
-    assert normalize_channel_handle(DEFAULT_TELEGRAM_CHANNEL_URL) == "prism_insight_global_en"
+    assert normalize_channel_handle(DEFAULT_TELEGRAM_CHANNEL_URL) == "stock_ai_agent"
+    assert normalize_channel_handle("https://t.me/s/stock_ai_agent") == "stock_ai_agent"
     assert normalize_channel_handle("https://t.me/s/prism_insight_global_en") == "prism_insight_global_en"
     assert normalize_channel_handle("@prism_insight_global_en") == "prism_insight_global_en"
 
@@ -188,7 +291,7 @@ def test_fetch_signal_messages_returns_only_parseable_signals():
     assert signals[0].signal.ticker == "005930"
     assert signals[0].payload["source"] == "https://t.me/prism_insight_global_en/101"
     assert signals[1].signal.signal_type == "SELL"
-    assert session.calls[0]["url"] == "https://t.me/s/prism_insight_global_en"
+    assert session.calls[0]["url"] == "https://t.me/s/stock_ai_agent"
 
 
 def test_fetch_signal_messages_skips_malformed_signals():

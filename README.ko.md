@@ -72,7 +72,7 @@ chmod 600 .env
 GCP_PROJECT_ID=your-project-id
 GCP_PUBSUB_SUBSCRIPTION_ID=your-subscription-id
 GCP_CREDENTIALS_PATH=/absolute/path/to/service-account.json
-TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/prism_insight_global_en
+TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/stock_ai_agent
 TELEGRAM_FETCH_PAGES=3
 KIS_RATE_LIMIT_RETRY_ATTEMPTS=10
 KIS_RATE_LIMIT_RETRY_BASE_SECONDS=1.0
@@ -267,7 +267,7 @@ Pub/Sub 메시지는 아래 필드를 사용할 수 있습니다.
 
 `trading.telegram_fetch`와 `subscriber.py`의 `TelegramSignalWorker`는 Telegram 공개 미리보기 페이지에서 신호 후보를 가져오고 주기적으로 보완하는 도구입니다.
 
-- 기본 채널: `https://t.me/prism_insight_global_en`
+- 기본 채널: `https://t.me/stock_ai_agent` (한국어). <https://t.me/s/stock_ai_agent>에서 Telegram 로그인 없이 공개 게시글을 읽습니다.
 - 가져오기 URL 형식: `https://t.me/s/<channel>`
 - 동작 방식:
   - `subscriber.py` 실행 시 백그라운드 스레드(`TelegramSignalWorker`)가 함께 시작되어 주기적으로(기본 60초) Telegram 채널을 폴링합니다.
@@ -277,6 +277,9 @@ Pub/Sub 메시지는 아래 필드를 사용할 수 있습니다.
 - 지원 형식:
   - JSON 본문 형식
   - `New Buy`, `Sell`, `Event` 같은 라벨 기반 영어 게시글
+  - `신규 매수 | 종목명 (코드)`, `매도: 종목명(코드)` 형식의 한국어 게시글. 매수가·목표가·손절가를 읽고, `1슬롯의 24%로 시작`은 로컬 주문 예산의 `position_fraction=0.24`로 전달합니다. 신규 매수의 최초 비중을 확인할 수 없으면 신호를 거부합니다.
+
+매수 보류, 추가 매수, 손절가 조정, 부분 매도 알림, 포트폴리오 보고서, 조건부 매매 설명은 새 거래 지시로 해석하지 않습니다. 페이지를 거슬러 올라가 요청한 범위의 최신 게시글을 모은 뒤 시간순으로 처리하며 원래 게시 시각과 기존 신호 안전 검증을 유지합니다. 기존 `.env`에 이전 채널이 지정돼 있다면 `TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/stock_ai_agent`로 변경하세요.
 
 Python 코드에서 직접 조회하는 예시:
 
@@ -304,7 +307,7 @@ for item in signals:
 2. 로컬 `.env`에 `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `TELEGRAM_SESSION_PATH`를 설정합니다. 세션 경로는 저장소 밖의 `/절대/비공개/경로/telegram-history.session`처럼 `.session`으로 끝나는 파일이어야 합니다.
 3. 의존성을 설치하고 본인 터미널에서 `python -m trading.telegram_login`을 실행합니다. 전화번호, 로그인 코드, 2단계 인증은 해당 터미널에서 입력합니다. 이 명령은 로그인만 수행하며 subscriber나 거래 실행을 시작하지 않습니다.
 4. 실행 서버에도 같은 환경 변수와 세션 파일을 안전하게 설정하고 WebUI/subscriber를 재시작합니다. Docker에서는 세션 파일을 읽기 전용 비밀 파일로 마운트하고 이미지에 넣지 마세요.
-5. WebUI의 읽기 전용 Telegram 미리보기에서 확인합니다. 채널을 별도로 지정하지 않으면 기본 채널 `https://t.me/prism_insight_global_en`을 그대로 사용합니다.
+5. WebUI의 읽기 전용 Telegram 미리보기에서 확인합니다. 채널을 별도로 지정하지 않으면 기본 채널 `https://t.me/stock_ai_agent`을 그대로 사용합니다.
 
 세션 파일은 Telegram 계정 접근 권한을 담고 있습니다. 저장소 밖에 보관하고 파일 접근 권한을 제한하세요. 로그인 코드, API 자격 증명, 세션 내용을 채팅에 붙여 넣지 마세요. 노출되면 Telegram의 기기 설정에서 해당 세션을 해제하세요. 실행 중에는 로그인을 요청하거나 채널 가입, 메시지 전송, 읽음 처리를 하지 않습니다. 세션은 메모리로 읽기만 하므로 WebUI와 poller가 읽기 전용 파일을 공유할 수 있습니다. 인증, 접근, 네트워크 오류가 있으면 처리를 중단하며, subscriber의 기존 신호 검증과 거래 제어는 그대로 적용됩니다.
 

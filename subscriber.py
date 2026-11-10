@@ -28,6 +28,7 @@ from trading.dispatch import TradeDispatcher  # noqa: E402 - config env must loa
 from trading.market_hours import KST  # noqa: E402 - config env must load first
 from trading.off_hours_queue import QueueCapacityError, default_queue_path  # noqa: E402
 from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E402
+from trading.telegram_fetch import DEFAULT_TELEGRAM_CHANNEL_URL  # noqa: E402
 from trading.signal_safety import (  # noqa: E402 - config env must load first
     REASON_MALFORMED_PAYLOAD,
     SignalSafetyGate,
@@ -779,8 +780,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--telegram-channel",
-        default=os.environ.get("TELEGRAM_SIGNAL_CHANNEL_URL", "https://t.me/prism_insight_global_en"),
-        help="Telegram channel URL for supplementary signals (default: $TELEGRAM_SIGNAL_CHANNEL_URL or https://t.me/prism_insight_global_en)",
+        default=os.environ.get("TELEGRAM_SIGNAL_CHANNEL_URL", DEFAULT_TELEGRAM_CHANNEL_URL),
+        help=f"Telegram channel URL for supplementary signals (default: $TELEGRAM_SIGNAL_CHANNEL_URL or {DEFAULT_TELEGRAM_CHANNEL_URL})",
     )
     parser.add_argument(
         "--telegram-fetch-pages",

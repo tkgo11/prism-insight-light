@@ -37,7 +37,7 @@ def test_preview_telegram_uses_existing_post_fields(monkeypatch):
 @pytest.mark.parametrize(("override", "configured", "expected"), [
     (None, "@configured_channel", "@configured_channel"),
     ("@override_channel", "@configured_channel", "@override_channel"),
-    (None, "  ", "https://t.me/prism_insight_global_en"),
+    (None, "  ", "https://t.me/stock_ai_agent"),
 ])
 def test_preview_telegram_resolves_configured_channel(monkeypatch, override, configured, expected):
     import trading.telegram_fetch as telegram_fetch

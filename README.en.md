@@ -74,7 +74,7 @@ Then configure:
 GCP_PROJECT_ID=your-project-id
 GCP_PUBSUB_SUBSCRIPTION_ID=your-subscription-id
 GCP_CREDENTIALS_PATH=/absolute/path/to/service-account.json
-TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/prism_insight_global_en
+TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/stock_ai_agent
 TELEGRAM_FETCH_PAGES=3
 KIS_RATE_LIMIT_RETRY_ATTEMPTS=10
 KIS_RATE_LIMIT_RETRY_BASE_SECONDS=1.0
@@ -276,7 +276,7 @@ If an `unknown` outcome appears, inspect KIS order/execution history before taki
 
 `trading.telegram_fetch` and the subscriber's `TelegramSignalWorker` can fetch, parse, and periodically ingest signal posts from Telegram public preview pages.
 
-- Default channel: `https://t.me/prism_insight_global_en`
+- Default channel: `https://t.me/stock_ai_agent` (Korean), publicly readable at <https://t.me/s/stock_ai_agent> without Telegram login.
 - Fetch source format: `https://t.me/s/<channel>`
 - Runtime behavior:
   - When `subscriber.py` runs, `TelegramSignalWorker` starts in the background and polls the Telegram channel periodically (default: 60s).
@@ -286,6 +286,11 @@ If an `unknown` outcome appears, inspect KIS order/execution history before taki
 - Supported parsed post shapes:
   - JSON bodies matching the signal contract above;
   - labeled English text posts such as `New Buy`, `Sell`, and `Event`.
+  - Korean `신규 매수 | 종목명 (코드)` and `매도: 종목명(코드)` posts, including Korean price labels and initial slot allocation. For example, `1슬롯의 24%로 시작` maps to `position_fraction=0.24` of the locally configured order budget. Korean new buys without a recognized initial allocation are rejected.
+
+Korean hold notices (`매수 보류`), additional-buy updates, stop adjustments, partial-sell notices, portfolio reports, and conditional trading prose are not interpreted as new trade instructions. Public history pagination keeps the latest requested posts in chronological order. Existing English and JSON inputs remain supported.
+
+If an existing `.env` selects the previous channel, change it to `TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/stock_ai_agent`; explicit environment settings still override the default.
 
 Example:
 
@@ -320,7 +325,7 @@ The fetcher can fall back to Telegram's API using a user account that can read t
 
 3. Install the requirements, then run `python -m trading.telegram_login` in your own terminal. Complete Telegram's phone/code/2FA prompts there. This setup command signs in; it does not start the subscriber or trading runtime.
 4. Configure those same three variables on the runtime host and securely place the generated session file at `TELEGRAM_SESSION_PATH`. For Docker, mount it as a read-only secret file; never bake it into the image. Restart the WebUI/subscriber to load environment changes.
-5. Use the WebUI's read-only Telegram preview with the channel override left blank. It still uses `https://t.me/prism_insight_global_en` unless you configure another source.
+5. Use the WebUI's read-only Telegram preview with the channel override left blank. It still uses `https://t.me/stock_ai_agent` unless you configure another source.
 
 The session file grants access to your Telegram account. Keep it outside the repository, restrict file permissions, and never paste it, login codes, or API credentials into chat. If exposed, revoke that session in Telegram's Devices settings. Runtime fetching never prompts for login, joins channels, sends messages, or marks messages read. It reads the session into memory without rewriting the file, so the WebUI and poller can share a read-only mount. Missing authorization, inaccessible history, timeouts, and API errors fail closed. The existing subscriber still validates and handles fetched signals through its normal trading controls.
 

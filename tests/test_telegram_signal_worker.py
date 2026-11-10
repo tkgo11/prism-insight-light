@@ -10,6 +10,11 @@ from trading.schema import SignalMessage
 from trading.telegram_fetch import ParsedTelegramSignal, TelegramChannelPost, TelegramFetchError
 
 
+def test_default_telegram_channel_is_korean_source(monkeypatch):
+    monkeypatch.delenv("TELEGRAM_SIGNAL_CHANNEL_URL", raising=False)
+    assert parse_args([]).telegram_channel == "https://t.me/stock_ai_agent"
+
+
 class FakeDispatcher:
     def __init__(self):
         self.dispatched = []
