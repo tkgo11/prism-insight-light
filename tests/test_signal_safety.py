@@ -533,7 +533,7 @@ def _fake_kr_context(results):
             return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-sell"}
 
     class FakeContext:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             self.mode = mode
 
         async def __aenter__(self):
@@ -707,7 +707,7 @@ def test_queued_signal_expiring_before_execution_is_quarantined(monkeypatch, tmp
          "timestamp": old_timestamp}
     )
     queue = dispatcher.queue
-    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:fixture:01"})
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:12345678:01", "name": "fixture", "account": "12345678", "svr": "vps", "product": "01", "market": "kr"})
     item = queue.enqueue(signal, {"version": 2, "multi_account": False, "trading_mode": "demo", "account_scope": __import__("hashlib").sha256(dispatcher._single_account_execution_selector(signal).encode("utf-8")).hexdigest(), "account_id": dispatcher._resolved_single_account_id(signal)})
     assert queue.pending_count() == 1
 
@@ -751,7 +751,7 @@ def test_fresh_queued_signal_still_executes(monkeypatch, tmp_path):
         {"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000}
     )
     queue = dispatcher.queue
-    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:fixture:01"})
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:12345678:01", "name": "fixture", "account": "12345678", "svr": "vps", "product": "01", "market": "kr"})
     queue.enqueue(signal, {"version": 2, "multi_account": False, "trading_mode": "demo", "account_scope": __import__("hashlib").sha256(dispatcher._single_account_execution_selector(signal).encode("utf-8")).hexdigest(), "account_id": dispatcher._resolved_single_account_id(signal)})
 
     broker_calls = []

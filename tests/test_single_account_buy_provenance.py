@@ -178,8 +178,9 @@ async def test_single_buy_pins_canonical_account_before_claim_and_broker(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
 @pytest.mark.parametrize("mode", ["demo", "real"])
+@pytest.mark.parametrize("failure", ["missing", "malformed", "foreign_mode", "wrong_product", "mismatched_account"])
 async def test_unresolvable_single_buy_never_claims_or_submits(
-    tmp_path, monkeypatch, market, ticker, mode,
+    tmp_path, monkeypatch, market, ticker, mode, failure,
 ):
     path = tmp_path / "ledger.json"
     monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {}))
@@ -188,7 +189,18 @@ async def test_unresolvable_single_buy_never_claims_or_submits(
                         lambda *a, **k: SimpleNamespace(outcome="allow", fresh_quote=None))
 
     def unavailable(**kwargs):
-        raise ValueError("synthetic account unavailable")
+        if failure == "missing":
+            raise ValueError("synthetic account unavailable")
+        account = _account(market, mode, "12345678")
+        if failure == "malformed":
+            account["account_key"] = "not-a-canonical-key"
+        elif failure == "foreign_mode":
+            account["svr"] = "prod" if mode == "demo" else "vps"
+        elif failure == "wrong_product":
+            account["product"] = "02"
+        elif failure == "mismatched_account":
+            account["account"] = "87654321"
+        return account
 
     monkeypatch.setattr("trading.dispatch.ka.resolve_account", unavailable)
     broker = AsyncMock(return_value=DispatchResult("unknown", "mock timeout", "BUY", market))
@@ -203,3 +215,44 @@ async def test_unresolvable_single_buy_never_claims_or_submits(
     assert result.status == "deferred"
     broker.assert_not_called()
     assert not path.exists()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+async def test_webui_manual_buy_uses_same_pinned_durable_account(tmp_path, monkeypatch, market, ticker):
+    from webui.services import trade_service
+
+    path = tmp_path / "manual-ledger.json"
+    account = _account(market, "demo", "12345678")
+    calls = []
+
+    class ManualDispatcher(TradeDispatcher):
+        def __init__(self, **kwargs):
+            super().__init__(execution_ledger_path=path, **kwargs)
+
+    async def mock_broker(self, signal, *, account=None):
+        calls.append(account["account_key"])
+        entry = next(iter(json.loads(path.read_text(encoding="utf-8")).values()))
+        assert entry["status"] == "in_progress"
+        assert entry["order_intent"]["kind"] == "buy_unresolved"
+        assert entry["order_intent"]["account_scope"] == sha256(account["account_key"].encode()).hexdigest()
+        return DispatchResult("unknown", "mock timeout", "BUY", market)
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    monkeypatch.setattr(trade_service, "TradeDispatcher", ManualDispatcher)
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: dict(account))
+    monkeypatch.setattr(SignalSafetyGate, "evaluate_execution",
+                        lambda *a, **k: SimpleNamespace(outcome="allow", fresh_quote=None))
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_broker)
+    result = await trade_service.dispatch_manual_order(
+        action="BUY", ticker=ticker, market=market, price=100,
+        account_name="synthetic", trading_mode="demo",
+        arm_phrase=trade_service.ARM_PHRASE,
+    )
+    assert result["result"]["status"] == "unknown"
+    assert calls == [account["account_key"]]
+    with ExecutionLedger(path).guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
+    assert account["account_key"] not in path.read_text(encoding="utf-8")

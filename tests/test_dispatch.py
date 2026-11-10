@@ -36,7 +36,7 @@ async def test_dispatch_kr_buy(monkeypatch):
             return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-buy"}
 
     class FakeContext:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             self.mode = mode
 
         async def __aenter__(self):
@@ -233,7 +233,7 @@ async def test_balance_split_buy_routes_with_fractional_buy_amount(monkeypatch, 
     results = {}
 
     class FakeUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             results["mode"] = mode
 
         def get_account_summary(self):
@@ -268,7 +268,7 @@ async def test_disabled_strategy_buy_uses_legacy_path(monkeypatch):
     results = {}
 
     class FakeUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             results["mode"] = mode
 
         async def async_buy_stock(self, ticker, limit_price=None):
@@ -369,7 +369,7 @@ async def test_broker_workflows_are_serialized_across_dispatchers(monkeypatch):
     active = 0
     max_active = 0
 
-    async def fake_execute(self, signal):
+    async def fake_execute(self, signal, *, account=None):
         nonlocal active, max_active
         active += 1
         max_active = max(max_active, active)

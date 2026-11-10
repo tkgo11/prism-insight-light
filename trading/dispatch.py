@@ -174,8 +174,8 @@ def _untrusted_reserved_watcher_id(signal: SignalMessage) -> bool:
 def _buy_stop_loss_intent(signal: SignalMessage, account_selector: str) -> dict[str, Any] | None:
     """Persist non-actionable reconciliation hints, not a filled position.
 
-    The scope is hashed; in single-account mode it may be a configuration
-    selector rather than a broker-verified account identity.
+    The scope is hashed. New durable BUY claims use the resolved canonical
+    account key; older selector-scoped claims remain non-actionable evidence.
     """
     if signal.signal_type != "BUY":
         return None
@@ -926,12 +926,8 @@ class TradeDispatcher:
                     signal.signal_type, signal.market,
                 )
             try:
-                order_account = ka.resolve_account(
-                    svr="vps" if self.trading_mode == "demo" else "prod",
-                    product="01",
-                    market=signal.market.lower(),
-                    account_name=self.account_name,
-                    account_index=self.account_index,
+                order_account = await asyncio.to_thread(
+                    self._resolve_single_account, signal,
                 )
                 if _account_id(order_account["account_key"]) != queued_context.get("account_id"):
                     return DispatchResult(
@@ -967,6 +963,36 @@ class TradeDispatcher:
                     signal.signal_type, signal.market,
                 )
 
+        # A single-account BUY must pin the same canonical account in both
+        # its durable intent and the actual broker constructor. Resolving a
+        # mutable primary/name/index again after the claim can redirect the
+        # order, while hashing that selector makes read-only history unable
+        # to correlate even a matching receipt. Keep the existing selector
+        # for dedupe identity (including legacy claims); only the intent scope
+        # and broker routing use the pinned account.
+        buy_intent = None
+        if account is None and self.execution_dedupe and signal.signal_type == "BUY":
+            try:
+                if order_account is None:
+                    order_account = await asyncio.to_thread(
+                        self._resolve_single_account, signal,
+                    )
+                # A resolver result is configuration provenance, not a
+                # broker fill. Reject incomplete/inconsistent account keys
+                # before the durable claim or any order submission.
+                key = self._validated_buy_account_key(order_account, signal)
+                buy_intent = _buy_stop_loss_intent(signal, key)
+            except (KeyError, TypeError, ValueError, OSError, RuntimeError):
+                logger.warning(
+                    "Deferring BUY %s %s: canonical KIS account unavailable",
+                    signal.market, signal.ticker,
+                )
+                return DispatchResult(
+                    "failed" if queued_context is not None else "deferred",
+                    "KIS BUY account could not be pinned before submission; operator reconciliation required",
+                    signal.signal_type, signal.market,
+                )
+
         identity = None
         claim_token = None
         if account is None and self.execution_dedupe:
@@ -975,9 +1001,7 @@ class TradeDispatcher:
             )
             claimed, previous_status, claim_token = await asyncio.to_thread(
                 self.execution_ledger.claim, identity, aliases=aliases, with_token=True,
-                order_intent=_buy_stop_loss_intent(
-                    signal, self._single_account_execution_selector(signal)
-                ),
+                order_intent=buy_intent,
                 order_side="SELL" if signal.signal_type == "SELL" else None,
             )
             if not claimed:
@@ -1317,20 +1341,38 @@ class TradeDispatcher:
                 return ProtectiveExitStrategy(config=self.protective_exit_config)
         return None
 
-    def _resolved_single_account_id(self, signal: SignalMessage) -> str:
-        """Pin the actual KIS account, not merely a mutable name/index/primary.
-
-        resolve_account uses the same server, product and market contract as
-        DomesticStockTrading and USStockTrading. Store only its opaque hash.
-        """
-        account = ka.resolve_account(
+    def _resolve_single_account(self, signal: SignalMessage) -> dict[str, Any]:
+        """Resolve configuration only; never authenticate or submit an order."""
+        return ka.resolve_account(
             svr="vps" if self.trading_mode == "demo" else "prod",
             product="01",
             market=signal.market.lower(),
             account_name=self.account_name,
             account_index=self.account_index,
         )
-        return _account_id(account["account_key"])
+
+    def _validated_buy_account_key(
+        self, account: dict[str, Any], signal: SignalMessage,
+    ) -> str:
+        """Require the same canonical account contract as read-only history."""
+        server = "vps" if self.trading_mode == "demo" else "prod"
+        number = account["account"]
+        key = account["account_key"]
+        if (
+            not isinstance(number, str)
+            or re.fullmatch(r"[0-9]{8}", number) is None
+            or account["svr"] != server
+            or account["product"] != "01"
+            or account["market"] not in ("all", signal.market.lower())
+            or key != f"{server}:{number}:01"
+            or not isinstance(account["name"], str)
+        ):
+            raise ValueError("Invalid canonical KIS BUY account")
+        return key
+
+    def _resolved_single_account_id(self, signal: SignalMessage) -> str:
+        """Pin the actual KIS account, not merely a mutable name/index/primary."""
+        return _account_id(self._resolve_single_account(signal)["account_key"])
 
     def _single_account_execution_selector(self, signal: SignalMessage) -> str:
         if self.account_name:
