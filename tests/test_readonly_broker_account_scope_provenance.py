@@ -177,7 +177,10 @@ def test_real_shaped_account_key_matches_durable_multiaccount_scope_but_never_ac
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("key", ["vps:87654321:01", "vps:12345678:02", "prod:12345678:01"])
+@pytest.mark.parametrize("key", [
+    "vps:87654321:01", "vps:12345678:02", "prod:12345678:01",
+    "a" * 64, "detached-account-label",
+])
 def test_conflicting_raw_account_key_and_request_environment_fail_closed_before_inquiry(
     market, lookup, key,
 ):

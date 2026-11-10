@@ -6,6 +6,7 @@ case a terminal pagination cursor is not sufficient to call the evidence
 complete. This is NOT permission to attribute a fill or activate a stop.
 No KIS/demo/live connections or orders are allowed.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -57,7 +58,8 @@ def _row(market, account, fill_id, *, filled, execution, remaining, cancel="N"):
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("scope,account", [
-    ("a" * 64, "12345678"), ("b" * 64, "87654321"),
+    (sha256(b"vps:12345678:01").hexdigest(), "12345678"),
+    (sha256(b"vps:87654321:01").hexdigest(), "87654321"),
 ])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
 @pytest.mark.parametrize("missing_execution", [True, False])
@@ -108,7 +110,7 @@ def test_cumulative_fill_requires_all_identified_executions_before_triage(
         return next(responses)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )

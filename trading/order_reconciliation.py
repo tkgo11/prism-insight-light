@@ -1,6 +1,33 @@
 """Read-only KIS order-history collection: never proof of a fill or permission to SELL."""
 from datetime import datetime
+from hashlib import sha256
 import re
+
+
+def _account_provenance(trader):
+    """Bind read-only evidence to the actual KIS account, not a raw/forged label.
+
+    Both production adapters store the canonical key server:CANO:product.
+    The durable multi-account BUY intent stores SHA-256 of that same key.
+    Validate the authenticated request environment before any inquiry and
+    return only the opaque digest. A digest is NOT broker fill attribution.
+    """
+    env = getattr(trader, "trenv", None)
+    account = getattr(env, "my_acct", None)
+    product = getattr(env, "my_prod", None)
+    key = getattr(trader, "account_key", None)
+    mode = getattr(trader, "mode", None)
+    if mode not in ("demo", "real"):
+        raise ValueError("unknown broker mode")
+    if (not isinstance(account, str) or re.fullmatch(r"[0-9]{8}", account) is None
+            or not isinstance(product, str) or re.fullmatch(r"[0-9]{2}", product) is None
+            or not isinstance(key, str)):
+        raise ValueError("invalid KIS account provenance")
+    server = "vps" if mode == "demo" else "prod"
+    expected_key = f"{server}:{account}:{product}"
+    if key != expected_key:
+        raise ValueError("KIS account provenance mismatch")
+    return account, product, sha256(key.encode("utf-8")).hexdigest(), mode
 
 
 def _get(obj, key, default=None):
@@ -244,15 +271,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
         raise ValueError("invalid ticker")
     if type(max_pages) is not int or not 1 <= max_pages <= 20:
         raise ValueError("invalid page limit")
-    env = getattr(trader, "trenv", None)
-    account, product, scope = (getattr(env, "my_acct", None),
-                               getattr(env, "my_prod", None),
-                               getattr(trader, "account_key", None))
-    if not all(isinstance(x, str) and x for x in (account, product, scope)):
-        raise ValueError("missing account provenance")
-    mode = getattr(trader, "mode", None)
-    if mode not in ("demo", "real"):
-        raise ValueError("unknown broker mode")
+    account, product, scope, mode = _account_provenance(trader)
     result = dict(market=market, account_scope=scope, order_no=order_no,
                   order_date=order_date, ticker=ticker, status="UNVERIFIED",
                   complete=False, can_activate_stop=False, matches=[])
@@ -435,16 +454,7 @@ def discover_buy_order_candidates(trader, *, market, ticker, start_date,
             raise ValueError("invalid discovery date") from exc
     if not 0 <= (parsed_dates[1] - parsed_dates[0]).days <= 6:
         raise ValueError("discovery window must be 1 to 7 inclusive days")
-    env = getattr(trader, "trenv", None)
-    account, product, scope = (
-        getattr(env, "my_acct", None), getattr(env, "my_prod", None),
-        getattr(trader, "account_key", None),
-    )
-    if not all(isinstance(x, str) and x for x in (account, product, scope)):
-        raise ValueError("missing account provenance")
-    mode = getattr(trader, "mode", None)
-    if mode not in ("demo", "real"):
-        raise ValueError("unknown broker mode")
+    account, product, scope, mode = _account_provenance(trader)
     result = dict(
         market=market, account_scope=scope, ticker=ticker,
         start_date=start_date, end_date=end_date,

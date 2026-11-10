@@ -4,6 +4,7 @@ The entire paginated inquiry is unverified if two spellings of a KIS
 continuation cursor disagree. No broker order, ledger mutation, or stop-loss
 activation is permitted from this read-only evidence.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -63,7 +64,7 @@ def history_row(market, execution_id, *, cumulative, remaining, cancel="N"):
 def inquiry(market, lookup, pages, scope):
     responses = iter(pages)
     calls = []
-    account = "12345678" if scope.startswith("a") else "87654321"
+    account = "12345678" if scope == sha256(b"vps:12345678:01").hexdigest() else "87654321"
 
     def request(path, tr_id, params, **kwargs):
         assert "/inquire-" in path and "/order" not in path
@@ -73,7 +74,7 @@ def inquiry(market, lookup, pages, scope):
         return next(responses)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
@@ -93,7 +94,7 @@ def inquiry(market, lookup, pages, scope):
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 @pytest.mark.parametrize("conflict", ["fk", "nk"])
 def test_conflicting_cursor_aliases_discard_partial_cancel_history_and_keep_fence(
     tmp_path, market, lookup, scope, conflict,
@@ -134,7 +135,7 @@ def test_conflicting_cursor_aliases_discard_partial_cancel_history_and_keep_fenc
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_identical_cursor_aliases_remain_bounded_and_nonactionable(
     market, lookup, scope,
 ):
@@ -158,7 +159,7 @@ def test_identical_cursor_aliases_remain_bounded_and_nonactionable(
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_conflicting_continuation_header_aliases_discard_history(
     market, lookup, scope,
 ):
@@ -184,7 +185,7 @@ def test_conflicting_continuation_header_aliases_discard_history(
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 @pytest.mark.parametrize("conflict", ["execution_id", "remaining_quantity"])
 def test_conflicting_history_output_aliases_discard_partial_cancel_and_keep_fence(
     tmp_path, market, lookup, scope, conflict,
@@ -241,7 +242,7 @@ def test_conflicting_history_output_aliases_discard_partial_cancel_and_keep_fenc
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_equal_history_output_aliases_remain_read_only(market, lookup, scope):
     """Identical wrapper payload aliases must not cause false rejection."""
     first = HistoryPage(market, [
@@ -272,7 +273,7 @@ def test_equal_history_output_aliases_remain_read_only(market, lookup, scope):
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_later_page_conflicting_output_alias_discards_earlier_fill_evidence(
     tmp_path, market, lookup, scope,
 ):
@@ -319,7 +320,7 @@ def test_later_page_conflicting_output_alias_discards_earlier_fill_evidence(
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_uppercase_only_history_output_alias_stays_nonactionable(
     market, lookup, scope,
 ):

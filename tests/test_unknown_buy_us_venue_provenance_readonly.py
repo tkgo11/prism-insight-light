@@ -4,6 +4,7 @@ An accepted BUY receipt is not a fill. Even consistent quantities and IDs must
 not turn a two-venue contradictory history into a possible match, durable fill
 attribution, or an actionable stop. No live/demo KIS requests or orders.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -86,7 +87,7 @@ def test_us_same_order_cross_page_exchange_provenance_is_fail_closed(
         return next(pages)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
@@ -127,7 +128,8 @@ def test_us_same_order_cross_page_exchange_provenance_is_fail_closed(
 
 
 @pytest.mark.parametrize("scope,account", [
-    ("a" * 64, "12345678"), ("b" * 64, "87654321"),
+    (sha256(b"vps:12345678:01").hexdigest(), "12345678"),
+    (sha256(b"vps:87654321:01").hexdigest(), "87654321"),
 ])
 def test_us_reused_order_number_different_dates_can_have_different_venues(
     tmp_path, scope, account,
@@ -174,7 +176,7 @@ def test_us_reused_order_number_different_dates_can_have_different_venues(
         return next(pages)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )

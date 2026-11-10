@@ -41,7 +41,7 @@ def test_exact_history_zero_order_number_is_not_evidence(market, order_no):
         return _Page(market, row)
 
     trader = SimpleNamespace(
-        mode="demo", account_key="a" * 64,
+        mode="demo", account_key="vps:12345678:01",
         trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
         _request=read_only_request,
     )

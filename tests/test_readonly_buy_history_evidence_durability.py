@@ -5,6 +5,7 @@ ledger claim clearing, or stop-loss activation is permitted by these tests.
 A broker history trading date is NOT authenticated order-acceptance provenance.
 """
 import json
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -37,17 +38,18 @@ def _history(market, scope, *, order="00001234", filled="4", remaining="6",
         "rmn_qty": remaining, "ccld_no": execution, "cncl_yn": cancelled,
     }
     calls = []
+    account = "12345678" if scope == sha256(b"vps:12345678:01").hexdigest() else "87654321"
 
     def request(path, tr_id, params, **kwargs):
         assert "/inquire-" in path and "/order" not in path
-        assert params["CANO"] == "12345678"
+        assert params["CANO"] == account
         assert params["ACNT_PRDT_CD"] == "01"
         calls.append(path)
         return _Page(market, [row])
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
-        trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
+        mode="demo", account_key=f"vps:{account}:01",
+        trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
     result = read_order_history(
@@ -76,7 +78,7 @@ def _claim(ledger, identity, market, scope, *, receipt=True):
 
 
 @pytest.mark.parametrize("market", ["KR", "US"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_readonly_evidence_persists_across_restart_without_fill_authority(
     tmp_path, market, scope,
 ):
@@ -110,7 +112,7 @@ def test_readonly_replay_is_byte_idempotent_and_new_partial_cancel_is_nonactiona
     tmp_path, market,
 ):
     path = tmp_path / "ledger.json"
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     ledger = ExecutionLedger(path)
     _claim(ledger, "buy", market, scope)
     history = _history(market, scope)
@@ -134,12 +136,12 @@ def test_readonly_replay_is_byte_idempotent_and_new_partial_cancel_is_nonactiona
 def test_same_receipt_across_two_accounts_stays_isolated(tmp_path, market):
     path = tmp_path / "ledger.json"
     ledger = ExecutionLedger(path)
-    for identity, scope in (("buy-a", "a" * 64), ("buy-b", "b" * 64)):
+    for identity, scope in (("buy-a", sha256(b"vps:12345678:01").hexdigest()), ("buy-b", sha256(b"vps:87654321:01").hexdigest())):
         _claim(ledger, identity, market, scope)
         ledger.record_read_only_buy_history(identity, _history(market, scope))
     saved = json.loads(path.read_text())
-    assert saved["buy-a"]["reconciliation_evidence"][0]["account_scope"] == "a" * 64
-    assert saved["buy-b"]["reconciliation_evidence"][0]["account_scope"] == "b" * 64
+    assert saved["buy-a"]["reconciliation_evidence"][0]["account_scope"] == sha256(b"vps:12345678:01").hexdigest()
+    assert saved["buy-b"]["reconciliation_evidence"][0]["account_scope"] == sha256(b"vps:87654321:01").hexdigest()
     assert all(saved[k]["status"] == "unknown" for k in ("buy-a", "buy-b"))
 
 
@@ -150,10 +152,10 @@ def test_untrusted_history_cannot_be_persisted_or_clear_unknown(
 ):
     path = tmp_path / "ledger.json"
     ledger = ExecutionLedger(path)
-    _claim(ledger, "buy", market, "a" * 64)
-    history = _history(market, "a" * 64)
+    _claim(ledger, "buy", market, sha256(b"vps:12345678:01").hexdigest())
+    history = _history(market, sha256(b"vps:12345678:01").hexdigest())
     if mutation == "foreign_scope":
-        history["account_scope"] = "b" * 64
+        history["account_scope"] = sha256(b"vps:87654321:01").hexdigest()
     elif mutation == "wrong_receipt":
         history["order_no"] = "99999999"
     elif mutation == "incomplete":
@@ -173,9 +175,9 @@ def test_untrusted_history_cannot_be_persisted_or_clear_unknown(
 def test_receiptless_unknown_never_persists_unattributed_history(tmp_path, market):
     path = tmp_path / "ledger.json"
     ledger = ExecutionLedger(path)
-    _claim(ledger, "buy", market, "a" * 64, receipt=False)
+    _claim(ledger, "buy", market, sha256(b"vps:12345678:01").hexdigest(), receipt=False)
     before = path.read_bytes()
-    verdict = ledger.record_read_only_buy_history("buy", _history(market, "a" * 64))
+    verdict = ledger.record_read_only_buy_history("buy", _history(market, sha256(b"vps:12345678:01").hexdigest()))
     assert verdict["status"] == "UNVERIFIED"
     assert path.read_bytes() == before
 
@@ -184,10 +186,10 @@ def test_receiptless_unknown_never_persists_unattributed_history(tmp_path, marke
 def test_corrupted_persisted_evidence_blocks_restart(tmp_path, market):
     path = tmp_path / "ledger.json"
     ledger = ExecutionLedger(path)
-    _claim(ledger, "buy", market, "a" * 64)
-    ledger.record_read_only_buy_history("buy", _history(market, "a" * 64))
+    _claim(ledger, "buy", market, sha256(b"vps:12345678:01").hexdigest())
+    ledger.record_read_only_buy_history("buy", _history(market, sha256(b"vps:12345678:01").hexdigest()))
     saved = json.loads(path.read_text())
-    saved["buy"]["reconciliation_evidence"][0]["account_scope"] = "b" * 64
+    saved["buy"]["reconciliation_evidence"][0]["account_scope"] = sha256(b"vps:87654321:01").hexdigest()
     path.write_text(json.dumps(saved), encoding="utf-8")
     with pytest.raises(RuntimeError, match="reconciliation"):
         ExecutionLedger(path).claim("buy")
@@ -197,7 +199,7 @@ def test_corrupted_persisted_evidence_blocks_restart(tmp_path, market):
 def test_evidence_persistence_failure_does_not_clear_unknown(tmp_path, monkeypatch, market):
     path = tmp_path / "ledger.json"
     ledger = ExecutionLedger(path)
-    _claim(ledger, "buy", market, "a" * 64)
+    _claim(ledger, "buy", market, sha256(b"vps:12345678:01").hexdigest())
     before = path.read_bytes()
 
     def fail_save(entries):
@@ -205,7 +207,7 @@ def test_evidence_persistence_failure_does_not_clear_unknown(tmp_path, monkeypat
 
     monkeypatch.setattr(ledger, "_save", fail_save)
     with pytest.raises(OSError, match="mock disk"):
-        ledger.record_read_only_buy_history("buy", _history(market, "a" * 64))
+        ledger.record_read_only_buy_history("buy", _history(market, sha256(b"vps:12345678:01").hexdigest()))
     assert path.read_bytes() == before
     assert ExecutionLedger(path).claim("buy") == (False, "unknown")
 
@@ -216,10 +218,10 @@ def test_duplicate_receipt_same_scope_is_not_persisted_as_unique_provenance(
 ):
     path = tmp_path / "ledger.json"
     ledger = ExecutionLedger(path)
-    _claim(ledger, "buy-a", market, "a" * 64)
-    _claim(ledger, "buy-b", market, "a" * 64)
+    _claim(ledger, "buy-a", market, sha256(b"vps:12345678:01").hexdigest())
+    _claim(ledger, "buy-b", market, sha256(b"vps:12345678:01").hexdigest())
     before = path.read_bytes()
-    verdict = ledger.record_read_only_buy_history("buy-a", _history(market, "a" * 64))
+    verdict = ledger.record_read_only_buy_history("buy-a", _history(market, sha256(b"vps:12345678:01").hexdigest()))
     assert verdict["status"] == "UNVERIFIED"
     assert verdict["can_activate_stop"] is False
     assert path.read_bytes() == before

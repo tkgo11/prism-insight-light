@@ -3,6 +3,7 @@
 All responses are mocks.  These tests must not place a broker order, clear
 pending BUY claims, or activate a stop-loss based on order acceptance.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -37,13 +38,13 @@ class MockHistoryResponse:
         return SimpleNamespace(tr_cont="M" if self.more else "")
 
 
-def _trader(market, pages, *, account="account-a", mode="demo"):
+def _trader(market, pages, *, account="12345678", mode="demo"):
     cls = DomesticStockTrading if market == "KR" else USStockTrading
     trader = object.__new__(cls)
     trader.mode = mode
     trader.env = "vps" if mode == "demo" else "prod"
-    trader.account_key = account
-    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+    trader.account_key = f"{trader.env}:{account}:01"
+    trader.trenv = SimpleNamespace(my_acct=account, my_prod="01")
     calls = []
     responses = iter(pages)
 
@@ -85,7 +86,7 @@ def test_read_only_pagination_and_exact_local_order_match(market):
     assert result["status"] == "EVIDENCE_ONLY"
     assert result["complete"] is True
     assert result["can_activate_stop"] is False
-    assert result["account_scope"] == "account-a"
+    assert result["account_scope"] == sha256(b"vps:12345678:01").hexdigest()
     assert len(result["matches"]) == 1
     assert len(calls) == 2
     assert all(call[2]["CANO"] == "12345678" for call in calls)
@@ -113,11 +114,12 @@ def test_wrong_symbol_date_and_side_are_not_attributed(market):
 @pytest.mark.parametrize("market", ["KR", "US"])
 def test_account_scopes_are_isolated(market):
     outputs = []
-    for scope in ("account-a", "account-b"):
+    for scope in ("12345678", "87654321"):
         trader, calls = _trader(market, [MockHistoryResponse([_row(market)], market=market)], account=scope)
         outputs.append(_read(trader, market))
         assert len(calls) == 1
-    assert [r["account_scope"] for r in outputs] == ["account-a", "account-b"]
+    assert [r["account_scope"] for r in outputs] == [sha256(f"vps:{account}:01".encode()).hexdigest()
+                                               for account in ("12345678", "87654321")]
     assert all(r["can_activate_stop"] is False for r in outputs)
 
 

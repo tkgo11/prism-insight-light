@@ -44,7 +44,7 @@ def _history_row(market, *, execution_id, ordered="10", cumulative="4",
     }
 
 
-def _query(market, rows, *, account_scope="a" * 64):
+def _query(market, rows):
     calls = []
 
     def read_only_request(path, tr_id, params, **kwargs):
@@ -55,7 +55,7 @@ def _query(market, rows, *, account_scope="a" * 64):
         return _MockPage(market, rows)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=account_scope,
+        mode="demo", account_key="vps:12345678:01",
         trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
         _request=read_only_request,
     )
@@ -127,7 +127,7 @@ def test_exact_order_history_missing_quantity_cannot_bypass_known_order_bound(
         return _MockPage(market, [first, later])
 
     trader = SimpleNamespace(
-        mode="demo", account_key="a" * 64,
+        mode="demo", account_key="vps:12345678:01",
         trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
         _request=read_only_request,
     )
@@ -155,7 +155,7 @@ def test_exact_order_history_missing_quantity_at_bound_remains_nonactionable(mar
         return _MockPage(market, [first, later])
 
     trader = SimpleNamespace(
-        mode="demo", account_key="a" * 64,
+        mode="demo", account_key="vps:12345678:01",
         trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
         _request=read_only_request,
     )

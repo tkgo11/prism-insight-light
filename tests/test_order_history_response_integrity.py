@@ -51,7 +51,7 @@ def _read(market, responses):
     trader = object.__new__(cls)
     trader.mode = "demo"
     trader.env = "vps"
-    trader.account_key = "account-a"
+    trader.account_key = "vps:12345678:01"
     trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
     calls = []
     iterator = iter(responses)

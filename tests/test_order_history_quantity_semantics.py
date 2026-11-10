@@ -4,6 +4,7 @@ KIS ccld_qty is a per-execution quantity; tot_ccld_qty is cumulative.
 They must never be treated as interchangeable. Every result stays read-only:
 no ledger finalization, stop-loss activation, or order submission is allowed.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -46,14 +47,15 @@ def _read(market, pages, *, scope="account-a"):
     trader = object.__new__(cls)
     trader.mode = "demo"
     trader.env = "vps"
-    trader.account_key = scope
-    trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
+    account = "12345678" if scope == "account-a" else "87654321"
+    trader.account_key = f"vps:{account}:01"
+    trader.trenv = SimpleNamespace(my_acct=account, my_prod="01")
     calls = []
     responses = iter(pages)
 
     def request(path, tr_id, params, **kwargs):
         assert "/inquire-" in path, "read-only mock must never submit an order"
-        assert params["CANO"] == "12345678"
+        assert params["CANO"] == account
         assert params["ACNT_PRDT_CD"] == "01"
         calls.append((path, dict(params)))
         return next(responses)
@@ -63,7 +65,7 @@ def _read(market, pages, *, scope="account-a"):
         order_no="00001234", order_date="20261104",
         ticker="005930" if market == "KR" else "AAPL", max_pages=3)
     assert result["can_activate_stop"] is False
-    assert result["account_scope"] == scope
+    assert result["account_scope"] == sha256(trader.account_key.encode()).hexdigest()
     return result, calls
 
 
@@ -288,7 +290,7 @@ def test_unknown_buy_without_order_number_cannot_query_or_clear_restart_fence(
     cls = DomesticStockTrading if market == "KR" else USStockTrading
     trader = object.__new__(cls)
     trader.mode = "demo"
-    trader.account_key = "account-a"
+    trader.account_key = "vps:12345678:01"
     trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
     calls = []
 

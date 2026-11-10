@@ -5,6 +5,7 @@ later appears partly filled and partly cancelled across three pages.  The
 acceptance receipt has no authenticated order date/execution provenance, so
 even plausible complete history cannot activate a stop-loss automatically.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -59,7 +60,8 @@ def _row(market, account, *, fill_id="FILL1", fill_qty=4,
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
 @pytest.mark.parametrize("scope,account", [
-    ("a" * 64, "12345678"), ("b" * 64, "87654321"),
+    (sha256(b"prod:12345678:01").hexdigest(), "12345678"),
+    (sha256(b"prod:87654321:01").hexdigest(), "87654321"),
 ])
 @pytest.mark.parametrize("late_status", ["0", "1"])
 @pytest.mark.parametrize("cancel_remaining", [0, 3])
@@ -116,7 +118,7 @@ def test_real_mode_mock_partial_cancel_history_never_activates_stop(
         return next(pages)
 
     trader = SimpleNamespace(
-        mode="real", account_key=scope,
+        mode="real", account_key=f"prod:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=fake_request,
     )

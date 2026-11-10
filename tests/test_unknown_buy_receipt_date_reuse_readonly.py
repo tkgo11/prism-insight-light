@@ -6,6 +6,7 @@ receipt cannot select a date, activate a stop, or clear an UNKNOWN BUY.
 No live/demo KIS request or order submission is made.
 """
 import json
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -62,7 +63,7 @@ def _inquire(market, scope, account, date, *, reversed_pages=False):
         calls.append((tr_id, kwargs.get("tr_cont")))
         return next(pages)
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
@@ -85,7 +86,8 @@ def _inquire(market, scope, account, date, *, reversed_pages=False):
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("scope,account", [
-    ("a" * 64, "12345678"), ("b" * 64, "87654321"),
+    (sha256(b"vps:12345678:01").hexdigest(), "12345678"),
+    (sha256(b"vps:87654321:01").hexdigest(), "87654321"),
 ])
 def test_reused_receipt_two_dates_partial_cancel_stays_unattributed_after_restart(
     tmp_path, market, scope, account,

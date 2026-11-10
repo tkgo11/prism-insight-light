@@ -4,6 +4,7 @@ These checks do not establish broker-authoritative attribution, clear ledger cla
 activate stop losses, submit orders, or connect to KIS.
 """
 import json
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -66,7 +67,7 @@ def _claim(path, market, scope, *, identity, order_no="00001234"):
 
 
 def _inquire(market, lookup, scope, pages):
-    account = "12345678" if scope.startswith("a") else "87654321"
+    account = "12345678" if scope == sha256(b"vps:12345678:01").hexdigest() else "87654321"
     calls = []
     responses = iter(pages)
 
@@ -78,7 +79,7 @@ def _inquire(market, lookup, scope, pages):
         return next(responses)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
@@ -98,7 +99,7 @@ def _inquire(market, lookup, scope, pages):
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_unknown_receipt_late_partial_cancel_is_evidence_only_after_restart(
     tmp_path, market, lookup, scope,
 ):
@@ -132,7 +133,7 @@ def test_unknown_receipt_late_partial_cancel_is_evidence_only_after_restart(
 def test_duplicate_execution_page_never_duplicates_a_pending_buy(
     tmp_path, market, lookup,
 ):
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     ledger = _claim(tmp_path / "ledger.json", market, scope, identity="pending")
     before = ledger.path.read_bytes()
     row = _row(market)
@@ -149,7 +150,7 @@ def test_duplicate_execution_page_never_duplicates_a_pending_buy(
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_partial_cancel_residual_contradiction_discards_prior_page_and_keeps_fence(
     tmp_path, market, lookup, scope,
 ):
@@ -174,7 +175,7 @@ def test_partial_cancel_residual_contradiction_discards_prior_page_and_keeps_fen
 def test_reused_order_number_on_other_date_does_not_attrib_to_unknown_receipt(
     tmp_path, market,
 ):
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     ledger = _claim(tmp_path / "ledger.json", market, scope, identity="pending")
     before = ledger.path.read_bytes()
     result, calls = _inquire(market, "exact", scope, [
@@ -195,7 +196,7 @@ def test_same_order_receipt_number_in_two_scopes_cannot_clear_either_fence(
     tmp_path, market,
 ):
     path = tmp_path / "ledger.json"
-    a, b = "a" * 64, "b" * 64
+    a, b = sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()
     _claim(path, market, a, identity="buy-a")
     ledger = _claim(path, market, b, identity="buy-b")
     before = path.read_bytes()
@@ -219,7 +220,7 @@ def test_zero_submitted_quantity_is_not_reconcilable_history_after_restart(
     tmp_path, market, lookup,
 ):
     """A zero-share BUY cannot establish a valid receipt-to-fill history."""
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     ledger = _claim(tmp_path / "ledger.json", market, scope, identity="pending")
     before = ledger.path.read_bytes()
     row = _row(market, cumulative=0, remaining=0)
@@ -241,7 +242,7 @@ def test_zero_submitted_quantity_is_not_reconcilable_history_after_restart(
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 @pytest.mark.parametrize("page_mode", ["single", "late"])
 def test_positive_fill_without_execution_id_is_unverified_after_restart(
     tmp_path, market, lookup, scope, page_mode,
@@ -273,7 +274,7 @@ def test_positive_fill_without_execution_id_is_unverified_after_restart(
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 @pytest.mark.parametrize("late_corruption", [
     "foreign_account",
     "reused_execution_id_changed_quantity",
@@ -295,7 +296,7 @@ def test_late_page_poison_cannot_preserve_partial_fill_or_clear_unknown_buy(
     before = ledger.path.read_bytes()
     late = _row(market)
     if late_corruption == "foreign_account":
-        late["cano"] = "87654321" if scope.startswith("a") else "12345678"
+        late["cano"] = "87654321" if scope == sha256(b"vps:12345678:01").hexdigest() else "12345678"
     elif late_corruption == "reused_execution_id_changed_quantity":
         late["ccld_qty"] = "3"
     elif late_corruption == "reused_execution_id_changed_cancel":
@@ -338,9 +339,9 @@ def test_same_receipt_cross_account_partial_cancel_replay_stays_fenced(
     """
     path = tmp_path / "ledger.json"
     ticker = "005930" if market == "KR" else "AAPL"
-    for scope, account in (("a" * 64, "12345678"),
-                           ("b" * 64, "87654321")):
-        identity = f"unknown-{scope[0]}"
+    for scope, account in ((sha256(b"vps:12345678:01").hexdigest(), "12345678"),
+                           (sha256(b"vps:87654321:01").hexdigest(), "87654321")):
+        identity = "unknown-a" if account == "12345678" else "unknown-b"
         ledger = _claim(path, market, scope, identity=identity)
         first = _row(market, execution="FILL1", cumulative=4, remaining=6)
         second = _row(
@@ -390,8 +391,8 @@ def test_same_receipt_cross_account_partial_cancel_replay_stays_fenced(
 
     persisted = json.loads(path.read_text())
     assert set(persisted) == {"unknown-a", "unknown-b"}
-    for scope in ("a" * 64, "b" * 64):
-        entry = persisted[f"unknown-{scope[0]}"]
+    for scope in (sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()):
+        entry = persisted["unknown-a" if scope == sha256(b"vps:12345678:01").hexdigest() else "unknown-b"]
         assert entry["status"] == "unknown"
         assert entry["order_receipt"]["order_no"] == "00001234"
         assert entry["order_intent"]["account_scope"] == scope

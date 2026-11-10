@@ -4,6 +4,7 @@ The KIS wrapper may return JSON quantities as Python integers rather than
 strings. Integer and string representations must obey identical finite bounds.
 These inquiries are read-only and cannot authorize a SELL or clear a BUY fence.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -55,7 +56,7 @@ def row(market, *, execution_id, **overrides):
 def inquire(market, lookup, pages, *, scope):
     responses = iter(pages)
     calls = []
-    account = "12345678" if scope.startswith("a") else "87654321"
+    account = "12345678" if scope == sha256(b"vps:12345678:01").hexdigest() else "87654321"
 
     def request(path, tr_id, params, **kwargs):
         assert "/inquire-" in path and "/order" not in path
@@ -66,7 +67,7 @@ def inquire(market, lookup, pages, *, scope):
         return next(responses)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
@@ -90,7 +91,7 @@ def inquire(market, lookup, pages, *, scope):
 @pytest.mark.parametrize("field", [
     "ord_qty", "tot_ccld_qty", "ccld_qty", "rmn_qty",
 ])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_integer_overflow_in_later_cancelled_partial_history_poison_all_evidence(
     tmp_path, market, lookup, field, scope,
 ):
@@ -146,7 +147,7 @@ def test_18_digit_integer_quantity_boundary_is_still_nonactionable(market, looku
             row(market, execution_id="FILL1", ord_qty=10**18 - 1,
                 tot_ccld_qty="4", ccld_qty="4", rmn_qty="6"),
         ])],
-        scope="a" * 64,
+        scope=sha256(b"vps:12345678:01").hexdigest(),
     )
     assert result["status"] in ("EVIDENCE_ONLY", "CANDIDATES_ONLY")
     assert result["complete"] is True

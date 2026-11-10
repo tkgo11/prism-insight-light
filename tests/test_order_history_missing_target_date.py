@@ -54,7 +54,7 @@ def _history(market, later_row):
         return next(pages)
 
     trader = SimpleNamespace(
-        mode="demo", account_key="account-A",
+        mode="demo", account_key="vps:12345678:01",
         trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
         _request=request,
     )

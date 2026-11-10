@@ -4,6 +4,7 @@ No live/demo broker request, order submission, stop activation or fill attributi
 The acceptance receipt lacks a broker-authenticated trading date/execution ID.
 """
 import json
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -66,9 +67,9 @@ def _read(market, rows, *, lookup):
         calls.append((tr_id, dict(params), kwargs.get("tr_cont")))
         return next(responses)
 
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key="vps:12345678:01",
         trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
         _request=request,
     )
@@ -101,7 +102,7 @@ def test_same_scope_same_receipt_across_markets_keeps_poison_isolated_after_rest
     """
     path = tmp_path / "ledger.json"
     ledger = ExecutionLedger(path)
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     for market in ("KR", "US"):
         claimed, _, token = ledger.claim(
             "collision-" + market, with_token=True,

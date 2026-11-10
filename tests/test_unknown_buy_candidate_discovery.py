@@ -3,6 +3,7 @@
 All KIS responses are mocks. No order, stop-loss, ledger finalize or account
 balance mutation may occur. An unknown order cannot be inferred from a ticker.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -48,18 +49,19 @@ def row(market, *, order="00001234", date="20261104", **changes):
 def query(market, pages, *, scope="account-a", **kwargs):
     responses = iter(pages)
     calls = []
+    account = "12345678" if scope == "account-a" else "87654321"
 
     def request(path, tr_id, params, **request_kwargs):
         assert "/inquire-" in path and "/order" not in path
-        assert params["CANO"] == "12345678"
+        assert params["CANO"] == account
         assert params["ACNT_PRDT_CD"] == "01"
         assert params["ODNO"] == ""
         calls.append((path, tr_id, dict(params)))
         return next(responses)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
-        trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
+        mode="demo", account_key=f"vps:{account}:01",
+        trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
     result = reconciliation.discover_buy_order_candidates(
@@ -82,7 +84,7 @@ def test_unknown_order_discovers_bounded_candidates_without_attributing_fill(mar
     assert result["status"] == "CANDIDATES_ONLY"
     assert result["complete"] is True
     assert result["can_activate_stop"] is False
-    assert result["account_scope"] == "account-a"
+    assert result["account_scope"] == sha256(b"vps:12345678:01").hexdigest()
     assert {(c["order_no"], c["order_date"]) for c in result["candidates"]} == {
         ("00001234", "20261103"), ("00001234", "20261104")
     }
@@ -171,7 +173,7 @@ def test_unknown_buy_ledger_remains_fenced_after_discovery_and_restart(tmp_path,
         identity, with_token=True,
         order_intent={
             "kind": "buy_stop_loss", "market": market, "ticker": ticker,
-            "stop_loss": 90.0, "account_scope": "a" * 64,
+            "stop_loss": 90.0, "account_scope": sha256(b"vps:12345678:01").hexdigest(),
         },
     )
     assert claimed and token

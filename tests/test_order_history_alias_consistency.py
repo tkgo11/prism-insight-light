@@ -46,7 +46,7 @@ def test_conflicting_history_aliases_fail_closed(market, alias, contradiction):
     trader = object.__new__(DomesticStockTrading if market == "KR" else USStockTrading)
     trader.mode = "demo"
     trader.env = "vps"
-    trader.account_key = "account-a"
+    trader.account_key = "vps:12345678:01"
     trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
     row = {
         "odno": "00001234",
@@ -86,7 +86,7 @@ def test_identical_history_aliases_preserve_read_only_evidence(market):
     trader = object.__new__(DomesticStockTrading if market == "KR" else USStockTrading)
     trader.mode = "demo"
     trader.env = "vps"
-    trader.account_key = "account-a"
+    trader.account_key = "vps:12345678:01"
     trader.trenv = SimpleNamespace(my_acct="12345678", my_prod="01")
     row = {
         "odno": "00001234", "ODNO": "00001234",

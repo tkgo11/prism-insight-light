@@ -2,6 +2,7 @@
 
 No KIS credentials, real orders, ledger mutation, or stop-loss activation.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -45,7 +46,7 @@ def _row(market, execution, cumulative, remaining):
 
 
 def _inquiry(market, lookup, scope, pages):
-    account = "12345678" if scope.startswith("a") else "87654321"
+    account = "12345678" if scope == sha256(b"vps:12345678:01").hexdigest() else "87654321"
     responses = iter(pages)
     calls = []
 
@@ -57,7 +58,7 @@ def _inquiry(market, lookup, scope, pages):
         return next(responses)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
@@ -77,7 +78,7 @@ def _inquiry(market, lookup, scope, pages):
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 @pytest.mark.parametrize("alias,bad", [
     ("TOT_CCLD_QTY", "9"),
     ("FT_CCLD_QTY", "9"),
@@ -132,7 +133,7 @@ def test_uppercase_only_quantity_alias_preserves_nonactionable_value(
 ):
     row = _row(market, "FILL1", 4, 6)
     row[alias] = row.pop(lower)
-    result, calls = _inquiry(market, lookup, "a" * 64, [MockPage(market, [row])])
+    result, calls = _inquiry(market, lookup, sha256(b"vps:12345678:01").hexdigest(), [MockPage(market, [row])])
     assert len(calls) == 1
     assert result["status"] == ("EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY")
     assert result["complete"] is True
@@ -144,7 +145,7 @@ def test_uppercase_only_quantity_alias_preserves_nonactionable_value(
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_uppercase_execution_id_conflict_keeps_unknown_ledger_fence(
     tmp_path, market, lookup, scope,
 ):
@@ -180,7 +181,7 @@ def test_uppercase_execution_id_conflict_keeps_unknown_ledger_fence(
 def test_us_uppercase_ticker_alias_conflict_discards_history(lookup):
     row = _row("US", "FILL1", 4, 6)
     row["OVRS_PDNO"] = "MSFT"
-    result, calls = _inquiry("US", lookup, "a" * 64, [MockPage("US", [row])])
+    result, calls = _inquiry("US", lookup, sha256(b"vps:12345678:01").hexdigest(), [MockPage("US", [row])])
     assert len(calls) == 1
     assert result["status"] == "UNVERIFIED"
     assert result["complete"] is False
@@ -193,7 +194,7 @@ def test_us_uppercase_ticker_alias_conflict_discards_history(lookup):
 def test_uppercase_only_execution_id_stays_nonactionable(market, lookup):
     row = _row(market, "FILL1", 4, 6)
     row["CCLD_SEQ"] = row.pop("ccld_no")
-    result, calls = _inquiry(market, lookup, "a" * 64, [MockPage(market, [row])])
+    result, calls = _inquiry(market, lookup, sha256(b"vps:12345678:01").hexdigest(), [MockPage(market, [row])])
     assert len(calls) == 1
     assert result["status"] == ("EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY")
     assert result["can_activate_stop"] is False
@@ -205,7 +206,7 @@ def test_uppercase_only_execution_id_stays_nonactionable(market, lookup):
 def test_us_uppercase_only_ticker_stays_nonactionable(lookup):
     row = _row("US", "FILL1", 4, 6)
     row["OVRS_PDNO"] = row.pop("pdno")
-    result, calls = _inquiry("US", lookup, "a" * 64, [MockPage("US", [row])])
+    result, calls = _inquiry("US", lookup, sha256(b"vps:12345678:01").hexdigest(), [MockPage("US", [row])])
     assert len(calls) == 1
     assert result["status"] == ("EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY")
     assert result["can_activate_stop"] is False
@@ -226,7 +227,7 @@ def test_us_uppercase_only_ticker_stays_nonactionable(lookup):
 def test_equal_uppercase_quantity_aliases_remain_read_only(market, lookup, alias, lower):
     row = _row(market, "FILL1", 4, 6)
     row[alias] = row[lower]
-    result, calls = _inquiry(market, lookup, "a" * 64, [MockPage(market, [row])])
+    result, calls = _inquiry(market, lookup, sha256(b"vps:12345678:01").hexdigest(), [MockPage(market, [row])])
     assert len(calls) == 1
     assert result["status"] == ("EVIDENCE_ONLY" if lookup == "exact" else "CANDIDATES_ONLY")
     assert result["complete"] is True

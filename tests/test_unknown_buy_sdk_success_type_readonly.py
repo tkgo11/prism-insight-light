@@ -4,6 +4,7 @@ Three-page mock responses include a partial fill, duplicate notification, and
 late partial cancellation. No broker order, real/demo KIS request, stop
 activation, or ledger mutation is permitted.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -61,7 +62,8 @@ def fill_row(market, account, execution_id, execution_qty, cumulative, remaining
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
 @pytest.mark.parametrize("scope,account", [
-    ("a" * 64, "12345678"), ("b" * 64, "87654321"),
+    (sha256(b"vps:12345678:01").hexdigest(), "12345678"),
+    (sha256(b"vps:87654321:01").hexdigest(), "87654321"),
 ])
 @pytest.mark.parametrize("last_sdk_ok", [True, "False", "0", 1])
 def test_late_nonboolean_sdk_success_cannot_validate_partial_cancel_history(
@@ -105,7 +107,7 @@ def test_late_nonboolean_sdk_success_cannot_validate_partial_cancel_history(
         return next(pages)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )

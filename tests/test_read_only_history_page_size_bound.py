@@ -4,6 +4,7 @@ A broker history response containing more than 2,000 rows is incomplete
 evidence, even when rows repeat an otherwise valid partial fill. These
 mock-only inquiries cannot submit orders, clear the ledger, or activate stops.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -54,7 +55,7 @@ def inquire(market, counts):
         return next(pages)
 
     trader = SimpleNamespace(
-        mode="demo", account_key="a" * 64,
+        mode="demo", account_key="vps:12345678:01",
         trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
         _request=request,
     )
@@ -63,7 +64,7 @@ def inquire(market, counts):
         order_date="20261104", ticker=ticker, max_pages=3,
     )
     assert result["can_activate_stop"] is False
-    assert result["account_scope"] == "a" * 64
+    assert result["account_scope"] == sha256(b"vps:12345678:01").hexdigest()
     return result, calls
 
 

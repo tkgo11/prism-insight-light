@@ -28,11 +28,12 @@ class _Page:
 
 
 @pytest.mark.parametrize("market", ["KR", "US"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [hashlib.sha256(b"vps:12345678:01").hexdigest(), hashlib.sha256(b"vps:87654321:01").hexdigest()])
 def test_reordered_execution_history_is_one_durable_snapshot_after_restart(
     tmp_path, market, scope,
 ):
     ticker = "005930" if market == "KR" else "AAPL"
+    account = "12345678" if scope == hashlib.sha256(b"vps:12345678:01").hexdigest() else "87654321"
     path = tmp_path / "ledger.json"
     ledger = ExecutionLedger(path)
     claimed, _, token = ledger.claim(
@@ -63,13 +64,13 @@ def test_reordered_execution_history_is_one_durable_snapshot_after_restart(
         calls = []
         def request(path, tr_id, params, **kwargs):
             assert "/inquire-" in path and "/order" not in path
-            assert params["CANO"] == "12345678"
+            assert params["CANO"] == account
             assert params["ACNT_PRDT_CD"] == "01"
             calls.append(path)
             return _Page(market, ordered_rows)
         trader = SimpleNamespace(
-            mode="demo", account_key=scope,
-            trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
+            mode="demo", account_key=f"vps:{account}:01",
+            trenv=SimpleNamespace(my_acct=account, my_prod="01"),
             _request=request,
         )
         result = read_order_history(

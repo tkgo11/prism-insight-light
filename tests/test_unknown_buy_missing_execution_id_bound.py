@@ -55,7 +55,7 @@ def _trader(market, rows):
         return _Page(market, rows)
 
     return SimpleNamespace(
-        mode="demo", account_key="a" * 64,
+        mode="demo", account_key="vps:12345678:01",
         trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
         _request=read_only_request,
     ), calls

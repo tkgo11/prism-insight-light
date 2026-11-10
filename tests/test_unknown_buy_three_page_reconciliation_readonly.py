@@ -3,6 +3,7 @@
 The inquiry is strictly read-only. No broker order, ledger resolution, stop
 activation, or real/demo KIS connection is permitted by these tests.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -54,7 +55,8 @@ def row(market, account, date, execution, cumulative, remaining, *,
 @pytest.mark.parametrize("market", ["KR", "US"])
 @pytest.mark.parametrize("lookup", ["exact", "discovery"])
 @pytest.mark.parametrize("scope,account", [
-    ("a" * 64, "12345678"), ("b" * 64, "87654321"),
+    (sha256(b"vps:12345678:01").hexdigest(), "12345678"),
+    (sha256(b"vps:87654321:01").hexdigest(), "87654321"),
 ])
 @pytest.mark.parametrize("late_case", [
     "valid_partial_cancel", "invalid_remaining",
@@ -112,7 +114,7 @@ def test_three_page_date_reuse_duplicate_and_late_cancel_never_authorizes_stop(
         return next(pages)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )

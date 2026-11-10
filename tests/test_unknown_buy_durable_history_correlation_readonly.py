@@ -4,6 +4,7 @@ Only mocked read-only KIS history; no broker order, stop activation, ledger
 finalization, or fill attribution. Receipt observed_at is NOT a trading date.
 """
 import json
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -51,16 +52,17 @@ def _history(market, scope, *, ticker=None, order_no="00001234", date="20261104"
         "rmn_qty": "6", "ccld_no": "E1", "cncl_yn": "N",
     }
     calls = []
+    account = "12345678" if scope == sha256(b"vps:12345678:01").hexdigest() else "87654321"
 
     def request(path, tr_id, params, **kwargs):
         assert "/inquire-" in path and "/order" not in path
-        assert params["CANO"] == "12345678"
+        assert params["CANO"] == account
         calls.append((path, params))
         return Page(market, [row])
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
-        trenv=SimpleNamespace(my_acct="12345678", my_prod="01"),
+        mode="demo", account_key=f"vps:{account}:01",
+        trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
     result = read_order_history(
@@ -74,7 +76,7 @@ def _history(market, scope, *, ticker=None, order_no="00001234", date="20261104"
 
 
 @pytest.mark.parametrize("market", ["KR", "US"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_single_matching_receipt_is_only_a_possible_nonactionable_match(
     tmp_path, market, scope,
 ):
@@ -99,10 +101,10 @@ def test_history_from_other_scope_or_instrument_never_matches_durable_intent(
     tmp_path, market,
 ):
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     _claim(ledger, "buy-one", market, scope)
     before = ledger.path.read_bytes()
-    foreign_scope = _history(market, "b" * 64)
+    foreign_scope = _history(market, sha256(b"vps:87654321:01").hexdigest())
     other_ticker = "000660" if market == "KR" else "MSFT"
     foreign_ticker = _history(market, scope, ticker=other_ticker)
     for history in (foreign_scope, foreign_ticker):
@@ -120,7 +122,7 @@ def test_same_account_duplicate_receipt_never_selects_arbitrary_unknown_buy(
     tmp_path, market,
 ):
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     _claim(ledger, "buy-one", market, scope)
     _claim(ledger, "buy-two", market, scope)
     before = ledger.path.read_bytes()
@@ -137,7 +139,7 @@ def test_unknown_buy_without_receipt_cannot_be_attributed_from_one_candidate(
     tmp_path, market,
 ):
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     _claim(ledger, "buy-one", market, scope, receipt=False)
     before = ledger.path.read_bytes()
     result = ledger.inspect_unresolved_buy_history("buy-one", _history(market, scope))
@@ -152,7 +154,7 @@ def test_incomplete_history_or_forged_actionable_flag_cannot_clear_pending_fence
     tmp_path, market,
 ):
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     _claim(ledger, "buy-one", market, scope)
     before = ledger.path.read_bytes()
     history = _history(market, scope)
@@ -174,7 +176,7 @@ def test_same_receipt_number_in_two_accounts_isolated_without_fill_attribution(
     tmp_path, market,
 ):
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    a, b = "a" * 64, "b" * 64
+    a, b = sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()
     _claim(ledger, "buy-a", market, a)
     _claim(ledger, "buy-b", market, b)
     before = ledger.path.read_bytes()
@@ -193,7 +195,7 @@ def test_same_account_receipt_reused_for_other_ticker_is_ambiguous(
     tmp_path, market,
 ):
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     _claim(ledger, "buy-one", market, scope)
     _claim(ledger, "buy-other", market, scope,
            ticker="000660" if market == "KR" else "MSFT")
@@ -210,7 +212,7 @@ def test_corrupt_persisted_receipt_blocks_readonly_triage_without_repair(
     tmp_path, market,
 ):
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     _claim(ledger, "buy-one", market, scope)
     data = json.loads(ledger.path.read_text())
     data["buy-one"]["order_receipt"]["order_no"] = "00000000"
@@ -226,7 +228,7 @@ def test_unknown_or_missing_claim_identity_is_never_selected(
     tmp_path, market,
 ):
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     _claim(ledger, "buy-one", market, scope)
     before = ledger.path.read_bytes()
     history = _history(market, scope)
@@ -257,7 +259,7 @@ def test_contradictory_fill_cancel_remaining_evidence_cannot_be_a_possible_match
     Mock-only: no broker orders, fill attribution, stop activation, or ledger mutation.
     """
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     _claim(ledger, "buy-one", market, scope)
     before = ledger.path.read_bytes()
     history = _history(market, scope)
@@ -301,7 +303,7 @@ def test_caller_supplied_zero_order_quantity_cannot_be_possible_receipt_match(
 ):
     """A cached or forged zero-share snapshot cannot pass ledger triage."""
     ledger = ExecutionLedger(tmp_path / "ledger.json")
-    scope = "a" * 64
+    scope = sha256(b"vps:12345678:01").hexdigest()
     _claim(ledger, "buy-one", market, scope)
     before = ledger.path.read_bytes()
     history = _history(market, scope)
@@ -320,7 +322,7 @@ def test_caller_supplied_zero_order_quantity_cannot_be_possible_receipt_match(
     assert ExecutionLedger(ledger.path).claim("buy-one") == (False, "unknown")
 
 @pytest.mark.parametrize("market", ["KR", "US"])
-@pytest.mark.parametrize("scope", ["a" * 64, "b" * 64])
+@pytest.mark.parametrize("scope", [sha256(b"vps:12345678:01").hexdigest(), sha256(b"vps:87654321:01").hexdigest()])
 def test_cached_positive_fill_without_execution_id_is_not_possible_match(
     tmp_path, market, scope,
 ):

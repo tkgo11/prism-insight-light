@@ -5,6 +5,7 @@ trading date, even when two paginated KR/US histories reuse fill IDs. A
 contradictory same-date execution poisons the entire discovery, not just a
 single row. No real/demo KIS requests, broker orders or stop activation.
 """
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
@@ -35,7 +36,8 @@ class _Page:
 
 @pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
 @pytest.mark.parametrize("scope,account", [
-    ("a" * 64, "12345678"), ("b" * 64, "87654321"),
+    (sha256(b"vps:12345678:01").hexdigest(), "12345678"),
+    (sha256(b"vps:87654321:01").hexdigest(), "87654321"),
 ])
 @pytest.mark.parametrize("late_conflict", [False, True])
 def test_discovery_reused_odno_and_fill_ids_across_dates_stays_nonactionable(
@@ -99,7 +101,7 @@ def test_discovery_reused_odno_and_fill_ids_across_dates_stays_nonactionable(
         return next(pages)
 
     trader = SimpleNamespace(
-        mode="demo", account_key=scope,
+        mode="demo", account_key=f"vps:{account}:01",
         trenv=SimpleNamespace(my_acct=account, my_prod="01"),
         _request=request,
     )
