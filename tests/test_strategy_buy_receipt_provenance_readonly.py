@@ -153,3 +153,35 @@ async def test_strategy_buy_noncanonical_receipt_never_becomes_ledger_proof(
     with ExecutionLedger(ledger_path).guard_unresolved_buy(market, ticker) as unresolved:
         assert unresolved is True
     assert dispatcher.stop_loss_tracker.get_position(market, ticker) is None
+
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("broker_outcome", ["executed", "unknown"])
+def test_balance_split_buy_result_retains_broker_receipt_for_strategy_dispatch(
+    market, ticker, broker_outcome,
+):
+    """BalanceSplit and inheriting ScoreMaxCapital use a distinct result type."""
+    from trading.strategies.balance_split import (
+        BalanceSplitStrategy, BalanceSplitStrategyConfig,
+    )
+    signal = parse_signal_payload({
+        "signal_id": f"balance-receipt-{market}-{broker_outcome}",
+        "type": "BUY", "market": market, "ticker": ticker, "price": 100,
+    })
+    result = {
+        "success": broker_outcome == "executed",
+        "message": (
+            "synthetic acceptance (NOT fill)"
+            if broker_outcome == "executed" else "synthetic read timed out"
+        ),
+        "order_no": "00001234",
+    }
+    strategy = BalanceSplitStrategy(
+        config=BalanceSplitStrategyConfig(split_count=2)
+    )
+    execution = strategy._from_trade_result(
+        signal, result=result, available_amount=2000,
+        buy_amount=1000, cash_source="available_amount",
+    )
+    assert execution.status == broker_outcome
+    assert execution.order_no == "00001234"
