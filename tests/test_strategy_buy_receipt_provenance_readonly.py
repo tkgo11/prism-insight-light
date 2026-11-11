@@ -185,3 +185,157 @@ def test_balance_split_buy_result_retains_broker_receipt_for_strategy_dispatch(
     )
     assert execution.status == broker_outcome
     assert execution.order_no == "00001234"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("broker_outcome", ["executed", "unknown"])
+async def test_multiaccount_strategy_buy_receipts_remain_per_account_and_unverified(
+    tmp_path, monkeypatch, market, ticker, broker_outcome,
+):
+    """Two synthetic accounts cannot exchange strategy receipts or fill proof."""
+    path = tmp_path / "multi-ledger.json"
+    accounts = [
+        {"name": "synthetic-a", "account_key": "vps:12345678:01",
+         "account": "12345678", "product": "01", "svr": "vps",
+         "market": market.lower()},
+        {"name": "synthetic-b", "account_key": "vps:87654321:01",
+         "account": "87654321", "product": "01", "svr": "vps",
+         "market": market.lower()},
+    ]
+    receipts = {
+        accounts[0]["account_key"]: "00001234",
+        accounts[1]["account_key"]: "00005678",
+    }
+    calls = []
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    monkeypatch.setattr(
+        SignalSafetyGate, "evaluate_execution",
+        lambda *a, **kw: SimpleNamespace(outcome="allow", fresh_quote=None),
+    )
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=path, fresh_quote_enabled=False,
+    )
+    dispatcher.stop_loss_tracker = StopLossTracker(tmp_path / "stops.json")
+    dispatcher.multi_account_enabled = True
+    monkeypatch.setattr(
+        dispatcher.multi_account_dispatcher, "_eligible_accounts",
+        lambda *a, **kw: (list(accounts), []),
+    )
+
+    class SyntheticStrategy:
+        async def execute(self, incoming, *, trading_mode, trader_kwargs):
+            key = trader_kwargs["account_key"]
+            assert key in receipts and trading_mode == "demo"
+            calls.append(key)
+            return execution_from_result(incoming, {
+                "success": broker_outcome == "executed",
+                "message": (
+                    "synthetic broker receipt (NOT a fill)"
+                    if broker_outcome == "executed" else "synthetic read timed out"
+                ),
+                "order_no": receipts[key],
+            }, "mock strategy")
+
+    monkeypatch.setattr(dispatcher, "_resolve_strategy", lambda _: SyntheticStrategy())
+    signal = parse_signal_payload({
+        "signal_id": f"multi-strategy-receipt-{market}-{broker_outcome}",
+        "type": "BUY", "market": market, "ticker": ticker,
+        "price": 100, "stop_loss": 80,
+    })
+    outcome = await dispatcher.dispatch(signal, allow_queue=False)
+    assert outcome.status == broker_outcome
+    assert len(outcome.accounts) == 2
+    assert [leg.order_id for leg in outcome.accounts] == [
+        receipts[a["account_key"]] for a in accounts
+    ]
+    assert calls == [a["account_key"] for a in accounts]
+    entries = list(json.loads(path.read_text(encoding="utf-8")).values())
+    assert len(entries) == 2
+    for account in accounts:
+        scope = sha256(account["account_key"].encode("utf-8")).hexdigest()
+        matches = [e for e in entries if e["order_intent"]["account_scope"] == scope]
+        assert len(matches) == 1
+        assert matches[0]["order_receipt"]["order_no"] == receipts[account["account_key"]]
+        assert matches[0]["status"] == broker_outcome
+    assert all(a["account_key"] not in path.read_text(encoding="utf-8") for a in accounts)
+    with ExecutionLedger(path).guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
+    again = await dispatcher.dispatch(signal, allow_queue=False)
+    assert again.status == "skipped"
+    assert len(calls) == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("broker_outcome", ["executed", "unknown"])
+async def test_queued_strategy_buy_preserves_receipt_without_replaying_or_attributing_fill(
+    tmp_path, monkeypatch, market, ticker, broker_outcome,
+):
+    """The off-hours queue retains strategy order evidence only after dispatch."""
+    path = tmp_path / "queued-ledger.json"
+    account = {
+        "name": "synthetic", "account_key": "vps:12345678:01",
+        "account": "12345678", "product": "01",
+        "svr": "vps", "market": market.lower(),
+    }
+    open_state = {"is_open": False}
+    calls = []
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: open_state["is_open"])
+    monkeypatch.setattr("trading.dispatch.is_off_hours_order_available", lambda _: False)
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kw: dict(account))
+    monkeypatch.setattr(
+        SignalSafetyGate, "evaluate_execution",
+        lambda *a, **kw: SimpleNamespace(outcome="allow", fresh_quote=None),
+    )
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=path, queue_path=tmp_path / "queue.json",
+        fresh_quote_enabled=False,
+    )
+    dispatcher.stop_loss_tracker = StopLossTracker(tmp_path / "stops.json")
+
+    class SyntheticStrategy:
+        async def execute(self, incoming, *, trading_mode, trader_kwargs):
+            calls.append(trader_kwargs["account_key"])
+            return execution_from_result(incoming, {
+                "success": broker_outcome == "executed",
+                "message": (
+                    "synthetic broker receipt (NOT a fill)"
+                    if broker_outcome == "executed" else "synthetic read timed out"
+                ),
+                "order_no": "00001234",
+            }, "queued mock strategy")
+
+    monkeypatch.setattr(dispatcher, "_resolve_strategy", lambda _: SyntheticStrategy())
+    signal = parse_signal_payload({
+        "signal_id": f"queued-strategy-receipt-{market}-{broker_outcome}",
+        "type": "BUY", "market": market, "ticker": ticker,
+        "price": 100, "stop_loss": 80,
+    })
+    assert (await dispatcher.dispatch(signal)).status == "queued"
+    assert not path.exists()
+    queued = dispatcher.queue._load()[0]
+    open_state["is_open"] = True
+    result = await dispatcher.execute_queued_signal({
+        **queued.signal, "__prism_queue_context": queued.execution_context,
+    })
+    assert result.status == broker_outcome
+    assert result.order_no == "00001234"
+    entries = list(json.loads(path.read_text(encoding="utf-8")).values())
+    assert len(entries) == 1
+    assert entries[0]["order_receipt"]["order_no"] == "00001234"
+    assert entries[0]["order_intent"]["account_scope"] == sha256(
+        account["account_key"].encode("utf-8")
+    ).hexdigest()
+    assert calls == [account["account_key"]]
+    with ExecutionLedger(path).guard_unresolved_buy(market, ticker) as unresolved:
+        assert unresolved is True
+    second = await dispatcher.execute_queued_signal({
+        **queued.signal, "__prism_queue_context": queued.execution_context,
+    })
+    assert second.status in ("skipped", "failed")
+    assert len(calls) == 1
