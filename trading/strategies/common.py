@@ -39,6 +39,8 @@ class StrategyExecution:
     market: str
     ticker: str = ""
     details: dict[str, Any] | None = None
+    # Receipt is broker acceptance evidence only, never a fill or stop authorization.
+    order_no: str | None = None
 
 
 def strategy_name(payload: dict[str, Any] | None) -> str:
@@ -239,6 +241,9 @@ def execution_from_result(signal: SignalMessage, result: dict[str, Any], message
         market=signal.market,
         ticker=signal.ticker,
         details=details or None,
+        # Preserve only string broker identifiers. Dispatch/ledger enforce
+        # canonical numeric KIS receipts and fail closed on ambiguity.
+        order_no=(result.get("order_no") if isinstance(result.get("order_no"), str) else None),
     )
 
 

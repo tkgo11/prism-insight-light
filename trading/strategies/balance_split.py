@@ -56,6 +56,7 @@ class BalanceSplitExecution:
     buy_amount: float
     split_count: int
     cash_source: str = "available_amount"
+    order_no: str | None = None
 
 
 class _BuyTrader(Protocol):
@@ -658,4 +659,5 @@ class BalanceSplitStrategy:
             buy_amount=buy_amount,
             split_count=self.config.split_count,
             cash_source=cash_source,
+            order_no=(result.get("order_no") if isinstance(result.get("order_no"), str) else None),
         )

@@ -1040,6 +1040,7 @@ class TradeDispatcher:
                     strategy_result.message,
                     signal.signal_type,
                     signal.market,
+                    order_no=getattr(strategy_result, "order_no", None),
                 )
             elif order_account is None:
                 result = await self._execute_legacy_trade(signal)
