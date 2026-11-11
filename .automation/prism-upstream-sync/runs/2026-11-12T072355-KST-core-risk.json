@@ -1,0 +1,37 @@
+{
+  "run_id": "scheduled-20261112T072355-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "state_parent": "599f970b95106939b99e109c2f6adb6efd3cec72",
+  "pr": 43,
+  "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "new_reproductions": 0,
+  "new_tests": 0,
+  "new_code_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "verified_read_only": [
+    {
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+      "finding": "read_order_history is explicitly NON-ACTIONABLE and does not authorize stop activation"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711",
+      "finding": "record_read_only_buy_history stores HISTORY_ONLY_UNATTRIBUTED snapshot; no fill attribution or watcher activation"
+    }
+  ],
+  "unverified": [
+    "positive authenticated original BUY date and execution ID provenance",
+    "broker-to-ledger confirmed fill and account-specific watcher activation",
+    "current HEAD CI",
+    "full audits"
+  ],
+  "reason": "Read-only contract confirms positive attribution is intentionally not implemented; no safe test-first mutation was justified without checking producer and watcher and existing test equivalence. No Actions RED run.",
+  "next_exact_action": "Inspect strategy BUY producer and stop-loss watcher call paths plus existing tests at PR HEAD, then author only a nonduplicate synthetic fail-closed test and observe Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}

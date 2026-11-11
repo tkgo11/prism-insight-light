@@ -1,13 +1,13 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261112T061917-KST-core-risk",
+  "run_id": "scheduled-20261112T072355-KST-core-risk",
   "status": "STALLED_READ_ONLY_EVIDENCE",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T061917-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T072355-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect trading/order_reconciliation.py read_order_history and trading/execution_ledger.py record_read_only_buy_history positive attribution and watcher activation; add a nonduplicate synthetic read-only transition test on guarded Draft PR and observe Actions RED."
+  "next_exact_action": "Inspect strategy BUY producer and stop-loss watcher call paths plus existing tests at PR HEAD, then author only a nonduplicate synthetic fail-closed test and observe Actions RED."
 }
