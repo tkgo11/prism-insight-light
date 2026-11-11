@@ -1,0 +1,56 @@
+{
+  "run_id": "scheduled-20261112T021711-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_GAP_IDENTIFIED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": "at least 2 previous reported slots; durable count unverified",
+  "state_before": "d208b368cbe663fbaedbfdd0cdbc5fe8556746c8",
+  "lock_acquired_commit": "f79db9fa0671afe7aebfc4c5309d69795b1a0adc",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "mock_latest_head_CI": [
+    43041452951,
+    43041440961
+  ],
+  "baseline_fail_observed": "historical 43040097744 only",
+  "new_mock_tests": 0,
+  "new_code_fixes": 0,
+  "attempted_reproductions": 0,
+  "candidate_count": 1,
+  "verified_candidates": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "read_files": [
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "blob_sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+      "coverage": "order_no persisted and remains unverified; no authenticated fill attribution"
+    },
+    {
+      "path": "tests/test_readonly_broker_account_scope_provenance.py",
+      "blob_sha": "5c4ea215a1131a5997d551455a5c9b972dff91b8",
+      "coverage": "account scope and pagination drift; not positive stop activation"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711",
+      "coverage": "read-only history validation/recording"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+      "coverage": "stop position registration and check logic"
+    }
+  ],
+  "unverified_transitions": [
+    "authenticated broker acceptance date and execution IDs",
+    "partial fill/cancel remaining quantity to durable ledger",
+    "per-account positive stop activation after verified fill",
+    "restart and crash recovery across broker->ledger->watcher"
+  ],
+  "exact_blocker": "No full producer->broker->ledger->watcher impact matrix completed; cannot safely author expectation for new fail-closed Mock without verifying source semantics. No CI triggered. This is an execution coverage limitation, not KIS credential limitation.",
+  "next_exact_action": "Read trading/execution_ledger.py lines 180-340 and 550-710, trading/dispatch.py BUY finalization, trading/stop_loss_watcher.py record_position/check_stop_loss_once, compare existing tests then add one synthetic read-only broker order_date/execution_id/partial-cancel provenance test to PR #43 using expected HEAD CAS, observe Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
