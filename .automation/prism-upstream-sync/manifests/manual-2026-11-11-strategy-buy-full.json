@@ -1,0 +1,2468 @@
+{
+  "schema_version": 3,
+  "run_id": "manual-connector-financial-audit-20261111-pr43",
+  "observed_at": "2026-11-11T14:52:55.209Z",
+  "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "git_tree_sha": "923bde640e49b0b13f8e4397555c3c2e1be18ba8",
+  "status": "PARTIAL_FILE_EVIDENCE_NO_INDEPENDENT_PASS",
+  "audit_pass": false,
+  "independent_audit_slot_passes": 0,
+  "scope_closure_verified": false,
+  "note": "91 unchanged historical full-file reviews plus 2 current-HEAD full-file reviews; not separate independent audit slots.",
+  "kind": "full_tracked_tree",
+  "file_count": 251,
+  "files_fully_audited": 93,
+  "files": [
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/.editorconfig",
+      "blob_sha": "9ef1765100ab308fc5975d04221ff624cf8b29ea",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/.gitattributes",
+      "blob_sha": "b543473da99005806d2283c49b2720e2b43b98d8",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/.github/workflows/validate.yml",
+      "blob_sha": "32a4802c9cbb27148ba6e42a8347ab0c8e4bb7f3",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/.gitignore",
+      "blob_sha": "55d370322443808c0404fcd62c16f6150fc38773",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/CHANGELOG.md",
+      "blob_sha": "f988533117bb1581ae33895ea07f109f5c0cc364",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/CHECKSUMS.txt",
+      "blob_sha": "3fd838884a1432d0455ca3eb1d91386f4d491c6b",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/Makefile",
+      "blob_sha": "bcb18a41d8b169a78185dc68aba2fc53b41964bb",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/README.md",
+      "blob_sha": "312418e750dd1c5b45dd14b2cf4636c22a46a453",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/SKILL.md",
+      "blob_sha": "f70dfc2d1b8653ba8dc0adeb4c88d53c1f3c3499",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/VERSION",
+      "blob_sha": "ccbccc3dc62631f22ff358ac418e52401ec770b4",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/examples/AGENTS.md.snippet",
+      "blob_sha": "7ba6c4057a2e042f631aa4d1410152196e512f5e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/examples/invocations.md",
+      "blob_sha": "f977ea06226114f0d400e6c6002d8870b1ede1e9",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/install.ps1",
+      "blob_sha": "381ab6b2d1023fb2f725a8e837820c9a17ccc1f7",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/install.sh",
+      "blob_sha": "b15dfa375ab41ac9a90d8d68622c2b121814bbb7",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/scripts/validate_skill.py",
+      "blob_sha": "1688bd8b67f20d6770d59ab7a25f97ec198f3e34",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/standalone/SKILL.md",
+      "blob_sha": "cccfe0cbb54afac76302a4bcc3d8a6165cbcb286",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/tests/test_installers.ps1",
+      "blob_sha": "fe674a150f5d48ce1c422aa157e859eae52c8203",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/tests/test_installers.sh",
+      "blob_sha": "6eceac0f4f752b836ce94ce7d9b9532ea91bcf5c",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/uninstall.ps1",
+      "blob_sha": "3d079e7a2ad8d1d01dfd65140bb520f0c65ee3e2",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/codex-autonomous-maintainer/uninstall.sh",
+      "blob_sha": "00242e7c75103e6e5ffa1d1c33f1eb0a9c844d5e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/prism-insight-light/SKILL.md",
+      "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".agents/skills/prism-insight-light/agents/openai.yaml",
+      "blob_sha": "5b0f9ea241f62d302b5839f4036482bf034780ba",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".claude/ecc-tools.json",
+      "blob_sha": "2c893f7ba0b42ffc1788839737763e55ec4a4150",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".claude/homunculus/instincts/inherited/prism-insight-light-instincts.yaml",
+      "blob_sha": "aa4e351b89edd631eddb9443243430ed5c8324e3",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".claude/identity.json",
+      "blob_sha": "f033d29c5f7e28e61dd4824401d288ab168e0d97",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".claude/skills/prism-insight-light/SKILL.md",
+      "blob_sha": "dc44baf40bd6030728ba1cdd801d05665d34faf2",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".codex/AGENTS.md",
+      "blob_sha": "c7dda2d79ee76ddcbcdd2c723b8839ee75abb0eb",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".codex/agents/docs-researcher.toml",
+      "blob_sha": "ecf4557e443fe460177527c96d387015180823a0",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".codex/agents/explorer.toml",
+      "blob_sha": "e57fb3b60c010bd5e53a1af3f3883ec65707bcff",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".codex/agents/reviewer.toml",
+      "blob_sha": "827de0a18c6398d8e2209a69da471165e1de4c6d",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".codex/agents/test-planner.toml",
+      "blob_sha": "d880784d3839d1478b2ba83120d39dff5a3245e2",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".codex/config.toml",
+      "blob_sha": "cb590f808b9ebddc43444c1fbf6f0673ef718302",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".dockerignore",
+      "blob_sha": "2b8213e1a84f4221cc5784743cf2d6e7b58d0edb",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".env.example",
+      "blob_sha": "1337983d8e65c504c500e11e331abc7fb16c3c30",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "68a5c2fc3a8edb72161eedb2eee29327922ed864",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "CURRENT_RUN_SOURCE_AND_CI_FULL_EVIDENCE_NO_SLOT_PASS",
+      "review_note": "Entire file read/authored and exact current-head CI success",
+      "test_evidence": [
+        "43041440961 push 2792 pytest GREEN",
+        "43041452951 PR 2802 pytest GREEN"
+      ]
+    },
+    {
+      "path": ".gitignore",
+      "blob_sha": "35a1af29fde81bfff3c4b24895ad91dc2da3870c",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "Dockerfile",
+      "blob_sha": "3b0dead05078f0e16e37b53aa0c4d16d0a8e7733",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "LICENSE",
+      "blob_sha": "be3f7b28e564e7dd05eaf59d64adba1a4065ac0e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "README.en.md",
+      "blob_sha": "7551d3cbfbdff121dbdb6ce3a4d3ab8ae58001e2",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "README.ko.md",
+      "blob_sha": "647d2d823ffb080c156eb364afa0fbbf806e852a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "README.md",
+      "blob_sha": "125dcddda02de2d1e1e377d38bb54ab0764f1156",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "check_pubsub_readiness.py",
+      "blob_sha": "2ce8388379013b3bac9c792fb4425080cd18892f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "docs/FINANCIAL_SIGNAL_SIZING_AUDIT.md",
+      "blob_sha": "5ee96cc29933ca9af9b19ec4dfd1d70e743428e2",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "docs/REPOSITORY_AUDIT_2026-11-03.md",
+      "blob_sha": "78ae246efd74fdf88700503a291d7296dd0068cd",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "install_prism_docker.sh",
+      "blob_sha": "c4461aed3bf4358f7fbe2fdda7f13d6a3d87c8ce",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "pubsub_readiness.py",
+      "blob_sha": "41e5e02faf1b5a57a10407ec8075f8dc71f2f129",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "pytest.ini",
+      "blob_sha": "fd7e79a47a073d76514c770332b0258e63fc0045",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "renovate.json",
+      "blob_sha": "16674ff993b4b61a24948ecd1b14f4e6758a71fd",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "blob_sha": "90aee653b4f09cb5667daa34e804a9c88d8b8b76",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "requirements.txt",
+      "blob_sha": "1d15064ec7aaae11fecb249b09ec862e0e8b3e88",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "run.sh",
+      "blob_sha": "0c7ca598f4897814cb11aae8ae6973a56de1b0fa",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "setup_subscriber_crontab.sh",
+      "blob_sha": "5571b59b6bf010fb86e662573d4008ea9f617fba",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "setup_subscriber_docker_crontab.sh",
+      "blob_sha": "50e4462e7e52962936e157dc25d2c6e155142131",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "subscriber.py",
+      "blob_sha": "5e919d3afa3e71a15863ff0a0310c14dbceb12e4",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/conftest.py",
+      "blob_sha": "b35b9f428d5a66510ed8abdab2052361f1a181ff",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "b35b9f428d5a66510ed8abdab2052361f1a181ff"
+    },
+    {
+      "path": "tests/test_balance_split_strategy.py",
+      "blob_sha": "209fda023339f96b178c7e97058806e7ff5cd743",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_balanced_risk_strategy.py",
+      "blob_sha": "77458591e68f6e06b4b66a1e88b7c347bea5793c",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_broker_exception_class_ambiguity.py",
+      "blob_sha": "c0821c386ca9a8ceff4ba7c098c8e989516381f3",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "c0821c386ca9a8ceff4ba7c098c8e989516381f3"
+    },
+    {
+      "path": "tests/test_broker_http_rejection_safety.py",
+      "blob_sha": "8603c39807bdb6075ca319310d10928fed81dd41",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "8603c39807bdb6075ca319310d10928fed81dd41"
+    },
+    {
+      "path": "tests/test_broker_portfolio_header_fail_closed.py",
+      "blob_sha": "c3d3f74c04c728d3c44af3dc109fa98b48adf84f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "c3d3f74c04c728d3c44af3dc109fa98b48adf84f"
+    },
+    {
+      "path": "tests/test_broker_portfolio_pagination_safety.py",
+      "blob_sha": "9b97b9eb7428f589ca912f158cea9b27a0735781",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "9b97b9eb7428f589ca912f158cea9b27a0735781"
+    },
+    {
+      "path": "tests/test_broker_transport_ambiguity_fence.py",
+      "blob_sha": "b1f9f50cbd82864a4fbc79e22a49e3353b345c5c",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "b1f9f50cbd82864a4fbc79e22a49e3353b345c5c"
+    },
+    {
+      "path": "tests/test_buy_order_receipt_durability.py",
+      "blob_sha": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4"
+    },
+    {
+      "path": "tests/test_buy_sizing.py",
+      "blob_sha": "b3ef619dfee6ed59920bcaeab54ef29efcf1d76e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_check_pubsub_readiness.py",
+      "blob_sha": "e0765d4513357ff046a5bcf7aeb567d8e4d10859",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_cooldown_pending_reconciliation.py",
+      "blob_sha": "722173fa7eb4c1018facbe515a0ba020eaad841a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "722173fa7eb4c1018facbe515a0ba020eaad841a"
+    },
+    {
+      "path": "tests/test_direct_cron_script.py",
+      "blob_sha": "d14481c2a3dbe1c591a4134a28fd4c5901cf505a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_dispatch.py",
+      "blob_sha": "bd4b50a02c5ff96ad57bac94af37eea51cee6f25",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_dispatch_cancellation_safety.py",
+      "blob_sha": "4064f0c775f8dd76f5567fde1452ea5b5c1b15b7",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "4064f0c775f8dd76f5567fde1452ea5b5c1b15b7"
+    },
+    {
+      "path": "tests/test_docker_installer_smoke.py",
+      "blob_sha": "b649c7713a170b89733861a5e82487b1e585a765",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_durable_state_directory_sync.py",
+      "blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "f5f23fbdd3d4e67cb6da191c7de75cc9e83da7a7"
+    },
+    {
+      "path": "tests/test_effective_order_metadata.py",
+      "blob_sha": "cdb0a523f5a94e606b77ac0b6f1518dd4c03ea84",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_execution_ledger_retention.py",
+      "blob_sha": "5f11a8322caaec8945fb8ecf422f928f8f8be721",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "5f11a8322caaec8945fb8ecf422f928f8f8be721"
+    },
+    {
+      "path": "tests/test_execution_outcome.py",
+      "blob_sha": "e87b7a346750ef7ce5d0f9df4e39506a7e440917",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "e87b7a346750ef7ce5d0f9df4e39506a7e440917"
+    },
+    {
+      "path": "tests/test_financial_sizing_audit.py",
+      "blob_sha": "3f311e0f82bf704231ec008894bc661dd53084de",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_implicit_live_config_safety.py",
+      "blob_sha": "bb8921553e8855fcf6e7f46d44ffd311f64c00c6",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "bb8921553e8855fcf6e7f46d44ffd311f64c00c6"
+    },
+    {
+      "path": "tests/test_inbound_json_duplicate_keys.py",
+      "blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "17f6e201ea82c3eb928ce67b6a6a9e6e778154f7"
+    },
+    {
+      "path": "tests/test_kis_auth_token_paths.py",
+      "blob_sha": "2aad283cf196af6ceaaa302bac51baad2d70eadf",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_kis_noncanonical_holding_quantity.py",
+      "blob_sha": "0ed8659a458701807f52e2a8ef655e4552fceaab",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "0ed8659a458701807f52e2a8ef655e4552fceaab"
+    },
+    {
+      "path": "tests/test_kis_read_only_order_history.py",
+      "blob_sha": "5f3b049c5204117f261482929287f25288ea0314",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "5f3b049c5204117f261482929287f25288ea0314"
+    },
+    {
+      "path": "tests/test_legacy_unattributed_buy_fence.py",
+      "blob_sha": "a98fa4b0fd2a45e29c8389f35a2868f5d59f7075",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "a98fa4b0fd2a45e29c8389f35a2868f5d59f7075"
+    },
+    {
+      "path": "tests/test_market_hours.py",
+      "blob_sha": "7e140a732dcd94b75fbdcd65cd0ea3476ad49364",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_multi_account_dispatch.py",
+      "blob_sha": "f62a91164f46ce7a103e419b10fdc60be611ac3f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_multi_account_domestic.py",
+      "blob_sha": "17bc20fe8ef1cc399cf1dde6d9a1f85e6cf3415d",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_multi_account_empty_balance_fail_closed.py",
+      "blob_sha": "c569088f272834d3e20829d7b15fc1dfa8ce0964",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "c569088f272834d3e20829d7b15fc1dfa8ce0964"
+    },
+    {
+      "path": "tests/test_multi_account_kis_auth.py",
+      "blob_sha": "a46c30438ab16495e1780f9a47d3e02cf096e718",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_multi_account_malformed_balance_fail_closed.py",
+      "blob_sha": "7d97a580899d56cd85f4a6099af182bf86d25b5e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "7d97a580899d56cd85f4a6099af182bf86d25b5e"
+    },
+    {
+      "path": "tests/test_multi_account_us.py",
+      "blob_sha": "fd078dbc723634021d05ff9cd347d2664223261f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_off_hours_policy.py",
+      "blob_sha": "4b456a6973113ac26c27972923e16fde247e9fb2",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_order_history_alias_consistency.py",
+      "blob_sha": "834d7ac399daa33369c82794782c46a3f350c446",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "834d7ac399daa33369c82794782c46a3f350c446"
+    },
+    {
+      "path": "tests/test_order_history_cursor_alias_integrity.py",
+      "blob_sha": "661ae1c7eb6ee4de5afc82f175772c2c28d23473",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "661ae1c7eb6ee4de5afc82f175772c2c28d23473"
+    },
+    {
+      "path": "tests/test_order_history_missing_target_date.py",
+      "blob_sha": "41af4c8e39a4064137c59e454cf021f99156fe1a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "41af4c8e39a4064137c59e454cf021f99156fe1a"
+    },
+    {
+      "path": "tests/test_order_history_quantity_semantics.py",
+      "blob_sha": "cec80a17d2a5957ef5d012fa46e92bebf1f74915",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "cec80a17d2a5957ef5d012fa46e92bebf1f74915"
+    },
+    {
+      "path": "tests/test_order_history_response_integrity.py",
+      "blob_sha": "3ae9bd04b7b35597a55be1c92f4050e067379472",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "3ae9bd04b7b35597a55be1c92f4050e067379472"
+    },
+    {
+      "path": "tests/test_order_history_uppercase_row_alias_integrity.py",
+      "blob_sha": "35bb73b4e7cd53ddc7f163158a3170979f906db1",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "35bb73b4e7cd53ddc7f163158a3170979f906db1"
+    },
+    {
+      "path": "tests/test_partial_exit_stop_loss_safety.py",
+      "blob_sha": "b99e699d9c376654c50ca640524840d5c851166e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "b99e699d9c376654c50ca640524840d5c851166e"
+    },
+    {
+      "path": "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+      "blob_sha": "5653e71c581605e39e223801ec88d2156f10d71b",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "5653e71c581605e39e223801ec88d2156f10d71b"
+    },
+    {
+      "path": "tests/test_pending_buy_stop_loss_safety.py",
+      "blob_sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2"
+    },
+    {
+      "path": "tests/test_percent_buy_account_summary_finite.py",
+      "blob_sha": "d12d25430518753c31e3fed197ea743360ff4b8a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_profit_band_config_integrity.py",
+      "blob_sha": "b9219d4918af9788b5913f1f579da2595e17de9a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_pubsub_readiness.py",
+      "blob_sha": "cda94ccff0897c4228793cde03bd0d6cb5f5a006",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_queue_and_account_sizing.py",
+      "blob_sha": "1f2765d5f033f4eb01a6f0a5f02a35e0d6dcaf21",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_queue_corrupt_entry_recovery.py",
+      "blob_sha": "1f4fac4e9857bc59156e50de1d780de989b51026",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "1f4fac4e9857bc59156e50de1d780de989b51026"
+    },
+    {
+      "path": "tests/test_queue_execution_context.py",
+      "blob_sha": "5e1b5d5c7f754ceed991e5de4f522762e5954345",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_read_only_history_page_size_bound.py",
+      "blob_sha": "76bf0780f1eca4b7591e7633600f14f11a483da6",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "76bf0780f1eca4b7591e7633600f14f11a483da6"
+    },
+    {
+      "path": "tests/test_readonly_broker_account_scope_provenance.py",
+      "blob_sha": "5c4ea215a1131a5997d551455a5c9b972dff91b8",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "5c4ea215a1131a5997d551455a5c9b972dff91b8"
+    },
+    {
+      "path": "tests/test_readonly_buy_history_evidence_durability.py",
+      "blob_sha": "3d96c5f35c95294c06016a5d3938dc26589d63ef",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "3d96c5f35c95294c06016a5d3938dc26589d63ef"
+    },
+    {
+      "path": "tests/test_readonly_history_replay_order_independence.py",
+      "blob_sha": "da4b868389dd5d4fc599303c568313b4fced95d7",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "da4b868389dd5d4fc599303c568313b4fced95d7"
+    },
+    {
+      "path": "tests/test_run_script.py",
+      "blob_sha": "4cb4b3da37835ae97579547010e632f781590509",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_runtime_paths.py",
+      "blob_sha": "cd12299bb5d5f037484087ee1cf98f5f1a557ef7",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_schema.py",
+      "blob_sha": "fa42823b5396ef94551ba85a63336bfa0f7a02da",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "fa42823b5396ef94551ba85a63336bfa0f7a02da"
+    },
+    {
+      "path": "tests/test_score_band_config_integrity.py",
+      "blob_sha": "354910f908f6f05d7ce856f26efa088bf5d6aadb",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_score_max_capital_strategy.py",
+      "blob_sha": "22c6a7382015fc5376cc05ffb56df4e9f3fe4633",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_signal_exit_strategies.py",
+      "blob_sha": "ec952e7c4052279de1b7db528cbfa05d900f9fd6",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_signal_integer_precision.py",
+      "blob_sha": "7f149439d02cc84c0fda7e7d3dcab0b5f6060180",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_signal_safety.py",
+      "blob_sha": "b925516786c2a6d1619fa9a8de9fd97c93b9b345",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_signal_schema.py",
+      "blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "0abe7d0e6e89df527d6776c41b276e220923d8c9"
+    },
+    {
+      "path": "tests/test_single_account_buy_provenance.py",
+      "blob_sha": "31691b83f1bccd3bc8971d276e350109c51ae684",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_stop_loss_account_selection.py",
+      "blob_sha": "f3e992bb83678d3c60d920f7ec36816f98820ca4",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "f3e992bb83678d3c60d920f7ec36816f98820ca4"
+    },
+    {
+      "path": "tests/test_stop_loss_legacy_quarantine.py",
+      "blob_sha": "97657edc424b61e1789034de08e6bf69b2ebc695",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "97657edc424b61e1789034de08e6bf69b2ebc695"
+    },
+    {
+      "path": "tests/test_stop_loss_mismatched_key_quarantine.py",
+      "blob_sha": "3ac8519a8bb699d499b891b6fa0d78ec7955265d",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "3ac8519a8bb699d499b891b6fa0d78ec7955265d"
+    },
+    {
+      "path": "tests/test_stop_loss_signal_identity.py",
+      "blob_sha": "82be94f9dff37d58d5f333b33297309b332b03e8",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "82be94f9dff37d58d5f333b33297309b332b03e8"
+    },
+    {
+      "path": "tests/test_stop_loss_snapshot_preflight.py",
+      "blob_sha": "e5227529f3ae172150702cddc56915b85258c5ee",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "e5227529f3ae172150702cddc56915b85258c5ee"
+    },
+    {
+      "path": "tests/test_stop_loss_strategy_market_order.py",
+      "blob_sha": "64ac3bb603c87a4fbce01a6694830487d1783ce8",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "64ac3bb603c87a4fbce01a6694830487d1783ce8"
+    },
+    {
+      "path": "tests/test_stop_loss_watcher.py",
+      "blob_sha": "4a01653810a0e5758da7a925dadc30e06652347f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "blob_sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "CURRENT_RUN_SOURCE_AND_CI_FULL_EVIDENCE_NO_SLOT_PASS",
+      "review_note": "Entire file read/authored and exact current-head CI success",
+      "test_evidence": [
+        "43041440961 push 2792 pytest GREEN",
+        "43041452951 PR 2802 pytest GREEN"
+      ]
+    },
+    {
+      "path": "tests/test_strategy_partial_matrix.py",
+      "blob_sha": "a57d37d6acf86f34b0334793d135a02af7d53d9f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_strategy_runtime_fail_closed.py",
+      "blob_sha": "cb4120f4c6cb765de42765655773166f0c909f75",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_strategy_semantic_state_safety.py",
+      "blob_sha": "ab1e6b1ab76b96f5f8c9d05bb94a06e4f544e9c4",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_strategy_suite.py",
+      "blob_sha": "a76728d36349b4d36f47d1a2629a43f8e5f39692",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_subscriber_smoke.py",
+      "blob_sha": "baaad276d08c5ff7fde4f413401bf75e2282a45a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_telegram_fetch.py",
+      "blob_sha": "2fc3284381b3690b87f0da591582bc71cdf127e9",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_telegram_signal_worker.py",
+      "blob_sha": "a2f30413b66c9fdf71b350b56af3cc001b431669",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_unknown_buy_candidate_discovery.py",
+      "blob_sha": "98c5795bfe05d21f301442f06b3e2e3acc43d232",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "98c5795bfe05d21f301442f06b3e2e3acc43d232"
+    },
+    {
+      "path": "tests/test_unknown_buy_cross_market_order_collision_readonly.py",
+      "blob_sha": "e38b9f96838bdee17882e539662001a145a28bbf",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "e38b9f96838bdee17882e539662001a145a28bbf"
+    },
+    {
+      "path": "tests/test_unknown_buy_cross_row_bounds.py",
+      "blob_sha": "35a7aad0e129d24ac0a65147cf5051cd0259954f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "35a7aad0e129d24ac0a65147cf5051cd0259954f"
+    },
+    {
+      "path": "tests/test_unknown_buy_cumulative_execution_gap_readonly.py",
+      "blob_sha": "e5d0dc11fcb7b6b0203cbe40b4e4e7ce46ae6b53",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "e5d0dc11fcb7b6b0203cbe40b4e4e7ce46ae6b53"
+    },
+    {
+      "path": "tests/test_unknown_buy_delayed_fill_fence.py",
+      "blob_sha": "6a2325723a1b58e63fb3e78475fc118f3d860583",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "6a2325723a1b58e63fb3e78475fc118f3d860583"
+    },
+    {
+      "path": "tests/test_unknown_buy_discovery_date_reuse_readonly.py",
+      "blob_sha": "83ee9f346a8324a2f69a0be96539413b9d068dd1",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "83ee9f346a8324a2f69a0be96539413b9d068dd1"
+    },
+    {
+      "path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+      "blob_sha": "cb0166ef05bcbd27e04e9e38fd5beb55938f4267",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "cb0166ef05bcbd27e04e9e38fd5beb55938f4267"
+    },
+    {
+      "path": "tests/test_unknown_buy_history_integer_overflow.py",
+      "blob_sha": "f0ed51dc7ccbac642bd100fb3a2a8932f018cb79",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "f0ed51dc7ccbac642bd100fb3a2a8932f018cb79"
+    },
+    {
+      "path": "tests/test_unknown_buy_intent_durability.py",
+      "blob_sha": "067f69b773d7d1a17a8f51fc6e04a02684d0c83a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "067f69b773d7d1a17a8f51fc6e04a02684d0c83a"
+    },
+    {
+      "path": "tests/test_unknown_buy_missing_execution_id_bound.py",
+      "blob_sha": "33b1c68e176f94008f47637a1ec3f706530c4551",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "33b1c68e176f94008f47637a1ec3f706530c4551"
+    },
+    {
+      "path": "tests/test_unknown_buy_real_mode_readonly.py",
+      "blob_sha": "d1dfed29362fd7ea467ce2c7fa42ba3e04e68c7b",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "d1dfed29362fd7ea467ce2c7fa42ba3e04e68c7b"
+    },
+    {
+      "path": "tests/test_unknown_buy_receipt_date_reuse_readonly.py",
+      "blob_sha": "63b9963d2c3fb02713624a379ca756661484ae00",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "63b9963d2c3fb02713624a379ca756661484ae00"
+    },
+    {
+      "path": "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py",
+      "blob_sha": "e4805fd8254949ef597dc14a2e246fe3afdcedb7",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "e4805fd8254949ef597dc14a2e246fe3afdcedb7"
+    },
+    {
+      "path": "tests/test_unknown_buy_sdk_success_type_readonly.py",
+      "blob_sha": "7648b4ee3c091e4bc476aef7c560e4208da235dc",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "7648b4ee3c091e4bc476aef7c560e4208da235dc"
+    },
+    {
+      "path": "tests/test_unknown_buy_three_page_reconciliation_readonly.py",
+      "blob_sha": "eae366b7e46f0a44281b8de43d2d280cb05e8c67",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "eae366b7e46f0a44281b8de43d2d280cb05e8c67"
+    },
+    {
+      "path": "tests/test_unknown_buy_us_venue_provenance_readonly.py",
+      "blob_sha": "c294214971c2e4f7cd6d7971b24be4336f0589f4",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "c294214971c2e4f7cd6d7971b24be4336f0589f4"
+    },
+    {
+      "path": "tests/test_unresolved_buy_without_stop_loss.py",
+      "blob_sha": "7751ce96f23a336c8ed5a5dd15aac35e6f505deb",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "7751ce96f23a336c8ed5a5dd15aac35e6f505deb"
+    },
+    {
+      "path": "tests/test_upstream_exact_sell_fraction.py",
+      "blob_sha": "758c8cf1eba0a2ef3e9188f2094dae268419da9f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_upstream_signal_sizing.py",
+      "blob_sha": "b4e98d37f1708ef203be0263172e795e9a94e075",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_upstream_strategy_compatibility.py",
+      "blob_sha": "c60e3d868f8ee231dac4caf23a0fd5a0b2f4782a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_watcher_buy_sell_interleaving_mock.py",
+      "blob_sha": "4d519d23891fcd4e5c24643344d7361693d2a48c",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "4d519d23891fcd4e5c24643344d7361693d2a48c"
+    },
+    {
+      "path": "tests/test_watcher_cross_process_buy_fence_mock.py",
+      "blob_sha": "82ae87b6fa01008c71abc76371304dde230d8365",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "82ae87b6fa01008c71abc76371304dde230d8365"
+    },
+    {
+      "path": "tests/test_watcher_origin_spoofing.py",
+      "blob_sha": "d51905a710f75ac1403eef339e2a202f61b64d6b",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_watcher_strategy_bypass.py",
+      "blob_sha": "49ec5a4c90a67d731fb62b2db997957a4550824b",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "49ec5a4c90a67d731fb62b2db997957a4550824b"
+    },
+    {
+      "path": "tests/test_wave4_execution_safety.py",
+      "blob_sha": "38ecc2cffd3a21f6bfdc78f9d17a4e1d8e6abd59",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_webui_console.py",
+      "blob_sha": "378b6a6da0bf820e39faa300d9a1448febbcacdf",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_webui_dry_run_service.py",
+      "blob_sha": "17960df01e1b1e675a813ce34e861d9c4a10331e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "17960df01e1b1e675a813ce34e861d9c4a10331e"
+    },
+    {
+      "path": "tests/test_webui_log_service.py",
+      "blob_sha": "91a863e2e5f81ce0f73ada7d7ac43d0bcf5c6b11",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_webui_manual_buy_durable_intent.py",
+      "blob_sha": "eb7c816267b8b08e899e84fd752bde67d07de93e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "eb7c816267b8b08e899e84fd752bde67d07de93e"
+    },
+    {
+      "path": "tests/test_webui_queue_service.py",
+      "blob_sha": "eb9f2b0207d83c7f45540f64473bbd89c0c36138",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_webui_readiness_service.py",
+      "blob_sha": "344cadc082a6b7a10fa66da01d2ce8344b6626de",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "344cadc082a6b7a10fa66da01d2ce8344b6626de"
+    },
+    {
+      "path": "tests/test_webui_routes.py",
+      "blob_sha": "64b568e9bb566b053e8e4f7f753162777f0b2cfc",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_webui_security.py",
+      "blob_sha": "d25e2cdba7c6ea5c5279ab032cfe4d30d99f43fa",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_webui_signal_service.py",
+      "blob_sha": "3b4aa6628f88c9b415e01ee86eb9941a73787547",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "3b4aa6628f88c9b415e01ee86eb9941a73787547"
+    },
+    {
+      "path": "tests/test_webui_startup.py",
+      "blob_sha": "999f9a3cd0ac77e3ff9003e95e7c0b6b288b3f63",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_webui_telegram_service.py",
+      "blob_sha": "556d9084efb712c5adca05c6366c85d4a7134481",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/test_zero_order_number_reconciliation.py",
+      "blob_sha": "915730fa82d4275296d3b7c6f12c236ac91916d3",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "915730fa82d4275296d3b7c6f12c236ac91916d3"
+    },
+    {
+      "path": "tests/webui_browser_smoke.cjs",
+      "blob_sha": "53aec023f1b2e3d3148853d02a35f2a0804df34e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "tests/webui_fixture_server.py",
+      "blob_sha": "9e2ee38cb00c41375f1f7cc0711106aebe483639",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/STRATEGIES.md",
+      "blob_sha": "65adb322efb0bcd103045ad122d1d5d0d3f3d758",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/__init__.py",
+      "blob_sha": "a0326b8406920998e8dbe830d120148840ddfe01",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "a0326b8406920998e8dbe830d120148840ddfe01"
+    },
+    {
+      "path": "trading/buy_sizing.py",
+      "blob_sha": "bae6cd582801b40d70ad8054e3eb2de189fb746b",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/config/kis_devlp.yaml.example",
+      "blob_sha": "0f9ffd629f9c96cf55ad068a143c77364d748016",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/config_paths.py",
+      "blob_sha": "64e9ac586681ab5144cf6de6582d027ee9abf21e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "64e9ac586681ab5144cf6de6582d027ee9abf21e"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "7cde54f3ba157958ae7c09c4dac925c30b099997",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711"
+    },
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "24a8ca67746d4eaf712d54861585beecede40ce7"
+    },
+    {
+      "path": "trading/file_lock.py",
+      "blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "9538b7ad2a336f64f1f6341d21edd0ca493b0c69"
+    },
+    {
+      "path": "trading/kis_auth.py",
+      "blob_sha": "5b2113b2439bed4d06b18217e9a575fff8f14319",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/market_hours.py",
+      "blob_sha": "931a5689ac00ae81b1c7ae3958bae295119a5cb9",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "931a5689ac00ae81b1c7ae3958bae295119a5cb9"
+    },
+    {
+      "path": "trading/modes.py",
+      "blob_sha": "49caad45c48992394cc00b090495cb1bc4cbbd85",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "49caad45c48992394cc00b090495cb1bc4cbbd85"
+    },
+    {
+      "path": "trading/off_hours_queue.py",
+      "blob_sha": "df7091f091dc47b2b8140cd7239b0e4e79df9bc5",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb"
+    },
+    {
+      "path": "trading/portfolio_pagination.py",
+      "blob_sha": "cb8e36b0dc69e02296c93a611fb859bb7f884c4f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "cb8e36b0dc69e02296c93a611fb859bb7f884c4f"
+    },
+    {
+      "path": "trading/schema.py",
+      "blob_sha": "61cb3dac81c8708edf1c9103392b8fd2875c2716",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/signal_safety.py",
+      "blob_sha": "2a30edf46e86b295c8e1f1b599511f28146884fb",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/signal_sizing.py",
+      "blob_sha": "6530287a535d3912f5e9220492d6b25539157b28",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+    },
+    {
+      "path": "trading/strategies/README.md",
+      "blob_sha": "86fcbe68e561b19b3687ba10ba8498e5dc44fe6a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/__init__.py",
+      "blob_sha": "f5ce41bce6f6c9fc314ebcd401df0df376e79232",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "f5ce41bce6f6c9fc314ebcd401df0df376e79232"
+    },
+    {
+      "path": "trading/strategies/balance_split.py",
+      "blob_sha": "641baf2f291d7708f721faa9a6d8713568cc4787",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/balanced_risk.py",
+      "blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "51162a7406a69e9b81cd27ce81cf74c5ea690220"
+    },
+    {
+      "path": "trading/strategies/bracket_exit.py",
+      "blob_sha": "7355e0a20212f77926e8d856b7d0539b9dc670c0",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "7355e0a20212f77926e8d856b7d0539b9dc670c0"
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "71bd1583fab8569c10d58fbf4047807cf6bb1f26",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/cooldown.py",
+      "blob_sha": "824afe8cd6f71f43a937c3684f3bf97264627bee",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "824afe8cd6f71f43a937c3684f3bf97264627bee"
+    },
+    {
+      "path": "trading/strategies/event_risk_off.py",
+      "blob_sha": "a243343f6dc3f5fcbbeadc475c0962a72d54df8f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/limit_buffer.py",
+      "blob_sha": "d61848090f664b45155be1efbf017030de08eacd",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "d61848090f664b45155be1efbf017030de08eacd"
+    },
+    {
+      "path": "trading/strategies/profit_ladder.py",
+      "blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "c2982be1a6cd5f961cb86c84279b51bf83e9158c"
+    },
+    {
+      "path": "trading/strategies/protective_exit.py",
+      "blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "178c42275cacd8d8bcac5aaed879199a6733bb09"
+    },
+    {
+      "path": "trading/strategies/risk_bracket.py",
+      "blob_sha": "a21130bbdfb8ff1957321542ab19131b2202beaf",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/score_max_capital.py",
+      "blob_sha": "8b8480cf9578380a1c69022318737f3c970e9c5a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/score_risk.py",
+      "blob_sha": "113bb68e4fa2a0c057e0ea67a7847ed630a6fa5e",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/score_weighted.py",
+      "blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "82cb7fa8af78b47b666f777005acbc0c0674e6af"
+    },
+    {
+      "path": "trading/strategies/signal_trailing_stop.py",
+      "blob_sha": "796593dc47c9202b5c0b0e429006265fb5de0157",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/strategies/stop_loss_sell.py",
+      "blob_sha": "51da4cd995adc32a0ee0ab97a5ce3e31160cd870",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "51da4cd995adc32a0ee0ab97a5ce3e31160cd870"
+    },
+    {
+      "path": "trading/strategy_names.py",
+      "blob_sha": "2fbd9fd37b9b37c6fd1fdf532de5c09809e94705",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "2fbd9fd37b9b37c6fd1fdf532de5c09809e94705"
+    },
+    {
+      "path": "trading/telegram_fetch.py",
+      "blob_sha": "a78875c325fadb7745734897406468cebb6ce61a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "263dc9839a3fc1334d152895fdbd9648ab596b89",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "trading/yaml_compat.py",
+      "blob_sha": "d28beb4d042ec631409ebe17d01588fe3b00c2a6",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "d28beb4d042ec631409ebe17d01588fe3b00c2a6"
+    },
+    {
+      "path": "webui/__init__.py",
+      "blob_sha": "7a80de1688e723fec4a0cbb96ca21e005525a4ea",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/__main__.py",
+      "blob_sha": "fcabfa185168eac19da0b2ac5dd6110afc5858b9",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/app.py",
+      "blob_sha": "0a9576bb59e01e131250b5ab06ac5baf57e8ef76",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/__init__.py",
+      "blob_sha": "ddddf4858bec829a4cc1770e3728a84068f44322",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/activity.py",
+      "blob_sha": "d003a105c30d2a70934f447d6f0f73c794e82f8a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/dashboard.py",
+      "blob_sha": "93ad8dffab06496b5ab3ea85596144e3c30adbc5",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/dry_run.py",
+      "blob_sha": "fd8269d909fbc06d8f38a1c693dafb6f4b7dd1be",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/guards.py",
+      "blob_sha": "902d3029c3c3ca2990f43cf46dcf816663471e98",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/logs.py",
+      "blob_sha": "e2d680f356062a1d3ad9027b08a90beffe30e481",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/queue.py",
+      "blob_sha": "eba37a4c0e4bc58c9d077432ff9944bbee5b6d14",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/readiness.py",
+      "blob_sha": "17b9e8c143a1901169cbb8e8d15f41ff43a14e56",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/signals.py",
+      "blob_sha": "54e65e576cde8b3455494c81233c994093293c42",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/telegram.py",
+      "blob_sha": "652624391aa1752cd3453432d56aff036a6fb79d",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/routes/trading.py",
+      "blob_sha": "1c7aefddb3bc1b5a893942d47a68c054c99f7b43",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/services/account_service.py",
+      "blob_sha": "586aee6b00713da80a49b3d366afffda554df94f",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/services/activity_service.py",
+      "blob_sha": "67fb004425f6f59b06227a59c5263409276c6170",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/services/dry_run_service.py",
+      "blob_sha": "01e94a72fb3c3dcfd481bcddfdb9463eeb00976a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "01e94a72fb3c3dcfd481bcddfdb9463eeb00976a"
+    },
+    {
+      "path": "webui/services/log_service.py",
+      "blob_sha": "164e7ca0e1b66a9042b0be20c784c6a34e95af2b",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/services/masking.py",
+      "blob_sha": "0214b94b9acf52f6668cd2dedfbf6edde5921b81",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/services/queue_service.py",
+      "blob_sha": "5676ec357f18e38a65e212bd8de957c1c29527eb",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/services/readiness_service.py",
+      "blob_sha": "472da75058b3a852760e33731476390777f6e6e8",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "472da75058b3a852760e33731476390777f6e6e8"
+    },
+    {
+      "path": "webui/services/signal_service.py",
+      "blob_sha": "2cd96c0143da8d1d9194500031a74158b7571135",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "2cd96c0143da8d1d9194500031a74158b7571135"
+    },
+    {
+      "path": "webui/services/telegram_service.py",
+      "blob_sha": "8bf1ad38fbc48d319e432a71a2872f46bac9e536",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/services/trade_service.py",
+      "blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": true,
+      "audit_pass": false,
+      "evidence_status": "HISTORICAL_FULL_FILE_EVIDENCE_BLOB_MATCH",
+      "previous_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json",
+      "previous_blob_sha": "ad83b8a3dfe5f95443dc640d04fc2c4bba1d488c"
+    },
+    {
+      "path": "webui/static/console.css",
+      "blob_sha": "b5ec46d0a14289d17d667199fc9e414096da0f92",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/static/console.js",
+      "blob_sha": "8fab1f7b73a604c4182098604dcbc1b33df8ecc6",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/static/favicon.svg",
+      "blob_sha": "41aaeecbbda6c7a0da6429f73f250091af2e228a",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/static/style.css",
+      "blob_sha": "1a640490eaf214467390987595ddc6d58fba8c6d",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/activity.html",
+      "blob_sha": "6a656b2262c26d38f80a73aeed24d666fa1c4c94",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/base.html",
+      "blob_sha": "94d9feaed645f8fb06c35e22d44228dc1787afde",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/dashboard.html",
+      "blob_sha": "e4c4d3d2c9467320451c13d3849bc64d1eecbae0",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/dry_run.html",
+      "blob_sha": "b322d66efea7dac30998e5a9d591a0b860ca6744",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/logs.html",
+      "blob_sha": "df8c3a5a9dabb71fe22ea2c2e8b4934000c43726",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/queue.html",
+      "blob_sha": "e141d1a4901feab19ac900f71abad43e0fa7bac0",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/readiness.html",
+      "blob_sha": "7326ceeea4400cb06d6d050790dd01965725afb1",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/signals.html",
+      "blob_sha": "80065293abffc797fae9e5c58c3396c6f64fd4b6",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/telegram.html",
+      "blob_sha": "dce3410f1e3e7922ba2393e6cb8d0add520b5a98",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    },
+    {
+      "path": "webui/templates/trading.html",
+      "blob_sha": "6c9bbc9bec5dd0f30b557e2c2f7459bb4774f91b",
+      "mode": "100644",
+      "type": "blob",
+      "file_audit_complete": false,
+      "audit_pass": false,
+      "evidence_status": "PENDING_FULL_FILE_AUDIT"
+    }
+  ]
+}
