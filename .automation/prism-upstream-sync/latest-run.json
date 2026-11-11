@@ -1,19 +1,18 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261112T041612-KST-core-risk",
+  "run_id": "scheduled-20261112T051647-KST-core-risk",
   "status": "STALLED_READ_ONLY_EVIDENCE",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
   "base_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T041612-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T051647-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "prior_report_path": ".automation/prism-upstream-sync/runs/manual-2026-11-11-strategy-buy-receipt-red-green.json",
-  "next_exact_action": "Read broker history producer and operator reconciliation entrypoint, then add missing synthetic read-only fail-closed test under guarded PR HEAD and observe GitHub Actions RED. No KIS calls or live orders.",
+  "next_exact_action": "Inspect read_order_history lines 248-437 and execution ledger writer/caller; author nonduplicated read-only Mock for authenticated history-to-ledger positive/ambiguous transition, commit test first to guarded Draft PR and observe Actions RED.",
   "core_risk_gate": {
-    "mock_result": "NOT_RUN_THIS_SLOT; historical 24 synthetic cases GREEN at prior HEAD",
-    "baseline_fail_observed": "HISTORICAL only",
-    "exact_blocker": "Existing test coverage verified by code inspection; no new executable test was authored or Actions dispatched. Core safety transition remains unverified, no audit PASS."
+    "mock_result": "NOT_RUN_THIS_SLOT; historical 24 synthetic cases GREEN",
+    "baseline_fail_observed": "HISTORICAL_ONLY",
+    "exact_blocker": "No new test authored or Actions dispatched; safety-critical positive transition still unverified. Not a KIS or local DNS blocker."
   }
 }

@@ -1,0 +1,32 @@
+{
+  "run_id": "scheduled-20261112T051647-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_before": "cdc7ae72b8fa60e61eaafe55820cbb05c588ccf9",
+  "lock_acquire_commit": "46248f58a67febeff5c356dfedbbf831b7160b54",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": {
+    "trading/order_reconciliation.py": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+    "tests/test_kis_read_only_order_history.py": "5f3b049c5204117f261482929287f25288ea0314",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "evidence": "Confirmed existing KR/US synthetic order history tests for partial/cancel, account, date, pagination, duplicate and restart; strategy receipt test has five parametrized groups. No new executable scenario or CI run in this slot.",
+  "new_tests": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "candidates_verified": 0,
+  "related_passes_earned": 0,
+  "full_passes_earned": 0,
+  "unverified_transitions": [
+    "authenticated acceptance date/execution-ID to durable ledger",
+    "broker-backed positive per-account stop activation",
+    "production operator read-only reconciliation entrypoint"
+  ],
+  "exact_blocker": "No new test authored or Actions dispatched; safety-critical positive transition still unverified. Not a KIS or local DNS blocker.",
+  "next_exact_action": "Inspect read_order_history lines 248-437 and execution ledger writer/caller; author nonduplicated read-only Mock for authenticated history-to-ledger positive/ambiguous transition, commit test first to guarded Draft PR and observe Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
