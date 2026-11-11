@@ -1,18 +1,11 @@
 {
-  "run_id": "prism-connector-20261110-1924-single-account-pin",
-  "status": "RELEASED",
-  "acquired_at": "2026-11-10T10:24:33Z",
-  "expected_state_parent": "4f7ea5d62105b2b03186305adc0ddb46963a94ef",
-  "expected_pr_head": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+  "run_id": "manual-connector-financial-audit-20261111-pr43",
+  "status": "ACTIVE",
+  "acquired_at": "2026-11-11T14:29:13.877Z",
+  "expected_state_parent": "5e776a9a45a68265900ed0c13a13dc52f60effa3",
+  "expected_pr_head": "1f4fa5b5c17cc01f533b0314fe84af15fa9ad3fa",
   "observed_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
   "prior_lock_status": "RELEASED",
-  "purpose": "test-first single-account account provenance; no orders/KIS calls",
-  "released_at": "2026-11-11T13:59:18.508Z",
-  "release_reason": "MANUAL_USER_AUTHORIZED_STALE_LOCK_RECOVERY",
-  "released_by_run_id": "manual-user-requested-stale-lock-recovery-20261111",
-  "release_report_path": ".automation/prism-upstream-sync/runs/2026-11-11T2258-KST-manual-stale-lock-recovery.json",
-  "release_expected_state_head": "cf30df05b562fe45e8869f22f6974a7a7282f6ea",
-  "release_observed_pr_head": "1f4fa5b5c17cc01f533b0314fe84af15fa9ad3fa",
-  "release_conflict_detected": true,
-  "release_in_same_cas_commit": true
+  "purpose": "Test-first KR/US read-only strategy BUY broker receipt/order number durability and per-account stop activation safety audit; absolutely no KIS calls/orders",
+  "release_requirement": "Same-run CAS release with latest-run/report"
 }
