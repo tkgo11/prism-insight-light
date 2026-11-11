@@ -1,18 +1,13 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261112T051647-KST-core-risk",
+  "run_id": "scheduled-20261112T061917-KST-core-risk",
   "status": "STALLED_READ_ONLY_EVIDENCE",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "base_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T051647-KST-core-risk.json",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T061917-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect read_order_history lines 248-437 and execution ledger writer/caller; author nonduplicated read-only Mock for authenticated history-to-ledger positive/ambiguous transition, commit test first to guarded Draft PR and observe Actions RED.",
-  "core_risk_gate": {
-    "mock_result": "NOT_RUN_THIS_SLOT; historical 24 synthetic cases GREEN",
-    "baseline_fail_observed": "HISTORICAL_ONLY",
-    "exact_blocker": "No new test authored or Actions dispatched; safety-critical positive transition still unverified. Not a KIS or local DNS blocker."
-  }
+  "next_exact_action": "Inspect trading/order_reconciliation.py read_order_history and trading/execution_ledger.py record_read_only_buy_history positive attribution and watcher activation; add a nonduplicate synthetic read-only transition test on guarded Draft PR and observe Actions RED."
 }

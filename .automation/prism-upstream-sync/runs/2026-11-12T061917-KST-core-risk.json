@@ -1,0 +1,30 @@
+{
+  "run_id": "scheduled-20261112T061917-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "state_parent": "d486a7553b72ec52f5e1d2116d2e5aed73cf9c8e",
+  "pr": 43,
+  "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "new_reproductions": 0,
+  "new_tests": 0,
+  "new_code_fixes": 0,
+  "verified_read_only": [
+    "state branch HEAD and released prior lock",
+    "PR #43 draft HEAD and base",
+    "strategy receipt test existing KR/US executed/unknown, multiaccount, queue, noncanonical receipt",
+    "durable ledger receipt restart, stale claim, persistence failure",
+    "pending stop-loss fail-closed tests"
+  ],
+  "unverified": [
+    "authenticated read-only history positive attribution to ledger and account-specific stop activation",
+    "current PR HEAD CI and complete audits"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "reason": "Existing equivalent negative/fail-closed coverage found; positive authenticated broker-history-to-ledger transition not yet verified. No test authored or Actions RED observed in this slot.",
+  "next_exact_action": "Inspect trading/order_reconciliation.py read_order_history and trading/execution_ledger.py record_read_only_buy_history positive attribution and watcher activation; add a nonduplicate synthetic read-only transition test on guarded Draft PR and observe Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
