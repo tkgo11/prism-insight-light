@@ -1,20 +1,9 @@
 {
-  "run_id": "manual-connector-financial-audit-20261111-pr43",
-  "status": "RELEASED",
-  "acquired_at": "2026-11-11T14:29:13.877Z",
-  "expected_state_parent": "5e776a9a45a68265900ed0c13a13dc52f60effa3",
+  "run_id": "scheduled-20261112T001635-KST-core-risk",
+  "status": "ACTIVE",
+  "acquired_at": "2026-11-12T00:16:35+09:00",
+  "expected_state_parent": "2b83436cfcfe72ef66e3a47991e10f2757259cae",
   "expected_pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
   "observed_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "prior_lock_status": "RELEASED",
-  "purpose": "Test-first KR/US read-only strategy BUY broker receipt/order number durability and per-account stop activation safety audit; absolutely no KIS calls/orders",
-  "release_requirement": "Same-run CAS release with latest-run/report",
-  "released_at": "2026-11-11T14:54:16.965Z",
-  "released_by_run_id": "manual-connector-financial-audit-20261111-pr43",
-  "report_path": ".automation/prism-upstream-sync/runs/manual-2026-11-11-strategy-buy-receipt-red-green.json",
-  "result": "CORE_RISK_STRATEGY_RECEIPT_RED_GREEN_MOCK_VALIDATED_NOT_KIS",
-  "release_expected_state_parent": "b54dc9992b7d266703fc61d769add4c1eaf85626",
-  "release_in_same_cas_commit": true,
-  "real_orders": 0,
-  "demo_orders": 0,
-  "kis_calls": 0
+  "purpose": "Read-only mock provenance audit; no KIS or real orders"
 }
