@@ -1,0 +1,58 @@
+{
+  "run_id": "scheduled-20261112T082454-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "state_parent": "740fc47a8b97e6abb7702cc86e25f24bbb79f5d8",
+  "pr": 43,
+  "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "new_reproductions": 0,
+  "new_tests": 0,
+  "new_code_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "verified_read_only": [
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "blob_sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+      "finding": "Existing synthetic strategy BUY tests cover KR/US executed/unknown receipt persistence, queued and multiaccount scope; watcher stays unresolved; no fill attribution"
+    },
+    {
+      "path": "tests/test_buy_order_receipt_durability.py",
+      "blob_sha": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+      "finding": "Existing ledger restart and receipt persistence tests cover canonical receipt, claim fencing, disk failure"
+    },
+    {
+      "path": "tests/test_single_account_buy_provenance.py",
+      "blob_sha": "31691b83f1bccd3bc8971d276e350109c51ae684",
+      "finding": "Existing legacy/strategy/queued account pinning mock coverage"
+    },
+    {
+      "path": "tests/test_unresolved_buy_without_stop_loss.py",
+      "blob_sha": "7751ce96f23a336c8ed5a5dd15aac35e6f505deb",
+      "finding": "Existing watcher mock blocks sell during unresolved BUY"
+    }
+  ],
+  "latest_head_checks": [
+    {
+      "name": "Full pytest suite",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Windows runtime smoke",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "unverified": [
+    "Positive authoritative broker fill attribution with execution ID/date",
+    "Account-specific watcher activation after verified fill",
+    "Current HEAD full transitive audit and branch policies"
+  ],
+  "reason": "Existing equivalence tests already cover strategy receipt persistence; did not duplicate. No new RED or code fix, critical positive reconciliation remains unimplemented/unverified.",
+  "next_exact_action": "Inspect trading/dispatch.py, trading/stop_loss_watcher.py and broker adapter fill-ID provenance together with existing tests; design a nonduplicate synthetic fail-closed test for authenticated positive fill attribution without KIS calls.",
+  "kis_calls": 0,
+  "real_orders": 0
+}

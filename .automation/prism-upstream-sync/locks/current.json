@@ -1,10 +1,9 @@
 {
   "run_id": "scheduled-20261112T082454-KST-core-risk",
-  "status": "ACTIVE",
-  "acquired_expected_state_head": "5b0c2a6b3d6725b23a5b54ee8b19c1b2447e8e85",
-  "expected_pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "expected_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "status": "RELEASED",
+  "released_by_run_id": "scheduled-20261112T082454-KST-core-risk",
+  "release_expected_state_parent": "740fc47a8b97e6abb7702cc86e25f24bbb79f5d8",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T082454-KST-core-risk.json",
   "kis_calls": 0,
   "real_orders": 0
 }
