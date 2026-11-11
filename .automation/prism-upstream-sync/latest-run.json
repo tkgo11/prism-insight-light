@@ -1,136 +1,19 @@
 {
   "schema_version": 2,
-  "run_id": "manual-connector-financial-audit-20261111-pr43",
-  "status": "CORE_RISK_STRATEGY_RECEIPT_RED_GREEN_MOCK_VALIDATED_NOT_KIS",
-  "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "run_id": "scheduled-20261112T041612-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
   "pr": 43,
+  "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
   "base_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "pr_api_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
-  "upstream_head_sha": "4faaf0a5786feaf43bc1615c3df13eba08125032",
-  "merge_result_sha": "6775a814936f48743dc4ad115f6743b8c9b894e7",
-  "merge_tree_sha": "ddad39a213f0170ae300f8459e31ed81f9c4d136",
-  "report_path": ".automation/prism-upstream-sync/runs/manual-2026-11-11-strategy-buy-receipt-red-green.json",
-  "related_manifest_path": ".automation/prism-upstream-sync/manifests/manual-2026-11-11-strategy-buy-related.json",
-  "full_manifest_path": ".automation/prism-upstream-sync/manifests/manual-2026-11-11-strategy-buy-full.json",
-  "related_complete": "93/204",
-  "full_complete": "93/251",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T041612-KST-core-risk.json",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
+  "prior_report_path": ".automation/prism-upstream-sync/runs/manual-2026-11-11-strategy-buy-receipt-red-green.json",
+  "next_exact_action": "Read broker history producer and operator reconciliation entrypoint, then add missing synthetic read-only fail-closed test under guarded PR HEAD and observe GitHub Actions RED. No KIS calls or live orders.",
   "core_risk_gate": {
-    "prior_stalled_count": 0,
-    "prior_stalled_note": "Durable historical count only, not a confirmed current streak",
-    "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-    "latest_attempt_command_or_test_id": "tests/test_strategy_buy_receipt_provenance_readonly.py (24 new synthetic cases; exact HEAD CI 43041452951)",
-    "baseline_fail_observed": "YES: PR run 43040097744: 8 verified product failures + 2786 passed; 4 common strategy lost order_no and 4 BalanceSplitExecution missing order_no. First baseline push 43039478970 had 4 failed and 2776 passed.",
-    "mock_result": "GREEN 24 synthetic read-only cases; push CI 2792 passed; PR CI 2802 passed; Windows smoke success and Docker built; NO KIS calls, NO confirmed fill.",
-    "code_fix_commit": [
-      "d563c246f0750f6a561295635eb99acdb939f583"
-    ],
-    "latest_head_CI": [
-      {
-        "id": 43041440961,
-        "event": "push",
-        "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-        "status": "completed",
-        "conclusion": "success",
-        "pytest": "2792 passed",
-        "windows": "success",
-        "docker": "success"
-      },
-      {
-        "id": 43041452951,
-        "event": "pull_request",
-        "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-        "status": "completed",
-        "conclusion": "success",
-        "pytest": "2802 passed",
-        "windows": "success",
-        "docker": "success"
-      }
-    ],
-    "unverified_transitions": [
-      "KIS-authenticated acceptance date, fill/execution IDs, partial/cancel/remaining provenance",
-      "account-specific positive stop-loss activation after verified BUY fill",
-      "production read-only operator history-to-ledger workflow",
-      "related and full independent audit slots 0/2,0/2",
-      "0 submitted reviews, detailed branch protection endpoint 403, Qlty historical blocking issues unresolved",
-      "upstream synchronization from evolving dragon1086/prism-insight requires review"
-    ],
-    "exact_blocker": "KIS-authenticated positive fill/stop attribution not verified; full audits and 2+2 incomplete, branch protection 403/review 0, Qlty issues not independently triaged. No merge.",
-    "evidence_delta": "Test-first 202bc3b6 and 6e7f6ddb -> 8 RED; root-cause fix d563c246 (3 production files); boundary test 045d057d (+8 tests); current HEAD 24 new Mock cases GREEN; historical 91 file SHA matches and 2 current full-file proofs, no independent PASS.",
-    "next_exact_action": "Audit authenticated producer->broker->ledger->watcher, identify operator read-only reconciliation entrypoint; add fail-closed Mock for missing acceptance-date/partial-cancel if uncovered. Never autoactivate stop on read-only evidence. Complete per-file related/full audit in separate 2+2 slots, reviews/policies. Draft only."
-  },
-  "ci_latest": [
-    {
-      "id": 43041440961,
-      "event": "push",
-      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-      "status": "completed",
-      "conclusion": "success",
-      "pytest": "2792 passed",
-      "windows": "success",
-      "docker": "success"
-    },
-    {
-      "id": 43041452951,
-      "event": "pull_request",
-      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-      "status": "completed",
-      "conclusion": "success",
-      "pytest": "2802 passed",
-      "windows": "success",
-      "docker": "success"
-    }
-  ],
-  "candidate_count": 12,
-  "new_candidate_count": 8,
-  "attempted_reproductions": 24,
-  "reproduced_defects": 1,
-  "actual_code_fixes": 1,
-  "regression_tests_added_and_run": 24,
-  "last_updated_at": "2026-11-11T14:54:16.965Z",
-  "next_exact_action": "Audit authenticated producer->broker->ledger->watcher, identify operator read-only reconciliation entrypoint; add fail-closed Mock for missing acceptance-date/partial-cancel if uncovered. Never autoactivate stop on read-only evidence. Complete per-file related/full audit in separate 2+2 slots, reviews/policies. Draft only.",
-  "state_json_updated": true,
-  "qlty": {
-    "state": "success",
-    "description": "89 blocking issues",
-    "blocking_issues_current": 89,
-    "triaged": false,
-    "required_policy": "UNCONFIRMED"
-  },
-  "cas": {
-    "run_id": "manual-connector-financial-audit-20261111-pr43",
-    "lock_acquire_commit": "b54dc9992b7d266703fc61d769add4c1eaf85626",
-    "lock_release_in_same_commit": true,
-    "expected_state_parent": "b54dc9992b7d266703fc61d769add4c1eaf85626",
-    "force": false,
-    "state_json_updated": true
-  },
-  "prior_related_complete": "93/204",
-  "prior_full_complete": "93/236",
-  "audit_progress_note": "93 blob-backed complete evidence entries on current PR tree incl 91 unchanged historic; related scope provisional; no independent PASS or complete audit.",
-  "carried_forward_candidate_count": 4,
-  "candidate_count_note": "12 distinct candidate/subcase entries; 8 new this run (6 account provenance/drift subcases + 2 upstream contract candidates), 4 carried-forward safety cases revalidated. Not 12 independent defects.",
-  "operational_recovery": {
-    "run_id": "manual-user-requested-stale-lock-recovery-20261111",
-    "observed_at": "2026-11-11T13:59:18.508Z",
-    "status": "FOLLOWUP_CAS_RUN_COMPLETE",
-    "report_path": ".automation/prism-upstream-sync/runs/2026-11-11T2258-KST-manual-stale-lock-recovery.json",
-    "previous_run_id": "prism-connector-recovery-20261110-history-watcher",
-    "previous_run_head_sha": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
-    "observed_pr_head_sha": "1f4fa5b5c17cc01f533b0314fe84af15fa9ad3fa",
-    "previous_lock_owner": "prism-connector-20261110-1924-single-account-pin",
-    "related_passes_earned": 0,
-    "full_passes_earned": 0,
-    "notes": "Prior run snapshot retained without promoting historical Mock/audit results to current-HEAD evidence.",
-    "post_recovery_run_id": "manual-connector-financial-audit-20261111-pr43",
-    "post_recovery_pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
-  },
-  "previous_run": {
-    "run_id": "prism-connector-recovery-20261110-history-watcher",
-    "head_sha": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
-    "report_path": ".automation/prism-upstream-sync/runs/2026-11-10T18-17-KST-connector-account-provenance.json",
-    "related_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-related.json",
-    "full_manifest_path": ".automation/prism-upstream-sync/manifests/2026-11-10T18-17-KST-full.json"
+    "mock_result": "NOT_RUN_THIS_SLOT; historical 24 synthetic cases GREEN at prior HEAD",
+    "baseline_fail_observed": "HISTORICAL only",
+    "exact_blocker": "Existing test coverage verified by code inspection; no new executable test was authored or Actions dispatched. Core safety transition remains unverified, no audit PASS."
   }
 }

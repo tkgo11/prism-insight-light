@@ -1,0 +1,40 @@
+{
+  "run_id": "scheduled-20261112T041612-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_before": "b3bfa2f354c5adb0b0c929abb0b00293be468c5a",
+  "acquire_commit": "bc24cb0c94c3f504e3a176e640df5688ccc501b0",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "read_files": {
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "evidence": "Existing 24 synthetic strategy receipt cases cover KR/US, single/multi account, executed/unknown, noncanonical receipts and queue. Ledger record_read_only_buy_history retains snapshots without attributing fill or activating stop; no authenticated broker acceptance-date/execution-ID path verified.",
+  "new_tests": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "attempted_reproductions": 0,
+  "candidates_verified": 0,
+  "related_passes_earned": 0,
+  "full_passes_earned": 0,
+  "ci_new_runs": 0,
+  "latest_ci_historical": [
+    43041440961,
+    43041452951
+  ],
+  "unverified_transitions": [
+    "authenticated order acceptance date/execution ID",
+    "partial/cancel/remaining broker attribution",
+    "positive per-account stop activation",
+    "operator read-only reconciliation entrypoint"
+  ],
+  "exact_blocker": "Existing test coverage verified by code inspection; no new executable test was authored or Actions dispatched. Core safety transition remains unverified, no audit PASS.",
+  "next_exact_action": "Read broker history producer and operator reconciliation entrypoint, then add missing synthetic read-only fail-closed test under guarded PR HEAD and observe GitHub Actions RED. No KIS calls or live orders.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
