@@ -1,0 +1,19 @@
+{
+  "run_id": "scheduled-20261112T011553-KST-core-risk",
+  "status": "STALLED_CORE_RISK_READONLY_DIAGNOSTIC",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "new_tests": 0,
+  "new_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "ci_run": 43043158326,
+  "ci_sha": "2b83436cfcfe72ef66e3a47991e10f2757259cae",
+  "ci_result": "3 failed 633 passed",
+  "diagnosis": "State branch old fixed-date Telegram fixture rejected by stale_signal in November; PR #43 HEAD fixture uses datetime.now UTC; this is not PR HEAD CI.",
+  "next_exact_action": "Audit broker acceptance-date, partial/cancel and account-specific watcher transitions; add uncovered synthetic read-only tests to Draft PR after safe CAS; observe PR HEAD CI.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
