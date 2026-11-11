@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "run_id": "manual-user-requested-stale-lock-recovery-20261111",
+  "observed_at": "2026-11-11T13:59:18.508Z",
+  "status": "OPERATIONAL_RECOVERY_ONLY_NOT_FINANCIAL_AUDIT",
+  "repository": "tkgo11/prism-insight-light",
+  "pr": 43,
+  "pr_head_sha": "1f4fa5b5c17cc01f533b0314fe84af15fa9ad3fa",
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "state_branch_head_before": "cf30df05b562fe45e8869f22f6974a7a7282f6ea",
+  "previous_lock_blob_sha": "d584bb62584c49f0fd130cd680f9c5db24c1e47e",
+  "previous_state_blob_sha": "418cf0b77865a307f97c08346157569b11cfe583",
+  "previous_lock_owner": "prism-connector-20261110-1924-single-account-pin",
+  "previous_lock_acquired_at": "2026-11-10T10:24:33Z",
+  "previous_lock_expected_pr_head": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+  "release_authorization": "User explicitly requested fix on 2026-11-11",
+  "safety_evidence": [
+    "State branch lock unchanged since acquisition at 2026-11-10T10:25:10Z",
+    "PR latest commit at 2026-11-10T10:46:25Z; current HEAD CI 42801971296 SUCCESS",
+    "Scheduled automation last run completed at 2026-11-11T13:21:54Z; task temporarily paused before CAS repair"
+  ],
+  "owner_specific_terminal_verification": "NOT_DIRECTLY_AVAILABLE; manual user-authorized stale lock recovery, not ordinary automatic ACTIVE lock takeover",
+  "zero_financial_side_effects": true,
+  "audit_passes_added": 0,
+  "existing_evidence": "Retain prior latest-run report and 95/206 95/238 historical audit records; do not claim current-HEAD full audit",
+  "unverified_risks": [
+    "Broker-authenticated order receipt date/execution ID/partial-cancel-remaining attribution",
+    "Per-account positive stop-loss activation",
+    "Independent related 2/2 and full 2/2 audits",
+    "Branch protection/reviews/Qlty"
+  ],
+  "next_exact_action": "Reacquire fresh CAS lock only after ref/lock/PR HEAD checks. First compare current HEAD tests for strategy BUY broker order-no durability, then test-first read-only KR/US multi-account UNKNOWN-to-broker-receipt attribution, and use GitHub Actions for Mock RED/GREEN. No KIS/trades, retain Draft and 0/2+0/2."
+}

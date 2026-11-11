@@ -97,7 +97,7 @@
   "actual_code_fixes": 2,
   "regression_tests_added_and_run": 42,
   "last_updated_at": "2026-11-10T09:33:33Z",
-  "next_exact_action": "First, add a test-first production-shaped single-account dispatch scenario with mocked ka.resolve_account: pin actual canonical account key at pre-submit claim, verify mutable primary/name/index changes cannot correlate a foreign account, preserve existing dedupe identity and fail-closed UNKNOWN fence. Trace strategy/legacy/queued/WebUI/multi-account paths before any product change. Then verify an explicit read-only operator history->ledger entrypoint and authenticated KIS acceptance-date/fill-ID/partial-cancel/remaining provenance only when demo credentials exist; never auto-activate stop or submit orders from mock/history. After core evidence, test upstream exact sell_fraction and pyramid ticker allocation compatibility; continue independent related 2/2 then full 2/2 audits, reviewer/policy/Qlty verification; no merge.",
+  "next_exact_action": "Reacquire fresh CAS lock only after ref/lock/PR HEAD checks. First compare current HEAD tests for strategy BUY broker order-no durability, then test-first read-only KR/US multi-account UNKNOWN-to-broker-receipt attribution, and use GitHub Actions for Mock RED/GREEN. No KIS/trades, retain Draft and 0/2+0/2.",
   "state_json_updated": false,
   "qlty": {
     "state": "success",
@@ -120,5 +120,18 @@
   "prior_full_complete": "93/236",
   "audit_progress_note": "Prior 93 flagged complete, 67 unchanged blob matches, 26 changed revalidated, 2 new files fully reviewed. Historical evidence is not a new independent slot PASS; current 95 file evidence entries only.",
   "carried_forward_candidate_count": 4,
-  "candidate_count_note": "12 distinct candidate/subcase entries; 8 new this run (6 account provenance/drift subcases + 2 upstream contract candidates), 4 carried-forward safety cases revalidated. Not 12 independent defects."
+  "candidate_count_note": "12 distinct candidate/subcase entries; 8 new this run (6 account provenance/drift subcases + 2 upstream contract candidates), 4 carried-forward safety cases revalidated. Not 12 independent defects.",
+  "operational_recovery": {
+    "run_id": "manual-user-requested-stale-lock-recovery-20261111",
+    "observed_at": "2026-11-11T13:59:18.508Z",
+    "status": "STALE_LOCK_RELEASED_PENDING_CURRENT_HEAD_REVALIDATION",
+    "report_path": ".automation/prism-upstream-sync/runs/2026-11-11T2258-KST-manual-stale-lock-recovery.json",
+    "previous_run_id": "prism-connector-recovery-20261110-history-watcher",
+    "previous_run_head_sha": "5a518b8b5a058eb4d1b9348384e33f27273bfefa",
+    "observed_pr_head_sha": "1f4fa5b5c17cc01f533b0314fe84af15fa9ad3fa",
+    "previous_lock_owner": "prism-connector-20261110-1924-single-account-pin",
+    "related_passes_earned": 0,
+    "full_passes_earned": 0,
+    "notes": "Prior run snapshot retained without promoting historical Mock/audit results to current-HEAD evidence."
+  }
 }
