@@ -1,0 +1,34 @@
+{
+  "run_id": "scheduled-20261112T001635-KST-core-risk",
+  "created_at": "2026-11-12T00:16:35+09:00",
+  "status": "READ_ONLY_REVALIDATION_NO_NEW_MOCK",
+  "state_parent": "545e9f4436c6f339d9a41f1250d86a457580df1e",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "core_risk": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "observed_existing_test": "tests/test_strategy_buy_receipt_provenance_readonly.py blob c964347f446912ace6760e4b4981ddd27f4cf2e9; existing synthetic KR/US executed/unknown, invalid IDs, two accounts, queued route; no new tests this run",
+  "prior_ci": {
+    "pr_success": 43041452951,
+    "sha": "2b83436cfcfe72ef66e3a47991e10f2757259cae",
+    "state_branch_failure": 43043158326,
+    "failed_job": "Full pytest suite / Run all tests",
+    "windows": "success"
+  },
+  "candidate_count_new": 0,
+  "reproductions_new": 0,
+  "fixes_new": 0,
+  "tests_new": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified": [
+    "authenticated broker acceptance date/fill IDs/partial-cancel/remaining",
+    "per-account positive stop activation",
+    "operator read-only history to ledger",
+    "state-branch pytest failure cause",
+    "review, branch protection, Qlty, independent audits"
+  ],
+  "next_exact_action": "Inspect Actions 43043158326 pytest failure logs; read broker history/ledger/watcher paths and add only uncovered read-only Mock test to PR43 after safe CAS; run Actions RED. No KIS calls or real orders.",
+  "kis_calls": 0,
+  "orders": 0
+}
