@@ -1,0 +1,37 @@
+{
+  "run_id": "scheduled-20261112T212239-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "c1fe5dea25a9a591cd320485143d777a2641797a",
+  "acquired_commit": "3f9e2125f42f869299fd663933730b6c6ac4df3a",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "mock_result": "NOT_RUN_THIS_SLOT",
+  "baseline_fail_observed": false,
+  "new_tests": 0,
+  "code_fixes": 0,
+  "candidates_verified": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "read_only_evidence": [
+    "trading/dispatch.py@1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py@c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py@be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_single_account_buy_provenance.py@31691b83f1bccd3bc8971d276e350109c51ae684"
+  ],
+  "ci": [
+    {
+      "id": 43041452951,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    }
+  ],
+  "unverified_transitions": [
+    "read-only broker partial fill/cancel reconciliation to per-account stop activation",
+    "strategy BUY receipt history after restart across order-date/execution-id collisions"
+  ],
+  "next_exact_action": "Inspect remaining strategy receipt tests and dispatch reconciliation call sites for a genuinely uncovered scenario; only then commit read-only Mock RED test and run Actions",
+  "kis_calls": 0,
+  "real_orders": 0
+}
