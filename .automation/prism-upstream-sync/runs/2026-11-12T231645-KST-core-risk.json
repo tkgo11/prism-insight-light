@@ -1,0 +1,30 @@
+{
+  "run_id": "scheduled-20261112T231645-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "4c99bc36af93c05699b8cd58e1d26b1296c54847",
+  "acquired_commit": "875f2d2e6ec5f48523a48c8b8e6c9c6f0403839d",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "prior_stalled_count": "not independently counted",
+  "mock_result": "NOT_RUN_THIS_SLOT",
+  "baseline_fail_observed": false,
+  "new_tests": 0,
+  "code_fixes": 0,
+  "candidates_verified": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "read_only_evidence": [
+    "tests/test_strategy_buy_receipt_provenance_readonly.py@c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "trading/execution_ledger.py@9162199532e31857835ab22e1ef17cfe6afd0711"
+  ],
+  "coverage_observed": "strategy tests include KR/US, two-account receipt isolation, queued receipt persistence, unknown/executed receipt and duplicate suppression; ledger finalize stores order_receipt atomically with terminal claim and does not infer fill",
+  "unverified_transitions": [
+    "strategy BUY receipt history after restart across order-date/execution-id collisions",
+    "broker partial fill/cancel reconciliation to per-account stop activation"
+  ],
+  "next_exact_action": "Read trading watcher implementation and remaining history evidence tests; add only missing read-only Mock case test-first on PR43, observe Actions RED",
+  "kis_calls": 0,
+  "real_orders": 0
+}
