@@ -1,0 +1,45 @@
+{
+  "run_id": "scheduled-20261113T072143-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_acquired_commit": "75d884144add6f3b9c6c5ae12f6c88c10f11543e",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "new_tests": 0,
+  "executed_tests": 0,
+  "new_fixes": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "reviewed_files": {
+    "trading/order_reconciliation.py": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py": "e4805fd8254949ef597dc14a2e246fe3afdcedb7",
+    "tests/test_pending_buy_confirmed_tracker_cleanup.py": "5653e71c581605e39e223801ec88d2156f10d71b",
+    "tests/test_stop_loss_account_selection.py": "f3e992bb83678d3c60d920f7ec36816f98820ca4"
+  },
+  "observations": [
+    "Strategy BUY receipt tests cover KR/US, single/multi account, queued and noncanonical receipt, persistent ledger with no fill attribution.",
+    "Order reconciliation functions return evidence-only with can_activate_stop=False; broker-authoritative stop activation remains unverified.",
+    "Existing tests fence unknown/cancelled BUY against zero-balance cleanup and assert selected broker account."
+  ],
+  "ci_evidence": {
+    "state_branch_run": 43309119488,
+    "sha": "9605e564a7c8d29076a74af81fc468fe1c02fed0",
+    "conclusion": "failure",
+    "failed_job": 131500179321,
+    "failed_step": "Run all tests",
+    "windows_smoke": "success",
+    "pr_head_ci": "not reverified"
+  },
+  "unverified_transitions": [
+    "broker-confirmed per-account partial fill -> stop-loss activation",
+    "broker cancellation residual -> scoped watcher reconciliation",
+    "GitHub Actions full pytest failure cause",
+    "KIS demo integration"
+  ],
+  "exact_blocker": "No distinct uncovered fail-closed mock case demonstrated from inspected tests; existing Actions full pytest suite failed and failure logs were not retrieved. No speculative RED test or code change.",
+  "next_exact_action": "Fetch GitHub Actions job 131500179321 logs and PR #43 head-specific checks; isolate failed pytest, then inspect per-account confirmed fill to watcher activation and add only a distinct reproducible mock regression."
+}
