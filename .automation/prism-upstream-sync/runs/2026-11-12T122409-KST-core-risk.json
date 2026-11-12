@@ -1,0 +1,40 @@
+{
+  "run_id": "scheduled-20261112T122409-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "64c533f9a094674b59e34c59a21519dda26892a1",
+  "lock_acquire_commit": "828dda4e1d406bbe2053b0795afdff9c8975b05e",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": {
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "evidence": [
+    "CAS lock acquired after RELEASED verification and latest state HEAD fetch",
+    "Existing synthetic KR/US executed/unknown strategy BUY receipt tests already assert durable order_receipt and nonactionable fill provenance",
+    "Existing multiaccount and queued strategy cases already cover receipt isolation and no replay",
+    "Read execution ledger, watcher and dispatch for additional boundary assessment; no verified distinct product defect established"
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "new_tests": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": "NOT_VERIFIED",
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "authenticated positive-fill account/order/date/execution attribution",
+    "partial/cancel/remaining broker reconciliation",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "Existing equivalent synthetic receipt coverage; no distinct justified failing assertion established. No test-first commit or Actions run initiated.",
+  "next_exact_action": "Inspect execution_ledger and watcher positive-fill authorization branches and their tests for a distinct synthetic fail-closed boundary; commit test first only after identifying a verifiable missing assertion.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
