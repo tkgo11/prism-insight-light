@@ -1,0 +1,54 @@
+{
+  "run_id": "scheduled-20261112T092121-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "1d9a00bd2947277ebfb7ac661d6639ffe622cfd4",
+  "lock_acquire_commit": "f56e3e88e13cc2b6991065d9d80ec0f75621403b",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "ci": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "files_read": [
+    {
+      "path": "trading/dispatch.py",
+      "sha": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "sha": "9162199532e31857835ab22e1ef17cfe6afd0711"
+    },
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+    }
+  ],
+  "finding": "Ledger record_read_only_buy_history explicitly never attributes fill and always returns can_activate_stop=false. Stop-loss watcher blocks pending_buy; no authenticated positive-fill-to-activation transition demonstrated. Existing synthetic KR/US single/multi/queued receipt tests are non-actionable evidence only.",
+  "new_tests": 0,
+  "new_defects_reproduced": 0,
+  "code_fixes": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "authenticated positive fill attribution by order/date/account/execution ID",
+    "partial/cancel/remaining fill reconciliation",
+    "account-specific pending stop activation"
+  ],
+  "next_exact_action": "Inspect complete ledger positive-fill reconciliation and broker adapter provenance contracts, then add a nonduplicate synthetic read-only positive-fill boundary test to Draft PR and observe baseline Actions RED before any product change.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
