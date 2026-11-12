@@ -1,0 +1,45 @@
+{
+  "run_id": "scheduled-20261112T171816-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "11495f183065911437bf48ae3771f60a9b70e5c1",
+  "lock_acquire_commit": "07c18e5096995c57c0d7d5cbebdff5218ad559c1",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_file_shas": {
+    "trading/order_reconciliation.py": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "evidence": [
+    "Fresh Git ref returned 11495f183065911437bf48ae3771f60a9b70e5c1; RELEASED lock read; CAS acquisition succeeded and state HEAD 07c18e5096995c57c0d7d5cbebdff5218ad559c1 verified",
+    "PR #43 still Draft at expected head; latest-head Actions run 43041452951 completed success",
+    "Inspected ledger inspect_unresolved_buy_history and record_read_only_buy_history: history date remains HISTORY_ONLY_UNATTRIBUTED and cannot activate stop; account/order/receipt uniqueness checked under lock",
+    "Inspected broker read-only matching for order number/date, side, ticker, cumulative quantity and execution identity; strategy receipt test already persists canonical order_no and restart fence"
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "new_tests": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": {
+    "run_id": 43041452951,
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "positive-fill authenticated broker attribution",
+    "partial/cancel/remaining broker-to-ledger reconciliation",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "No distinct failing assertion established from inspected code and existing tests; avoid speculative safety patch. New Mock test not committed or executed.",
+  "next_exact_action": "Inspect remaining broker-to-ledger and stop watcher call sites and existing tests for a distinct missing fail-closed transition; commit test-first only if demonstrably uncovered",
+  "kis_calls": 0,
+  "real_orders": 0
+}
