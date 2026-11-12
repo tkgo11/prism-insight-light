@@ -1,0 +1,25 @@
+{
+  "run_id": "scheduled-20261113T001802-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "8913e055a1aeaf9cb23e27de5602837dcecaf892",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "evidence": {
+    "reviewed_tests": [
+      "tests/test_buy_order_receipt_durability.py",
+      "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py",
+      "tests/test_stop_loss_watcher.py"
+    ],
+    "existing_coverage": "KR/US strategy receipts, single/multi-account persistence, UNKNOWN/accepted non-fill, restart fence, partial/cancel history evidence-only",
+    "new_tests": 0,
+    "executed_tests": 0,
+    "new_fixes": 0,
+    "ci_latest_head": "NOT_REVALIDATED",
+    "broker_integration": "NOT_RUN",
+    "audit_passes": "0/2 related; 0/2 full"
+  },
+  "next_exact_action": "Inspect strategy-to-ledger and watcher source and remaining tests for a genuinely uncovered read-only transition; commit test first to draft PR43 only after confirming no equivalent test; observe GitHub Actions RED."
+}
