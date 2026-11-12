@@ -1,0 +1,37 @@
+{
+  "run_id": "scheduled-20261112T111940-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "c9739f3ad9ab5cb752d7bc405efb90c4b3bed44a",
+  "lock_acquire_commit": "b128cd032ab96b6424b10268cd78e6bcc48d5dcd",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "evidence": [
+    "Fresh state branch HEAD read via GitHub fetch object.sha, lock RELEASED verified before CAS acquisition",
+    "PR #43 Draft HEAD and main SHA reverified; CAS lock acquired successfully",
+    "Inspected order_reconciliation.py blob 24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb: broker history explicitly EVIDENCE_ONLY and never stop authorization",
+    "Inspected test_strategy_buy_receipt_provenance_readonly.py blob c964347f446912ace6760e4b4981ddd27f4cf2e9: KR/US single/multi account executed/unknown receipt persistence and restart already covered",
+    "Inspected test_readonly_buy_history_evidence_durability.py blob 3d96c5f35c95294c06016a5d3938dc26589d63ef: partial/cancel/replay evidence remains nonactionable",
+    "Inspected stop_loss_watcher.py blob 1f7ce6c1185ac2530b02fcb0b651e67832e574e3 (partial content)"
+  ],
+  "new_tests": 0,
+  "new_defects_reproduced": 0,
+  "code_fixes": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": "NOT_VERIFIED",
+  "unverified_transitions": [
+    "authenticated positive fill provenance by order/date/account/execution ID",
+    "partial/cancel/remaining reconciliation to account-specific stop activation",
+    "full watcher and ledger transition contract"
+  ],
+  "exact_blocker": "No distinct justified RED test established from inspected paths; broker history is explicitly evidence-only, and introducing stop activation without authenticated attribution would be unsafe.",
+  "next_exact_action": "Read full trading/execution_ledger.py, trading/stop_loss_watcher.py and trading/dispatch.py plus existing positive-fill tests; identify a distinct fail-closed synthetic boundary assertion before any PR test-first commit.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
