@@ -1,19 +1,18 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261112T151630-KST-core-risk",
+  "run_id": "scheduled-20261112T162854-KST-core-risk",
   "status": "STALLED_READ_ONLY_EVIDENCE",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T151630-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T162854-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
   "latest_head_CI": {
     "run_id": 43041452951,
     "conclusion": "success",
-    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-    "source": "prior report, not independently refreshed this run"
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
   },
-  "next_exact_action": "Inspect full read_order_history aggregation and existing broker-to-ledger positive-fill attribution tests; derive distinct failing read-only Mock assertion and commit only after CAS recheck"
+  "next_exact_action": "Read remaining order_reconciliation.py and execution_ledger.py record_read_only_buy_history; identify a distinct safe failing assertion before any test-first PR commit"
 }

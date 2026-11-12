@@ -1,0 +1,45 @@
+{
+  "run_id": "scheduled-20261112T162854-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "d6018255b2d12cc6a25bbbd4ae1070c8b1856c13",
+  "lock_acquire_commit": "d147846ecc445d91fa1290a639b9fc55fcdb21aa",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_file_shas": {
+    "trading/order_reconciliation.py": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+    "tests/test_kis_read_only_order_history.py": "5f3b049c5204117f261482929287f25288ea0314",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "evidence": [
+    "Live state ref and RELEASED lock verified; CAS lock acquired and ref verified",
+    "Existing KR/US strategy BUY receipt persistence, invalid receipt rejection, multiaccount isolation and restart checks inspected",
+    "Read-only broker history already tests pagination, wrong identity, partial fill/cancel, duplicate rows, account scope and restart",
+    "Latest PR HEAD workflow run 43041452951 independently verified completed success; does not prove positive fill attribution"
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "new_tests": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": {
+    "run_id": 43041452951,
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "positive-fill authenticated broker attribution",
+    "partial/cancel/remaining broker-to-ledger reconciliation",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "Existing tests cover examined receipt and read-only evidence paths; no distinct proven failing assertion yet. No speculative code/test change.",
+  "next_exact_action": "Read remaining order_reconciliation.py and execution_ledger.py record_read_only_buy_history; identify a distinct safe failing assertion before any test-first PR commit",
+  "kis_calls": 0,
+  "real_orders": 0
+}
