@@ -1,0 +1,47 @@
+{
+  "run_id": "scheduled-20261112T132158-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "ebe1dcba6d3490cb46b5629af0a4940d29e909a7",
+  "lock_acquire_commit": "79ebd660b888deb6f0e7289033a658ac13381e7f",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": {
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2"
+  },
+  "evidence": [
+    "Current state branch SHA resolved through GitHub git/ref API; lock acquired via expected_sha CAS",
+    "Existing strategy receipt tests cover synthetic KR/US executed/unknown, invalid IDs, multiaccount, queued/restart",
+    "Watcher blocks pending_buy automatic SELL even with positive aggregate holdings",
+    "Ledger stores history for operator triage only and never activates stops",
+    "PR HEAD workflow Tests run 43041452951 completed success; not a newly executed baseline RED"
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "new_tests": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": {
+    "run_id": 43041452951,
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "authenticated positive-fill account/order/date/execution attribution",
+    "partial/cancel/remaining broker reconciliation",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "No distinct proven missing assertion after review of receipt, ledger and watcher; adding duplicate tests or enabling stops would be unsafe. No new RED baseline.",
+  "next_exact_action": "Inspect broker history positive-fill provenance tests and reconciliation code for a distinct missing fail-closed assertion; add test first only if evidence demonstrates a coverage gap.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
