@@ -1,10 +1,1 @@
-{
-  "run_id": "scheduled-20261113T012024-KST-core-risk",
-  "status": "ACTIVE",
-  "acquired_from_state_sha": "69117173136ff13c70de9ff1190c11f86afd74c6",
-  "expected_pr": 43,
-  "expected_pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
-  "kis_calls": 0,
-  "real_orders": 0
-}
+{"run_id":"scheduled-20261113T012024-KST-core-risk","status":"RELEASED","released_by_run_id":"scheduled-20261113T012024-KST-core-risk","release_expected_state_parent":"50e855735affb5f5c36bd75eb38520cbcfd8beae","kis_calls":0,"real_orders":0,"notes":"Report tree update returned GitHub 422 timeout; release lock independently"}
