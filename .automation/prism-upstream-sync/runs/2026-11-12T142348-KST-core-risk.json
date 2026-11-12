@@ -1,0 +1,44 @@
+{
+  "run_id": "scheduled-20261112T142348-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "d476f21c816cbecd9a6b57e3982cbe76fb9486d9",
+  "lock_acquire_commit": "1a10e170f9b967975fb37b50b86cb3959aa47c8b",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "evidence": [
+    "Resolved current state HEAD via git/ref, acquired expected_sha CAS lock and verified acquired branch and PR head",
+    "Existing strategy receipt tests explicitly assert KR/US executed and unknown receipt persistence, invalid order IDs, multiaccount isolation, queued replay and no fill attribution",
+    "Verified prior Tests workflow 43041452951 completed success for exact PR HEAD; historical run not newly executed"
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "new_tests": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": {
+    "run_id": 43041452951,
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "authenticated positive-fill broker provenance",
+    "partial/cancel/remaining attribution",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "No distinct proven missing assertion established by current read-only inspection; test-first code change not justified; no new RED baseline",
+  "next_exact_action": "Read trading/order_reconciliation.py and broker positive-fill history tests at current PR HEAD; identify a distinct missing fail-closed assertion before test-first commit and Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
