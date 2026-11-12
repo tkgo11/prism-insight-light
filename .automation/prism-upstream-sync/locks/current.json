@@ -1,9 +1,9 @@
 {
-  "run_id": "scheduled-20261112T231645-KST-core-risk",
-  "status": "RELEASED",
-  "released_by_run_id": "scheduled-20261112T231645-KST-core-risk",
-  "release_expected_state_parent": "875f2d2e6ec5f48523a48c8b8e6c9c6f0403839d",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T231645-KST-core-risk.json",
+  "run_id": "scheduled-20261113T001802-KST-core-risk",
+  "status": "ACTIVE",
+  "acquired_expected_state_parent": "e4be387883a23a53d1433302587d916a5a01a4df",
+  "expected_pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "expected_main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
   "kis_calls": 0,
   "real_orders": 0
 }
