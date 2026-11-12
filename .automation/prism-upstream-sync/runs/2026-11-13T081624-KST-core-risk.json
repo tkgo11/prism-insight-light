@@ -1,0 +1,43 @@
+{
+  "run_id": "scheduled-20261113T081624-KST-core-risk",
+  "status": "STALLED_WITH_CI_DIAGNOSIS",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_acquired_commit": "3a02a22c3f2ffe8e673e2f25526fbd9e2e02a38b",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "new_tests": 0,
+  "executed_tests": 0,
+  "new_fixes": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "ci_evidence": {
+    "state_branch_run": 43309119488,
+    "failed_job": 131500179321,
+    "failed_tests": [
+      "test_telegram_worker_polls_and_dispatches_signals",
+      "test_telegram_worker_keeps_deferred_posts_eligible",
+      "test_telegram_worker_persists_seen_posts_across_restarts"
+    ],
+    "cause": "Static fixture signals stale (age 2352024s > 345600s); 3 failed, 633 passed, on state-branch run SHA 9605e564a7c8d29076a74af81fc468fe1c02fed0; not a proven product bug",
+    "pr_head_runs": [
+      {
+        "id": 43041452951,
+        "conclusion": "success"
+      },
+      {
+        "id": 43041440961,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "unverified_transitions": [
+    "broker-confirmed per-account partial fill -> watcher activation",
+    "broker cancellation residual -> watcher reconciliation",
+    "KIS demo integration"
+  ],
+  "next_exact_action": "Inspect current PR #43 tests/test_telegram_signal_worker.py fixture timestamps and per-account confirmed fill to watcher tests; avoid duplicate tests. Correct stale test fixtures only if still present, then run Actions and verify current PR HEAD.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
