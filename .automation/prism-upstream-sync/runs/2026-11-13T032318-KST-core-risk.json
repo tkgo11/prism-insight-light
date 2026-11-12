@@ -1,0 +1,27 @@
+{
+  "run_id": "scheduled-20261113T032318-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_acquired_commit": "edb3fb4b097e5e193670092413660deb07a05eed",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "new_tests": 0,
+  "executed_tests": 0,
+  "new_fixes": 0,
+  "candidate_count": 0,
+  "reviewed_files": {
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_watcher_buy_sell_interleaving_mock.py": "4d519d23891fcd4e5c24643344d7361693d2a48c"
+  },
+  "ci": [
+    43041452951,
+    43041440961
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No demonstrated missing transition after equivalent read-only Mock coverage review; no speculative patch or duplicate test permitted",
+  "next_exact_action": "Inspect unreviewed strategy-to-ledger/watcher transitions, identify distinct fail-closed scenario, commit test-first Mock on Draft PR and observe Actions baseline RED; preserve CAS."
+}

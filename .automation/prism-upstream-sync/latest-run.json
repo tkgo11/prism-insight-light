@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261113T021703-KST-core-risk",
+  "run_id": "scheduled-20261113T032318-KST-core-risk",
   "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-13T021703-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-13T032318-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Read trading/dispatch.py and trading/stop_loss_watcher.py plus all remaining strategy-to-ledger tests; identify an uncovered fail-closed transition and commit a read-only Mock regression test before any production change; verify baseline RED on GitHub Actions."
+  "next_exact_action": "Inspect unreviewed strategy-to-ledger/watcher transitions, identify distinct fail-closed scenario, commit test-first Mock on Draft PR and observe Actions baseline RED; preserve CAS."
 }
