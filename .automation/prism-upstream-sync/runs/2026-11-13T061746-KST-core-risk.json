@@ -1,0 +1,35 @@
+{
+  "run_id": "scheduled-20261113T061746-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_acquired_commit": "f3a0ddb59fabdb7a40d3d5178cf58b3cb8b419fc",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "new_tests": 0,
+  "executed_tests": 0,
+  "new_fixes": 0,
+  "candidate_count": 0,
+  "verified_read_only_paths": [
+    "strategy execution result -> dispatch order_no -> durable ledger receipt",
+    "restart preserves unresolved BUY fence",
+    "partial-cancel broker history remains evidence-only",
+    "pending BUY watcher tracking is not confirmed fill"
+  ],
+  "reviewed_files": {
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py": "e4805fd8254949ef597dc14a2e246fe3afdcedb7"
+  },
+  "unverified_transitions": [
+    "broker-confirmed per-account partial fill -> stop-loss activation",
+    "broker cancel residual -> scoped watcher reconciliation",
+    "KIS demo integration"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "Existing equivalent mock tests cover receipt durability and partial-cancel evidence-only; no distinct uncovered scenario established, so a test-first RED commit would be speculative.",
+  "next_exact_action": "Inspect reconciliation_evidence and stop_loss_watcher per-account activation integration, compare existing test assertions, and commit only a distinct uncovered fail-closed mock case."
+}
