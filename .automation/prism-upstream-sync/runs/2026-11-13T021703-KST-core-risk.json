@@ -1,0 +1,39 @@
+{
+  "run_id": "scheduled-20261113T021703-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "14269853dc39ba46abf69ad037605f6c401b51e9",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "evidence": {
+    "new_tests": 0,
+    "executed_tests": 0,
+    "new_fixes": 0,
+    "confirmed_new_defects": 0,
+    "candidate_count": 0,
+    "reason": "Existing equivalent coverage found in strategy broker receipt durability, KR/US multi-account and reused-order-number date scenarios; no justified test-first patch without identifying a genuinely missing transition",
+    "reviewed_files": {
+      "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+      "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+      "tests/test_unknown_buy_receipt_date_reuse_readonly.py": "63b9963d2c3fb02713624a379ca756661484ae00",
+      "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711"
+    },
+    "latest_head_ci": [
+      {
+        "id": 43041452951,
+        "conclusion": "success"
+      },
+      {
+        "id": 43041440961,
+        "conclusion": "success"
+      }
+    ],
+    "ci_limit": "Tests workflow success is not independent full audit or live broker integration",
+    "related_passes": 0,
+    "full_passes": 0,
+    "broker_integration": "NOT_RUN"
+  },
+  "next_exact_action": "Read trading/dispatch.py and trading/stop_loss_watcher.py plus all remaining strategy-to-ledger tests; identify an uncovered fail-closed transition and commit a read-only Mock regression test before any production change; verify baseline RED on GitHub Actions."
+}
