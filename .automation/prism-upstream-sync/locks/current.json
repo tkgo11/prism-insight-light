@@ -1,8 +1,9 @@
 {
-  "run_id": "scheduled-20261113T021703-KST-core-risk",
-  "status": "RELEASED",
-  "released_by_run_id": "scheduled-20261113T021703-KST-core-risk",
-  "release_expected_state_parent": "14269853dc39ba46abf69ad037605f6c401b51e9",
+  "run_id": "scheduled-20261113T032318-KST-core-risk",
+  "status": "ACTIVE",
+  "expected_state_parent": "1be6a23ed929ba19a5492b16bd5d304e3dcce15b",
+  "expected_pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "expected_main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
   "kis_calls": 0,
   "real_orders": 0
 }
