@@ -1,0 +1,42 @@
+{
+  "run_id": "scheduled-20261112T201630-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "d156a002e16335396f26a9a12dce6e2143004250",
+  "acquired_commit": "f6f39412bb7b206e88abbbaa1156f7c615121238",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "mock_result": "NOT_RUN_THIS_SLOT",
+  "baseline_fail_observed": false,
+  "new_tests": 0,
+  "code_fixes": 0,
+  "candidates_verified": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "read_only_evidence": [
+    "trading/stop_loss_watcher.py@1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py@c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py@be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_stop_loss_account_selection.py@f3e992bb83678d3c60d920f7ec36816f98820ca4"
+  ],
+  "ci": [
+    {
+      "id": 43041452951,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    }
+  ],
+  "unverified_transitions": [
+    "broker order history per-account partial fill/cancel reconciliation to watcher activation",
+    "restart attribution of remaining quantity to strategy order"
+  ],
+  "next_exact_action": "Read trading/dispatch.py strategy order-result and broker reconciliation call paths plus relevant tests; add only genuinely missing read-only Mock scenario, then observe Actions RED before implementation",
+  "kis_calls": 0,
+  "real_orders": 0
+}
