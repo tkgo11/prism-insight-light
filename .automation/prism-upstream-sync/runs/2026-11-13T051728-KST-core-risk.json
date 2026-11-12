@@ -1,0 +1,26 @@
+{
+  "run_id": "scheduled-20261113T051728-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_acquired_commit": "1e4e479a4bc3639487cf841071916b13ba147208",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "new_tests": 0,
+  "executed_tests": 0,
+  "new_fixes": 0,
+  "candidate_count": 0,
+  "reviewed_files": {
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2"
+  },
+  "findings": "Verified existing strategy receipt, ledger durability, pending watcher tests by names and source paths; no independently established uncovered broker attribution transition from partial source review. No duplicate test or speculative implementation.",
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No distinct missing scenario demonstrated; source review incomplete, hence no justified test-first RED workflow.",
+  "next_exact_action": "Read full dispatch reconciliation-to-watcher activation call path and test assertions; establish a distinct missing broker-attributed partial-fill/cancel case before test-first PR commit and Actions RED."
+}
