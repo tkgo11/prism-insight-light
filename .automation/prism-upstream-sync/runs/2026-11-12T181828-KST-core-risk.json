@@ -1,0 +1,45 @@
+{
+  "run_id": "scheduled-20261112T181828-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "3194c8fd38be28a44cd0c119fec98e3ac2ddb471",
+  "lock_acquire_commit": "b011ce4b2bd1deef2793a1452811cbbe23fbff67",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_file_shas": {
+    "trading/order_reconciliation.py": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "evidence": [
+    "Fresh state HEAD acquired via GitHub git/ref object.sha; CAS lock acquired with expected_sha and force=false",
+    "PR #43 confirmed Draft, head unchanged; Actions 43041452951 completed success for exact PR head",
+    "Existing receipt tests cover canonical receipt persistence, noncanonical fail-closed, multiaccount isolation and queued strategy receipt",
+    "Order reconciliation and ledger paths inspected for broker identity, partial/cancel/remaining, unresolved buy; no distinct missing assertion established"
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "code_fixes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": {
+    "run_id": 43041452951,
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "authenticated broker positive-fill attribution",
+    "partial/cancel/remaining reconciliation to ledger",
+    "per-account stop watcher activation"
+  ],
+  "exact_blocker": "No distinct uncovered failing assertion established from inspected files; test-first code commit would be speculative",
+  "next_exact_action": "Read stop watcher and strategy-to-ledger call sites, cross-reference all existing read-only tests, add only a demonstrably missing Mock transition and run Actions RED",
+  "kis_calls": 0,
+  "real_orders": 0
+}
