@@ -1,0 +1,30 @@
+{
+  "run_id": "scheduled-20261112T192149-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "0070761fd5a6d4436693d3277c92067dc423ce2d",
+  "acquired_commit": "f0f16ef8643ff94b478c6af1ba706c75f9079570",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "mock_result": "NOT_RUN_THIS_SLOT",
+  "baseline_fail_observed": false,
+  "new_tests": 0,
+  "code_fixes": 0,
+  "candidates_verified": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "read_only_evidence": [
+    "tests/test_strategy_buy_receipt_provenance_readonly.py@c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py@be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_stop_loss_account_selection.py@f3e992bb83678d3c60d920f7ec36816f98820ca4"
+  ],
+  "existing_coverage": "Strategy BUY canonical receipt persists for KR/US executed/unknown single/multi account and queued path; acceptance not fill; watcher account selection mocked",
+  "unverified_transitions": [
+    "broker history fill attribution to account stop activation",
+    "partial cancel remaining quantity end-to-end"
+  ],
+  "next_exact_action": "Inspect trading/stop_loss_watcher.py and strategy dispatch implementation against existing tests; identify a genuinely missing read-only transition before any PR test commit",
+  "kis_calls": 0,
+  "real_orders": 0
+}
