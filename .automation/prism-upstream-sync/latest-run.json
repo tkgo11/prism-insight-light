@@ -1,13 +1,13 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261112T092121-KST-core-risk",
+  "run_id": "scheduled-20261112T101539-KST-core-risk",
   "status": "STALLED_READ_ONLY_EVIDENCE",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
   "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T092121-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-12T101539-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect complete ledger positive-fill reconciliation and broker adapter provenance contracts, then add a nonduplicate synthetic read-only positive-fill boundary test to Draft PR and observe baseline Actions RED before any product change."
+  "next_exact_action": "Inspect broker adapter normalized history, complete ledger reconciliation and watcher activation contracts; formulate a distinct fail-closed synthetic positive-fill boundary test and commit test-first to Draft PR only after confirming nonduplication."
 }

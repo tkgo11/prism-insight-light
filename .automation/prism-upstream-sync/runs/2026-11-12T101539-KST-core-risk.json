@@ -1,0 +1,30 @@
+{
+  "run_id": "scheduled-20261112T101539-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "9e829b7453d4f596d91c3f945371d3a986f9d2b2",
+  "lock_acquire_commit": "73721a43eebdb7d585485f00b34e67b31497f279",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "evidence": [
+    "Read strategy receipt test: KR/US executed/unknown single and multi-account, queued, restart, noncanonical rejection; no attributed fill",
+    "Read durable ledger receipt tests: persistence, restart, stale finalize, disk failure, per-account isolation",
+    "Read ledger validation and dispatcher receipt extraction; positive authenticated fill to watcher activation remains unverified"
+  ],
+  "new_tests": 0,
+  "new_defects_reproduced": 0,
+  "code_fixes": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "authenticated positive fill provenance by order/date/account/execution ID",
+    "partial/cancel/remaining reconciliation to account-specific stop activation"
+  ],
+  "exact_blocker": "Existing evidence-only API intentionally cannot attribute fills; no proven safe activation contract or distinct RED scenario established from inspected files; do not introduce speculative finance logic.",
+  "next_exact_action": "Inspect broker adapter normalized history, complete ledger reconciliation and watcher activation contracts; formulate a distinct fail-closed synthetic positive-fill boundary test and commit test-first to Draft PR only after confirming nonduplication.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
