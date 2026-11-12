@@ -1,0 +1,45 @@
+{
+  "run_id": "scheduled-20261112T151630-KST-core-risk",
+  "status": "STALLED_READ_ONLY_EVIDENCE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "eb0e61e32646bc5436b03ff12862787079abffc0",
+  "lock_acquire_commit": "9c4ac723fb725a3290dc313b83f048a9d7d476c9",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": [
+    "trading/order_reconciliation.py",
+    "tests/test_kis_read_only_order_history.py",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py"
+  ],
+  "evidence": [
+    "State ref object.sha retrieved dynamically; RELEASED prior lock; acquired and verified CAS lock",
+    "Existing KR/US strategy receipt persistence, restart and multiaccount tests inspected; existing read-only history partial/cancel, pagination, account scope tests inspected",
+    "No distinct missing assertion demonstrated; no speculative test or code commit"
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "new_tests": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": {
+    "run_id": 43041452951,
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "source": "prior report, not independently refreshed this run"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "positive-fill authenticated broker attribution",
+    "partial/cancel/remaining broker-to-ledger reconciliation",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "No distinct proven missing assertion after inspection; no test-first RED baseline justified",
+  "next_exact_action": "Inspect full read_order_history aggregation and existing broker-to-ledger positive-fill attribution tests; derive distinct failing read-only Mock assertion and commit only after CAS recheck",
+  "kis_calls": 0,
+  "real_orders": 0
+}
