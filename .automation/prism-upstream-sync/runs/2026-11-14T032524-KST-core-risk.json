@@ -1,0 +1,47 @@
+{
+  "run_id": "scheduled-20261114T032524-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "8940989fd2e383a2cacb294b7b6632f972242eb7",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    }
+  ],
+  "reviewed_file_blobs": {
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "tests/test_strategy_partial_matrix.py": "a57d37d6acf86f34b0334793d135a02af7d53d9f"
+  },
+  "observations": "Confirmed strategy broker receipt persisted per account, restart unresolved fence, record_read_only_buy_history evidence-only and no stop activation. No independently demonstrated missing assertion or defect; do not fabricate RED. Existing Actions success is not a new test execution.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "Read-only review found no independently demonstrated uncovered transition; test-first PR change requires specific missing assertion. No KIS integration attempted.",
+  "unverified_transitions": [
+    "broker-authenticated original acceptance date and execution identity",
+    "partial-fill cancellation remaining-quantity attribution per account",
+    "account-scoped stop activation from verified fills"
+  ],
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Inspect existing partial-fill and watcher mock assertions for a specific missing fail-closed transition; only then commit test-only to Draft PR using expected HEAD lease and observe Actions RED."
+}
