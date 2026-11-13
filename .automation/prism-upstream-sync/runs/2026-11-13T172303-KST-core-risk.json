@@ -1,0 +1,37 @@
+{
+  "run_id": "scheduled-20261113T172303-KST-core-risk",
+  "status": "STALLED_READ_ONLY_CODE_INSPECTION_NO_NEW_REPRO",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "416b8e03b4d6ee21b5ccc05c6f3458ba9a164fcc",
+  "state_acquired_commit": "b6499a2affab3ba16e131fc47045966f98f52dba",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "inspected_blobs": {
+    "trading/order_reconciliation.py": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "finding": "Broker receipt only validates order_no, no fill attribution; reconciliation requires order date and execution ID; BUY tracking remains pending. Existing tests cover receipt persistence. No distinct failing case proven.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": "NOT_RECHECKED",
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-authenticated dated execution-to-ledger-to-account stop activation",
+    "partial fill/cancel/restart end-to-end"
+  ],
+  "exact_blocker": "No distinct failing test derived from inspected existing coverage; no speculative changes authorized",
+  "next_exact_action": "Read complete watcher reconciliation and ledger inspect_unresolved_buy_history methods; derive distinct synthetic fail-closed test, commit to Draft PR after new CAS verification and observe Actions RED",
+  "kis_calls": 0,
+  "real_orders": 0
+}
