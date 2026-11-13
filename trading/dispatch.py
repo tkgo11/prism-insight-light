@@ -1147,7 +1147,7 @@ class TradeDispatcher:
                 trade_result = await trader.async_buy_stock(**buy_kwargs)
             else:
                 sell_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
-                if signal.sell_denominator != 1:
+                if signal.sell_fraction is not None or signal.sell_denominator != 1:
                     sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
                 trade_result = await trader.async_sell_stock(**sell_kwargs)
         else:
@@ -1165,7 +1165,7 @@ class TradeDispatcher:
                         "stock_code": signal.ticker,
                         "limit_price": None if limit_price is None else int(limit_price),
                     }
-                    if signal.sell_denominator != 1:
+                    if signal.sell_fraction is not None or signal.sell_denominator != 1:
                         sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
                     trade_result = await trader.async_sell_stock(**sell_kwargs)
         status = classify_broker_result(trade_result)

@@ -102,7 +102,11 @@ async def test_strategy_partially_buys_once_from_own_budget(name, tmp_path):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("name", SELL_STRATEGIES)
-async def test_strategy_partial_sell_respects_publisher_denominator(name, tmp_path):
+@pytest.mark.parametrize("fields,expected", [
+    ({"sell_denominator": 2}, 0.5),
+    ({"sell_denominator": 2, "sell_fraction": 0.6}, 0.6),
+])
+async def test_strategy_partial_sell_respects_publisher_fraction(name, tmp_path, fields, expected):
     dispatcher = TradeDispatcher(
         trading_mode="demo", strategy_config={
             "name": name, "runtime_path": str(tmp_path / f"{name}.json"),
@@ -113,9 +117,9 @@ async def test_strategy_partial_sell_respects_publisher_denominator(name, tmp_pa
     strategy = dispatcher._resolve_strategy(signal("SELL"))
     assert strategy is not None, name
     result = await strategy.execute(
-        signal("SELL", sell_denominator=2), trading_mode="demo"
+        signal("SELL", **fields), trading_mode="demo"
     )
     assert result.status == "executed", (name, result)
     assert len(FakeUSTrader.calls) == 1, name
     assert FakeUSTrader.calls[0][0] == "SELL"
-    assert FakeUSTrader.calls[0][1]["sell_fraction"] == pytest.approx(0.5), name
+    assert FakeUSTrader.calls[0][1]["sell_fraction"] == pytest.approx(expected), name

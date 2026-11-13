@@ -1,4 +1,5 @@
 """New console boundaries: read-only state, bounded diagnostics and safe handoff."""
+import base64
 import html
 import json
 import re
@@ -126,7 +127,13 @@ def test_queue_error_does_not_claim_clear(monkeypatch):
 
 def test_network_dashboard_does_not_say_armed(monkeypatch):
     monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
-    c = TestClient(create_app(WebUISettings(host="0.0.0.0", allow_non_loopback=True, allowed_hosts=("testserver",))))
+    c = TestClient(
+        create_app(WebUISettings(
+            host="0.0.0.0", allow_non_loopback=True, allowed_hosts=("testserver",),
+            auth_username="test-operator", auth_password="test-network-password-1234",
+        )),
+        headers={"Authorization": "Basic " + base64.b64encode(b"test-operator:test-network-password-1234").decode()},
+    )
     page = c.get("/").text
     assert "<strong>Armed</strong>" not in page
     assert "Network read-only" in page

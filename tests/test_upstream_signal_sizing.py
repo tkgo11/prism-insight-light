@@ -39,6 +39,22 @@ def test_partial_sells_compose_with_local_policy():
     assert adjusted_sell_fraction(signal("SELL"), 0.4) == 0.4
 
 
+@pytest.mark.parametrize("denominator", [1, 2, 4])
+def test_exact_sell_fraction_overrides_legacy_denominator(denominator):
+    exact = signal("SELL", sell_fraction=0.6, sell_denominator=denominator)
+    assert exact.sell_fraction == 0.6
+    assert adjusted_sell_fraction(exact) == 0.6
+    assert adjusted_sell_fraction(exact, 0.4) == pytest.approx(0.24)
+    assert adjusted_sell_fraction(signal("SELL", sell_fraction=1)) == 1.0
+
+
+@pytest.mark.parametrize("value", [0, -0.1, 1.01, "nan", "inf", None,
+                                  True, False, "", "oops", {}, 10 ** 1000])
+def test_invalid_exact_sell_fraction_is_rejected(value):
+    with pytest.raises(SignalValidationError, match="sell_fraction"):
+        signal("SELL", sell_fraction=value)
+
+
 @pytest.mark.parametrize(
     "value", [True, False, "oops", "", 0, -0.1, 1.1, float("nan"),
               float("inf"), {}, 10 ** 1000]

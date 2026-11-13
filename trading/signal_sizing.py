@@ -76,9 +76,14 @@ def scaled_buy_amount(signal: SignalMessage, base_amount: float | None) -> float
 def adjusted_sell_fraction(
     signal: SignalMessage, strategy_fraction: float | None = None
 ) -> float | None:
-    """Apply publisher partial exit to an optional local strategy exit fraction."""
+    """Apply exact publisher exit (or legacy denominator), then local policy once."""
+    publisher_fraction = signal.sell_fraction
+    if publisher_fraction is None:
+        publisher_fraction = 1.0 / signal.sell_denominator
     if strategy_fraction is None:
-        return None if signal.sell_denominator == 1 else 1.0 / signal.sell_denominator
+        if signal.sell_fraction is None and signal.sell_denominator == 1:
+            return None  # Preserve the legacy full-exit adapter default.
+        return publisher_fraction
     # Reject invalid local strategy parameters *before* broker submission.
     # Raw float()/comparisons used to raise ValueError/TypeError/OverflowError,
     # which the dispatcher could mistake for an ambiguous broker outcome.
@@ -90,4 +95,7 @@ def adjusted_sell_fraction(
         raise SignalSizingError("Strategy sell fraction must be within (0, 1]") from exc
     if not math.isfinite(fraction) or not 0 < fraction <= 1:
         raise SignalSizingError("Strategy sell fraction must be within (0, 1]")
-    return fraction / signal.sell_denominator
+    effective = fraction * publisher_fraction
+    if effective <= 0:
+        raise SignalSizingError("Combined sell fraction is too small to represent")
+    return effective
