@@ -1,0 +1,38 @@
+{
+  "run_id": "scheduled-20261114T002116-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_acquired_commit": "8d36e5c0e44c1c81aaa4d0ee6990a3a0f1db9cf6",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": [
+    "tests/test_stop_loss_snapshot_preflight.py",
+    "tests/test_stop_loss_account_selection.py",
+    "tests/test_pending_buy_stop_loss_safety.py",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "trading/stop_loss_watcher.py",
+    "tests/test_watcher_buy_sell_interleaving_mock.py"
+  ],
+  "existing_coverage": "KR/US strategy receipt durability, account-scoped receipt, pending BUY fencing, snapshot preflight, late BUY interleaving are present; no verified uncovered defect",
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "new_tests": 0,
+  "new_fixes": 0,
+  "candidates_verified": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "exact_blocker": "No confirmed uncovered mock scenario after inspection; creating a duplicate or speculative test would violate test-first evidence gate.",
+  "next_exact_action": "Inspect stop-loss activation and account-specific SELL preflight against persisted strategy receipt; identify an uncovered fail-closed transition, then commit read-only test and observe Actions RED."
+}
