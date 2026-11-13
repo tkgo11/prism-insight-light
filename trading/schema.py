@@ -164,6 +164,7 @@ class SignalMessage:
     event_source: str = ""
     event_description: str = ""
     raw: dict[str, Any] = field(default_factory=dict)
+    sell_fraction: float | None = None
 
     @property
     def is_trade(self) -> bool:
@@ -210,6 +211,11 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
     sell_denominator = _as_int(payload.get("sell_denominator", 1), field_name="sell_denominator")
     if sell_denominator is None or sell_denominator < 1:
         raise SignalValidationError("'sell_denominator' must be a positive integer")
+    sell_fraction = None
+    if "sell_fraction" in payload:
+        sell_fraction = _as_float(payload["sell_fraction"], field_name="sell_fraction")
+        if sell_fraction is None or not 0 < sell_fraction <= 1:
+            raise SignalValidationError("'sell_fraction' must be greater than 0 and at most 1")
 
     return SignalMessage(
         signal_type=signal_type,
@@ -226,6 +232,7 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
         buy_price=_as_positive_float(payload.get("buy_price"), field_name="buy_price"),
         position_fraction=position_fraction,
         sell_denominator=sell_denominator,
+        sell_fraction=sell_fraction,
         event_type=_as_text(payload.get("event_type"), field_name="event_type"),
         event_source=_as_text(payload.get("source"), field_name="source"),
         event_description=_as_text(payload.get("event_description"), field_name="event_description"),

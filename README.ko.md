@@ -405,6 +405,13 @@ WebUI는 Pub/Sub subscriber와 함께 실행할 수 있는 로컬 운영 콘솔�
 
 명시적으로 허용한 비루프백 바인딩은 진단용 읽기 전용입니다. 호스트 허용 목록은 인증이 아니므로 브로커 주문과 설정 변경이 거부됩니다. 변경 가능한 매매 제어는 신뢰할 수 있는 로컬 장비에 두세요.
 
+외부 바인딩에는 `WEBUI_AUTH_USERNAME`과 16자 이상의 임의 비밀번호인
+`WEBUI_AUTH_PASSWORD`가 필수입니다. 없으면 WebUI 시작을 거부합니다.
+HTTP Basic 인증은 모든 화면·API·정적 파일에 적용되며, 루프백에서도 선택적으로
+설정할 수 있습니다. HTTPS 프록시 또는 SSH 터널 안에서 사용하세요. 인증을
+설정해도 외부 접속의 주문·설정 변경은 계속 차단됩니다. 실제 비밀번호는 `.env`에만
+보관하고 Git에 올리지 마세요.
+
 
 ### 운영 콘솔 기능
 
@@ -437,6 +444,8 @@ WEBUI_HOST=127.0.0.1
 WEBUI_PORT=8765
 WEBUI_ALLOW_NON_LOOPBACK=false
 WEBUI_ALLOWED_HOSTS=
+WEBUI_AUTH_USERNAME=
+WEBUI_AUTH_PASSWORD=
 WEBUI_ENABLE_LIVE_TRADING=false
 # 내장 WebUI는 subscriber의 --dry-run 및 --queue-path 설정을 이어받습니다.
 WEBUI_FORCE_DRY_RUN=false
@@ -488,6 +497,7 @@ pytest tests/test_docker_installer_smoke.py
 
 - `BUY.position_fraction`: 생략하면 1.0, 유효 범위는 (0, 1]. 0.3이면 해당 계정·전략이 계산한 1회 매수 예산의 30%만 주문합니다. 예산을 확인할 수 없는 경우 전액 매수로 대체하지 않습니다.
 - `SELL.sell_denominator`: 생략하면 1. 양의 정수 2라면 보유 수량의 절반(주식 수량 소수점 버림)을 매도합니다. 자체 매도 전략 비중이 있다면 그 비중과 곱해 적용합니다.
+- `SELL.sell_fraction`: 선택 필드이며 유효 범위는 (0, 1]입니다. 있으면 `sell_denominator`보다 우선합니다. 예를 들어 `sell_fraction=0.6`, `sell_denominator=2`는 60% 매도이며 30%가 아닙니다. 자체 전략 비중이 0.4라면 최종 비중은 0.24입니다. 잘못된 값은 주문 전에 거부합니다.
 
 **ADD(기존 포지션 증액) 신호는 아직 미지원**입니다. 기존 보유 확인·슬롯 상한·영속적인 중복 방지 기능 없이 신규 매수로 처리하면 위험하기 때문에 주문 없이 ACK합니다. 원본의 BTC 거래·AI 분석·발행 기능은 경량 포크 범위에서 제외합니다.
 

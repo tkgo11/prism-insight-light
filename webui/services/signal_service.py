@@ -10,6 +10,10 @@ from typing import Any
 def _signal_to_dto(signal) -> dict[str, Any]:
     payload = asdict(signal)
     payload.pop("raw", None)
+    # An absent exact fraction must remain absent when the validated DTO is
+    # handed back to the parser by the simulator. Explicit null is invalid.
+    if signal.sell_fraction is None:
+        payload.pop("sell_fraction", None)
     payload["is_trade"] = signal.is_trade
     payload["is_event"] = signal.is_event
     return payload

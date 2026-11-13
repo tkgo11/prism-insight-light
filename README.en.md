@@ -414,6 +414,13 @@ Manual broker orders are locked by default. The safe deployment uses the default
 
 An explicitly enabled non-loopback bind is diagnostic and read-only: broker orders and configuration changes are rejected because host allowlisting is not authentication. Keep mutable trading controls on a trusted local machine.
 
+Non-loopback binding requires `WEBUI_AUTH_USERNAME` and a random
+`WEBUI_AUTH_PASSWORD` of at least 16 characters; the WebUI refuses to start
+without them. HTTP Basic authentication protects every page, API and static
+asset, and is optional on loopback. Use it behind HTTPS or an SSH tunnel.
+Authentication does not unlock remote orders or config changes. Keep actual
+credentials only in the deployment `.env`, outside Git.
+
 Install the web dependencies with the normal requirements file, then start the subscriber and UI together explicitly:
 
 
@@ -448,6 +455,8 @@ WEBUI_HOST=127.0.0.1
 WEBUI_PORT=8765
 WEBUI_ALLOW_NON_LOOPBACK=false
 WEBUI_ALLOWED_HOSTS=
+WEBUI_AUTH_USERNAME=
+WEBUI_AUTH_PASSWORD=
 WEBUI_ENABLE_LIVE_TRADING=false
 # Embedded WebUI instances inherit subscriber --dry-run and --queue-path.
 WEBUI_FORCE_DRY_RUN=false
@@ -512,5 +521,10 @@ The check covers all nine pages, desktop/mobile overflow, theme persistence, nav
 ## Upstream signal sizing compatibility
 
 `BUY.position_fraction` (default 1.0; valid (0, 1]) scales the configured per-order budget; an unknown fractional budget never falls back to a full-size order. `SELL.sell_denominator` (default 1; positive integer) reduces the held quantity by that denominator. If an exit strategy specifies its own sell fraction, the two fractions are multiplied.
+
+Optional `SELL.sell_fraction` must be finite and within (0, 1]. It takes
+precedence over `sell_denominator`: fraction 0.6 with denominator 2 requests
+60%, not 30%. A local strategy fraction of 0.4 then yields 0.24 exactly once.
+Malformed explicit fractions are rejected before submission.
 
 Upstream `ADD` (micro-split position top-up) remains unsupported: without holding checks, durable signal-level idempotency and position caps, it must never be treated as a new BUY. Unsupported signals are acknowledged without placing an order. BTC trading and publisher/analysis features are outside the light fork's scope. Verify with demo and `--dry-run` before trading live.

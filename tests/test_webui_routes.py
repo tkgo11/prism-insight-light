@@ -1,3 +1,5 @@
+import base64
+import os
 import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -122,9 +124,12 @@ def test_sidebar_safety_chip_reflects_non_loopback_and_live_trading(monkeypatch)
                 host="0.0.0.0",
                 allow_non_loopback=True,
                 allowed_hosts=("testserver",),
+                auth_username="test-operator",
+                auth_password="test-network-password-1234",
                 csrf_token="local-webui",
             )
-        )
+        ),
+        headers={"Authorization": "Basic " + base64.b64encode(b"test-operator:test-network-password-1234").decode()},
     )
     response = c.get("/")
     assert response.status_code == 200
@@ -414,9 +419,12 @@ def test_non_loopback_webui_blocks_order_and_config_mutations(monkeypatch):
                 host="0.0.0.0",
                 allow_non_loopback=True,
                 allowed_hosts=("testserver",),
+                auth_username="test-operator",
+                auth_password="test-network-password-1234",
                 csrf_token="local-webui",
             )
-        )
+        ),
+        headers={"Authorization": "Basic " + base64.b64encode(b"test-operator:test-network-password-1234").decode()},
     )
     page = c.get("/trading")
     system_page = c.get("/readiness")
@@ -739,7 +747,9 @@ def test_config_update_is_transactional_and_secret_permissions(monkeypatch, tmp_
         },
     )
     assert response.status_code == 200
-    assert config_path.stat().st_mode & 0o777 == 0o600
+    if os.name == "posix":
+        # Windows chmod/stat cannot represent POSIX owner-only permissions.
+        assert config_path.stat().st_mode & 0o777 == 0o600
 
 
 def test_config_update_rejects_blank_mode_and_preserves_omitted_fields(
