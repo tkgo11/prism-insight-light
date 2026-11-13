@@ -1,0 +1,44 @@
+{
+  "run_id": "scheduled-20261114T052107-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "1e664708d28cb2cdd2802d187461c791ad561744",
+  "acquired_state_commit": "87f00fa50c075bdecc8deeda7b2401023e214da0",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "read_files": [
+    "trading/stop_loss_watcher.py",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "tests/test_buy_order_receipt_durability.py",
+    "tests/test_pending_buy_stop_loss_safety.py"
+  ],
+  "observations": "Existing strategy BUY receipt persistence for KR/US executed and unknown, multiaccount isolation, restart, noncanonical IDs and pending stop fail-closed are covered. No new deterministic uncovered assertion established. Main has advanced beyond PR base. No speculative code mutation.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-authenticated acceptance date/execution identity",
+    "partial fill cancellation residual quantity by account",
+    "verified account-scoped stop activation"
+  ],
+  "exact_blocker": "Inspected existing mock tests but did not establish a distinct missing assertion suitable for test-first RED; CI runs are historical green on current PR HEAD, not new tests.",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Inspect tests/test_readonly_broker_account_scope_provenance.py and trading/execution_ledger.py broker-history attribution against watcher transitions; author a nonduplicative fail-closed test only if missing, then run Actions RED."
+}
