@@ -19,10 +19,13 @@ def signal():
 
 
 def dispatcher(monkeypatch, tmp_path, *, mode="demo", account_name=None, multi=False):
-    monkeypatch.setattr(
-        "trading.dispatch.ka.resolve_account",
-        lambda **kwargs: {"account_key": f"{kwargs['svr']}:{kwargs.get('account_name') or ('index-' + str(kwargs['account_index']) if kwargs.get('account_index') is not None else 'primary')}:01"},
-    )
+    def resolve(**kwargs):
+        name = kwargs.get("account_name") or "primary"
+        number = {"account-A": "11111111", "account-B": "22222222"}.get(name, "12345678")
+        return {"account_key": f"{kwargs['svr']}:{number}:01", "name": name,
+                "account": number, "svr": kwargs["svr"], "product": "01",
+                "market": kwargs.get("market") or "kr"}
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", resolve)
     monkeypatch.setattr(
         TradeDispatcher, "_load_runtime_config",
         staticmethod(lambda: {"multi_account_trading": {"enabled": multi}}),
@@ -225,8 +228,8 @@ async def test_queued_single_account_rechecks_identity_after_scope_check(
     assert (await replay.dispatch(signal())).status == "queued"
     persisted = replay.queue._load()[0]
     calls = []
-    original = {"account_key": "vps:primary:01", "name": "primary", "product": "01"}
-    changed = {"account_key": "vps:other:01", "name": "other", "product": "01"}
+    original = {"account_key": "vps:12345678:01", "name": "primary", "product": "01", "account": "12345678", "svr": "vps", "market": "kr"}
+    changed = {"account_key": "vps:87654321:01", "name": "other", "product": "01", "account": "87654321", "svr": "vps", "market": "kr"}
     resolutions = iter([original, changed])
     monkeypatch.setattr(
         "trading.dispatch.ka.resolve_account", lambda **kwargs: next(resolutions),
@@ -252,7 +255,7 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     replay = dispatcher(monkeypatch, tmp_path)
     assert (await replay.dispatch(signal())).status == "queued"
     persisted = replay.queue._load()[0]
-    resolved = {"account_key": "vps:primary:01", "name": "primary", "product": "01"}
+    resolved = {"account_key": "vps:12345678:01", "name": "primary", "product": "01", "account": "12345678", "svr": "vps", "market": "kr"}
     monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: resolved)
     calls = []
     claims = []
@@ -260,11 +263,15 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     replay.execution_dedupe = True
     monkeypatch.setattr(
         replay.execution_ledger, "claim",
-        lambda identity, *, aliases=(): (claims.append(identity) or True, None),
+        lambda identity, *, aliases=(), with_token=False, order_intent=None, order_side=None: (
+            claims.append((identity, order_side, order_intent)) or True, None, "mock-claim-token"
+        ) if with_token else (True, None),
     )
     monkeypatch.setattr(
         replay.execution_ledger, "finalize",
-        lambda identity, status: finals.append((identity, status)),
+        lambda identity, status, *, claim_token=None: finals.append(
+            (identity, status, claim_token)
+        ),
     )
     async def fake_trade(self, order, *, account=None):
         calls.append(account)
@@ -277,7 +284,9 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     assert result.status == "executed"
     assert calls == [resolved]
     assert len(claims) == 1
-    assert finals == [(claims[0], "executed")]
+    assert claims[0][1] is None  # BUY must carry intent, never SELL-only provenance
+    assert claims[0][2]["kind"] == "buy_unresolved"
+    assert finals == [(claims[0][0], "executed", "mock-claim-token")]
 
 
 @pytest.mark.asyncio
@@ -291,7 +300,7 @@ async def test_queued_single_account_strategy_uses_pinned_account(
     replay = dispatcher(monkeypatch, tmp_path)
     assert (await replay.dispatch(signal())).status == "queued"
     persisted = replay.queue._load()[0]
-    resolved = {"account_key": "vps:primary:01", "name": "primary", "product": "01"}
+    resolved = {"account_key": "vps:12345678:01", "name": "primary", "product": "01", "account": "12345678", "svr": "vps", "market": "kr"}
     monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: resolved)
     captured = []
     class FakeStrategy:

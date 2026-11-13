@@ -219,6 +219,57 @@ def test_rejection_is_ambiguous_discriminates_business_code():
     assert rejection_is_ambiguous(object()) is True
 
 
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("error_code", ["0", "401", "unknown", "None", "GatewayTimeout", "EGW00123\\nproxy"])
+def test_unverified_error_code_does_not_authorize_order_replay(market, error_code):
+    # These are not canonical KIS business codes. A proxy may return them
+    # after forwarding the order, so no automatic second submission is safe.
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=400, error_code=error_code,
+        error_message="upstream response incomplete",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+def test_http_redirect_cannot_prove_kis_business_rejection(market):
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=302, error_code="EGW00123",
+        error_message="intermediary redirected order request",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("error_code", ["EGW00123", "APBK0918", "OPSQ2000"])
+def test_canonical_kis_business_code_remains_verified_rejection(market, error_code):
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=400, error_code=error_code,
+        error_message="KIS business rejection",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is False
+    assert classify_broker_result(result) == "failed"
+
+
 # ---------------------------------------------------------------------------
 # us.py numeric coercion: non-finite broker values fall back to defaults
 # ---------------------------------------------------------------------------
@@ -1048,3 +1099,61 @@ def test_us_cfg_float_validators_reject_non_finite():
     assert ust._cfg_positive_float(float("nan"), 3.0) == 3.0
     assert ust._cfg_nonnegative_float(float("inf"), 2.0) == 2.0
     assert ust._cfg_positive_float("5.5") == 5.5
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("http_status", [408, 409, 425, 429, 499])
+def test_intermediary_http_code_cannot_prove_kr_us_order_rejection(market, http_status):
+    """Actual KR/US adapter paths, with a mock KIS response and zero orders."""
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=http_status, error_code="APBK0918",
+        error_message="intermediary status after order forwarding",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"
+
+
+# Regression: a non-200 2xx status does not prove KIS rejected a BUY.
+# 201/202 can mean accepted; 204 has no response body; 206/207/226 are
+# partial/multi/extension responses. A proxy may attach a KIS-looking code.
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("http_status", [201, 202, 204, 205, 206, 207, 226])
+def test_nonstandard_2xx_cannot_prove_kis_order_rejection(market, http_status):
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=http_status, error_code="APBK0918",
+        error_message="intermediary 2xx after order forwarding",
+    )
+    result = (
+        trader.buy_market_price("005930", 100000)
+        if market == "KR" else trader.buy_market_price("AAPL", 200.0)
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("http_status", [201, 202, 204, 205, 206, 207, 226])
+def test_nonstandard_2xx_cannot_prove_kis_sell_rejection(market, http_status):
+    """Actual SELL adapter boundary with no broker access or live orders."""
+    trader = _domestic_trader() if market == "KR" else _us_trader()
+    trader._request = lambda *args, **kwargs: _FakeResp(
+        False, status=http_status, error_code="APBK0918",
+        error_message="intermediary 2xx after order forwarding",
+    )
+    result = (
+        trader.sell_all_market_price("005930", holding_quantity=5)
+        if market == "KR" else trader.sell_all_market_price(
+            "AAPL", holding_quantity=2, limit_price=200.0
+        )
+    )
+    assert result["success"] is False
+    assert result["outcome_unknown"] is True
+    assert classify_broker_result(result) == "unknown"

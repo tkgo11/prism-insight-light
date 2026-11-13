@@ -22,7 +22,11 @@ def test_explicit_unknown_overrides_contradictory_success_flag():
 
 
 def test_explicit_broker_rejection_is_failed():
-    assert classify_broker_result({"success": False, "message": "APBK0918 - market closed"}) == "failed"
+    # The wrapper must explicitly establish the broker-authored rejection.
+    assert classify_broker_result({
+        "success": False, "outcome_unknown": False,
+        "message": "APBK0918 - market closed",
+    }) == "failed"
 
 
 def test_transport_timeout_is_unknown():
@@ -174,3 +178,80 @@ def test_unusable_textual_receipt_keeps_replay_fence_after_restart(tmp_path):
 def test_reconcilable_broker_receipt_remains_accepted(receipt):
     # Do not accidentally reject valid zero-padded or mock alphanumeric IDs.
     assert classify_broker_result({"success": True, "order_no": receipt}) == "executed"
+
+
+@pytest.mark.parametrize("message", [
+    "APBK0918 - market closed",
+    "upstream proxy returned APBK0918 after an order timeout",
+    "Unhandled client exception APBK1507",
+])
+def test_unverified_apbk_text_is_not_authoritative_rejection(message):
+    # A string can be echoed by a proxy or client after the broker accepted
+    # the request. A mere APBK-looking message must not make it retryable.
+    assert classify_broker_result({
+        "success": False, "message": message,
+    }) == "unknown"
+
+
+def test_unverified_apbk_message_preserves_duplicate_claim_after_restart(tmp_path):
+    ledger_path = tmp_path / "apbk_unverified.json"
+    ledger = ExecutionLedger(ledger_path)
+    assert ledger.claim("account-signal-apbk") == (True, None)
+    status = classify_broker_result({
+        "success": False, "message": "client exception APBK0918",
+    })
+    assert status == "unknown"
+    ledger.finalize("account-signal-apbk", status)
+    assert ExecutionLedger(ledger_path).claim("account-signal-apbk") == (
+        False, "unknown",
+    )
+
+
+@pytest.mark.parametrize("message", [
+    "Gateway timeout after order submission",
+    "Read timed out after the broker received the order",
+    "Connection reset after the order was accepted",
+])
+def test_success_with_receipt_and_transport_ambiguity_is_not_confirmed(message):
+    # A contradictory wrapper result cannot be trusted as an authoritative
+    # acceptance, even when it carries a syntactically valid order number.
+    assert classify_broker_result({
+        "success": True, "order_no": "KIS-123", "message": message,
+    }) == "unknown"
+
+
+def test_contradictory_success_timeout_keeps_replay_fence_after_restart(tmp_path):
+    path = tmp_path / "contradictory-receipt.json"
+    ledger = ExecutionLedger(path)
+    assert ledger.claim("account-signal-ambiguous-receipt") == (True, None)
+    outcome = classify_broker_result({
+        "success": True,
+        "order_no": "12345678",
+        "message": "Gateway timeout after order submission",
+    })
+    assert outcome == "unknown"
+    ledger.finalize("account-signal-ambiguous-receipt", outcome)
+    assert ExecutionLedger(path).claim("account-signal-ambiguous-receipt") == (
+        False, "unknown",
+    )
+
+
+@pytest.mark.parametrize("receipt", [
+    "０００", "１２３", "٠١٢", "KIS１２３", "🦄", "@", "KIS/123",
+])
+@pytest.mark.parametrize("field", ["order_no", "broker_order_id"])
+def test_nonascii_or_noncanonical_order_receipt_cannot_confirm_acceptance(receipt, field):
+    # KIS order identifiers are ASCII; Unicode decimal digits and arbitrary
+    # punctuation are not broker-reconcilable receipts. Full-width zeros must
+    # never bypass the zero-order-number sentinel check.
+    assert classify_broker_result({"success": True, field: receipt}) == "unknown"
+
+
+def test_nonascii_receipt_preserves_claim_across_restart(tmp_path):
+    path = tmp_path / "unicode-receipt.json"
+    ledger = ExecutionLedger(path)
+    assert ledger.claim("unicode-receipt") == (True, None)
+    status = classify_broker_result({"success": True, "order_no": "０００"})
+    assert status == "unknown"
+    ledger.finalize("unicode-receipt", status)
+    assert ExecutionLedger(path).claim("unicode-receipt") == (False, "unknown")

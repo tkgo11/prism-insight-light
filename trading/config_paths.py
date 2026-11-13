@@ -31,6 +31,15 @@ def writable_kis_config_path(env: dict[str, str] | None = None) -> Path:
     return configured_kis_config_path(env) or DEFAULT_CONFIG_PATH
 
 
+def implicit_example_kis_config_active(env: dict[str, str] | None = None) -> bool:
+    """True only when no operator-provided KIS config is selected.
+
+    The bundled example is a parsing/test fallback, not authorization to
+    submit production orders even if someone changes its default_mode.
+    """
+    return configured_kis_config_path(env) is None and not DEFAULT_CONFIG_PATH.exists()
+
+
 def active_kis_config_path(env: dict[str, str] | None = None) -> Path:
     """Return the explicit/live config, or the maintained safe example."""
 

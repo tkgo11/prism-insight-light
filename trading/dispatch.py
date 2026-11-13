@@ -6,12 +6,13 @@ import asyncio
 import hashlib
 import logging
 import math
+import re
 import threading
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable, TypeVar
 
 from . import kis_auth as ka
 from . import yaml_compat as yaml
@@ -61,6 +62,7 @@ from .strategies import (
     StopLossSellStrategy,
     StopLossSellStrategyConfig,
 )
+from .strategies.common import _has_reserved_watcher_identity, _is_watcher_generated_stop_sell
 from .stop_loss_watcher import StopLossTracker, StopLossWatcherConfig
 from .us import USStockTrading
 
@@ -116,9 +118,77 @@ async def _serialized_broker_workflow():
             _BROKER_EXECUTION_LOCK.release()
 
 
+_WorkflowResult = TypeVar("_WorkflowResult")
+
+
+async def _complete_broker_workflow(workflow: Awaitable[_WorkflowResult]) -> _WorkflowResult:
+    """Delay caller cancellation until broker work and durable tracking finish.
+
+    Cancelling ``to_thread`` cannot stop its worker. Keep the serialization
+    locks held while the shielded workflow finishes, including repeated caller
+    cancellations, so another signal cannot overlap a still-active order.
+    """
+    task = asyncio.ensure_future(workflow)
+    cancellation: asyncio.CancelledError | None = None
+    while True:
+        try:
+            result = await asyncio.shield(task)
+        except asyncio.CancelledError as exc:
+            if task.cancelled():
+                raise
+            cancellation = exc
+        except Exception:
+            if cancellation is not None:
+                logger.exception("Broker workflow failed while draining caller cancellation")
+                raise cancellation
+            raise
+        else:
+            if cancellation is not None:
+                raise cancellation
+            return result
+
+
 def _account_id(account_key: str) -> str:
     """Return an opaque persistent account selector without storing account numbers."""
     return hashlib.sha256(account_key.encode("utf-8")).hexdigest()[:24]
+
+
+def _is_stop_loss_sell(signal: SignalMessage) -> bool:
+    """Recognize the semantic stop-loss reason independent of letter case."""
+    return (
+        signal.signal_type == "SELL"
+        and isinstance(signal.sell_reason, str)
+        and signal.sell_reason.strip().casefold() == "stop_loss"
+    )
+
+
+def _untrusted_reserved_watcher_id(signal: SignalMessage) -> bool:
+    # Publisher-controlled stable IDs can collide with a future internal
+    # stop-loss SELL's durable dedupe claim, even across instrument tickers.
+    return (
+        _has_reserved_watcher_identity(signal)
+        and not _is_watcher_generated_stop_sell(signal)
+    )
+
+
+def _buy_stop_loss_intent(signal: SignalMessage, account_selector: str) -> dict[str, Any] | None:
+    """Persist non-actionable reconciliation hints, not a filled position.
+
+    The scope is hashed. New durable BUY claims use the resolved canonical
+    account key; older selector-scoped claims remain non-actionable evidence.
+    """
+    if signal.signal_type != "BUY":
+        return None
+    # A BUY without a new stop threshold can still fill after an initial
+    # zero-balance inquiry. Persist its non-actionable identity before broker
+    # submission so an older confirmed tracker is not silently discarded.
+    has_stop = signal.stop_loss is not None and signal.stop_loss > 0
+    return {
+        "kind": "buy_stop_loss" if has_stop else "buy_unresolved",
+        "market": signal.market, "ticker": signal.ticker,
+        "stop_loss": signal.stop_loss if has_stop else None,
+        "account_scope": hashlib.sha256(account_selector.encode("utf-8")).hexdigest(),
+    }
 
 
 def _as_enabled(value: Any, default: bool = False) -> bool:
@@ -236,6 +306,24 @@ class DispatchResult:
     order_no: str | None = None
 
 
+def _durable_buy_receipt(signal: SignalMessage, result: DispatchResult) -> dict[str, str] | None:
+    """Extract canonical broker order identity without inferring any fill.
+
+    Unknown/no-receipt orders remain durably fenced for manual reconciliation.
+    Noncanonical mock/legacy IDs are never persisted as KIS query keys.
+    """
+    order_no = result.order_no
+    if (
+        signal.signal_type != "BUY"
+        or result.status not in ("executed", "unknown")
+        or not isinstance(order_no, str)
+        or re.fullmatch(r"[0-9]{1,20}", order_no) is None
+        or not order_no.strip("0")
+    ):
+        return None
+    return {"order_no": order_no}
+
+
 class MultiAccountTradeDispatcher:
     """Resolve, execute, and aggregate one validated signal across eligible accounts.
 
@@ -334,6 +422,11 @@ class MultiAccountTradeDispatcher:
         requested_ids: list[str] | None = None,
         queued_context: dict[str, Any] | None = None,
     ) -> DispatchResult:
+        if _untrusted_reserved_watcher_id(signal):
+            return DispatchResult(
+                "rejected", "Reserved internal watcher identity; publisher order rejected",
+                signal.signal_type, signal.market,
+            )
         if signal.is_event:
             # Event signals are account-agnostic state (e.g. risk-off). Route
             # them through the single-account path exactly once instead of
@@ -407,8 +500,10 @@ class MultiAccountTradeDispatcher:
             account_id = _account_id(account["account_key"])
             identity, aliases = execution_identities(signal.raw, account["account_key"])
             if self.dispatcher.execution_dedupe:
-                claimed, previous_status = await asyncio.to_thread(
-                    self.ledger.claim, identity, aliases=aliases
+                claimed, previous_status, claim_token = await asyncio.to_thread(
+                    self.ledger.claim, identity, aliases=aliases, with_token=True,
+                    order_intent=_buy_stop_loss_intent(signal, account["account_key"]),
+                    order_side="SELL" if signal.signal_type == "SELL" else None,
                 )
                 if not claimed:
                     results.append(
@@ -444,10 +539,17 @@ class MultiAccountTradeDispatcher:
                         # claim (an earlier account's workflow may straddle a
                         # market boundary). Nothing was submitted, so the claim
                         # must be released or the identity is poisoned forever.
-                        await asyncio.to_thread(self.ledger.release, identity)
-                    else:
                         await asyncio.to_thread(
-                            self.ledger.finalize, identity, result.status
+                            self.ledger.release, identity, claim_token=claim_token
+                        )
+                    else:
+                        receipt = _durable_buy_receipt(signal, result)
+                        finalize_kwargs = {"claim_token": claim_token}
+                        if receipt is not None:
+                            finalize_kwargs["order_receipt"] = receipt
+                        await asyncio.to_thread(
+                            self.ledger.finalize, identity, result.status,
+                            **finalize_kwargs,
                         )
                 results.append(
                     AccountDispatchResult(
@@ -465,12 +567,12 @@ class MultiAccountTradeDispatcher:
                 )
             except asyncio.CancelledError:
                 if self.dispatcher.execution_dedupe:
-                    self.ledger.finalize(identity, "unknown")
+                    self.ledger.finalize(identity, "unknown", claim_token=claim_token)
                 raise
             except Exception as exc:  # noqa: BLE001 - each account is an isolated boundary
                 error_message = f"{type(exc).__name__}: {str(exc)[:512]}"
                 if self.dispatcher.execution_dedupe:
-                    self.ledger.finalize(identity, "unknown")
+                    self.ledger.finalize(identity, "unknown", claim_token=claim_token)
                 results.append(
                     AccountDispatchResult(
                         account=account["name"],
@@ -572,6 +674,49 @@ class TradeDispatcher:
                 quote_provider=provider,
             )
 
+    async def _stop_sell_unresolved_buy_block(
+        self, signal: SignalMessage
+    ) -> DispatchResult | None:
+        """Check durable BUY provenance inside the shared broker workflow lock.
+
+        Called by both immediate dispatch and the queued multi-account fast
+        path. A queue replay must not bypass the same stop-loss SELL fence.
+        The caller holds _serialized_broker_workflow throughout the check and
+        subsequent broker dispatch; no fill is inferred from aggregate holdings.
+        """
+        if not _is_stop_loss_sell(signal) or self.dry_run:
+            return None
+
+        def unresolved_buy_before_stop_sell() -> bool:
+            with self.execution_ledger.guard_unresolved_buy(
+                signal.market, signal.ticker
+            ) as unresolved:
+                return unresolved
+
+        try:
+            unresolved = await asyncio.to_thread(unresolved_buy_before_stop_sell)
+        except Exception:
+            logger.exception(
+                "Blocking automatic stop SELL for %s %s: BUY intent "
+                "ledger cannot be verified", signal.market, signal.ticker,
+            )
+            return DispatchResult(
+                "deferred",
+                "BUY intent ledger unavailable; operator reconciliation required",
+                signal.signal_type, signal.market,
+            )
+        if unresolved:
+            logger.critical(
+                "Blocking automatic stop SELL for %s %s: "
+                "unresolved BUY fill attribution", signal.market, signal.ticker,
+            )
+            return DispatchResult(
+                "deferred",
+                "Unresolved BUY; broker-authoritative fill reconciliation required",
+                signal.signal_type, signal.market,
+            )
+        return None
+
     async def dispatch(
         self,
         signal: SignalMessage,
@@ -581,22 +726,9 @@ class TradeDispatcher:
     ) -> DispatchResult:
         try:
             async with _serialized_broker_workflow():
-                if self.multi_account_enabled:
-                    result = await self.multi_account_dispatcher.dispatch(
-                        signal,
-                        allow_queue=allow_queue,
-                        queued_context=queued_context,
-                    )
-                elif self.dry_run:
-                    logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
-                    result = DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
-                else:
-                    serialized_kwargs: dict[str, Any] = {"allow_queue": allow_queue}
-                    if queued_context is not None:
-                        serialized_kwargs["queued_context"] = queued_context
-                    result = await self._dispatch_serialized(signal, **serialized_kwargs)
-                await asyncio.to_thread(self._update_stop_loss_tracking, signal, result)
-                return result
+                return await _complete_broker_workflow(
+                    self._dispatch_locked(signal, allow_queue=allow_queue, queued_context=queued_context)
+                )
         except BrokerWorkflowBusyError:
             logger.warning(
                 "Deferred %s %s(%s): broker execution lock stayed busy past %.0fs",
@@ -610,6 +742,42 @@ class TradeDispatcher:
                 signal.market,
             )
 
+    async def _dispatch_locked(
+        self, signal: SignalMessage, *, allow_queue: bool,
+        queued_context: dict[str, Any] | None,
+    ) -> DispatchResult:
+        """Finish routing and tracking while the caller owns broker locks."""
+        if _untrusted_reserved_watcher_id(signal):
+            logger.error(
+                "Rejecting publisher-supplied reserved watcher identity for %s %s",
+                signal.market, signal.ticker,
+            )
+            return DispatchResult(
+                "rejected", "Reserved internal watcher identity; publisher order rejected",
+                signal.signal_type, signal.market,
+            )
+        # Check under the cross-process broker lock before any KR/US
+        # single-account or multi-account stop-loss SELL submission.
+        stop_block = await self._stop_sell_unresolved_buy_block(signal)
+        if stop_block is not None:
+            return stop_block
+        if self.multi_account_enabled:
+            result = await self.multi_account_dispatcher.dispatch(
+                signal,
+                allow_queue=allow_queue,
+                queued_context=queued_context,
+            )
+        elif self.dry_run:
+            logger.info("[DRY-RUN] %s %s(%s)", signal.signal_type, signal.company_name, signal.ticker)
+            result = DispatchResult("dry-run", "Dry-run mode; no trade executed", signal.signal_type, signal.market)
+        else:
+            serialized_kwargs: dict[str, Any] = {"allow_queue": allow_queue}
+            if queued_context is not None:
+                serialized_kwargs["queued_context"] = queued_context
+            result = await self._dispatch_serialized(signal, **serialized_kwargs)
+        await asyncio.to_thread(self._update_stop_loss_tracking, signal, result)
+        return result
+
     async def _dispatch_serialized(
         self,
         signal: SignalMessage,
@@ -618,6 +786,12 @@ class TradeDispatcher:
         account: dict[str, Any] | None = None,
         queued_context: dict[str, Any] | None = None,
     ) -> DispatchResult:
+        # Defense in depth for internal callers that bypass dispatch().
+        if _untrusted_reserved_watcher_id(signal):
+            return DispatchResult(
+                "rejected", "Reserved internal watcher identity; publisher order rejected",
+                signal.signal_type, signal.market,
+            )
         event_strategy = self._resolve_event_strategy(signal)
         if signal.is_event:
             if event_strategy is not None:
@@ -752,12 +926,8 @@ class TradeDispatcher:
                     signal.signal_type, signal.market,
                 )
             try:
-                order_account = ka.resolve_account(
-                    svr="vps" if self.trading_mode == "demo" else "prod",
-                    product="01",
-                    market=signal.market.lower(),
-                    account_name=self.account_name,
-                    account_index=self.account_index,
+                order_account = await asyncio.to_thread(
+                    self._resolve_single_account, signal,
                 )
                 if _account_id(order_account["account_key"]) != queued_context.get("account_id"):
                     return DispatchResult(
@@ -770,13 +940,69 @@ class TradeDispatcher:
                     signal.signal_type, signal.market,
                 )
 
+        # A corrupt existing stop tracker must block a NEW BUY before it
+        # reaches KIS. Rejecting only the post-acceptance tracker update would
+        # leave a potentially filled position without reliable protection.
+        # This read-only preflight applies to KR/US, strategy, queued and
+        # multi-account broker paths (the latter may already hold a claim).
+        if signal.signal_type == "BUY" and isinstance(getattr(self, "stop_loss_tracker", None), StopLossTracker):
+            try:
+                await asyncio.to_thread(
+                    self.stop_loss_tracker.assert_registration_safe,
+                    signal.market, signal.ticker,
+                )
+            except (ValueError, RuntimeError, OSError) as exc:
+                logger.critical(
+                    "Blocking BUY %s %s before broker submission: corrupt "
+                    "stop-loss tracker requires operator reconciliation: %s",
+                    signal.market, signal.ticker, exc,
+                )
+                return DispatchResult(
+                    "rejected",
+                    "Existing stop-loss tracker requires operator reconciliation",
+                    signal.signal_type, signal.market,
+                )
+
+        # A single-account BUY must pin the same canonical account in both
+        # its durable intent and the actual broker constructor. Resolving a
+        # mutable primary/name/index again after the claim can redirect the
+        # order, while hashing that selector makes read-only history unable
+        # to correlate even a matching receipt. Keep the existing selector
+        # for dedupe identity (including legacy claims); only the intent scope
+        # and broker routing use the pinned account.
+        buy_intent = None
+        if account is None and self.execution_dedupe and signal.signal_type == "BUY":
+            try:
+                if order_account is None:
+                    order_account = await asyncio.to_thread(
+                        self._resolve_single_account, signal,
+                    )
+                # A resolver result is configuration provenance, not a
+                # broker fill. Reject incomplete/inconsistent account keys
+                # before the durable claim or any order submission.
+                key = self._validated_buy_account_key(order_account, signal)
+                buy_intent = _buy_stop_loss_intent(signal, key)
+            except (KeyError, TypeError, ValueError, OSError, RuntimeError):
+                logger.warning(
+                    "Deferring BUY %s %s: canonical KIS account unavailable",
+                    signal.market, signal.ticker,
+                )
+                return DispatchResult(
+                    "failed" if queued_context is not None else "deferred",
+                    "KIS BUY account could not be pinned before submission; operator reconciliation required",
+                    signal.signal_type, signal.market,
+                )
+
         identity = None
+        claim_token = None
         if account is None and self.execution_dedupe:
             identity, aliases = execution_identities(
                 signal.raw, self._single_account_execution_selector(signal)
             )
-            claimed, previous_status = await asyncio.to_thread(
-                self.execution_ledger.claim, identity, aliases=aliases
+            claimed, previous_status, claim_token = await asyncio.to_thread(
+                self.execution_ledger.claim, identity, aliases=aliases, with_token=True,
+                order_intent=buy_intent,
+                order_side="SELL" if signal.signal_type == "SELL" else None,
             )
             if not claimed:
                 self.signal_gate.audit_record(
@@ -814,6 +1040,7 @@ class TradeDispatcher:
                     strategy_result.message,
                     signal.signal_type,
                     signal.market,
+                    order_no=getattr(strategy_result, "order_no", None),
                 )
             elif order_account is None:
                 result = await self._execute_legacy_trade(signal)
@@ -823,22 +1050,30 @@ class TradeDispatcher:
             # Sizing was rejected before broker submission. Never classify it as
             # an ambiguous order (or leave a ledger claim stuck as "unknown").
             if identity is not None:
-                await asyncio.to_thread(self.execution_ledger.finalize, identity, "rejected")
+                await asyncio.to_thread(
+                    self.execution_ledger.finalize, identity, "rejected",
+                    claim_token=claim_token,
+                )
             logger.warning("Rejected %s %s(%s) sizing: %s",
                            signal.signal_type, signal.company_name, signal.ticker, exc)
             return DispatchResult("rejected", str(exc), signal.signal_type, signal.market)
         except asyncio.CancelledError:
             if identity is not None:
-                self.execution_ledger.finalize(identity, "unknown")
+                self.execution_ledger.finalize(identity, "unknown", claim_token=claim_token)
             raise
         except Exception:
             if identity is not None:
-                self.execution_ledger.finalize(identity, "unknown")
+                self.execution_ledger.finalize(identity, "unknown", claim_token=claim_token)
             raise
 
         if identity is not None:
+            receipt = _durable_buy_receipt(signal, result)
+            finalize_kwargs = {"claim_token": claim_token}
+            if receipt is not None:
+                finalize_kwargs["order_receipt"] = receipt
             await asyncio.to_thread(
-                self.execution_ledger.finalize, identity, result.status
+                self.execution_ledger.finalize, identity, result.status,
+                **finalize_kwargs,
             )
         return result
 
@@ -893,16 +1128,9 @@ class TradeDispatcher:
                         or len(set(requested_ids)) != len(requested_ids)
                     ):
                         return DispatchResult("failed", "Queued multi-account targets are invalid", signal.signal_type, signal.market)
-                    result = await self.multi_account_dispatcher.dispatch(
-                        signal,
-                        allow_queue=False,
-                        requested_ids=requested_ids,
-                        queued_context=queued_context,
+                    return await _complete_broker_workflow(
+                        self._execute_queued_multi_account_locked(signal, requested_ids, queued_context)
                     )
-                    await asyncio.to_thread(
-                        self._update_stop_loss_tracking, signal, result
-                    )
-                    return result
         except BrokerWorkflowBusyError:
             return DispatchResult(
                 "deferred",
@@ -911,6 +1139,27 @@ class TradeDispatcher:
                 signal.market,
             )
         return await self.dispatch(signal, allow_queue=False, queued_context=queued_context)
+
+    async def _execute_queued_multi_account_locked(
+        self, signal: SignalMessage, requested_ids: list[str],
+        queued_context: dict[str, Any],
+    ) -> DispatchResult:
+        # Queued multi-account replay bypasses dispatch(), so it
+        # must perform the same durable pending-BUY preflight
+        # before forwarding a stop-loss SELL to any account.
+        stop_block = await self._stop_sell_unresolved_buy_block(signal)
+        if stop_block is not None:
+            return stop_block
+        result = await self.multi_account_dispatcher.dispatch(
+            signal,
+            allow_queue=False,
+            requested_ids=requested_ids,
+            queued_context=queued_context,
+        )
+        await asyncio.to_thread(
+            self._update_stop_loss_tracking, signal, result
+        )
+        return result
 
     def _update_stop_loss_tracking(self, signal: SignalMessage, result: DispatchResult) -> None:
         # Dry-run and deferred outcomes must never mutate real position protection:
@@ -957,8 +1206,11 @@ class TradeDispatcher:
                     entry_price=signal.price or 0.0,
                     company_name=signal.company_name,
                     target_price=signal.target_price,
+                    # Broker acceptance is not a confirmed fill. Preserve
+                    # tracking across a pre-fill zero-holdings inquiry.
+                    pending_buy=True,
                 )
-            elif signal.signal_type == "SELL" and signal.sell_reason != "stop_loss":
+            elif signal.signal_type == "SELL" and not _is_stop_loss_sell(signal):
                 # An accepted broker order (including a full-size SELL) is not
                 # evidence that the shares were filled. Do not drop durable
                 # protection based on an order-acceptance status or an account
@@ -1051,6 +1303,13 @@ class TradeDispatcher:
         return None
 
     def _resolve_strategy(self, signal: SignalMessage):
+        if _is_watcher_generated_stop_sell(signal):
+            # The independent watcher has already verified its own stop
+            # snapshot and position gate. An opt-in signal strategy may
+            # reject it (e.g. no trailing BUY record) or turn its emergency
+            # SELL into a partial/limit order. Use the legacy market SELL
+            # adapter, while retaining the normal ledger and broker locks.
+            return None
         if self.score_max_capital_config is not None and signal.is_trade:
             return ScoreMaxCapitalStrategy(config=self.score_max_capital_config)
         if self.balanced_risk_config is not None and signal.is_trade:
@@ -1083,20 +1342,38 @@ class TradeDispatcher:
                 return ProtectiveExitStrategy(config=self.protective_exit_config)
         return None
 
-    def _resolved_single_account_id(self, signal: SignalMessage) -> str:
-        """Pin the actual KIS account, not merely a mutable name/index/primary.
-
-        resolve_account uses the same server, product and market contract as
-        DomesticStockTrading and USStockTrading. Store only its opaque hash.
-        """
-        account = ka.resolve_account(
+    def _resolve_single_account(self, signal: SignalMessage) -> dict[str, Any]:
+        """Resolve configuration only; never authenticate or submit an order."""
+        return ka.resolve_account(
             svr="vps" if self.trading_mode == "demo" else "prod",
             product="01",
             market=signal.market.lower(),
             account_name=self.account_name,
             account_index=self.account_index,
         )
-        return _account_id(account["account_key"])
+
+    def _validated_buy_account_key(
+        self, account: dict[str, Any], signal: SignalMessage,
+    ) -> str:
+        """Require the same canonical account contract as read-only history."""
+        server = "vps" if self.trading_mode == "demo" else "prod"
+        number = account["account"]
+        key = account["account_key"]
+        if (
+            not isinstance(number, str)
+            or re.fullmatch(r"[0-9]{8}", number) is None
+            or account["svr"] != server
+            or account["product"] != "01"
+            or account["market"] not in ("all", signal.market.lower())
+            or key != f"{server}:{number}:01"
+            or not isinstance(account["name"], str)
+        ):
+            raise ValueError("Invalid canonical KIS BUY account")
+        return key
+
+    def _resolved_single_account_id(self, signal: SignalMessage) -> str:
+        """Pin the actual KIS account, not merely a mutable name/index/primary."""
+        return _account_id(self._resolve_single_account(signal)["account_key"])
 
     def _single_account_execution_selector(self, signal: SignalMessage) -> str:
         if self.account_name:
@@ -1127,13 +1404,14 @@ class TradeDispatcher:
         self, signal: SignalMessage, *, account: dict[str, Any] | None = None
     ) -> DispatchResult:
         is_stop_loss = (
-            getattr(signal, "sell_reason", None) == "stop_loss"
+            _is_stop_loss_sell(signal)
             or getattr(signal, "type", None) == "STOP_LOSS"
             or getattr(signal, "signal_type", None) == "STOP_LOSS"
         )
         # Automatic stop-loss sells MUST execute as market orders so liquidation
         # is immediate and not left pending as an unfilled limit order.
         limit_price = None if is_stop_loss or signal.price in (None, 0) else signal.price
+        sell_fraction = adjusted_sell_fraction(signal) if signal.signal_type != "BUY" else None
         if signal.market == "US":
             # Construction authenticates synchronously (token file scan, lock,
             # possible mint); keep it off the event loop.
@@ -1147,8 +1425,8 @@ class TradeDispatcher:
                 trade_result = await trader.async_buy_stock(**buy_kwargs)
             else:
                 sell_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
-                if signal.sell_denominator != 1:
-                    sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
+                if sell_fraction is not None:
+                    sell_kwargs["sell_fraction"] = sell_fraction
                 trade_result = await trader.async_sell_stock(**sell_kwargs)
         else:
             async with AsyncTradingContext(**self._trader_kwargs(account)) as trader:
@@ -1165,8 +1443,8 @@ class TradeDispatcher:
                         "stock_code": signal.ticker,
                         "limit_price": None if limit_price is None else int(limit_price),
                     }
-                    if signal.sell_denominator != 1:
-                        sell_kwargs["sell_fraction"] = adjusted_sell_fraction(signal)
+                    if sell_fraction is not None:
+                        sell_kwargs["sell_fraction"] = sell_fraction
                     trade_result = await trader.async_sell_stock(**sell_kwargs)
         status = classify_broker_result(trade_result)
         message = str(trade_result.get("message", ""))

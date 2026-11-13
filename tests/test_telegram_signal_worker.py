@@ -394,3 +394,199 @@ async def test_event_risk_off_strategy_records_original_event_publication_time(t
     assert data[0]["created_at"] == published_time
 
 
+
+
+def _worker_for_channel(path, channel):
+    return TelegramSignalWorker(
+        FakeDispatcher(), ActiveWorkTracker(), channel_url=channel, seen_posts_path=path
+    )
+
+
+def test_seen_posts_are_scoped_to_channel_and_preserve_restarts(tmp_path):
+    path = tmp_path / "seen.json"
+    first = _worker_for_channel(path, "https://t.me/First_Channel")
+    first._seen_post_ids.add("101")
+    first._save_seen_post_ids()
+
+    other = _worker_for_channel(path, "@second_channel")
+    assert "101" not in other._seen_post_ids
+    other._seen_post_ids.add("101")
+    other._save_seen_post_ids()
+
+    assert _worker_for_channel(path, "@FIRST_CHANNEL")._seen_post_ids == {"101"}
+    assert _worker_for_channel(path, "https://t.me/s/second_channel")._seen_post_ids == {"101"}
+    assert json.loads(path.read_text()) == {
+        "version": 1,
+        "channels": {"first_channel": ["101"], "second_channel": ["101"]},
+    }
+
+
+def test_legacy_seen_posts_bind_once_to_first_configured_channel(tmp_path):
+    path = tmp_path / "seen.json"
+    path.write_text('["101", "102"]', encoding="utf-8")
+
+    assert _worker_for_channel(path, "@first")._seen_post_ids == {"101", "102"}
+    assert _worker_for_channel(path, "@second")._seen_post_ids == set()
+    assert _worker_for_channel(path, "https://t.me/s/FIRST")._seen_post_ids == {"101", "102"}
+    assert json.loads(path.read_text())["channels"] == {"first": ["101", "102"]}
+
+
+def test_seen_posts_merge_stale_workers_without_losing_other_channels(tmp_path):
+    path = tmp_path / "seen.json"
+    first = _worker_for_channel(path, "@first")
+    stale_first = _worker_for_channel(path, "@FIRST")
+    second = _worker_for_channel(path, "@second")
+
+    for worker, post_id in ((first, "101"), (second, "201"), (stale_first, "102")):
+        worker._seen_post_ids.add(post_id)
+        worker._save_seen_post_ids()
+
+    assert _worker_for_channel(path, "@first")._seen_post_ids == {"101", "102"}
+    assert _worker_for_channel(path, "@second")._seen_post_ids == {"201"}
+
+
+def test_seen_posts_concurrent_writers_merge_state(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    path = tmp_path / "seen.json"
+    workers = [_worker_for_channel(path, "@shared") for _ in range(8)]
+
+    def save(index):
+        workers[index]._seen_post_ids.add(str(index))
+        workers[index]._save_seen_post_ids()
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(save, range(8)))
+
+    assert _worker_for_channel(path, "@shared")._seen_post_ids == {str(i) for i in range(8)}
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_seen_posts_save_preserves_unknown_state_format(tmp_path, caplog):
+    path = tmp_path / "seen.json"
+    original = '{"version":99,"channels":{"first":["101"]}}'
+    path.write_text(original, encoding="utf-8")
+    worker = _worker_for_channel(path, "@first")
+    worker._seen_post_ids.add("102")
+    worker._save_seen_post_ids()
+
+    assert path.read_text(encoding="utf-8") == original
+    assert "Could not save seen Telegram post IDs" in caplog.text
+
+
+def test_seen_posts_failed_replace_preserves_state_and_cleans_temp(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    path = tmp_path / "seen.json"
+    worker = _worker_for_channel(path, "@first")
+    worker._seen_post_ids.add("101")
+    worker._save_seen_post_ids()
+    original = path.read_bytes()
+    worker._seen_post_ids.add("102")
+
+    def fail_replace(self, target):
+        raise OSError("simulated replace failure")
+
+    monkeypatch.setattr(Path, "replace", fail_replace)
+    worker._save_seen_post_ids()
+
+    assert path.read_bytes() == original
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_seen_posts_retention_preserves_other_channels(tmp_path):
+    path = tmp_path / "seen.json"
+    other = _worker_for_channel(path, "@other")
+    other._seen_post_ids.add("1")
+    other._save_seen_post_ids()
+    worker = _worker_for_channel(path, "@first")
+    worker._seen_post_ids = {str(i) for i in range(2001)}
+    worker._save_seen_post_ids()
+
+    assert _worker_for_channel(path, "@first")._seen_post_ids == {str(i) for i in range(1001, 2001)}
+    assert _worker_for_channel(path, "@other")._seen_post_ids == {"1"}
+
+
+@pytest.mark.parametrize("original", ['{invalid', '{"version":99,"channels":{}}'])
+def test_seen_posts_invalid_state_blocks_dispatch_until_repaired(tmp_path, original):
+    path = tmp_path / "seen.json"
+    path.write_text(original, encoding="utf-8")
+    worker = _worker_for_channel(path, "@first")
+    signals = [_make_parsed_signal("101"), _make_parsed_signal("102")]
+
+    with patch("trading.telegram_fetch.fetch_signal_messages", return_value=signals) as fetch:
+        assert worker.poll_once() == 0
+        fetch.assert_not_called()
+        assert worker.dispatcher.dispatched == []
+        assert path.read_text(encoding="utf-8") == original
+
+        path.write_text('{"version":1,"channels":{"first":["101"]}}', encoding="utf-8")
+        assert worker.poll_once() == 1
+        assert len(worker.dispatcher.dispatched) == 1
+        assert worker._seen_post_ids == {"101", "102"}
+        assert json.loads(path.read_text())["channels"]["first"] == ["101", "102"]
+
+
+def test_seen_posts_save_failure_pauses_polls_and_persists_union_on_recovery(tmp_path):
+    path = tmp_path / "seen.json"
+    worker = _worker_for_channel(path, "@first")
+    signal = _make_parsed_signal("101")
+
+    with patch.object(worker, "_write_seen_channels", side_effect=[None, OSError("disk full"), OSError("disk full")]):
+        with patch("trading.telegram_fetch.fetch_signal_messages", return_value=[signal]) as fetch:
+            assert worker.poll_once() == 1
+            assert worker._seen_post_ids == {"101"}
+            fetch.reset_mock()
+            assert worker.poll_once() == 0
+            fetch.assert_not_called()
+            assert len(worker.dispatcher.dispatched) == 1
+
+    path.write_text('{"version":1,"channels":{"first":["99"],"other":["1"]}}', encoding="utf-8")
+    with patch("trading.telegram_fetch.fetch_signal_messages", return_value=[signal]) as fetch:
+        assert worker.poll_once() == 0
+        fetch.assert_called_once()
+    assert worker._seen_post_ids == {"99", "101"}
+    assert json.loads(path.read_text())["channels"] == {"first": ["101", "99"], "other": ["1"]}
+
+
+def test_seen_posts_save_failure_stops_remaining_batch(tmp_path):
+    worker = _worker_for_channel(tmp_path / "seen.json", "@first")
+    signals = [_make_parsed_signal("101"), _make_parsed_signal("102")]
+    with patch.object(worker, "_write_seen_channels", side_effect=[None, OSError("disk full"), OSError("disk full")]):
+        with patch("trading.telegram_fetch.fetch_signal_messages", return_value=signals):
+            assert worker.poll_once() == 1
+    assert len(worker.dispatcher.dispatched) == 1
+    assert worker._seen_post_ids == {"101"}
+
+
+def test_seen_posts_corruption_after_initialization_blocks_dispatch(tmp_path):
+    path = tmp_path / "seen.json"
+    worker = _worker_for_channel(path, "@first")
+    path.write_text('{invalid', encoding="utf-8")
+    with patch("trading.telegram_fetch.fetch_signal_messages", return_value=[_make_parsed_signal("101")]) as fetch:
+        assert worker.poll_once() == 0
+        fetch.assert_not_called()
+    assert worker.dispatcher.dispatched == []
+    assert path.read_text(encoding="utf-8") == '{invalid'
+
+
+def test_seen_posts_unwritable_state_blocks_first_dispatch(tmp_path):
+    worker = _worker_for_channel(tmp_path / "seen.json", "@first")
+    with patch.object(worker, "_write_seen_channels", side_effect=OSError("disk full")):
+        with patch("trading.telegram_fetch.fetch_signal_messages", return_value=[_make_parsed_signal("101")]) as fetch:
+            assert worker.poll_once() == 0
+            fetch.assert_not_called()
+    assert worker.dispatcher.dispatched == []
+
+
+def test_seen_posts_poll_refreshes_ids_from_other_worker(tmp_path):
+    path = tmp_path / "seen.json"
+    stale = _worker_for_channel(path, "@first")
+    other = _worker_for_channel(path, "@first")
+    other._seen_post_ids.add("101")
+    other._save_seen_post_ids()
+
+    with patch("trading.telegram_fetch.fetch_signal_messages", return_value=[_make_parsed_signal("101")]):
+        assert stale.poll_once() == 0
+    assert stale.dispatcher.dispatched == []
+    assert stale._seen_post_ids == {"101"}

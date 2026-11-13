@@ -479,7 +479,8 @@ def test_multi_account_stop_loss_retains_tracking_when_duplicate_suppressed_behi
 
 
 @pytest.mark.asyncio
-async def test_dispatcher_stop_loss_sell_signal_uses_market_order_in_legacy_trade(tmp_path, monkeypatch):
+@pytest.mark.parametrize("reason", ["stop_loss", "STOP_LOSS", "Stop_Loss"])
+async def test_dispatcher_stop_loss_sell_signal_uses_market_order_in_legacy_trade(tmp_path, monkeypatch, reason):
     captured_limit_prices: list[int | None] = []
 
     class FakeTrader:
@@ -513,14 +514,14 @@ async def test_dispatcher_stop_loss_sell_signal_uses_market_order_in_legacy_trad
             "ticker": "252990",
             "price": 14090.0,
             "stop_loss": 15000.0,
-            "sell_reason": "stop_loss",
+            "sell_reason": reason,
         },
         signal_type="SELL",
         market="KR",
         ticker="252990",
         price=14090.0,
         stop_loss=15000.0,
-        sell_reason="stop_loss",
+        sell_reason=reason,
     )
 
     result = await dispatcher._execute_legacy_trade(stop_loss_signal)
@@ -860,18 +861,18 @@ def test_corrupt_stop_loss_ticker_cannot_redirect_order_or_block_valid_position(
     dispatcher.dispatch.assert_not_called()
 
 
-def test_rearming_stop_loss_replaces_corrupt_same_key_record(tmp_path):
+def test_rearming_stop_loss_quarantines_corrupt_same_key_record(tmp_path):
     tracker_path = tmp_path / "tracker.json"
     tracker = StopLossTracker(tracker_path)
     tracker_path.write_text(json.dumps({"KR:111111": None}), encoding="utf-8")
+    original = tracker_path.read_bytes()
 
-    tracker.record_position("KR", "111111", 90, entry_price=100)
-
-    repaired = tracker.get_position("KR", "111111")
-    assert repaired["market"] == "KR"
-    assert repaired["ticker"] == "111111"
-    assert repaired["stop_loss"] == 90
-    assert repaired["created_at"]
+    # A new accepted BUY cannot erase unknown historical protection state.
+    # Only explicit operator reconciliation may replace a corrupt record.
+    with pytest.raises(ValueError, match="operator reconciliation"):
+        tracker.record_position("KR", "111111", 90, entry_price=100)
+    assert tracker_path.read_bytes() == original
+    assert tracker.get_positions("KR") == []
 
 
 @pytest.mark.parametrize(

@@ -8,13 +8,14 @@ import os
 import tempfile
 from dataclasses import dataclass, field, fields, replace
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from .config_paths import runtime_file_path
 from .file_lock import FileLock, fsync_parent_directory
 from .market_hours import next_market_open
-from .schema import SignalMessage
+from .schema import SignalMessage, validate_signal_numeric_tokens
 
 DEFAULT_QUEUE_PATH = Path("runtime") / "off_hours_queue.json"
 MAX_QUEUE_BYTES = 16 * 1024 * 1024
@@ -133,7 +134,18 @@ class OffHoursOrderQueue:
                 obj[key] = value
             return obj
 
-        data = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_object_pairs)
+        # Recovered/hand-edited queue bytes are a new trust boundary. Check
+        # exact decimal tokens before float conversion can turn a malformed
+        # fraction/denominator into a valid (possibly full) SELL. Like a
+        # duplicate key, numeric ambiguity blocks the queue without rewriting
+        # the original evidence; an operator must reconcile it explicitly.
+        text = raw.decode("utf-8")
+        try:
+            exact = json.loads(text, object_pairs_hook=unique_object_pairs, parse_float=Decimal)
+        except InvalidOperation as exc:
+            raise ValueError("Invalid numeric literal in off-hours queue JSON") from exc
+        validate_signal_numeric_tokens(exact)
+        data = json.loads(text, object_pairs_hook=unique_object_pairs)
         if not isinstance(data, list):
             raise ValueError("Off-hours queue must contain a JSON list")
         # Tolerate unknown keys: a queue file written by a different version or
@@ -154,9 +166,26 @@ class OffHoursOrderQueue:
                     )
                 )
                 continue
-            items.append(
-                QueuedSignal(**{k: v for k, v in item.items() if k in known_fields})
+            record = {k: v for k, v in item.items() if k in known_fields}
+            malformed = (
+                not isinstance(record.get("signal"), dict)
+                or not isinstance(record.get("execute_at"), str)
+                or not isinstance(record.get("created_at"), str)
+                or not isinstance(record.get("execution_context", {}), dict)
+                or record.get("status", "pending") not in ("pending", "failed")
             )
+            if malformed:
+                # Never let a corrupt entry block valid orders, or repair its
+                # missing execution provenance into an actionable order.
+                items.append(QueuedSignal(
+                    signal=record.get("signal", {}),
+                    execute_at=record.get("execute_at", ""),
+                    created_at=record.get("created_at", ""),
+                    status="failed",
+                    failure_message="Malformed queue entry (missing or invalid fields)",
+                ))
+                continue
+            items.append(QueuedSignal(**record))
         return items
 
     def _save(

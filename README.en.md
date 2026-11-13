@@ -81,6 +81,13 @@ KIS_RATE_LIMIT_RETRY_BASE_SECONDS=1.0
 KIS_RATE_LIMIT_RETRY_MAX_SECONDS=5.0
 ```
 
+Telegram posts are processed oldest first within the newest fetched batch.
+Seen-post state is scoped by channel. On upgrade, an old ID-only state file is
+bound to the first configured channel; keep the original channel for that first
+startup, or reconcile its history before switching. Polling pauses if this state
+cannot be read or durably saved. The broker execution ledger remains the order
+deduplication boundary when multiple subscribers run concurrently.
+
 The required Pub/Sub identifiers are:
 
 - `GCP_PROJECT_ID`
@@ -96,6 +103,12 @@ Copy the example KIS config to the live config path.
 cp trading/config/kis_devlp.yaml.example trading/config/kis_devlp.yaml
 chmod 600 trading/config/kis_devlp.yaml
 ```
+
+The bundled example defaults to **demo**, but `auto_trading: true` can still
+submit **paper** orders. Use `--dry-run` or set `auto_trading: false`
+until ready. If no operator KIS configuration exists, the runtime will not
+infer live trading from the example. An explicitly missing config path is an
+error; real trading requires an explicit configuration selecting `real`.
 
 Recommended first-run flow:
 
@@ -511,6 +524,6 @@ The check covers all nine pages, desktop/mobile overflow, theme persistence, nav
 
 ## Upstream signal sizing compatibility
 
-`BUY.position_fraction` (default 1.0; valid (0, 1]) scales the configured per-order budget; an unknown fractional budget never falls back to a full-size order. `SELL.sell_denominator` (default 1; positive integer) reduces the held quantity by that denominator. If an exit strategy specifies its own sell fraction, the two fractions are multiplied.
+`BUY.position_fraction` (default 1.0; valid (0, 1]) scales the configured per-order budget; an unknown fractional budget never falls back to a full-size order. `SELL.sell_denominator` (default 1; positive integer) reduces the held quantity by that denominator. When the publisher supplies `SELL.sell_fraction` (exact four-decimal share, (0, 1]), it takes precedence over the legacy denominator; an invalid explicit fraction is rejected, not treated as a full sell. A full fraction of 1 is incompatible with a denominator greater than 1. If an exit strategy specifies its own sell fraction, multiply it by the publisher fraction exactly once. Whole-share quantities are rounded down.
 
 Upstream `ADD` (micro-split position top-up) remains unsupported: without holding checks, durable signal-level idempotency and position caps, it must never be treated as a new BUY. Unsupported signals are acknowledged without placing an order. BTC trading and publisher/analysis features are outside the light fork's scope. Verify with demo and `--dry-run` before trading live.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import secrets
 from dataclasses import asdict
 from typing import Any
 from pathlib import Path
@@ -62,6 +63,9 @@ async def dispatch_manual_order(
             company_name=company_name,
             market=market,
         )
+        # A newly armed manual ticket is a distinct order, not a replay of a
+        # prior identical ticker/price. Durable ledger fencing remains mandatory.
+        signal_payload["signal_id"] = "manual-" + secrets.token_hex(16)
         signal = parse_signal_payload(signal_payload)
     except (TypeError, ValueError) as exc:
         raise ValueError(str(exc)) from exc
@@ -106,7 +110,9 @@ async def dispatch_manual_order(
                 trading_mode=trading_mode or None,
                 strategy_config={"name": ""},
                 account_name=account_name or None,
-                execution_dedupe=False,
+                # Persist BUY intent before submission (even for manual tickets).
+                # Unique per-ticket IDs preserve intentional manual repeat orders.
+                execution_dedupe=True,
                 # The operator types the limit price deliberately, so the
                 # fresh-quote deviation check does not apply to manual orders.
                 fresh_quote_enabled=False,

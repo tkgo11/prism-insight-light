@@ -214,3 +214,134 @@ def test_fetch_signal_messages_scales_limit_with_pages():
             session=None,
             timeout=10.0,
         )
+
+
+def _preview_page(message_ids):
+    return "".join(
+        f'<div class="tgme_widget_message_wrap">'
+        f'<div data-post="channel/{message_id}">'
+        f'<div class="tgme_widget_message_text">Post {message_id}</div>'
+        f'<a class="tgme_widget_message_date" href="/channel/{message_id}">'
+        '<time datetime="2026-11-03T00:00:00Z"></time></a></div></div>'
+        for message_id in message_ids
+    )
+
+
+def test_fetch_channel_posts_paginates_before_oldest_message():
+    from trading.telegram_fetch import fetch_channel_posts
+
+    class PaginatedSession(DummySession):
+        def get(self, url, **kwargs):
+            self.calls.append(url)
+            if "before=101" in url:
+                return DummyResponse(_preview_page([99, 100]))
+            if "before=99" in url:
+                return DummyResponse(_preview_page([97, 98]))
+            return DummyResponse(_preview_page([101, 102]))
+
+    session = PaginatedSession("")
+    posts = fetch_channel_posts("channel", pages=3, limit=6, session=session)
+
+    assert [post.message_id for post in posts] == ["97", "98", "99", "100", "101", "102"]
+    assert session.calls == [
+        "https://t.me/s/channel",
+        "https://t.me/s/channel?before=101",
+        "https://t.me/s/channel?before=99",
+    ]
+
+
+def test_fetch_channel_posts_stops_when_pagination_does_not_advance():
+    from trading.telegram_fetch import fetch_channel_posts
+
+    session = DummySession(_preview_page([101, 102]))
+    posts = fetch_channel_posts("channel", pages=10, limit=20, session=session)
+
+    assert [post.message_id for post in posts] == ["101", "102"]
+    assert len(session.calls) == 2
+
+
+def test_fetch_channel_posts_uses_numeric_cursor_for_unordered_posts():
+    from trading.telegram_fetch import fetch_channel_posts
+
+    session = DummySession(_preview_page([10, 9, 11]))
+    fetch_channel_posts("channel", pages=2, session=session)
+
+    assert session.calls[1]["url"] == "https://t.me/s/channel?before=9"
+
+
+def test_fetch_channel_posts_selects_newest_posts_before_applying_limit():
+    from trading.telegram_fetch import fetch_channel_posts
+
+    session = DummySession(_preview_page([99, 100, 101, 102]))
+    posts = fetch_channel_posts("channel", limit=2, session=session)
+
+    assert [post.message_id for post in posts] == ["101", "102"]
+    assert len(session.calls) == 1
+
+
+def test_fetch_signal_messages_orders_buy_before_later_sell_across_pages():
+    class PaginatedSession(DummySession):
+        def get(self, url, **kwargs):
+            self.calls.append(url)
+            if "before=102" in url:
+                return DummyResponse(_preview_page([101]).replace(
+                    "Post 101", '{"type":"BUY","ticker":"AAPL","market":"US","price":100}'
+                ))
+            return DummyResponse(_preview_page([102]).replace(
+                "Post 102", '{"type":"SELL","ticker":"AAPL","market":"US","price":100}'
+            ))
+
+    signals = fetch_signal_messages(pages=2, session=PaginatedSession(""))
+
+    assert [item.post.message_id for item in signals] == ["101", "102"]
+    assert [item.signal.signal_type for item in signals] == ["BUY", "SELL"]
+
+
+def test_fetch_channel_posts_does_not_request_when_limit_is_zero():
+    from trading.telegram_fetch import fetch_channel_posts
+
+    session = DummySession(SAMPLE_HTML)
+    assert fetch_channel_posts("channel", limit=0, session=session) == []
+    assert session.calls == []
+
+
+def test_fetch_channel_posts_closes_only_owned_session(monkeypatch):
+    from unittest.mock import Mock
+    from trading.telegram_fetch import fetch_channel_posts
+
+    session = DummySession(SAMPLE_HTML)
+    session.close = Mock()
+    monkeypatch.setattr("trading.telegram_fetch.requests.Session", lambda: session)
+
+    fetch_channel_posts("channel")
+    session.close.assert_called_once_with()
+    session.close.reset_mock()
+    fetch_channel_posts("channel", session=session)
+    session.close.assert_not_called()
+
+
+def test_fetch_channel_posts_closes_owned_session_on_fetch_failure(monkeypatch):
+    from unittest.mock import Mock
+    import pytest
+    import requests
+    from trading.telegram_fetch import TelegramFetchError, fetch_channel_posts
+
+    session = Mock()
+    session.get.side_effect = requests.RequestException("offline")
+    monkeypatch.setattr("trading.telegram_fetch.requests.Session", lambda: session)
+
+    with pytest.raises(TelegramFetchError):
+        fetch_channel_posts("channel")
+    session.close.assert_called_once_with()
+
+
+def test_fetch_channel_posts_validates_channel_before_allocating_session(monkeypatch):
+    from unittest.mock import Mock
+    import pytest
+    from trading.telegram_fetch import fetch_channel_posts
+
+    constructor = Mock()
+    monkeypatch.setattr("trading.telegram_fetch.requests.Session", constructor)
+    with pytest.raises(ValueError):
+        fetch_channel_posts(" ")
+    constructor.assert_not_called()

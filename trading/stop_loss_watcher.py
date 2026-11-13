@@ -18,6 +18,7 @@ from typing import Any
 
 from .config_paths import runtime_file_path
 from .domestic import DomesticStockTrading, MultiAccountDomesticStockTrading
+from .execution_ledger import ExecutionLedger
 from .file_lock import FileLock, fsync_parent_directory
 from .market_hours import is_market_open
 from .schema import SignalMessage, parse_signal_payload
@@ -26,6 +27,27 @@ from .us import MultiAccountUSStockTrading, USStockTrading
 logger = logging.getLogger("trading.stop_loss_watcher")
 
 DEFAULT_STOP_LOSS_POSITIONS_PATH = Path("runtime") / "stop_loss_positions.json"
+
+
+def _legacy_stop_loss_signal_id(market: str, ticker: str, record: dict[str, Any]) -> str:
+    """Exact pre-upgrade signal identity, retained for already-submitted SELLs."""
+    material = "|".join((
+        market, ticker, str(record.get("created_at") or ""),
+        str(record.get("entry_price") or ""), str(record.get("stop_loss") or ""),
+    ))
+    digest = hashlib.sha256(material.encode("utf-8")).hexdigest()[:20]
+    return f"stop_loss_{market}_{ticker}_{digest}"
+
+
+def _valid_stop_loss_signal_id(value: Any, market: str, ticker: str) -> bool:
+    if not isinstance(value, str):
+        return False
+    prefix = f"stop_loss_{market}_{ticker}_"
+    if not value.startswith(prefix):
+        return False
+    suffix = value[len(prefix):]
+    return len(suffix) == 20 and all(ch in "0123456789abcdef" for ch in suffix)
+
 
 
 def default_stop_loss_positions_path() -> Path:
@@ -112,12 +134,26 @@ class TrackedPosition:
     target_price: float | None = None
     created_at: str = ""
     updated_at: str = ""
+    # An accepted BUY may fill after an initial zero-balance inquiry.
+    pending_buy: bool = False
+    # Stable across stop/entry edits; preserves legacy accepted SELL identity.
+    stop_loss_signal_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TrackedPosition":
+        pending_buy = data.get("pending_buy", True)
+        if not isinstance(pending_buy, bool):
+            raise ValueError("Invalid pending BUY provenance")
+        market = str(data.get("market", "")).upper()
+        ticker = str(data.get("ticker", ""))
+        stable_id = data.get("stop_loss_signal_id")
+        if stable_id is None:
+            stable_id = _legacy_stop_loss_signal_id(market, ticker, data)
+        elif not _valid_stop_loss_signal_id(stable_id, market, ticker):
+            raise ValueError("Invalid persisted stop-loss signal identity")
         return cls(
             market=str(data.get("market", "")).upper(),
             ticker=str(data.get("ticker", "")),
@@ -131,7 +167,20 @@ class TrackedPosition:
             ),
             created_at=str(data.get("created_at", "")),
             updated_at=str(data.get("updated_at", "")),
+            pending_buy=pending_buy,
+            stop_loss_signal_id=stable_id,
         )
+
+
+def _valid_stored_price(value: Any, *, positive: bool = False) -> bool:
+    """Validate persisted tracker prices before reads AND overwrites."""
+    if isinstance(value, bool):
+        return False
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return math.isfinite(number) and (number > 0 if positive else number >= 0)
 
 
 class StopLossTracker:
@@ -263,6 +312,88 @@ class StopLossTracker:
             if temporary_path is not None and temporary_path.exists():
                 temporary_path.unlink()
 
+    def _assert_rearmable(
+        self, positions: dict[str, Any], market: str, ticker: str, key: str,
+    ) -> None:
+        """Shared fail-closed validation for pre-submit checks and durable updates."""
+        # Never silently overwrite or duplicate a legacy case-variant or
+        # quarantined instrument. Its original evidence must be reconciled
+        # by an operator before a new stop level can become actionable.
+        for stored_key, stored in positions.items():
+            if not isinstance(stored, dict):
+                continue
+            stored_market, stored_ticker = stored.get("market"), stored.get("ticker")
+            if not isinstance(stored_market, str) or not isinstance(stored_ticker, str):
+                continue
+            if (stored_market.strip().upper() == market
+                    and stored_ticker.strip().upper() == ticker.upper()
+                    and stored_key != key):
+                raise ValueError(
+                    "Conflicting stop-loss instrument requires operator reconciliation"
+                )
+        existing = positions.get(key)
+        if key in positions:
+            # A corrupt canonical record is quarantined by get_positions().
+            # A later BUY registration must not overwrite it and destroy
+            # the evidence an operator needs to reconcile a possible fill.
+            # Use the same structural/price/provenance rules as the reader,
+            # while allowing valid pre-upgrade records with absent metadata.
+            if not isinstance(existing, dict):
+                raise ValueError(
+                    "Malformed existing stop-loss record; operator reconciliation required"
+                )
+            stored_market = existing.get("market")
+            stored_ticker = existing.get("ticker")
+            if (
+                not isinstance(stored_market, str)
+                or not isinstance(stored_ticker, str)
+                or not stored_market.strip()
+                or not stored_ticker.strip()
+                or stored_market.strip().upper() not in {"KR", "US"}
+                or stored_ticker != stored_ticker.strip()
+                or any(ord(ch) < 32 or ord(ch) == 127
+                       for ch in stored_market + stored_ticker)
+                or self._key(stored_market, stored_ticker) != key
+                or not _valid_stored_price(existing.get("stop_loss"), positive=True)
+                or not _valid_stored_price(existing.get("entry_price", 0))
+                or (
+                    existing.get("target_price") is not None
+                    and not _valid_stored_price(existing["target_price"])
+                )
+                or (
+                    "pending_buy" in existing
+                    and not isinstance(existing["pending_buy"], bool)
+                )
+                or (
+                    "stop_loss_signal_id" in existing
+                    and not _valid_stop_loss_signal_id(
+                        existing["stop_loss_signal_id"],
+                        stored_market.strip().upper(), stored_ticker,
+                    )
+                )
+            ):
+                raise ValueError(
+                    "Corrupt existing stop-loss record; operator reconciliation required"
+                )
+
+    def assert_registration_safe(self, market: str, ticker: str) -> None:
+        """Check whether a new BUY can safely preserve existing stop evidence.
+
+        Read-only: never register a phantom position before broker acceptance.
+        """
+        if (
+            not isinstance(market, str)
+            or market.strip().upper() not in {"KR", "US"}
+            or not isinstance(ticker, str)
+            or not ticker.strip()
+            or any(ord(ch) < 32 or ord(ch) == 127 for ch in market + ticker)
+        ):
+            raise ValueError("Invalid stop-loss instrument; operator reconciliation required")
+        market = market.strip().upper()
+        ticker = ticker.strip().upper() if market == "US" else ticker.strip()
+        with FileLock(self.lock_path):
+            self._assert_rearmable(self._load(), market, ticker, self._key(market, ticker))
+
     def record_position(
         self,
         market: str,
@@ -272,8 +403,11 @@ class StopLossTracker:
         entry_price: float = 0.0,
         company_name: str = "",
         target_price: float | None = None,
+        pending_buy: bool = False,
     ) -> None:
         """Register or update a position's stop-loss price."""
+        if not isinstance(pending_buy, bool):
+            raise ValueError("Pending BUY provenance must be boolean")
         # Reject malformed identifiers before touching durable protection.
         # Whitespace-only instruments otherwise create unreachable ledger
         # entries that the watcher silently skips; normalize outer whitespace
@@ -312,23 +446,39 @@ class StopLossTracker:
         key = self._key(market, ticker)
         with FileLock(self.lock_path):
             positions = self._load()
-            # Never silently overwrite or duplicate a legacy case-variant or
-            # quarantined instrument. Its original evidence must be reconciled
-            # by an operator before a new stop level can become actionable.
-            for stored_key, stored in positions.items():
-                if not isinstance(stored, dict):
-                    continue
-                stored_market, stored_ticker = stored.get("market"), stored.get("ticker")
-                if not isinstance(stored_market, str) or not isinstance(stored_ticker, str):
-                    continue
-                if (stored_market.strip().upper() == market
-                        and stored_ticker.strip().upper() == ticker.upper()
-                        and stored_key != key):
-                    raise ValueError(
-                        "Conflicting stop-loss instrument requires operator reconciliation"
-                    )
+            self._assert_rearmable(positions, market, ticker, key)
             existing = positions.get(key)
+            if isinstance(existing, dict):
+                # A stop-price update cannot clear unresolved BUY provenance.
+                # Older records without the field are ambiguous and protected.
+                old_pending = existing.get("pending_buy", True)
+                if not isinstance(old_pending, bool):
+                    raise ValueError("Invalid existing pending BUY provenance")
+                pending_buy = pending_buy or old_pending
             created_at = existing.get("created_at") if isinstance(existing, dict) else now_iso
+            # A threshold or entry-price edit must not create a new automatic
+            # SELL identity while an earlier SELL may still be at the broker.
+            # For pre-upgrade records, derive the exact legacy ID BEFORE
+            # overwriting the old price/threshold (migration compatibility).
+            stable_id = None
+            if isinstance(existing, dict):
+                stable_id = existing.get("stop_loss_signal_id")
+                if stable_id is None:
+                    stable_id = _legacy_stop_loss_signal_id(market, ticker, existing)
+                elif not _valid_stop_loss_signal_id(stable_id, market, ticker):
+                    raise ValueError("Invalid persisted stop-loss signal identity")
+                if pending_buy and old_pending is False:
+                    # A newly accepted BUY has no confirmed fill. Replacing an
+                    # already-confirmed position's threshold or marking it
+                    # pending would silently disable its existing protection.
+                    # The new BUY's unresolved intent is held separately in
+                    # the execution ledger until authoritative reconciliation.
+                    logger.warning(
+                        "[StopLossTracker] Keeping confirmed protection for %s %s: "
+                        "a pending BUY cannot replace its stop-loss threshold",
+                        market, ticker,
+                    )
+                    return
             pos = TrackedPosition(
                 market=market.upper(),
                 ticker=ticker,
@@ -338,7 +488,13 @@ class StopLossTracker:
                 target_price=target_price_value,
                 created_at=created_at or now_iso,
                 updated_at=now_iso,
+                pending_buy=pending_buy,
+                stop_loss_signal_id=stable_id or "",
             )
+            if stable_id is None:
+                pos.stop_loss_signal_id = _legacy_stop_loss_signal_id(
+                    market, ticker, pos.to_dict()
+                )
             positions[key] = pos.to_dict()
             self._save(positions)
             logger.info(
@@ -394,18 +550,6 @@ class StopLossTracker:
 
     def get_positions(self, market: str | None = None) -> list[dict[str, Any]]:
         """Return valid tracked positions without discarding corrupt records on disk."""
-        def valid_stored_price(value: Any, *, positive: bool = False) -> bool:
-            # Legacy/manual JSON can contain booleans or NaN/Infinity. A bool
-            # becomes 1.0 under float(), and nonfinite stop levels could
-            # silently disable protection or trigger an unintended order.
-            if isinstance(value, bool):
-                return False
-            try:
-                number = float(value)
-            except (TypeError, ValueError, OverflowError):
-                return False
-            return math.isfinite(number) and (number > 0 if positive else number >= 0)
-
         with FileLock(self.lock_path):
             data = self._load()
             items = list(data.items())
@@ -422,9 +566,16 @@ class StopLossTracker:
             if not isinstance(q_market, str) or not isinstance(q_ticker, str) or not q_market.strip() or not q_ticker.strip():
                 continue
             canonical_key = f"{q_market.strip().upper()}:{q_ticker.strip().upper()}"
-            if key.startswith("__legacy_unverified_"):
+            # A record claiming an instrument under a noncanonical storage
+            # key is conflicting evidence, not merely an invalid record to
+            # ignore. Otherwise a second, valid-looking record for that same
+            # instrument remains actionable and may submit an unsafe SELL.
+            # Preserve both records for operator reconciliation; unrelated
+            # instruments must remain eligible for normal monitoring.
+            if (key.startswith("__legacy_unverified_")
+                    or self._key(q_market, q_ticker) != key):
                 quarantined_instruments.add(canonical_key)
-            elif self._key(q_market, q_ticker) == key:
+            else:
                 active_instrument_counts[canonical_key] = active_instrument_counts.get(canonical_key, 0) + 1
         valid: list[dict[str, Any]] = []
         for key, item in items:
@@ -443,11 +594,15 @@ class StopLossTracker:
                 or item["ticker"] != item["ticker"].strip()
                 or any(ord(ch) < 32 or ord(ch) == 127 for ch in item["market"] + item["ticker"])
                 or self._key(item["market"], item["ticker"]) != key
-                or not valid_stored_price(item.get("stop_loss"), positive=True)
-                or not valid_stored_price(item.get("entry_price", 0))
+                or ("pending_buy" in item and not isinstance(item["pending_buy"], bool))
+                or ("stop_loss_signal_id" in item and not _valid_stop_loss_signal_id(
+                    item["stop_loss_signal_id"], item["market"].strip().upper(), item["ticker"]
+                ))
+                or not _valid_stored_price(item.get("stop_loss"), positive=True)
+                or not _valid_stored_price(item.get("entry_price", 0))
                 or (
                     item.get("target_price") is not None
-                    and not valid_stored_price(item["target_price"])
+                    and not _valid_stored_price(item["target_price"])
                 )
             ):
                 # Never dispatch an order to a malformed or mismatched ticker.
@@ -535,9 +690,23 @@ class StopLossWatcher:
     def _get_trader(self, market: str):
         mode = getattr(self.dispatcher, "trading_mode", "real")
         multi_account = getattr(self.dispatcher, "multi_account_enabled", False)
+        if multi_account:
+            if market == "US":
+                return MultiAccountUSStockTrading(mode=mode)
+            return MultiAccountDomesticStockTrading(mode=mode)
+        # Holdings and quotes must come from the same selected account that
+        # receives the dispatcher's orders. Looking at the primary account
+        # can otherwise remove protection for a funded secondary account.
+        kwargs: dict[str, Any] = {"mode": mode}
+        account_name = getattr(self.dispatcher, "account_name", None)
+        account_index = getattr(self.dispatcher, "account_index", None)
+        if account_name:
+            kwargs["account_name"] = account_name
+        if account_index is not None:
+            kwargs["account_index"] = account_index
         if market == "US":
-            return MultiAccountUSStockTrading(mode=mode) if multi_account else USStockTrading(mode=mode)
-        return MultiAccountDomesticStockTrading(mode=mode) if multi_account else DomesticStockTrading(mode=mode)
+            return USStockTrading(**kwargs)
+        return DomesticStockTrading(**kwargs)
 
     def _get_cached_trader(self, market: str):
         trader = self._traders.get(market)
@@ -551,6 +720,39 @@ class StopLossWatcher:
         if last is None:
             return True
         return now - last >= self.config.holding_check_interval_seconds
+
+    def _remove_if_verified_flat(
+        self, market: str, ticker: str, pos: dict[str, Any]
+    ) -> bool:
+        """Keep old protection while an accepted/UNKNOWN BUY may still fill."""
+        if pos.get("pending_buy", True):
+            return False
+        ledger = getattr(self.dispatcher, "execution_ledger", None)
+        if isinstance(ledger, ExecutionLedger):
+            try:
+                with ledger.guard_unresolved_buy(market, ticker) as unresolved:
+                    if unresolved:
+                        logger.error(
+                            "[Stop-Loss] Keeping %s %s: durable BUY intent "
+                            "may still fill after a zero balance", market, ticker,
+                        )
+                        return False
+                    return self.tracker.remove_position(
+                        market, ticker, expected_updated_at=pos.get("updated_at"),
+                        expected_record=pos,
+                    )
+            except Exception:
+                logger.exception(
+                    "[Stop-Loss] Keeping %s %s: BUY intent ledger could not be "
+                    "verified before tracker cleanup", market, ticker,
+                )
+                return False
+        # Legacy/mock dispatchers may have no ledger; production TradeDispatcher
+        # always supplies ExecutionLedger. Never synthesize broker fill evidence.
+        return self.tracker.remove_position(
+            market, ticker, expected_updated_at=pos.get("updated_at"),
+            expected_record=pos,
+        )
 
     def check_stop_loss_once(self) -> list[dict[str, Any]]:
         """Inspect tracked positions and trigger automatic SELL when current price <= stop_loss."""
@@ -642,18 +844,33 @@ class StopLossWatcher:
                     continue
 
                 if holding_qty == 0:
+                    if pos.get("pending_buy", True):
+                        logger.warning(
+                            "[Stop-Loss] Keeping %s %s: zero holdings cannot rule out "
+                            "a later fill of an unresolved accepted BUY", market, ticker,
+                        )
+                        continue
                     logger.info(
                         "[Stop-Loss] %s %s has 0 holding quantity; clearing from tracking",
                         market,
                         ticker,
                     )
-                    self.tracker.remove_position(
-                        market, ticker, expected_updated_at=pos.get("updated_at"),
-                        expected_record=pos,
-                    )
+                    self._remove_if_verified_flat(market, ticker, pos)
                     continue
 
                 if stop_hit:
+                    if pos.get("pending_buy", True):
+                        # A positive aggregate holding is not evidence that
+                        # THIS accepted BUY filled; it could be an unrelated,
+                        # pre-existing position. Never sell it based on an
+                        # unreconciled pending BUY's stop threshold.
+                        logger.error(
+                            "[Stop-Loss] Blocking automatic SELL for %s %s: "
+                            "pending BUY fill is not attributable to holdings; "
+                            "broker reconciliation required",
+                            market, ticker,
+                        )
+                        continue
                     # Price/holdings inquiries can take seconds. A concurrent
                     # BUY or operator stop-level edit may replace the snapshot
                     # while those broker calls are running. Do not liquidate
@@ -722,17 +939,87 @@ class StopLossWatcher:
         self, market: str, ticker: str, current_price: float, pos: dict[str, Any]
     ) -> dict[str, Any]:
         """Dispatch an automated stop-loss SELL signal."""
-        identity_material = "|".join(
-            (
-                market,
-                ticker,
-                str(pos.get("created_at") or ""),
-                str(pos.get("entry_price") or ""),
-                str(pos.get("stop_loss") or ""),
+        if pos.get("pending_buy", True):
+            # Defense in depth: a direct caller must not bypass the watcher's
+            # unresolved BUY fence, even if aggregate holdings are positive.
+            logger.error(
+                "[Stop-Loss] Blocking direct SELL for %s %s: "
+                "pending BUY fill is unverified", market, ticker,
             )
-        )
-        signal_digest = hashlib.sha256(identity_material.encode("utf-8")).hexdigest()[:20]
-        signal_id = f"stop_loss_{market}_{ticker}_{signal_digest}"
+            return {
+                "market": market, "ticker": ticker, "status": "blocked",
+                "message": "Pending BUY fill unverified; broker reconciliation required",
+            }
+        # The watcher revalidates after broker quote/holdings inquiries, but
+        # the record may be edited, removed or quarantined before this final
+        # dispatch boundary. Direct callers must obey the same fail-closed
+        # snapshot contract. This is a pre-submit check, not a broker fill.
+        try:
+            current_positions = self.tracker.get_positions(market=market)
+        except Exception as exc:
+            logger.error(
+                "[Stop-Loss] Blocking SELL for %s %s: cannot verify current "
+                "tracked position before submission: %s", market, ticker, exc,
+            )
+            return {
+                "market": market, "ticker": ticker, "status": "blocked",
+                "message": "Stop-loss tracker cannot be verified; operator reconciliation required",
+            }
+        if not any(
+            current == pos
+            and current.get("market", "").strip().upper() == market.strip().upper()
+            and current.get("ticker") == ticker
+            for current in current_positions
+        ):
+            logger.warning(
+                "[Stop-Loss] Blocking stale, removed or quarantined stop-loss "
+                "snapshot for %s %s before broker submission", market, ticker,
+            )
+            return {
+                "market": market, "ticker": ticker, "status": "blocked",
+                "message": "Stop-loss snapshot changed; broker submission blocked",
+            }
+        # A confirmed older tracker can coexist with an UNKNOWN new BUY for
+        # this ticker. Aggregate holdings cannot attribute shares to either
+        # order, so the old threshold must not authorize a SELL of the new
+        # unresolved position. Fail closed until broker-authoritative fill
+        # reconciliation; retain the old tracker for operator inspection.
+        ledger = getattr(self.dispatcher, "execution_ledger", None)
+        if isinstance(ledger, ExecutionLedger):
+            try:
+                with ledger.guard_unresolved_buy(market, ticker) as unresolved:
+                    if unresolved:
+                        logger.critical(
+                            "[Stop-Loss] Blocking SELL for %s %s: unresolved "
+                            "BUY may have changed attributable holdings", market, ticker,
+                        )
+                        return {
+                            "market": market, "ticker": ticker, "status": "blocked",
+                            "message": "Unresolved BUY; per-order broker reconciliation required",
+                        }
+            except Exception:
+                logger.exception(
+                    "[Stop-Loss] Blocking SELL for %s %s: durable BUY ledger "
+                    "could not be verified", market, ticker,
+                )
+                return {
+                    "market": market, "ticker": ticker, "status": "blocked",
+                    "message": "BUY intent ledger unavailable; operator reconciliation required",
+                }
+        signal_id = pos.get("stop_loss_signal_id")
+        if signal_id is None:
+            # Legacy persisted records retain the same identity they used
+            # before migration, even if they already have a pending SELL.
+            signal_id = _legacy_stop_loss_signal_id(market, ticker, pos)
+        elif not _valid_stop_loss_signal_id(signal_id, market, ticker):
+            logger.error(
+                "[Stop-Loss] Blocking %s %s: invalid persisted SELL identity",
+                market, ticker,
+            )
+            return {
+                "market": market, "ticker": ticker, "status": "blocked",
+                "message": "Invalid stop-loss execution identity; operator reconciliation required",
+            }
         signal_payload = {
             "signal_id": signal_id,
             "type": "SELL",
@@ -745,6 +1032,9 @@ class StopLossWatcher:
             "sell_reason": "stop_loss",
         }
         signal = parse_signal_payload(signal_payload)
+        # Internal-only origin is granted after the durable tracker snapshot
+        # and unresolved-BUY preflight, never from publisher-controlled JSON.
+        signal.internal_watcher_stop = True
 
         try:
             result = asyncio.run(self.dispatcher.dispatch(signal, allow_queue=False))
@@ -755,7 +1045,8 @@ class StopLossWatcher:
                 result.status,
                 result.message,
             )
-            trader = self._get_cached_trader(market)
+            # A deferred/rejected/unknown SELL has no post-order holdings to
+            # verify. Do not authenticate to KIS or rewrite its broker outcome.
             # In multi-account setups, if the sell executed on holding accounts
             # and other accounts were already satisfied or had no position,
             # or if 0 shares remain across accounts, protection is safely dropped.
@@ -779,6 +1070,9 @@ class StopLossWatcher:
                 # flat. Preserve the durable watcher until a fresh aggregate
                 # holdings inquiry confirms exactly zero shares.
                 try:
+                    # Post-order auth/holdings failures must retain protection
+                    # without changing the broker's already returned outcome.
+                    trader = self._get_cached_trader(market)
                     remaining_qty = self._validated_holding_quantity(
                         trader.get_holding_quantity(ticker)
                     )
@@ -790,13 +1084,16 @@ class StopLossWatcher:
                     )
                 else:
                     if remaining_qty == 0:
-                        self.tracker.remove_position(
-                            market, ticker, expected_updated_at=pos.get("updated_at"),
-                            expected_record=pos,
-                        )
-                        self._last_trigger_attempt.pop(
-                            self.tracker._key(market, ticker), None
-                        )
+                        if pos.get("pending_buy", True):
+                            logger.warning(
+                                "[Stop-Loss] Keeping %s %s after SELL: zero holdings "
+                                "cannot establish an accepted BUY will not fill later",
+                                market, ticker,
+                            )
+                        elif self._remove_if_verified_flat(market, ticker, pos):
+                            self._last_trigger_attempt.pop(
+                                self.tracker._key(market, ticker), None
+                            )
                     else:
                         logger.warning(
                             "[Stop-Loss] Keeping protection for %s %s after "

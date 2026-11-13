@@ -7,6 +7,7 @@ import json
 import logging
 import math
 import os
+import re
 import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -38,6 +39,8 @@ class StrategyExecution:
     market: str
     ticker: str = ""
     details: dict[str, Any] | None = None
+    # Receipt is broker acceptance evidence only, never a fill or stop authorization.
+    order_no: str | None = None
 
 
 def strategy_name(payload: dict[str, Any] | None) -> str:
@@ -147,7 +150,55 @@ def market_base_amount(signal: SignalMessage, *, krw: float, usd: float) -> floa
     return usd if signal.market == "US" else krw
 
 
+def _has_reserved_watcher_identity(signal: SignalMessage) -> bool:
+    """A publisher must not preempt the watcher's durable execution ID.
+
+    Stable signal_id/event_id/id and legacy aliases all hash their value
+    under the same account. Reject the entire reserved namespace at ingress
+    unless a trusted watcher generated the matching stop SELL.
+    """
+    if not isinstance(signal.raw, dict):
+        return False
+    for field in ("signal_id", "event_id", "id"):
+        value = signal.raw.get(field)
+        if (
+            isinstance(value, str)
+            and re.fullmatch(r"stop_loss_(?:KR|US)_.+_[0-9a-f]{20}", value.strip()) is not None
+        ):
+            return True
+    return False
+
+
+def _is_watcher_generated_stop_sell(signal: SignalMessage) -> bool:
+    """Select watcher market-order semantics without changing publisher limits.
+
+    The watcher uses a stable instrument-scoped identity plus stop_loss reason.
+    The identity shape is a routing marker, not proof of authentication.
+    """
+    if (
+        signal.signal_type != "SELL"
+        or not isinstance(signal.sell_reason, str)
+        or signal.sell_reason.strip().casefold() != "stop_loss"
+        or not isinstance(signal.raw, dict)
+        # A publisher controls signal_id and sell_reason; neither authenticates
+        # a watcher-origin emergency SELL. Only the internal watcher sets this.
+        or signal.internal_watcher_stop is not True
+    ):
+        return False
+    signal_id = signal.raw.get("signal_id")
+    prefix = f"stop_loss_{signal.market}_{signal.ticker}_"
+    return (
+        isinstance(signal_id, str)
+        and signal_id.startswith(prefix)
+        and re.fullmatch(r"[0-9a-f]{20}", signal_id[len(prefix):]) is not None
+    )
+
+
 async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount: float | None = None, limit_price: float | None = None, sell_fraction: float | None = None, trader_kwargs: dict[str, Any] | None = None) -> dict[str, Any]:
+    if _is_watcher_generated_stop_sell(signal):
+        # The automatic watcher needs a market SELL; an unfilled protective
+        # limit would leave exposure while durable dedupe blocks replay.
+        limit_price = None
     kwargs = {"mode": trading_mode, **(trader_kwargs or {})}
     if signal.market == "US":
         trader = USStockTrading(**kwargs)
@@ -180,12 +231,19 @@ async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount:
 def execution_from_result(signal: SignalMessage, result: dict[str, Any], message_prefix: str, **details: Any) -> StrategyExecution:
     broker_message = str(result.get("message", ""))
     message = f"{message_prefix}: {broker_message}" if broker_message else message_prefix
+    if _is_watcher_generated_stop_sell(signal):
+        # Report the submitted order type, not the discarded strategy limit.
+        details["limit_price"] = None
+        details["order_type"] = "market"
     return StrategyExecution(
         status=classify_broker_result(result),
         message=message,
         market=signal.market,
         ticker=signal.ticker,
         details=details or None,
+        # Preserve only string broker identifiers. Dispatch/ledger enforce
+        # canonical numeric KIS receipts and fail closed on ambiguity.
+        order_no=(result.get("order_no") if isinstance(result.get("order_no"), str) else None),
     )
 
 
