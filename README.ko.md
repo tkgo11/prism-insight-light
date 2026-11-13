@@ -72,7 +72,7 @@ chmod 600 .env
 GCP_PROJECT_ID=your-project-id
 GCP_PUBSUB_SUBSCRIPTION_ID=your-subscription-id
 GCP_CREDENTIALS_PATH=/absolute/path/to/service-account.json
-TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/prism_insight_global_en
+TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/stock_ai_agent
 TELEGRAM_FETCH_PAGES=3
 KIS_RATE_LIMIT_RETRY_ATTEMPTS=10
 KIS_RATE_LIMIT_RETRY_BASE_SECONDS=1.0
@@ -267,7 +267,7 @@ Pub/Sub 메시지는 아래 필드를 사용할 수 있습니다.
 
 `trading.telegram_fetch`와 `subscriber.py`의 `TelegramSignalWorker`는 Telegram 공개 미리보기 페이지에서 신호 후보를 가져오고 주기적으로 보완하는 도구입니다.
 
-- 기본 채널: `https://t.me/prism_insight_global_en`
+- 기본 채널: `https://t.me/stock_ai_agent` (한국어). <https://t.me/s/stock_ai_agent>에서 Telegram 로그인 없이 공개 게시글을 읽습니다.
 - 가져오기 URL 형식: `https://t.me/s/<channel>`
 - 동작 방식:
   - `subscriber.py` 실행 시 백그라운드 스레드(`TelegramSignalWorker`)가 함께 시작되어 주기적으로(기본 60초) Telegram 채널을 폴링합니다.
@@ -277,6 +277,27 @@ Pub/Sub 메시지는 아래 필드를 사용할 수 있습니다.
 - 지원 형식:
   - JSON 본문 형식
   - `New Buy`, `Sell`, `Event` 같은 라벨 기반 영어 게시글
+  - `신규 매수 | 종목명 (코드)`, `매도: 종목명(코드)` 형식의 한국어 게시글. 매수가·목표가·손절가를 읽고, `1슬롯의 24%로 시작`은 로컬 주문 예산의 `position_fraction=0.24`로 전달합니다. 신규 매수의 최초 비중을 확인할 수 없으면 신호를 거부합니다.
+
+매수 보류, 추가 매수, 손절가 조정, 부분 매도 알림, 포트폴리오 보고서, 조건부 매매 설명은 새 거래 지시로 해석하지 않습니다. 페이지를 거슬러 올라가 요청한 범위의 최신 게시글을 모은 뒤 시간순으로 처리하며 원래 게시 시각과 기존 신호 안전 검증을 유지합니다. 기존 `.env`에 이전 채널이 지정돼 있다면 `TELEGRAM_SIGNAL_CHANNEL_URL=https://t.me/stock_ai_agent`로 변경하세요.
+
+### 다른 언어 채널과 미리보기 백업
+
+[원본 저장소 README](https://github.com/dragon1086/prism-insight/blob/e137c14e65690aa7bb312bad572c2ea2c7512e9e/README.md#L136-L140)에 안내된 공식 채널입니다.
+
+| 언어 | 채널 |
+| --- | --- |
+| 한국어 (기본) | <https://t.me/stock_ai_agent> |
+| 영어 | <https://t.me/prism_insight_global_en> |
+| 일본어 | <https://t.me/prism_insight_ja> |
+| 중국어 | <https://t.me/prism_insight_zh> |
+| 스페인어 | <https://t.me/prism_insight_es> |
+
+읽기 전용 WebUI 미리보기는 설정한 공식 채널을 가져오지 못하면 영어 → 일본어 → 중국어 → 스페인어 순서로 조회하고, 처음 읽히는 채널을 사용합니다. 실제 조회한 채널과 백업 사용 여부를 표시하며, 읽을 수 있는 게시글에 거래 신호가 없다는 이유만으로 다른 채널로 바꾸지는 않습니다. 채널을 직접 입력하면 해당 채널만 조회하고, 별도로 지정한 개인 채널에는 공식 백업 목록을 자동 적용하지 않습니다.
+
+`TELEGRAM_PREVIEW_BACKUP_CHANNEL_URLS`에 쉼표로 구분한 주소를 넣어 순서를 바꾸거나 공백으로 설정해 백업을 끌 수 있습니다. 최대 네 개 백업에 화면의 페이지·게시글 제한을 각각 적용합니다. 계정 인증을 설정했다면 공개 미리보기를 읽지 못할 때 인증 방식도 사용할 수 있습니다. 2026-11-10 확인 당시 네 개 외국어 채널의 공개 기록 URL은 모두 게시글 없는 소개 페이지로 이동했고 한국어 기본 채널은 정상 조회됐습니다. 목록 등록 자체가 현재 접근 가능함을 뜻하지는 않습니다.
+
+자동 거래 수집은 `TELEGRAM_SIGNAL_CHANNEL_URL`을 유지합니다. 번역본은 채널·메시지 ID, 문구, 게시 시각이 다르고 공통 이벤트 ID가 확인되지 않아, 자동 전환 후 기본 채널 복구 시 같은 거래가 중복 실행될 수 있습니다. 이를 피하려고 기존 중복 방지 기준을 완화하지 않습니다. 한국어·영어 거래 문구를 파싱하며, 일본어·중국어·스페인어 게시글은 수동 검토용으로 표시하고 인식하지 못한 문구를 주문으로 번역하지 않습니다.
 
 Python 코드에서 직접 조회하는 예시:
 
@@ -292,8 +313,23 @@ for item in signals:
 
 - 최종 검증 기준은 여전히 위 JSON 신호 계약입니다.
 - Telegram 공개 미리보기는 요청 환경에 따라 게시글 목록을 보여 주지 않을 수 있습니다.
-- 기본 채널에서 실시간 게시글이 보이지 않으면 결과가 비어 있을 수 있습니다.
+- Telegram에서 채널이 정상적으로 보여도 웹 미리보기는 채널 소개 페이지로 이동하거나 “Please open Telegram to view this post”를 표시할 수 있습니다. 이때는 아래 계정 인증 방식을 설정하세요. 인증 설정이 없으면 `TelegramFetchError`가 발생하고 WebUI에 **Unavailable**이 표시됩니다.
+- WebUI에서 채널을 따로 입력하지 않으면 `TELEGRAM_SIGNAL_CHANNEL_URL`을 사용하며, 설정이 없거나 공백이면 기본 채널을 사용합니다.
 - 게시글 안의 `Source:` 값은 보조 정보로 보관하고, 실제 출처는 Telegram 게시글 URL을 우선합니다.
+
+### 웹 미리보기가 안 되는 채널의 게시글 가져오기
+
+공개 웹 페이지에서 게시글을 읽지 못하면 같은 채널에 접근할 수 있는 Telegram 사용자 계정으로 API에서 최근 메시지와 원래 게시 시각을 가져올 수 있습니다. 검색 결과나 게시글 소개 문구를 거래 신호로 대체하지 않습니다.
+
+1. <https://my.telegram.org/apps>에서 본인의 API ID와 API Hash를 발급받습니다.
+2. 로컬 `.env`에 `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `TELEGRAM_SESSION_PATH`를 설정합니다. 세션 경로는 저장소 밖의 `/절대/비공개/경로/telegram-history.session`처럼 `.session`으로 끝나는 파일이어야 합니다.
+3. 의존성을 설치하고 본인 터미널에서 `python -m trading.telegram_login`을 실행합니다. 전화번호, 로그인 코드, 2단계 인증은 해당 터미널에서 입력합니다. 이 명령은 로그인만 수행하며 subscriber나 거래 실행을 시작하지 않습니다.
+4. 실행 서버에도 같은 환경 변수와 세션 파일을 안전하게 설정하고 WebUI/subscriber를 재시작합니다. Docker에서는 세션 파일을 읽기 전용 비밀 파일로 마운트하고 이미지에 넣지 마세요.
+5. WebUI의 읽기 전용 Telegram 미리보기에서 확인합니다. 채널을 별도로 지정하지 않으면 기본 채널 `https://t.me/stock_ai_agent`을 그대로 사용합니다.
+
+세션 파일은 Telegram 계정 접근 권한을 담고 있습니다. 저장소 밖에 보관하고 파일 접근 권한을 제한하세요. 로그인 코드, API 자격 증명, 세션 내용을 채팅에 붙여 넣지 마세요. 노출되면 Telegram의 기기 설정에서 해당 세션을 해제하세요. 실행 중에는 로그인을 요청하거나 채널 가입, 메시지 전송, 읽음 처리를 하지 않습니다. 세션은 메모리로 읽기만 하므로 WebUI와 poller가 읽기 전용 파일을 공유할 수 있습니다. 인증, 접근, 네트워크 오류가 있으면 처리를 중단하며, subscriber의 기존 신호 검증과 거래 제어는 그대로 적용됩니다.
+
+`t.me` HTTPS뿐 아니라 Telegram MTProto 서버로의 네트워크 연결도 필요합니다. 실제 계정 로그인은 운영자가 완료해야 하며 자동화 테스트에서는 가짜 클라이언트를 사용합니다.
 
 ## Docker로 실행하기
 

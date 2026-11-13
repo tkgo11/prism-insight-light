@@ -15,7 +15,8 @@
     <div class="panel-head"><div><p class="eyebrow">Preview</p><h2>Telegram channel</h2></div><span class="pill">Read-only</span></div>
     <form method="post" action="/telegram/preview" class="form-grid form-grid--preview">
       <input type="hidden" name="x_webui_csrf" value="{{ csrf_token }}">
-      <label class="span-2" for="telegram-channel">Channel override <input id="telegram-channel" name="channel" value="{{ channel }}" maxlength="256" placeholder="Leave blank to use the configured channel"></label>
+      <label class="span-2" for="telegram-channel">Channel override <input id="telegram-channel" name="channel" value="{{ channel }}" maxlength="256" list="telegram-channel-options" placeholder="Leave blank to use the configured channel and preview backups"></label>
+      <datalist id="telegram-channel-options">{% for code, language, url in telegram_channels %}<option value="{{ url }}">{{ language }}</option>{% endfor %}</datalist>
       <label for="telegram-pages">Pages <input id="telegram-pages" name="pages" type="number" min="1" max="5" value="{{ pages }}" required></label>
       <label for="telegram-limit">Maximum posts <input id="telegram-limit" name="max_posts" type="number" min="1" max="100" value="{{ max_posts }}" required></label>
       <p class="field-hint span-2">Limits are enforced: 1–5 pages and 1–100 posts. A preview never submits an order or changes the queue.</p>
@@ -24,6 +25,8 @@
   </article>
   <aside class="panel panel--signal-guide">
     <p class="eyebrow">Operator path</p><h2>Review then validate</h2>
+    <p class="field-hint">Official channels: {% for code, language, url in telegram_channels %}<a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ language }}</a>{{ ', ' if not loop.last else '.' }}{% endfor %}</p>
+    <p class="field-hint">Preview backups are tried when the configured source cannot be read. An explicit channel override checks only that source. Automatic trading uses its configured source.</p>
     <ol class="step-list">
       <li><span>1</span><div><strong>Preview safely</strong><small>Posts are read and masked through the existing integration.</small></div></li>
       <li><span>2</span><div><strong>Inspect candidates</strong><small>Only successfully parsed items display a normalized signal summary.</small></div></li>
@@ -35,7 +38,7 @@
 {% if preview %}
 <section class="panel" aria-live="polite">
   <div class="panel-head">
-    <div><p class="eyebrow">Preview result</p><h2>{{ preview["items"]|length if preview["items"] else 0 }} posts returned</h2>{% if preview.error %}<p class="warning">{{ preview.error }}</p>{% endif %}</div>
+    <div><p class="eyebrow">Preview result</p><h2>{{ preview["items"]|length if preview["items"] else 0 }} posts returned</h2>{% if preview.error %}<p class="warning">{{ preview.error }}</p>{% endif %}{% if preview.ok %}<p class="field-hint">{{ 'Backup source' if preview.fallback_used else 'Source' }}: {{ preview.channel }}{% if preview.fallback_used %} (requested: {{ preview.requested_channel }}){% endif %}</p>{% endif %}</div>
     <span class="status-badge {{ 'success' if preview.ok else 'danger' }}">{{ 'Complete' if preview.ok else 'Unavailable' }}</span>
   </div>
   {% if preview["items"] %}

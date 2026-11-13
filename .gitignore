@@ -16,3 +16,5 @@ crontab_subscriber_docker_backup_*.txt
 prism-insight-*.json
 trading/config/.token_key
 trading/config/KIS_acct_*.token
+*.session
+*.session.*

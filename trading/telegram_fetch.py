@@ -14,8 +14,8 @@ from urllib.parse import urlparse
 import requests
 
 from .schema import SignalMessage, SignalValidationError, load_signal_json, parse_signal_payload
+from .telegram_channels import DEFAULT_TELEGRAM_CHANNEL_URL
 
-DEFAULT_TELEGRAM_CHANNEL_URL = "https://t.me/prism_insight_global_en"
 _TELEGRAM_PREVIEW_BASE = "https://t.me/s/"
 _MESSAGE_BLOCK_RE = re.compile(
     r'<div class="tgme_widget_message_wrap[^>]*>(?P<body>.*?)</div>\s*</div>',
@@ -36,6 +36,21 @@ _HEADER_RE = re.compile(
     r"^[^A-Za-z\n]*?(?P<kind>NEW BUY|BUY|SELL|EVENT)\s*:\s*(?P<company>.+?)\((?P<ticker>[A-Z0-9._-]+)\)\s*$",
     re.IGNORECASE,
 )
+_KOREAN_HEADER_RE = re.compile(
+    r"^[^\w\n]*(?P<kind>신규 매수|매수|매도)\s*[:|]\s*"
+    r"(?P<company>.+?)\s*\((?P<ticker>[A-Z0-9._-]+)\)\s*$",
+    re.IGNORECASE,
+)
+_KOREAN_FIELDS = {
+    "매수가": "buy price", "매도가": "sell price", "목표가": "target price",
+    "손절가": "stop loss", "매수 점수": "buy score", "수익률": "profit rate",
+    "수익률(전략 기준)": "profit rate", "매도이유": "sell reason", "매도 이유": "sell reason",
+}
+_KOREAN_FIELD_RE = re.compile(
+    r"^(?P<label>" + "|".join(re.escape(label) for label in _KOREAN_FIELDS)
+    + r")(?:\s*:\s*|\s+)(?P<value>.+)$"
+)
+_KOREAN_ALLOCATION_RE = re.compile(r"^분할 매수\s*:\s*1슬롯의\s*(\d+(?:\.\d+)?)\s*%로\s*시작(?:\s|\(|$)")
 _NUMBER_RE = re.compile(r"[-+]?\d[\d,]*\.?\d*")
 
 
@@ -98,6 +113,29 @@ def fetch_channel_posts(
     session: requests.Session | None = None,
     timeout: float = 10.0,
 ) -> list[TelegramChannelPost]:
+    """Read public previews, falling back to a configured Telegram account."""
+    if limit <= 0:
+        return []
+    try:
+        return _fetch_public_channel_posts(
+            channel, limit=limit, pages=pages, session=session, timeout=timeout,
+        )
+    except TelegramFetchError:
+        from .telegram_history import authenticated_history_configured, fetch_authenticated_history
+
+        if not authenticated_history_configured():
+            raise
+        return fetch_authenticated_history(channel, limit=limit, timeout=timeout)
+
+
+def _fetch_public_channel_posts(
+    channel: str,
+    *,
+    limit: int,
+    pages: int,
+    session: requests.Session | None,
+    timeout: float,
+) -> list[TelegramChannelPost]:
     client = session or requests.Session()
     headers = {
         "User-Agent": (
@@ -124,20 +162,30 @@ def fetch_channel_posts(
 
         page_posts = extract_channel_posts(response.text, channel=handle)
         if not page_posts:
+            if not collected:
+                raise TelegramFetchError(
+                    "No readable public posts were returned by Telegram. "
+                    "The channel may still exist but not expose its history on the web. "
+                    "Configure authenticated history with python -m trading.telegram_login "
+                    "to read it through a Telegram account."
+                )
             break
 
         for post in page_posts:
             if post.message_id and post.message_id not in seen_ids:
                 seen_ids.add(post.message_id)
                 collected.append(post)
-                if len(collected) >= max(limit, 0):
-                    return collected[: max(limit, 0)]
-
-        before = page_posts[-1].message_id or None
-        if not before:
+        if len(collected) >= limit:
             break
 
-    return collected[: max(limit, 0)]
+        oldest_id = min((post.message_id for post in page_posts), key=int)
+        if before is not None and int(oldest_id) >= int(before):
+            break
+        before = oldest_id
+
+    # Telegram renders each page oldest first; pages themselves arrive newest first.
+    # Keep the latest bounded window, processed in chronological order.
+    return sorted(collected, key=lambda post: int(post.message_id))[-limit:]
 
 
 def extract_channel_posts(html: str, *, channel: str) -> list[TelegramChannelPost]:
@@ -250,7 +298,7 @@ def _parse_labeled_signal(text: str) -> dict[str, Any] | None:
 
     header = _HEADER_RE.match(lines[0])
     if not header:
-        return None
+        return _parse_korean_signal(lines)
 
     kind = header.group("kind").upper()
     company_name = header.group("company").strip()
@@ -271,6 +319,39 @@ def _parse_labeled_signal(text: str) -> dict[str, Any] | None:
         _apply_labeled_field(payload, label, value)
 
     return payload if payload.get("type") else None
+
+
+def _parse_korean_signal(lines: list[str]) -> dict[str, Any] | None:
+    header = _KOREAN_HEADER_RE.fullmatch(lines[0])
+    if not header:
+        return None
+    kind = header.group("kind")
+    ticker = header.group("ticker").upper()
+    payload: dict[str, Any] = {
+        "type": "SELL" if kind == "매도" else "BUY",
+        "ticker": ticker,
+        "company_name": header.group("company").strip(),
+        "market": _infer_market(ticker),
+    }
+    for index, line in enumerate(lines[1:], start=1):
+        clean = re.sub(r"^[^\w]+", "", line)
+        field = _KOREAN_FIELD_RE.fullmatch(clean)
+        if field:
+            _apply_labeled_field(payload, _KOREAN_FIELDS[field.group("label")], field.group("value"))
+        elif clean.startswith("분할 매수") and payload["type"] == "BUY":
+            allocation = _KOREAN_ALLOCATION_RE.match(clean)
+            if allocation is None or "position_fraction" in payload:
+                raise SignalValidationError("Unsupported or duplicate Korean position allocation")
+            fraction = Decimal(allocation.group(1)) / 100
+            if not 0 < fraction <= 1:
+                raise SignalValidationError("Korean position allocation must be within (0, 100] percent")
+            payload["position_fraction"] = float(fraction)
+        elif clean == "매수 근거":
+            payload["rationale"] = "\n".join(lines[index + 1:])
+            break
+    if kind == "신규 매수" and "position_fraction" not in payload:
+        raise SignalValidationError("Korean new buys require an explicit initial slot allocation")
+    return payload
 
 
 def _apply_labeled_field(payload: dict[str, Any], label: str, value: str) -> None:

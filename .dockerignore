@@ -24,3 +24,7 @@ trading/config/.tmp_token_*
 crontab_subscriber_backup_*.txt
 crontab_subscriber_docker_backup_*.txt
 prism-insight-*.json
+*.session
+*.session.*
+**/*.session
+**/*.session.*
