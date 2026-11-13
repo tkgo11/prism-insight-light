@@ -1,0 +1,48 @@
+{
+  "run_id": "scheduled-20261113T191922-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_RECHECK",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "916fc9e904c7574eb7dc0ecf89bf3784df239d76",
+  "state_acquired_commit": "43b6367f59bc199073907f578530478354f5ec95",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "inspected_blobs": {
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "finding": "Existing KR/US single/multiaccount strategy BUY receipt persistence and pending fence tests found. Ledger explicitly treats broker receipt as non-fill and history as non-actionable; no new distinct RED scenario established in this run.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": {
+    "head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "runs": [
+      {
+        "id": 43041452951,
+        "conclusion": "success"
+      },
+      {
+        "id": 43041440961,
+        "conclusion": "success"
+      }
+    ],
+    "required_checks_not_fully_verified": true
+  },
+  "unverified_transitions": [
+    "broker-authenticated order date/execution ID",
+    "partial fill/cancel/restart account stop activation"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No distinct reproducible missing test identified from inspected paths; additional complete reconciliation and fixture review needed before safe test-first change",
+  "next_exact_action": "Read stop_loss_watcher.py lines 690-1120 and execution_ledger.py lines 550-715 plus related mock history tests; identify non-duplicate fail-closed test before test-first PR commit",
+  "kis_calls": 0,
+  "real_orders": 0
+}
