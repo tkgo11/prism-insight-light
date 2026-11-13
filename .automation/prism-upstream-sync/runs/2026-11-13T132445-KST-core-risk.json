@@ -1,0 +1,37 @@
+{
+  "run_id": "scheduled-20261113T132445-KST-core-risk",
+  "status": "STALLED_NO_NEW_DISTINCT_TEST_GAP_ESTABLISHED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_before": "761353eb684521788196e3e4fb07d1040a40e251",
+  "lock_acquired_commit": "6019e4434a07cb428461bb82a3d29e13f1b00182",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": {
+    "tests/test_readonly_broker_account_scope_provenance.py": "5c4ea215a1131a5997d551455a5c9b972dff91b8",
+    "trading/order_reconciliation.py": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb"
+  },
+  "ci_runs": [
+    {
+      "id": 43041452951,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "code_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker receipt correlation with run ID",
+    "dated partial fill/cancel to per-account stop activation"
+  ],
+  "exact_blocker": "Read-only history tests already cover KR/US account scope, pagination, cancellation and stop blocking; no novel failing case established in this run; no speculative test or patch committed",
+  "next_exact_action": "Inspect strategy receipt persistence and watcher activation contract against read-only reconciliation tests; identify distinct failing scenario before test-first commit",
+  "kis_calls": 0,
+  "real_orders": 0
+}
