@@ -1,0 +1,39 @@
+{
+  "run_id": "scheduled-20261113T162735-KST-core-risk",
+  "status": "STALLED_EXISTING_MOCK_COVERAGE_NO_DISTINCT_FAILING_CASE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": "not independently verified",
+  "state_parent": "4b23f0860e7122cabe691c18a2367554a2d95554",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "existing_test_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_readonly_buy_history_evidence_durability.py": "3d96c5f35c95294c06016a5d3938dc26589d63ef",
+    "tests/test_stop_loss_account_selection.py": "f3e992bb83678d3c60d920f7ec36816f98820ca4"
+  },
+  "evidence_delta": "Verified current state SHA and acquired CAS lease; read strategy receipt durability, KR/US multi-account mock tests, read-only partial-cancel history and watcher account-selection tests; existing tests already cover these examined cases.",
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW; existing CI success does not prove KIS integration",
+  "ci_runs": [
+    43041452951,
+    43041440961
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-authenticated order-date/execution-ID provenance",
+    "account-specific stop activation after verified fill"
+  ],
+  "exact_blocker": "No distinct failing synthetic scenario established after reading existing coverage; no speculative patch",
+  "next_exact_action": "Inspect trading/order_reconciliation.py, trading/execution_ledger.py, trading/dispatch.py and trading/stop_loss_watcher.py at current PR HEAD to derive a distinct failing synthetic dated partial-fill/cancel transition, then commit test-first and observe Actions RED",
+  "kis_calls": 0,
+  "real_orders": 0
+}
