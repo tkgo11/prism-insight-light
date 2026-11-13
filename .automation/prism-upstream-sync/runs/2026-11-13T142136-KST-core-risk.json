@@ -1,0 +1,39 @@
+{
+  "run_id": "scheduled-20261113T142136-KST-core-risk",
+  "status": "STALLED_EXISTING_MOCK_COVERAGE_NO_DISTINCT_FAILING_CASE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_before": "fc108cadfe97ea36c7790c3c34da7091d931a431",
+  "lock_acquired_commit": "3ada6e7c72f0b422355e6c8d37c48ec0e15e977b",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": {
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "existing_coverage": [
+    "KR/US synthetic strategy receipt persisted with canonical order number",
+    "executed acceptance and unknown both remain unresolved without fill attribution",
+    "invalid order number rejected",
+    "restart and duplicate dispatch guarded",
+    "pending BUY stop loss blocked even with positive aggregate holdings"
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "code_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "ci_latest_head": "not independently verified in this run",
+  "unverified_transitions": [
+    "dated partial fill and cancel broker attribution to specific strategy run",
+    "per-account stop activation after independently verified fills"
+  ],
+  "exact_blocker": "Existing equivalent synthetic Mock tests found; no distinct untested failure established; did not invent a failing case or change trading code",
+  "next_exact_action": "Read complete strategy receipt provenance multi-account tests and execution_ledger.record_read_only_buy_history, then isolate a novel dated partial-fill/cancel per-account stop activation scenario before test-first PR commit",
+  "kis_calls": 0,
+  "real_orders": 0
+}
