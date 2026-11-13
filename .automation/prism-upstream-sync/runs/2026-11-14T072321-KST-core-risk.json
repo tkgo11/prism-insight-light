@@ -1,0 +1,49 @@
+{
+  "run_id": "scheduled-20261114T072321-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "acquired_state_commit": "f423bda88fe83f4b2bda1b005f13557cb7439082",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "prior_stalled_count": null,
+  "latest_attempt_command_or_test_id": "GitHub Connector fetch_file existing tests only",
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW; prior CI success not new mock evidence",
+  "code_fix_commit": null,
+  "latest_head_CI": [
+    {
+      "id": 43041452951,
+      "conclusion": "success",
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+    }
+  ],
+  "read_files": [
+    "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "tests/test_buy_order_receipt_durability.py",
+    "tests/test_readonly_buy_history_evidence_durability.py",
+    "tests/test_stop_loss_watcher.py",
+    ".github/workflows/tests.yml"
+  ],
+  "evidence_delta": "Confirmed existing strategy BUY order_no durability for KR/US, unknown/executed, multi-account, queued execution, invalid receipts, and restart; no new defect established",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "verified_paths": [
+    "existing test source assertions (static only)"
+  ],
+  "unverified_paths": [
+    "broker acceptance date/execution identity attribution",
+    "account-scoped stop activation after verified fill",
+    "full producer-to-watcher runtime path"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No distinct uncovered deterministic scenario established from inspected files; producer-to-watcher code trace not yet completed",
+  "next_exact_action": "Read trading/dispatch.py, trading/execution_ledger.py, trading/stop_loss_watcher.py and read-only history correlation tests at current PR HEAD; identify a nonduplicate deterministic fail-closed test, commit test-only to Draft PR, observe Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
