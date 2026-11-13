@@ -1,0 +1,34 @@
+{
+  "run_id": "scheduled-20261113T211816-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_RECHECK",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_acquired_commit": "8e0a338c6a72d3ee5b8c27181088126bc9b108fc",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "inspected_blobs": {
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "finding": "Existing strategy BUY receipt tests cover persistence without attributing fills, including multi-account and queued BUY. Watcher releases unresolved-BUY ledger guard before asyncio.run(dispatch); must inspect dispatch boundary guards and concurrency tests before asserting race or writing duplicate test.",
+  "candidate_count": 1,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": "NOT_VERIFIED_THIS_RUN",
+  "unverified_transitions": [
+    "broker-authenticated order date/execution ID",
+    "partial-fill/cancel/restart per-account stop activation",
+    "watcher ledger-guard-to-dispatch race"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "Distinct race regression test not yet established against dispatch's own guards; no CI dispatch",
+  "next_exact_action": "Inspect TradeDispatcher.dispatch SELL preflight and existing watcher concurrency tests, then add only missing synthetic read-only race test and observe Actions RED",
+  "kis_calls": 0,
+  "real_orders": 0
+}
