@@ -1,0 +1,36 @@
+{
+  "run_id": "scheduled-20261113T202349-KST-core-risk",
+  "status": "STALLED_READ_ONLY_COVERAGE_RECHECK",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "7fd3c47c5095181e4a0709226a15f29a31c9ae81",
+  "state_acquired_commit": "8c4fe96d8edb6860682979895b8dc897e4ad6403",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "inspected_blobs": {
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "finding": "Existing strategy BUY KR/US single/multi-account receipt persistence tests and watcher fail-closed guards reviewed. Broker-authenticated order date/execution ID and per-account stop activation remain unverified. No distinct RED test demonstrated.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "latest_head_CI": "NOT_VERIFIED_THIS_RUN",
+  "unverified_transitions": [
+    "broker-authenticated order date/execution ID",
+    "partial-fill/cancel/restart per-account stop activation",
+    "watcher ledger-guard-to-dispatch race"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No new distinct test established from inspected code; mock workflow not dispatched; existing PR head unchanged",
+  "next_exact_action": "Review existing watcher concurrency test coverage and add a distinct synthetic test for ledger guard release-to-dispatch race if absent, then observe Actions RED before implementation",
+  "kis_calls": 0,
+  "real_orders": 0
+}
