@@ -764,7 +764,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--web-ui",
         action="store_true",
-        help="Start the local guarded operator WebUI alongside the Pub/Sub subscriber",
+        default=os.environ.get("WEBUI_ENABLED", "").strip().lower() in {"1", "true", "yes", "on"},
+        help="Start the guarded operator WebUI (also enabled by WEBUI_ENABLED=true)",
     )
     parser.add_argument(
         "--stop-loss-poll-seconds",

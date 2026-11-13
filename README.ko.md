@@ -423,6 +423,11 @@ pip install -r requirements.txt
 python subscriber.py --web-ui
 ```
 
+호스팅 패널에서 실행 인수를 바꿀 수 없다면 `.env`에 `WEBUI_ENABLED=true`를
+설정하고 구독자를 재시작하세요. 기본값은 비활성화입니다.
+`WEBUI_ALLOWED_HOSTS`에는 URL 스킴이나 포트 없이 `node.example.com` 같은
+호스트 이름을 입력합니다. 외부 바인딩에서는 읽기 전용으로 동작합니다.
+
 고급 사용자는 `python -m webui` 직접 실행도 사용할 수 있습니다.
 
 기본값은 로컬 전용입니다. 원격 노출은 별도 보안 검토 전까지 사용하지 마세요.

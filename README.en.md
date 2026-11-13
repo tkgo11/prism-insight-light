@@ -434,6 +434,11 @@ pip install -r requirements.txt
 python subscriber.py --web-ui
 ```
 
+For hosting panels that run `python subscriber.py` without configurable arguments,
+set `WEBUI_ENABLED=true` in `.env` and restart the subscriber. It remains disabled
+by default. `WEBUI_ALLOWED_HOSTS` accepts hostnames such as `node.example.com`,
+without a URL scheme or port. Non-loopback access remains read-only.
+
 The direct module entrypoint `python -m webui` remains available for advanced use.
 
 Defaults are intentionally local-only:
