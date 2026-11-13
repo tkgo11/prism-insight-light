@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261113T101800-KST-core-risk",
+  "run_id": "scheduled-20261113T111800-KST-core-risk",
   "status": "STALLED_EXISTING_COVERAGE_NO_DISTINCT_GAP_ESTABLISHED",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-13T101800-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-13T111800-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect trading/order_reconciliation.py and trading/stop_loss_watcher.py alongside tests/test_stop_loss_watcher.py for a specific broker-confirmed per-account partial-fill activation gap; only then add targeted test and observe RED"
+  "next_exact_action": "Inspect dispatch.py lines 990-1060 and 1180-1225, identify actual reconciliation test filename via PR tree, compare BUY receipt persistence and account-specific stop activation before adding a nonduplicative read-only Mock test"
 }
