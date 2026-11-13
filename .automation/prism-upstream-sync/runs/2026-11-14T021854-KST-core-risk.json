@@ -1,0 +1,46 @@
+{
+  "run_id": "scheduled-20261114T021854-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "state_parent": "a9535429f66f32b00a7642530e7ccfa4d638f5e9",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    }
+  ],
+  "reviewed_file_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_stop_loss_account_selection.py": "f3e992bb83678d3c60d920f7ec36816f98820ca4",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "observations": "Existing synthetic KR/US strategy BUY receipt persistence, account-scoped receipts, queued replay prevention, pending-stop protection and watcher account selector tests inspected. No independently demonstrated uncovered transition; do not add speculative duplicate test.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No independently demonstrated uncovered transition after partial review; cannot responsibly assert RED or patch. Read-only coverage review only.",
+  "unverified_transitions": [
+    "broker order receipt/date/run identity linked to partially filled strategy BUY per account",
+    "account-scoped watcher activation after partial fill and cancellation",
+    "restart reconciliation of remaining quantity"
+  ],
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Read execution_ledger.record_read_only_buy_history and dispatch stop-loss registration plus partial-fill mock tests at PR HEAD; identify a concrete missing assertion, commit test-only to Draft PR using safe branch lease, observe Actions RED before product changes."
+}
