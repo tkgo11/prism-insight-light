@@ -1,0 +1,45 @@
+{
+  "run_id": "scheduled-20261114T042323-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "f7a24fab49ea07cc29adfbe935766fe5a13a6f3b",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    }
+  ],
+  "reviewed_file_blobs": {
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_strategy_partial_matrix.py": "a57d37d6acf86f34b0334793d135a02af7d53d9f"
+  },
+  "observations": "Acquired state CAS lock and verified latest PR and Actions. Existing tests cover strategy receipt persistence, account isolation, pending BUY fail-closed, restart, positive aggregate holdings, and direct trigger. No demonstrated uncovered failing transition, so no speculative test-only RED or product patch.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-authenticated original acceptance date and execution identity",
+    "partial-fill cancellation remaining-quantity attribution per account",
+    "account-scoped stop activation from verified fills"
+  ],
+  "exact_blocker": "Existing mock coverage inspection did not establish a concrete missing assertion; no test was committed, and Actions RED was not observed. Existing CI success does not prove broker integration.",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Read trading/stop_loss_watcher.py and reconciliation mock tests at PR HEAD; identify an untested deterministic account-scoped partial-fill/cancel transition before test-only CAS commit and Actions RED."
+}
