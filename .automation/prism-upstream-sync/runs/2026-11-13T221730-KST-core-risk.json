@@ -1,0 +1,35 @@
+{
+  "run_id": "scheduled-20261113T221730-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "dcb3fefb312e0d88c6a6aada83b4fff9c033810e",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": [
+    "trading/dispatch.py",
+    "trading/stop_loss_watcher.py",
+    "tests/test_watcher_buy_sell_interleaving_mock.py",
+    "tests/test_watcher_cross_process_buy_fence_mock.py",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "tests/test_buy_order_receipt_durability.py"
+  ],
+  "evidence": "Existing mock covers KR/US cross-process late BUY fence, single account receipt durability and restart. No new uncovered reproducible defect established; no duplicate tests or speculative changes.",
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "new_tests": 0,
+  "new_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Inspect account-specific stop-loss activation and SELL preflight gaps against existing tests, create only a genuinely missing read-only mock case and observe baseline Actions RED."
+}
