@@ -1,0 +1,36 @@
+{
+  "run_id": "scheduled-20261114T081731-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "acquired_state_commit": "e70bebe47ba93bb56cb968df91bc80eafcb042fe",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "code_fix_commit": null,
+  "latest_head_CI": "NOT_RECHECKED_THIS_RUN",
+  "read_files": {
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "evidence_delta": "Confirmed live state ref, RELEASED prior lock, acquired CAS lock, and inspected three primary code files; no end-to-end mock test executed",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_paths": [
+    "broker order date/execution identity attribution",
+    "account scoped stop activation after confirmed fill",
+    "end-to-end producer-to-watcher runtime"
+  ],
+  "exact_blocker": "Full equivalent-test correlation and safe deterministic nonduplicate test not completed; no evidence-based test-only patch prepared",
+  "next_exact_action": "Inspect existing history correlation tests and full dispatcher-to-ledger-to-watcher call sites at PR #43 head; identify unique deterministic fail-closed test, commit test-only to Draft PR with CAS and observe Actions RED",
+  "kis_calls": 0,
+  "real_orders": 0
+}
