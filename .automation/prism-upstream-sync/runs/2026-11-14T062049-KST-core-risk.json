@@ -1,0 +1,48 @@
+{
+  "run_id": "scheduled-20261114T062049-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "1d4ddb48aff88f2751faaecf2015d459153dda1a",
+  "acquired_state_commit": "9ff754f8d6d5a699cc9ab5946eb36b16ae92e292",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "3476d9c5743360cbaf81b5224219f33ccb761880",
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "read_files": [
+    {
+      "path": "tests/test_readonly_broker_account_scope_provenance.py",
+      "sha": "5c4ea215a1131a5997d551455a5c9b972dff91b8"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "sha": "9162199532e31857835ab22e1ef17cfe6afd0711"
+    }
+  ],
+  "observations": "Existing KR/US multi-account read-only broker history tests assert pagination, account drift, durable restart, and no stop activation. Ledger validates order receipt and read-only history evidence, but code path review incomplete; no proven missing assertion or product defect. No new test committed.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-authenticated order acceptance date and execution attribution",
+    "account-scoped automatic stop activation after verified fill"
+  ],
+  "exact_blocker": "No distinct uncovered deterministic failing scenario established from inspected code; further producer-to-watcher trace needed before test-first commit.",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Trace dispatch receipt persistence through broker history to stop_loss_watcher, compare existing test assertions and add only a nonduplicate fail-closed mock regression, then observe Actions RED."
+}
