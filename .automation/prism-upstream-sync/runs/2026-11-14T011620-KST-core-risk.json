@@ -1,0 +1,38 @@
+{
+  "run_id": "scheduled-20261114T011620-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "state_acquired_commit": "7c3745ef5ce695868284ad3aee214eb7ed318dbf",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "a004e70ee13296bd345a36eca4ff546fc8d30355",
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "conclusion": "success",
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+    }
+  ],
+  "reviewed_files": [
+    "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "tests/test_stop_loss_account_selection.py",
+    "tests/test_watcher_cross_process_buy_fence_mock.py",
+    "trading/stop_loss_watcher.py",
+    "tests/test_stop_loss_snapshot_preflight.py",
+    "tests/test_pending_buy_stop_loss_safety.py",
+    "tests/test_unresolved_buy_without_stop_loss.py"
+  ],
+  "existing_coverage": "Strategy receipt account-scoped durability, UNKNOWN fencing, pending stop protection, stale snapshot preflight and cross-process late BUY fence covered by existing mock tests; new uncovered defect not confirmed",
+  "new_tests": 0,
+  "new_fixes": 0,
+  "attempted_reproductions": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "exact_blocker": "Inspected related mock coverage but no independently substantiated missing transition; test-first RED not executed. No speculative changes.",
+  "next_exact_action": "Inspect broker receipt provenance to per-account stop-loss activation on partially filled strategy BUY and confirm missing mock assertion before test-only Draft PR commit."
+}
