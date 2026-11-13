@@ -1,0 +1,53 @@
+{
+  "run_id": "scheduled-20261113T151629-KST-core-risk",
+  "status": "STALLED_EXISTING_MOCK_COVERAGE_NO_DISTINCT_FAILING_CASE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_before": "e90879ac9d537bc00909ad19a599018bb4c9b3ac",
+  "lock_acquired_commit": "233b597688a36dc0b5ad204b403629a696253d64",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_readonly_broker_account_scope_provenance.py": "5c4ea215a1131a5997d551455a5c9b972dff91b8",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "existing_coverage": [
+    "KR/US strategy receipt durable and canonical",
+    "multi-account strategy receipts remain distinct and unverified",
+    "queued strategy receipt persisted without replay",
+    "KR/US account-bound two-page partial-fill/cancel history is operator-only evidence",
+    "ledger read-only history persists without stop activation",
+    "restart and duplicate dispatch fail closed"
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "code_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+      "conclusion": "success"
+    }
+  ],
+  "unverified_transitions": [
+    "authenticated original BUY order date and execution ID attribution",
+    "per-account activation after independently verified partial fill",
+    "broker integration with KIS credentials"
+  ],
+  "exact_blocker": "Existing equivalent synthetic read-only coverage found; no distinct failing case established; no new Actions RED or code change; audit remains incomplete",
+  "next_exact_action": "Inspect broker reconciliation history validation and dispatch/watcher account-specific stop activation contract; identify a distinct failing synthetic dated partial-fill/cancel case before test-first commit",
+  "kis_calls": 0,
+  "real_orders": 0
+}

@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261113T142136-KST-core-risk",
+  "run_id": "scheduled-20261113T151629-KST-core-risk",
   "status": "STALLED_EXISTING_MOCK_COVERAGE_NO_DISTINCT_FAILING_CASE",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-13T142136-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-13T151629-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Read complete strategy receipt provenance multi-account tests and execution_ledger.record_read_only_buy_history, then isolate a novel dated partial-fill/cancel per-account stop activation scenario before test-first PR commit"
+  "next_exact_action": "Inspect broker reconciliation history validation and dispatch/watcher account-specific stop activation contract; identify a distinct failing synthetic dated partial-fill/cancel case before test-first commit"
 }
