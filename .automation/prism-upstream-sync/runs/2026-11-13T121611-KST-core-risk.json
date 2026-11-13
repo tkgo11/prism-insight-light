@@ -1,0 +1,54 @@
+{
+  "run_id": "scheduled-20261113T121611-KST-core-risk",
+  "status": "STALLED_EXISTING_COVERAGE_CONFIRMED_NO_NEW_DISTINCT_GAP",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_before": "cc823334e59cba021de0b878b5dcb19df2916f22",
+  "lock_acquired_commit": "aa086fdaa800dbda2f23a2e9c27c878aaa461840",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "evidence": {
+    "strategy_receipt_test": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "strategy_receipt_blob": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "existing_tests": [
+      "test_strategy_buy_broker_receipt_is_persisted_without_fill_attribution",
+      "test_strategy_buy_noncanonical_receipt_never_becomes_ledger_proof",
+      "test_multiaccount_strategy_buy_receipts_remain_per_account_and_unverified",
+      "test_queued_strategy_buy_preserves_receipt_without_replaying_or_attributing_fill"
+    ],
+    "legacy_receipt_test": "tests/test_buy_order_receipt_durability.py",
+    "legacy_receipt_blob": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "account_watcher_test": "tests/test_stop_loss_account_selection.py",
+    "account_watcher_blob": "f3e992bb83678d3c60d920f7ec36816f98820ca4",
+    "ci_runs": [
+      {
+        "id": 43041452951,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+      },
+      {
+        "id": 43041440961,
+        "status": "completed",
+        "conclusion": "success",
+        "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+      }
+    ]
+  },
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "code_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker history receipt correlation by execution date and run id",
+    "partial fill/cancel remaining quantity attribution and per-account stop activation"
+  ],
+  "exact_blocker": "Existing equivalent strategy receipt tests already present; no distinct failing scenario established; no test-first commit justified",
+  "next_exact_action": "Read tests/test_readonly_broker_account_scope_provenance.py and trading/order_reconciliation.py; isolate uncovered dated partial-fill/cancel per-account activation scenario before test-first PR commit",
+  "kis_calls": 0,
+  "real_orders": 0
+}

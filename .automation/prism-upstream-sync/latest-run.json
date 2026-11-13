@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261113T111800-KST-core-risk",
-  "status": "STALLED_EXISTING_COVERAGE_NO_DISTINCT_GAP_ESTABLISHED",
+  "run_id": "scheduled-20261113T121611-KST-core-risk",
+  "status": "STALLED_EXISTING_COVERAGE_CONFIRMED_NO_NEW_DISTINCT_GAP",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-13T111800-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-13T121611-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect dispatch.py lines 990-1060 and 1180-1225, identify actual reconciliation test filename via PR tree, compare BUY receipt persistence and account-specific stop activation before adding a nonduplicative read-only Mock test"
+  "next_exact_action": "Read tests/test_readonly_broker_account_scope_provenance.py and trading/order_reconciliation.py; isolate uncovered dated partial-fill/cancel per-account activation scenario before test-first PR commit"
 }
