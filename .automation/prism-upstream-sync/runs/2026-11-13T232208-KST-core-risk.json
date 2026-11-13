@@ -1,0 +1,34 @@
+{
+  "run_id": "scheduled-20261113T232208-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "6f7c9b4c34fc3f73bb019130ae8ee2e702da7cb5",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "read_files_with_sha": {
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_watcher_buy_sell_interleaving_mock.py": "4d519d23891fcd4e5c24643344d7361693d2a48c"
+  },
+  "evidence": "Existing mock tests cover strategy receipt provenance, per-account receipts, receipt restart durability and watcher late BUY fencing. No verified uncovered scenario yet; do not duplicate or speculate.",
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "new_tests": 0,
+  "new_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Inspect stop-loss activation path and SELL preflight against existing tests, identify a genuinely uncovered account-scoped fail-closed scenario, commit read-only mock test first and observe Actions RED."
+}
