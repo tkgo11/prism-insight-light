@@ -1,0 +1,38 @@
+{
+  "run_id": "scheduled-20261113T101800-KST-core-risk",
+  "status": "STALLED_EXISTING_COVERAGE_NO_DISTINCT_GAP_ESTABLISHED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_acquired_commit": "9c5efc1a20c8ef0966b624b1bc002e345e7c9f20",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "base_head": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "existing_ci": {
+    "id": 43041452951,
+    "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "conclusion": "success"
+  },
+  "new_tests": 0,
+  "executed_tests": 0,
+  "new_fixes": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "inspected_tests": {
+    "tests/test_pending_buy_confirmed_tracker_cleanup.py": "5653e71c581605e39e223801ec88d2156f10d71b",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "tests/test_stop_loss_watcher.py": "4a01653810a0e5758da7a925dadc30e06652347f",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py": "e4805fd8254949ef597dc14a2e246fe3afdcedb7"
+  },
+  "evidence_delta": "Verified existing multi-account partial-cancel evidence-only tests and pending watcher protection; no newly established uncovered executable transition.",
+  "unverified_transitions": [
+    "broker-confirmed per-account partial fill -> stop activation",
+    "cancelled residual -> authoritative watcher reconciliation",
+    "KIS demo integration"
+  ],
+  "exact_blocker": "Distinct missing read-only Mock scenario not established from inspected coverage; no speculative duplicate test or product patch",
+  "next_exact_action": "Inspect trading/order_reconciliation.py and trading/stop_loss_watcher.py alongside tests/test_stop_loss_watcher.py for a specific broker-confirmed per-account partial-fill activation gap; only then add targeted test and observe RED",
+  "kis_calls": 0,
+  "real_orders": 0
+}
