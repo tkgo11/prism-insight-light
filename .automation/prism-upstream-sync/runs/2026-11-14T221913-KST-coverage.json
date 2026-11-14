@@ -1,0 +1,19 @@
+{
+  "run_id": "scheduled-20261114T221913-KST-coverage",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_test_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_pending_buy_confirmed_tracker_cleanup.py": "5653e71c581605e39e223801ec88d2156f10d71b",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4"
+  },
+  "finding": "Existing KR/US multiaccount strategy receipt durability and unresolved stop cleanup assertions; per-account partial-fill -> confirmed stop activation remains unverified.",
+  "new_tests": 0,
+  "new_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "next_exact_action": "Read multiaccount partial fill tracker activation code and existing test, write only missing read-only assertion, commit test to Draft PR and observe Actions baseline RED."
+}

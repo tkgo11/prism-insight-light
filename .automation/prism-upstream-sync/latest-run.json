@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261114T212344-KST-core-risk",
+  "run_id": "scheduled-20261114T221913-KST-coverage",
   "status": "STALLED_COVERAGE_REVIEW",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-14T212344-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-14T221913-KST-coverage.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect strategy multiaccount partial-fill to per-account StopLossTracker activation path and identify missing assertion before test-first commit; observe baseline Actions RED."
+  "next_exact_action": "Read multiaccount partial fill tracker activation code and existing test, write only missing read-only assertion, commit test to Draft PR and observe Actions baseline RED."
 }
