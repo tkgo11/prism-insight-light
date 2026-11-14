@@ -1,0 +1,38 @@
+{
+  "run_id": "scheduled-20261114T101653-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "038c9acdbe2ec668c9251156e7dd80b70efb4dbd",
+  "lock_acquire_commit": "ae6112fd23d7d14944962d983120197b3d69f1f2",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "latest_head_CI": [
+    {
+      "id": 43041452951,
+      "conclusion": "success",
+      "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+    }
+  ],
+  "read_files": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "tests/test_readonly_buy_history_evidence_durability.py": "3d96c5f35c95294c06016a5d3938dc26589d63ef",
+    "tests/test_stop_loss_account_selection.py": "f3e992bb83678d3c60d920f7ec36816f98820ca4"
+  },
+  "coverage_observed": "KR/US synthetic strategy receipt, restart, account isolation, partial/cancel read-only evidence, watcher pending protection, selected account inquiry already covered. No verified end-to-end account-specific broker-attributed fill-to-stop activation; deliberately fail-closed.",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "baseline_fail_observed": false,
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "Focused review found overlapping synthetic test coverage; no uniquely uncovered deterministic behavior established and no safe test-only change justified without full production call-graph inspection",
+  "next_exact_action": "Inspect trading/dispatch.py, trading/execution_ledger.py, trading/order_reconciliation.py and trading/stop_loss_watcher.py full current blobs; identify nonduplicate synthetic failure transition, test-only CAS commit and observe Actions RED",
+  "kis_calls": 0,
+  "real_orders": 0
+}
