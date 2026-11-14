@@ -1,0 +1,45 @@
+{
+  "run_id": "scheduled-20261114T182039-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "3f6d6127c28e18859d2039e5490f20d4001342cc",
+  "lock_acquire_commit": "9d94237d5a643564de99475052494fc4734fe278",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed": [
+    {
+      "path": "trading/order_reconciliation.py",
+      "sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "sha": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490"
+    },
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+    }
+  ],
+  "observed": "Read-only review confirms strategy receipt persistence test and pending_buy stop fence. Account-specific reconciliation-to-activation remains unverified. No distinct new failing test safely established.",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "latest_head_ci": {
+    "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "status": "NOT_RECHECKED_THIS_RUN"
+  },
+  "exact_blocker": "Nonduplicate account-specific activation transition not yet mapped end-to-end; no test-first RED evidence. Not a GitHub HEAD lookup failure.",
+  "next_exact_action": "Read trading/order_reconciliation.py lines 420-673 and stop_loss_watcher.py activation methods; compare tests for per-account partial-fill/cancel/restart activation; add synthetic read-only missing assertion to Draft PR and observe Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
