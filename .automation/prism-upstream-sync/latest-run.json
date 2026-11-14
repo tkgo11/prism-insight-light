@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261114T182039-KST-core-risk",
+  "run_id": "scheduled-20261114T192103-KST-core-risk",
   "status": "STALLED_COVERAGE_REVIEW",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-14T182039-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-14T192103-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Read trading/order_reconciliation.py lines 420-673 and stop_loss_watcher.py activation methods; compare tests for per-account partial-fill/cancel/restart activation; add synthetic read-only missing assertion to Draft PR and observe Actions RED."
+  "next_exact_action": "Read stop_loss_watcher.py remaining methods (700-end) and existing activation tests, identify one nonduplicate synthetic partial-fill/account-scope transition assertion, commit test first to Draft PR #43 and observe Actions RED."
 }
