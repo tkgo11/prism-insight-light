@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261115T062438-KST-watcher-review",
-  "status": "STALLED_READ_ONLY_REVIEW",
+  "run_id": "scheduled-20261115T072014-KST-broker-ledger-review",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-15T062438-KST-watcher-review.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-15T072014-KST-broker-ledger-review.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Trace stop-loss pending_buy transition from strategy BUY receipt through account-scoped confirmed broker fill and tracker mutation; compare tests before adding read-only synthetic fail-closed assertion."
+  "next_exact_action": "Inspect broker-confirmed fill reconciliation and stop-loss tracker activation paths against existing synthetic tests; identify a genuinely missing fail-closed assertion before test-first PR commit."
 }

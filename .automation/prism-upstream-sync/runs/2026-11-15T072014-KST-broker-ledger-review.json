@@ -1,0 +1,36 @@
+{
+  "run_id": "scheduled-20261115T072014-KST-broker-ledger-review",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent_before_acquire": "8827bfe193ca9c6827dd43e1b9f324d7223d8908",
+  "acquired_state_commit": "d45ba2d4e4cc13a6c89525a71479d8fc7765d1c6",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_test_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2"
+  },
+  "finding": "Existing tests already cover strategy BUY broker receipt persistence across KR/US, unknown/executed, multiaccount and queue; ledger restart and receipt-only non-fill; watcher pending_buy blocks SELL. No distinct untested fail-closed transition established in this review; broker-confirmed fill -> account-scoped stop-loss activation remains unverified.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "latest_head_CI": {
+    "runs": [
+      43041452951,
+      43041440961
+    ],
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Inspect broker-confirmed fill reconciliation and stop-loss tracker activation paths against existing synthetic tests; identify a genuinely missing fail-closed assertion before test-first PR commit."
+}
