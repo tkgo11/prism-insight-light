@@ -1,0 +1,38 @@
+{
+  "run_id": "scheduled-20261114T121605-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "194e953e4cb44c6fdaa487dba1a979e586d2ff16",
+  "lock_acquire_commit": "8c758cdbdff6441139748099d021705c8a9b048d",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "read_test_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_stop_loss_account_selection.py": "f3e992bb83678d3c60d920f7ec36816f98820ca4"
+  },
+  "coverage_observed": "Existing synthetic tests cover strategy receipt persistence KR/US, multiaccount, queue, restart, invalid IDs, ledger write failure, and watcher selected account. No distinct failing subcase established from inspected files.",
+  "latest_head_CI": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "Existing equivalent tests found; distinct deterministic failing case not established. Production call graph and complete audit still pending; no speculative test/patch.",
+  "next_exact_action": "Inspect trading/dispatch.py, trading/execution_ledger.py, trading/order_reconciliation.py, trading/stop_loss_watcher.py and existing synthetic tests for uncovered broker-attribution/stop activation transition; add only distinct test-first reproduction.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
