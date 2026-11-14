@@ -1,0 +1,31 @@
+{
+  "run_id": "scheduled-20261114T151726-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "0a349b7d7978615106b4ceb2c8aa4c75ff5da52c",
+  "lock_acquire_commit": "19f9941d0e2277a4c8bdefeaa9034b28cf16c522",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed": [
+    "trading/dispatch.py",
+    "trading/execution_ledger.py",
+    "trading/stop_loss_watcher.py",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "tests/test_buy_order_receipt_durability.py"
+  ],
+  "observed": "Existing synthetic KR/US executed/unknown strategy BUY test persists order_no 00001234 to ledger, checks unresolved BUY and rejects fill attribution; dispatcher records pending_buy=true for accepted BUY. Distinct failing broker-to-account stop activation transition not yet established.",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "latest_head_ci": "NOT_VERIFIED",
+  "exact_blocker": "No distinct failing Mock test established from existing equivalent coverage; Actions RED not run. No speculative code mutation.",
+  "next_exact_action": "Read remaining broker history attribution and per-account stop watcher activation paths; identify distinct missing transition, commit read-only failing test on Draft PR and observe Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
