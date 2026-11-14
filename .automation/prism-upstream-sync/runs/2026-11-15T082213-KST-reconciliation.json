@@ -1,0 +1,37 @@
+{
+  "run_id": "scheduled-20261115T082213-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "state_parent_before_acquire": "9dc49502d701fa66ad09eb8477b768a825730700",
+  "acquired_state_commit": "9ae4400b87b705213c15ae45f7ba91738ab80c28",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_test_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py": "e4805fd8254949ef597dc14a2e246fe3afdcedb7",
+    ".github/workflows/tests.yml": "68a5c2fc3a8edb72161eedb2eee29327922ed864"
+  },
+  "finding": "Confirmed existing synthetic tests cover strategy receipt persistence, KR/US, unknown/executed, multi-account, restart and partial-cancel evidence-only behavior. No distinct missing test proved; broker-authoritative fill to account-scoped stop activation remains unverified.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "latest_head_CI": {
+    "runs": [
+      43041452951
+    ],
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Read trading/dispatch.py, trading/execution_ledger.py, trading/stop_loss_watcher.py and account-scoped tracker activation tests at current PR HEAD; identify an uncovered broker-confirmed fill transition and commit test-first only if distinct."
+}
