@@ -1,0 +1,43 @@
+{
+  "run_id": "scheduled-20261114T202412-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "e4dc32bac12e791f530d40aaede0e823f4c43512",
+  "lock_acquire_commit": "43fefbfb001ef7ef8ffeedacc15d3d1b7ec69823",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed": [
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+      "lines": "680-1100"
+    },
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+      "lines": "1-350"
+    }
+  ],
+  "evidence_delta": "Confirmed watcher pending_buy blocks stop-triggered SELL even with positive aggregate holdings; ledger guard also blocks unresolved BUY. Existing strategy receipt tests cover KR/US single/multi account, queued and restart persistence. No new executable partial-fill-to-activation test or RED observation.",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "latest_head_ci": {
+    "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "runs": [
+      43041452951,
+      43041440961
+    ],
+    "status": "SUCCESS_EXISTING_HEAD_NOT_NEW_TEST"
+  },
+  "exact_blocker": "Account-specific broker-attributed partial-fill activation contract and existing activation test inventory not yet fully established; no speculative test commit.",
+  "next_exact_action": "Read tests covering StopLossTracker pending_buy clearance and ExecutionLedger record_read_only_buy_history, then add nonduplicate synthetic per-account partial-fill activation assertion and observe Actions RED before any production patch.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
