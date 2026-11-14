@@ -1,0 +1,57 @@
+{
+  "run_id": "scheduled-20261114T172047-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "5b702f96339fe1fccf3245e71c0f8184db2a725b",
+  "lock_acquire_commit": "83264a6baa6ee60eeb553456457b1c14cc6c73f2",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed": [
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+    },
+    {
+      "path": "tests/test_buy_order_receipt_durability.py",
+      "sha": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4"
+    },
+    {
+      "path": "trading/order_reconciliation.py",
+      "sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "sha": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490"
+    },
+    {
+      "path": "tests/test_pending_buy_stop_loss_safety.py",
+      "sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2"
+    }
+  ],
+  "observed": "Strategy BUY receipt existing synthetic coverage includes KR/US, accepted/unknown, noncanonical receipts, per-account isolation, queue/restart, pending stop protection. No novel failing transition established. GitHub Actions existing PR HEAD tests completed success (43041452951,43041440961), not new tests.",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "latest_head_ci": {
+    "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "runs": [
+      43041452951,
+      43041440961
+    ],
+    "status": "success"
+  },
+  "exact_blocker": "No distinct missing fail-closed transition proven from existing coverage; test-first RED cannot be safely claimed without a nonduplicate assertion. Full function bodies and account-specific activation transition remain unverified.",
+  "next_exact_action": "Read trading/order_reconciliation.py lines 248-673, trading/stop_loss_watcher.py lines 397-508 and 757-912, trading/dispatch.py lines 745-1080 and 1164-1238; map account-specific reconciliation-to-stop activation; write one nonduplicate read-only synthetic Mock test on Draft PR, observe Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
