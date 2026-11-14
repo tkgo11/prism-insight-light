@@ -1,0 +1,33 @@
+{
+  "run_id": "scheduled-20261115T021909-KST-reconciliation",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": "not independently determined",
+  "state_parent_before_acquire": "eaa7534503531887938554e71639ed93366b4e54",
+  "acquired_state_commit": "2c9612c11baf06d076b144faad042366807dca2d",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "read_only_files": [
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+    },
+    {
+      "path": "trading/order_reconciliation.py",
+      "sha": "not recorded"
+    }
+  ],
+  "findings": "Confirmed strategy BUY tests cover canonical/noncanonical order IDs, KR/US, synthetic multiaccount receipt isolation, queued execution, restart unresolved fence; broker order history remains explicitly NON-ACTIONABLE. No new distinct fail-closed assertion confirmed; no code/test write.",
+  "new_tests": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "latest_head_CI": "not reverified this run",
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No distinct uncovered executable assertion established from read-only review; not KIS or local DNS.",
+  "next_exact_action": "Inspect account-specific partial-fill activation in trading/order_reconciliation.py and stop_loss_watcher.py, establish a missing synthetic assertion, commit test to Draft PR #43 and observe Actions RED."
+}
