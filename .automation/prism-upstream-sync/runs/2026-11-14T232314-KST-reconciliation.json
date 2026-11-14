@@ -1,0 +1,29 @@
+{
+  "run_id": "scheduled-20261114T232314-KST-reconciliation",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "3fc7e04ed69a3716c3f4d5321e6cbb00d55f3c85",
+  "acquired_state_commit": "18cc3dd80663f67b5ed0f4fdd6a73ddefa5fb4a5",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_tests": [
+    "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "tests/test_buy_order_receipt_durability.py",
+    "tests/test_pending_buy_confirmed_tracker_cleanup.py",
+    "tests/test_pending_buy_stop_loss_safety.py",
+    "tests/test_stop_loss_account_selection.py"
+  ],
+  "finding": "Existing KR/US strategy receipt persistence and account isolation tests; per-account partial-fill confirmed stop activation not yet proven",
+  "latest_head_actions": [
+    43041452951,
+    43041440961
+  ],
+  "new_tests": 0,
+  "new_fixes": 0,
+  "attempted_reproductions": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No distinct uncovered test assertion established from reviewed files; production activation paths still need inspection. No speculative code changes.",
+  "next_exact_action": "Read trading/dispatch.py, trading/stop_loss_watcher.py, trading/execution_ledger.py and strategy partial matrix; add only uncovered per-account partial-fill confirmed-stop mock assertion on Draft PR #43, observe Actions RED."
+}
