@@ -1,0 +1,38 @@
+{
+  "run_id": "scheduled-20261114T162409-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "c2f34917351f00391751c05e7a8eb6345ff5fca2",
+  "lock_acquire_commit": "1c093710c0ccbbb5606c5ed865b812ce944bacd5",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed": [
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+    },
+    {
+      "path": "tests/test_pending_buy_stop_loss_safety.py",
+      "sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2"
+    },
+    {
+      "path": "trading/order_reconciliation.py",
+      "sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb"
+    }
+  ],
+  "observed": "Existing synthetic strategy BUY receipt tests cover canonical receipt persistence, invalid receipts, multi-account receipts and queued strategy BUY; pending stop tests cover restart, zero/positive balance, account partial acceptance and blocking unverified sell. Reconciliation code has order history matching and discovery. No distinct missing transition established in this run.",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "latest_head_ci": "NOT_VERIFIED",
+  "exact_blocker": "Existing equivalent coverage requires deeper end-to-end account-specific activation gap analysis before a nonduplicate failing Mock test can be safely authored; no test or Actions run in this execution.",
+  "next_exact_action": "Inspect read_order_history and discover_buy_order_candidates full logic alongside StopLossWatcher activation and dispatcher reconciliation call graph; identify a distinct missing fail-closed transition, then commit read-only test on Draft PR and observe Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
