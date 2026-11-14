@@ -1,0 +1,31 @@
+{
+  "run_id": "scheduled-20261114T131606-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "fc1a287fe1889c1abc8d930c891097c783057e46",
+  "lock_acquire_commit": "931a6f325d65edfe7967b02907540606f07a59a9",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "inspected_blobs": {
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/order_reconciliation.py": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4"
+  },
+  "coverage_observed": "Existing synthetic tests explicitly cover KR/US strategy BUY broker receipt persistence without fill attribution, and receipt durability after restart. Reviewed file headers and keyword locations; no new deterministic failing transition established.",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No distinct reproducible failing scenario established from partial source inspection; cannot safely introduce speculative test or product patch. Full function-level audit and latest CI verification remain pending.",
+  "next_exact_action": "Read full strategy BUY receipt/ledger/watcher activation functions and corresponding tests at PR HEAD; identify a distinct broker-attribution-to-stop-activation failing Mock transition before test-first commit.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
