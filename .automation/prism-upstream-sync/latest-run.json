@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261114T232314-KST-reconciliation",
+  "run_id": "scheduled-20261115T001816-KST-reconciliation",
   "status": "STALLED_COVERAGE_REVIEW",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-14T232314-KST-reconciliation.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-15T001816-KST-reconciliation.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Read trading/dispatch.py, trading/stop_loss_watcher.py, trading/execution_ledger.py and strategy partial matrix; add only uncovered per-account partial-fill confirmed-stop mock assertion on Draft PR #43, observe Actions RED."
+  "next_exact_action": "Inspect remaining strategy receipt provenance test and account-specific partial-fill stop activation tests; only commit uncovered fail-closed mock assertion on Draft PR #43, then observe Actions RED."
 }

@@ -1,0 +1,22 @@
+{
+  "run_id": "scheduled-20261115T001816-KST-reconciliation",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "new_tests": 0,
+  "code_fixes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN",
+  "related_passes": 0,
+  "full_passes": 0,
+  "read_only_evidence": [
+    "tests/test_strategy_buy_receipt_provenance_readonly.py c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_strategy_partial_matrix.py a57d37d6acf86f34b0334793d135a02af7d53d9f",
+    "trading/dispatch.py 1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/execution_ledger.py 9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py 1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  ],
+  "next_exact_action": "Inspect remaining strategy receipt provenance test and account-specific partial-fill stop activation tests; only commit uncovered fail-closed mock assertion on Draft PR #43, then observe Actions RED."
+}
