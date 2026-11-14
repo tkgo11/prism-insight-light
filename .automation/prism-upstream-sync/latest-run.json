@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261115T041832-KST-reconciliation",
+  "run_id": "scheduled-20261115T051920-KST-coverage",
   "status": "STALLED_COVERAGE_REVIEW",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-15T041832-KST-reconciliation.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-15T051920-KST-coverage.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect account-specific watcher activation and execution ledger attribution test matrix; if a distinct fail-closed gap is proven, add synthetic test to Draft PR #43 and observe Actions RED."
+  "next_exact_action": "Inspect trading/stop_loss_watcher.py and execution_ledger.py activation call graph against account-specific confirmed fills; add synthetic fail-closed test only for demonstrably uncovered transition."
 }
