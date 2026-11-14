@@ -1,0 +1,27 @@
+{
+  "run_id": "scheduled-20261115T062438-KST-watcher-review",
+  "status": "STALLED_READ_ONLY_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent_before_acquire": "ec998abee6e3e775b4d28cbbf3374b7fd7514a52",
+  "acquired_state_commit": "121657dd7480a91ed689e6c2b16c0d90582f5845",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "read_only_files": {
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711"
+  },
+  "finding": "Watcher blocks automatic SELL for pending_buy even with positive aggregate holdings. Ledger distinguishes broker receipt from fills. Activation provenance across broker-to-ledger-to-watcher is not proven; no safe distinct RED assertion established.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "latest_head_CI": "NOT_REVALIDATED",
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Trace stop-loss pending_buy transition from strategy BUY receipt through account-scoped confirmed broker fill and tracker mutation; compare tests before adding read-only synthetic fail-closed assertion."
+}

@@ -1,9 +1,11 @@
 {
   "run_id": "scheduled-20261115T062438-KST-watcher-review",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "acquired_expected_state_parent": "ec998abee6e3e775b4d28cbbf3374b7fd7514a52",
   "expected_pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
   "expected_main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "released_by_run_id": "scheduled-20261115T062438-KST-watcher-review",
+  "release_expected_state_parent": "121657dd7480a91ed689e6c2b16c0d90582f5845",
   "kis_calls": 0,
   "real_orders": 0
 }
