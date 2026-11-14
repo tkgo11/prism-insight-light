@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261115T032527-KST-reconciliation",
+  "run_id": "scheduled-20261115T041832-KST-reconciliation",
   "status": "STALLED_COVERAGE_REVIEW",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-15T032527-KST-reconciliation.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-15T041832-KST-reconciliation.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Read remaining watcher account-specific activation methods and reconciliation test matrix; add only a proven missing synthetic fail-closed assertion to Draft PR #43, then observe GitHub Actions RED."
+  "next_exact_action": "Inspect account-specific watcher activation and execution ledger attribution test matrix; if a distinct fail-closed gap is proven, add synthetic test to Draft PR #43 and observe Actions RED."
 }

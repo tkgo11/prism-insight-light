@@ -1,0 +1,44 @@
+{
+  "run_id": "scheduled-20261115T041832-KST-reconciliation",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": "not independently determined",
+  "state_parent_before_acquire": "7e82a6419e80438c7ffc0c914eeae2f48c182b51",
+  "acquired_state_commit": "ac3febabd488ca3a84e7dcf3163ace76d0281f3c",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "read_only_files": [
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+      "inspected_lines": "690-910"
+    },
+    {
+      "path": "trading/order_reconciliation.py",
+      "sha": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb"
+    },
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+    }
+  ],
+  "findings": "Existing KR/US, accepted/UNKNOWN, multiaccount, queued strategy receipt assertions already exist. Watcher pending_buy blocks SELL even on positive aggregate holding; single-account trader uses dispatcher account selectors; multiaccount watcher uses aggregate trader. Account-specific activation and fill attribution remain unverified; no independent missing assertion established. No test or code write.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "latest_head_CI": {
+    "run_id": 43041452951,
+    "status": "completed",
+    "conclusion": "success",
+    "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No proven distinct missing assertion from read-only inspection; do not fabricate RED or patch. KIS integration not attempted.",
+  "next_exact_action": "Inspect account-specific watcher activation and execution ledger attribution test matrix; if a distinct fail-closed gap is proven, add synthetic test to Draft PR #43 and observe Actions RED."
+}
