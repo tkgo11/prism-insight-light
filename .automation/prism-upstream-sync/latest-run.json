@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261114T081731-KST-core-risk",
+  "run_id": "scheduled-20261114T091628-KST-core-risk",
   "status": "STALLED_COVERAGE_REVIEW",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-14T081731-KST-core-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-14T091628-KST-core-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect existing history correlation tests and full dispatcher-to-ledger-to-watcher call sites at PR #43 head; identify unique deterministic fail-closed test, commit test-only to Draft PR with CAS and observe Actions RED"
+  "next_exact_action": "Read complete strategy-to-watcher call graph and remaining reconciliation tests; isolate a genuinely uncovered fail-closed transition, then CAS commit a test-only PR change and observe Actions baseline RED"
 }

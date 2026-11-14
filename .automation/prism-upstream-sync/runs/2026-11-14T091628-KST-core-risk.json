@@ -1,0 +1,41 @@
+{
+  "run_id": "scheduled-20261114T091628-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "c0d289ce1788c6cb4301e8a79b23bc9c409f59c7",
+  "lock_acquire_commit": "56526269810c10cf951119b9485d6f50335d7190",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "latest_head_CI": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "read_files": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "tests/test_readonly_buy_history_evidence_durability.py": "3d96c5f35c95294c06016a5d3938dc26589d63ef",
+    "tests/test_stop_loss_account_selection.py": "f3e992bb83678d3c60d920f7ec36816f98820ca4",
+    ".github/workflows/tests.yml": "68a5c2fc3a8edb72161eedb2eee29327922ed864"
+  },
+  "coverage_observed": "Existing synthetic KR/US strategy receipt durability, unknown/executed, multi-account, restart, history evidence and watcher account-selection tests; end-to-end broker-attributed fill-to-account-specific stop activation not proven",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "baseline_fail_observed": false,
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No unique deterministic nonduplicate test or demonstrated product defect established after focused existing-test inspection; no safe test-only commit made",
+  "next_exact_action": "Read complete strategy-to-watcher call graph and remaining reconciliation tests; isolate a genuinely uncovered fail-closed transition, then CAS commit a test-only PR change and observe Actions baseline RED",
+  "kis_calls": 0,
+  "real_orders": 0
+}
