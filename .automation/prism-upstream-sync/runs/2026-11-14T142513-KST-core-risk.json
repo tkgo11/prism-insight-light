@@ -1,0 +1,31 @@
+{
+  "run_id": "scheduled-20261114T142513-KST-core-risk",
+  "status": "STALLED_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "36822d6dbef8510c22b45811c603b94bc5f48ba4",
+  "lock_acquire_commit": "f8f7d281d6c29d558d17eaeb22bbc27749870749",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed": [
+    "trading/dispatch.py",
+    "trading/execution_ledger.py",
+    "trading/stop_loss_watcher.py",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "tests/test_buy_order_receipt_durability.py"
+  ],
+  "observed": "Strategy BUY receipt is persisted through dispatch into ledger, including queued and multi-account synthetic coverage. Receipt alone is explicitly not fill proof. Watcher marks accepted BUY as pending_buy, not broker-confirmed fill. No distinct failing transition proven.",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "latest_head_ci": "NOT_VERIFIED: Actions branch query returned no runs; no new commit",
+  "exact_blocker": "Existing equivalent receipt persistence tests already present; no independently established new failing broker-attribution-to-stop-activation transition. No speculative mutation.",
+  "next_exact_action": "Inspect complete strategy broker result classifier and per-account watcher activation contract, then add only a distinct read-only failing Mock test on Draft PR and verify RED via Actions.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
