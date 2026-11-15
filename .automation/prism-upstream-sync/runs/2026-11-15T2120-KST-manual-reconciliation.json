@@ -1,0 +1,43 @@
+{
+  "run_id": "manual-20261115T2120-KST-reconciliation",
+  "status": "STALLED_CORE_RISK_READ_ONLY_DIAGNOSIS",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before_acquire": "6d15373af29dbe3ab8b7fe2e5e8252df4d4b6448",
+  "acquired_state_commit": "b8a34766b2af4823f0142485e787504888f34159",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "diagnosis": {
+    "failing_workflow_run": 43713177270,
+    "failed_job": 132809001682,
+    "branch": "automation/prism-insight-sync-state",
+    "summary": "633 passed, 3 failed due stale hard-coded 2026-10-17 Telegram test timestamp in state branch",
+    "state_fixture_blob": "15e35bfaea9cd7e7c811f3f4369f01fe0d2edfc7",
+    "pr_fixture_blob": "a2f30413b66c9fdf71b350b56af3cc001b431669",
+    "pr_fixture_already_uses_dynamic_utc_now": true,
+    "pr_head_prior_workflow_run": 43041452951,
+    "pr_head_prior_workflow_conclusion": "success",
+    "interpretation": "State branch workflow failures are not PR-head failures. State branch contains older code and should not be conflated with Draft PR."
+  },
+  "core_review": {
+    "files": [
+      "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py",
+      "tests/test_readonly_broker_account_scope_provenance.py",
+      "trading/order_reconciliation.py"
+    ],
+    "existing_coverage": "KR/US synthetic broker receipt and multi-account partial-fill/cancel evidence-only; never activates stop",
+    "remaining_gap": "broker-authoritative durable fill attribution and account-scoped stop-loss activation remains unverified",
+    "attempted_reproductions": 0,
+    "new_tests": 0,
+    "code_fixes": 0,
+    "candidate_count": 0,
+    "baseline_fail_observed": false
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "exact_blocker": "No distinct test-first core failure reproduced in this manual slot; state-branch pytest failures stem from outdated fixed-date fixture, not current Draft PR.",
+  "next_exact_action": "Inspect missing broker-authoritative ledger reconciliation transitions; add nonduplicative synthetic read-only test to Draft PR #43 and verify RED on exact PR HEAD; keep state branch metadata-only and inspect PR-head CI separately."
+}
