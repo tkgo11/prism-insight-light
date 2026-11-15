@@ -1,0 +1,62 @@
+{
+  "run_id": "scheduled-20261116T0721-KST-provenance",
+  "status": "STALLED_CORE_RISK_EXISTING_COVERAGE_NO_NEW_REPRODUCTION",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "state_parent": "d00be37c388548f35f255966c33949babf97bddb",
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_THIS_SLOT",
+  "code_fix_commit": null,
+  "latest_head_CI": {
+    "id": 43041452951,
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "historical_existing_run": true
+  },
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "verified_paths": [
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+      "observation": "_durable_buy_receipt persists order_no only; strategy result order_no flows to ledger; BUY accepted is tracked pending_buy, not verified fill"
+    },
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "blob_sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+      "observation": "KR/US executed/unknown strategy acceptance, durable order number, read-only history, no fill attribution; existing coverage"
+    },
+    {
+      "path": "tests/test_unknown_buy_receipt_date_reuse_readonly.py",
+      "blob_sha": "63b9963d2c3fb02713624a379ca756661484ae00",
+      "observation": "date reuse, two-page partial fills, restart and non-actionable evidence already covered"
+    },
+    {
+      "path": "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py",
+      "blob_sha": "e4805fd8254949ef597dc14a2e246fe3afdcedb7",
+      "observation": "KR/US partial cancel, residual contradiction, duplicate fill IDs and account scope already covered"
+    }
+  ],
+  "unverified_transitions": [
+    "authenticated broker acceptance date and execution ID captured at producer",
+    "broker-authoritative order-to-fill attribution",
+    "account-specific automatic stop activation after independently verified fill",
+    "KIS demo integration"
+  ],
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "No distinct untested fail-closed transition established from inspected code; existing coverage cannot be counted as new RED/GREEN. No Mock Actions dispatch this slot.",
+  "evidence_delta": "Confirmed exact dispatch acceptance receipt contains order_no only and lacks authenticated order date or fill ID; corroborated existing tests for date reuse and partial cancellation.",
+  "next_exact_action": "Inspect actual KR/US broker response parsing and strategy execution_from_result to determine whether an authenticated acceptance-date or execution identifier is available and dropped; only then add a distinct read-only Mock RED test, never activate stop or infer fills.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
