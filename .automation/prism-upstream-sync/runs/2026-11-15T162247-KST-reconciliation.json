@@ -1,0 +1,45 @@
+{
+  "run_id": "scheduled-20261115T162247-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before_acquire": "fb23c1fb91561a466558f437dc6c750f6642f855",
+  "acquired_state_commit": "2394f91e3fd6531bbc1f92742bd5b0a9b015f7f8",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    ".github/workflows/tests.yml": "68a5c2fc3a8edb72161eedb2eee29327922ed864"
+  },
+  "existing_coverage": "Synthetic strategy BUY receipt durability, KR/US, unknown/executed, multi-account and queue confirmed by static test reading; no new runtime assertion.",
+  "latest_head_CI": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "unverified_transitions": [
+    "broker partial-fill attribution",
+    "account-specific stop activation",
+    "cancel/remainder and restart"
+  ],
+  "exact_blocker": "No distinct test authored; existing coverage inspected but synthetic partial-fill watcher contract not yet fully mapped. No product defect established.",
+  "next_exact_action": "Read stop_loss_watcher pending_buy activation and execution_ledger read-only history attribution methods end-to-end; author distinct KR/US multi-account synthetic partial-fill activation regression test on Draft PR #43 and observe Actions RED."
+}
