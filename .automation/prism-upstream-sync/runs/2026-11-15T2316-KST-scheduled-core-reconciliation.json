@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "run_id": "scheduled-20261115T2316-KST-core-reconciliation",
+  "status": "STALLED_CORE_RISK_READ_ONLY_DIAGNOSIS",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": "not_verified",
+  "state_parent_before_acquire": "0c258735e3ffaf1edc9b1e56bdb9fa7597908ba3",
+  "lock_acquire_commit": "c3610d74203d285b2d3907ef2d069e135e86903e",
+  "pr": 43,
+  "pr_head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "ci": {
+    "run_id": 43041452951,
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "conclusion": "success",
+    "verified_via": "mcp__GitHub__fetch_commit_workflow_runs"
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "existing code and historical CI verified; no new mock execution",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "evidence_delta": {
+    "files_read": [
+      "trading/dispatch.py",
+      "trading/execution_ledger.py",
+      "trading/stop_loss_watcher.py",
+      "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "tests/test_buy_order_receipt_durability.py",
+      "tests/test_readonly_broker_account_scope_provenance.py",
+      "tests/test_pending_buy_stop_loss_safety.py",
+      "tests/test_unknown_buy_missing_execution_id_bound.py",
+      ".github/workflows/tests.yml"
+    ],
+    "confirmed": "strategy order_no is preserved for single and multi-account mock flows; order receipt does not prove fill; watcher pending_buy remains fail-closed; no proven broker-date and execution-id attribution activation path"
+  },
+  "unverified_transitions": [
+    "broker-verified order-date and execution-id linkage to strategy receipt",
+    "partial fill/cancel/remainder to account-specific stop activation",
+    "restart durable authenticated fill activation"
+  ],
+  "exact_blocker": "No proven safe product defect from read-only review; existing tests cover receipt persistence and history-only attribution, and current contract deliberately denies stop activation. New failing test requires verified activation specification and nonduplicative scenario; no speculative change made.",
+  "next_exact_action": "Inspect strategy-to-broker acceptance metadata and reconcile broker order date, execution ID and account scope against durable intent; add nonduplicative mock-only failing test with explicit safe activation contract before any product patch.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
