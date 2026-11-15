@@ -1,0 +1,29 @@
+{
+  "run_id": "scheduled-20261115T211756-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before_acquire": "54541172b93db18d8ad61cd3d09b85b5e70f674e",
+  "acquired_state_commit": "a9388232e32527cebcd848445048eab2c4e84099",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "evidence_delta": "Confirmed existing strategy BUY receipt persistence tests cover KR/US executed and unknown, invalid IDs, multi-account isolation, queue and restart; watcher tests cover pending BUY protection. No new distinct failing transition established.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "mock_result": "NO_NEW_MOCK_RUN",
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "exact_blocker": "No justified nonduplicative executable scenario identified from reviewed tests; no RED run.",
+  "next_exact_action": "Inspect broker-to-ledger partial-fill account-scoped reconciliation contract and existing history tests, identify uncovered executable transition, add synthetic read-only test on Draft PR #43 and observe Actions RED."
+}
