@@ -1,11 +1,9 @@
 {
-  "run_id": "scheduled-20261116T0222-KST-core-reconciliation",
-  "status": "RELEASED",
-  "acquired_expected_state_parent": "0e4dbae6cce5fef09082891e1c651185e7183cf4",
+  "run_id": "scheduled-20261116T0315-KST-core-recovery",
+  "status": "ACTIVE",
+  "acquired_expected_state_parent": "5eff62e263e7285c6c83d4676a85f08e148120bf",
   "expected_pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
   "expected_main_head": "d0a4d420bdd199a576a447788c704053b6550067",
   "kis_calls": 0,
-  "real_orders": 0,
-  "released_by_run_id": "scheduled-20261116T0222-KST-core-reconciliation",
-  "release_expected_state_parent": "14a9f3d9fcabfe04d066174184f6d93c60616088"
+  "real_orders": 0
 }
