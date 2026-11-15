@@ -1,0 +1,29 @@
+{
+  "run_id": "scheduled-20261115T142345-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "state_parent_before_acquire": "db22d747f3b1fb55ff6a67242789db9d2f2d19bb",
+  "acquired_state_commit": "ea8f8747fd849b4c31fa578146f2d5ecf2c1e62e",
+  "reviewed_blobs": {
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_stop_loss_account_selection.py": "f3e992bb83678d3c60d920f7ec36816f98820ca4"
+  },
+  "finding": "Existing tests guard pending BUY and persist strategy receipt but do not establish broker-authoritative partial fill activation in account-specific watcher. No new test committed or run.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "latest_head_CI": "NOT_REVALIDATED_THIS_RUN",
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Inspect trading/stop_loss_watcher.py and execution ledger account-scoped reconciliation APIs; author distinct synthetic partial-fill stop activation test on Draft PR #43 and observe RED Actions."
+}
