@@ -1,0 +1,37 @@
+{
+  "run_id": "scheduled-20261115T102004-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent_before_acquire": "a87122ad9856cdd4faac305e5c3e227f44c03d17",
+  "acquired_state_commit": "2abee7152524b7fa1692f82592fdf5c2070a664f",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "read_paths": [
+    "trading/dispatch.py",
+    "trading/execution_ledger.py",
+    "trading/stop_loss_watcher.py",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py",
+    "tests/test_buy_order_receipt_durability.py"
+  ],
+  "finding": "Existing tests demonstrate strategy BUY order receipt durable evidence, unresolved fill attribution, and account-scoped receipts. No distinct missing test proven in this run; broker-authoritative fill to account-scoped stop activation remains unverified.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "latest_head_CI": {
+    "runs": [
+      43041452951
+    ],
+    "conclusion": "success",
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Inspect broker fill attribution reconciliation and account-specific stop activation tests at PR #43 HEAD; add a distinct read-only mock regression test only after demonstrating a missing transition."
+}
