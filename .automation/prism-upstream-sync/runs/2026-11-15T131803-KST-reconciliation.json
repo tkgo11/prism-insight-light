@@ -1,0 +1,36 @@
+{
+  "run_id": "scheduled-20261115T131803-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "state_parent_before_acquire": "940d5478f5cd3ee5aa5cd0472b31c6e6e231c9b1",
+  "acquired_state_commit": "c5c7637a21e35ba3a5ebcb6cd74af27faff44ed1",
+  "reviewed_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "finding": "Confirmed existing synthetic broker receipt persistence and account separation tests; no distinct new executable reproduction produced. Account-scoped stop activation after broker-authoritative partial fill remains unverified.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "baseline_fail_observed": false,
+  "latest_head_CI": "NOT_REVALIDATED_THIS_RUN",
+  "unverified_transitions": [
+    "broker fill attribution by account/order/date",
+    "partial/cancel remaining quantities",
+    "account-scoped stop activation after confirmed fill"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Inspect reconciliation functions and existing stop-loss tests, write a distinct synthetic account-scoped partial-fill stop-activation regression on Draft PR #43, then observe GitHub Actions RED before implementation."
+}
