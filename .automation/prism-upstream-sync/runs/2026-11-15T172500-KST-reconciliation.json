@@ -1,0 +1,38 @@
+{
+  "run_id": "scheduled-20261115T172500-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before_acquire": "8ba480ac3ed9579f0fdbe3221f248117a8d0e58d",
+  "acquired_state_commit": "35673e8941be30e434f28cf8fd99acebd553826d",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py": "e4805fd8254949ef597dc14a2e246fe3afdcedb7"
+  },
+  "evidence_delta": "Verified strategy receipt persisted for KR/US executed and unknown, two-account distinct order IDs, queue, and restart; existing partial-cancel history tests retain can_activate_stop=false and account scopes; watcher pending_buy tests prohibit aggregate holdings as proof. No novel failing scenario proven.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "latest_head_CI": "NOT_RECHECKED_THIS_RUN",
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "unverified_transitions": [
+    "broker-to-watcher per-account activation after attributed partial fill",
+    "cancel/remainder activation",
+    "restart activation with durable per-account evidence"
+  ],
+  "exact_blocker": "Read-only inspection completed; no distinct executable regression authored or Actions run; product defect not established.",
+  "next_exact_action": "Inspect stop_loss_watcher pending_buy activation path and execution_ledger record_read_only_buy_history, design a non-duplicate synthetic multi-account partial-fill activation test, commit only after revalidating PR HEAD and CAS, observe Actions RED."
+}
