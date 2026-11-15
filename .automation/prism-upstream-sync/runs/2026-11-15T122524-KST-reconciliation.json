@@ -1,0 +1,36 @@
+{
+  "run_id": "scheduled-20261115T122524-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "state_parent_before_acquire": "f6b9d9f704d7eba4562db292a409a23dd0178663",
+  "acquired_state_commit": "d84a150490772de25490a6076804555a439b06df",
+  "reviewed_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "finding": "Read existing receipt provenance and durability tests and dispatch/watcher implementation indexes; no nonduplicative executable regression established. Broker-authoritative fill attribution and account-scoped stop activation remain unverified.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "baseline_fail_observed": false,
+  "latest_head_CI": "NOT_REVALIDATED_THIS_RUN",
+  "unverified_transitions": [
+    "broker fill attribution to account/order/date",
+    "partial/cancel remaining quantities",
+    "account-scoped stop activation after confirmed fill"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Inspect broker reconciliation implementation and tests at PR #43 HEAD, then add a distinct read-only fail-closed partial-fill account-scoped stop activation test and observe Actions RED."
+}
