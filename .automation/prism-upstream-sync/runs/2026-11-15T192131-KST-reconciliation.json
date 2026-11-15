@@ -1,0 +1,41 @@
+{
+  "run_id": "scheduled-20261115T192131-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before_acquire": "6ac935ac42fc507035a2fd274158f1548d072eb2",
+  "acquired_state_commit": "3abe3cbc4db973be719413ec62742803eb41a163",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "evidence_delta": "Fresh state HEAD correctly parsed from git/ref object.sha; CAS lock acquired. Existing synthetic strategy receipt tests explicitly cover KR/US, executed/unknown, canonical receipt, ledger persistence and restart, multiaccount; pending watcher tests block sales without proof. No new synthetic per-account partial-fill-to-activation test was committed or executed.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NO_NEW_MOCK_RUN",
+  "latest_head_CI": {
+    "id": 43041452951,
+    "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "conclusion": "success"
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "unverified_transitions": [
+    "per-account broker-attributed partial fill to watcher activation",
+    "cancel/remainder activation",
+    "restart activation with durable evidence"
+  ],
+  "exact_blocker": "Read-only review did not establish a distinct executable test; no code write or RED baseline performed. This is incomplete progress, not a GitHub or KIS blocker.",
+  "next_exact_action": "Inspect the full existing per-account broker reconciliation tests and ledger/watcher activation API, add a non-duplicative synthetic KR/US per-account partial-fill activation test to Draft PR #43 under CAS, observe Actions RED before implementation changes."
+}
