@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "run_id": "scheduled-20261116T0018-KST-core-reconciliation",
+  "status": "STALLED_CORE_RISK_READ_ONLY_DIAGNOSIS",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": "not_verified",
+  "pr": 43,
+  "pr_head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "ci": {
+    "run_id": 43041452951,
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "conclusion": "success",
+    "verified_current_run": true,
+    "run_updated_at": "2026-11-11T14:46:37Z"
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_THIS_RUN; existing tests inspected",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "evidence_delta": {
+    "file_sha": {
+      "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+      "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+      "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+      "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+      "tests/test_readonly_broker_account_scope_provenance.py": "5c4ea215a1131a5997d551455a5c9b972dff91b8"
+    },
+    "finding": "Existing KR/US strategy acceptance order number persistence and read-only account-scoped history tests are present; even matching history deliberately refuses stop activation; no safe authenticated fill activation contract verified."
+  },
+  "unverified_transitions": [
+    "broker-authenticated order-date/execution-id linkage",
+    "partial fill/cancel/remainder -> per-account stop activation",
+    "restart and durable authenticated fill attribution"
+  ],
+  "exact_blocker": "No nonduplicative failing product scenario safely specified from inspected contract; tests were not committed or run; mock verification remains incomplete, not blocked by KIS credentials.",
+  "next_exact_action": "Inspect broker order acceptance response schemas and order reconciliation adapter, then add a nonduplicative fail-closed mock test exercising authenticated date/execution provenance without live orders; observe Actions RED before product fix.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
