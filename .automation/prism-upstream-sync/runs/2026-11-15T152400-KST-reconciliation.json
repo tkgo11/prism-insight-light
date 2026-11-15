@@ -1,0 +1,36 @@
+{
+  "run_id": "scheduled-20261115T152400-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": "not independently established",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "state_parent_before_acquire": "cf6273cf4ecc00bf4732477da556c396ea1da826",
+  "acquired_state_commit": "853946783c93a18560f1225b437d163cc6202dd0",
+  "reviewed_blobs": {
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+  },
+  "finding": "Existing strategy BUY tests cover KR/US, accepted/unknown broker order IDs, durable ledger, multi-account, queued dispatch, and fail-closed no-fill inference. Partial-fill broker attribution and per-account stop activation remain unverified. No new test committed or run.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "latest_head_CI": "NOT_REVALIDATED_THIS_RUN",
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "unverified_transitions": [
+    "broker partial-fill attribution",
+    "account-specific stop activation",
+    "cancel/remainder and restart"
+  ],
+  "exact_blocker": "No new executable test was authored in this run; read-only inspection did not establish a product defect.",
+  "next_exact_action": "Inspect watcher activation and ledger attribution contract, add distinct synthetic partial-fill activation test to Draft PR #43; observe Actions RED."
+}
