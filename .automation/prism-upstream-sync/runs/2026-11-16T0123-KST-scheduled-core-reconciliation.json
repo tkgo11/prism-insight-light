@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "run_id": "scheduled-20261116T0123-KST-core-reconciliation",
+  "status": "STALLED_CORE_RISK_READ_ONLY_DIAGNOSIS",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent_before_lock": "878a851a1063d42af3898a37c84377838aeabeb3",
+  "lock_acquire_commit": "fb563c29d609225b07b05f46b812cec3c3a931f2",
+  "pr": 43,
+  "pr_head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "ci": {
+    "run_id": 43041452951,
+    "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+    "conclusion": "success",
+    "verified_current_run": true
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_THIS_RUN; existing tests inspected",
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "evidence_delta": {
+    "files": {
+      "tests/test_buy_order_receipt_durability.py": "be937a10e850989d0ab72d5c9f65ce2a69fd76c4",
+      "tests/test_readonly_broker_account_scope_provenance.py": "5c4ea215a1131a5997d551455a5c9b972dff91b8",
+      "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+      "trading/order_reconciliation.py": "24fde04ed5b731b699a5b6c4f3f4b38fc3ae52bb"
+    },
+    "finding": "Strategy receipt persistence and KR/US account-scoped history tests exist; history intentionally never authorizes stop activation."
+  },
+  "unverified_transitions": [
+    "authenticated order-date/execution-ID provenance",
+    "partial fill/cancel/remainder to per-account stop activation",
+    "durable fill attribution after restart"
+  ],
+  "exact_blocker": "No nonduplicative safe product-failing mock specified or committed; not KIS or GitHub permission failure.",
+  "next_exact_action": "Inspect broker acceptance date provenance and reconciliation adapter; design nonduplicative read-only KR/US mock asserting authenticated order-date/execution provenance and no unauthorized stop activation; test-first Actions RED.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
