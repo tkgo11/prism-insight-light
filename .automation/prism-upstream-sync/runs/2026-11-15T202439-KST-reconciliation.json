@@ -1,0 +1,30 @@
+{
+  "run_id": "scheduled-20261115T202439-KST-reconciliation",
+  "status": "STALLED_READ_ONLY_COVERAGE_REVIEW",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before_acquire": "65e4115de9b83cb530c87ab940a3f049984f1bba",
+  "acquired_state_commit": "fa80052c0b6a6bf97923feedeb4dab2a366e1b95",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_blobs": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "tests/test_unknown_buy_receipt_history_partial_cancel_readonly.py": "e4805fd8254949ef597dc14a2e246fe3afdcedb7",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3"
+  },
+  "evidence_delta": "Confirmed current state HEAD from git/ref object.sha and acquired lease by CAS; inspected existing strategy receipt KR/US and multi-account tests, watcher pending-buy fencing tests, and partial-cancel replay tests. No novel failing case committed or run.",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "new_tests": 0,
+  "mock_result": "NO_NEW_MOCK_RUN",
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "exact_blocker": "Coverage review did not yet yield a justified non-duplicative executable test; baseline RED and Actions were not run.",
+  "next_exact_action": "Inspect detailed strategy receipt and watcher activation contracts for an uncovered KR/US per-account partial-fill transition, then commit a synthetic read-only test to Draft PR #43 after fresh CAS validation and observe Actions RED."
+}
