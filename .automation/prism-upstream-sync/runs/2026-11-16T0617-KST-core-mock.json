@@ -1,0 +1,42 @@
+{
+  "run_id": "scheduled-20261116T0617-KST-core-mock",
+  "status": "STALLED_CORE_RISK_EXISTING_EQUIVALENT_COVERAGE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "prior_stalled_count": null,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_THIS_SLOT",
+  "new_tests": 0,
+  "new_fixes": 0,
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "verified_existing_coverage": [
+    "tests/test_strategy_buy_receipt_provenance_readonly.py: strategy receipt persisted and remains unverified KR/US and multi-account",
+    "tests/test_readonly_broker_account_scope_provenance.py: synthetic two-page KR/US partial and cancel E1/E2, account scope, ledger evidence, watcher blocks SELL"
+  ],
+  "unverified_transitions": [
+    "broker-authenticated order date and execution ID attributable to original strategy BUY",
+    "account-specific automatic stop activation after confirmed fill"
+  ],
+  "latest_head_ci": [
+    {
+      "id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "exact_blocker": "Existing test already covers read-only partial/cancel history-to-watcher; no distinct safe failing test established in this slot, so avoid duplicate or fabricated RED",
+  "next_exact_action": "Inspect whether broker order acceptance captures authenticated order date and execution identifiers; design a genuinely distinct read-only negative regression only if absent; never promote history to fill proof or call KIS",
+  "state_lock_release": "RELEASED",
+  "kis_calls": 0,
+  "real_orders": 0
+}

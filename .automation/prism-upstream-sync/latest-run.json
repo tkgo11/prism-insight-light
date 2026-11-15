@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261116T0525-KST-core-mock",
-  "status": "STALLED_CORE_RISK_EXISTING_COVERAGE_REVIEWED",
+  "run_id": "scheduled-20261116T0617-KST-core-mock",
+  "status": "STALLED_CORE_RISK_EXISTING_EQUIVALENT_COVERAGE",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-16T0525-KST-core-mock.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-16T0617-KST-core-mock.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect existing _inquire fixture and StopLossWatcher interfaces, create one distinct read-only synthetic KR/US partial/cancel history-to-watcher regression on Draft PR #43, observe Actions baseline RED; never call KIS"
+  "next_exact_action": "Inspect whether broker order acceptance captures authenticated order date and execution identifiers; design a genuinely distinct read-only negative regression only if absent; never promote history to fill proof or call KIS"
 }
