@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261116T0315-KST-core-recovery",
-  "status": "STALLED_CORE_RISK_EXISTING_COVERAGE_REVIEWED",
+  "run_id": "scheduled-20261116T0416-KST-core-recovery",
+  "status": "STALLED_CORE_RISK_COVERAGE_REVIEWED_NO_NEW_TEST",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-16T0315-KST-core-recovery.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-16T0416-KST-core-recovery.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Read existing strategy receipt and partial-cancel fixture contracts together; add one genuinely new synthetic strategy-to-history-to-stop fail-closed integration test on Draft PR #43 and observe baseline Actions outcome; do not infer actual fill or activate stops."
+  "next_exact_action": "Read order-history and watcher fixture contracts; construct one genuinely nonduplicate KR/US synthetic strategy receipt -> history partial/cancel -> ledger -> watcher fail-closed test, commit to Draft PR #43 and inspect baseline Actions RED/GREEN without KIS calls"
 }

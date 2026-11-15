@@ -1,0 +1,65 @@
+{
+  "run_id": "scheduled-20261116T0416-KST-core-recovery",
+  "status": "STALLED_CORE_RISK_COVERAGE_REVIEWED_NO_NEW_TEST",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": "at least 1; precise count unverified",
+  "state_parent": "0777b227e6f2f3ea52a18854081b98fa526c953c",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "latest_head_CI": [
+    {
+      "run_id": 43041452951,
+      "conclusion": "success"
+    },
+    {
+      "run_id": 43041440961,
+      "conclusion": "success"
+    }
+  ],
+  "files_read": [
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "blob_sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+    },
+    {
+      "path": "tests/test_pending_buy_stop_loss_safety.py",
+      "blob_sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2"
+    },
+    {
+      "path": "tests/test_strategy_partial_matrix.py",
+      "blob_sha": "a57d37d6acf86f34b0334793d135a02af7d53d9f"
+    },
+    {
+      "path": "tests/test_readonly_history_replay_order_independence.py",
+      "blob_sha": "da4b868389dd5d4fc599303c568313b4fced95d7"
+    },
+    {
+      "path": "trading/execution_ledger.py"
+    }
+  ],
+  "observations": [
+    "Strategy BUY canonical order receipt persisted and guarded for KR/US, unknown/executed, multi-account, queue; existing tests",
+    "History replay ordering dedupe KR/US tested in existing fixture; no fill or stop authorization",
+    "No newly established nonduplicate test expectation or product defect"
+  ],
+  "attempted_reproductions": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW; existing latest HEAD CI success is not a new test",
+  "candidate_count": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "complete_related_files": "0 newly; denominator not established",
+  "complete_all_files": "0 newly; denominator not established",
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "strategy receipt to authenticated order date and execution identity",
+    "partial/cancel/remaining to account-specific stop activation"
+  ],
+  "exact_blocker": "No new test committed or dispatched; existing adjacent tests already cover receipt and history separately; end-to-end fixture not completed",
+  "next_exact_action": "Read order-history and watcher fixture contracts; construct one genuinely nonduplicate KR/US synthetic strategy receipt -> history partial/cancel -> ledger -> watcher fail-closed test, commit to Draft PR #43 and inspect baseline Actions RED/GREEN without KIS calls",
+  "kis_calls": 0,
+  "real_orders": 0
+}
