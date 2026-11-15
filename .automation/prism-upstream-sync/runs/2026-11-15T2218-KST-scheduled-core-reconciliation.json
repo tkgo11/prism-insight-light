@@ -1,0 +1,40 @@
+{
+  "run_id": "scheduled-20261115T2218-KST-core-reconciliation",
+  "status": "STALLED_CORE_RISK_READ_ONLY_DIAGNOSIS",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before_acquire": "084b94a60b658986d44c51b65b3c9d2ea37e212e",
+  "acquired_state_commit": "736fad605b84c02491c91cc09214aa5a9dc25686",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "latest_head_ci": {
+    "run_id": 43041452951,
+    "status": "completed",
+    "conclusion": "success",
+    "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+  },
+  "new_evidence": {
+    "files_read": [
+      "tests/test_buy_order_receipt_durability.py",
+      "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "tests/test_readonly_buy_history_evidence_durability.py",
+      "tests/test_unresolved_buy_without_stop_loss.py",
+      "trading/execution_ledger.py",
+      "trading/stop_loss_watcher.py"
+    ],
+    "strategy_receipt_persistence": "existing KR/US tests verify canonical order receipt persisted after strategy dispatch",
+    "read_only_history": "existing KR/US tests persist partial fill, cancel, execution id and account-scoped snapshots after restart, always evidence-only",
+    "remaining_gap": "No authenticated broker acceptance date/execution provenance or automatic per-account stop-loss activation; intentionally fail-closed",
+    "baseline_fail_observed": false,
+    "attempted_reproductions": 0,
+    "new_tests": 0,
+    "code_fixes": 0,
+    "candidate_count": 0
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "kis_calls": 0,
+  "real_orders": 0,
+  "exact_blocker": "Existing read-only evidence tests cover candidate cases; no validated nonduplicate executable assertion for automatic activation without broker-authenticated provenance, so unsafe synthetic RED was not committed.",
+  "next_exact_action": "Inspect broker acceptance metadata and strategy producer provenance; construct nonduplicative safe synthetic test for authenticated date/execution attribution before considering stop activation."
+}

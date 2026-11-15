@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "manual-20261115T2120-KST-reconciliation",
+  "run_id": "scheduled-20261115T2218-KST-core-reconciliation",
   "status": "STALLED_CORE_RISK_READ_ONLY_DIAGNOSIS",
   "pr": 43,
   "head_sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-15T2120-KST-manual-reconciliation.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-15T2218-KST-scheduled-core-reconciliation.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect missing broker-authoritative ledger reconciliation transitions; add nonduplicative synthetic read-only test to Draft PR #43 and verify RED on exact PR HEAD; keep state branch metadata-only and inspect PR-head CI separately."
+  "next_exact_action": "Inspect broker acceptance metadata and strategy producer provenance; construct nonduplicative safe synthetic test for authenticated date/execution attribution before considering stop activation."
 }
