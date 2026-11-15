@@ -1,0 +1,38 @@
+{
+  "run_id": "scheduled-20261116T0823-KST",
+  "status": "STALLED_CORE_RISK_EXISTING_COVERAGE_NO_NEW_REPRODUCTION",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_acquired_commit": "cc15c8df2f00d58a85a633acd36ac90fb19e7e70",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_THIS_SLOT",
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "verified_paths": [
+    {
+      "path": "trading/dispatch.py",
+      "sha": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490"
+    },
+    {
+      "path": "tests/test_strategy_buy_receipt_provenance_readonly.py",
+      "sha": "c964347f446912ace6760e4b4981ddd27f4cf2e9"
+    }
+  ],
+  "unverified_transitions": [
+    "broker-authenticated order date/execution identifier propagation",
+    "broker authoritative fill attribution",
+    "account-specific stop activation after verified fills",
+    "KIS demo"
+  ],
+  "related_passes": 0,
+  "full_passes": 0,
+  "exact_blocker": "Existing Mock tests cover strategy BUY canonical order number persistence; no distinct untested broker provenance scenario established, so no speculative RED test was committed.",
+  "next_exact_action": "Inspect trading/strategies/common.py execution_from_result and KR/US broker response producers, identify dropped authenticated provenance if any, then add a distinct read-only RED test and run Actions.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
