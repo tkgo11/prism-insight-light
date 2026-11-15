@@ -1,8 +1,11 @@
 {
   "run_id": "scheduled-20261116T0525-KST-core-mock",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "acquired_expected_state_parent": "48aa5181780cb4dab14a3bf639053ae6a808137e",
   "expected_pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
   "expected_main_head": "d0a4d420bdd199a576a447788c704053b6550067",
-  "purpose": "read-only Mock strategy BUY provenance regression"
+  "released_by_run_id": "scheduled-20261116T0525-KST-core-mock",
+  "release_expected_state_parent": "a47de39cbd7391234878dd8cb7f24541e900a8c1",
+  "kis_calls": 0,
+  "real_orders": 0
 }

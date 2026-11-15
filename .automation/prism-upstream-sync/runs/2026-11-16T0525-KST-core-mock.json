@@ -1,0 +1,27 @@
+{
+  "run_id": "scheduled-20261116T0525-KST-core-mock",
+  "status": "STALLED_CORE_RISK_EXISTING_COVERAGE_REVIEWED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_parent": "a47de39cbd7391234878dd8cb7f24541e900a8c1",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "reviewed_files": {
+    "tests/test_strategy_buy_receipt_provenance_readonly.py": "c964347f446912ace6760e4b4981ddd27f4cf2e9",
+    "tests/test_pending_buy_stop_loss_safety.py": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+    "tests/test_strategy_partial_matrix.py": "a57d37d6acf86f34b0334793d135a02af7d53d9f"
+  },
+  "new_tests": 0,
+  "attempted_reproductions": 0,
+  "confirmed_defects": 0,
+  "code_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "baseline_red_observed": false,
+  "mock_result": "NOT_RUN_NEW_TEST",
+  "unverified_transitions": [
+    "strategy BUY receipt -> broker order date and execution identity -> partial/cancel remaining -> account-specific stop activation"
+  ],
+  "exact_blocker": "No genuinely nonduplicate executable end-to-end synthetic fixture constructed during this run; not a KIS credential blocker",
+  "next_exact_action": "Inspect existing _inquire fixture and StopLossWatcher interfaces, create one distinct read-only synthetic KR/US partial/cancel history-to-watcher regression on Draft PR #43, observe Actions baseline RED; never call KIS"
+}
