@@ -1,0 +1,57 @@
+{
+  "run_id": "scheduled-20261117T0523-KST",
+  "status": "STALLED_CI_GREEN_FINANCIAL_UNVERIFIED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_head": "91cf29039dc9f644b88c005801ad83bf6bf740c0",
+  "latest_head_ci": {
+    "run_id": 43937874781,
+    "head_sha": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 133547172471,
+        "name": "Windows runtime smoke",
+        "conclusion": "success"
+      },
+      {
+        "id": 133547173153,
+        "name": "Full pytest suite",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "baseline_fail_observed": "historical only",
+  "mock_result": "existing tests included in successful full pytest, exact KR/US test IDs not independently confirmed",
+  "code_fix_commit": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "new_tests": 0,
+  "new_code_fixes": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "candidate_count_verified": 0,
+  "candidate_count_deferred": 1,
+  "related_passes": 0,
+  "full_passes": 0,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "unverified_transitions": [
+    "KR/US broker order-date provenance",
+    "order/execution IDs persisted account-scoped",
+    "partial fills/cancel/rejection/remainder",
+    "duplicate notifications",
+    "stop-loss activation after restart",
+    "ledger write failure recovery",
+    "UNKNOWN not treated as fill"
+  ],
+  "exact_blocker": "CI GREEN is not end-to-end financial safety proof; review absent; branch protection 403; Qlty/Snyk unverified",
+  "evidence_delta": "Actions 43937874781 completed SUCCESS on exact PR HEAD; both jobs and two check-runs SUCCESS",
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'trading/dispatch.py',ref:'8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5'})",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "merged": false
+}
