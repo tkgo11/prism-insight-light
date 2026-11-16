@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261116T1519-KST",
+  "run_id": "scheduled-20261116T1640-KST",
   "status": "STALLED_EXISTING_RED_UNPATCHED",
   "pr": 43,
   "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-16T1519-KST.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-16T1640-KST.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect broker KIS response output fields and date provenance for KR/US; design fail-closed optional order_date contract and backward-compatible ledger receipt migration; add mock coverage then CI RED/GREEN on current PR HEAD."
+  "next_exact_action": "Read trading/dispatch.py receipt finalize and trading/execution_ledger.py _validated_order_receipt callers, then inspect KIS output order date field contract in KR/US response and add fail-closed Mock test for missing broker date before any production patch."
 }

@@ -1,0 +1,57 @@
+{
+  "run_id": "scheduled-20261116T1640-KST",
+  "status": "STALLED_EXISTING_RED_UNPATCHED",
+  "state_start": "b99b1af3042dcedf4f48b7f249e7d6bdf7fdec57",
+  "acquired_state_commit": "1d7ad1ab31db5006308281733905d33a120ce129",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": "not independently quantified",
+  "baseline_fail_observed": "prior Actions run 43785659666 confirmed completed/failure on current PR HEAD; not a new run",
+  "mock_result": "existing RED; no new tests",
+  "code_fix_commit": null,
+  "latest_head_CI": {
+    "id": 43785659666,
+    "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "name": "Full pytest suite",
+        "conclusion": "failure"
+      },
+      {
+        "name": "Windows runtime smoke",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "inspected_blobs": {
+    "trading/strategies/common.py": "71bd1583fab8569c10d58fbf4047807cf6bb1f26",
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/domestic.py": "7cde54f3ba157958ae7c09c4dac925c30b099997",
+    "trading/us.py": "263dc9839a3fc1334d152895fdbd9648ab596b89",
+    "tests/test_strategy_buy_order_date_provenance_mock.py": "7649ee24814a8d1a4a755c3eca002432b1e600eb"
+  },
+  "candidate_count": 1,
+  "verified_candidates": 1,
+  "attempted_reproductions": 0,
+  "reproduced_defects_new": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-origin order date missing from actual KR/US BUY return dictionaries",
+    "StrategyExecution lacks order_date; DispatchResult and ledger receipt only order_no",
+    "execution IDs/partial/cancel/remaining attribution",
+    "per-account stop activation and restart"
+  ],
+  "exact_blocker": "Existing RED already demonstrated. Broker KR/US production response omits order_date; adding a field only in StrategyExecution would be unsound. Full contract/migration and test design not completed; no new Mock/CI run.",
+  "evidence_delta": "Fresh state CAS acquired; current PR/CI independently checked; KR/US producer missing order_date confirmed; verified current file blob SHAs and existing RED test; no new defect/fix/test claimed.",
+  "next_exact_action": "Read trading/dispatch.py receipt finalize and trading/execution_ledger.py _validated_order_receipt callers, then inspect KIS output order date field contract in KR/US response and add fail-closed Mock test for missing broker date before any production patch.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
