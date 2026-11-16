@@ -1,0 +1,33 @@
+{
+  "run_id": "scheduled-20261116T1915-KST",
+  "status": "STALLED_EXISTING_RED_UNPATCHED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_before": "dfe4989ec8799e70e42279c9958b3ba63cfe8add",
+  "lock_acquired_commit": "10fce7c179a94a1661df3d2a5b13958ac243d3f5",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "ci": {
+    "id": 43785659666,
+    "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
+    "conclusion": "failure"
+  },
+  "new_code_fixes": 0,
+  "new_tests": 0,
+  "new_ci_runs": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "observations": [
+    "Confirmed existing KR/US test expects broker order_date but StrategyExecution does not have order_date",
+    "KR domestic and US broker buy success response only returns order_no, not broker order_date; both producer and downstream contracts need review",
+    "DispatchResult and _durable_buy_receipt preserve order_no only; ledger _validated_order_receipt accepts only order_no",
+    "Git tree confirms actual dispatcher is trading/dispatch.py, not trading/strategies/dispatch.py"
+  ],
+  "unverified_transitions": [
+    "broker date provenance from actual KIS output",
+    "execution_id and partial/cancel/remaining",
+    "account-specific stop activation and restart"
+  ],
+  "next_exact_action": "Read KR/US broker response contracts and add read-only mock regression for order-date provenance at broker producer before coherent producer-to-ledger implementation.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
