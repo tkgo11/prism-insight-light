@@ -1,0 +1,61 @@
+{
+  "run_id": "scheduled-20261116T2023-KST",
+  "status": "STALLED_EXISTING_RED_UNPATCHED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "ci": {
+    "run_id": 43785659666,
+    "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
+    "conclusion": "failure",
+    "historical": true
+  },
+  "new_tests": 0,
+  "new_fixes": 0,
+  "new_ci_runs": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "read_only_evidence": [
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "7cde54f3ba157958ae7c09c4dac925c30b099997",
+      "finding": "KR market/limit/after-hours BUY receipt returns order_no without broker order_date"
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "263dc9839a3fc1334d152895fdbd9648ab596b89",
+      "finding": "US market/limit/reserved BUY receipt returns order_no without broker order_date"
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "71bd1583fab8569c10d58fbf4047807cf6bb1f26",
+      "finding": "StrategyExecution has no order_date; execution_from_result discards it"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+      "finding": "DispatchResult and durable receipt only carry order_no"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711",
+      "finding": "durable receipt validates only order_no, history date is HISTORY_ONLY_UNATTRIBUTED"
+    },
+    {
+      "path": "tests/test_strategy_buy_order_date_provenance_mock.py",
+      "blob_sha": "7649ee24814a8d1a4a755c3eca002432b1e600eb",
+      "finding": "Existing KR/US tests assert order_date survives strategy mapping; avoid duplicates"
+    }
+  ],
+  "unverified": [
+    "broker order date response contract",
+    "stop_loss_watcher",
+    "restart",
+    "multi-account",
+    "cancel and partial fill provenance"
+  ],
+  "next_exact_action": "Inspect KR/US KIS response payload order-date contract and full dispatch-to-ledger account scoping; add missing producer/ledger Mock tests and run Actions RED before coherent fix.",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "merge": false
+}

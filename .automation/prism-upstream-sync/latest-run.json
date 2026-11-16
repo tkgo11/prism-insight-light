@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "run_id": "scheduled-20261116T1958-KST",
+  "run_id": "scheduled-20261116T2023-KST",
   "status": "STALLED_EXISTING_RED_UNPATCHED",
   "pr": 43,
   "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-16T1958-KST.json",
+  "report_path": ".automation/prism-upstream-sync/runs/2026-11-16T2023-KST.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect all KR/US BUY response variants and KIS response order-date field contract; add producer Mock tests then coherent producer-to-ledger implementation, run Actions on new PR HEAD."
+  "next_exact_action": "Inspect KR/US KIS response payload order-date contract and full dispatch-to-ledger account scoping; add missing producer/ledger Mock tests and run Actions RED before coherent fix."
 }
