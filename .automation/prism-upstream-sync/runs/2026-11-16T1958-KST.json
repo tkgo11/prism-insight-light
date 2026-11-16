@@ -1,0 +1,59 @@
+{
+  "run_id": "scheduled-20261116T1958-KST",
+  "status": "STALLED_EXISTING_RED_UNPATCHED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_before": "3d0991435ca985648b2b95590f69933f61a49b2d",
+  "lock_acquire_commit": "ace04d211e70659f194917641f72150213a9db88",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "ci": {
+    "run_id": 43785659666,
+    "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
+    "conclusion": "failure",
+    "historical": true
+  },
+  "new_tests": 0,
+  "new_code_fixes": 0,
+  "new_reproductions": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "evidence": [
+    {
+      "file": "trading/domestic.py",
+      "blob_sha": "7cde54f3ba157958ae7c09c4dac925c30b099997",
+      "finding": "KR market BUY success returns odno only, no broker order date"
+    },
+    {
+      "file": "trading/us.py",
+      "blob_sha": "263dc9839a3fc1334d152895fdbd9648ab596b89",
+      "finding": "US market BUY success returns ODNO only, no broker order date"
+    },
+    {
+      "file": "trading/strategies/common.py",
+      "blob_sha": "71bd1583fab8569c10d58fbf4047807cf6bb1f26",
+      "finding": "StrategyExecution lacks order_date"
+    },
+    {
+      "file": "trading/execution_ledger.py",
+      "blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711",
+      "finding": "receipt validator accepts only order_no; persisted receipt requires order_no, observed_at"
+    },
+    {
+      "file": "tests/test_strategy_buy_order_date_provenance_mock.py",
+      "blob_sha": "7649ee24814a8d1a4a755c3eca002432b1e600eb",
+      "finding": "existing KR/US RED tests require order_date from broker input"
+    }
+  ],
+  "unverified": [
+    "broker response order-date field contract",
+    "all buy order variants",
+    "dispatch and ledger migration",
+    "watcher and restart",
+    "multi-account and partial fill/cancel",
+    "KIS integration"
+  ],
+  "next_exact_action": "Inspect all KR/US BUY response variants and KIS response order-date field contract; add producer Mock tests then coherent producer-to-ledger implementation, run Actions on new PR HEAD.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
