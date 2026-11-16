@@ -1,0 +1,53 @@
+{
+  "run_id": "scheduled-20261117T0816-KST",
+  "status": "STALLED_CI_GREEN_FINANCIAL_UNVERIFIED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "91cf29039dc9f644b88c005801ad83bf6bf740c0",
+  "ci": {
+    "run_id": 43937874781,
+    "head_sha": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+    "conclusion": "success",
+    "checks": [
+      "Full pytest suite",
+      "Windows runtime smoke"
+    ],
+    "historical": true
+  },
+  "new_mock_runs": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "new_complete_audits": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "review_count": 0,
+  "branch_protection": "read failed; not PASS",
+  "external_security": "not verified; not PASS",
+  "finding": "Confirmed multi-account dispatch.py lines 520-560 passes _durable_buy_receipt to ledger.finalize but AccountDispatchResult copies only order_no; strategy dispatch.py lines 1038-1044 copies only order_no. execution_ledger._validated_order_receipt requires exactly order_no. Existing KR/US provenance Mock injects order_date directly and does not test producer->dispatch->ledger.",
+  "file_blob_sha": {
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_order_date_provenance_mock.py": "7649ee24814a8d1a4a755c3eca002432b1e600eb"
+  },
+  "unverified_transitions": [
+    "acceptance vs fill",
+    "UNKNOWN",
+    "delayed/partial fill",
+    "cancel/reject",
+    "duplicate",
+    "remaining quantity",
+    "stop-loss activation",
+    "multi-account isolation",
+    "restart",
+    "ledger write failure",
+    "recovery"
+  ],
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'trading/dispatch.py',ref:'8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5',start_line:300,end_line:400})",
+  "kis_calls": 0,
+  "real_orders": 0
+}
