@@ -1,0 +1,36 @@
+{
+  "run_id": "scheduled-20261116T1018-KST",
+  "status": "WAITING_FOR_MOCK_RED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_start": "ccfc9f106495aaeeadbbcc9b93e4a44dd1a6aac8",
+  "acquired_state_commit": "46903e1557583b45c3da09d997ff76e8e4e97af3",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "new_test_commit": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "new_tests": 2,
+  "attempted_reproductions": 1,
+  "baseline_fail_observed": false,
+  "mock_result": "CI_IN_PROGRESS",
+  "ci_runs": [
+    {
+      "id": 43785659666,
+      "status": "in_progress",
+      "sha": "5415ed6da99e211225f517a97eb1067fd547f77c"
+    }
+  ],
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "candidate_count": 1,
+  "verified_candidates": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-origin order date",
+    "broker-origin execution id",
+    "partial-fill/cancel residual attribution",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "Latest-head Actions 43785659666 still running; RED not observed, so production code modification withheld",
+  "next_exact_action": "Fetch Actions run 43785659666 and jobs/logs; verify failure is missing broker-origin order_date on KR/US strategy mapping rather than test/environment failure; only then implement end-to-end safe provenance propagation and run regression CI."
+}
