@@ -1,0 +1,38 @@
+{
+  "run_id": "scheduled-20261116T1519-KST",
+  "status": "STALLED_EXISTING_RED_UNPATCHED",
+  "state_start": "694f20971e816b1f27019164d0bc94adec033e7f",
+  "acquired_state_commit": "0e849df08333788ab9f6e988452dbabd32375282",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "existing_red_test": "tests/test_strategy_buy_order_date_provenance_mock.py",
+  "prior_baseline_fail_run": 43785659666,
+  "observed_gap": "StrategyExecution lacks order_date; dispatch receipt accepts only order_no; ledger receipt requires order_no and observed_at; KR/US production buy return dictionaries omit order_date, so simply adding dataclass field would not establish broker provenance",
+  "inspected_blobs": {
+    "trading/strategies/common.py": "71bd1583fab8569c10d58fbf4047807cf6bb1f26",
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/strategies/balance_split.py": "641baf2f291d7708f721faa9a6d8713568cc4787",
+    "trading/domestic.py": "7cde54f3ba157958ae7c09c4dac925c30b099997",
+    "trading/us.py": "263dc9839a3fc1334d152895fdbd9648ab596b89"
+  },
+  "attempted_reproductions": 0,
+  "new_tests": 0,
+  "actual_code_fixes": 0,
+  "candidate_count": 1,
+  "verified_candidates": 1,
+  "related_passes": 0,
+  "full_passes": 0,
+  "latest_head_ci": "previous recorded failure 43785659666; fetch_commit_workflow_runs returned empty, not independently revalidated",
+  "unverified_transitions": [
+    "broker-origin order date and execution ID",
+    "partial/cancel residual",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "Existing RED requires coordinated broker response provenance and ledger schema migration; current production broker return payload has no order_date, so a dataclass-only patch would fabricate assurance. No new test or code patch committed.",
+  "next_exact_action": "Inspect broker KIS response output fields and date provenance for KR/US; design fail-closed optional order_date contract and backward-compatible ledger receipt migration; add mock coverage then CI RED/GREEN on current PR HEAD.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
