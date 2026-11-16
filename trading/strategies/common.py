@@ -255,9 +255,12 @@ def execution_from_result(signal: SignalMessage, result: dict[str, Any], message
         # Preserve only string broker identifiers. Dispatch/ledger enforce
         # canonical numeric KIS receipts and fail closed on ambiguity.
         order_no=(result.get("order_no") if isinstance(result.get("order_no"), str) else None),
-        order_date=(result.get("order_date") if isinstance(result.get("order_date"), str)
-                    and re.fullmatch(r"[0-9]{8}", result["order_date"])
-                    and _validated_broker_order_date(result["order_date"]) or None),
+        order_date=(
+            _validated_broker_order_date(result["order_date"])
+            if isinstance(result.get("order_date"), str)
+            and re.fullmatch(r"[0-9]{8}", result["order_date"])
+            else None
+        ),
     )
 
 
