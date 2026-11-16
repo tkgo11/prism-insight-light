@@ -41,6 +41,8 @@ class StrategyExecution:
     details: dict[str, Any] | None = None
     # Receipt is broker acceptance evidence only, never a fill or stop authorization.
     order_no: str | None = None
+    # Broker-provided order date is provenance, never evidence of a fill.
+    order_date: str | None = None
 
 
 def strategy_name(payload: dict[str, Any] | None) -> str:
@@ -228,6 +230,15 @@ async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount:
         )
 
 
+def _validated_broker_order_date(value: str) -> str | None:
+    """Preserve only valid broker-origin calendar dates, never infer one."""
+    try:
+        datetime.strptime(value, "%Y%m%d")
+    except ValueError:
+        return None
+    return value
+
+
 def execution_from_result(signal: SignalMessage, result: dict[str, Any], message_prefix: str, **details: Any) -> StrategyExecution:
     broker_message = str(result.get("message", ""))
     message = f"{message_prefix}: {broker_message}" if broker_message else message_prefix
@@ -244,6 +255,9 @@ def execution_from_result(signal: SignalMessage, result: dict[str, Any], message
         # Preserve only string broker identifiers. Dispatch/ledger enforce
         # canonical numeric KIS receipts and fail closed on ambiguity.
         order_no=(result.get("order_no") if isinstance(result.get("order_no"), str) else None),
+        order_date=(result.get("order_date") if isinstance(result.get("order_date"), str)
+                    and re.fullmatch(r"[0-9]{8}", result["order_date"])
+                    and _validated_broker_order_date(result["order_date"]) or None),
     )
 
 
