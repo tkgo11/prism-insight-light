@@ -1,0 +1,35 @@
+{
+  "run_id": "scheduled-20261116T1416-KST",
+  "status": "STALLED_EXISTING_RED_UNPATCHED",
+  "state_start": "e4cbc0db5319bdad72bdddb88fc125f00ea4e88e",
+  "acquired_state_commit": "14b823d1ce0e1bd41f9a55585f26db97f415ce7a",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "prior_baseline_fail_run": 43785659666,
+  "latest_head_ci": {
+    "run_id": 43785659666,
+    "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
+    "conclusion": "failure"
+  },
+  "existing_red_test": "tests/test_strategy_buy_order_date_provenance_mock.py",
+  "existing_test_sha": "7649ee24814a8d1a4a755c3eca002432b1e600eb",
+  "observed_contract_gap": "StrategyExecution dataclass has order_no but no order_date; existing KR/US RED test asserts order_date; do not assume downstream schema migration",
+  "attempted_reproductions": 0,
+  "new_tests": 0,
+  "actual_code_fixes": 0,
+  "candidate_count": 1,
+  "verified_candidates": 1,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker order date propagation",
+    "legacy receipt migration",
+    "execution ID",
+    "partial/cancel residual",
+    "per-account stop activation"
+  ],
+  "next_exact_action": "Trace execution_from_result and dispatch/ledger receipt schema and all constructors; implement coordinated broker-origin order_date propagation with migration tests; run Actions on new PR HEAD.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
