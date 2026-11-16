@@ -1,0 +1,37 @@
+{
+  "run_id": "scheduled-20261116T1321-KST",
+  "status": "STALLED_PRIOR_RED_CONFIRMED_NO_NEW_PATCH",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_start": "dfe457e741838b4fb78cf9fbe1f12031587d07e9",
+  "acquired_state_commit": "40aa0f7355bf48a97d73935364139f1a7aa8117c",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "baseline_fail_observed_this_run": false,
+  "prior_baseline_fail_run": 43785659666,
+  "prior_failed_tests": 2,
+  "latest_head_ci": {
+    "run_id": 43785659666,
+    "conclusion": "failure",
+    "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c"
+  },
+  "evidence_delta": "Revalidated live state HEAD, RELEASED prior lock, PR #43 Draft HEAD, latest failed Actions run; inspected strategy/dispatch/ledger and two existing provenance tests; no duplicate test added.",
+  "attempted_reproductions": 0,
+  "reproduced_defects_new": 0,
+  "actual_code_fixes": 0,
+  "new_tests": 0,
+  "candidate_count": 1,
+  "verified_candidates": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-origin order_date persistence",
+    "broker execution ID",
+    "partial fill/cancel residual attribution",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "Existing RED test requires coordinated schema-compatible provenance propagation and legacy receipt migration; no speculative partial financial fix.",
+  "next_exact_action": "Inspect complete existing RED tests and all receipt callsites, add end-to-end KR/US date provenance and legacy migration regression coverage, then implement atomic propagation fix and verify latest-head Actions.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
