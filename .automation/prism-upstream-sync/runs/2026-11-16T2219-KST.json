@@ -1,0 +1,51 @@
+{
+  "run_id": "scheduled-20261116T2219-KST",
+  "status": "STALLED_EXISTING_RED_UNPATCHED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "9b171ae3431ef24a3d3425994ecdd2643d1864d0",
+  "ci": {
+    "run_id": 43785659666,
+    "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
+    "conclusion": "failure",
+    "pytest": "failure",
+    "windows_smoke": "success",
+    "historical": true
+  },
+  "evidence": [
+    {
+      "path": "tests/test_strategy_buy_order_date_provenance_mock.py",
+      "blob_sha": "7649ee24814a8d1a4a755c3eca002432b1e600eb",
+      "observation": "Existing KR/US parametrized RED test asserts StrategyExecution.order_date."
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "71bd1583fab8569c10d58fbf4047807cf6bb1f26",
+      "observation": "StrategyExecution lacks order_date; execution_from_result retains order_no only."
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+      "observation": "DispatchResult durable BUY receipt retains only order_no."
+    }
+  ],
+  "new_tests": 0,
+  "new_fixes": 0,
+  "new_ci_runs": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified": [
+    "KR/US broker payload order-date provenance",
+    "dispatch-to-ledger account scope",
+    "stop_loss_watcher after restart",
+    "partial fills and cancellation"
+  ],
+  "exact_blocker": "Existing test RED is confirmed historically; full broker-to-ledger-to-watcher impact scope and producer contract not yet validated, so no speculative production patch.",
+  "next_exact_action": "GitHub Connector fetch_file trading/domestic.py and trading/us.py at PR #43 HEAD; inspect all BUY response payloads and order-date fields, then add missing producer/ledger read-only Mock tests before coherent fix.",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "merge": false
+}

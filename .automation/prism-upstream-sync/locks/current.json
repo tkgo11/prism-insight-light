@@ -1,8 +1,10 @@
 {
   "run_id": "scheduled-20261116T2219-KST",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "acquired_expected_state_parent": "0e0569f2d59dc6096b04667469c918afc93c17f2",
   "expected_pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "released_by_run_id": "scheduled-20261116T2219-KST",
+  "release_expected_state_parent": "6b91153ce40004d27be84466b081721ea1daf70c",
   "kis_calls": 0,
   "real_orders": 0
 }
