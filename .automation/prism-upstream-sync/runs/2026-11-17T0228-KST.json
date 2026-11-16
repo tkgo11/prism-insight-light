@@ -1,0 +1,23 @@
+{
+  "run_id": "scheduled-20261117T0228-KST",
+  "status": "STALLED_PARTIAL_MAPPING_FIX_CI_PENDING",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "previous_pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "head_sha": "03917c2550988b65ba2d3aba1a47cfadc9dc6ee9",
+  "code_fix_commit": "03917c2550988b65ba2d3aba1a47cfadc9dc6ee9",
+  "baseline_fail_observed": true,
+  "baseline_ci_run": 43785659666,
+  "baseline_results": "2 failed, 2792 passed; KR/US StrategyExecution.order_date AttributeError",
+  "new_tests_added": 0,
+  "new_tests_run": 0,
+  "latest_head_ci": "PENDING_NOT_OBSERVED",
+  "related_passes": 0,
+  "full_passes": 0,
+  "remaining_risk": "Broker order-date origin, dispatch/ledger persistence, watcher recovery, multi-account transitions unverified; no fill/stop authorization",
+  "next_exact_action": "mcp__GitHub__fetch({url:'https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs?head_sha=03917c2550988b65ba2d3aba1a47cfadc9dc6ee9&per_page=10'}) and inspect CI logs, then add dispatch/ledger read-only Mock coverage",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "merged": false
+}
