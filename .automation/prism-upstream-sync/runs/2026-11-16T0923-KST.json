@@ -1,0 +1,62 @@
+{
+  "run_id": "scheduled-20261116T0923-KST",
+  "status": "STALLED_CORE_RISK_PROVENANCE_GAP_READONLY",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_start": "010e8c2be9ab71a1931c7dc7ca7c9136cf3eec26",
+  "acquired_state_commit": "8acc91be13541ca281e99ead3b78fea416fbced0",
+  "pr": 43,
+  "pr_head": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "evidence_delta": [
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "71bd1583fab8569c10d58fbf4047807cf6bb1f26",
+      "finding": "execution_from_result propagates only order_no, not broker order date or execution id"
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "7cde54f3ba157958ae7c09c4dac925c30b099997",
+      "finding": "KR BUY success producers return order_no but no order_date in inspected branches"
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "263dc9839a3fc1334d152895fdbd9648ab596b89",
+      "finding": "US BUY success producers return order_no but no order_date in inspected branches"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711",
+      "finding": "receipt validator only allows order_no; history date provenance remains HISTORY_ONLY_UNATTRIBUTED"
+    }
+  ],
+  "latest_head_CI": [
+    {
+      "id": 43041452951,
+      "conclusion": "success",
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+    },
+    {
+      "id": 43041440961,
+      "conclusion": "success",
+      "sha": "045d057d7b8e89d0b12c3b98e3a3287bb37a2f32"
+    }
+  ],
+  "new_tests": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "candidate_count": 1,
+  "verified_candidates": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "baseline_fail_observed": false,
+  "mock_result": "NOT_RUN_NEW",
+  "unverified_transitions": [
+    "broker-origin order date",
+    "broker-origin execution id",
+    "partial-fill/cancel residual attribution",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "Read-only broker provenance gap identified, but no distinct Mock RED test or product defect reproduction; changes withheld pending test-first evidence",
+  "next_exact_action": "Add distinct read-only KR/US Mock test proving broker order-date provenance cannot be attributed through strategy execution and ledger; run GitHub Actions RED, then fix only if validated, preserving fail-closed safety."
+}
