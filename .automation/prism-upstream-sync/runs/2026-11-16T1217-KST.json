@@ -1,0 +1,50 @@
+{
+  "run_id": "scheduled-20261116T1217-KST",
+  "status": "MOCK_RED_CONFIRMED_SCOPE_REVIEW_NO_PATCH",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_start": "36d7d5fe584fa0905b8f44ef9cca4e44576127f9",
+  "acquired_state_commit": "0b2f18b01e51e11d21b7e2675e6d271cbc68ac14",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "baseline_fail_observed_this_run": false,
+  "prior_baseline_fail_run": 43785659666,
+  "prior_failed_tests": 2,
+  "source_review": [
+    {
+      "path": "trading/strategies/common.py",
+      "sha": "71bd1583fab8569c10d58fbf4047807cf6bb1f26"
+    },
+    {
+      "path": "trading/strategies/balance_split.py",
+      "sha": "641baf2f291d7708f721faa9a6d8713568cc4787"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "sha": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "sha": "9162199532e31857835ab22e1ef17cfe6afd0711"
+    }
+  ],
+  "evidence_delta": "Verified precise missing date propagation across StrategyExecution, DispatchResult, durable receipt and strict ledger receipt schema. No new test or fix; previous RED retained.",
+  "attempted_reproductions": 0,
+  "reproduced_defects_new": 0,
+  "actual_code_fixes": 0,
+  "new_tests": 0,
+  "candidate_count": 1,
+  "verified_candidates": 1,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-origin order_date persistence",
+    "broker execution ID",
+    "partial fill/cancel residual attribution",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "Atomic fix needs safe backward-compatible receipt schema migration and KR/US single/multi-account end-to-end tests; no partial speculative financial patch.",
+  "next_exact_action": "Add synthetic KR/US date-provenance end-to-end tests through strategy/dispatch/ledger and legacy receipt migration tests; observe Actions RED, then implement one atomic schema-compatible propagation fix and run latest-head CI.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
