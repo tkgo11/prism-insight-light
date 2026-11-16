@@ -1,0 +1,44 @@
+{
+  "run_id": "scheduled-20261116T1743-KST",
+  "status": "STALLED_EXISTING_RED_UNPATCHED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_head_before": "22952669b2a2347db798e301f75f91a891eb82fb",
+  "lock_acquired_commit": "e1aeea994172be8b68d257598da221a43c96b935",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_head": "9b171ae3431ef24a3d3425994ecdd2643d1864d0",
+  "ci": {
+    "run_id": 43785659666,
+    "head_sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
+    "status": "completed",
+    "conclusion": "failure",
+    "full_pytest": "failure",
+    "windows_smoke": "success"
+  },
+  "observations": [
+    "StrategyExecution has order_no but no order_date",
+    "execution_from_result preserves order_no but drops broker order_date",
+    "DispatchResult and _durable_buy_receipt carry order_no only",
+    "execution_ledger._validated_order_receipt only accepts order_no",
+    "Existing KR/US Mock test asserts broker order_date survives strategy mapping; latest HEAD CI failed"
+  ],
+  "new_tests": 0,
+  "new_code_fixes": 0,
+  "new_ci_runs": 0,
+  "candidate_count": 1,
+  "attempted_reproductions": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker order_date through KR/US dispatcher/ledger",
+    "execution_id",
+    "partial fill/cancel/remaining",
+    "account-specific stop activation",
+    "restart"
+  ],
+  "next_exact_action": "Read full dispatch receipt call sites and broker KR/US order response contract, then add missing-date fail-closed Mock coverage before coherent production fix.",
+  "kis_calls": 0,
+  "real_orders": 0
+}
