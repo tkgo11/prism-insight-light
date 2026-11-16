@@ -1,0 +1,42 @@
+{
+  "run_id": "scheduled-20261116T1124-KST",
+  "status": "MOCK_RED_CONFIRMED_FIX_BLOCKED_PENDING_SCOPE",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "state_start": "171cfcb32dcc2630ae99e5505742c3c4c07fbac0",
+  "acquired_state_commit": "381d3fcd3d0c6dff0203e42cd099bc2ebc9bcfbd",
+  "pr": 43,
+  "pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
+  "main_head": "d0a4d420bdd199a576a447788c704053b6550067",
+  "baseline_fail_observed": true,
+  "mock_result": "RED_2_FAILED_2792_PASSED",
+  "ci_runs": [
+    {
+      "id": 43785659666,
+      "status": "completed",
+      "conclusion": "failure",
+      "sha": "5415ed6da99e211225f517a97eb1067fd547f77c",
+      "failed_job_id": 133032586056
+    }
+  ],
+  "failed_tests": [
+    "test_broker_order_date_provenance_survives_strategy_buy_mapping[KR-005930]",
+    "test_broker_order_date_provenance_survives_strategy_buy_mapping[US-AAPL]"
+  ],
+  "root_cause_evidence": "StrategyExecution lacks order_date; execution_from_result drops broker order_date. DispatchResult and durable receipt persist order_no only; ledger receipt schema validates exactly order_no and observed_at. Requires coordinated migration and downstream tests; no unsafe partial patch.",
+  "new_tests": 0,
+  "attempted_reproductions": 1,
+  "reproduced_defects": 1,
+  "actual_code_fixes": 0,
+  "candidate_count": 1,
+  "verified_candidates": 1,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "broker-origin order_date end-to-end persistence",
+    "broker-origin execution id",
+    "partial-fill/cancel residual attribution",
+    "per-account stop activation"
+  ],
+  "exact_blocker": "Confirmed RED; end-to-end provenance requires schema/ledger compatibility and KR/US multi-account regression matrix before production patch. No speculative partial code change.",
+  "next_exact_action": "Inspect trading broker order response, StrategyExecution/BalanceSplitExecution, DispatchResult, _durable_buy_receipt, ExecutionLedger validation and migration; add end-to-end date persistence tests before atomic fix, run latest-head CI."
+}
