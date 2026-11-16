@@ -1,0 +1,36 @@
+{
+  "run_id": "scheduled-20261117T0328-KST",
+  "status": "STALLED_CI_FAILURE_UNDIAGNOSED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "head_sha": "03917c2550988b65ba2d3aba1a47cfadc9dc6ee9",
+  "baseline_fail_observed": "historical 2 failed, 2792 passed; not re-run",
+  "latest_head_ci": {
+    "run_id": 43918814343,
+    "head_sha": "03917c2550988b65ba2d3aba1a47cfadc9dc6ee9",
+    "status": "completed",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "id": 133480198660,
+        "failed_step": "Run static smoke checks"
+      },
+      {
+        "id": 133480199620,
+        "failed_step": "Run cross-platform runtime tests"
+      }
+    ]
+  },
+  "exact_blocker": "Both Linux static smoke and Windows runtime tests failed; log endpoint rejected by connector; no trustworthy failure traceback available. Branch protection 403.",
+  "new_tests": 0,
+  "new_code_fixes": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "review_count": 0,
+  "security_checks": "unverified",
+  "next_exact_action": "mcp__GitHub__fetch({url:'https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/43918814343/jobs'}) then obtain job failure diagnostics through an allowed GitHub Connector action",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "merged": false
+}
