@@ -1,9 +1,7 @@
 {
-  "run_id": "scheduled-20261116T1217-KST",
-  "status": "RELEASED",
-  "released_by_run_id": "scheduled-20261116T1217-KST",
-  "acquired_expected_state_parent": "36d7d5fe584fa0905b8f44ef9cca4e44576127f9",
-  "release_expected_state_parent": "0b2f18b01e51e11d21b7e2675e6d271cbc68ac14",
+  "run_id": "scheduled-20261116T1321-KST",
+  "status": "ACTIVE",
+  "acquired_expected_state_parent": "dfe457e741838b4fb78cf9fbe1f12031587d07e9",
   "expected_pr_head": "5415ed6da99e211225f517a97eb1067fd547f77c",
   "expected_main_head": "d0a4d420bdd199a576a447788c704053b6550067",
   "kis_calls": 0,
