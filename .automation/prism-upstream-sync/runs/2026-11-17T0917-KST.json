@@ -1,0 +1,57 @@
+{
+  "run_id": "scheduled-20261117T0917-KST",
+  "status": "STALLED_CI_GREEN_FINANCIAL_UNVERIFIED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "91cf29039dc9f644b88c005801ad83bf6bf740c0",
+  "ci": {
+    "run_id": 43937874781,
+    "head_sha": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+    "checks": [
+      "Full pytest suite",
+      "Windows runtime smoke"
+    ],
+    "conclusion": "success",
+    "historical": true,
+    "verified_this_run_via_check_runs": true
+  },
+  "review_count": 0,
+  "branch_protection": "403, not PASS",
+  "external_security": "Qlty/Snyk not confirmed",
+  "new_mock_runs": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "new_complete_audits": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "code_observation": "dispatch._durable_buy_receipt returns only order_no and explicitly avoids fill inference; KR/US market BUY producers return order_no but not order_date; strategy mapping accepts broker order_date when injected; ledger _validated_order_receipt rejects any keys other than order_no; existing Mock directly injects order_date and therefore does not prove broker producer->ledger provenance. Multi-account receipt path needs separately grounded test.",
+  "file_blob_sha": {
+    "trading/dispatch.py": "1d9640dc01d7f8d5a80434a3add38bb7b5f58490",
+    "trading/strategies/common.py": "91adb299f26789762fd8a6c1ba78e76c901a776e",
+    "trading/domestic.py": "7cde54f3ba157958ae7c09c4dac925c30b099997",
+    "trading/us.py": "263dc9839a3fc1334d152895fdbd9648ab596b89",
+    "trading/execution_ledger.py": "9162199532e31857835ab22e1ef17cfe6afd0711",
+    "trading/stop_loss_watcher.py": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "tests/test_strategy_buy_order_date_provenance_mock.py": "7649ee24814a8d1a4a755c3eca002432b1e600eb"
+  },
+  "unverified_transitions": [
+    "acceptance vs fill",
+    "UNKNOWN",
+    "delayed/partial fill",
+    "cancel/reject",
+    "duplicate",
+    "remaining quantity",
+    "stop-loss activation",
+    "multi-account isolation",
+    "restart",
+    "ledger write failure",
+    "recovery"
+  ],
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'trading/domestic.py',ref:'8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5',start_line:455,end_line:485})",
+  "kis_calls": 0,
+  "real_orders": 0
+}
