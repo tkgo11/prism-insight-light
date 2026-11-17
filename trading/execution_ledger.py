@@ -163,8 +163,9 @@ def _validated_order_intent(value: dict[str, Any]) -> dict[str, Any]:
 
 def _validated_order_receipt(value: dict[str, Any]) -> dict[str, str]:
     """Validate non-actionable broker acceptance evidence, never a fill."""
-    if not isinstance(value, dict) or set(value) != {"order_no"}:
-        raise ValueError("BUY receipt must contain only an order number")
+    if (not isinstance(value, dict)
+            or set(value) not in ({"order_no"}, {"order_no", "order_date"})):
+        raise ValueError("BUY receipt must contain only an order number and optional broker date")
     order_no = value["order_no"]
     if (
         not isinstance(order_no, str)
@@ -172,7 +173,14 @@ def _validated_order_receipt(value: dict[str, Any]) -> dict[str, str]:
         or not order_no.strip("0")
     ):
         raise ValueError("BUY receipt order number is not canonical")
-    return {"order_no": order_no}
+    receipt = {"order_no": order_no}
+    if "order_date" in value:
+        date = value["order_date"]
+        if not isinstance(date, str) or re.fullmatch(r"[0-9]{8}", date) is None:
+            raise ValueError("BUY receipt date is not canonical")
+        datetime.strptime(date, "%Y%m%d")
+        receipt["order_date"] = date
+    return receipt
 
 
 
@@ -316,6 +324,8 @@ def _validate_read_only_history_snapshot(
     if not isinstance(date, str) or re.fullmatch(r"[0-9]{8}", date) is None:
         raise ValueError("Invalid history snapshot date")
     datetime.strptime(date, "%Y%m%d")
+    if "order_date" in receipt and receipt["order_date"] != date:
+        raise ValueError("History date conflicts with original broker receipt")
     matches = snapshot["matches"]
     if not isinstance(matches, list) or not 0 < len(matches) <= 2000:
         raise ValueError("Missing or oversized history snapshot")
@@ -388,9 +398,15 @@ class ExecutionLedger:
                 continue  # Legacy claims remain supported and fail closed elsewhere.
             receipt = entry["order_receipt"]
             try:
-                if not isinstance(receipt, dict) or set(receipt) != {"order_no", "observed_at"}:
+                if (not isinstance(receipt, dict)
+                        or set(receipt) not in (
+                            {"order_no", "observed_at"},
+                            {"order_no", "order_date", "observed_at"},
+                        )):
                     raise ValueError("Malformed persisted BUY receipt")
-                _validated_order_receipt({"order_no": receipt["order_no"]})
+                _validated_order_receipt({
+                    key: value for key, value in receipt.items() if key != "observed_at"
+                })
                 observed_at = receipt["observed_at"]
                 if not isinstance(observed_at, str):
                     raise ValueError("Malformed receipt timestamp")
@@ -553,8 +569,8 @@ class ExecutionLedger:
         """Compare durable BUY intent with read-only history for operator triage.
 
         Even a matching receipt and a complete broker history inquiry cannot
-        establish fill attribution: the persisted acceptance receipt lacks a
-        broker-authenticated trading date and execution IDs. This method never
+        establish fill attribution: legacy receipts lack a broker trading
+        date, and neither receipt version establishes execution IDs. This method never
         mutates the ledger, clears a pending fence, or authorizes a SELL.
         """
         verdict = {
@@ -601,6 +617,9 @@ class ExecutionLedger:
             receipt = entry.get("order_receipt")
             if not isinstance(receipt, dict) or receipt.get("order_no") != order_no:
                 return verdict
+            if "order_date" in receipt and receipt["order_date"] != order_date:
+                verdict["reason"] = "BROKER_ORDER_DATE_MISMATCH"
+                return verdict
             try:
                 intent = _validated_order_intent(entry.get("order_intent"))
             except ValueError:
@@ -637,8 +656,9 @@ class ExecutionLedger:
     ) -> dict[str, Any]:
         """Atomically retain operator-triage snapshots, NEVER fill attribution.
 
-        The history date is NOT an authenticated date from the original BUY
-        acceptance. No broker order, tracker mutation, pending-claim release,
+        A history date cannot supply a missing original acceptance date; when
+        the receipt has a broker date, the history must agree. No broker order,
+        tracker mutation, pending-claim release,
         fill finalization, or SELL authorization can occur here.
         """
         refused = {

@@ -141,7 +141,7 @@ def _exceeds_known_order_bound(match, known_order_quantity):
 
 
 def _has_missing_anchored_execution(matches):
-    """Detect an incomplete execution list only when a zero-based anchor exists.
+    """Reject overlapping executions and zero-anchored missing executions.
 
     A single late fill row can legitimately report a cumulative total larger
     than its per-execution quantity. That is never actionable, but can remain
@@ -149,10 +149,14 @@ def _has_missing_anchored_execution(matches):
     quantity equal to its own fill quantity, however, that row anchors this
     order's observed execution sequence at zero. A complete history must then
     account for all shares through its latest cumulative total, deduplicated
-    by execution ID. Never infer missing fills or activate a stop.
+    by execution ID. Equal totals alone are insufficient: distinct executions
+    cannot cover the same cumulative quantity interval. An overlap can conceal
+    a gap while the sum still equals the final cumulative total. Never infer
+    missing fills or activate a stop.
     """
     anchored = False
     execution_quantities = {}
+    execution_intervals = {}
     max_cumulative = None
     for match in matches:
         cumulative = match["filled_quantity"]
@@ -165,8 +169,15 @@ def _has_missing_anchored_execution(matches):
             )
         if execution_id is not None and execution is not None:
             execution_quantities[execution_id] = execution
+            if execution > 0 and cumulative is not None:
+                execution_intervals[execution_id] = (cumulative - execution, cumulative)
             if execution > 0 and cumulative == execution:
                 anchored = True
+    previous_end = None
+    for start, end in sorted(execution_intervals.values()):
+        if previous_end is not None and start < previous_end:
+            return True
+        previous_end = end
     return (
         anchored
         and max_cumulative is not None

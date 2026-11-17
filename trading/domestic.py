@@ -33,6 +33,7 @@ from .portfolio_pagination import next_balance_cursor, validated_balance_row
 from .execution_outcome import (
     PortfolioInquiryError,
     classify_broker_result,
+    broker_order_date,
     rejection_is_ambiguous,
 )
 from .market_hours import KST
@@ -473,6 +474,7 @@ class DomesticStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'message': f'Market buy order completed ({buy_quantity} shares)'
@@ -612,6 +614,7 @@ class DomesticStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'limit_price': effective_limit_price,
@@ -766,6 +769,7 @@ class DomesticStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'message': f'After-hours closing price buy order completed ({buy_quantity} shares)'
@@ -886,6 +890,7 @@ class DomesticStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'order_type': order_type_str,
@@ -1002,6 +1007,7 @@ class DomesticStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'limit_price': int(effective_limit_price) if use_limit else None,
@@ -1149,6 +1155,7 @@ class DomesticStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'message': f'After-hours closing price sell completed ({buy_quantity} shares)'
@@ -1261,6 +1268,7 @@ class DomesticStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'order_type': order_type_str,
@@ -1395,6 +1403,7 @@ class DomesticStockTrading:
                             self.smart_buy, stock_code, amount, requested_limit_price
                         )
 
+                        result['order_date'] = broker_order_date(buy_result)
                         submission_status = classify_broker_result(buy_result)
                         if submission_status == "executed":
                             result['quantity'] = int(
@@ -1556,6 +1565,7 @@ class DomesticStockTrading:
                             self.smart_sell_all, stock_code, effective_limit_price, holding_quantity
                         )
 
+                        result['order_date'] = broker_order_date(all_sell_result)
                         submission_status = classify_broker_result(all_sell_result)
                         if submission_status == "executed":
                             result['success'] = True

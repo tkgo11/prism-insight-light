@@ -68,6 +68,7 @@ from .signal_sizing import floor_sell_quantity
 from .portfolio_pagination import next_balance_cursor, validated_balance_row
 from .execution_outcome import (
     PortfolioInquiryError,
+    broker_order_date,
     classify_broker_result,
     rejection_is_ambiguous,
 )
@@ -834,6 +835,7 @@ class USStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'auto_exchange_used': buy_info.get('auto_exchange_used', False),
@@ -954,6 +956,7 @@ class USStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
@@ -1100,6 +1103,7 @@ class USStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': quantity,
                     'message': f'Market sell order completed ({quantity} shares)'
@@ -1279,6 +1283,7 @@ class USStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
@@ -1407,6 +1412,7 @@ class USStockTrading:
                 return {
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': quantity,
                     'limit_price': limit_price if not use_moo else None,
@@ -1687,6 +1693,7 @@ class USStockTrading:
                             self.smart_buy, ticker, resolved_amount, resolved_exchange, effective_limit_price
                         )
 
+                        result["order_date"] = broker_order_date(buy_result)
                         submission_status = classify_broker_result(buy_result)
                         if submission_status == "executed":
                             result['quantity'] = int(buy_result.get('quantity') or buy_quantity)
@@ -1867,6 +1874,7 @@ class USStockTrading:
                             holding_quantity,
                         )
 
+                        result["order_date"] = broker_order_date(sell_result)
                         submission_status = classify_broker_result(sell_result)
                         if submission_status == "executed":
                             result['success'] = True

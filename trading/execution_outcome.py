@@ -9,7 +9,35 @@ the execution ledger.
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from typing import Any
+
+
+def broker_order_date(output: Any) -> str | None:
+    """Retain an explicit, unambiguous broker date; never infer a date.
+
+    Order acceptance metadata is provenance only, not proof of execution.
+    Some broker responses omit ORD_DT altogether. Such receipts remain
+    undated, including when a local observation timestamp is available.
+    """
+    dates = []
+    for field in ("order_date", "ord_dt", "ORD_DT"):
+        if isinstance(output, dict):
+            if field not in output:
+                continue
+            value = output[field]
+        else:
+            if not hasattr(output, field):
+                continue
+            value = getattr(output, field)
+        if not isinstance(value, str) or re.fullmatch(r"[0-9]{8}", value) is None:
+            return None
+        try:
+            datetime.strptime(value, "%Y%m%d")
+        except ValueError:
+            return None
+        dates.append(value)
+    return dates[0] if dates and len(set(dates)) == 1 else None
 
 
 class PortfolioInquiryError(RuntimeError):

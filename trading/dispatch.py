@@ -19,7 +19,7 @@ from . import yaml_compat as yaml
 from .config_paths import active_kis_config_path, runtime_file_path
 from .domestic import AsyncTradingContext, DomesticStockTrading
 from .execution_ledger import ExecutionLedger, execution_identities
-from .execution_outcome import classify_broker_result
+from .execution_outcome import broker_order_date, classify_broker_result
 from .file_lock import FileLock
 from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
 from .modes import normalize_trading_mode
@@ -294,6 +294,7 @@ class AccountDispatchResult:
     # queue-drain dispositions tell "already executed earlier" apart from
     # "blocked by an ambiguous claim".
     previous_status: str | None = None
+    order_date: str | None = None
 
 
 @dataclass(slots=True)
@@ -304,6 +305,8 @@ class DispatchResult:
     market: str
     accounts: list[AccountDispatchResult] = field(default_factory=list)
     order_no: str | None = None
+    # Broker acceptance provenance only; never a confirmed execution.
+    order_date: str | None = None
 
 
 def _durable_buy_receipt(signal: SignalMessage, result: DispatchResult) -> dict[str, str] | None:
@@ -321,7 +324,11 @@ def _durable_buy_receipt(signal: SignalMessage, result: DispatchResult) -> dict[
         or not order_no.strip("0")
     ):
         return None
-    return {"order_no": order_no}
+    receipt = {"order_no": order_no}
+    date = broker_order_date({"order_date": result.order_date})
+    if date is not None:
+        receipt["order_date"] = date
+    return receipt
 
 
 class MultiAccountTradeDispatcher:
@@ -558,6 +565,7 @@ class MultiAccountTradeDispatcher:
                         status=result.status,
                         message=result.message,
                         order_id=result.order_no,
+                        order_date=result.order_date,
                     )
                 )
                 logger.info(
@@ -1041,6 +1049,9 @@ class TradeDispatcher:
                     signal.signal_type,
                     signal.market,
                     order_no=getattr(strategy_result, "order_no", None),
+                    order_date=broker_order_date({
+                        "order_date": getattr(strategy_result, "order_date", None),
+                    }),
                 )
             elif order_account is None:
                 result = await self._execute_legacy_trade(signal)
@@ -1453,6 +1464,7 @@ class TradeDispatcher:
         return DispatchResult(
             status, message, signal.signal_type, signal.market,
             order_no=str(trade_result.get("order_no") or "") or None,
+            order_date=broker_order_date(trade_result),
         )
 
 

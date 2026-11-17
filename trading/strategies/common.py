@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 from ..config_paths import configured_runtime_dir
 from ..domestic import AsyncTradingContext
-from ..execution_outcome import classify_broker_result
+from ..execution_outcome import broker_order_date, classify_broker_result
 from ..file_lock import FileLock, fsync_parent_directory
 from ..schema import SignalMessage
 from ..signal_sizing import adjusted_sell_fraction, configured_buy_budget, scaled_buy_amount
@@ -230,15 +230,6 @@ async def execute_order(signal: SignalMessage, *, trading_mode: str, buy_amount:
         )
 
 
-def _validated_broker_order_date(value: str) -> str | None:
-    """Preserve only valid broker-origin calendar dates, never infer one."""
-    try:
-        datetime.strptime(value, "%Y%m%d")
-    except ValueError:
-        return None
-    return value
-
-
 def execution_from_result(signal: SignalMessage, result: dict[str, Any], message_prefix: str, **details: Any) -> StrategyExecution:
     broker_message = str(result.get("message", ""))
     message = f"{message_prefix}: {broker_message}" if broker_message else message_prefix
@@ -255,12 +246,7 @@ def execution_from_result(signal: SignalMessage, result: dict[str, Any], message
         # Preserve only string broker identifiers. Dispatch/ledger enforce
         # canonical numeric KIS receipts and fail closed on ambiguity.
         order_no=(result.get("order_no") if isinstance(result.get("order_no"), str) else None),
-        order_date=(
-            _validated_broker_order_date(result["order_date"])
-            if isinstance(result.get("order_date"), str)
-            and re.fullmatch(r"[0-9]{8}", result["order_date"])
-            else None
-        ),
+        order_date=broker_order_date(result),
     )
 
 
