@@ -1,0 +1,48 @@
+{
+  "run_id": "scheduled-20261117T1415-KST",
+  "status": "STALLED_CI_GREEN_FINANCIAL_UNVERIFIED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "db705f4c1dcfdf4e81822fba875ae41fde86abc8",
+  "upstream_change": "PR #1388 fixed-wave BTC benchmark replay; five files, including workflow ci.yml; not yet integrated or audited",
+  "ci": {
+    "run_id": 43937874781,
+    "head_sha": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+    "conclusion": "success",
+    "checks": [
+      "Full pytest suite:success",
+      "Windows runtime smoke:success"
+    ]
+  },
+  "new_mock_runs": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "new_complete_audits": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "ledger_observation": "inspect_unresolved_buy_history requires EVIDENCE_ONLY complete read-only history; checks receipt, order date, ticker, account_scope, ambiguous duplicate claims; returns POSSIBLE_RECEIPT_MATCH without fill_attributed or stop authorization. record_read_only_buy_history stores operator triage snapshots only, not fill attribution.",
+  "ledger_blob_sha": "9162199532e31857835ab22e1ef17cfe6afd0711",
+  "unverified_transitions": [
+    "acceptance vs fill",
+    "UNKNOWN",
+    "delayed/partial fill",
+    "cancel/reject",
+    "duplicate",
+    "remaining quantity",
+    "stop-loss activation",
+    "multi-account isolation",
+    "restart",
+    "ledger write failure",
+    "recovery"
+  ],
+  "branch_protection": "403 forbidden",
+  "reviews": 0,
+  "security": "Qlty/Snyk unverified",
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'trading/execution_ledger.py',ref:'8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5',start_line:675,end_line:790})",
+  "kis_calls": 0,
+  "real_orders": 0
+}
