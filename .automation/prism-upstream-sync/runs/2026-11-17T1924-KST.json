@@ -1,0 +1,52 @@
+{
+  "run_id": "scheduled-20261117T1924-KST",
+  "status": "STALLED_CI_GREEN_FINANCIAL_UNVERIFIED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "8f08bdbe032e6fd4301287a5e20ed41136350816",
+  "ci": {
+    "run_id": 43937874781,
+    "head_sha": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+    "status": "completed",
+    "conclusion": "success",
+    "checks": [
+      "Full pytest suite",
+      "Windows runtime smoke"
+    ]
+  },
+  "new_evidence": {
+    "file": "trading/stop_loss_watcher.py",
+    "blob_sha": "1f7ce6c1185ac2530b02fcb0b651e67832e574e3",
+    "lines": "700-970",
+    "observation": "Watcher chooses trader by dispatcher account_name/account_index for single account; get_cached_trader caches by market only. check_stop_loss_once obtains market:ticker positions and trader.get_holding_quantity(ticker), then blocks pending_buy, missing/invalid holdings and unresolved ledger before SELL. No account identifier on tracked position; account-specific ownership not demonstrated. Existing stop-loss test names discovered via GitHub code search; no new mock or baseline RED."
+  },
+  "new_tests": 0,
+  "new_mock_runs": 0,
+  "new_fixes": 0,
+  "new_complete_audits": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "review_count": 0,
+  "branch_protection": "403",
+  "security": "Qlty/Snyk unverified",
+  "unverified_transitions": [
+    "acceptance vs fill",
+    "UNKNOWN",
+    "delayed/partial fill",
+    "cancel/reject",
+    "duplicate",
+    "remaining quantity",
+    "stop-loss activation",
+    "multi-account isolation",
+    "restart",
+    "ledger write failure",
+    "recovery"
+  ],
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'tests/test_stop_loss_watcher.py',ref:'8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5'})",
+  "kis_calls": 0,
+  "real_orders": 0
+}
