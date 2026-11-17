@@ -1,0 +1,336 @@
+{
+  "schema_version": 1,
+  "run_id": "codex-prism-20261117-remediation",
+  "outcome": "PARTIAL_BLOCKED",
+  "initial_checkout": "e17032bac72c0aebac8a1e4710b2c4b018abc986",
+  "baseline": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "code_fix_commit": "6851f0131ba749903a8ab26f9ddf6ee0b3b8739b",
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "stage_A": "partial targeted related-path audit",
+  "stage_B": "not executed in separate authorized execution",
+  "stage_C": "changed-scope review by lead and independent workers",
+  "stage_D": "not executed in separate authorized execution",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "files": [
+    {
+      "path": "scripts/run_offline_pytest.py",
+      "blob_sha": "d136c8d2816866093a407c979ea2fd6d2c6c00bf",
+      "functions": [],
+      "reviewers": [
+        "tests"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "full offline suite 2955 PASS"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "tests/test_broker_date_ledger.py",
+      "blob_sha": "a03dc1457a91f98f6633d2b439b51474b29fbdf3",
+      "functions": [],
+      "reviewers": [
+        "lead",
+        "owning_worker_cross_review"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "tests/test_broker_date_ledger.py"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "tests/test_execution_interval_gaps.py",
+      "blob_sha": "a3cb605931eb52cc57b75601b7cb7260ec37ddf0",
+      "functions": [],
+      "reviewers": [
+        "lead",
+        "owning_worker_cross_review"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "tests/test_execution_interval_gaps.py"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "tests/test_kr_broker_date_provenance.py",
+      "blob_sha": "8c540a1c98a46cd2c648fa4f1bcd664cbfd8e02b",
+      "functions": [],
+      "reviewers": [
+        "lead",
+        "owning_worker_cross_review"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "tests/test_kr_broker_date_provenance.py"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "tests/test_us_broker_date_provenance.py",
+      "blob_sha": "6c8e35e63954c0ecb7187667be7d866e5da90a48",
+      "functions": [],
+      "reviewers": [
+        "lead",
+        "owning_worker_cross_review"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "tests/test_us_broker_date_provenance.py"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "5a1f9504343bc6afd9e45e862f3608123cb46828",
+      "functions": [],
+      "reviewers": [
+        "stoploss",
+        "upstream_review"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "full offline suite 2955 PASS"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "2997a73702d0d9fb7ee38ce4069bd077cb424d4d",
+      "functions": [],
+      "reviewers": [
+        "us",
+        "upstream_review"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "full offline suite 2955 PASS"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "5fbd75fa35ab329f0d445d4e40f49e8a60551a6b",
+      "functions": [],
+      "reviewers": [
+        "stoploss",
+        "upstream_review",
+        "kr"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "full offline suite 2955 PASS"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "a28f0097584faf9cc0eefcac8ae6b78d85a34ea6",
+      "functions": [],
+      "reviewers": [
+        "stoploss",
+        "upstream_review"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "full offline suite 2955 PASS"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "efa651ab3f0a7f64352e605f3fd26dbe6b8367e6",
+      "functions": [],
+      "reviewers": [
+        "kr"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "full offline suite 2955 PASS"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "trading/strategies/balance_split.py",
+      "blob_sha": "ba6ad28ba10538bd8bfa0ca48c2d779b6dad370d",
+      "functions": [],
+      "reviewers": [
+        "stoploss"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "full offline suite 2955 PASS"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "919acdc3f3632394a692acf485d7423f70dd5101",
+      "functions": [],
+      "reviewers": [
+        "stoploss",
+        "upstream_review"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "full offline suite 2955 PASS"
+      ],
+      "audit_pass": false
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "971db2b5a94cd3f7fdb4cc90a8f7b4158a5b98e8",
+      "functions": [],
+      "reviewers": [
+        "kr",
+        "upstream_review"
+      ],
+      "review_scope": "changed contracts, failure paths and adjacent callers; not full independent execution audit",
+      "tests": [
+        "full offline suite 2955 PASS"
+      ],
+      "audit_pass": false
+    }
+  ],
+  "execution_evidence": {
+    "baseline": {
+      "original_path": "/tmp/prism-baseline-pytest.log",
+      "sha256": "4526c32c1bf991e8708fc5f423efec8f83e7cb665e60ebb57194eb9cd5df93e3",
+      "exit_code": 0,
+      "tail": [
+        "........................................................................ [ 92%]",
+        "........................................................................ [ 95%]",
+        "........................................................................ [ 97%]",
+        "..........................................................               [100%]",
+        "2794 passed in 39.70s"
+      ]
+    },
+    "final": {
+      "original_path": "/tmp/prism-final-pytest.log",
+      "sha256": "e474a61ad9a67db742a7f4fbd178ec2fd3d574fbe5373ba989c9166b02a53c9b",
+      "exit_code": 0,
+      "tail": [
+        "........................................................................ [ 95%]",
+        "........................................................................ [ 97%]",
+        "........................................................................ [ 99%]",
+        "...                                                                      [100%]",
+        "2955 passed in 43.61s"
+      ]
+    },
+    "ledger_red": {
+      "original_path": "/tmp/prism-date-red.log",
+      "sha256": "b371833220c9646d9fb5f021e22602d872af5b5ba0cccf89fe5567f2ee5711ed",
+      "exit_code": 1,
+      "tail": [
+        "FAILED tests/test_broker_date_ledger.py::test_broker_date_survives_dispatch_and_restart[unknown-strategy-KR-005930]",
+        "FAILED tests/test_broker_date_ledger.py::test_broker_date_survives_dispatch_and_restart[unknown-strategy-US-AAPL]",
+        "FAILED tests/test_broker_date_ledger.py::test_broker_date_survives_dispatch_and_restart[unknown-legacy-KR-005930]",
+        "FAILED tests/test_broker_date_ledger.py::test_broker_date_survives_dispatch_and_restart[unknown-legacy-US-AAPL]",
+        "8 failed, 5 passed in 0.84s"
+      ]
+    },
+    "balance_red": {
+      "original_path": "/tmp/prism-date-balance-red.log",
+      "sha256": "cca01953dfce4ef3bdf4c3b3fb54f58d6a740b6e94f40c96af8c8d8105ef36e2",
+      "exit_code": 1,
+      "tail": [
+        "FAILED tests/test_broker_date_ledger.py::test_broker_date_survives_dispatch_and_restart[queued-executed-balance_split-KR-005930]",
+        "FAILED tests/test_broker_date_ledger.py::test_broker_date_survives_dispatch_and_restart[queued-executed-balance_split-US-AAPL]",
+        "FAILED tests/test_broker_date_ledger.py::test_broker_date_survives_dispatch_and_restart[queued-unknown-balance_split-KR-005930]",
+        "FAILED tests/test_broker_date_ledger.py::test_broker_date_survives_dispatch_and_restart[queued-unknown-balance_split-US-AAPL]",
+        "12 failed, 36 deselected in 1.46s"
+      ]
+    },
+    "kr_red_offline": {
+      "original_path": "/tmp/prism-kr-baseline/red.txt",
+      "sha256": "fff6e773344a5756ad168ca38a2cd6ba476016d661e26bf49542a886dd7044a7",
+      "exit_code": 1,
+      "tail": [
+        "FAILED tests/test_kr_broker_date_provenance.py::test_kr_async_preserves_date_for_accepted_and_unknown_order[False-BUY]",
+        "FAILED tests/test_kr_broker_date_provenance.py::test_kr_async_preserves_date_for_accepted_and_unknown_order[False-SELL]",
+        "FAILED tests/test_kr_broker_date_provenance.py::test_kr_async_preserves_date_for_accepted_and_unknown_order[True-BUY]",
+        "FAILED tests/test_kr_broker_date_provenance.py::test_kr_async_preserves_date_for_accepted_and_unknown_order[True-SELL]",
+        "18 failed, 9 passed in 0.11s"
+      ]
+    },
+    "interval_red": {
+      "original_path": "/tmp/prism-interval-red.log",
+      "sha256": "f6a2df3f1857ab46f3acde8964e94a820ee9046f5922b6b8ece37bb0c2553152",
+      "exit_code": 1,
+      "tail": [
+        "FAILED tests/test_execution_interval_gaps.py::test_equal_total_cannot_hide_overlapping_execution_intervals[True-discovery-KR]",
+        "FAILED tests/test_execution_interval_gaps.py::test_equal_total_cannot_hide_overlapping_execution_intervals[True-discovery-US]",
+        "FAILED tests/test_execution_interval_gaps.py::test_equal_total_cannot_hide_overlapping_execution_intervals[True-cached-KR]",
+        "FAILED tests/test_execution_interval_gaps.py::test_equal_total_cannot_hide_overlapping_execution_intervals[True-cached-US]",
+        "6 failed, 6 passed in 0.11s"
+      ]
+    },
+    "interval_green": {
+      "original_path": "/tmp/prism-interval-green.log",
+      "sha256": "8e461d7070300af9140901529ccd284567c2420917bbbc99fb50ef36c37929fb",
+      "exit_code": 0,
+      "tail": [
+        "OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+        "........................................................................ [ 58%]",
+        "....................................................                     [100%]",
+        "124 passed in 1.36s"
+      ]
+    },
+    "docker_original": {
+      "original_path": "/tmp/prism-docker-build.log",
+      "sha256": "14d0a8929248d4225fa37aa2c58a9bd8d5d64316ab078e2fe81cea58f24e788e",
+      "exit_code": 1,
+      "tail": [
+        "  13 | >>> RUN pip install --no-cache-dir -r requirements.txt",
+        "  14 |     ",
+        "  15 |     COPY subscriber.py .",
+        "--------------------",
+        "ERROR: failed to build: failed to solve: process \"/bin/sh -c pip install --no-cache-dir -r requirements.txt\" did not complete successfully: exit code: 1"
+      ]
+    },
+    "docker_CA_mounted": {
+      "original_path": "/tmp/prism-docker-build-ca.log",
+      "sha256": "9376e1135e1fd863d8fa56fad08e6a92630b669fed52a1a9cf418c9c96bfc0a9",
+      "exit_code": 0,
+      "tail": [
+        "#15 exporting layers",
+        "#15 exporting layers 3.4s done",
+        "#15 writing image sha256:76539bb641c5c8959d27b8737110f34f1184c02e12901c00fc77f540b444d5e2 done",
+        "#15 naming to docker.io/library/prism-insight-light:prism-verification done",
+        "#15 DONE 3.4s"
+      ]
+    },
+    "docker_offline_import": {
+      "original_path": "/tmp/prism-docker-import.log",
+      "sha256": "758e377acd62d7cd3123b088981ae80eb4132a9e45605888ccf33005d5ce9582",
+      "exit_code": 0,
+      "tail": [
+        "NETWORK_DISABLED_RUNTIME_IMPORT_OK"
+      ]
+    },
+    "platform_subset_on_linux": {
+      "original_path": "/tmp/prism-linux-platform-selection.log",
+      "sha256": "a2656e8dc35a375289a6b348f536c39db77c9c8955e765a353c30447e92c5acf",
+      "exit_code": 0,
+      "tail": [
+        "OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+        "........................................................................ [ 37%]",
+        "........................................................................ [ 75%]",
+        "...............................................                          [100%]",
+        "191 passed in 3.48s"
+      ]
+    }
+  },
+  "unverified_transitions": [
+    "broker-authoritative execution attribution",
+    "account-specific tracker state",
+    "partial/cancel remaining quantity transitions",
+    "automatic stop activation",
+    "restart recovery of actionable attributed position"
+  ],
+  "prior_stalled_count": null,
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION"
+}
