@@ -1,9 +1,8 @@
 {
-  "run_id": "scheduled-20261117T2017-KST",
-  "status": "RELEASED",
-  "acquired_expected_state_parent": "35dfc28edb06a02e20879016c91858297948de4b",
+  "run_id": "codex-prism-20261117-remediation",
+  "status": "ACTIVE",
+  "acquired_expected_state_parent": "86d63aa458411ac978f3d8ab18fe7afc32ff3745",
   "expected_pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
   "kis_calls": 0,
-  "real_orders": 0,
-  "release_expected_state_parent": "18cd75e42cef4a45585278f502eea1a4af0bef35"
+  "real_orders": 0
 }
