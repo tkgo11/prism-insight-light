@@ -1,0 +1,74 @@
+{
+  "run_id": "scheduled-20261117T2017-KST",
+  "status": "STALLED_CI_GREEN_FINANCIAL_UNVERIFIED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "8f08bdbe032e6fd4301287a5e20ed41136350816",
+  "latest_head_ci": {
+    "run_id": 43937874781,
+    "head_sha": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+    "status": "completed",
+    "conclusion": "success",
+    "checks": [
+      "Full pytest suite",
+      "Windows runtime smoke"
+    ]
+  },
+  "external_statuses": {
+    "snyk": {
+      "state": "success",
+      "description": "1 security test has passed"
+    },
+    "qlty": {
+      "state": "success",
+      "description": "89 blocking issues",
+      "gate": "NOT_PASS_UNTIL_ISSUES_REVIEWED"
+    }
+  },
+  "branch_protection": "403 Resource not accessible by integration",
+  "reviews": 0,
+  "new_evidence": {
+    "file": "tests/test_stop_loss_watcher.py",
+    "blob_sha": "4a01653810a0e5758da7a925dadc30e06652347f",
+    "scope": "all 1103 lines",
+    "existing_test_ids": [
+      "test_multi_account_stop_loss_retains_tracking_when_non_holding_account_fails",
+      "test_multi_account_stop_loss_retains_tracking_when_duplicate_suppressed_behind_executed",
+      "test_dispatcher_update_stop_loss_tracking_retains_with_non_holding_accounts",
+      "test_stop_loss_signal_id_is_stable_for_same_tracked_position",
+      "test_stop_loss_watcher_requires_valid_post_order_flat_balance",
+      "test_stop_loss_tracker_corruption_fails_closed",
+      "test_legacy_post_sell_rearm_cannot_erase_new_stop"
+    ],
+    "finding": "Existing tests exercise multi-account aggregate retention and stale-record protection but do not prove account-specific tracking of same ticker across two accounts after restart. No new test executed; no baseline RED."
+  },
+  "new_tests": 0,
+  "new_mock_runs": 0,
+  "new_fixes": 0,
+  "new_complete_audits": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "verified_paths": [
+    "test source inspected; CI head verified"
+  ],
+  "unverified_transitions": [
+    "acceptance vs fill",
+    "UNKNOWN",
+    "delayed/partial fill",
+    "cancel/reject",
+    "duplicate",
+    "remaining quantity",
+    "stop-loss activation",
+    "multi-account isolation",
+    "restart",
+    "ledger write failure",
+    "recovery"
+  ],
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'tests/test_partial_exit_stop_loss_safety.py',ref:'8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5'})",
+  "kis_calls": 0,
+  "real_orders": 0
+}
