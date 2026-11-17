@@ -1,0 +1,57 @@
+{
+  "run_id": "scheduled-20261117T1617-KST",
+  "status": "STALLED_CI_GREEN_FINANCIAL_UNVERIFIED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01fb4b3ab4ffeab88e0b8f10cebbd700764f8531",
+  "ci": {
+    "run_id": 43937874781,
+    "head_sha": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+    "status": "completed",
+    "conclusion": "success",
+    "checks": [
+      {
+        "id": 133547173153,
+        "name": "Full pytest suite",
+        "conclusion": "success"
+      },
+      {
+        "id": 133547172471,
+        "name": "Windows runtime smoke",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "watcher_observation": "record_position preserves pending_buy provenance, blocks pending BUY replacing confirmed protection; check_stop_loss_once blocks SELL when pending_buy, validates positive holdings and unchanged snapshot; _trigger_sell independently blocks pending BUY. _remove_if_verified_flat checks unresolved ledger BUY before removing tracked position. Multi-account holdings provenance and restart still unverified.",
+  "watcher_file": "trading/stop_loss_watcher.py",
+  "watcher_reviewed_lines": "350-970",
+  "new_tests": 0,
+  "new_mock_runs": 0,
+  "new_fixes": 0,
+  "new_complete_audits": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "unverified_transitions": [
+    "acceptance vs fill",
+    "UNKNOWN",
+    "delayed/partial fill",
+    "cancel/reject",
+    "duplicate",
+    "remaining quantity",
+    "stop-loss activation",
+    "multi-account isolation",
+    "restart",
+    "ledger write failure",
+    "recovery"
+  ],
+  "reviews": 0,
+  "branch_protection": "403 Resource not accessible by integration",
+  "security": "Qlty/Snyk unverified",
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'trading/stop_loss_watcher.py',ref:'8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5',start_line:970,end_line:1190})",
+  "kis_calls": 0,
+  "real_orders": 0
+}
