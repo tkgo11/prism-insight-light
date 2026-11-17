@@ -1,9 +1,13 @@
 {
-  "run_id": "codex-prism-20261117-remediation",
-  "status": "RELEASED",
-  "acquired_expected_state_parent": "86d63aa458411ac978f3d8ab18fe7afc32ff3745",
+  "run_id": "codex-prism-20261117-subagent-audits",
+  "status": "ACTIVE",
+  "acquired_expected_state_parent": "97e9a117aeab2bebc2c3531a24ede594525d2c0a",
   "expected_pr_head": "f3527787a95d22d4915ae954e7a1528f39b6ebde",
-  "release_expected_state_parent": "c949c86134db3a64b374be8729078b6064f65acf",
+  "methodology": "same-task subagent counters distinct from original execution counters",
+  "subagent_related_audits": 0,
+  "subagent_full_audits": 0,
+  "original_related_execution_audits": 0,
+  "original_full_execution_audits": 0,
   "kis_calls": 0,
   "real_orders": 0
 }
