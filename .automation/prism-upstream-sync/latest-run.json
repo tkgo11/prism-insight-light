@@ -1,12 +1,14 @@
 {
-  "schema_version": 2,
-  "run_id": "scheduled-20261117T2017-KST",
-  "status": "STALLED_CI_GREEN_FINANCIAL_UNVERIFIED",
+  "schema_version": 3,
+  "run_id": "codex-prism-20261117-remediation",
+  "status": "PARTIAL_BLOCKED",
   "pr": 43,
-  "head_sha": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
-  "report_path": ".automation/prism-upstream-sync/runs/2026-11-17T2017-KST.json",
+  "head_sha": "f3527787a95d22d4915ae954e7a1528f39b6ebde",
+  "report_path": ".automation/prism-upstream-sync/runs/codex-20261117-remediation.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261117-remediation.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/codex-20261117-risk-register.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'tests/test_partial_exit_stop_loss_safety.py',ref:'8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5'})"
+  "next_exact_action": "Add nonduplicate offline end-to-end delayed/partial/cancel/restart regressions for account-specific attributed BUY quantities and implement a persistent reconciliation contract without inferring fills from acceptance/aggregate balances."
 }

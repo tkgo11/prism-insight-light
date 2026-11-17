@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "run_id": "codex-prism-20261117-remediation",
+  "head_sha": "f3527787a95d22d4915ae954e7a1528f39b6ebde",
+  "risks": [
+    {
+      "id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "state": "OPEN",
+      "unverified_transitions": [
+        "authoritative account/order/date/execution fill attribution",
+        "delayed/partial/cancel remaining reconciliation",
+        "account-specific tracker quantity and threshold isolation",
+        "automatic pending BUY stop activation",
+        "restart recovery of actionable attributed positions"
+      ]
+    },
+    {
+      "id": "BROKER_DATE_LOSS",
+      "parent": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "state": "FIXED_MOCK_VERIFIED",
+      "commit": "6851f0131ba749903a8ab26f9ddf6ee0b3b8739b"
+    },
+    {
+      "id": "OVERLAPPING_CUMULATIVE_INTERVALS",
+      "parent": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "state": "FIXED_MOCK_VERIFIED",
+      "commit": "6851f0131ba749903a8ab26f9ddf6ee0b3b8739b"
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 {
   "run_id": "codex-prism-20261117-remediation",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "acquired_expected_state_parent": "86d63aa458411ac978f3d8ab18fe7afc32ff3745",
-  "expected_pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
+  "expected_pr_head": "f3527787a95d22d4915ae954e7a1528f39b6ebde",
+  "release_expected_state_parent": "c949c86134db3a64b374be8729078b6064f65acf",
   "kis_calls": 0,
   "real_orders": 0
 }
