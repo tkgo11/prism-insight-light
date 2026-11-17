@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "run_id": "codex-prism-20261117-subagent-audits",
+  "head_sha": "a5efd1a4a44e4e25e7df7769d88523f05712a295",
+  "risks": [
+    {
+      "id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+      "status": "OPEN",
+      "critical": true,
+      "blocker": "With external trading possible, original BUY order history and aggregate balance are observationally identical for original lot remaining 4 versus 0 after external SELL/rebuy. Current inputs omit complete account transactions/transfers and allocation policy; cannot safely derive current ownership or authorize SELL.",
+      "next_exact_action": "Define source-backed complete-account transaction/transfer event and allocation contracts with deterministic offline fixtures, then implement all BUY/SELL allocation, exact quantity reservations and confirmed exit consumption. Resolve cancellation provenance before freezing a candidate for independent R1/R2/F1/F2 audits."
+    },
+    {
+      "id": "RECEIPT_NAMESPACE_QUANTITY_VENUE_LOSS",
+      "status": "FIXED_MOCK_VERIFIED",
+      "commit": "10e743f9bb323a44ebe9065b8df4c58c978de12c"
+    },
+    {
+      "id": "CURRENT_OWNERSHIP_OBSERVABILITY",
+      "status": "BLOCKED_MISSING_TRANSACTION_TRANSFER_CONTRACT",
+      "user_external_transactions_possible": true
+    }
+  ],
+  "subagent_related_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "subagent_full_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_related_execution_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_full_execution_audits": {
+    "passed": 0,
+    "required": 2
+  }
+}

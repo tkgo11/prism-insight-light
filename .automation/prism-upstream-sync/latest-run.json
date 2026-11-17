@@ -1,14 +1,30 @@
 {
-  "schema_version": 3,
-  "run_id": "codex-prism-20261117-remediation",
+  "schema_version": 4,
+  "run_id": "codex-prism-20261117-subagent-audits",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
-  "head_sha": "f3527787a95d22d4915ae954e7a1528f39b6ebde",
-  "report_path": ".automation/prism-upstream-sync/runs/codex-20261117-remediation.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261117-remediation.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/codex-20261117-risk-register.json",
+  "head_sha": "a5efd1a4a44e4e25e7df7769d88523f05712a295",
+  "report_path": ".automation/prism-upstream-sync/runs/codex-20261117-subagent-continuation.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261117-subagent-continuation.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/codex-20261117-ownership-risk-register.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "subagent_related_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "subagent_full_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_related_execution_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_full_execution_audits": {
+    "passed": 0,
+    "required": 2
+  },
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Add nonduplicate offline end-to-end delayed/partial/cancel/restart regressions for account-specific attributed BUY quantities and implement a persistent reconciliation contract without inferring fills from acceptance/aggregate balances."
+  "next_exact_action": "Define source-backed complete-account transaction/transfer event and allocation contracts with deterministic offline fixtures, then implement all BUY/SELL allocation, exact quantity reservations and confirmed exit consumption. Resolve cancellation provenance before freezing a candidate for independent R1/R2/F1/F2 audits."
 }

@@ -1,0 +1,189 @@
+{
+  "schema_version": 4,
+  "run_id": "codex-prism-20261117-subagent-audits",
+  "status": "PARTIAL_BLOCKED",
+  "session_start_time": null,
+  "lease_acquired_at": "2026-11-17T12:44:19Z",
+  "end_time": "2026-11-17 12:51:53 UTC",
+  "baseline_head": "f3527787a95d22d4915ae954e7a1528f39b6ebde",
+  "final_candidate_sha": "a5efd1a4a44e4e25e7df7769d88523f05712a295",
+  "code_fix_commit": "10e743f9bb323a44ebe9065b8df4c58c978de12c",
+  "audit_candidate_sha": null,
+  "pr": 43,
+  "pr_head": "a5efd1a4a44e4e25e7df7769d88523f05712a295",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "pr_status": "open Draft, not merged",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "primary_risk_status": "OPEN_CURRENT_OWNERSHIP_EVIDENCE_MISSING",
+  "prior_stalled_count": null,
+  "subagent_related_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "subagent_full_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_related_execution_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_full_execution_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "related_passes": 0,
+  "full_passes": 0,
+  "methodology_change": "User authorized four independent same-task Subagent audits; original separate-execution counters remain unchanged. Campaign not launched because critical ownership prerequisite blocked.",
+  "audit_results": {
+    "R1": {
+      "result": "NOT_STARTED",
+      "inspected_files": 0,
+      "total_files": 233,
+      "reason": "Critical ownership reconciliation prerequisite incomplete; no audit PASS claimed"
+    },
+    "R2": {
+      "result": "NOT_STARTED",
+      "inspected_files": 0,
+      "total_files": 233,
+      "reason": "Critical ownership reconciliation prerequisite incomplete; no audit PASS claimed"
+    },
+    "F1": {
+      "result": "NOT_STARTED",
+      "inspected_files": 0,
+      "total_files": 268,
+      "reason": "Critical ownership reconciliation prerequisite incomplete; no audit PASS claimed"
+    },
+    "F2": {
+      "result": "NOT_STARTED",
+      "inspected_files": 0,
+      "total_files": 268,
+      "reason": "Critical ownership reconciliation prerequisite incomplete; no audit PASS claimed"
+    }
+  },
+  "user_confirmed_external_transactions_possible": true,
+  "engineering_agents": [
+    {
+      "name": "kr",
+      "scope": "KR receipt identity, pure bounded fill summary"
+    },
+    {
+      "name": "us",
+      "scope": "US receipt identity and independent KR review"
+    },
+    {
+      "name": "ledger",
+      "scope": "durable evidence schema, idempotency, conflict/restart validation"
+    },
+    {
+      "name": "stoploss",
+      "scope": "real watcher/dispatcher nonactivation integration tests"
+    },
+    {
+      "name": "tests",
+      "scope": "regression/static/Docker/CI, immutable manifests"
+    },
+    {
+      "name": "upstream_review",
+      "scope": "independent adversarial engineering review, external inventory counterexample"
+    }
+  ],
+  "confirmed_metadata_losses": [
+    "reservation and normal broker order namespace discarded",
+    "submitted quantity and US venue not retained across dispatch/restart"
+  ],
+  "actual_fixes": [
+    "explicit namespace/submitted quantity/venue persistence",
+    "strict account/order/date/venue bounded historical fill summaries",
+    "atomic canonical evidence plus recomputed restart validation and monotonic updates",
+    "mandatory offline Linux CI runner"
+  ],
+  "not_implemented": [
+    "current strategy-owned inventory book covering external SELL/transfers",
+    "all SELL paths scoped allocation and confirmed quantity consumption",
+    "exact account/quantity bound durable stop exit reservation",
+    "cancel terminal proof from explicit canceled qty/root chain",
+    "automatic safe stop activation"
+  ],
+  "baseline_fail_observed": true,
+  "baseline_red": {
+    "KR_metadata_assertions": 15,
+    "US_metadata_assertions": 29,
+    "strategy_receipt_assertions": 12,
+    "ledger_metadata_assertions": 2,
+    "summary_missing_feature": 62,
+    "note": "Missing feature failures distinguished from existing unsafe trading defects; transient shared import collection error excluded"
+  },
+  "latest_attempt_command_or_test_id": "python scripts/run_offline_pytest.py -q",
+  "mock_result": {
+    "baseline_passed": 2955,
+    "final_passed": 3185,
+    "new_cases": 230,
+    "new_file_cases": 194,
+    "expanded_existing_cases": 36,
+    "exit_code": 0,
+    "offline": "libseccomp denies non-Unix sockets inherited by subprocesses"
+  },
+  "latest_head_CI": {
+    "run_id": 44086505616,
+    "head_sha": "a5efd1a4a44e4e25e7df7769d88523f05712a295",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tkgo11/prism-insight-light/actions/runs/44086505616",
+    "linux_tests": 3185,
+    "linux_offline_guard_log_verified": true,
+    "windows_tests": 191,
+    "docker_build": "success"
+  },
+  "external_statuses": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success",
+      "description": "1 security test has passed",
+      "target_url": "https://app.snyk.io/org/tkgo11/pr-checks/49ce778f-ba21-46ae-a860-6ba6af929792"
+    },
+    {
+      "context": "qlty check",
+      "state": "success",
+      "description": "88 blocking issues",
+      "target_url": "https://qlty.sh/gh/tkgo11/projects/prism-insight-light/pull/43/issues"
+    }
+  ],
+  "historical_baseline_qlty_blocking_issues": 89,
+  "human_reviews": 0,
+  "branch_protection": "403 Resource not accessible by integration",
+  "inventory": {
+    "head_sha": "a5efd1a4a44e4e25e7df7769d88523f05712a295",
+    "tree_sha": "c6eb77dbaad920c657bca35fbbd876c8620858c2",
+    "full_files": 268,
+    "related_files": 233,
+    "gitlinks": 0,
+    "audited_files": 0,
+    "manifest_sha256": "638dde505eded0386fbaf965098b84a48fb591439f7254818d09d6b8b85ae438",
+    "tested_files_sha256_matched": 217,
+    "tested_files_mismatch": 0
+  },
+  "exact_blocker": "With external trading possible, original BUY order history and aggregate balance are observationally identical for original lot remaining 4 versus 0 after external SELL/rebuy. Current inputs omit complete account transactions/transfers and allocation policy; cannot safely derive current ownership or authorize SELL.",
+  "unverified_transitions": [
+    "historical BUY fill -> current owned inventory",
+    "partial cancel terminal and remaining quantity release",
+    "all internal/external SELL and transfer allocation",
+    "exact scoped stop SELL reservation and confirmed fill consumption",
+    "automatic stop activation/recovery"
+  ],
+  "evidence_delta": "230 extra offline cases, metadata assertion RED/GREEN, durable nonactionable account-specific evidence and restart/corruption checks, current-ownership counterexample, final-head offline Linux+Windows+Docker CI success; no final audits",
+  "next_exact_action": "Define source-backed complete-account transaction/transfer event and allocation contracts with deterministic offline fixtures, then implement all BUY/SELL allocation, exact quantity reservations and confirmed exit consumption. Resolve cancellation provenance before freezing a candidate for independent R1/R2/F1/F2 audits.",
+  "upstream_integration": "none in continuation",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261117-subagent-continuation.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/codex-20261117-ownership-risk-register.json",
+  "repository_report": "docs/PRISM_SUBAGENT_AUDIT_CONTINUATION_2026-11-17.md",
+  "repository_evidence": "docs/prism-subagent-continuation-evidence-2026-11-17.json",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "lease": {
+    "acquired_commit": "d086ad4c1a0f9eb99c387c1e8cc490aef302d14f",
+    "acquired_expected_parent": "97e9a117aeab2bebc2c3531a24ede594525d2c0a",
+    "release_expected_parent": "d086ad4c1a0f9eb99c387c1e8cc490aef302d14f",
+    "protocol": "Connector-only blob/tree/commit/ref, expected_sha and force=false, owner reverified before each write"
+  }
+}
