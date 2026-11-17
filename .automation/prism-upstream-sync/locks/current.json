@@ -1,9 +1,8 @@
 {
-  "run_id": "scheduled-20261117T1415-KST",
-  "status": "RELEASED",
-  "acquired_expected_state_parent": "72f085e17426733c7f0e6426ee39a530ed764d18",
+  "run_id": "scheduled-20261117T1523-KST",
+  "status": "ACTIVE",
+  "acquired_expected_state_parent": "d1190ba02e105c87a52747da46fb8ef47d8db75d",
   "expected_pr_head": "8cb4d7a6540d7b8e339ca330fd3ed6d83b802ef5",
-  "release_expected_state_parent": "cd513e8ebd41ed4086e4913c78b1b6b823c26e0d",
   "kis_calls": 0,
   "real_orders": 0
 }
