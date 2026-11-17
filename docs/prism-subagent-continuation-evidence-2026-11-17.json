@@ -1,0 +1,356 @@
+{
+  "schema_version": 1,
+  "run_id": "codex-prism-20261117-subagent-audits",
+  "outcome": "PARTIAL_BLOCKED",
+  "baseline": "f3527787a95d22d4915ae954e7a1528f39b6ebde",
+  "code_commit": "10e743f9bb323a44ebe9065b8df4c58c978de12c",
+  "final_audit_candidate": null,
+  "primary_risk": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "primary_risk_status": "OPEN_CURRENT_OWNERSHIP_EVIDENCE_MISSING",
+  "user_confirmed_external_transactions_possible": true,
+  "subagent_related_audits": 0,
+  "subagent_full_audits": 0,
+  "original_related_execution_audits": 0,
+  "original_full_execution_audits": 0,
+  "audit_assignments": {
+    "R1": {
+      "status": "NOT_STARTED",
+      "inspected_files": 0,
+      "scope": "related",
+      "reason": "Critical ownership/cancel/exit implementation prerequisite blocked by missing account transaction and transfer evidence"
+    },
+    "R2": {
+      "status": "NOT_STARTED",
+      "inspected_files": 0,
+      "scope": "related",
+      "reason": "Critical ownership/cancel/exit implementation prerequisite blocked by missing account transaction and transfer evidence"
+    },
+    "F1": {
+      "status": "NOT_STARTED",
+      "inspected_files": 0,
+      "scope": "full",
+      "reason": "Critical ownership/cancel/exit implementation prerequisite blocked by missing account transaction and transfer evidence"
+    },
+    "F2": {
+      "status": "NOT_STARTED",
+      "inspected_files": 0,
+      "scope": "full",
+      "reason": "Critical ownership/cancel/exit implementation prerequisite blocked by missing account transaction and transfer evidence"
+    }
+  },
+  "engineering_agents": [
+    "kr",
+    "us",
+    "ledger",
+    "stoploss",
+    "tests",
+    "upstream_review"
+  ],
+  "files": [
+    {
+      "path": ".github/workflows/tests.yml",
+      "blob_sha": "cafa149efe9852a53a133ebf6874b1341a9e8c06",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "tests/test_broker_date_ledger.py",
+      "blob_sha": "afa0884ea814a294b8078178f56f59afea416bad",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "tests/test_buy_fill_evidence.py",
+      "blob_sha": "7345c7222aa792781e011e7f2afae161c9243004",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "tests/test_durable_buy_fill_evidence.py",
+      "blob_sha": "890cb060a2c7dfad870401f7ab494a7f1f079f47",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "tests/test_external_inventory_ambiguity.py",
+      "blob_sha": "23374d0b5f501e22703c32d308cf5e4c2ae23e8c",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "tests/test_kr_order_receipt_identity.py",
+      "blob_sha": "ac8dee802272b1041a6ac51db64741d77950aebc",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "tests/test_order_identity_dispatch.py",
+      "blob_sha": "f576f4190836cdde823ad500ee66656af3d45695",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "tests/test_reconciled_buy_never_authorizes_stop.py",
+      "blob_sha": "e989de2a59ad1df1c3d8f369f5e12c81b0f6be94",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "tests/test_us_order_receipt_identity.py",
+      "blob_sha": "517b6d46a76a0c990e8cacf61dbdeadc061636fb",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "7db90461483f58a9d19ef44b31f30c623ff8a61f",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "trading/domestic.py",
+      "blob_sha": "d31ef96c84a60402182ae646b217b7c28bfcbf3a",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "us",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "0322c03c61e41855b7f7d6c86a81005b7a3d47d3",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "trading/execution_outcome.py",
+      "blob_sha": "f98cd1ecc4de52290d27a9de23535764436a27dc",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "trading/order_reconciliation.py",
+      "blob_sha": "492b3cb72cd772033fae2fa6136ca49e8bf8d2a2",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "trading/strategies/balance_split.py",
+      "blob_sha": "b31b410d998bbe0f593210d9324ca1ddfde3ecd2",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "trading/strategies/common.py",
+      "blob_sha": "a89be588448532743ec7cb094a09c502620e1358",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "lead",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    },
+    {
+      "path": "trading/us.py",
+      "blob_sha": "c2805c4271aa5cf0e1731303392fb2e212d2c99b",
+      "review_scope": "bounded changed contracts, failure paths and integration; not final related/full audit",
+      "engineering_reviewers": [
+        "kr",
+        "upstream_review"
+      ],
+      "function_inventory_not_review_claim": [],
+      "final_audit_examined": false
+    }
+  ],
+  "validation": {
+    "baseline_passed": 2955,
+    "final_local_passed": 3185,
+    "new_cases": 230,
+    "new_file_cases": 194,
+    "expanded_existing_cases": 36,
+    "offline": "Mandatory Linux seccomp denies non-Unix sockets, inherited by subprocesses",
+    "python": "3.12.14",
+    "actual_hosted_CI": "recorded separately at final delivery HEAD"
+  },
+  "execution_evidence": {
+    "baseline": {
+      "original_path": "/tmp/prism-f352778-baseline.log",
+      "sha256": "9d5030f20ed2b806a06d3e5a86e513522d1a3bf8ed65ce2fb4d880726d2e8f32",
+      "exit_code": 0,
+      "tail": [
+        "........................................................................ [ 97%]",
+        "........................................................................ [ 99%]",
+        "...                                                                      [100%]",
+        "2955 passed in 45.00s"
+      ]
+    },
+    "KR_initial_feature_and_metadata_red": {
+      "original_path": "/tmp/prism-fill-summary-red.log",
+      "sha256": "7a5ebc6082e8984a75fe3e55c760f55fbc742011b3dbc0e46c013d929d599a67",
+      "exit_code": 1,
+      "tail": [
+        "FAILED tests/test_buy_fill_evidence.py::test_us_venue_must_be_present_and_match_original_receipt[nasd-history]",
+        "FAILED tests/test_buy_fill_evidence.py::test_us_venue_must_be_present_and_match_original_receipt[True-receipt]",
+        "FAILED tests/test_buy_fill_evidence.py::test_us_venue_must_be_present_and_match_original_receipt[True-history]",
+        "77 failed in 1.24s"
+      ]
+    },
+    "US_metadata_red": {
+      "original_path": "/tmp/prism-us-order-identity-red.log",
+      "sha256": "93270ba5c296ca10d162b9062343952dd7d430f796d5355febd531df6efb924a",
+      "exit_code": 1,
+      "tail": [
+        "FAILED tests/test_us_order_receipt_identity.py::test_us_async_preserves_submission_identity_including_unknown[True-broker_order-sell]",
+        "FAILED tests/test_us_order_receipt_identity.py::test_us_async_preserves_submission_identity_including_unknown[True-reservation-buy]",
+        "FAILED tests/test_us_order_receipt_identity.py::test_us_async_preserves_submission_identity_including_unknown[True-reservation-sell]",
+        "29 failed in 0.28s"
+      ]
+    },
+    "strategy_receipt_metadata_red": {
+      "original_path": "/tmp/prism-order-identity-dispatch-red.log",
+      "sha256": "a4ad816471446a9df5f2869805081c5e6eee4f59f09c3a2ccd6ec9143d106f78",
+      "exit_code": 1,
+      "tail": [
+        "FAILED tests/test_order_identity_dispatch.py::test_submission_identity_survives_strategy_and_receipt[receipt-broker_order-US-AAPL]",
+        "FAILED tests/test_order_identity_dispatch.py::test_submission_identity_survives_strategy_and_receipt[receipt-reservation-KR-005930]",
+        "FAILED tests/test_order_identity_dispatch.py::test_submission_identity_survives_strategy_and_receipt[receipt-reservation-US-AAPL]",
+        "12 failed, 6 passed in 0.92s"
+      ]
+    },
+    "ledger_metadata_red": {
+      "original_path": "/tmp/prism-fill-metadata-red.log",
+      "sha256": "af18fb06b1b86c5966879050770eb893a7848d79c274bdb35e4738c37deda1ca",
+      "exit_code": 1,
+      "tail": [
+        "=========================== short test summary info ============================",
+        "FAILED tests/test_durable_buy_fill_evidence.py::test_new_broker_receipt_metadata_is_persisted_exactly[KR]",
+        "FAILED tests/test_durable_buy_fill_evidence.py::test_new_broker_receipt_metadata_is_persisted_exactly[US]",
+        "2 failed, 12 deselected in 0.10s"
+      ]
+    },
+    "full_final": {
+      "original_path": "/tmp/prism-tranche-final-pytest.log",
+      "sha256": "6fe4c5a9d0d974a8deafa9fca8c252c2f9a681e36a56b98a6b22b40df8603b4a",
+      "exit_code": 0,
+      "tail": [
+        "........................................................................ [ 97%]",
+        "........................................................................ [ 99%]",
+        ".................                                                        [100%]",
+        "3185 passed in 53.49s"
+      ]
+    },
+    "independent_bounded_review": {
+      "original_path": "/tmp/prism-metadata-summary-independent-review.log",
+      "sha256": "4fdf20049bfd0d7966ad9090f36a621d54c8b24678ef5f0e96072370f16d17a2",
+      "exit_code": 0,
+      "tail": [
+        "........................................................................ [ 37%]",
+        "........................................................................ [ 74%]",
+        "..................................................                       [100%]",
+        "194 passed in 1.39s"
+      ]
+    },
+    "independent_mapping_queue_review": {
+      "original_path": "/tmp/prism-final-metadata-integration-review.log",
+      "sha256": "b7b05c57c12cd9741a1fe32c41b3f9567abc83be530e900a6b1c894d67dd81ab",
+      "exit_code": 0,
+      "tail": [
+        "OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+        "........................................................................ [ 70%]",
+        "..............................                                           [100%]",
+        "102 passed in 5.46s"
+      ]
+    },
+    "docker_build": {
+      "original_path": "/tmp/prism-tranche-docker-build.log",
+      "sha256": "b1176c4aa6f7ae1edaea3d0e85ffbf4c19496af777312a898d67d37de5325ae8",
+      "exit_code": 0,
+      "tail": [
+        "#15 exporting layers 1.3s done",
+        "#15 writing image sha256:f61d8377128c1de29b6a55dc2e33a950f4cd1604bc6247a3b9cfb1abfd9d989d done",
+        "#15 naming to docker.io/library/prism-insight-light:prism-tranche-verification done",
+        "#15 DONE 1.3s"
+      ]
+    },
+    "docker_import_network_none": {
+      "original_path": "/tmp/prism-tranche-docker-import.log",
+      "sha256": "758e377acd62d7cd3123b088981ae80eb4132a9e45605888ccf33005d5ce9582",
+      "exit_code": 0,
+      "tail": [
+        "NETWORK_DISABLED_RUNTIME_IMPORT_OK"
+      ]
+    }
+  },
+  "kis_calls": 0,
+  "real_orders": 0,
+  "next_exact_action": "Source-backed complete account transaction/transfer evidence contract and allocation policy, then persistent scoped BUY/SELL quantity book and exact quantity exit reservations before final audits"
+}
