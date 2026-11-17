@@ -23,7 +23,7 @@ from typing import Any, Iterable
 
 from .config_paths import runtime_file_path
 from .file_lock import FileLock, fsync_parent_directory
-from .order_reconciliation import _has_missing_anchored_execution
+from .order_reconciliation import _has_missing_anchored_execution, summarize_buy_fill_evidence
 
 DEFAULT_LEDGER_PATH = Path("runtime") / "multi_account_execution_ledger.json"
 MAX_LEDGER_ENTRIES = 10_000
@@ -161,11 +161,22 @@ def _validated_order_intent(value: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _validated_order_receipt(value: dict[str, Any]) -> dict[str, str]:
+def _validated_order_receipt(value: dict[str, Any]) -> dict[str, Any]:
     """Validate non-actionable broker acceptance evidence, never a fill."""
-    if (not isinstance(value, dict)
-            or set(value) not in ({"order_no"}, {"order_no", "order_date"})):
-        raise ValueError("BUY receipt must contain only an order number and optional broker date")
+    allowed = {"order_no", "order_date", "order_kind", "order_quantity", "order_venue"}
+    if not isinstance(value, dict) or "order_no" not in value or not set(value) <= allowed:
+        raise ValueError("BUY receipt must contain only approved broker metadata")
+    modern = "order_kind" in value or "order_quantity" in value
+    if modern:
+        if (value.get("order_kind") not in ("broker_order", "reservation")
+                or type(value.get("order_quantity")) is not int
+                or not 0 < value["order_quantity"] < 10**18):
+            raise ValueError("BUY receipt kind and positive quantity must be supplied together")
+    if "order_venue" in value and (
+        not modern or not isinstance(value["order_venue"], str)
+        or re.fullmatch(r"[A-Z0-9]{2,8}", value["order_venue"]) is None
+    ):
+        raise ValueError("BUY receipt venue is not canonical")
     order_no = value["order_no"]
     if (
         not isinstance(order_no, str)
@@ -180,6 +191,9 @@ def _validated_order_receipt(value: dict[str, Any]) -> dict[str, str]:
             raise ValueError("BUY receipt date is not canonical")
         datetime.strptime(date, "%Y%m%d")
         receipt["order_date"] = date
+    for key in ("order_kind", "order_quantity", "order_venue"):
+        if key in value:
+            receipt[key] = value[key]
     return receipt
 
 
@@ -352,6 +366,81 @@ def _validate_read_only_history_snapshot(
         raise ValueError("History snapshot fingerprint mismatch")
 
 
+def _fill_history_material(history: dict[str, Any]) -> dict[str, Any]:
+    """Keep only the exact normalized, non-sensitive broker inquiry schema."""
+    fields = {"market", "ticker", "account_scope", "order_no", "order_date",
+              "status", "complete", "can_activate_stop", "matches"}
+    if (not isinstance(history, dict)
+            or set(history) not in (fields, fields | {"order_venue"})):
+        raise ValueError("Invalid normalized fill history fields")
+    copied = json.loads(json.dumps(history, ensure_ascii=False, allow_nan=False))
+    if not isinstance(copied["matches"], list) or not 0 < len(copied["matches"]) <= 2000:
+        raise ValueError("Invalid normalized fill history rows")
+    # Identical broker notifications and page ordering do not create versions.
+    rows = {json.dumps(row, sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=False, allow_nan=False): row
+            for row in copied["matches"]}
+    copied["matches"] = [rows[key] for key in sorted(rows)]
+    return copied
+
+
+def _fill_fingerprint(history: dict[str, Any]) -> str:
+    return hashlib.sha256(json.dumps(
+        history, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=False, allow_nan=False,
+    ).encode("utf-8")).hexdigest()
+
+
+def _unique_dated_buy_receipt(entries, identity, intent, receipt) -> bool:
+    """An undated legacy receipt can conflict with every reuse of its number."""
+    for other_identity, other in entries.items():
+        if other_identity == identity:
+            continue
+        other_receipt = other.get("order_receipt")
+        if not isinstance(other_receipt, dict) or other_receipt.get("order_no") != receipt["order_no"]:
+            continue
+        try:
+            other_intent = _validated_order_intent(other.get("order_intent"))
+        except ValueError:
+            return False
+        if (other_intent["market"] == intent["market"]
+                and other_intent["account_scope"] == intent["account_scope"]
+                and ("order_date" not in other_receipt
+                     or other_receipt["order_date"] == receipt["order_date"])):
+            return False
+    return True
+
+
+def _validated_fill_evidence(entry, evidence) -> dict[str, Any]:
+    if (not isinstance(evidence, dict) or set(evidence) != {
+        "schema_version", "history", "summary", "captured_at", "fingerprint",
+    } or type(evidence["schema_version"]) is not int or evidence["schema_version"] != 1):
+        raise ValueError("Malformed durable fill evidence")
+    if entry.get("status") not in ("unknown", "executed") or entry.get("order_side") is not None:
+        raise ValueError("Fill evidence requires a protected BUY claim")
+    intent = _validated_order_intent(entry["order_intent"])
+    receipt = _validated_order_receipt({
+        key: value for key, value in entry["order_receipt"].items() if key != "observed_at"
+    })
+    history = _fill_history_material(evidence["history"])
+    if history != evidence["history"] or evidence["fingerprint"] != _fill_fingerprint(history):
+        raise ValueError("Noncanonical or conflicting fill history fingerprint")
+    summary = summarize_buy_fill_evidence(intent, receipt, history)
+    if (summary is None
+            or summary.get("can_activate_stop") is not False
+            or summary.get("current_owned_quantity") is not None
+            or json.dumps(summary, sort_keys=True, allow_nan=False)
+            != json.dumps(evidence["summary"], sort_keys=True, allow_nan=False)):
+        raise ValueError("Fill evidence summary cannot be recomputed")
+    captured_at = evidence["captured_at"]
+    if not isinstance(captured_at, str):
+        raise ValueError("Invalid fill capture timestamp")
+    parsed = datetime.fromisoformat(captured_at)
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError("Fill capture timestamp must be timezone-aware")
+    return summary
+
+
 class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
@@ -398,11 +487,7 @@ class ExecutionLedger:
                 continue  # Legacy claims remain supported and fail closed elsewhere.
             receipt = entry["order_receipt"]
             try:
-                if (not isinstance(receipt, dict)
-                        or set(receipt) not in (
-                            {"order_no", "observed_at"},
-                            {"order_no", "order_date", "observed_at"},
-                        )):
+                if not isinstance(receipt, dict) or "observed_at" not in receipt:
                     raise ValueError("Malformed persisted BUY receipt")
                 _validated_order_receipt({
                     key: value for key, value in receipt.items() if key != "observed_at"
@@ -450,6 +535,17 @@ class ExecutionLedger:
                 raise RuntimeError(
                     "Automatic-trading reconciliation evidence requires operator reconciliation"
                 ) from exc
+        for identity, entry in data.items():
+            if "buy_fill_evidence_v1" not in entry:
+                continue
+            try:
+                _validated_fill_evidence(entry, entry["buy_fill_evidence_v1"])
+                if not _unique_dated_buy_receipt(
+                    data, identity, entry["order_intent"], entry["order_receipt"],
+                ):
+                    raise ValueError("Multiple BUY claims have an ambiguous dated receipt")
+            except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                raise RuntimeError("Automatic-trading fill evidence requires operator reconciliation") from exc
         return data
 
     def _save(self, entries: dict[str, dict[str, Any]]) -> None:
@@ -747,6 +843,78 @@ class ExecutionLedger:
             entry["reconciliation_evidence"] = [*existing, snapshot]
             self._save(entries)
         return {**refused, "reason": "READ_ONLY_HISTORY_SAVED_FOR_OPERATOR"}
+
+    def record_reconciled_buy_evidence(
+        self, identity: str, history: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Persist bounded fill facts; NEVER infer current ownership or allow SELL.
+
+        Caller-supplied/cache evidence remains non-actionable. External trades
+        and transfers can consume a historical BUY even when its fills and
+        the latest aggregate balance look internally consistent.
+        """
+        refused = {"state": "unverified", "current_owned_quantity": None,
+                   "can_activate_stop": False}
+        if not isinstance(identity, str) or not identity:
+            return refused
+        try:
+            material = _fill_history_material(history)
+        except (TypeError, ValueError, OverflowError):
+            return refused
+        with FileLock(self.lock_path):
+            entries = self._load()
+            entry = entries.get(identity)
+            if (not isinstance(entry, dict)
+                    or entry.get("status") not in ("unknown", "executed")
+                    or entry.get("order_side") is not None):
+                return refused
+            try:
+                intent = _validated_order_intent(entry.get("order_intent"))
+                raw_receipt = entry.get("order_receipt")
+                if not isinstance(raw_receipt, dict):
+                    return refused
+                receipt = _validated_order_receipt({
+                    key: value for key, value in raw_receipt.items() if key != "observed_at"
+                })
+                summary = summarize_buy_fill_evidence(intent, receipt, material)
+            except (TypeError, ValueError, KeyError, OverflowError):
+                return refused
+            if summary is None:
+                return refused
+            if not _unique_dated_buy_receipt(entries, identity, intent, receipt):
+                raise RuntimeError("Multiple BUY claims have an ambiguous dated receipt")
+            previous = entry.get("buy_fill_evidence_v1")
+            if previous is not None:
+                old_summary = _validated_fill_evidence(entry, previous)
+                if old_summary == summary:
+                    return json.loads(json.dumps(summary))
+                old_executions = {row["execution_id"]: row for row in old_summary["executions"]}
+                new_executions = {row["execution_id"]: row for row in summary["executions"]}
+                if (old_summary["state"] == "filled_terminal"
+                        or summary["confirmed_filled_quantity"] < old_summary["confirmed_filled_quantity"]
+                        or any(new_executions.get(key) != value
+                               for key, value in old_executions.items())):
+                    raise RuntimeError("Conflicting or regressing BUY fill evidence")
+            evidence = {
+                "schema_version": 1, "history": material, "summary": summary,
+                "captured_at": datetime.now(timezone.utc).isoformat(),
+                "fingerprint": _fill_fingerprint(material),
+            }
+            _validated_fill_evidence(entry, evidence)
+            entry["buy_fill_evidence_v1"] = evidence
+            self._save(entries)
+            return json.loads(json.dumps(summary))
+
+    def get_reconciled_buy_evidence(self) -> list[dict[str, Any]]:
+        """Return validated historical fill summaries, never protective positions."""
+        with FileLock(self.lock_path):
+            entries = self._load()
+            summaries = []
+            for identity, entry in entries.items():
+                if "buy_fill_evidence_v1" in entry:
+                    summary = _validated_fill_evidence(entry, entry["buy_fill_evidence_v1"])
+                    summaries.append({"identity": identity, **summary})
+            return json.loads(json.dumps(summaries))
 
     def claim(
         self, identity: str, *, aliases: Iterable[str] = (), with_token: bool = False,

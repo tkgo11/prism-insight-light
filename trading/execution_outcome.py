@@ -13,6 +13,31 @@ from datetime import datetime
 from typing import Any
 
 
+def broker_receipt_metadata(result: Any) -> dict[str, Any]:
+    """Keep explicit submission identity metadata without inferring execution.
+
+    A reservation sequence is a different namespace from a broker order ID.
+    Missing/invalid metadata remains legacy evidence, never an authority to
+    attribute a fill or sell inventory. Quantity means submitted, not filled.
+    """
+    def value(key: str) -> Any:
+        return result.get(key) if isinstance(result, dict) else getattr(result, key, None)
+
+    kind, quantity, venue = (value(key) for key in (
+        "order_kind", "order_quantity", "order_venue",
+    ))
+    if kind not in ("broker_order", "reservation") or type(quantity) is not int:
+        return {}
+    if not 0 < quantity < 10**18:
+        return {}
+    metadata = {"order_kind": kind, "order_quantity": quantity}
+    if venue is not None:
+        if not isinstance(venue, str) or re.fullmatch(r"[A-Z0-9]{2,8}", venue) is None:
+            return {}
+        metadata["order_venue"] = venue
+    return metadata
+
+
 def broker_order_date(output: Any) -> str | None:
     """Retain an explicit, unambiguous broker date; never infer a date.
 

@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 from ..config_paths import configured_runtime_dir
 from ..domestic import AsyncTradingContext
-from ..execution_outcome import broker_order_date, classify_broker_result
+from ..execution_outcome import broker_order_date, broker_receipt_metadata, classify_broker_result
 from ..file_lock import FileLock, fsync_parent_directory
 from ..schema import SignalMessage
 from ..signal_sizing import adjusted_sell_fraction, configured_buy_budget, scaled_buy_amount
@@ -43,6 +43,9 @@ class StrategyExecution:
     order_no: str | None = None
     # Broker-provided order date is provenance, never evidence of a fill.
     order_date: str | None = None
+    order_kind: str | None = None
+    order_quantity: int | None = None
+    order_venue: str | None = None
 
 
 def strategy_name(payload: dict[str, Any] | None) -> str:
@@ -247,6 +250,7 @@ def execution_from_result(signal: SignalMessage, result: dict[str, Any], message
         # canonical numeric KIS receipts and fail closed on ambiguity.
         order_no=(result.get("order_no") if isinstance(result.get("order_no"), str) else None),
         order_date=broker_order_date(result),
+        **broker_receipt_metadata(result),
     )
 
 

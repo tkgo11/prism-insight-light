@@ -19,7 +19,7 @@ from . import yaml_compat as yaml
 from .config_paths import active_kis_config_path, runtime_file_path
 from .domestic import AsyncTradingContext, DomesticStockTrading
 from .execution_ledger import ExecutionLedger, execution_identities
-from .execution_outcome import broker_order_date, classify_broker_result
+from .execution_outcome import broker_order_date, broker_receipt_metadata, classify_broker_result
 from .file_lock import FileLock
 from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
 from .modes import normalize_trading_mode
@@ -295,6 +295,9 @@ class AccountDispatchResult:
     # "blocked by an ambiguous claim".
     previous_status: str | None = None
     order_date: str | None = None
+    order_kind: str | None = None
+    order_quantity: int | None = None
+    order_venue: str | None = None
 
 
 @dataclass(slots=True)
@@ -307,9 +310,12 @@ class DispatchResult:
     order_no: str | None = None
     # Broker acceptance provenance only; never a confirmed execution.
     order_date: str | None = None
+    order_kind: str | None = None
+    order_quantity: int | None = None
+    order_venue: str | None = None
 
 
-def _durable_buy_receipt(signal: SignalMessage, result: DispatchResult) -> dict[str, str] | None:
+def _durable_buy_receipt(signal: SignalMessage, result: DispatchResult) -> dict[str, Any] | None:
     """Extract canonical broker order identity without inferring any fill.
 
     Unknown/no-receipt orders remain durably fenced for manual reconciliation.
@@ -328,6 +334,7 @@ def _durable_buy_receipt(signal: SignalMessage, result: DispatchResult) -> dict[
     date = broker_order_date({"order_date": result.order_date})
     if date is not None:
         receipt["order_date"] = date
+    receipt.update(broker_receipt_metadata(result))
     return receipt
 
 
@@ -566,6 +573,7 @@ class MultiAccountTradeDispatcher:
                         message=result.message,
                         order_id=result.order_no,
                         order_date=result.order_date,
+                        **broker_receipt_metadata(result),
                     )
                 )
                 logger.info(
@@ -1052,6 +1060,7 @@ class TradeDispatcher:
                     order_date=broker_order_date({
                         "order_date": getattr(strategy_result, "order_date", None),
                     }),
+                    **broker_receipt_metadata(strategy_result),
                 )
             elif order_account is None:
                 result = await self._execute_legacy_trade(signal)
@@ -1465,6 +1474,7 @@ class TradeDispatcher:
             status, message, signal.signal_type, signal.market,
             order_no=str(trade_result.get("order_no") or "") or None,
             order_date=broker_order_date(trade_result),
+            **broker_receipt_metadata(trade_result),
         )
 
 

@@ -185,6 +185,105 @@ def _has_missing_anchored_execution(matches):
     )
 
 
+def summarize_buy_fill_evidence(intent, receipt, history):
+    """Summarize a dated, identified BUY's historical fills, never ownership.
+
+    This pure validator cannot authorize a stop, clear an unresolved claim,
+    or prove current holdings. External/manual trades may have changed the
+    account after the reported executions. Reservation identifiers and legacy
+    receipts lacking an explicit namespace/quantity remain unverified.
+    """
+    if not all(isinstance(value, dict) for value in (intent, receipt, history)):
+        return None
+    market, ticker, scope = (intent.get(key) for key in ("market", "ticker", "account_scope"))
+    ticker_pattern = r"[0-9]{6}" if market == "KR" else r"[A-Z0-9.]{1,16}"
+    if (intent.get("kind") not in ("buy_unresolved", "buy_stop_loss")
+            or market not in ("KR", "US")
+            or not isinstance(ticker, str) or re.fullmatch(ticker_pattern, ticker) is None
+            or not isinstance(scope, str) or re.fullmatch(r"[0-9a-f]{64}", scope) is None):
+        return None
+    order_no, order_date = receipt.get("order_no"), receipt.get("order_date")
+    ordered = receipt.get("order_quantity")
+    if (receipt.get("order_kind") != "broker_order"
+            or type(ordered) is not int or not 0 < ordered < 10**18
+            or not isinstance(order_no, str) or re.fullmatch(r"[0-9]{1,20}", order_no) is None
+            or not order_no.strip("0")
+            or not isinstance(order_date, str) or re.fullmatch(r"[0-9]{8}", order_date) is None):
+        return None
+    try:
+        datetime.strptime(order_date, "%Y%m%d")
+    except ValueError:
+        return None
+    if (history.get("status") != "EVIDENCE_ONLY"
+            or history.get("complete") is not True
+            or history.get("can_activate_stop") is not False
+            or any(history.get(key) != expected for key, expected in (
+                ("market", market), ("ticker", ticker), ("account_scope", scope),
+                ("order_no", order_no), ("order_date", order_date),
+            ))):
+        return None
+    venue = receipt.get("order_venue")
+    if market == "US":
+        if (not isinstance(venue, str) or re.fullmatch(r"[A-Z0-9]{2,8}", venue) is None
+                or history.get("order_venue") != venue):
+            return None
+    elif venue is not None or history.get("order_venue") is not None:
+        return None
+    matches = history.get("matches")
+    if not isinstance(matches, list) or not 0 < len(matches) <= 2000:
+        return None
+    expected_fields = {
+        "order_no", "order_date", "ticker", "order_quantity", "filled_quantity",
+        "execution_quantity", "remaining_quantity", "execution_id", "cancel_flag",
+    }
+    versions = {}
+    for match in matches:
+        if (not isinstance(match, dict) or set(match) != expected_fields
+                or match["order_no"] != order_no or match["order_date"] != order_date
+                or match["ticker"] != ticker
+                or type(match["order_quantity"]) is not int or match["order_quantity"] != ordered
+                # A cancellation flag does not establish its confirmed quantity
+                # or terminal broker status. Preserve that uncertainty.
+                or match["cancel_flag"] != "N"):
+            return None
+        execution_id = match["execution_id"]
+        if (not isinstance(execution_id, str)
+                or re.fullmatch(r"[A-Za-z0-9]{1,40}", execution_id) is None):
+            return None
+        quantity, cumulative, remaining = (match[key] for key in (
+            "execution_quantity", "filled_quantity", "remaining_quantity",
+        ))
+        if (type(quantity) is not int or not 0 < quantity <= ordered
+                or type(cumulative) is not int or not quantity <= cumulative <= ordered
+                or type(remaining) is not int or remaining != ordered - cumulative):
+            return None
+        if execution_id in versions and versions[execution_id] != match:
+            return None
+        versions[execution_id] = match
+    executions = sorted(versions.values(), key=lambda match: match["filled_quantity"])
+    filled = 0
+    for execution in executions:
+        # Exact duplicate rows contribute once; missing earlier executions,
+        # overlaps, and unexplained cumulative increments remain unverified.
+        if execution["filled_quantity"] - execution["execution_quantity"] != filled:
+            return None
+        filled = execution["filled_quantity"]
+    result = dict(
+        schema_version=1, market=market, ticker=ticker, account_scope=scope,
+        order_no=order_no, order_date=order_date, order_quantity=ordered,
+        confirmed_filled_quantity=filled, remaining_quantity=ordered-filled,
+        state="filled_terminal" if filled == ordered else "partial_open",
+        executions=[dict(execution_id=execution["execution_id"],
+                         quantity=execution["execution_quantity"],
+                         cumulative_quantity=execution["filled_quantity"])
+                    for execution in executions],
+        can_activate_stop=False, current_owned_quantity=None,
+    )
+    if market == "US":
+        result["order_venue"] = venue
+    return result
+
+
 def _matched(row, *, order_no, order_date, ticker, account, product):
     if not isinstance(row, dict):
         raise ValueError("malformed history row")
@@ -312,6 +411,7 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
     execution_quantities, total_execution_quantity = {}, 0
     cumulative_execution_ids, max_cumulative_quantity = set(), None
     us_venues = set()
+    us_venue_complete = True
     total_rows = 0
     for page in range(max_pages):
         try:
@@ -361,6 +461,8 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                 if match is not None:
                     if market == "US":
                         venue = _us_venue(row)
+                        if venue is None:
+                            us_venue_complete = False
                         if venue is not None:
                             us_venues.add(venue)
                             if len(us_venues) > 1:
@@ -432,6 +534,10 @@ def read_order_history(trader, *, market, order_no, order_date, ticker, max_page
                 if _has_missing_anchored_execution(matches):
                     return result
                 result.update(status="EVIDENCE_ONLY", complete=True, matches=matches)
+                if market == "US" and us_venue_complete and len(us_venues) == 1:
+                    # A missing venue on even one target row cannot establish
+                    # a complete venue-bound execution identity for summaries.
+                    result["order_venue"] = next(iter(us_venues))
                 return result
             if continuation not in ("M", "F"):
                 return result

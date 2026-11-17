@@ -34,6 +34,7 @@ from .execution_outcome import (
     PortfolioInquiryError,
     classify_broker_result,
     broker_order_date,
+    broker_receipt_metadata,
     rejection_is_ambiguous,
 )
 from .market_hours import KST
@@ -462,6 +463,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -472,6 +477,7 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] Market buy order successful: {buy_quantity} shares, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -484,6 +490,7 @@ class DomesticStockTrading:
                 logger.error(f"Buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -495,6 +502,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -602,6 +610,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -612,6 +624,7 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] Limit buy order successful: {buy_quantity} shares x {effective_limit_price:,} KRW, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -625,6 +638,7 @@ class DomesticStockTrading:
                 logger.error(f"Limit buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -637,6 +651,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during limit buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -757,6 +772,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -767,6 +786,7 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] After-hours closing price buy order successful: {buy_quantity} shares, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -779,6 +799,7 @@ class DomesticStockTrading:
                 logger.error(f"After-hours closing price buy failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -790,6 +811,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during after-hours closing price buy: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -870,6 +892,10 @@ class DomesticStockTrading:
         else:
             params["RSVN_ORD_END_DT"] = ""
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "reservation", "order_quantity": int(buy_quantity),
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -888,6 +914,7 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] Reserved buy order successful: {buy_quantity} shares, {order_type_str}, {period_str}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -903,6 +930,7 @@ class DomesticStockTrading:
                 error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
                 logger.error(f"Reserved buy order failed: {error_msg}")
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -914,6 +942,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during reserved buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -994,6 +1023,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1005,6 +1038,7 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] {order_kind} sell all order successful: {buy_quantity} shares, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -1018,6 +1052,7 @@ class DomesticStockTrading:
                 logger.error(f"Sell order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -1029,6 +1064,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during sell order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -1143,6 +1179,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1153,6 +1193,7 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] After-hours closing price sell order successful: {buy_quantity} shares, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -1163,6 +1204,7 @@ class DomesticStockTrading:
             else:
                 error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -1173,6 +1215,7 @@ class DomesticStockTrading:
 
         except Exception as e:
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -1248,6 +1291,10 @@ class DomesticStockTrading:
         else:
             params["RSVN_ORD_END_DT"] = ""
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "reservation", "order_quantity": int(buy_quantity),
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1266,6 +1313,7 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] Reserved sell order successful: {buy_quantity} shares, {order_type_str}, {period_str}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -1281,6 +1329,7 @@ class DomesticStockTrading:
                 error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
                 logger.error(f"Reserved sell order failed: {error_msg}")
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -1292,6 +1341,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during reserved sell order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -1403,6 +1453,7 @@ class DomesticStockTrading:
                             self.smart_buy, stock_code, amount, requested_limit_price
                         )
 
+                        result.update(broker_receipt_metadata(buy_result))
                         result['order_date'] = broker_order_date(buy_result)
                         submission_status = classify_broker_result(buy_result)
                         if submission_status == "executed":
@@ -1565,6 +1616,7 @@ class DomesticStockTrading:
                             self.smart_sell_all, stock_code, effective_limit_price, holding_quantity
                         )
 
+                        result.update(broker_receipt_metadata(all_sell_result))
                         result['order_date'] = broker_order_date(all_sell_result)
                         submission_status = classify_broker_result(all_sell_result)
                         if submission_status == "executed":

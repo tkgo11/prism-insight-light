@@ -69,6 +69,7 @@ from .portfolio_pagination import next_balance_cursor, validated_balance_row
 from .execution_outcome import (
     PortfolioInquiryError,
     broker_order_date,
+    broker_receipt_metadata,
     classify_broker_result,
     rejection_is_ambiguous,
 )
@@ -823,6 +824,11 @@ class USStockTrading:
             "ORD_DVSN": "01"   # Market order (시장가)
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -833,6 +839,7 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Market buy order success: {buy_quantity} shares, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -846,6 +853,7 @@ class USStockTrading:
                 logger.error(f"Buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -858,6 +866,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -944,6 +953,11 @@ class USStockTrading:
             "ORD_DVSN": "00"  # Limit order
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -954,6 +968,7 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Limit buy order success: {buy_quantity} shares x ${limit_price:.2f}, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -968,6 +983,7 @@ class USStockTrading:
                 logger.error(f"Limit buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -981,6 +997,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during limit buy: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -1091,6 +1108,11 @@ class USStockTrading:
             "ORD_DVSN": "00"   # Limit order (지정가) — TTTT1006U does not support "01"
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": quantity,
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1101,6 +1123,7 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Market sell order success: {quantity} shares, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -1113,6 +1136,7 @@ class USStockTrading:
                 logger.error(f"Sell order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -1124,6 +1148,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during sell order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -1271,6 +1296,11 @@ class USStockTrading:
             "ORD_SVR_DVSN_CD": "0"
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "reservation", "order_quantity": int(buy_quantity),
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1281,6 +1311,7 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Reserved buy order success: {buy_quantity} shares x ${limit_price:.2f}, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -1297,6 +1328,7 @@ class USStockTrading:
                 logger.error(f"Reserved buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -1309,6 +1341,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during reserved buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -1400,6 +1433,11 @@ class USStockTrading:
             "ORD_SVR_DVSN_CD": "0"
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "reservation", "order_quantity": int(quantity),
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1410,6 +1448,7 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Reserved sell order success: {quantity} shares, {order_type_str}, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
                     'order_date': broker_order_date(output),
@@ -1424,6 +1463,7 @@ class USStockTrading:
                 logger.error(f"Reserved sell order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -1435,6 +1475,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during reserved sell order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -1694,6 +1735,7 @@ class USStockTrading:
                         )
 
                         result["order_date"] = broker_order_date(buy_result)
+                        result.update(broker_receipt_metadata(buy_result))
                         submission_status = classify_broker_result(buy_result)
                         if submission_status == "executed":
                             result['quantity'] = int(buy_result.get('quantity') or buy_quantity)
@@ -1875,6 +1917,7 @@ class USStockTrading:
                         )
 
                         result["order_date"] = broker_order_date(sell_result)
+                        result.update(broker_receipt_metadata(sell_result))
                         submission_status = classify_broker_result(sell_result)
                         if submission_status == "executed":
                             result['success'] = True

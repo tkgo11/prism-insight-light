@@ -28,8 +28,9 @@ def test_receipt_never_invents_missing_or_invalid_broker_date(date):
 @pytest.mark.parametrize("route", ["strategy", "balance_split", "legacy"])
 @pytest.mark.parametrize("outcome", ["executed", "unknown"])
 @pytest.mark.parametrize("scope", ["single", "multi", "queued"])
+@pytest.mark.parametrize("modern_receipt", [False, True])
 async def test_broker_date_survives_dispatch_and_restart(
-    tmp_path, monkeypatch, market, ticker, route, outcome, scope,
+    tmp_path, monkeypatch, market, ticker, route, outcome, scope, modern_receipt,
 ):
     account = {"name": "synthetic", "account_key": "vps:12345678:01",
                "account": "12345678", "product": "01", "svr": "vps",
@@ -43,6 +44,10 @@ async def test_broker_date_survives_dispatch_and_restart(
                         lambda *a, **kw: SimpleNamespace(outcome="allow", fresh_quote=None))
     broker_result = {"success": outcome == "executed", "order_no": "00001234",
                      "order_date": "20261105", "outcome_unknown": outcome == "unknown"}
+    metadata = {"order_kind": "broker_order", "order_quantity": 3} if modern_receipt else {}
+    if modern_receipt and market == "US":
+        metadata["order_venue"] = "NASD"
+    broker_result.update(metadata)
     calls = []
 
     class Broker:
@@ -107,12 +112,24 @@ async def test_broker_date_survives_dispatch_and_restart(
     assert result.status == outcome and len(calls) == (2 if scope == "multi" else 1)
     if scope == "multi":
         assert [leg.order_date for leg in result.accounts] == ["20261105", "20261106"]
+        for leg in result.accounts:
+            for key, value in metadata.items():
+                assert getattr(leg, key) == value
     else:
         assert getattr(result, "order_date", None) == "20261105"
+        for key, value in metadata.items():
+            assert getattr(result, key) == value
     entries = json.loads(path.read_text())
     assert {entry["order_receipt"]["order_date"] for entry in entries.values()} == (
         {"20261105", "20261106"} if scope == "multi" else {"20261105"}
     )
+    for entry in entries.values():
+        for key, value in metadata.items():
+            assert entry["order_receipt"][key] == value
+        if not modern_receipt:
+            assert "order_kind" not in entry["order_receipt"]
+            assert "order_quantity" not in entry["order_receipt"]
+            assert "order_venue" not in entry["order_receipt"]
     restarted = ExecutionLedger(path)
     for identity in entries:
         assert restarted.claim(identity) == (False, outcome)

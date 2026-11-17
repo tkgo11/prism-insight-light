@@ -40,7 +40,7 @@ jobs:
           bash -n run.sh install_prism_docker.sh setup_subscriber_crontab.sh setup_subscriber_docker_crontab.sh
 
       - name: Run all tests
-        run: python -m pytest -q
+        run: python scripts/run_offline_pytest.py -q
 
       - name: Build runtime image
         run: docker build --tag prism-insight-light:test .
