@@ -254,3 +254,16 @@ def test_reused_receipt_cannot_attach_old_execution_to_new_attempt(tmp_path):
     with pytest.raises(ValueError, match="multiple"):
         book.record_submission(position_id, attempt["token"], outcome="ACCEPTED", receipt=_receipt())
     assert book.path.read_bytes() == before
+
+
+def test_us_receipt_date_uses_dst_aware_trade_calendar(tmp_path, monkeypatch):
+    from trading import managed_position_state
+
+    monkeypatch.setattr(managed_position_state, "_now", lambda: "2026-06-12T04:30:00+00:00")
+    book, position_id = _enroll(tmp_path, market="US")
+    attempt = _reserve(book, position_id)
+    book.mark_submitting(position_id, attempt["token"])
+    stale = {**_receipt("US"), "order_date": "20260611"}
+    with pytest.raises(ValueError, match="submission window"):
+        book.record_submission(position_id, attempt["token"], outcome="ACCEPTED", receipt=stale)
+    assert book.get(position_id)["attempts"][-1]["state"] == "SUBMITTING"

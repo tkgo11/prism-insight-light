@@ -14,6 +14,7 @@ from pathlib import Path
 import re
 import tempfile
 import uuid
+from zoneinfo import ZoneInfo
 
 from .config_paths import runtime_file_path
 from .file_lock import FileLock, fsync_parent_directory
@@ -90,8 +91,7 @@ def _check_receipt_date(receipt, market, submitted_at, observed_at):
         kst = timezone(timedelta(hours=9))
         observed_date = _time(observed_at).astimezone(kst).date()
         broker_date = datetime.strptime(receipt["order_date"], "%Y%m%d").date()
-        # NY standard time is the earliest plausible US venue calendar date.
-        earliest_zone = kst if market == "KR" else timezone(timedelta(hours=-5))
+        earliest_zone = kst if market == "KR" else ZoneInfo("America/New_York")
         earliest_date = _time(submitted_at).astimezone(earliest_zone).date()
         if not earliest_date <= broker_date <= observed_date:
             raise ValueError("Broker order date is outside the submission window")
