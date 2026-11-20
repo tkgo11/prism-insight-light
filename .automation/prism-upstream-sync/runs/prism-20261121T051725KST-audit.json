@@ -1,0 +1,61 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T051725KST-audit",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "1412dee17056d504a9416dbf6e4106bd6e81b86b",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "mock_result": "not rerun; historical 3372 passed",
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "id": 44801401976,
+    "head_sha": "7185f1ad5088dfe4b60a8fa53852693c17bcd5ec",
+    "conclusion": "failure",
+    "failed_job_id": 136514181859,
+    "failed_step": "Run all tests",
+    "root_cause": "UNCONFIRMED: no detailed logs; state workflow uses direct pytest -q versus PR offline runner"
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success status; 87 blocking issues",
+    "reviews": 0,
+    "branch_protection": "403"
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "formal_related_passes": 0,
+  "formal_full_passes": 0,
+  "unverified_transitions": [
+    "KIS all-channel authoritative open-order coverage",
+    "broker-side atomic external order serialization",
+    "lost-response order recovery identity",
+    "native execution IDs and cancellation proof"
+  ],
+  "new_evidence": [
+    "Current state HEAD and RELEASED lock confirmed; PR HEAD unchanged and Draft.",
+    "Latest state branch run 44801401976 failed Linux Run all tests job 136514181859; Windows smoke passed.",
+    "State workflow blob 11be975d457a88139ee8326c15c4aabb664db895 uses direct pytest -q; PR workflow blob cafa149efe9852a53a133ebf6874b1341a9e8c06 uses offline runner. Not equivalent CI.",
+    "Current commit status: Snyk SUCCESS, Qlty SUCCESS with 87 blocking issues; reviews 0; branch protection HTTP403.",
+    "Prior manifest read, inventory only. No new code defects, new tests or complete audits."
+  ],
+  "exact_blocker": "Actual KIS contracts not established; 2+2 audits incomplete; Qlty 87 blocking issues, human reviews zero, branch protection 403.",
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/jobs/136514181859/logs or supported annotations; inspect PR immutable-head related-file audit; do not conflate state CI with PR CI."
+}
