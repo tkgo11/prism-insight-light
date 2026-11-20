@@ -1,0 +1,62 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T031847KST-audit",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "1412dee17056d504a9416dbf6e4106bd6e81b86b",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "mock_result": "not rerun; historical 3372 passed",
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "linux": "success",
+    "windows": "success"
+  },
+  "state_branch_ci": {
+    "id": 44782068349,
+    "head_sha": "337e0d0315ebc20b92f6b725c76654cb2e7d4754",
+    "conclusion": "failure",
+    "failed_job_id": 136447080587,
+    "failed_step": "Run all tests",
+    "root_cause": "UNCONFIRMED: job step only, detailed logs unavailable; state workflow differs from PR HEAD"
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success commit status, 87 blocking issues",
+    "reviews": 0,
+    "branch_protection": "403"
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "formal_related_passes": 0,
+  "formal_full_passes": 0,
+  "unverified_transitions": [
+    "all-channel KIS open-order completeness",
+    "order/execution provenance live contract",
+    "UNKNOWN recovery identity",
+    "broker-side atomic order reservation"
+  ],
+  "new_evidence": [
+    "Current PR HEAD and upstream main rechecked, upstream changed to 1412dee17056d504a9416dbf6e4106bd6e81b86b.",
+    "State CI 44782068349 Linux Run all tests failed, Windows smoke passed; PR code CI 44732835470 succeeded on exact PR HEAD.",
+    "Read trading/managed_broker.py SHA 959bc15c972d5b56e23eb8653d75a0c82c4a04a8: native snapshot requires separate authoritative reservation_reader; without it fail closed, external MTS orders cannot be atomically serialized.",
+    "Read trading/managed_positions.py SHA 140340547940c934848b50dd83950d0eb0e3eaea, trading/managed_position_state.py SHA 69f5817b69d507ded8c80dafe28228aad53b9922, docs/FULL_POSITION_MANAGED.md SHA f2d830504d672df0e638c654b3628fb3ffc4348d, test integration/adversarial file SHAs; prior coverage includes restart, duplicate, partial fill, concurrent controller, missing snapshot, unknown reservation.",
+    "Qlty status description still reports 87 blocking issues, no human reviews; branch protection 403."
+  ],
+  "exact_blocker": "KIS full-channel/atomic contract unverified; 2+2 full audits not complete; Qlty 87 blocking issues; human review 0; branch protection 403.",
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44782068349/jobs; continue immutable-head audit focusing on trading/managed_broker.py _native_snapshot/_native_order and existing tests; do not count partial review."
+}
