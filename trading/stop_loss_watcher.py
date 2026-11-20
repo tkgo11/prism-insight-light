@@ -680,6 +680,12 @@ class StopLossWatcher:
                 if self.work_tracker is not None and not self.work_tracker.begin():
                     return
             try:
+                managed_check = getattr(self.dispatcher, "check_managed_positions", None)
+                if managed_check is not None:
+                    try:
+                        asyncio.run(managed_check())
+                    except Exception:
+                        logger.exception("Managed-position reconciliation paused")
                 self.check_stop_loss_once()
             except Exception as exc:  # noqa: BLE001
                 logger.exception("Stop-loss watcher error during check cycle: %s", exc)

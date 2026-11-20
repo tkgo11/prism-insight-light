@@ -21,6 +21,8 @@ from .domestic import AsyncTradingContext, DomesticStockTrading
 from .execution_ledger import ExecutionLedger, execution_identities
 from .execution_outcome import broker_order_date, broker_receipt_metadata, classify_broker_result
 from .file_lock import FileLock
+from .managed_position_state import ManagedPositionBook
+from .managed_positions import ManagedPositionController
 from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
 from .modes import normalize_trading_mode
 from .off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue, QueueExecutionResult
@@ -621,6 +623,7 @@ class TradeDispatcher:
         signal_gate: SignalSafetyGate | None = None,
         quote_provider: Any | None = None,
         fresh_quote_enabled: bool | None = None,
+        managed_gateway: Any | None = None,
     ):
         self.dry_run = dry_run
         self.execution_dedupe = execution_dedupe
@@ -662,6 +665,11 @@ class TradeDispatcher:
             and _as_enabled(setting.get("enabled") if isinstance(setting, dict) else setting)
         )
         self.execution_ledger = ExecutionLedger(execution_ledger_path)
+        self.managed_position_book = ManagedPositionBook()
+        self.managed_position_controller = (
+            ManagedPositionController(self.managed_position_book, managed_gateway)
+            if managed_gateway is not None else None
+        )
         self.multi_account_dispatcher = MultiAccountTradeDispatcher(
             self, self.execution_ledger
         )
@@ -732,6 +740,55 @@ class TradeDispatcher:
                 signal.signal_type, signal.market,
             )
         return None
+
+    async def check_managed_positions(self) -> list[dict[str, Any]]:
+        """Run opt-in exits under the same lock as local signal orders."""
+        controller = self.managed_position_controller
+        if (controller is None or self.dry_run
+                or self._runtime_config.get("auto_trading") is not True):
+            return []
+
+        def check() -> list[dict[str, Any]]:
+            results = []
+            for entry in controller.book.list_enrollments():
+                market = entry["market"]
+                if not is_market_open(market):
+                    continue
+                server = "vps" if self.trading_mode == "demo" else "prod"
+                scopes = [
+                    hashlib.sha256(account["account_key"].encode()).hexdigest()
+                    for account in ka.get_configured_accounts(svr=server, market=market.lower())
+                    if account.get("enabled") is True and account.get("product") == "01"
+                ]
+                if scopes.count(entry["account_scope"]) == 1:
+                    if self.execution_ledger.has_ambiguous_legacy_submission(
+                        market, entry["ticker"], entry["account_scope"],
+                    ):
+                        results.append({"position_id": entry["position_id"], "status": "PAUSED",
+                                        "reason": "LEGACY_SUBMISSION_UNRESOLVED"})
+                        continue
+                    results.append(controller.cycle(entry["position_id"]))
+            return results
+
+        try:
+            async with _serialized_broker_workflow():
+                return await _complete_broker_workflow(asyncio.to_thread(check))
+        except BrokerWorkflowBusyError:
+            return []
+
+    def _managed_instrument_policies(self, signal: SignalMessage) -> list[dict[str, Any]]:
+        """Read the common book even in a process without a managed gateway."""
+        book = getattr(self, "managed_position_book", None)
+        if book is None:
+            return []
+        try:
+            book.path.stat()
+        except FileNotFoundError:
+            return []
+        return [
+            entry for entry in book.list_enrollments()
+            if entry["market"] == signal.market and entry["ticker"] == signal.ticker.upper()
+        ]
 
     async def dispatch(
         self,
@@ -955,6 +1012,29 @@ class TradeDispatcher:
                     "failed", "Queued KIS account could not be resolved before submission; operator reconciliation required",
                     signal.signal_type, signal.market,
                 )
+
+        try:
+            policies = await asyncio.to_thread(self._managed_instrument_policies, signal)
+            if policies:
+                if order_account is None:
+                    order_account = await asyncio.to_thread(self._resolve_single_account, signal)
+                key = self._validated_buy_account_key(order_account, signal)
+                scope = hashlib.sha256(key.encode()).hexdigest()
+                for policy in policies:
+                    if policy["account_scope"] == scope and (
+                        signal.signal_type == "SELL" or any(
+                            attempt["remaining_quantity"] > 0 for attempt in policy["attempts"]
+                        )
+                    ):
+                        return DispatchResult(
+                            "deferred", "Order reserved for full-position management",
+                            signal.signal_type, signal.market,
+                        )
+        except (OSError, RuntimeError, ValueError, TypeError, KeyError):
+            return DispatchResult(
+                "deferred", "Managed position state or account cannot be verified",
+                signal.signal_type, signal.market,
+            )
 
         # A corrupt existing stop tracker must block a NEW BUY before it
         # reaches KIS. Rejecting only the post-acceptance tracker update would

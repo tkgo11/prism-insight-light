@@ -444,6 +444,26 @@ def _validated_fill_evidence(entry, evidence) -> dict[str, Any]:
 class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
+    def has_ambiguous_legacy_submission(self, market: str, ticker: str, account_scope: str) -> bool:
+        """Fence requests that may still reach the broker after an inventory read."""
+        with FileLock(self.lock_path):
+            for entry in self._load().values():
+                status = entry.get("status")
+                if status not in ("in_progress", "unknown", "executed"):
+                    continue
+                intent = entry.get("order_intent")
+                if intent is None:
+                    return True  # Older opaque SELLs cannot be assigned to an account.
+                if status == "executed":
+                    # An identified BUY is handled by current inventory and
+                    # open-order evidence, without attributing individual lots.
+                    continue
+                intent = _validated_order_intent(intent)
+                if (intent["market"] == market and intent["ticker"].upper() == ticker
+                        and intent["account_scope"] == account_scope):
+                    return True
+        return False
+
     def __init__(self, path: Path | None = None):
         self.path = path or runtime_file_path(DEFAULT_LEDGER_PATH)
         try:

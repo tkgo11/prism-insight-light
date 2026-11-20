@@ -942,7 +942,7 @@ def _start_web_ui_thread(
     return thread
 
 
-def main(argv: list[str] | None = None) -> None:
+def main(argv: list[str] | None = None, *, managed_gateway=None) -> None:
     args = parse_args(argv)
     try:
         _configure_logging(args.log_file, level=args.log_level)
@@ -966,6 +966,7 @@ def main(argv: list[str] | None = None) -> None:
     dispatcher = TradeDispatcher(
         dry_run=args.dry_run,
         queue_path=queue_path,
+        **({"managed_gateway": managed_gateway} if managed_gateway is not None else {}),
     )
     queue_worker = QueueWorker(dispatcher, args.queue_poll_seconds, work_tracker)
 
