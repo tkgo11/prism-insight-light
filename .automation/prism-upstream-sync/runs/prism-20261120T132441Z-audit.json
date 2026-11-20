@@ -1,0 +1,63 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261120T132441Z-audit",
+  "status": "PARTIAL_BLOCKED",
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "aa47997259382fc7f8b3a1c9ce32bbc0c0514b16",
+  "state_head_observed": "af81385db76113fc9c6f2cda259d12adede0b3a8",
+  "lease_commit": "ee7dcf66d1ca1dcb163127b8d18e3031d186fef8",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "baseline_fail_observed": false,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical_test_count": 3372
+  },
+  "state_branch_ci": {
+    "id": 44733217667,
+    "head_sha": "af81385db76113fc9c6f2cda259d12adede0b3a8",
+    "conclusion": "failure",
+    "failing_job": "Full pytest suite",
+    "not_pr_code_ci": true
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success status; 87 blocking issues",
+    "reviews": 0,
+    "branch_protection": "403"
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "formal_related_passes": 0,
+  "formal_full_passes": 0,
+  "reviewed_paths": [
+    {
+      "path": "docs/FULL_POSITION_MANAGED.md",
+      "sha": "f2d830504d672df0e638c654b3628fb3ffc4348d"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8"
+    }
+  ],
+  "new_evidence": [
+    "Current PR HEAD matches latest frozen manifest, still Draft",
+    "Current PR HEAD CI successful; separate state-branch CI failed in Full pytest suite",
+    "Qlty current status has 87 blocking issues; Snyk success",
+    "Native gateway lacks verified all-channel atomic conditional order/reservation and lost-reply recovery contract; documented fail-closed"
+  ],
+  "exact_blocker": "No verified production KIS all-channel authoritative reservation and broker-side atomic submission contract; formal full-source audits incomplete; 87 Qlty blockers, no human reviews, branch-protection 403",
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44733217667/jobs?per_page=100 and inspect failure evidence; independently inspect current 278-file manifest for full audit while keeping live SELL blocked."
+}
