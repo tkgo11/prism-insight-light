@@ -1,0 +1,60 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T062407KST-audit",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "1412dee17056d504a9416dbf6e4106bd6e81b86b",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "mock_result": "not rerun; historical PR 3372 pass",
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "id": 44810178808,
+    "head_sha": "42ea3a69a965292170633e42c6524d80849796a0",
+    "conclusion": "failure",
+    "failed_job_id": 136544417022,
+    "failed_step": "Run all tests",
+    "new_root_cause_evidence": "Previous state CI job 136514181859 logs: 3 TelegramSignalWorker tests failed because fixed published_at 2026-10-17 became older than 345600-second safety limit; 633 passed. State branch tests/test_telegram_signal_worker.py blob 15e35bfaea9cd7e7c811f3f4369f01fe0d2edfc7 embeds fixed date. This is a time-dependent fixture issue in state CI, not proof of PR code regression."
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success status; 87 blocking issues historical not freshly counted",
+    "reviews": 0,
+    "branch_protection": "403"
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "formal_related_passes": 0,
+  "formal_full_passes": 0,
+  "unverified_transitions": [
+    "KIS all-channel authoritative open-order coverage",
+    "broker-side atomic external order serialization",
+    "lost-response order recovery identity",
+    "native execution IDs and cancellation proof"
+  ],
+  "new_evidence": [
+    "Fetched historical failed job logs: 3 failed, 633 passed; stale_signal gate rejected 2026-10-17 Telegram fixtures after >345600 seconds.",
+    "State branch test file SHA 15e35bfaea9cd7e7c811f3f4369f01fe0d2edfc7 contains fixed published_at 2026-10-17T01:00:00+09:00.",
+    "Current state CI 44810178808 failure on state HEAD 42ea3a69; PR HEAD unchanged, historical PR CI green.",
+    "No code change or mock rerun; tests and full audit not credited."
+  ],
+  "exact_blocker": "Real KIS broker contracts and atomicity unverified; Qlty 87 blockers not resolved; reviews zero, protection 403; full audits incomplete.",
+  "next_exact_action": "GitHub Connector fetch_file tests/test_telegram_signal_worker.py at immutable PR HEAD 0e34faae4365a54cb38dfd5e8ad04973994d80e1; compare time fixture and offline runner; do not alter PR unless independently reproduced defect."
+}
