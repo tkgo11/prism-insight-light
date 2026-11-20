@@ -1,12 +1,11 @@
 {
   "schema_version": 4,
-  "run_id": "codex-prism-20261117-subagent-audits",
+  "run_id": "codex-prism-20261120-full-position",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
-  "head_sha": "a5efd1a4a44e4e25e7df7769d88523f05712a295",
-  "report_path": ".automation/prism-upstream-sync/runs/codex-20261117-subagent-continuation.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261117-subagent-continuation.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/codex-20261117-ownership-risk-register.json",
+  "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "report_path": ".automation/prism-upstream-sync/runs/codex-20261120-full-position.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "subagent_related_audits": {
     "passed": 0,
@@ -26,5 +25,5 @@
   },
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Define source-backed complete-account transaction/transfer event and allocation contracts with deterministic offline fixtures, then implement all BUY/SELL allocation, exact quantity reservations and confirmed exit consumption. Resolve cancellation provenance before freezing a candidate for independent R1/R2/F1/F2 audits."
+  "next_exact_action": "Obtain a production provider contract for fresh all-channel open-order/reservation coverage, dated order identity, identifiable executions/cancellations, request correlation after a lost reply, and broker-side conditional submission. Validate those contracts offline before activation and fresh 2+2 audits."
 }

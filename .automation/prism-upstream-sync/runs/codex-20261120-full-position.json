@@ -1,0 +1,212 @@
+{
+  "schema_version": 4,
+  "run_id": "codex-prism-20261120-full-position",
+  "status": "PARTIAL_BLOCKED",
+  "initial_head": "a5efd1a4a44e4e25e7df7769d88523f05712a295",
+  "final_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr": 43,
+  "pr_state": "open draft",
+  "start_time": "2026-11-20T11:50:28Z",
+  "observed_end_time": "2026-11-20 12:07:42 UTC",
+  "kis_calls": 0,
+  "real_orders": 0,
+  "lease_acquired_commit": "83c2d25072abb0fea96afa53273478220475dee6",
+  "release_expected_parent": "83c2d25072abb0fea96afa53273478220475dee6",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "subcase": "FULL_POSITION_MANAGED",
+  "related_passes": 0,
+  "full_passes": 0,
+  "subagent_related_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "subagent_full_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_related_execution_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_full_execution_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_sha256": "bd464e2dc05999f716f5a64bc4602beeafcdfd9b116c2958c8eb7dc57d6ef39e",
+  "audit_readiness": "Latest delivery has focused independent engineering review and immutable inventory. Two older frozen audit rounds were invalidated by repairs. Final 2+2 cannot pass before native KIS evidence and recovery contracts are available.",
+  "previous_frozen_audits": {
+    "audit-r1": {
+      "head": "d6c1d620a5f32dcecc15b62ae131717c19347b3a",
+      "verdict": "FAIL",
+      "report_sha256": "f0cd29b2be54127a972c8b8917ba1377568ebae95f9d1e65855f1908ea9f57e0",
+      "scope": {
+        "tracked_total": 278,
+        "related_total": 243,
+        "frozen_git_blob_and_hash_verified": 243,
+        "automated_utf8_python_ast_and_json_read": 243,
+        "related_source_lines": 60894,
+        "independently_source_inspected": 29,
+        "source_unverified_count": 214
+      }
+    },
+    "audit-r2": {
+      "head": "d6c1d620a5f32dcecc15b62ae131717c19347b3a",
+      "verdict": "FAIL",
+      "report_sha256": "e81a9e5feee40de85e2839148071542d2f1e3aea8e1cdefdf7921947831db672",
+      "scope": {
+        "manifest_total": 278,
+        "related_required": 243,
+        "actual_source_blobs_read_and_verified": 243,
+        "deep_behavior_trace_and_static_content_scan": 24,
+        "static_content_scan_only": 219,
+        "bytes_read": 2537875,
+        "lines_scanned": 60894
+      }
+    },
+    "audit-f2": {
+      "head": "d6c1d620a5f32dcecc15b62ae131717c19347b3a",
+      "verdict": "FAIL",
+      "report_sha256": "d8e9cbe107043368f64d9e95cf2329dc9466ebee4b059b6dee0675c25f761ecd",
+      "scope": {
+        "bytes": 2722638,
+        "lines": 64600
+      }
+    },
+    "final-r1": {
+      "head": "869763afec3360c549e0063a0eb2274b7a081d2d",
+      "verdict": "FAIL",
+      "report_sha256": "b00598f2525d1c108a90d437e0cfa7e804550d6bfafa54e64ea56cf49c972d58",
+      "scope": {
+        "frozen_tree_entries_verified": 278,
+        "full_tree_blobs_rehashed": 278,
+        "related_utf8_sources_scanned": 243,
+        "related_python_sources_ast_parsed": 204,
+        "risk_based_human_source_paths": 24,
+        "related_paths_without_human_semantic_review": 219
+      }
+    },
+    "final-f1": {
+      "head": "869763afec3360c549e0063a0eb2274b7a081d2d",
+      "verdict": "FAIL",
+      "report_sha256": "1e643436456bca6130732bf2f4f86213b4589390872ec218fbeb95ada4c2efd0",
+      "scope": {
+        "manifest_leaves_verified_against_git_tree": 278,
+        "source_leaves_inspected": 24,
+        "source_leaves_total": 278,
+        "source_leaves_unverified": 254
+      }
+    },
+    "final-f2": {
+      "head": "869763afec3360c549e0063a0eb2274b7a081d2d",
+      "verdict": "FAIL",
+      "report_sha256": "2391408f013b28e52168e916478bd65e88907fd08bb28cdf9a804615e16f3c57",
+      "scope": {
+        "manifest_tracked_files": 278,
+        "manifest_related_files": 243,
+        "immutable_archive_blobs_read_hash_validated_utf8_and_pattern_scanned": 278,
+        "python_sources_ast_parsed": 205,
+        "archive_integrity_unverified_files": 0,
+        "manual_semantic_path_review_files": 30,
+        "manual_semantic_review_related_files": 28,
+        "manual_semantic_review_unverified_tracked_files": 248,
+        "manual_semantic_review_unverified_related_files": 215
+      }
+    }
+  },
+  "missing_full_reports": [
+    {
+      "head": "d6c1d62",
+      "assignment": "F1",
+      "status": "interrupted after preliminary findings"
+    },
+    {
+      "head": "869763a",
+      "assignment": "R2",
+      "status": "interrupted after preliminary findings"
+    }
+  ],
+  "latest_head_audits": {
+    "R1": {
+      "status": "BLOCKED_NOT_CREDITED",
+      "inspected_as_formal_audit": 0,
+      "total": 243
+    },
+    "R2": {
+      "status": "BLOCKED_NOT_CREDITED",
+      "inspected_as_formal_audit": 0,
+      "total": 243
+    },
+    "F1": {
+      "status": "BLOCKED_NOT_CREDITED",
+      "inspected_as_formal_audit": 0,
+      "total": 278
+    },
+    "F2": {
+      "status": "BLOCKED_NOT_CREDITED",
+      "inspected_as_formal_audit": 0,
+      "total": 278
+    }
+  },
+  "tests": {
+    "baseline": 3185,
+    "focused": 187,
+    "final_full_local": 3372,
+    "elapsed_seconds": 49.09,
+    "new_cases": 187,
+    "offline": "Linux seccomp non-UNIX socket denial",
+    "required_scenario": "isolated PRISM BUY4 / manual SELL4 / manual BUY4 / restart / one scoped exit request of 4 / no duplicate",
+    "feature_red": "missing capability reproduced",
+    "defect_repairs": [
+      "zero-holdings latch",
+      "expired local preflight and explicit safe abort",
+      "legacy SELL scope and malformed claims",
+      "replayed terminal holdings and persistent submission time",
+      "account selector and venue binding",
+      "US daylight-saving order date"
+    ]
+  },
+  "ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tkgo11/prism-insight-light/actions/runs/44732835470"
+  },
+  "ci_jobs": [
+    {
+      "id": 136276686157,
+      "name": "Full pytest suite",
+      "passed": 3372,
+      "offline_guard_log": true,
+      "docker_built": true
+    },
+    {
+      "id": 136276686625,
+      "name": "Windows runtime smoke",
+      "passed": 191,
+      "offline_guard_log": false,
+      "docker_built": false
+    }
+  ],
+  "external": [
+    {
+      "context": "qlty check",
+      "state": "pending",
+      "description": "Qlty is analyzing your code."
+    },
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success",
+      "description": "1 security test has passed"
+    }
+  ],
+  "human_reviews": 0,
+  "branch_protection": "403 Resource not accessible by integration",
+  "exact_blockers": [
+    "Stock CLI has no authoritative KIS snapshot/recovery provider. Native broker documentation does not establish all-channel active reservation coverage, dated cash receipts, execution identity and explicit terminal cancellation evidence.",
+    "Cash submission lost before receipt persistence lacks broker-proven reservation correlation. Retain fence.",
+    "MTS/HTS orders and PRISM cannot be atomically serialized by local locks. Broker-side conditional order/reservation required."
+  ],
+  "next_exact_action": "Obtain a production provider contract for fresh all-channel open-order/reservation coverage, dated order identity, identifiable executions/cancellations, request correlation after a lost reply, and broker-side conditional submission. Validate those contracts offline before activation and fresh 2+2 audits."
+}

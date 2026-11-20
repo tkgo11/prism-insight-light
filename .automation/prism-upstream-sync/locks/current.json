@@ -1,8 +1,25 @@
 {
   "run_id": "codex-prism-20261120-full-position",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "acquired_expected_state_parent": "147e1f15b897ebba68fa063d393f69d2ac5d6915",
-  "expected_pr_head": "a5efd1a4a44e4e25e7df7769d88523f05712a295",
+  "release_expected_state_parent": "83c2d25072abb0fea96afa53273478220475dee6",
+  "expected_pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "subagent_related_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "subagent_full_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_related_execution_audits": {
+    "passed": 0,
+    "required": 2
+  },
+  "original_full_execution_audits": {
+    "passed": 0,
+    "required": 2
+  },
   "kis_calls": 0,
   "real_orders": 0
 }
