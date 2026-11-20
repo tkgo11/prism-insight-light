@@ -1,0 +1,63 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261120T142313Z-audit",
+  "status": "PARTIAL_BLOCKED",
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "759e19ff0079cf355e0e639b3a18de91e73719b2",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "baseline_fail_observed": false,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical_test_count": 3372
+  },
+  "state_branch_ci": {
+    "id": 44744202059,
+    "head_sha": "b3eae3e4332ac8d7860c8624b130d8ae19c5b460",
+    "conclusion": "failure",
+    "failed_step": "Run all tests",
+    "root_cause": "UNCONFIRMED; state branch has different historical test workflow and lacks scripts/run_offline_pytest.py; job logs unavailable through approved connector fetch",
+    "different_code_tree": true
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success with 87 blocking issues",
+    "reviews": 0,
+    "branch_protection": "403"
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "formal_related_passes": 0,
+  "formal_full_passes": 0,
+  "reviewed_paths": [
+    {
+      "path": "docs/FULL_POSITION_MANAGED.md",
+      "sha": "f2d830504d672df0e638c654b3628fb3ffc4348d"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8"
+    }
+  ],
+  "new_evidence": [
+    "State branch HEAD differs from PR HEAD and runs older workflow; state branch tests use python -m pytest -q whereas PR HEAD uses seccomp offline runner",
+    "State branch lacks scripts/run_offline_pytest.py, so state-branch CI cannot validate PR safety changes",
+    "GitHub Connector jobs show failure at Run all tests but cannot retrieve detailed logs via permitted fetch endpoint",
+    "Upstream main moved to 759e19ff0079cf355e0e639b3a18de91e73719b2"
+  ],
+  "exact_blocker": "Unverified live KIS all-channel authoritative state and atomic broker-side order control; full audits 0/2; Qlty 87 blocking findings, human review 0, protection 403",
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44744202059/jobs?per_page=100; obtain supported check annotations or job log access, and audit unchanged PR HEAD 0e34faae4365a54cb38dfd5e8ad04973994d80e1."
+}

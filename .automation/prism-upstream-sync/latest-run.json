@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-20261120T132441Z-audit",
+  "run_id": "prism-20261120T142313Z-audit",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-20261120T132441Z-audit.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-20261120T142313Z-audit.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44733217667/jobs?per_page=100 and inspect failure evidence; independently inspect current 278-file manifest for full audit while keeping live SELL blocked."
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44744202059/jobs?per_page=100; obtain supported check annotations or job log access, and audit unchanged PR HEAD 0e34faae4365a54cb38dfd5e8ad04973994d80e1."
 }
