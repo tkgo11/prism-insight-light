@@ -264,3 +264,61 @@ def test_scoped_gateway_preflight_pause_retries_without_an_unknown(tmp_path, mon
     controller.cycle(position_id)
     controller.cycle(position_id)
     assert len(gateway.calls) == 1
+
+
+def test_repeated_local_preflights_do_not_accumulate_broker_attempts(tmp_path, monkeypatch):
+    from trading.managed_broker import SubmissionNotStarted
+
+    book, entry, gateway, controller = _setup(tmp_path)
+    gateway.price = 85
+
+    def pause(policy, quantity, *, reservation_id):
+        raise SubmissionNotStarted(policy, reservation_id, "mock commitment changed")
+
+    monkeypatch.setattr(gateway, "submit_exact_sell", pause)
+    for _ in range(5):
+        controller.cycle(entry["position_id"])
+    attempts = book.get(entry["position_id"])["attempts"]
+    assert [item["state"] for item in attempts] == ["ABORTED_PRE_SUBMIT"]
+    assert gateway.calls == []
+
+
+@pytest.mark.parametrize("change", ["manual_buy", "market_closed"])
+def test_custom_gateway_preflight_rechecks_inventory_and_market(tmp_path, monkeypatch, change):
+    book, entry, gateway, controller = _setup(tmp_path)
+    gateway.price = 85
+    original = book.mark_submitting
+    market_open = True
+    controller.submission_allowed = lambda _: market_open
+
+    def changed(*args):
+        nonlocal market_open
+        result = original(*args)
+        if change == "manual_buy":
+            gateway.quantity = 7
+        else:
+            market_open = False
+        return result
+
+    monkeypatch.setattr(book, "mark_submitting", changed)
+    assert controller.cycle(entry["position_id"])["status"] == "PAUSED"
+    assert book.get(entry["position_id"])["attempts"][-1]["state"] == "ABORTED_PRE_SUBMIT"
+    assert gateway.calls == []
+
+
+def test_impossible_future_order_receipt_cannot_clear_reservation(tmp_path, monkeypatch):
+    book, entry, gateway, controller = _setup(tmp_path)
+    gateway.price = 85
+    original = gateway.submit_exact_sell
+
+    def future_receipt(*args, **kwargs):
+        result = original(*args, **kwargs)
+        result["receipt"]["order_date"] = "20991231"
+        return result
+
+    monkeypatch.setattr(gateway, "submit_exact_sell", future_receipt)
+    position_id = entry["position_id"]
+    assert controller.cycle(position_id)["status"] == "PAUSED"
+    assert book.get(position_id)["attempts"][-1]["state"] == "SUBMITTING"
+    controller.cycle(position_id)
+    assert len(gateway.calls) == 1

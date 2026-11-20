@@ -5,7 +5,7 @@ trades and flat balances never reset a policy or resolve a broker submission.
 This book is separate from strategy ownership and the execution dedupe ledger.
 """
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import json
 import math
@@ -83,6 +83,14 @@ def _receipt(value, quantity, market):
     elif "order_venue" in value:
         raise ValueError("Domestic receipt must not claim overseas venue")
     return deepcopy(value)
+
+
+def _check_receipt_date(receipt, observed_at):
+    if receipt is not None and "order_date" in receipt:
+        kst = timezone(timedelta(hours=9))
+        observed_date = _time(observed_at).astimezone(kst).date()
+        if datetime.strptime(receipt["order_date"], "%Y%m%d").date() > observed_date:
+            raise ValueError("Broker order date is later than submission observation")
 
 
 def _executions(rows):
@@ -168,6 +176,7 @@ def _validate_attempt(position, attempt):
     _time(attempt["updated_at"])
     if attempt["receipt"] is not None:
         _receipt(attempt["receipt"], quantity, position["market"])
+        _check_receipt_date(attempt["receipt"], attempt["updated_at"])
     elif state == "ACCEPTED":
         raise ValueError("Accepted SELL lacks broker receipt")
     if attempt["executions"] != _executions(attempt["executions"]):
@@ -388,6 +397,12 @@ class ManagedPositionBook:
                 raise RuntimeError("Unresolved SELL reservation blocks another financial action")
             if any(attempt["snapshot_id"] == snapshot_id for attempt in position["attempts"]):
                 raise RuntimeError("A fresh broker snapshot is required after a terminal attempt")
+            # These attempts were proven never to invoke the cash API. They
+            # contribute no receipt or fill identity to future deduplication.
+            position["attempts"] = [
+                attempt for attempt in position["attempts"]
+                if attempt["state"] != "ABORTED_PRE_SUBMIT"
+            ]
             now = _now()
             attempt = {"token": uuid.uuid4().hex, "snapshot_id": snapshot_id, "quantity": quantity,
                        "state": "CLAIMED", "receipt": None, "executions": [], "filled_quantity": 0,

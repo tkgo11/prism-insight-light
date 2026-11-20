@@ -441,6 +441,20 @@ def _validated_fill_evidence(entry, evidence) -> dict[str, Any]:
     return summary
 
 
+def _validated_sell_scope(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != {"market", "ticker", "account_scope"}:
+        raise ValueError("Malformed SELL scope")
+    ticker, scope = value["ticker"], value["account_scope"]
+    if (value["market"] not in ("KR", "US") or not isinstance(ticker, str)
+            or not ticker or len(ticker) > 64 or ticker != ticker.strip().upper()
+            or not ticker.isprintable()
+            or (scope is not None and (
+                not isinstance(scope, str) or re.fullmatch(r"[0-9a-f]{64}", scope) is None
+            ))):
+        raise ValueError("Malformed SELL scope")
+    return dict(value)
+
+
 class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
@@ -449,10 +463,17 @@ class ExecutionLedger:
         with FileLock(self.lock_path):
             for entry in self._load().values():
                 status = entry.get("status")
-                if status not in ("in_progress", "unknown", "executed"):
+                if isinstance(status, str) and status in _RETRYABLE_STATUSES:
                     continue
+                if status not in ("in_progress", "unknown", "executed"):
+                    return True
                 intent = entry.get("order_intent")
                 if intent is None:
+                    if "sell_scope" in entry:
+                        sell = _validated_sell_scope(entry["sell_scope"])
+                        if (sell["market"] != market or sell["ticker"] != ticker
+                                or sell["account_scope"] not in (None, account_scope)):
+                            continue
                     return True  # Older opaque SELLs cannot be assigned to an account.
                 if status == "executed":
                     # An identified BUY is handled by current inventory and
@@ -503,6 +524,13 @@ class ExecutionLedger:
         if not isinstance(data, dict) or not all(isinstance(value, dict) for value in data.values()):
             raise RuntimeError("Automatic-trading execution ledger has an invalid format")
         for entry in data.values():
+            if "sell_scope" in entry:
+                try:
+                    if entry.get("order_side") != "SELL" or "order_intent" in entry:
+                        raise ValueError("Conflicting SELL scope")
+                    _validated_sell_scope(entry["sell_scope"])
+                except ValueError as exc:
+                    raise RuntimeError("Automatic-trading SELL scope is invalid") from exc
             if "order_receipt" not in entry:
                 continue  # Legacy claims remain supported and fail closed elsewhere.
             receipt = entry["order_receipt"]
@@ -940,6 +968,7 @@ class ExecutionLedger:
         self, identity: str, *, aliases: Iterable[str] = (), with_token: bool = False,
         order_intent: dict[str, Any] | None = None,
         order_side: str | None = None,
+        sell_scope: dict[str, Any] | None = None,
     ) -> tuple[bool, str | None] | tuple[bool, str | None, str | None]:
         """Claim an identity or return the prior status without exposing account data.
 
@@ -966,6 +995,10 @@ class ExecutionLedger:
         )
         if order_side is not None and (order_side != "SELL" or validated_intent is not None):
             raise ValueError("Only SELL without BUY intent can use explicit order-side provenance")
+        if sell_scope is not None:
+            if order_side != "SELL":
+                raise ValueError("SELL scope requires SELL provenance")
+            sell_scope = _validated_sell_scope(sell_scope)
         now = datetime.now(timezone.utc)
         with FileLock(self.lock_path):
             entries = self._prune(self._load(), now)
@@ -994,6 +1027,8 @@ class ExecutionLedger:
                 # Persist before submission so the legacy quarantine can
                 # distinguish this safe case after a crash or restart.
                 entry["order_side"] = "SELL"
+                if sell_scope is not None:
+                    entry["sell_scope"] = sell_scope
             entries[identity] = entry
             # Fail closed at capacity. Silently dropping older accepted/unknown
             # claims to make room would re-enable duplicate broker submissions.

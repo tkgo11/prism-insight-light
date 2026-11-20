@@ -296,6 +296,11 @@ def test_partial_fill_then_confirmed_cancel_requires_new_snapshot_and_exits_only
     controller.cycle(position_id)
     assert len(gateway.orders) == 1  # pre-reconciliation inventory cannot authorize another order
     assert book.get(position_id)["attempts"][-1]["state"] == "CANCELLED"
+    assert controller.cycle(position_id)["status"] == "PAUSED"
+    assert len(gateway.orders) == 1
+    later = NOW + timedelta(seconds=1)
+    gateway.set_position(entry, 3, price=85, as_of=later.isoformat())
+    controller.clock = lambda: later
     controller.cycle(position_id)
     assert [order["quantity"] for order in gateway.orders] == [4, 3]
     Controller(Book(path), gateway, clock=lambda: NOW).cycle(position_id)
@@ -316,8 +321,9 @@ def test_confirmed_exit_keeps_policy_latched_for_future_manual_repurchase(tmp_pa
     controller.cycle(position_id)
     assert len(gateway.orders) == 1
     gateway.evidence = None
-    gateway.set_position(entry, 6, price=100)
-    Controller(Book(path), gateway, clock=lambda: NOW).cycle(position_id)
+    later = NOW + timedelta(seconds=1)
+    gateway.set_position(entry, 6, price=100, as_of=later.isoformat())
+    Controller(Book(path), gateway, clock=lambda: later).cycle(position_id)
     assert [order["quantity"] for order in gateway.orders] == [4, 6]
     assert book.get(position_id)["stop_loss"] == 90
 
@@ -340,3 +346,15 @@ def test_inconsistent_cancel_fill_evidence_does_not_release_pending_exit(tmp_pat
     Controller(Book(path), gateway, clock=lambda: NOW).cycle(entry["position_id"])
     assert len(gateway.orders) == 1
     assert book.get(entry["position_id"])["attempts"][-1] == before
+
+
+def test_equal_timestamp_inventory_cannot_reuse_a_confirmed_full_fill(tmp_path, monkeypatch):
+    _, _, _, gateway, book, controller = _runtime(tmp_path, monkeypatch)
+    entry = book.enroll(SCOPE_A, "KR", "005930", 90, latch_policy="LATCH_EXIT")
+    position_id = entry["position_id"]
+    gateway.set_position(entry, 4, price=85)
+    controller.cycle(position_id)
+    gateway.evidence = _proof(book.get(position_id), filled=4)
+    assert controller.cycle(position_id)["status"] == "RECONCILED"
+    assert controller.cycle(position_id)["status"] == "PAUSED"
+    assert len(gateway.orders) == 1

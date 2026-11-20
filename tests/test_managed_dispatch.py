@@ -80,3 +80,26 @@ async def test_runtime_poll_only_submits_for_enabled_enrolled_account(monkeypatc
 
     dispatcher.dry_run = True
     assert await dispatcher.check_managed_positions() == []
+
+
+def test_scoped_submission_does_not_fence_unrelated_managed_position(tmp_path):
+    from trading.execution_ledger import ExecutionLedger
+
+    ledger = ExecutionLedger(tmp_path / "execution.json")
+    _, _, token = ledger.claim("scoped-sell", with_token=True, order_side="SELL",
+                               sell_scope={"market": "KR", "ticker": "005930", "account_scope": "1" * 64})
+    ledger.finalize("scoped-sell", "executed", claim_token=token)
+    restarted = ExecutionLedger(ledger.path)
+    assert restarted.has_ambiguous_legacy_submission("KR", "005930", "1" * 64)
+    assert not restarted.has_ambiguous_legacy_submission("KR", "005930", "2" * 64)
+    assert not restarted.has_ambiguous_legacy_submission("KR", "000660", "1" * 64)
+
+
+@pytest.mark.parametrize("status", [{}, {"status": "unrecognized"}])
+def test_opaque_legacy_dedupe_state_cannot_bypass_managed_fence(tmp_path, status):
+    import json
+    from trading.execution_ledger import ExecutionLedger
+
+    ledger = ExecutionLedger(tmp_path / "execution.json")
+    ledger.path.write_text(json.dumps({"old-claim": status}), encoding="utf-8")
+    assert ledger.has_ambiguous_legacy_submission("KR", "005930", "1" * 64)

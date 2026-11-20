@@ -17,7 +17,7 @@ import math
 import re
 from typing import Any, Callable
 
-from .managed_broker import SubmissionNotStarted
+from .managed_broker import ManagedBrokerGateway, SubmissionNotStarted
 
 
 _TERMINAL = {"FILLED", "CANCELLED", "REJECTED", "ABORTED_PRE_SUBMIT"}
@@ -30,6 +30,7 @@ class ManagedPositionController:
     def __init__(
         self, book: Any, gateway: Any, *, max_snapshot_age_seconds: float = 5,
         clock: Callable[[], datetime] | None = None,
+        submission_allowed: Callable[[str], bool] | None = None,
     ) -> None:
         if (isinstance(max_snapshot_age_seconds, bool)
                 or not isinstance(max_snapshot_age_seconds, (int, float))
@@ -40,6 +41,7 @@ class ManagedPositionController:
         self.gateway = gateway
         self.max_snapshot_age_seconds = float(max_snapshot_age_seconds)
         self.clock = clock or (lambda: datetime.now(timezone.utc))
+        self.submission_allowed = submission_allowed
 
     @staticmethod
     def _result(position_id: str, status: str, reason: str) -> dict[str, Any]:
@@ -154,7 +156,7 @@ class ManagedPositionController:
                 if previous["state"] in _TERMINAL and proof is not None:
                     # A recently returned balance can still predate a known
                     # execution. Do not sell its already-consumed inventory.
-                    if snapshot_time < datetime.fromisoformat(proof["as_of"]):
+                    if snapshot_time <= datetime.fromisoformat(proof["as_of"]):
                         raise ValueError("Inventory snapshot predates terminal execution evidence")
         except Exception:
             return self._result(position_id, "PAUSED", "BROKER_SNAPSHOT_UNAVAILABLE_OR_INCONSISTENT")
@@ -186,10 +188,27 @@ class ManagedPositionController:
         except (ValueError, TypeError, OverflowError):
             self.book.abort_before_gateway(position_id, token)
             return self._result(position_id, "PAUSED", "SNAPSHOT_EXPIRED_AFTER_SUBMISSION_FENCE")
+        # A custom gateway still has to pass a fresh controller-side
+        # preflight. The KIS gateway performs this check inside its own lock.
+        try:
+            if type(self.gateway) is not ManagedBrokerGateway:
+                latest = self._snapshot(entry)
+                if (latest["open_orders"] or latest["holding_quantity"] != quantity
+                        or latest["sellable_quantity"] != quantity
+                        or latest.get("order_venue") != snapshot.get("order_venue")
+                        or datetime.fromisoformat(latest["as_of"])
+                        < datetime.fromisoformat(snapshot["as_of"])):
+                    raise ValueError("Managed inventory changed before submission")
+            if self.submission_allowed is not None and self.submission_allowed(entry["market"]) is not True:
+                raise ValueError("Market is unavailable for submission")
+        except Exception:
+            self.book.abort_before_gateway(position_id, token)
+            return self._result(position_id, "PAUSED", "BROKER_PREFLIGHT_CHANGED")
         try:
             response = self.gateway.submit_exact_sell(
                 {**entry, "decision_as_of": snapshot["as_of"],
-                 "decision_venue": snapshot.get("order_venue")},
+                 "decision_venue": snapshot.get("order_venue"),
+                 "decision_can_submit": self.submission_allowed},
                 quantity, reservation_id=token,
             )
         except SubmissionNotStarted as exc:

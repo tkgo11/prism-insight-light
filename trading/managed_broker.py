@@ -209,6 +209,9 @@ class ManagedBrokerGateway:
                 if decision_venue is not None and decision_venue != current.get("order_venue"):
                     raise EvidenceUnavailable("pre-submit venue differs from the exit decision")
                 self._identity(entry)
+                can_submit = _value(entry, "decision_can_submit")
+                if can_submit is not None and can_submit(self.market) is not True:
+                    raise EvidenceUnavailable("market closed during exit preflight")
             except EvidenceUnavailable as exc:
                 # This is the only location producing a known-no-submission
                 # result. Never wrap a broker/transport exception in this type.

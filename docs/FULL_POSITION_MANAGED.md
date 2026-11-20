@@ -22,11 +22,13 @@ enabled stop-loss watcher. The dispatcher also checks the selected trading
 environment, active account, open market, and automatic-trading setting.
 
 Processes handling the same account must share the PRISM runtime directory and
-its locks. The managed book remains part of the ordinary dispatcher fence even
-in a process without a managed gateway. Ordinary PRISM SELLs for an enrolled
+its locks, use the common execution ledger, and keep execution deduplication enabled. The managed book remains part of the ordinary dispatcher fence even
+in a process without a managed gateway. Separate ledgers or processes that skip
+execution deduplication cannot participate in managed cutover. Ordinary PRISM SELLs for an enrolled
 account and instrument are deferred. Existing strategy orders with uncertain
 submission, and accepted or opaque legacy SELLs without terminal evidence,
-block cutover. Preserve the managed book on restart.
+block cutover. New SELL claims retain verified account scope when available
+and otherwise retain instrument scope. Preserve the managed book on restart.
 
 ## Evidence and order handling
 
@@ -42,7 +44,8 @@ After an ambiguous submission or crash, the reservation remains in force
 until matched broker evidence resolves it. A dated receipt records acceptance.
 Confirmed fill IDs and explicit cancellation quantities must account for the
 original order. Terminal confirmation forces another holdings read before
-any subsequent exit. An unknown submission without an order identifier stays
+any subsequent exit. The inventory timestamp must be strictly newer than
+terminal evidence. An unknown submission without an order identifier stays
 paused when no authoritative correlation is available.
 
 ## KIS capability limits
@@ -54,7 +57,10 @@ cash holdings and bounded pages of open orders, with additional reservation
 queries using date windows. They do not establish all externally entered
 commitments, and the documented history examples lack the execution identity
 and cancellation detail needed for recovery. The existing quote methods do
-not expose the timestamp needed by the native snapshot contract. The native
+not expose the timestamp needed by the native snapshot contract. Native cash
+examples report an order number and time of day without a broker order date.
+That receipt cannot establish a dated order identity for automatic recovery.
+The native
 gateway pauses at these boundaries and the demo open-order path is unsupported.
 
 The KIS real-time notification formats mix order and execution events. The gateway

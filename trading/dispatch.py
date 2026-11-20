@@ -520,6 +520,8 @@ class MultiAccountTradeDispatcher:
                     self.ledger.claim, identity, aliases=aliases, with_token=True,
                     order_intent=_buy_stop_loss_intent(signal, account["account_key"]),
                     order_side="SELL" if signal.signal_type == "SELL" else None,
+                    **({"sell_scope": self.dispatcher._sell_scope(signal, account)}
+                       if signal.signal_type == "SELL" else {}),
                 )
                 if not claimed:
                     results.append(
@@ -626,6 +628,8 @@ class TradeDispatcher:
         managed_gateway: Any | None = None,
     ):
         self.dry_run = dry_run
+        if managed_gateway is not None and (not execution_dedupe or execution_ledger_path is not None):
+            raise ValueError("Managed positions require the common durable execution ledger")
         self.execution_dedupe = execution_dedupe
         selected_mode = get_trading_mode() if trading_mode is None else trading_mode
         self.trading_mode = normalize_trading_mode(selected_mode)
@@ -667,7 +671,8 @@ class TradeDispatcher:
         self.execution_ledger = ExecutionLedger(execution_ledger_path)
         self.managed_position_book = ManagedPositionBook()
         self.managed_position_controller = (
-            ManagedPositionController(self.managed_position_book, managed_gateway)
+            ManagedPositionController(self.managed_position_book, managed_gateway,
+                                      submission_allowed=lambda market: is_market_open(market))
             if managed_gateway is not None else None
         )
         self.multi_account_dispatcher = MultiAccountTradeDispatcher(
@@ -1099,6 +1104,8 @@ class TradeDispatcher:
                 self.execution_ledger.claim, identity, aliases=aliases, with_token=True,
                 order_intent=buy_intent,
                 order_side="SELL" if signal.signal_type == "SELL" else None,
+                **({"sell_scope": self._sell_scope(signal, order_account)}
+                   if signal.signal_type == "SELL" else {}),
             )
             if not claimed:
                 self.signal_gate.audit_record(
@@ -1474,6 +1481,16 @@ class TradeDispatcher:
     def _resolved_single_account_id(self, signal: SignalMessage) -> str:
         """Pin the actual KIS account, not merely a mutable name/index/primary."""
         return _account_id(self._resolve_single_account(signal)["account_key"])
+
+    def _sell_scope(self, signal: SignalMessage, account: dict[str, Any] | None) -> dict[str, Any]:
+        scope = None
+        if account is not None:
+            try:
+                key = self._validated_buy_account_key(account, signal)
+                scope = hashlib.sha256(key.encode()).hexdigest()
+            except (KeyError, TypeError, ValueError):
+                pass
+        return {"market": signal.market, "ticker": signal.ticker.upper(), "account_scope": scope}
 
     def _single_account_execution_selector(self, signal: SignalMessage) -> str:
         if self.account_name:
