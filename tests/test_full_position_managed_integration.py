@@ -39,7 +39,8 @@ class OfflineGateway:
             "ticker": entry["ticker"], "complete": True,
             "as_of": NOW.isoformat(), "holding_quantity": quantity,
             "sellable_quantity": quantity if sellable is None else sellable,
-            "current_price": price, "open_orders": [], **changes,
+            "current_price": price, "open_orders": [],
+            **({"order_venue": "NYSE"} if entry["market"] == "US" else {}), **changes,
         }
 
     def snapshot(self, entry):

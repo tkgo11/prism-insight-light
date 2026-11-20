@@ -30,15 +30,18 @@ class Gateway:
             "ticker": entry["ticker"], "holding_quantity": self.quantity,
             "sellable_quantity": self.quantity, "current_price": self.price,
             "open_orders": self.open_orders, "complete": True,
-            "as_of": NOW.isoformat(), **self.overrides,
+            "as_of": NOW.isoformat(),
+            **({"order_venue": "NASD"} if entry["market"] == "US" else {}), **self.overrides,
         }
 
     def submit_exact_sell(self, entry, quantity, reservation_id=None):
         self.calls.append((entry["account_scope"], entry["market"], quantity, reservation_id))
         if self.raise_after_submit:
             raise TimeoutError("mock response lost after possible submission")
+        from trading.managed_position_state import _now
+
         receipt = {
-            "order_no": "00001234", "order_date": "20261118",
+            "order_no": "00001234", "order_date": datetime.fromisoformat(_now()).astimezone(timezone(timedelta(hours=9))).strftime("%Y%m%d"),
             "order_kind": "broker_order", "order_quantity": quantity,
         }
         if entry["market"] == "US":
@@ -88,7 +91,7 @@ def test_manual_flat_reentry_restart_exits_current_four_only_once(tmp_path, mark
 
 @pytest.mark.parametrize("overrides", [
     {"complete": False}, {"as_of": (NOW - timedelta(seconds=6)).isoformat()},
-    {"as_of": (NOW + timedelta(seconds=1)).isoformat()}, {"as_of": "20261118"},
+    {"as_of": (NOW + timedelta(seconds=1)).isoformat()}, {"as_of": datetime.now(timezone(timedelta(hours=9))).strftime("%Y%m%d")},
     {"account_scope": SCOPE_B}, {"market": "US"}, {"ticker": "OTHER"},
     {"holding_quantity": True}, {"holding_quantity": -1},
     {"sellable_quantity": 3}, {"sellable_quantity": 5},
@@ -219,7 +222,7 @@ def test_snapshot_older_than_terminal_execution_proof_cannot_start_next_exit(tmp
     controller.cycle(entry["position_id"])
     proof = {
         "account_scope": entry["account_scope"], "market": "KR", "ticker": "005930",
-        "order_no": "00001234", "order_date": "20261118", "order_quantity": 4,
+        "order_no": "00001234", "order_date": NOW.strftime("%Y%m%d"), "order_quantity": 4,
         "filled_quantity": 4, "cancelled_quantity": 0, "remaining_quantity": 0,
         "executions": [{"execution_id": "FILL1", "quantity": 4}],
         "complete": True, "terminal": True, "as_of": NOW.isoformat(),
@@ -246,36 +249,28 @@ def test_flat_price_dip_does_not_latch_first_manual_purchase(tmp_path):
     assert gateway.calls == []
 
 
-def test_scoped_gateway_preflight_pause_retries_without_an_unknown(tmp_path, monkeypatch):
+def test_custom_gateway_cannot_release_an_attempt_with_a_typed_exception(tmp_path, monkeypatch):
     from trading.managed_broker import SubmissionNotStarted
 
     book, entry, gateway, controller = _setup(tmp_path)
     gateway.price = 85
-    original = gateway.submit_exact_sell
 
-    def pause(policy, quantity, *, reservation_id):
-        raise SubmissionNotStarted(policy, reservation_id, "mock manual order appeared")
+    def action_with_lost_reply(policy, quantity, *, reservation_id):
+        gateway.calls.append(reservation_id)
+        raise SubmissionNotStarted(policy, reservation_id, "mock ambiguous adapter exception")
 
-    monkeypatch.setattr(gateway, "submit_exact_sell", pause)
+    monkeypatch.setattr(gateway, "submit_exact_sell", action_with_lost_reply)
     position_id = entry["position_id"]
-    assert controller.cycle(position_id)["status"] == "PAUSED"
-    assert book.get(position_id)["attempts"][-1]["state"] == "ABORTED_PRE_SUBMIT"
-    monkeypatch.setattr(gateway, "submit_exact_sell", original)
-    controller.cycle(position_id)
+    assert controller.cycle(position_id)["status"] == "PENDING"
+    assert book.get(position_id)["attempts"][-1]["state"] == "UNKNOWN"
     controller.cycle(position_id)
     assert len(gateway.calls) == 1
 
 
-def test_repeated_local_preflights_do_not_accumulate_broker_attempts(tmp_path, monkeypatch):
-    from trading.managed_broker import SubmissionNotStarted
-
+def test_repeated_local_preflights_do_not_accumulate_broker_attempts(tmp_path):
     book, entry, gateway, controller = _setup(tmp_path)
     gateway.price = 85
-
-    def pause(policy, quantity, *, reservation_id):
-        raise SubmissionNotStarted(policy, reservation_id, "mock commitment changed")
-
-    monkeypatch.setattr(gateway, "submit_exact_sell", pause)
+    controller.submission_allowed = lambda _: False
     for _ in range(5):
         controller.cycle(entry["position_id"])
     attempts = book.get(entry["position_id"])["attempts"]
@@ -322,3 +317,20 @@ def test_impossible_future_order_receipt_cannot_clear_reservation(tmp_path, monk
     assert book.get(position_id)["attempts"][-1]["state"] == "SUBMITTING"
     controller.cycle(position_id)
     assert len(gateway.calls) == 1
+
+
+def test_market_hours_preflight_latency_cannot_reuse_old_snapshot(tmp_path):
+    book, entry, gateway, controller = _setup(tmp_path)
+    gateway.price = 85
+    now = NOW
+    controller.clock = lambda: now
+
+    def market_check(market):
+        nonlocal now
+        now += timedelta(seconds=6)
+        return True
+
+    controller.submission_allowed = market_check
+    assert controller.cycle(entry["position_id"])["status"] == "PAUSED"
+    assert book.get(entry["position_id"])["attempts"][-1]["state"] == "ABORTED_PRE_SUBMIT"
+    assert gateway.calls == []

@@ -21,7 +21,7 @@ def _reserve(book, position_id, quantity=4):
 
 
 def _receipt(market="KR", quantity=4):
-    receipt = {"order_no": "00001234", "order_date": "20261118",
+    receipt = {"order_no": "00001234", "order_date": datetime.now(timezone(timedelta(hours=9))).strftime("%Y%m%d"),
                "order_kind": "broker_order", "order_quantity": quantity}
     if market == "US":
         receipt["order_venue"] = "NASD"
@@ -38,7 +38,7 @@ def _accept(book, position_id, market="KR"):
 def _proof(book, position_id, *, filled=2, cancelled=0, remaining=2):
     entry = book.get(position_id)
     evidence = {key: entry[key] for key in ("account_scope", "market", "ticker")}
-    evidence.update(order_no="00001234", order_date="20261118", order_quantity=4,
+    evidence.update(order_no="00001234", order_date=datetime.now(timezone(timedelta(hours=9))).strftime("%Y%m%d"), order_quantity=4,
                     filled_quantity=filled, cancelled_quantity=cancelled,
                     remaining_quantity=remaining, terminal=remaining == 0, complete=True,
                     executions=[] if filled == 0 else [{"execution_id": "F1", "quantity": filled}])
@@ -239,7 +239,7 @@ def test_proof_cannot_predate_reservation_or_regress_broker_timestamp(tmp_path):
     book.reconcile_sell(position_id, token, evidence=current)
     old["as_of"] = book.get(position_id)["attempts"][-1]["created_at"]
     before = book.path.read_bytes()
-    with pytest.raises(RuntimeError, match="timestamp"):
+    with pytest.raises((ValueError, RuntimeError), match="timestamp"):
         book.reconcile_sell(position_id, token, evidence=old)
     assert book.path.read_bytes() == before
 

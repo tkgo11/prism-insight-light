@@ -85,12 +85,16 @@ def _receipt(value, quantity, market):
     return deepcopy(value)
 
 
-def _check_receipt_date(receipt, observed_at):
+def _check_receipt_date(receipt, market, submitted_at, observed_at):
     if receipt is not None and "order_date" in receipt:
         kst = timezone(timedelta(hours=9))
         observed_date = _time(observed_at).astimezone(kst).date()
-        if datetime.strptime(receipt["order_date"], "%Y%m%d").date() > observed_date:
-            raise ValueError("Broker order date is later than submission observation")
+        broker_date = datetime.strptime(receipt["order_date"], "%Y%m%d").date()
+        # NY standard time is the earliest plausible US venue calendar date.
+        earliest_zone = kst if market == "KR" else timezone(timedelta(hours=-5))
+        earliest_date = _time(submitted_at).astimezone(earliest_zone).date()
+        if not earliest_date <= broker_date <= observed_date:
+            raise ValueError("Broker order date is outside the submission window")
 
 
 def _executions(rows):
@@ -134,8 +138,8 @@ def _evidence(position, attempt, proof):
     if (not isinstance(proof, dict) or set(proof) != fields or proof["complete"] is not True
             or type(proof["terminal"]) is not bool):
         raise ValueError("Incomplete or malformed SELL reconciliation evidence")
-    if _time(proof["as_of"]) < _time(attempt["created_at"]):
-        raise ValueError("SELL broker evidence predates the reservation")
+    if _time(proof["as_of"]) < _time(attempt["submitted_at"]):
+        raise ValueError("SELL evidence timestamp predates submission")
     receipt = attempt["receipt"]
     if receipt is None or "order_date" not in receipt:
         raise ValueError("Cannot reconcile SELL without original broker order date")
@@ -163,7 +167,7 @@ def _evidence(position, attempt, proof):
 def _validate_attempt(position, attempt):
     fields = {"token", "snapshot_id", "quantity", "state", "receipt", "executions",
               "filled_quantity", "cancelled_quantity", "rejected_quantity", "aborted_quantity", "remaining_quantity",
-              "created_at", "updated_at", "reconciliation", "rejection_proof", "abort_proof"}
+              "created_at", "updated_at", "submitted_at", "reconciliation", "rejection_proof", "abort_proof"}
     if not isinstance(attempt, dict) or set(attempt) != fields:
         raise ValueError("Malformed SELL reservation")
     _token(attempt["token"])
@@ -174,9 +178,16 @@ def _validate_attempt(position, attempt):
         raise ValueError("Unknown SELL reservation state")
     _time(attempt["created_at"])
     _time(attempt["updated_at"])
+    submitted_at = attempt["submitted_at"]
+    if ((state == "CLAIMED" and submitted_at is not None)
+            or (state not in ("CLAIMED", "ABORTED_PRE_SUBMIT") and submitted_at is None)
+            or (submitted_at is not None and not (
+                _time(attempt["created_at"]) <= _time(submitted_at) <= _time(attempt["updated_at"])
+            ))):
+        raise ValueError("Invalid durable submission timestamp")
     if attempt["receipt"] is not None:
         _receipt(attempt["receipt"], quantity, position["market"])
-        _check_receipt_date(attempt["receipt"], attempt["updated_at"])
+        _check_receipt_date(attempt["receipt"], position["market"], submitted_at, attempt["updated_at"])
     elif state == "ACCEPTED":
         raise ValueError("Accepted SELL lacks broker receipt")
     if attempt["executions"] != _executions(attempt["executions"]):
@@ -407,7 +418,7 @@ class ManagedPositionBook:
             attempt = {"token": uuid.uuid4().hex, "snapshot_id": snapshot_id, "quantity": quantity,
                        "state": "CLAIMED", "receipt": None, "executions": [], "filled_quantity": 0,
                        "cancelled_quantity": 0, "rejected_quantity": 0, "aborted_quantity": 0, "remaining_quantity": quantity,
-                       "created_at": now, "updated_at": now, "reconciliation": None,
+                       "created_at": now, "updated_at": now, "submitted_at": None, "reconciliation": None,
                        "rejection_proof": None, "abort_proof": None}
             position["attempts"].append(attempt)
             return attempt
@@ -425,7 +436,8 @@ class ManagedPositionBook:
             attempt = self._attempt(position, token)
             if attempt["state"] != "CLAIMED":
                 raise RuntimeError("SELL submission cannot be repeated")
-            attempt.update(state="SUBMITTING", updated_at=_now())
+            now = _now()
+            attempt.update(state="SUBMITTING", submitted_at=now, updated_at=now)
             return attempt
         result = self._change(position_id, update)
         self._local_submitting.add((position_id, token))

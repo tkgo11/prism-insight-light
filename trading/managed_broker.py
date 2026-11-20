@@ -212,6 +212,7 @@ class ManagedBrokerGateway:
                 can_submit = _value(entry, "decision_can_submit")
                 if can_submit is not None and can_submit(self.market) is not True:
                     raise EvidenceUnavailable("market closed during exit preflight")
+                self._fresh(current["as_of"])
             except EvidenceUnavailable as exc:
                 # This is the only location producing a known-no-submission
                 # result. Never wrap a broker/transport exception in this type.
@@ -245,6 +246,7 @@ class ManagedBrokerGateway:
                         or metadata.get("order_quantity") != quantity
                         or (self.market == "US" and metadata.get("order_venue") != current["order_venue"])):
                     status = "unknown"
+                    receipt = None
                 if status == "failed" and result.get("outcome_unknown") is False:
                     code = result.get("business_error_code")
                     # Free-form diagnostics cannot be turned into proof.

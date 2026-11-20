@@ -19,12 +19,13 @@ class Gateway:
         return {**{key: entry[key] for key in ("account_scope", "market", "ticker")},
                 "holding_quantity": 4, "sellable_quantity": 4,
                 "current_price": 85, "open_orders": [], "complete": True,
-                "as_of": self.clock["now"].isoformat()}
+                "as_of": self.clock["now"].isoformat(),
+                **({"order_venue": "NASD"} if entry["market"] == "US" else {})}
 
     def submit_exact_sell(self, entry, quantity, reservation_id=None):
         assert quantity == 4
         self.calls.append(reservation_id)
-        receipt = {"order_no": "00001234", "order_date": "20261118",
+        receipt = {"order_no": "00001234", "order_date": datetime.now(timezone(timedelta(hours=9))).strftime("%Y%m%d"),
                    "order_kind": "broker_order", "order_quantity": quantity}
         if entry["market"] == "US":
             receipt["order_venue"] = "NASD"
@@ -116,7 +117,7 @@ def test_old_broker_order_receipt_cannot_be_reused_for_a_new_exit_attempt(tmp_pa
     entry = book.observe(identity, quantity=4, sellable_quantity=4, price=85)
     first = book.reserve_sell(identity, snapshot_id=entry["snapshot"]["snapshot_id"], quantity=4)
     book.mark_submitting(identity, first["token"])
-    receipt = {"order_no": "00001234", "order_date": "20261118",
+    receipt = {"order_no": "00001234", "order_date": datetime.now(timezone(timedelta(hours=9))).strftime("%Y%m%d"),
                "order_kind": "broker_order", "order_quantity": 4}
     if market == "US":
         receipt["order_venue"] = "NASD"

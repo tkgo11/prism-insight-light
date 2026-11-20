@@ -79,6 +79,8 @@ class ManagedPositionController:
             raise ValueError("Invalid broker quote")
         if not isinstance(value.get("open_orders"), list):
             raise ValueError("Broker open-order inventory unavailable")
+        if entry["market"] == "US" and value.get("order_venue") not in ("NASD", "NYSE", "AMEX"):
+            raise ValueError("Broker instrument venue unavailable")
         return value
 
     @staticmethod
@@ -191,6 +193,7 @@ class ManagedPositionController:
         # A custom gateway still has to pass a fresh controller-side
         # preflight. The KIS gateway performs this check inside its own lock.
         try:
+            latest = snapshot
             if type(self.gateway) is not ManagedBrokerGateway:
                 latest = self._snapshot(entry)
                 if (latest["open_orders"] or latest["holding_quantity"] != quantity
@@ -201,6 +204,7 @@ class ManagedPositionController:
                     raise ValueError("Managed inventory changed before submission")
             if self.submission_allowed is not None and self.submission_allowed(entry["market"]) is not True:
                 raise ValueError("Market is unavailable for submission")
+            self._assert_fresh(latest)
         except Exception:
             self.book.abort_before_gateway(position_id, token)
             return self._result(position_id, "PAUSED", "BROKER_PREFLIGHT_CHANGED")
@@ -212,7 +216,8 @@ class ManagedPositionController:
                 quantity, reservation_id=token,
             )
         except SubmissionNotStarted as exc:
-            if (exc.token == token and exc.account_scope == entry["account_scope"]
+            if (type(self.gateway) is ManagedBrokerGateway
+                    and exc.token == token and exc.account_scope == entry["account_scope"]
                     and exc.market == entry["market"] and exc.ticker == entry["ticker"]):
                 self.book.abort_before_gateway(position_id, token)
                 return self._result(position_id, "PAUSED", "BROKER_PREFLIGHT_CHANGED")
@@ -237,6 +242,9 @@ class ManagedPositionController:
                 # release this attempt or authorize a new financial action.
                 pass
         receipt = self._receipt(response.get("receipt"), entry, quantity)
+        if (receipt is not None and entry["market"] == "US"
+                and receipt.get("order_venue") != snapshot["order_venue"]):
+            receipt = None
         if outcome != "ACCEPTED" or receipt is None or "order_date" not in receipt:
             outcome = "UNKNOWN"
         try:

@@ -382,3 +382,14 @@ def test_preflight_quantity_change_requires_another_full_position_decision(holdi
     with pytest.raises(module().SubmissionNotStarted):
         gateway.submit_exact_sell(entry(), 4, reservation_id="token1")
     assert not calls
+
+
+def test_conflicting_venue_receipt_cannot_settle_another_venue():
+    gateway, _, calls = fixture("US", result=dict(
+        success=True, order_no="00001234", order_date="20261118",
+        order_kind="broker_order", order_quantity=4, order_venue="NYSE",
+    ))
+    assert gateway.submit_exact_sell(entry("US"), 4, reservation_id="token1") == {
+        "outcome": "UNKNOWN", "receipt": None,
+    }
+    assert len(calls) == 1

@@ -765,6 +765,17 @@ class TradeDispatcher:
                     for account in ka.get_configured_accounts(svr=server, market=market.lower())
                     if account.get("enabled") is True and account.get("product") == "01"
                 ]
+                if self.account_name or self.account_index is not None:
+                    try:
+                        selected = ka.resolve_account(
+                            svr=server, product="01", market=market.lower(),
+                            account_name=self.account_name, account_index=self.account_index,
+                        )
+                        selected_scope = hashlib.sha256(selected["account_key"].encode()).hexdigest()
+                    except (KeyError, OSError, RuntimeError, TypeError, ValueError):
+                        continue
+                    if entry["account_scope"] != selected_scope:
+                        continue
                 if scopes.count(entry["account_scope"]) == 1:
                     if self.execution_ledger.has_ambiguous_legacy_submission(
                         market, entry["ticker"], entry["account_scope"],
