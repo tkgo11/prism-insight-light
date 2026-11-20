@@ -1,0 +1,87 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T012138KST-audit",
+  "status": "PARTIAL_BLOCKED",
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "759e19ff0079cf355e0e639b3a18de91e73719b2",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical_test_count": 3372
+  },
+  "state_branch_ci": {
+    "id": 44762870959,
+    "head_sha": "6aea4f8e7d7b82e93401a2e6442e08de68ddaa74",
+    "conclusion": "failure",
+    "failed_job_id": 136379679715,
+    "failed_step": "Run all tests",
+    "root_cause": "UNCONFIRMED; state branch differs from PR code; annotations endpoint rejected"
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success; historical blocking 87 not independently re-counted",
+    "reviews": 0,
+    "branch_protection": "403"
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "formal_related_passes": 0,
+  "formal_full_passes": 0,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "reviewed_paths": [
+    {
+      "path": "trading/dispatch.py",
+      "sha": "9e54f260f05dba943962eb7766a352c64417c65f"
+    },
+    {
+      "path": "trading/managed_positions.py",
+      "sha": "140340547940c934848b50dd83950d0eb0e3eaea"
+    },
+    {
+      "path": "trading/managed_position_state.py",
+      "sha": "69f5817b69d507ded8c80dafe28228aad53b9922"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8"
+    },
+    {
+      "path": "trading/order_reconciliation.py",
+      "sha": "492b3cb72cd772033fae2fa6136ca49e8bf8d2a2"
+    },
+    {
+      "path": "docs/FULL_POSITION_MANAGED.md",
+      "sha": "f2d830504d672df0e638c654b3628fb3ffc4348d"
+    },
+    {
+      "path": "scripts/run_offline_pytest.py",
+      "sha": "d136c8d2816866093a407c979ea2fd6d2c6c00bf"
+    }
+  ],
+  "new_evidence": [
+    "PR HEAD 0e34fa unchanged; Snyk/Qlty SUCCESS and two required CI check runs SUCCESS on PR HEAD.",
+    "Latest state-branch CI 44762870959 failed Full pytest suite Run all tests, Windows runtime smoke passed. No accessible failure log; root cause unconfirmed.",
+    "Reviewed managed controller, durable state, dispatch, watcher, reconciliation, offline runner and policy doc at exact blob SHAs. Gateway remains unverified for real KIS all-channel inventory and broker atomic reservation.",
+    "Existing immutable manifest 278/243 remains inventory only. No full audit credit and no code change."
+  ],
+  "exact_blocker": "KIS all-channel authoritative open-order and atomic conditional placement contracts unverified; formal independent audits 0/2 + 0/2; Qlty blockers not cleared; human review 0; branch protection 403",
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44762870959/jobs and obtain authorized failed-job annotations/logs; then continue full file-by-file audit at immutable PR HEAD."
+}
