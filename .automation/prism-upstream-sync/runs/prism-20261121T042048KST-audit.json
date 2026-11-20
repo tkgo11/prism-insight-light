@@ -1,0 +1,63 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T042048KST-audit",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "1412dee17056d504a9416dbf6e4106bd6e81b86b",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "mock_result": "not rerun; historical 3372 passed",
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "linux": "success",
+    "windows": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "id": 44791720873,
+    "head_sha": "134d0c967476646cae42d85b35294321cee3266a",
+    "conclusion": "failure",
+    "failed_job_id": 136480833260,
+    "failed_step": "Run all tests",
+    "root_cause": "UNCONFIRMED; job step identified, no log content"
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success commit status, 87 blocking issues",
+    "reviews": 0,
+    "branch_protection": "403"
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "formal_related_passes": 0,
+  "formal_full_passes": 0,
+  "unverified_transitions": [
+    "KIS all-channel authoritative open-order coverage",
+    "broker-side atomic external order serialization",
+    "lost-response order recovery identity",
+    "native execution IDs and explicit cancellation proof"
+  ],
+  "new_evidence": [
+    "State HEAD 134d0c967476646cae42d85b35294321cee3266a and RELEASED lock confirmed before acquiring CAS; current PR HEAD unchanged.",
+    "State CI 44791720873 on state HEAD 134d0c... failed Linux Run all tests job 136480833260; Windows smoke success. Separate PR HEAD CI 44732835470 remains success (historical).",
+    "Reviewed immutable PR HEAD trading/managed_broker.py blob 959bc15c972d5b56e23eb8653d75a0c82c4a04a8, lines 144-177,193-315,358-483 and tests/test_managed_broker.py blob c06c0ba2a3604407984d83f85ef3aa453ccd6510, 396 lines.",
+    "Confirmed fail-closed native snapshot without reservation_reader; submit_exact_sell requires order_reader, exact holdings/sellable quantity and no open orders; native reconciliation explicitly raises EvidenceUnavailable without execution IDs/cancellation proof. No new defect or test gap demonstrated.",
+    "Current PR HEAD Snyk SUCCESS, Qlty SUCCESS with 87 blocking issues, reviews zero, branch protection 403. No complete audits."
+  ],
+  "exact_blocker": "KIS all-channel/atomic contract unverified; 2+2 full audits incomplete; Qlty 87 blocking issues; human reviews zero; branch protection 403.",
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44791720873/jobs then inspect workflow source and immutable-head related-file audit; never treat state branch CI as PR CI."
+}
