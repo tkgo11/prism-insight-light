@@ -1,8 +1,7 @@
 {
-  "run_id": "prism-20261121T031847KST-audit",
-  "status": "RELEASED",
-  "acquired_expected_state_parent": "337e0d0315ebc20b92f6b725c76654cb2e7d4754",
+  "run_id": "prism-20261121T042048KST-audit",
+  "status": "ACTIVE",
+  "acquired_expected_state_parent": "134d0c967476646cae42d85b35294321cee3266a",
   "expected_pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "started_at": "2026-11-21T03:18:47+09:00",
-  "release_expected_state_parent": "b0e1174e0af7982efe9d63796986a12fc67455f7"
+  "started_at": "2026-11-21T04:20:48+09:00"
 }
