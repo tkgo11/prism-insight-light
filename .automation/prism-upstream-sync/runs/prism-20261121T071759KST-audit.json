@@ -1,0 +1,64 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T071759KST-audit",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "1412dee17056d504a9416dbf6e4106bd6e81b86b",
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true,
+    "check_runs_currently_successful": true
+  },
+  "state_branch_ci": {
+    "id": 44820117750,
+    "head_sha": "b3d0d3f6494adf06131d2476b0eafdde5d51d02d",
+    "conclusion": "failure",
+    "distinct_from_pr_ci": true
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun; 3372 Linux /191 Windows historical",
+  "code_fix_commit": null,
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "snyk": "success",
+    "qlty": "success status, 87 blocking issues in fresh commit status",
+    "reviews": 0,
+    "branch_protection": "unavailable/403; not PASS"
+  },
+  "verified_paths": [
+    "PR tests/test_telegram_signal_worker.py blob a2f30413b66c9fdf71b350b56af3cc001b431669 uses datetime.datetime.now(datetime.timezone.utc).isoformat() in fixture",
+    "State branch same file blob 15e35bfaea9cd7e7c811f3f4369f01fe0d2edfc7 uses fixed 2026-10-17T01:00:00+09:00 fixture",
+    "PR HEAD check runs Windows runtime smoke and Full pytest suite both success; no new run"
+  ],
+  "unverified_transitions": [
+    "KIS all-channel authoritative open-order coverage",
+    "broker-side atomic external order serialization",
+    "lost-response order recovery identity",
+    "native execution IDs and cancellation proof"
+  ],
+  "exact_blocker": "KIS authoritative contracts unverified, 87 Qlty blocking issues, 0 reviews, protection 403, independent 2+2 incomplete",
+  "evidence_delta": "Compared immutable PR/state Telegram test blob SHA and fixture: PR already uses current UTC time; state branch retains stale fixed date. State CI failure is not PR HEAD failure. No duplicate test or speculative patch.",
+  "next_exact_action": "GitHub Connector fetch_file trading/managed_broker.py at immutable PR HEAD 0e34faae4365a54cb38dfd5e8ad04973994d80e1, then map authoritative order/atomic submission contracts and existing tests by blob SHA before independent audit.",
+  "no_kis_calls": true,
+  "no_trades": true,
+  "no_merge": true,
+  "pr_draft": true
+}
