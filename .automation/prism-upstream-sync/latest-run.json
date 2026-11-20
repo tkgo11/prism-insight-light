@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-20261121T012138KST-audit",
+  "run_id": "prism-20261121T021749KST-audit",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T012138KST-audit.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T021749KST-audit.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44762870959/jobs and obtain authorized failed-job annotations/logs; then continue full file-by-file audit at immutable PR HEAD."
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44772755759/jobs; then inspect read-only workflow/CI evidence and progress file-by-file audit on immutable PR HEAD without counting incomplete reviews."
 }

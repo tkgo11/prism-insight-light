@@ -1,0 +1,61 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T021749KST-audit",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "759e19ff0079cf355e0e639b3a18de91e73719b2",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "mock_result": "not rerun; historical 3372 passed",
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "linux": "success",
+    "windows": "success"
+  },
+  "state_branch_ci": {
+    "id": 44772755759,
+    "head_sha": "e5c74371bfc06978bc0be6d93fd97da2a68443e4",
+    "conclusion": "failure",
+    "failed_job_id": 136414422669,
+    "failed_step": "Run all tests",
+    "root_cause": "UNCONFIRMED: state branch executes python -m pytest -q, lacks scripts/run_offline_pytest.py; PR uses seccomp offline runner; failure logs inaccessible"
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success status but 87 blocking issues confirmed via commit status description",
+    "reviews": 0,
+    "branch_protection": "403"
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "formal_related_passes": 0,
+  "formal_full_passes": 0,
+  "unverified_transitions": [
+    "all-channel KIS open-order completeness",
+    "order/execution provenance live contract",
+    "UNKNOWN recovery identity",
+    "broker-side atomic order reservation"
+  ],
+  "new_evidence": [
+    "Latest state-branch run 44772755759 failed Linux Run all tests, Windows success, unrelated to PR HEAD successful CI 44732835470.",
+    "Exact state workflow blob 11be975d457a88139ee8326c15c4aabb664db895 uses python -m pytest -q; PR workflow blob cafa149efe9852a53a133ebf6874b1341a9e8c06 uses scripts/run_offline_pytest.py -q. Runner absent from state branch.",
+    "PR HEAD commit status explicitly says qlty check success with 87 blocking issues, not quality clearance.",
+    "GitHub Connector rejected direct check-run/job URLs; failure root cause remains unconfirmed."
+  ],
+  "exact_blocker": "Live KIS authority/atomicity unverified; formal independent audits 0/2+0/2; Qlty 87 blocking issues; human review 0; branch protection 403.",
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/44772755759/jobs; then inspect read-only workflow/CI evidence and progress file-by-file audit on immutable PR HEAD without counting incomplete reviews."
+}
