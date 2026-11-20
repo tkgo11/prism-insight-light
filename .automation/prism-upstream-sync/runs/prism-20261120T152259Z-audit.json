@@ -1,0 +1,74 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261120T152259Z-audit",
+  "status": "PARTIAL_BLOCKED",
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "759e19ff0079cf355e0e639b3a18de91e73719b2",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "new_tests": 0,
+  "new_fixes": 0,
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical_test_count": 3372
+  },
+  "state_branch_ci": {
+    "id": 44753097249,
+    "head_sha": "90ee96ef573e790e156246830c60e197a35fa3e9",
+    "conclusion": "failure",
+    "failed_job_id": 136345726204,
+    "failed_step": "Run all tests",
+    "annotations_count": 2,
+    "annotations_endpoint": "rejected by connector INVALID_ARGUMENT",
+    "logs_endpoint": "empty response",
+    "root_cause": "UNCONFIRMED"
+  },
+  "external": {
+    "snyk": "success",
+    "qlty": "success; blocking issues historical 87 not independently re-counted",
+    "reviews": 0,
+    "branch_protection": "403"
+  },
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "formal_related_passes": 0,
+  "formal_full_passes": 0,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "reviewed_paths": [
+    {
+      "path": "docs/FULL_POSITION_MANAGED.md",
+      "sha": "f2d830504d672df0e638c654b3628fb3ffc4348d"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8"
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "sha": "cafa149efe9852a53a133ebf6874b1341a9e8c06"
+    }
+  ],
+  "new_evidence": [
+    "Latest state-branch run 44753097249 failed Run all tests, Windows passed; PR HEAD CI 44732835470 remains successful and unchanged.",
+    "Check-run annotations_count=2 but connector rejects annotations endpoint, logs endpoint returns empty content; no root-cause claim.",
+    "PR HEAD unchanged, manifest 278/243 remains inventory only; four file paths partially inspected, no formal audit credit.",
+    "Upstream HEAD unchanged since prior report."
+  ],
+  "exact_blocker": "KIS all-channel broker-authoritative state and atomic conditional order guarantees unverified; full 2+2 audits 0/2; Qlty blocking issues, review 0, protection 403",
+  "next_exact_action": "GitHub Connector fetch https://api.github.com/repos/tkgo11/prism-insight-light/check-runs/136345726204 then review output and obtain an allowed annotations/log route; continue immutable PR HEAD file-by-file audit."
+}
