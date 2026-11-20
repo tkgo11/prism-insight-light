@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-20261121T071759KST-audit",
+  "run_id": "prism-20261121T082102KST-audit11",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T071759KST-audit.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T082102KST-audit11.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "GitHub Connector fetch_file trading/managed_broker.py at immutable PR HEAD 0e34faae4365a54cb38dfd5e8ad04973994d80e1, then map authoritative order/atomic submission contracts and existing tests by blob SHA before independent audit."
+  "next_exact_action": "GitHub Connector fetch_file tests/test_managed_positions.py at immutable PR HEAD 0e34faae4365a54cb38dfd5e8ad04973994d80e1; map each durable SUBMITTING/UNKNOWN/restart transition to tests and missing contracts before independent audit."
 }

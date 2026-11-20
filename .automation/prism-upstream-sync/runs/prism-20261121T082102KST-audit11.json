@@ -1,0 +1,91 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T082102KST-audit11",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "1412dee17056d504a9416dbf6e4106bd6e81b86b",
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "id": 44827904851,
+    "head_sha": "2353566f1b7a2d46ebacbf6a7f333dcb6461fb91",
+    "conclusion": "failure",
+    "failed_job": 136605087838,
+    "passed_job": 136605087478
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun; historical 3372 Linux /191 Windows",
+  "code_fix_commit": null,
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "snyk": "success",
+    "qlty": "success status, 87 blocking issues (current status)",
+    "reviews": 0,
+    "branch_protection": "unavailable/403; not PASS"
+  },
+  "verified_paths": [
+    {
+      "path": "trading/managed_broker.py",
+      "blob_sha": "959bc15c972d5b56e23eb8653d75a0c82c4a04a8",
+      "contracts": [
+        "native snapshot requires explicit authoritative reservation_reader covers_all_order_kinds, rejects demo and incomplete coverage",
+        "snapshot enforces freshness, account, sellable quantity, open orders, US venue",
+        "submit_exact_sell requires recovery order_reader and exact full holdings; submission exceptions remain UNKNOWN",
+        "native order history lacks execution ID/cancellation proof and raises EvidenceUnavailable",
+        "no atomic transaction across MTS/HTS and submission"
+      ],
+      "test_file": "tests/test_managed_broker.py",
+      "test_sha": "c06c0ba2a3604407984d83f85ef3aa453ccd6510",
+      "test_ids": [
+        "test_missing_authoritative_order_recovery_blocks_initial_exit",
+        "test_native_demo_without_complete_supported_queries_pauses_instead_of_guessing",
+        "test_native_cumulative_status_without_execution_ids_remains_fenced",
+        "test_uncertain_submission_never_becomes_execution_or_retry_permission",
+        "test_reconciliation_requires_explicit_cancel_count_and_deduplicates_execution",
+        "test_native_query_failure_never_returns_partial_or_invented_complete_snapshot"
+      ]
+    },
+    {
+      "path": "trading/managed_positions.py",
+      "blob_sha": "140340547940c934848b50dd83950d0eb0e3eaea",
+      "contracts": [
+        "durable CLAIMED/SUBMITTING distinction and no retry of unresolved active attempt",
+        "snapshot checked before reserve and pre-submit; incomplete evidence PAUSED",
+        "receipt acceptance not fill; missing order_date stays UNKNOWN"
+      ]
+    }
+  ],
+  "unverified_transitions": [
+    "KIS authoritative all-channel MTS/HTS/PRISM open and reserved order completeness",
+    "broker-side atomic external order serialization",
+    "stable response-lost recovery identity and native execution IDs/cancel evidence",
+    "end-to-end fresh KR/US broker contracts without KIS API"
+  ],
+  "exact_blocker": "No proven KIS atomic order contract or authoritative full reservation and execution evidence; Qlty 87 blocking, review 0, branch protection 403, 2+2 incomplete",
+  "evidence_delta": "Current immutable PR HEAD source/test blob SHA and named contract/test mapping for managed broker and controller; current status confirms 87 Qlty blocking; state branch CI 44827904851 distinct and failed. No new tests, edits, or audit PASS.",
+  "next_exact_action": "GitHub Connector fetch_file tests/test_managed_positions.py at immutable PR HEAD 0e34faae4365a54cb38dfd5e8ad04973994d80e1; map each durable SUBMITTING/UNKNOWN/restart transition to tests and missing contracts before independent audit.",
+  "no_kis_calls": true,
+  "no_trades": true,
+  "no_merge": true,
+  "pr_draft": true
+}
