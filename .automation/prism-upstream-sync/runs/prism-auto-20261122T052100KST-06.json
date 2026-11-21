@@ -1,0 +1,82 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T052100KST-06",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "33837d9fd7bc49290d3888cc1c3dfbdba8563a75",
+  "state_acquired_lock_commit": "eeba85969c15d23282e13420016a76de1dd589a9",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "run_id": 44915195653,
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "conclusion": "success",
+    "checks": [
+      "Full pytest suite success",
+      "Windows runtime smoke success"
+    ]
+  },
+  "state_ci": {
+    "run_id": 44940718650,
+    "head_sha": "33837d9fd7bc49290d3888cc1c3dfbdba8563a75",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "success exact PR HEAD",
+    "qlty": "success status; 87 blocking issues",
+    "human_reviews": 0,
+    "branch_protection": "403, not PASS"
+  },
+  "verified_paths": [
+    {
+      "path": "trading/managed_broker.py",
+      "blob_sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+      "evidence": "lines 193-206 reject real-account SELL without atomic broker exclusion and recovery"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "84b52d94e925df13edf3f15629b6b5c8a8c9043f",
+      "evidence": "lines 323 onward UNKNOWN/no-receipt durable fence"
+    },
+    {
+      "path": "tests/test_managed_broker_real_atomic_gate.py",
+      "blob_sha": "83ec3a7d41d6a45825ce2b176feb49ccaf06f053",
+      "evidence": "offline KR/US self-attested complete snapshot cannot authorize real SELL; source inspected, not run"
+    },
+    {
+      "path": "docs/FULL_POSITION_MANAGED.md",
+      "blob_sha": "056722490f3508305c1889d99975df05377490ee",
+      "evidence": "lines 53-60 explicit real SELL guard; contract not demonstrated"
+    }
+  ],
+  "unverified_transitions": [
+    "all-channel MTS/HTS/PRISM pending and reservation authoritative inventory",
+    "broker order-date, fill ID, partial/cancel/remaining and venue attribution",
+    "lost response recovery",
+    "cross-channel broker atomic conditional sell/reservation"
+  ],
+  "evidence_delta": "Fresh source review at exact PR HEAD with code line anchors and four blob SHAs; state HEAD CI 44940718650 verified separately; Snyk/Qlty status description and branch protection 403 verified; no new RED, Mock, fix or complete audit.",
+  "historic_mock_evidence_not_new": "187 offline Mock cases and BUY4/manual SELL4/manual BUY4/restart/SELL4 request once",
+  "exact_blocker": "KIS authoritative cross-channel atomicity unverified; 87 Qlty blocking issues; 0 reviews; branch protection 403",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch({\"url\":\"https://api.github.com/repos/tkgo11/prism-insight-light/git/ref/heads/automation/prism-insight-sync-state\"})"
+}

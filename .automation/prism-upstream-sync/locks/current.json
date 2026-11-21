@@ -1,1 +1,10 @@
-{"run_id":"prism-auto-20261122T052100KST-06","status":"ACTIVE","owner":"scheduled-automation","acquired_expected_state_parent":"33837d9fd7bc49290d3888cc1c3dfbdba8563a75","expected_pr_head":"cd36647adf4665bfff1a5f26516b12d45b022354"}
+{
+  "run_id": "prism-auto-20261122T052100KST-06",
+  "status": "RELEASED",
+  "owner": "scheduled-automation",
+  "acquired_expected_state_parent": "33837d9fd7bc49290d3888cc1c3dfbdba8563a75",
+  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_expected_state_parent": "eeba85969c15d23282e13420016a76de1dd589a9",
+  "final_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_reason": "read-only exact-head safety audit"
+}
