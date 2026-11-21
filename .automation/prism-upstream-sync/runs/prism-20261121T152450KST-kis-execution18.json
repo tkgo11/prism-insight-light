@@ -1,0 +1,82 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T152450KST-kis-execution18",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "f0649c1620966fc89a504c4545b25700dd26d029",
+  "state_before": "c798d3b1cb91c26e9e43dc8c9a1ccd780b3f07fe",
+  "lock_acquire_commit": "9ab12bd8b9a2ef3bf8ecb2b2875b558757bb7a91",
+  "latest_head_ci": {
+    "run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "run_id": 44870509620,
+    "head_sha": "c798d3b1cb91c26e9e43dc8c9a1ccd780b3f07fe",
+    "conclusion": "failure"
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun",
+  "code_fix_commit": null,
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "snyk": "SUCCESS",
+    "qlty": "SUCCESS; 87 blocking issues in commit status",
+    "reviews": 0,
+    "branch_protection": "403 not PASS"
+  },
+  "official_docs": [
+    {
+      "path": "examples_llm/domestic_stock/inquire_daily_ccld/inquire_daily_ccld.py",
+      "sha": "38d5f5444c19dc3102389b023c558992e3eaec55"
+    },
+    {
+      "path": "examples_llm/domestic_stock/ccnl_notice/ccnl_notice.py",
+      "sha": "294967abb82167b545a7ba36596c3f253f36a677"
+    },
+    {
+      "path": "examples_llm/overseas_stock/inquire_ccnl/inquire_ccnl.py",
+      "sha": "046fa3a144204a7378d6a6bbb4ae674bc75d0ecc"
+    },
+    {
+      "path": "examples_llm/overseas_stock/ccnl_notice/ccnl_notice.py",
+      "sha": "58d5f68d6d4aff681ac57052fabd2978f28d90f9"
+    }
+  ],
+  "code_sha": {
+    "trading/managed_broker.py": "959bc15c972d5b56e23eb8653d75a0c82c4a04a8",
+    "trading/managed_position_state.py": "69f5817b69d507ded8c80dafe28228aad53b9922"
+  },
+  "evidence_delta": "Read 4 immutable official KIS example files. KR daily execution history includes date range, KRX/NXT/SOR/ALL exchange filter, up to 100 rows per page and continuation; older history warns delayed DB responses. US execution history requires local-date window, NASD market scope and continuation; sample has max_depth=10, so truncation cannot be treated complete. KR websocket notice distinguishes receipt (CNTG_YN=1) from execution (2), with order number, time, quantity but no explicitly documented unique execution ID. US notice lists order number, quantity and time, no explicitly documented unique execution ID. Notification stream alone cannot prove exhaustive durable execution/cancellation reconciliation. Native adapter still intentionally refuses unproven execution IDs and cancellation provenance.",
+  "verified_paths": [
+    "official public API example source and PR adapter code read only"
+  ],
+  "unverified_transitions": [
+    "all-channel MTS/HTS/PRISM order coverage",
+    "broker-authored unique execution ID",
+    "explicit cancellation and remaining-quantity authority",
+    "response-loss recovery",
+    "atomic order-vs-external-activity serialization",
+    "complete pagination beyond example depth"
+  ],
+  "exact_blocker": "Broker-authoritative execution identity, all-channel coverage and atomic conditional SELL not established; SELL must remain blocked.",
+  "next_exact_action": "GitHub Connector fetch official KIS inquiry output field definitions and PR trading/managed_broker.py native order parser; determine whether any stable per-execution identifier and explicit cancellation proof exist without KIS calls."
+}
