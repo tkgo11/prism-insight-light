@@ -103,3 +103,49 @@ def test_opaque_legacy_dedupe_state_cannot_bypass_managed_fence(tmp_path, status
     ledger = ExecutionLedger(tmp_path / "execution.json")
     ledger.path.write_text(json.dumps({"old-claim": status}), encoding="utf-8")
     assert ledger.has_ambiguous_legacy_submission("KR", "005930", "1" * 64)
+
+@pytest.mark.asyncio
+async def test_real_dispatcher_custom_gateway_cannot_bypass_atomic_broker_gate(monkeypatch):
+    """A directly injected gateway must not authorize live managed SELLs."""
+    from datetime import datetime, timezone
+
+    account_key = "prod:00000023:01"  # synthetic; no KIS connection
+    scope = sha256(account_key.encode()).hexdigest()
+    submissions = []
+
+    def snapshot(entry):
+        return {
+            **entry,
+            "complete": True,
+            "as_of": datetime.now(timezone.utc).isoformat(),
+            "holding_quantity": 4,
+            "sellable_quantity": 4,
+            "current_price": 85,
+            "open_orders": [],
+        }
+
+    def forbidden_submit(entry, quantity, *, reservation_id):
+        submissions.append((entry, quantity, reservation_id))
+        return {"outcome": "UNKNOWN", "receipt": None}
+
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **kw: [
+        {"account_key": account_key, "enabled": True, "product": "01"}
+    ])
+    gateway = SimpleNamespace(
+        snapshot=snapshot,
+        submit_exact_sell=forbidden_submit,
+        reconcile_order=lambda *args: None,
+    )
+    dispatcher = TradeDispatcher(
+        trading_mode="real", managed_gateway=gateway, fresh_quote_enabled=False
+    )
+    dispatcher.managed_position_book.enroll(
+        scope, "KR", "000661", 90, latch_policy="LATCH_EXIT"
+    )
+    results = await dispatcher.check_managed_positions()
+    assert results
+    assert all(result["status"] == "PAUSED"
+               and result["reason"] == "BROKER_ATOMIC_CROSS_CHANNEL_UNVERIFIED"
+               for result in results)
+    assert submissions == []
