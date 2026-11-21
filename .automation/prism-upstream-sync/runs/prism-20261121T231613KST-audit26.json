@@ -1,0 +1,69 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T231613KST-audit26",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "b40b048d6d5b51cc1fa73700d1ea6ab5c09f4f1e",
+  "state_before_lock": "006c68e00da5c81b6f08a64689dd26980ea1049a",
+  "state_ci": {
+    "run_id": 44908527839,
+    "head_sha": "006c68e00da5c81b6f08a64689dd26980ea1049a",
+    "conclusion": "failure"
+  },
+  "pr_ci": {
+    "historical_run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "rerun_this_execution": false
+  },
+  "security": {
+    "snyk": "success",
+    "qlty": "success",
+    "blocking_issue_count": "not independently retrieved",
+    "human_reviews": 0,
+    "branch_protection": "read denied"
+  },
+  "new_evidence": [
+    {
+      "path": "trading/managed_broker.py",
+      "blob_sha": "959bc15c972d5b56e23eb8653d75a0c82c4a04a8",
+      "contract": "_native_snapshot checks reservation_reader self-declared complete/covers_all_order_kinds and identity/time; it does not inspect provider pagination provenance; snapshot() accepts a snapshot_reader complete flag without independent broker authority"
+    },
+    {
+      "path": "tests/test_managed_broker.py",
+      "blob_sha": "c06c0ba2a3604407984d83f85ef3aa453ccd6510",
+      "contract": "test_native_query_failure_never_returns_partial_or_invented_complete_snapshot tests native _pages failures and missing_coverage, not a lying external reservation_reader; test_native_cash_query_keeps_sellable_quantity_with_explicit_coverage_provider assumes provider truth"
+    }
+  ],
+  "new_baseline_red": false,
+  "mock_ran": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidates_verified": 0,
+  "candidates_deferred": 1,
+  "complete_related_files": 0,
+  "total_related_files": 243,
+  "complete_all_files": 0,
+  "total_all_files": 278,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "unverified": [
+    "KIS all-channel complete reservation coverage",
+    "authoritative execution/cancel identity",
+    "lost-response stable recovery",
+    "atomic serialization with external MTS/HTS orders"
+  ],
+  "exact_blocker": "Self-attested complete=true cannot prove an external provider fetched all pages/all channels; no documented authoritative broker contract or atomic external-order exclusion; a test expecting detection of undetectable provider lies would require inventing evidence.",
+  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_broker.py lines 90-190 and tests/test_managed_broker.py lines 55-115; audit snapshot_reader injection path and preflight submit_exact_sell for any bypass of reservation_reader fail-closed contract, then trace producer/watcher provenance.",
+  "historical_evidence_not_new": "187 Mock scenarios and historical CI not rerun",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false
+}
