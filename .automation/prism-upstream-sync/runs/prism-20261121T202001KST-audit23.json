@@ -1,0 +1,63 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T202001KST-audit23",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "2c04737a836058efc2dc25b3d09f2da3b3a6298d",
+  "state_before": "3cb17a2fe280dc896c48082c40fc11d926f9c804",
+  "lock_acquire_commit": "c0848be399ede7de26cb2030fac8d2ac0e0ccbee",
+  "latest_head_ci": {
+    "run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "run_id": 44894053155,
+    "head_sha": "3cb17a2fe280dc896c48082c40fc11d926f9c804",
+    "conclusion": "failure"
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun",
+  "code_fix_commit": null,
+  "candidate_count": 1,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "security": {
+    "snyk": "success",
+    "qlty": "success",
+    "qlty_blocking_issues": 87,
+    "reviews": 0,
+    "branch_protection": "unverified/permission denied"
+  },
+  "evidence_delta": "Official KIS domestic order-resv-ccnl requires start/end date, terminal media kind, processing division, cancellation flag and pagination; US order-resv-list requires date range, inquiry division, venue and pagination, demo unsupported. PR native snapshot requires externally injected complete all-order coverage provider; without it fail-closed. No official cross-channel completeness, lost-response recovery or broker atomic submit guarantee proven. Official examples' max_depth 10 returns partial results and must not be treated as complete.",
+  "verified_paths": [
+    "PR immutable trading/managed_broker.py _native_snapshot",
+    "Official domestic and overseas reservation-query source contracts",
+    "Current PR CI vs state branch CI, status checks, lock ownership"
+  ],
+  "unverified_transitions": [
+    "MTS/HTS/PRISM complete coverage",
+    "fresh authority and reservation scope",
+    "execution ID/cancellation evidence",
+    "lost response recovery",
+    "broker atomic serialization"
+  ],
+  "exact_blocker": "No verified authoritative all-channel reservation reader or broker atomic reservation/conditional sell contract; no live KIS permitted",
+  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_broker.py _native_snapshot and tests/test_managed_broker.py; map reservation_reader trust boundary and pagination-incomplete Mock coverage, add distinct RED only if unsafe transition is demonstrated.",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T202001KST-audit23.json"
+}
