@@ -59,6 +59,9 @@ Offline demo fixtures continue exercising the full order-state transitions.
 A future live implementation requires independently verified broker-side
 cross-channel atomic execution or reservation; do not remove the guard based
 only on extra polling or an external provider's self-attestation.
+The standard `TradeDispatcher.check_managed_positions` path also returns an
+explicit `PAUSED` result in real mode even when a custom gateway is injected.
+A custom gateway's completeness declaration does not bypass this live gate.
 
 The stock CLI has no complete production provider wired by default. A trusted
 gateway needs both complete open-order coverage and recoverable, dated SELL

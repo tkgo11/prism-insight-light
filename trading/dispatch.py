@@ -752,6 +752,20 @@ class TradeDispatcher:
         if (controller is None or self.dry_run
                 or self._runtime_config.get("auto_trading") is not True):
             return []
+        # A custom injected gateway is not evidence of broker-atomic exclusion
+        # of MTS/HTS/other PRISM orders. Block the normal live dispatcher path
+        # independently of the ManagedBrokerGateway preflight guard.
+        if self.trading_mode != "demo":
+            try:
+                enrolled = controller.book.list_enrollments()
+            except (OSError, RuntimeError, ValueError, TypeError, KeyError):
+                logger.exception("Managed book unavailable; refusing live exit")
+                return []
+            return [
+                {"position_id": entry["position_id"], "status": "PAUSED",
+                 "reason": "BROKER_ATOMIC_CROSS_CHANNEL_UNVERIFIED"}
+                for entry in enrolled
+            ]
 
         def check() -> list[dict[str, Any]]:
             results = []
