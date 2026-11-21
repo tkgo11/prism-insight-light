@@ -1,0 +1,83 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T102224KST-audit13",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "1412dee17056d504a9416dbf6e4106bd6e81b86b",
+  "latest_head_ci": {
+    "id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "id": 44843688900,
+    "head_sha": "8edade9247d92aa9ca73189cccb5d89592572f8f",
+    "conclusion": "failure",
+    "distinct_from_pr": true
+  },
+  "lock_acquire_commit": "073cde532c52509f85f82039970338fe098878ae",
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun; historical 3372 Linux / 191 Windows",
+  "code_fix_commit": null,
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "snyk": "success status (2026-11-20)",
+    "qlty": "success status, 87 blocking issues (2026-11-20)",
+    "reviews": 0,
+    "branch_protection": "403 not PASS"
+  },
+  "verified_paths": [
+    {
+      "path": "trading/managed_position_state.py",
+      "blob_sha": "69f5817b69d507ded8c80dafe28228aad53b9922",
+      "related_test_path": "tests/test_managed_positions.py",
+      "related_test_blob_sha": "3a557f8ce00abcf0a036b27a6a77a7f0ea593239",
+      "test_ids": [
+        "test_manual_flat_reentry_restart_exits_current_four_only_once",
+        "test_unknown_exit_remains_reserved_at_zero_and_reentry_after_restart",
+        "test_durable_reservation_failure_prevents_submission",
+        "test_durable_write_latency_cannot_submit_stale_snapshot",
+        "test_impossible_future_order_receipt_cannot_clear_reservation"
+      ],
+      "contracts": [
+        "CLAIMED persisted before SUBMITTING and broker invocation",
+        "recovered SUBMITTING cannot gain volatile no-invocation capability",
+        "UNKNOWN and nonterminal reservation fences new SELL",
+        "receipt != fill; reconciled executions require identity, quantity conservation and monotonic evidence",
+        "atomic temp-file replace plus fsync, corrupt/invalid JSON fails closed",
+        "account+market+ticker scope and unique attempt tokens"
+      ],
+      "boundary": "read-only source inspection and test-name mapping, no new execution, no complete audit"
+    }
+  ],
+  "unverified_transitions": [
+    "KIS MTS/HTS/PRISM all-channel authoritative open and reserved orders",
+    "broker-native atomic conditional SELL vs external orders",
+    "response-loss order recovery and native execution/cancel proof",
+    "KIS broker contract for KR/US venues"
+  ],
+  "exact_blocker": "No authoritative KIS contract or atomic broker-side proof; Qlty 87 blocking, reviews 0, protection 403, related/full 2+2 incomplete",
+  "evidence_delta": "New immutable managed_position_state.py SHA 69f5817... and named persistent SUBMITTING/UNKNOWN/receipt reconciliation contracts mapped to existing tests. No new RED/fix/CI/audit PASS.",
+  "next_exact_action": "GitHub Connector fetch immutable tests/test_managed_position_state.py at PR HEAD 0e34faae4365a54cb38dfd5e8ad04973994d80e1 (or locate actual corresponding test file) and map durable SUBMITTING recovery, abort proof and execution reconciliation test IDs; do not credit full audit.",
+  "no_kis_calls": true,
+  "no_trades": true,
+  "no_merge": true,
+  "pr_draft": true
+}
