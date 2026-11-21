@@ -1,0 +1,74 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T192143KST-contract22",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "2c04737a836058efc2dc25b3d09f2da3b3a6298d",
+  "state_before": "1c3214f5a9349474fb2f4e132233e28d98eb1bc6",
+  "lock_acquire_commit": "6d5de3c0fd3f7fc2e8364ab5bc05e2a3f552065f",
+  "latest_head_ci": {
+    "run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "run_id": 44889260816,
+    "head_sha": "1c3214f5a9349474fb2f4e132233e28d98eb1bc6",
+    "conclusion": "failure"
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun",
+  "code_fix_commit": null,
+  "candidate_count": 1,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "code_sha": {
+    "trading/managed_broker.py": "959bc15c972d5b56e23eb8653d75a0c82c4a04a8",
+    "tests/test_managed_broker.py": "c06c0ba2a3604407984d83f85ef3aa453ccd6510"
+  },
+  "official_source": {
+    "commit": "d8c7f7936793f85dc1e9c364ba5dc66832353f8c",
+    "path": "examples_llm/domestic_stock/inquire_daily_ccld/inquire_daily_ccld.py",
+    "blob_sha": "38d5f5444c19dc3102389b023c558992e3eaec55",
+    "lines": [
+      44,
+      79,
+      174
+    ]
+  },
+  "evidence_delta": "Verified exact immutable _native_order KR request omits EXCG_ID_DVSN_CD, whereas official KIS sample explicitly passes optional EXCG_ID_DVSN_CD with client default KRX and supported KRX/NXT/SOR/ALL. Existing KR/US test_native_cumulative_status_without_execution_ids_remains_fenced proves native reconciliation rejects missing execution IDs regardless of exchange-scope ambiguity. No distinct unsafe transition or RED baseline established; avoid duplicate test or speculative patch. Server default remains unknown.",
+  "verified_paths": [
+    "Immutable official KIS sample parameter contract read",
+    "PR _native_order exact query and unconditional EvidenceUnavailable examined",
+    "Existing KR/US fail-closed test definition mapped"
+  ],
+  "unverified_transitions": [
+    "all-channel MTS/HTS/PRISM coverage",
+    "KR NXT/SOR history coverage",
+    "unique execution ID",
+    "explicit cancellation and residual quantity",
+    "lost response recovery",
+    "atomic broker external-order serialization"
+  ],
+  "exact_blocker": "Broker full-channel and atomic-order contract unproven; Qlty blocking count not independently re-read (historical 87); reviews 0; protection fetch failed; state branch CI failure separate from PR code CI",
+  "reviews": 0,
+  "branch_protection": "unreadable",
+  "snyk": "success",
+  "qlty_commit_status": "success; blocking count not verified this run",
+  "next_exact_action": "GitHub Connector fetch PR HEAD trading/managed_broker.py lines 358-444 and official KIS domestic/overseas reservation-order APIs; assess whether _native_snapshot can prove full-channel reserved-order coverage without a privileged injected provider."
+}
