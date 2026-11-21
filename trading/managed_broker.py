@@ -195,6 +195,13 @@ class ManagedBrokerGateway:
             if not isinstance(reservation_id, str) or not reservation_id:
                 raise EvidenceUnavailable("durable reservation token missing")
             try:
+                # Neither an injected complete snapshot nor a reservation
+                # reader proves atomic exclusion of orders entered from MTS,
+                # HTS or another PRISM process. Until a broker-documented
+                # cross-channel atomic operation is implemented and verified,
+                # real-account cash SELL must stop before any broker method.
+                if getattr(self.trader, "mode", None) != "demo":
+                    raise EvidenceUnavailable("broker atomic cross-channel order exclusion unverified")
                 if not callable(self.order_reader):
                     raise EvidenceUnavailable("authoritative SELL recovery provider unavailable")
                 _count(quantity, positive=True)

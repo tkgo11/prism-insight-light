@@ -50,6 +50,16 @@ paused when no authoritative correlation is available.
 
 ## KIS capability limits
 
+The shipped `ManagedBrokerGateway.submit_exact_sell` now rejects **all real-account**
+automatic SELL requests before any cash order call. A caller-supplied snapshot
+marked `complete=true` or an injected order reader cannot establish atomic
+exclusion of concurrent MTS/HTS/PRISM orders. This is a deliberate fail-closed
+restriction, not evidence that live automatic stop-loss is supported.
+Offline demo fixtures continue exercising the full order-state transitions.
+A future live implementation requires independently verified broker-side
+cross-channel atomic execution or reservation; do not remove the guard based
+only on extra polling or an external provider's self-attestation.
+
 The stock CLI has no complete production provider wired by default. A trusted
 gateway needs both complete open-order coverage and recoverable, dated SELL
 execution evidence before submission. The documented native KIS queries provide
