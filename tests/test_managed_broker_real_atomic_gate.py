@@ -14,7 +14,7 @@ from trading.managed_broker import ManagedBrokerGateway, SubmissionNotStarted
 
 
 NOW = datetime(2026, 11, 18, 1, 0, tzinfo=timezone.utc)
-ACCOUNT = "offline-example:00000000:01"
+ACCOUNT = "prod:00000000:01"
 SCOPE = sha256(ACCOUNT.encode()).hexdigest()
 
 
