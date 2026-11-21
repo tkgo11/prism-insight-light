@@ -1,0 +1,64 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T011746KST-02",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "64a08a3126c497d701cace8203aa3dfafffb3733",
+  "state_acquired_lock_commit": "f86b49e4226e63c4885fc14df83ecd4ab4e09adc",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "run_id": 44915195653,
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "conclusion": "success",
+    "newly_executed": false
+  },
+  "state_ci": {
+    "run_id": 44918615788,
+    "head_sha": "64a08a3126c497d701cace8203aa3dfafffb3733",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "previous success; not independently refreshed",
+    "qlty": "previous success; issue count 87 not independently resolved",
+    "human_reviews": 0,
+    "branch_protection": "403 FORBIDDEN"
+  },
+  "evidence_delta": "New read-only check of exact PR HEAD: managed_broker.py line 204 unconditional real-account SELL block; dispatch.py and existing offline regression test remain SHA-identical. Verified PR checks Full pytest suite and Windows runtime smoke completed success. No new RED, Mock or patch.",
+  "files_checked": {
+    "trading/managed_broker.py": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+    "trading/dispatch.py": "84b52d94e925df13edf3f15629b6b5c8a8c9043f",
+    "tests/test_managed_broker_real_atomic_gate.py": "83ec3a7d41d6a45825ce2b176feb49ccaf06f053",
+    "docs/FULL_POSITION_MANAGED.md": "056722490f3508305c1889d99975df05377490ee"
+  },
+  "unverified_transitions": [
+    "KIS cross-channel authoritative pending and reserved orders",
+    "broker-proven order date/execution ID/remaining quantity/venue",
+    "lost-response stable recovery identity",
+    "broker-side atomic conditional SELL reservation"
+  ],
+  "exact_blocker": "No verified real KIS atomic cross-channel contract; reviews absent; protection 403; Qlty issue count unresolved.",
+  "historic_mock_evidence_not_new": "187 offline cases and BUY4-SELL4-BUY4-restart-SELL4 once",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "real_trades_performed": false,
+  "next_exact_action": "mcp__GitHub__fetch({\"url\":\"https://api.github.com/repos/tkgo11/prism-insight-light/git/ref/heads/automation/prism-insight-sync-state\"})"
+}
