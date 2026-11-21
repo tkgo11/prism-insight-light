@@ -1,0 +1,64 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T182132KST-contract21",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "9913ec3d5294f95fe14c4118ec9eb83f94ddc5e3",
+  "state_before": "12aa8ec2e41d01675472d52a0504842d4c5a0cdc",
+  "lock_acquire_commit": "78b148886049d29ed9dc976f886f95e8230857e3",
+  "latest_head_ci": {
+    "run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "run_id": 44884819336,
+    "head_sha": "12aa8ec2e41d01675472d52a0504842d4c5a0cdc",
+    "conclusion": "failure"
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun",
+  "code_fix_commit": null,
+  "candidate_count": 1,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "code_sha": {
+    "trading/managed_broker.py": "959bc15c972d5b56e23eb8653d75a0c82c4a04a8",
+    "tests/test_managed_broker.py": "c06c0ba2a3604407984d83f85ef3aa453ccd6510"
+  },
+  "official_source": {
+    "commit": "d8c7f7936793f85dc1e9c364ba5dc66832353f8c",
+    "path": "examples_llm/domestic_stock/inquire_daily_ccld/inquire_daily_ccld.py",
+    "lines": [
+      44,
+      79,
+      174
+    ]
+  },
+  "evidence_delta": "Official immutable KIS sample exposes EXCG_ID_DVSN_CD KRX/NXT/SOR/ALL, with client default KRX. PR native KR history omits parameter, and its matching test file has no explicit exchange-scope test. Server default not proven. Native order reader unconditionally rejects lack of unique execution ID and cancellation proof, so unsafe SELL not reproduced. Candidate remains unverified.",
+  "unverified_transitions": [
+    "all-channel MTS/HTS/PRISM coverage",
+    "KR NXT/SOR history coverage",
+    "unique execution ID",
+    "explicit cancellation and residual quantity",
+    "lost response recovery",
+    "atomic broker external-order serialization"
+  ],
+  "exact_blocker": "Broker authoritative full-channel and atomic-order contracts unproven; 87 Qlty blocking issues; review 0; branch protection 403",
+  "next_exact_action": "GitHub Connector fetch official KIS domestic inquire_daily_ccld documentation at d8c7f7936793f85dc1e9c364ba5dc66832353f8c and PR _native_order; add nonduplicate fail-closed NXT/SOR Mock baseline only if distinct transition is established."
+}

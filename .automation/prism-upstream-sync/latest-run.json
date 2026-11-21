@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-20261121T172438KST-nxt20",
+  "run_id": "prism-20261121T182132KST-contract21",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T172438KST-nxt20.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T182132KST-contract21.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "GitHub Connector fetch official KIS inquire_daily_ccld source at immutable commit and verify EXCG_ID_DVSN_CD documented behavior, then design a nonduplicate fail-closed KR NXT/SOR Mock baseline RED."
+  "next_exact_action": "GitHub Connector fetch official KIS domestic inquire_daily_ccld documentation at d8c7f7936793f85dc1e9c364ba5dc66832353f8c and PR _native_order; add nonduplicate fail-closed NXT/SOR Mock baseline only if distinct transition is established."
 }

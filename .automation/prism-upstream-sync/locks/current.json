@@ -1,7 +1,8 @@
 {
   "run_id": "prism-20261121T182132KST-contract21",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "acquired_expected_state_parent": "12aa8ec2e41d01675472d52a0504842d4c5a0cdc",
   "expected_pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "started_at": "2026-11-21T18:21:32+09:00"
+  "started_at": "2026-11-21T18:21:32+09:00",
+  "release_expected_state_parent": "78b148886049d29ed9dc976f886f95e8230857e3"
 }
