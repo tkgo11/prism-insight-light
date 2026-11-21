@@ -1,7 +1,10 @@
 {
   "run_id": "prism-auto-20261122T0821KST-09",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "scheduled-automation",
   "acquired_expected_state_parent": "bcedafb883b77bf86014a1aa68487703afe141bf",
-  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354"
+  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_expected_state_parent": "0794b20f7a4f51e867f532e782bb88e7d53256a3",
+  "final_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_reason": "new ledger history and watcher failure-path mapping; no new test or code changes"
 }

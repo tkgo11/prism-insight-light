@@ -1,0 +1,85 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T0821KST-09",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "bcedafb883b77bf86014a1aa68487703afe141bf",
+  "state_acquired_lock_commit": "0794b20f7a4f51e867f532e782bb88e7d53256a3",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "run_id": 44915195653,
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "conclusion": "success",
+    "checks": [
+      "Full pytest suite",
+      "Windows runtime smoke"
+    ]
+  },
+  "state_ci": {
+    "run_id": 44956265721,
+    "head_sha": "bcedafb883b77bf86014a1aa68487703afe141bf",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "success",
+    "qlty": "success status; 87 blocking issues",
+    "human_reviews": 0,
+    "branch_protection": "403 not PASS"
+  },
+  "new_evidence": [
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8",
+      "contract": "_validate_read_only_history_snapshot lines 321-367 rejects conflicting provenance, stale/malformed dates, invalid digest; inspect_unresolved_buy_history lines 710-796 returns POSSIBLE_RECEIPT_MATCH only, can_activate_stop false, no mutation; guard_unresolved_buy lines 654-708 holds FileLock and blocks unattributed legacy claims"
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c",
+      "contract": "check_stop_loss_once lines 763-917 blocks pending_buy and invalid holding; _trigger_sell lines 944-1127 revalidates persisted tracker and unresolved BUY before dispatch; post-order auth failure preserves protection"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "84b52d94e925df13edf3f15629b6b5c8a8c9043f",
+      "contract": "_stop_sell_unresolved_buy_block lines 706-747 blocks queued and immediate stop SELL with unresolved BUY while holding shared workflow lock"
+    },
+    {
+      "path": "tests/test_watcher_cross_process_buy_fence_mock.py",
+      "blob_sha": "82ae87b6fa01008c71abc76371304dde230d8365",
+      "test_ids": [
+        "test_cross_process_late_buy_claim_blocks_stop_sell",
+        "test_post_sell_holdings_auth_error_preserves_broker_result"
+      ],
+      "coverage": "Existing tests mapped, not executed this run"
+    }
+  ],
+  "unverified_transitions": [
+    "authoritative all-channel pending/reserved orders",
+    "broker order date/execution ID/venue and lost response recovery",
+    "broker-side cross-channel atomic reservation"
+  ],
+  "historic_mock_evidence_not_new": "187 offline cases and BUY4/manual SELL4/manual BUY4/restart/SELL4 once",
+  "evidence_delta": "New read-only ledger-history triage and legacy watcher/dispatch fence function mapping, no new tests, no complete audit credited",
+  "exact_blocker": "Real KIS broker atomicity unverified; 87 Qlty blocking issues; zero reviews; branch protection 403",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch({\"url\":\"https://api.github.com/repos/tkgo11/prism-insight-light/git/ref/heads/automation/prism-insight-sync-state\"})"
+}
