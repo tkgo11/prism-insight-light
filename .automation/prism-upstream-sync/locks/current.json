@@ -1,7 +1,10 @@
 {
   "run_id": "prism-auto-20261122T042304KST-05",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "scheduled-automation",
   "acquired_expected_state_parent": "61ac1d56b68c7dca03414003036ceef8ca5e8b2a",
-  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354"
+  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_expected_state_parent": "041d75f8e24714c956aa2da7822abf20e4351055",
+  "final_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_reason": "read-only exact-head safety review"
 }
