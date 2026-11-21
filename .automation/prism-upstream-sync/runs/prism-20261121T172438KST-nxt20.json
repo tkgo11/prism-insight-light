@@ -1,0 +1,55 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T172438KST-nxt20",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "0076549d69f2e3c6f078809fcc0ee047698fce33",
+  "state_before": "47da86edc41547e7b2ccec00348ca4d60a1e12c8",
+  "lock_acquire_commit": "4b7dd99464046c80377608e55ac27143404763a9",
+  "latest_head_ci": {
+    "run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "run_id": 44880125546,
+    "head_sha": "47da86edc41547e7b2ccec00348ca4d60a1e12c8",
+    "conclusion": "failure"
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun",
+  "code_fix_commit": null,
+  "candidate_count": 1,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "code_sha": {
+    "trading/managed_broker.py": "959bc15c972d5b56e23eb8653d75a0c82c4a04a8",
+    "tests/test_managed_broker.py": "c06c0ba2a3604407984d83f85ef3aa453ccd6510"
+  },
+  "evidence_delta": "Current immutable test file has no explicit KR NXT/SOR/ALL parameter coverage test. Native _native_order KR query omits EXCG_ID_DVSN_CD and always fails closed after history; therefore omission is a coverage hypothesis, not a proven unsafe SELL. No new RED or production change.",
+  "unverified_transitions": [
+    "all-channel order coverage",
+    "KR NXT/SOR order history",
+    "unique execution IDs",
+    "explicit cancellation",
+    "lost-response recovery",
+    "broker atomic external-order serialization"
+  ],
+  "exact_blocker": "Broker-authoritative full-channel and atomic-order contracts not established; review 0; branch protection 403; Qlty SUCCESS does not clear 87 issues",
+  "next_exact_action": "GitHub Connector fetch official KIS inquire_daily_ccld source at immutable commit and verify EXCG_ID_DVSN_CD documented behavior, then design a nonduplicate fail-closed KR NXT/SOR Mock baseline RED."
+}
