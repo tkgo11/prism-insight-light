@@ -1,0 +1,88 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T0720KST-08",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "335bbc780bc76ab1ff93e6c4f447d114a4458721",
+  "state_acquired_lock_commit": "1a53986320b5101f601b204b8cb09af4cae79a5f",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "run_id": 44915195653,
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "conclusion": "success",
+    "checks": [
+      "Full pytest suite",
+      "Windows runtime smoke"
+    ]
+  },
+  "state_ci": {
+    "run_id": 44951310511,
+    "head_sha": "335bbc780bc76ab1ff93e6c4f447d114a4458721",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "success",
+    "qlty": "success status; 87 blocking issues",
+    "human_reviews": 0,
+    "branch_protection": "403 not PASS"
+  },
+  "new_evidence": [
+    {
+      "path": "trading/managed_broker.py",
+      "blob_sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+      "contract": "submit_exact_sell lines 193-204 denies real mode absent cross-channel atomic broker capability; reconcile_order lines 270-305 requires consistent fill/cancel/remaining; native order lines 452-490 cannot prove execution-ID and explicit cancellation"
+    },
+    {
+      "path": "tests/test_managed_broker_real_atomic_gate.py",
+      "blob_sha": "83ec3a7d41d6a45825ce2b176feb49ccaf06f053",
+      "test_id": "test_real_mode_self_attested_complete_snapshot_cannot_authorize_sell",
+      "coverage": "KR and US complete snapshot does not authorize SELL; source reviewed only"
+    },
+    {
+      "path": "tests/test_full_position_managed_integration.py",
+      "blob_sha": "dd67739dad6dd63791809c88efeca1f5c17425a3",
+      "test_ids": [
+        "test_prism_buy_manual_sell_repurchase_restart_exits_current_four_once",
+        "test_same_ticker_two_accounts_have_independent_quantity_threshold_and_reservation",
+        "test_acceptance_unknown_and_missing_order_id_never_release_reservation",
+        "test_manual_open_orders_or_untrustworthy_snapshot_pause_exit",
+        "test_reservation_write_failure_prevents_broker_submission",
+        "test_receipt_write_failure_after_submission_stays_reserved_after_restart",
+        "test_partial_fill_then_confirmed_cancel_requires_new_snapshot_and_exits_only_current_residual",
+        "test_inconsistent_cancel_fill_evidence_does_not_release_pending_exit",
+        "test_equal_timestamp_inventory_cannot_reuse_a_confirmed_full_fill"
+      ],
+      "coverage": "existing offline source tests only; no new execution"
+    }
+  ],
+  "unverified_transitions": [
+    "authoritative all-channel pending/reserved orders",
+    "broker date/ID/venue and lost response recovery",
+    "cross-channel broker atomic reservation"
+  ],
+  "evidence_delta": "New function-line/test-ID mapping of existing exact-HEAD code, including reconciliation arithmetic and cancellation proof limitation; no new RED or test run; no complete audit credited.",
+  "historic_mock_evidence_not_new": "187 offline cases and BUY4/manual SELL4/manual BUY4/restart/SELL4 once",
+  "exact_blocker": "Real KIS broker atomicity unverified; 87 Qlty blocking issues; 0 reviews; branch protection 403",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch({\"url\":\"https://api.github.com/repos/tkgo11/prism-insight-light/git/ref/heads/automation/prism-insight-sync-state\"})"
+}
