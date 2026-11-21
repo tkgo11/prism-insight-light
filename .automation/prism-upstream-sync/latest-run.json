@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-20261121T102224KST-audit13",
+  "run_id": "prism-20261121T111733KST-audit14",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T102224KST-audit13.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T111733KST-audit14.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "GitHub Connector fetch immutable tests/test_managed_position_state.py at PR HEAD 0e34faae4365a54cb38dfd5e8ad04973994d80e1 (or locate actual corresponding test file) and map durable SUBMITTING recovery, abort proof and execution reconciliation test IDs; do not credit full audit."
+  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_position_state.py and tests/test_managed_position_state.py; audit reconciliation functions against 14 mapped tests and verify untested KR/US broker contracts via public documentation only; do not enable SELL."
 }

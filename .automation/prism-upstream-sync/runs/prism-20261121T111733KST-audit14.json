@@ -1,0 +1,116 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T111733KST-audit14",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "c60f01f62dd0b8a4bf0ebae6942f8e4deff36a0a",
+  "latest_head_ci": {
+    "run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "run_id": 44849872606,
+    "head_sha": "52ba6908d448680409bbfaf3fa210a56efb38533",
+    "conclusion": "failure",
+    "distinct_from_pr": true
+  },
+  "lock_acquire_commit": "e2f533662f4ec358a40e7ae9e55d53e7be0b8952",
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun",
+  "code_fix_commit": null,
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "snyk": "SUCCESS commit status checked",
+    "qlty": "SUCCESS commit status checked; blocking issue count not freshly verified (historically 87)",
+    "reviews": 0,
+    "branch_protection": "HTTP 403, not PASS"
+  },
+  "verified_paths": [
+    {
+      "path": "tests/test_managed_position_state.py",
+      "blob_sha": "b6f4f85c38140e7ef8bb352d6a7531fa5dd61e7c",
+      "production_path": "trading/managed_position_state.py",
+      "production_blob_sha": "69f5817b69d507ded8c80dafe28228aad53b9922",
+      "test_ids": [
+        "test_manual_trades_and_restart_do_not_reset_latch_or_threshold",
+        "test_unresolved_attempt_survives_flat_balance_and_blocks_restart_retry",
+        "test_partial_fill_cancel_is_idempotent_terminal_and_requires_fresh_snapshot",
+        "test_contradictory_proof_preserves_prior_state",
+        "test_executions_cannot_change_quantity_or_regress",
+        "test_missing_broker_date_never_uses_current_date_or_balance_as_terminal",
+        "test_account_and_market_enrollments_remain_isolated",
+        "test_corrupt_schema_never_becomes_empty_or_overwritten",
+        "test_persistence_failure_blocks_pre_submit_transition",
+        "test_only_verified_broker_rejection_can_release_an_attempt",
+        "test_only_proven_pre_submit_claim_can_be_aborted",
+        "test_proof_cannot_predate_reservation_or_regress_broker_timestamp",
+        "test_reused_receipt_cannot_attach_old_execution_to_new_attempt",
+        "test_us_receipt_date_uses_dst_aware_trade_calendar"
+      ],
+      "coverage_mapping": {
+        "restart_and_unknown": [
+          "test_manual_trades_and_restart_do_not_reset_latch_or_threshold",
+          "test_unresolved_attempt_survives_flat_balance_and_blocks_restart_retry"
+        ],
+        "partial_fill_cancel": [
+          "test_partial_fill_cancel_is_idempotent_terminal_and_requires_fresh_snapshot"
+        ],
+        "conflicting_and_regressive_evidence": [
+          "test_contradictory_proof_preserves_prior_state",
+          "test_executions_cannot_change_quantity_or_regress",
+          "test_proof_cannot_predate_reservation_or_regress_broker_timestamp"
+        ],
+        "broker_date_and_us_dst": [
+          "test_missing_broker_date_never_uses_current_date_or_balance_as_terminal",
+          "test_us_receipt_date_uses_dst_aware_trade_calendar"
+        ],
+        "multi_account": [
+          "test_account_and_market_enrollments_remain_isolated"
+        ],
+        "corruption_and_write_failure": [
+          "test_corrupt_schema_never_becomes_empty_or_overwritten",
+          "test_persistence_failure_blocks_pre_submit_transition"
+        ],
+        "rejection_and_abort_proof": [
+          "test_only_verified_broker_rejection_can_release_an_attempt",
+          "test_only_proven_pre_submit_claim_can_be_aborted"
+        ],
+        "receipt_reuse": [
+          "test_reused_receipt_cannot_attach_old_execution_to_new_attempt"
+        ]
+      },
+      "boundary": "14 existing test definitions read and mapped to production functions; tests not executed this run; source-level evidence only; no complete audit"
+    }
+  ],
+  "unverified_transitions": [
+    "authoritative all-channel KIS open/reserved orders MTS/HTS/PRISM",
+    "atomic broker-side conditional SELL or reservation vs external orders",
+    "stable response-loss order recovery with native order/execution/cancel proof",
+    "KR/US broker-native contracts"
+  ],
+  "exact_blocker": "Broker-side authoritative contract/atomicity not proven; Qlty issue count not freshly enumerated; reviews zero; protection 403; independent 2+2 incomplete",
+  "evidence_delta": "New immutable test file SHA b6f4f85c... and 14 test IDs mapped; upstream main advanced to c60f01f...; no new RED or fix",
+  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_position_state.py and tests/test_managed_position_state.py; audit reconciliation functions against 14 mapped tests and verify untested KR/US broker contracts via public documentation only; do not enable SELL.",
+  "no_kis_calls": true,
+  "no_trades": true,
+  "no_merge": true,
+  "pr_draft": true
+}
