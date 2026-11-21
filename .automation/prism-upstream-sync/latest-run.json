@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-20261121T231613KST-audit26",
+  "run_id": "prism-manual-fix-20261121-20261121143147",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
-  "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T231613KST-audit26.json",
+  "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-manual-fix-20261121-20261121143147.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_broker.py lines 90-190 and tests/test_managed_broker.py lines 55-115; audit snapshot_reader injection path and preflight submit_exact_sell for any bypass of reservation_reader fail-closed contract, then trace producer/watcher provenance."
+  "next_exact_action": "mcp__GitHub__fetch({\"url\":\"https://api.github.com/repos/tkgo11/prism-insight-light/git/ref/heads/automation/prism-insight-sync-state\"})"
 }

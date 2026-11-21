@@ -1,8 +1,8 @@
 {
-  "head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "tree": "5b2fa646f2bf80b42c3cf7d5ee78ab81466d4b4e",
-  "full_count": 278,
-  "related_count": 243,
+  "head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "tree": "8751726a99decfe7bbfd6991e7721105a14f8545",
+  "full_count": 279,
+  "related_count": 244,
   "scope": "Immutable inventory only. Final independent audits not credited.",
   "files": [
     {
@@ -310,7 +310,7 @@
       "path": "docs/FULL_POSITION_MANAGED.md",
       "mode": "100644",
       "kind": "blob",
-      "blob_sha": "f2d830504d672df0e638c654b3628fb3ffc4348d",
+      "blob_sha": "056722490f3508305c1889d99975df05377490ee",
       "related": true
     },
     {
@@ -678,10 +678,17 @@
       "related": true
     },
     {
+      "path": "tests/test_managed_broker_real_atomic_gate.py",
+      "mode": "100644",
+      "kind": "blob",
+      "blob_sha": "83ec3a7d41d6a45825ce2b176feb49ccaf06f053",
+      "related": true
+    },
+    {
       "path": "tests/test_managed_dispatch.py",
       "mode": "100644",
       "kind": "blob",
-      "blob_sha": "3764eeb64487bfb23256c6302a182f65939d72fc",
+      "blob_sha": "6d891bb0932433a6a09ddbfa7c09e91dad647ae9",
       "related": true
     },
     {
@@ -1416,7 +1423,7 @@
       "path": "trading/dispatch.py",
       "mode": "100644",
       "kind": "blob",
-      "blob_sha": "9e54f260f05dba943962eb7766a352c64417c65f",
+      "blob_sha": "84b52d94e925df13edf3f15629b6b5c8a8c9043f",
       "related": true
     },
     {
@@ -1458,7 +1465,7 @@
       "path": "trading/managed_broker.py",
       "mode": "100644",
       "kind": "blob",
-      "blob_sha": "959bc15c972d5b56e23eb8653d75a0c82c4a04a8",
+      "blob_sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
       "related": true
     },
     {

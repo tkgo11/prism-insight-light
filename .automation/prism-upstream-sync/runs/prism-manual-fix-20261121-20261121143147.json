@@ -1,0 +1,189 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-manual-fix-20261121-20261121143147",
+  "status": "PARTIAL_BLOCKED",
+  "created_at": "2026-11-21T14:44:07.661Z",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "92f1dd63316b209396cb981b4a2d0cd00ded041e",
+  "state_acquired_lock_commit": "5960f2a471fa8d0060d5a91f1cafc84dbbd75e10",
+  "state_test_fix_commit": "f797785c0e62ac63446b2a322891a9f45533688d",
+  "state_before_release": "f797785c0e62ac63446b2a322891a9f45533688d",
+  "lock_expected_state_sha": "f797785c0e62ac63446b2a322891a9f45533688d",
+  "lock_owner": "prism-manual-fix-20261121-20261121143147",
+  "state_ci": {
+    "run_id": 44914465496,
+    "head_sha": "f797785c0e62ac63446b2a322891a9f45533688d",
+    "conclusion": "success",
+    "note": "Historical state branch CI, not PR code HEAD CI"
+  },
+  "pr_ci": {
+    "run_id": 44915195653,
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "conclusion": "success",
+    "linux_pytest_passed": 3375,
+    "windows_runtime": "success",
+    "docker_build": "success"
+  },
+  "security": {
+    "snyk": {
+      "context": "security/snyk (tkgo11)",
+      "state": "success",
+      "description": "1 security test has passed"
+    },
+    "qlty": {
+      "context": "qlty check",
+      "state": "success",
+      "description": "87 blocking issues"
+    },
+    "blocking_issues": 87,
+    "human_reviews": 0,
+    "branch_protection": "HTTP 403; not PASS",
+    "branch_rulesets_visible": 0
+  },
+  "attempted_reproductions": 3,
+  "baseline_fail_observed": true,
+  "baseline_red": [
+    {
+      "run_id": 44914758788,
+      "head_sha": "7dc986d4374385c1bd2e91bfdfa54be0a4fcb146",
+      "new_failure_cases": 2,
+      "other_tests_passed": 3372,
+      "product_defect": true,
+      "description": "ManagedBrokerGateway real mode accepted self-attested snapshots and reached SELL stub KR/US"
+    },
+    {
+      "run_id": 44915024840,
+      "head_sha": "ab679f1707e9d4ef603ca8467133c49a31c5a1cc",
+      "new_failure_cases": 1,
+      "other_tests_passed": 3374,
+      "product_defect": true,
+      "description": "TradeDispatcher real-mode custom gateway bypass invoked simulated SELL"
+    }
+  ],
+  "fixture_error_not_product_red": {
+    "run_id": 44914576530,
+    "head_sha": "27bb8973bf1c4ad99a59c06853751c18f369bbb4",
+    "reason": "invalid synthetic account key; corrected, not counted as product failure"
+  },
+  "root_causes_verified": 1,
+  "candidate_count_verified": 1,
+  "candidate_count_deferred": 1,
+  "candidate_goal": 10,
+  "reproduced_defects": 2,
+  "actual_code_fixes": 2,
+  "code_fix_commits": [
+    "98daa80e69277e2c08021f00f0c2f9a7db920139",
+    "cd36647adf4665bfff1a5f26516b12d45b022354"
+  ],
+  "regression_test_cases_added_and_run": 3,
+  "regression_test_ids": [
+    "tests/test_managed_broker_real_atomic_gate.py::test_real_mode_self_attested_complete_snapshot_cannot_authorize_sell[KR-005930]",
+    "tests/test_managed_broker_real_atomic_gate.py::test_real_mode_self_attested_complete_snapshot_cannot_authorize_sell[US-AAPL]",
+    "tests/test_managed_dispatch.py::test_real_dispatcher_custom_gateway_cannot_bypass_atomic_broker_gate"
+  ],
+  "state_branch_test_fixture_fix": {
+    "commit": "f797785c0e62ac63446b2a322891a9f45533688d",
+    "path": "tests/test_telegram_signal_worker.py",
+    "result": "GitHub Actions 44914465496 SUCCESS"
+  },
+  "code_changes": [
+    {
+      "path": "trading/managed_broker.py",
+      "contract": "Real KIS SELL SubmissionNotStarted before order method without broker-verified cross-channel atomic capability"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "contract": "Real-mode managed policy PAUSED even with injected custom gateway before controller.cycle"
+    },
+    {
+      "path": "docs/FULL_POSITION_MANAGED.md",
+      "contract": "Explicitly document real-mode fail-closed restriction"
+    }
+  ],
+  "tests_and_provenance": [
+    {
+      "path": "trading/managed_broker.py",
+      "blob_sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+      "complete_audit": false
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "84b52d94e925df13edf3f15629b6b5c8a8c9043f",
+      "complete_audit": false
+    },
+    {
+      "path": "trading/managed_positions.py",
+      "blob_sha": "140340547940c934848b50dd83950d0eb0e3eaea",
+      "complete_audit": false
+    },
+    {
+      "path": "trading/managed_position_state.py",
+      "blob_sha": "69f5817b69d507ded8c80dafe28228aad53b9922",
+      "complete_audit": false
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8",
+      "complete_audit": false
+    },
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c",
+      "complete_audit": false
+    },
+    {
+      "path": "tests/test_managed_broker_real_atomic_gate.py",
+      "blob_sha": "83ec3a7d41d6a45825ce2b176feb49ccaf06f053",
+      "complete_audit": false
+    },
+    {
+      "path": "tests/test_managed_dispatch.py",
+      "blob_sha": "6d891bb0932433a6a09ddbfa7c09e91dad647ae9",
+      "complete_audit": false
+    },
+    {
+      "path": "tests/test_full_position_managed_integration.py",
+      "blob_sha": "dd67739dad6dd63791809c88efeca1f5c17425a3",
+      "complete_audit": false
+    },
+    {
+      "path": "docs/FULL_POSITION_MANAGED.md",
+      "blob_sha": "056722490f3508305c1889d99975df05377490ee",
+      "complete_audit": false
+    }
+  ],
+  "historic_mock_evidence_not_new": "187 previously added offline scenarios, PRISM BUY4 -> manual SELL4 -> manual BUY4 -> restart -> one SELL4 intent, and KR/US/UNKNOWN/restart tests; no real broker validation",
+  "verified_paths": [
+    "CI state-branch Telegram timestamp fixture corrected",
+    "Mock KR/US managed real-account no-SELL preflight",
+    "Mock real-mode injected gateway dispatcher block",
+    "PR exact code HEAD Linux 3375/Windows/Docker GREEN"
+  ],
+  "unverified_transitions": [
+    "KIS authoritative all-channel MTS/HTS/PRISM complete open and reserved orders",
+    "order date/execution IDs/cancellation/remaining/venue broker provenance",
+    "stable lost-response execution identity across restarts",
+    "broker-side atomic condition/reservation preventing read-submit race",
+    "real KIS live automatic stop-loss"
+  ],
+  "exact_blocker": "No verified KIS broker contract establishing cross-channel atomic sell reservation and authoritative complete all-channel/recovery data. Live managed SELL deliberately blocked; Qlty reports 87 blocking issues, zero human reviews, branch protection unreadable (403).",
+  "evidence_delta": "New state-CI fixture fix; two genuine read-only RED reproductions (KR/US broker gateway and custom real dispatcher), two production safety guards, three regression cases, exact-HEAD 3375-test GREEN; no KIS use.",
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "real_trades_performed": false,
+  "next_exact_action": "mcp__GitHub__fetch({\"url\":\"https://api.github.com/repos/tkgo11/prism-insight-light/git/ref/heads/automation/prism-insight-sync-state\"})",
+  "next_security_action": "Review official KIS broker contracts for independently proven cross-channel atomic order exclusion; do not lift live gate based only on self-attested snapshots."
+}
