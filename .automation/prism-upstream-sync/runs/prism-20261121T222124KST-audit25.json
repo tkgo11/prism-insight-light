@@ -1,0 +1,69 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T222124KST-audit25",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "80a14c55cc45426e2e2e5d89edde355c4ce24cc3",
+  "state_parent_before_lock": "e87541f1faa69335bc1d2a545e266e291b62e4b0",
+  "state_ci": {
+    "run_id": 44903816707,
+    "head_sha": "e87541f1faa69335bc1d2a545e266e291b62e4b0",
+    "conclusion": "failure"
+  },
+  "pr_ci": {
+    "historical_run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "rerun_this_execution": false
+  },
+  "security": {
+    "snyk": "success",
+    "qlty": "success",
+    "blocking_issue_count": "not independently retrieved",
+    "human_reviews": 0,
+    "branch_protection": "HTTP 403"
+  },
+  "new_evidence": [
+    {
+      "path": "trading/managed_broker.py",
+      "blob_sha": "959bc15c972d5b56e23eb8653d75a0c82c4a04a8",
+      "contract": "_native_snapshot trusts injected reservation_reader complete and covers_all_order_kinds; validates identity and as_of but cannot independently attest upstream pagination or all-channel coverage; _pages native KIS requests fail closed on cursor/limit"
+    },
+    {
+      "path": "tests/test_managed_broker.py",
+      "blob_sha": "c06c0ba2a3604407984d83f85ef3aa453ccd6510",
+      "contract": "Existing native pagination/repeated-cursor and missing_coverage tests; no distinct self-asserted-complete upstream-partial provider case observed in inspected tests"
+    }
+  ],
+  "new_baseline_red": false,
+  "mock_ran": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidates_verified": 0,
+  "candidates_deferred": 1,
+  "complete_related_files": 0,
+  "total_related_files": 243,
+  "complete_all_files": 0,
+  "total_all_files": 278,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "unverified": [
+    "KIS all-channel complete reservation coverage",
+    "authoritative execution/cancel identity",
+    "lost-response stable recovery",
+    "atomic serialization with external MTS/HTS orders"
+  ],
+  "exact_blocker": "No authoritative provider contract/proof for all-channel complete pagination and atomic external order exclusion. Self-asserted complete=true is insufficient; no safe broker implementation can be inferred.",
+  "next_exact_action": "GitHub Connector fetch immutable PR HEAD tests/test_managed_broker.py and trading/managed_broker.py; inspect for self-asserted incomplete upstream pagination with complete=true; if distinct, design read-only fail-closed RED without assuming broker support; preserve UNKNOWN fence.",
+  "historical_evidence_not_new": "187 Mock scenarios and historical CI are not newly executed",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false
+}
