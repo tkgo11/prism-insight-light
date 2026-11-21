@@ -1,7 +1,8 @@
 {
   "run_id": "prism-20261121T142038KST-kis-doc17",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "acquired_expected_state_parent": "c7bc0bfe9e03be83a2e83c3c7eebfd056e81adf1",
   "expected_pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "started_at": "2026-11-21T14:20:38+09:00"
+  "started_at": "2026-11-21T14:20:38+09:00",
+  "release_expected_state_parent": "b34a280fa7921246cbefc409211766e5cb3e5d8c"
 }

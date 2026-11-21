@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-20261121T131554KST-audit16",
+  "run_id": "prism-20261121T142038KST-kis-doc17",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T131554KST-audit16.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T142038KST-kis-doc17.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_broker.py then official KIS open-trading-api documented reservation and execution contracts via approved GitHub reads; determine whether any authoritative complete provider and atomic broker primitive are documented without live API."
+  "next_exact_action": "GitHub Connector fetch official KIS execution history and notification example files at exact blob SHAs, compare unique execution IDs/cancellation proof to PR native reconciliation; no KIS calls."
 }

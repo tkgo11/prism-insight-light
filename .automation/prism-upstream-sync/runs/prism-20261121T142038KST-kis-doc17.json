@@ -1,0 +1,77 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T142038KST-kis-doc17",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "f0649c1620966fc89a504c4545b25700dd26d029",
+  "state_before": "c7bc0bfe9e03be83a2e83c3c7eebfd056e81adf1",
+  "lock_acquire_commit": "b34a280fa7921246cbefc409211766e5cb3e5d8c",
+  "latest_head_ci": {
+    "run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "run_id": 44865298241,
+    "head_sha": "c7bc0bfe9e03be83a2e83c3c7eebfd056e81adf1",
+    "conclusion": "failure"
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun",
+  "code_fix_commit": null,
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "snyk": "SUCCESS",
+    "qlty": "SUCCESS; issue count not independently verified this run",
+    "reviews": 0,
+    "branch_protection": "403, not PASS"
+  },
+  "evidence_delta": "Read four official KIS open-trading-api example implementations at immutable blob SHAs. KR amend/cancel eligible inquiry is not full reservation coverage; KR reservation query requires date range, terminal medium and cancellation filters; US reservation query requires date range and is unavailable in demo; US open orders query has pagination and exchange scope. Official examples do not document atomic conditional SELL or complete cross-channel guarantees. Not proof of nonexistence.",
+  "official_docs": [
+    {
+      "path": "examples_llm/domestic_stock/inquire_psbl_rvsecncl/inquire_psbl_rvsecncl.py",
+      "sha": "66a5e4c41666d4987d6fdf11e27a54f36b27b28f"
+    },
+    {
+      "path": "examples_llm/domestic_stock/order_resv_ccnl/order_resv_ccnl.py",
+      "sha": "cea635be611a7073edc37b219dfbc913940ca590"
+    },
+    {
+      "path": "examples_llm/overseas_stock/inquire_nccs/inquire_nccs.py",
+      "sha": "6db92e47c13eef0741b03b1553dc2d3fea2802a8"
+    },
+    {
+      "path": "examples_llm/overseas_stock/order_resv_list/order_resv_list.py",
+      "sha": "95c851681e6f0427be1fb2490f8a5a81e8afe17f"
+    }
+  ],
+  "verified_paths": [
+    "official public examples: API parameters and pagination; read only"
+  ],
+  "unverified_transitions": [
+    "all-channel MTS HTS PRISM coverage",
+    "atomic conditional SELL vs external orders",
+    "unique execution IDs and cancellation provenance",
+    "response-loss order recovery",
+    "actual broker contracts"
+  ],
+  "exact_blocker": "No verified broker-wide complete snapshot and atomic external order serialization; cannot authorize SELL.",
+  "next_exact_action": "GitHub Connector fetch official KIS execution history and notification example files at exact blob SHAs, compare unique execution IDs/cancellation proof to PR native reconciliation; no KIS calls."
+}
