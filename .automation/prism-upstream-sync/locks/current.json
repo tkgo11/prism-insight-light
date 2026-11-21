@@ -1,12 +1,8 @@
 {
-  "run_id": "prism-manual-fix-20261121-20261121143147",
-  "status": "RELEASED",
-  "acquired_expected_state_parent": "92f1dd63316b209396cb981b4a2d0cd00ded041e",
-  "expected_pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "started_at": "2026-11-21T14:31:48.001Z",
-  "owner": "manual-user-request",
-  "release_expected_state_parent": "f797785c0e62ac63446b2a322891a9f45533688d",
-  "final_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "finished_at": "2026-11-21T14:44:07.661Z",
-  "release_reason": "manual safety repair and verified CI"
+  "run_id": "prism-auto-20261122T001911KST-01",
+  "status": "ACTIVE",
+  "owner": "scheduled-automation",
+  "acquired_expected_state_parent": "e9513563361e2ea454433a9bc157b0869d4237cf",
+  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "started_at": "2026-11-21T15:19:11Z"
 }
