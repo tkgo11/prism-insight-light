@@ -1,0 +1,62 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T031830KST-04",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "5bef1cc56c60d485bbb3c96be7297a8848f01ba8",
+  "state_acquired_lock_commit": "72aba00b1662d428fe137640ec0cb1d283aeaddf",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "run_id": 44915195653,
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "checks": [
+      "Full pytest suite: success",
+      "Windows runtime smoke: success"
+    ]
+  },
+  "state_ci": {
+    "run_id": 44929203157,
+    "head_sha": "5bef1cc56c60d485bbb3c96be7297a8848f01ba8",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "success (historical exact PR HEAD)",
+    "qlty": "success status; 87 blocking issues",
+    "human_reviews": 0,
+    "branch_protection": "403 FORBIDDEN; not PASS"
+  },
+  "verified_paths": [
+    "KR/US real-mode managed broker blocks before cash SELL, test_real_mode_self_attested_complete_snapshot_cannot_authorize_sell"
+  ],
+  "unverified_transitions": [
+    "authoritative all-channel pending/reservation inventory",
+    "order date/fill identity/partial cancel remaining and venue",
+    "lost-response recovery",
+    "broker-side cross-channel atomic conditional SELL"
+  ],
+  "evidence_delta": "Fresh state HEAD and RELEASED ownership confirmed; PR #43 remains Draft; state CI 44929203157 successful for previous state HEAD; reviewed exact code and KR/US fail-closed test source; verified current PR exact-HEAD status describes 87 blocking Qlty issues. No new RED/Mock/fix or audit PASS.",
+  "historic_mock_evidence_not_new": "187 offline Mock cases; BUY4 manual SELL4 manual BUY4 restart SELL4 request once",
+  "exact_blocker": "Real KIS atomic contract unavailable; Qlty 87 blocking issues; zero reviews; branch protection 403",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch({\"url\":\"https://api.github.com/repos/tkgo11/prism-insight-light/git/ref/heads/automation/prism-insight-sync-state\"})"
+}
