@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-20261121T202001KST-audit23",
+  "run_id": "prism-20261121T212432KST-audit24",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T202001KST-audit23.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-20261121T212432KST-audit24.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_broker.py _native_snapshot and tests/test_managed_broker.py; map reservation_reader trust boundary and pagination-incomplete Mock coverage, add distinct RED only if unsafe transition is demonstrated."
+  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_broker.py _native_snapshot and tests/test_managed_broker.py; design one distinct read-only Mock for reservation_reader self-asserted complete=true despite incomplete upstream pagination, without enabling SELL; first confirm no equivalent test elsewhere."
 }
