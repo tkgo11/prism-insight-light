@@ -1,0 +1,87 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T131554KST-audit16",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "7da47156996598ed61850f5410a0289ee2d3a1b3",
+  "state_before": "483530e063df28bdc2639148002b2f5df96eceb8",
+  "lock_acquire_commit": "0f8e7941d37ce8f001e952f122b8c6df5dbec5f7",
+  "latest_head_ci": {
+    "run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "run_id": 44860741783,
+    "head_sha": "483530e063df28bdc2639148002b2f5df96eceb8",
+    "conclusion": "failure"
+  },
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun",
+  "code_fix_commit": null,
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "snyk": "SUCCESS",
+    "qlty": "SUCCESS; 87 blocking issues",
+    "reviews": 0,
+    "branch_protection": "403, not PASS"
+  },
+  "verified_paths": [
+    {
+      "path": "trading/managed_broker.py",
+      "blob_sha": "959bc15c972d5b56e23eb8653d75a0c82c4a04a8",
+      "test_path": "tests/test_managed_broker.py",
+      "test_blob_sha": "c06c0ba2a3604407984d83f85ef3aa453ccd6510",
+      "functions": [
+        "snapshot",
+        "submit_exact_sell",
+        "reconcile_order",
+        "_pages",
+        "_native_snapshot",
+        "_native_order"
+      ],
+      "contracts": [
+        "injected complete=true and covers_all_order_kinds require independent broker provenance",
+        "native snapshot blocks without reservation_reader",
+        "native reconciliation raises without unique execution IDs and explicit cancellation proof",
+        "no atomic serialization against external MTS/HTS orders",
+        "unknown after transport exception"
+      ],
+      "test_ids": [
+        "test_native_demo_without_complete_supported_queries_pauses_instead_of_guessing",
+        "test_native_cumulative_status_without_execution_ids_remains_fenced",
+        "test_missing_authoritative_order_recovery_blocks_initial_exit",
+        "test_native_query_failure_never_returns_partial_or_invented_complete_snapshot",
+        "test_any_open_order_or_reservation_blocks_exact_sell",
+        "test_uncertain_submission_never_becomes_execution_or_retry_permission"
+      ],
+      "boundary": "source and existing test audit only; no new test execution or broker verification; not complete audit"
+    }
+  ],
+  "unverified_transitions": [
+    "authoritative all-channel MTS/HTS/PRISM reservation/open-order coverage",
+    "atomic broker-side external-order serialization",
+    "response-loss order identification and unique execution/cancellation provenance",
+    "KR/US live broker contract"
+  ],
+  "exact_blocker": "Native KIS readers cannot prove all-channel coverage or unique execution/cancellation evidence; no documented atomic conditional SELL. External KIS prohibited.",
+  "evidence_delta": "Read immutable broker and tests, mapped explicit fail-closed guards and uncovered broker contract; Qlty 87 reconfirmed; upstream HEAD advanced.",
+  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_broker.py then official KIS open-trading-api documented reservation and execution contracts via approved GitHub reads; determine whether any authoritative complete provider and atomic broker primitive are documented without live API."
+}
