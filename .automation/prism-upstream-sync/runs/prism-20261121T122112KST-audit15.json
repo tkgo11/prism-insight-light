@@ -1,0 +1,107 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-20261121T122112KST-audit15",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "c60f01f62dd0b8a4bf0ebae6942f8e4deff36a0a",
+  "latest_head_ci": {
+    "run_id": 44732835470,
+    "head_sha": "0e34faae4365a54cb38dfd5e8ad04973994d80e1",
+    "conclusion": "success",
+    "historical": true
+  },
+  "state_branch_ci": {
+    "run_id": 44855167250,
+    "head_sha": "e2dde7d95bacb6948feeb1ea585a91bf8f86db4b",
+    "conclusion": "failure",
+    "linux_job_id": 136695547861,
+    "windows_job_id": 136695547661
+  },
+  "lock_acquire_commit": "6869f9ae6f4a943724a7cee6eaa2086fa7dcdd50",
+  "baseline_fail_observed": false,
+  "mock_result": "not rerun",
+  "code_fix_commit": null,
+  "candidate_count": 0,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "manifest_total": 278,
+  "manifest_related": 243,
+  "complete_related_files": 0,
+  "complete_all_files": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "external": {
+    "snyk": "SUCCESS current PR commit status",
+    "qlty": "SUCCESS commit status; issue count not enumerated",
+    "reviews": 0,
+    "branch_protection": "HTTP 403, not PASS"
+  },
+  "verified_paths": [
+    {
+      "path": "trading/managed_position_state.py",
+      "blob_sha": "69f5817b69d507ded8c80dafe28228aad53b9922",
+      "test_path": "tests/test_managed_position_state.py",
+      "test_blob_sha": "b6f4f85c38140e7ef8bb352d6a7531fa5dd61e7c",
+      "functions": [
+        "_receipt",
+        "_check_receipt_date",
+        "_executions",
+        "_evidence",
+        "_validate_attempt",
+        "_validate",
+        "_load",
+        "_save",
+        "reserve_sell",
+        "mark_submitting",
+        "release_unsubmitted",
+        "abort_before_gateway",
+        "record_submission",
+        "reconcile_sell"
+      ],
+      "contracts": [
+        "exact scoped receipt and date/venue",
+        "execution IDs deduplicated and quantity conserved",
+        "monotonic settlement with immutable terminal states",
+        "durable pre-submit vs submitting fence and restart no-capability",
+        "JSON validation and fsync/atomic replace"
+      ],
+      "test_ids": [
+        "test_unresolved_attempt_survives_flat_balance_and_blocks_restart_retry",
+        "test_partial_fill_cancel_is_idempotent_terminal_and_requires_fresh_snapshot",
+        "test_contradictory_proof_preserves_prior_state",
+        "test_executions_cannot_change_quantity_or_regress",
+        "test_missing_broker_date_never_uses_current_date_or_balance_as_terminal",
+        "test_account_and_market_enrollments_remain_isolated",
+        "test_corrupt_schema_never_becomes_empty_or_overwritten",
+        "test_persistence_failure_blocks_pre_submit_transition",
+        "test_only_verified_broker_rejection_can_release_an_attempt",
+        "test_only_proven_pre_submit_claim_can_be_aborted",
+        "test_proof_cannot_predate_reservation_or_regress_broker_timestamp",
+        "test_reused_receipt_cannot_attach_old_execution_to_new_attempt",
+        "test_us_receipt_date_uses_dst_aware_trade_calendar"
+      ],
+      "boundary": "source audit only; external broker proof.complete and execution IDs not authenticated by this book; tests not run; not complete audit"
+    }
+  ],
+  "unverified_transitions": [
+    "KIS MTS/HTS/PRISM authoritative all-channel pending/reserved orders",
+    "atomic broker-side reservation against external manual orders",
+    "stable response-loss recovery broker order/execution/cancel evidence",
+    "KR/US actual broker contract and provenance"
+  ],
+  "exact_blocker": "Broker-side authoritative contract and atomicity unproven; Qlty count not freshly enumerated; review zero; protection 403; independent 2+2 incomplete",
+  "evidence_delta": "Read immutable 546-line production state book and 270-line 14-test source; mapped functions, proof and failure paths; no new RED/fix",
+  "next_exact_action": "GitHub Connector fetch immutable PR HEAD trading/managed_broker.py and tests/test_managed_broker.py; audit provenance of complete=true, all-channel open orders and atomicity, then inspect official public KIS documentation without API calls.",
+  "no_kis_calls": true,
+  "no_trades": true,
+  "no_merge": true,
+  "pr_draft": true
+}
