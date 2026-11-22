@@ -1,8 +1,11 @@
 {
   "run_id": "prism-manual-20261122T2235KST-ci-fix-fd6791-01",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "manual-inline-run",
   "acquired_expected_state_parent": "b03430bfa21d86c7f407917cee48eb0d2e7d1625",
+  "acquired_active_state_head": "906be19ccfd0db41e7606bc8e9b496d868570b87",
   "expected_pr_head": "fd6791c8b6aeb3ca0912f237aa79d24d82214a31",
-  "mission": "Repair new offline cross-layer regression test after CI failure; no KIS API or trading"
+  "final_pr_head": "2b652234f58270aef73ffeef132b52e99368f534",
+  "release_expected_state_parent": "906be19ccfd0db41e7606bc8e9b496d868570b87",
+  "release_reason": "Corrected offline KR/US restart regression fixture; CI status recorded; no KIS/trading"
 }

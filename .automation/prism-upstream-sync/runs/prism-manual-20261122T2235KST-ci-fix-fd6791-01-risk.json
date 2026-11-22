@@ -1,0 +1,17 @@
+{
+  "run_id": "prism-manual-20261122T2235KST-ci-fix-fd6791-01",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "status": "PARTIAL_BLOCKED",
+  "real_broker_contracts_unverified": [
+    "KIS full-channel MTS/HTS/PRISM orders including reservations",
+    "authoritative account and KR/US order execution identity, date and venue",
+    "lost-response and partial-fill terminal reconciliation",
+    "atomic broker-level conditional reservation across external channels"
+  ],
+  "live_auto_sell_authorized": false,
+  "added_regression": "Offline synthetic ACCEPTED SELL receipt + order inquiry TimeoutError + restart for KR/US",
+  "safety_boundary": "No actual KIS API, credentials, accounts, or trading. Existing managed broker real-mode atomic gate unchanged.",
+  "branch_protection": "403; not PASS",
+  "related_independent_passes": 0,
+  "full_independent_passes": 0
+}

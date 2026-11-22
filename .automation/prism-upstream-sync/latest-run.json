@@ -1,13 +1,17 @@
 {
   "schema_version": 4,
-  "run_id": "prism-auto-20261122T2215KST-11",
+  "run_id": "prism-manual-20261122T2235KST-ci-fix-fd6791-01",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
-  "head_sha": "fd6791c8b6aeb3ca0912f237aa79d24d82214a31",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-auto-20261122T2215KST-11.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
+  "head_sha": "2b652234f58270aef73ffeef132b52e99368f534",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-manual-20261122T2235KST-ci-fix-fd6791-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-manual-20261122T2235KST-ci-fix-fd6791-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-manual-20261122T2235KST-ci-fix-fd6791-01-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "Inspect Actions run 45026635419 at head fd6791c8; if failed distinguish test fixture error from product defect, repair and re-run; if green record coverage-only improvement. Do not activate live SELL."
+  "ci_run_id": 45028659994,
+  "ci_status": "in_progress",
+  "ci_head_sha": "2b652234f58270aef73ffeef132b52e99368f534",
+  "next_exact_action": "GET https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/45028659994 for 2b652234f58270aef73ffeef132b52e99368f534; inspect failing jobs if any; never enable live auto SELL"
 }
