@@ -420,6 +420,8 @@ class ManagedBrokerGateway:
                         raise EvidenceUnavailable("unattributable US holding row")
                     if row.get("ovrs_pdno") != identity[1]: continue
                     venue = row.get("ovrs_excg_cd")
+                    if venue != exchange:
+                        raise EvidenceUnavailable("US holding row venue differs from queried exchange")
                     if venue not in ("NASD", "NYSE", "AMEX") or row.get("ovrs_cblc_qty") in (None, "") or row.get("ord_psbl_qty") in (None, ""):
                         raise EvidenceUnavailable("US holding/sellable/venue missing")
                     value = (validated_balance_quantity(row["ovrs_cblc_qty"]), validated_balance_quantity(row["ord_psbl_qty"]))
