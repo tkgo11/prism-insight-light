@@ -1,7 +1,10 @@
 {
   "run_id": "prism-auto-20261122T1723KST-10",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "scheduled-automation",
   "acquired_expected_state_parent": "5ffb6528664e809311986bcb07b9645466d1d18b",
-  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354"
+  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_expected_state_parent": "592aab92199540a18e15986afe3bee0431e1c755",
+  "final_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_reason": "Existing post-invocation exception UNKNOWN fence tests identified; no uncovered RED proven."
 }

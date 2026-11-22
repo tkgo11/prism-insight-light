@@ -1,0 +1,85 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T1723KST-10",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "5ffb6528664e809311986bcb07b9645466d1d18b",
+  "state_acquired_lock_commit": "592aab92199540a18e15986afe3bee0431e1c755",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "run_id": 44915195653,
+    "checks": [
+      "Full pytest suite:success",
+      "Windows runtime smoke:success"
+    ],
+    "historical": true
+  },
+  "state_ci": {
+    "run_id": 44997794401,
+    "head_sha": "5ffb6528664e809311986bcb07b9645466d1d18b",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "not independently verified this run",
+    "qlty": "UNKNOWN; user-excluded",
+    "human_reviews": 0,
+    "branch_protection": "403 FORBIDDEN"
+  },
+  "new_evidence": [
+    {
+      "path": "tests/test_managed_broker.py",
+      "sha": "c06c0ba2a3604407984d83f85ef3aa453ccd6510",
+      "test_ids": [
+        "test_uncertain_submission_never_becomes_execution_or_retry_permission",
+        "test_only_preflight_failure_can_prove_no_submission_started",
+        "test_account_change_after_submission_is_unknown_not_preflight_abort"
+      ],
+      "finding": "Existing PR-head tests cover gateway exception/transport ambiguity and account change after invocation."
+    },
+    {
+      "path": "tests/test_managed_positions.py",
+      "sha": "3a557f8ce00abcf0a036b27a6a77a7f0ea593239",
+      "test_ids": [
+        "test_custom_gateway_cannot_release_an_attempt_with_a_typed_exception",
+        "test_unknown_exit_remains_reserved_at_zero_and_reentry_after_restart"
+      ],
+      "finding": "Existing controller tests preserve UNKNOWN fence even when custom gateway raises typed preflight exception."
+    },
+    {
+      "path": "tests/test_broker_transport_ambiguity_fence.py",
+      "sha": "b1f9f50cbd82864a4fbc79e22a49e3353b345c5c",
+      "finding": "Additional broker transport ambiguity and restart coverage already exists; not newly executed."
+    }
+  ],
+  "unverified_transitions": [
+    "cross-channel authoritative open/reserved orders",
+    "broker order/fill/venue attribution",
+    "lost response stable recovery against real broker",
+    "broker atomic cross-channel exclusion"
+  ],
+  "evidence_delta": "Compared exact PR HEAD existing gateway/controller/transport test IDs; post-invocation exception → UNKNOWN fence already covered. No duplicate RED or code patch justified; no tests executed.",
+  "exact_blocker": "No proven uncovered product defect; real KIS atomicity unsupported; branch protection 403; reviews 0; Qlty UNKNOWN",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'tests/test_managed_broker.py',ref:'cd36647adf4665bfff1a5f26516b12d45b022354',start_line:130,end_line:155}) then compare demo UNKNOWN recovery after order-reader failure to managed_positions controller tests."
+}
