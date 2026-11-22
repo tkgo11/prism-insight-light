@@ -397,24 +397,56 @@ def test_conflicting_venue_receipt_cannot_settle_another_venue():
 
 @pytest.mark.parametrize("market", ["KR", "US"])
 def test_real_gateway_inquiry_timeout_keeps_durable_exit_fenced_after_restart(tmp_path, market):
-    """Offline-only cross-layer recovery: a lost inquiry never authorizes retry."""
+    """Offline recovery of an existing synthetic receipt must not retry SELL.
+
+    The controller must NOT submit through a real-account gateway simply to
+    set up a test: its broker atomic exclusion gate correctly stops that.
+    Model an already-submitted receipt in the durable book instead.
+    """
     from trading.managed_position_state import ManagedPositionBook
     from trading.managed_positions import ManagedPositionController
 
-    gateway, _, sell_calls = fixture(
-        market, order_reader=lambda policy, reservation: (_ for _ in ()).throw(
-            TimeoutError("offline injected order inquiry failure")
-        ),
-    )
+    inquiry_calls = []
+
+    def lost_inquiry(policy, reservation):
+        inquiry_calls.append((policy["market"], reservation["token"]))
+        raise TimeoutError("offline injected order inquiry failure")
+
+    gateway, _, sell_calls = fixture(market, order_reader=lost_inquiry)
     book = ManagedPositionBook(tmp_path / "durable.json")
     enrolled = book.enroll(SCOPE, market, entry(market)["ticker"], 90,
                            latch_policy="LATCH_EXIT")
     identity = enrolled["position_id"]
+
+    # Simulate a pre-existing broker receipt without calling any SELL method.
+    observed = book.observe(identity, quantity=4, sellable_quantity=4, price=80)
+    claimed = book.reserve_sell(
+        identity, snapshot_id=observed["snapshot"]["snapshot_id"], quantity=4,
+    )
+    book.mark_submitting(identity, claimed["token"])
+    receipt = {
+        "order_no": "00001234",
+        "order_date": datetime.now(timezone.utc).astimezone(
+            timezone(timedelta(hours=9))
+        ).strftime("%Y%m%d"),
+        "order_kind": "broker_order",
+        "order_quantity": 4,
+    }
+    if market == "US":
+        receipt["order_venue"] = "NASD"
+    book.record_submission(identity, claimed["token"],
+                           outcome="ACCEPTED", receipt=receipt)
+
     controller = ManagedPositionController(book, gateway, clock=lambda: NOW)
     initial = controller.cycle(identity)
-    assert initial["status"] == "PENDING"
-    assert len(sell_calls) == 1
-    for _ in range(2):
+    assert initial == {
+        "position_id": identity, "status": "PENDING",
+        "reason": "EXIT_EVIDENCE_UNAVAILABLE",
+    }
+    assert len(inquiry_calls) == 1
+    assert sell_calls == []
+
+    for count in (2, 3):
         restarted_book = ManagedPositionBook(book.path)
         restarted = ManagedPositionController(restarted_book, gateway, clock=lambda: NOW)
         result = restarted.cycle(identity)
@@ -422,7 +454,9 @@ def test_real_gateway_inquiry_timeout_keeps_durable_exit_fenced_after_restart(tm
             "position_id": identity, "status": "PENDING",
             "reason": "EXIT_EVIDENCE_UNAVAILABLE",
         }
-        assert len(sell_calls) == 1
-        assert restarted_book.get(identity)["attempts"][0]["state"] in {
-            "SUBMITTING", "ACCEPTED", "UNKNOWN",
-        }
+        assert len(inquiry_calls) == count
+        assert sell_calls == []
+        attempts = restarted_book.get(identity)["attempts"]
+        assert len(attempts) == 1
+        assert attempts[0]["state"] == "ACCEPTED"
+        assert attempts[0]["receipt"] == receipt
