@@ -1,11 +1,1 @@
-{
-  "run_id": "prism-hourly-20261123T0018KST-venue-red-01",
-  "status": "RELEASED",
-  "owner": "scheduled-hourly-run",
-  "acquired_expected_state_parent": "d7d62cd71bc7cec85a27be69123e3a99113c11bd",
-  "acquired_active_state_head": "cde0f9b1f53cb802affe5e57869cae30efcf3af3",
-  "expected_pr_head": "2b652234f58270aef73ffeef132b52e99368f534",
-  "final_pr_head": "9b17ac78febea4e0c63aa19f71ae80f4ef715b84",
-  "release_expected_state_parent": "cde0f9b1f53cb802affe5e57869cae30efcf3af3",
-  "release_reason": "Synthetic venue mismatch RED tests committed; exact HEAD CI queued; no broker API/trading"
-}
+{"run_id":"prism-hourly-20261123T0124KST-us-venue-fix-01","status":"ACTIVE","owner":"scheduled-hourly-run","acquired_expected_state_parent":"a875e07355f7f6d9b637d8b69dc4ec0817e6f016","expected_pr_head":"9b17ac78febea4e0c63aa19f71ae80f4ef715b84"}
