@@ -1,0 +1,15 @@
+{
+  "run_id": "prism-hourly-20261122T2321KST-broker-audit-01",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "status": "PARTIAL_BLOCKED",
+  "live_auto_sell_authorized": false,
+  "contracts_unverified": [
+    "MTS/HTS/PRISM full-channel authoritative pending/reservations and sellable holdings",
+    "KR/US broker IDs/date/execution IDs/partial fills/cancel evidence",
+    "UNKNOWN lost-response recovery after restart",
+    "Broker-atomic conditional order or reservation across manual/external channels"
+  ],
+  "reviewed_file": "trading/managed_broker.py",
+  "related_independent_passes": 0,
+  "full_independent_passes": 0
+}

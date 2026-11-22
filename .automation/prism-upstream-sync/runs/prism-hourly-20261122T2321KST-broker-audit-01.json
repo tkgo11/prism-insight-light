@@ -1,0 +1,131 @@
+{
+  "run_id": "prism-hourly-20261122T2321KST-broker-audit-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_draft": true,
+  "code_head": "2b652234f58270aef73ffeef132b52e99368f534",
+  "product_defects_reproduced": 0,
+  "product_code_fixes": 0,
+  "tests_executed_this_run": 0,
+  "red_observed_this_run": 0,
+  "mock_executed_this_run": 0,
+  "code_commits": [],
+  "new_evidence": [
+    {
+      "path": "trading/managed_broker.py",
+      "blob_sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+      "code_head": "2b652234f58270aef73ffeef132b52e99368f534",
+      "review_kind": "full_local_source_and_test_mapping",
+      "reviewed_in_run": "prism-hourly-20261122T2321KST-broker-audit-01",
+      "source_lines": 491,
+      "reviewed_functions": [
+        "EvidenceUnavailable",
+        "SubmissionNotStarted",
+        "_value",
+        "_count",
+        "_date",
+        "_order_no",
+        "_time",
+        "ManagedBrokerGateway.__init__",
+        "_identity",
+        "_clock",
+        "_fresh",
+        "snapshot",
+        "notify_hint",
+        "submit_exact_sell",
+        "reconcile_order",
+        "_pages",
+        "_row_account",
+        "_native_snapshot",
+        "_native_order"
+      ],
+      "contracts": [
+        "Scope is pinned to authenticated account and market/ticker identity",
+        "Snapshot complete, recent, whole-share and open-order data are required",
+        "Real mode always fails before SELL because broker atomic cross-channel exclusion unverified",
+        "Demo exact SELL requires durable token, no open orders, full sellable quantity, stable preflight",
+        "Broker response lost/exception => UNKNOWN; accepted order not equivalent to filled",
+        "Order recovery requires dated order ID, explicit cancel/fill/remaining quantities, unique execution IDs, account and venue identity",
+        "Native pagination rejects missing status, malformed pages, repeated cursors and max-page truncation",
+        "Native reservation reader must explicitly attest all-order coverage; unsupported real/demo queries fail closed",
+        "Native order history without unique execution IDs cannot reconcile a SELL"
+      ],
+      "negative_paths_reviewed": [
+        "KR/US balance pagination, malformed continuation, business status, repeated cursor",
+        "US NASD/NYSE/AMEX holdings and venue attribution",
+        "Open-order and external reservation completeness; no synthetic coverage",
+        "Stale/naive/future quote and snapshot; changed account",
+        "Post-submit exception, ambiguous acceptance, missing order date and venue",
+        "Order inquiry timeout after durable ACCEPTED and repeated restart",
+        "Native daily history cumulative fill without broker execution IDs",
+        "Real-account atomic multi-channel race remains unsupported"
+      ],
+      "test_ids": [
+        "test_native_cash_query_keeps_sellable_quantity_with_explicit_coverage_provider[KR]",
+        "test_native_cash_query_keeps_sellable_quantity_with_explicit_coverage_provider[US]",
+        "test_native_cash_balance_reads_later_page_before_using_holdings",
+        "test_native_query_failure_never_returns_partial_or_invented_complete_snapshot",
+        "test_native_cumulative_status_without_execution_ids_remains_fenced[KR]",
+        "test_native_cumulative_status_without_execution_ids_remains_fenced[US]",
+        "test_real_gateway_inquiry_timeout_keeps_durable_exit_fenced_after_restart[KR]",
+        "test_real_gateway_inquiry_timeout_keeps_durable_exit_fenced_after_restart[US]",
+        "test_real_mode_self_attested_complete_snapshot_cannot_authorize_sell[KR-005930]"
+      ],
+      "supporting_test_blob_shas": {
+        "tests/test_managed_broker.py": "91e08fdadf9bc3dc2ec9c2dbfea13ead59e5e01e",
+        "tests/test_managed_broker_real_atomic_gate.py": "83ec3a7d41d6a45825ce2b176feb49ccaf06f053",
+        "tests/test_managed_positions_adversarial.py": "1d6b8c70509392f2df1d8d5793ae1852f6976b48"
+      },
+      "new_transition": "KR/US native broker pagination -> native order history -> durable reconciliation: history lacking unique execution IDs must raise EvidenceUnavailable rather than infer FILLED; linked to explicit negative tests",
+      "existing_ci": {
+        "run_id": 45028659994,
+        "head_sha": "2b652234f58270aef73ffeef132b52e99368f534",
+        "conclusion": "success",
+        "not_rerun_in_this_run": true
+      },
+      "local_audit_complete": true,
+      "external_broker_contract_verified": false,
+      "independent_related_pass": false,
+      "independent_full_pass": false,
+      "observed_product_defect": false,
+      "verdict": "LOCAL_SOURCE_TEST_MAPPING_COMPLETE; EXTERNAL_BROKER_CONTRACT_BLOCKED",
+      "next_gap": "Separate synthetic regression for US venue-conflicting holding row vs query venue and cursor upper-bound; require observed RED before production patch."
+    }
+  ],
+  "counts": {
+    "candidates_verified": 0,
+    "candidates_deferred": 1,
+    "related_local_complete": 2,
+    "related_total": 244,
+    "full_local_complete": 2,
+    "full_total": 279,
+    "related_independent_passes": 0,
+    "full_independent_passes": 0
+  },
+  "ci": {
+    "run_id": 45028659994,
+    "head_sha": "2b652234f58270aef73ffeef132b52e99368f534",
+    "conclusion": "success",
+    "historical_not_new": true
+  },
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "snyk": "success",
+  "reviews": 0,
+  "branch_protection": "403 unknown",
+  "required_checks": "not independently established due protection 403",
+  "merge": false,
+  "merge_blockers": [
+    "Independent 2+2 not complete",
+    "PR remains Draft and unapproved",
+    "Branch protection and required checks cannot be verified",
+    "Real KIS atomic external order exclusion remains unproven"
+  ],
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261122T2321KST-broker-audit-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261122T2321KST-broker-audit-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261122T2321KST-broker-audit-01-risk.json",
+  "next_exact_action": "GitHub fetch_file tests/test_managed_broker.py and trading/managed_broker.py at HEAD 2b652234; add KR/US synthetic RED test for conflicting overseas venue in holding row/query venue, verify CI RED on exact test-only HEAD before any fix."
+}
