@@ -1,11 +1,8 @@
 {
-  "run_id": "prism-hourly-20261123T0624KST-dispatch-transition-01",
-  "status": "RELEASED",
+  "run_id": "prism-hourly-20261123T0723KST-ledger-claim-audit-01",
+  "status": "ACTIVE",
   "owner": "scheduled-hourly-run",
-  "acquired_expected_state_parent": "05d734d74121344a5e7c0fce4d0939a51cdc6cf0",
-  "acquired_active_state_head": "1828ffa102b32b0f8fa90d0c5386aa741d0df209",
+  "acquired_expected_state_parent": "d1831af9a7035b7e64987d94eb3c77b06fb54ba8",
   "expected_pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
-  "final_pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
-  "release_expected_state_parent": "1828ffa102b32b0f8fa90d0c5386aa741d0df209",
-  "release_reason": "Complete 1620-line dispatch audit and cross-process BUY claim versus stop SELL transition mapping; no new RED; external atomic broker fence unchanged"
+  "mission": "Trace non-dispatch ledger claim writer against stop SELL lock"
 }
