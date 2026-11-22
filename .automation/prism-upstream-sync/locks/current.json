@@ -1,11 +1,7 @@
 {
-  "run_id": "prism-manual-20261122-audit-controller-2b6522-01",
-  "status": "RELEASED",
-  "owner": "manual-inline-run",
-  "acquired_expected_state_parent": "47b013e45f020893ebfcd3cb16bc7ecac551a491",
-  "acquired_active_state_head": "30bb6202bb4228b7d86cc2bb1cc11a04e44ddb3f",
-  "expected_pr_head": "2b652234f58270aef73ffeef132b52e99368f534",
-  "final_pr_head": "2b652234f58270aef73ffeef132b52e99368f534",
-  "release_expected_state_parent": "30bb6202bb4228b7d86cc2bb1cc11a04e44ddb3f",
-  "release_reason": "Local full-file audit of managed controller and immutable test evidence; code unchanged; no real KIS or trading"
+  "run_id": "prism-hourly-20261122T2321KST-broker-audit-01",
+  "status": "ACTIVE",
+  "owner": "scheduled-hourly-run",
+  "acquired_expected_state_parent": "2eeea742c5ecf9fe25f0b1628477ed32a859b59f",
+  "expected_pr_head": "2b652234f58270aef73ffeef132b52e99368f534"
 }
