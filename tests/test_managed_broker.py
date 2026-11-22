@@ -460,3 +460,32 @@ def test_real_gateway_inquiry_timeout_keeps_durable_exit_fenced_after_restart(tm
         assert len(attempts) == 1
         assert attempts[0]["state"] == "ACCEPTED"
         assert attempts[0]["receipt"] == receipt
+
+
+@pytest.mark.parametrize("query_venue,row_venue", [("NASD", "NYSE"), ("NYSE", "NASD")])
+def test_native_us_holding_row_venue_must_match_queried_exchange(query_venue, row_venue):
+    """A response for one exchange must not authorize another exchange's holding.
+
+    Synthetic offline-only broker response; no KIS connection or SELL invocation.
+    The other exchange queries are empty, so an unvalidated row would be
+    accepted as a unique, complete holding and could select the wrong venue.
+    """
+    gateway, trader, policy, calls = native_fixture("US")
+    original = trader._request
+
+    def inconsistent_exchange(path, tr_id, params, **kwargs):
+        if path.endswith("inquire-balance") and params["OVRS_EXCG_CD"] == query_venue:
+            calls.append((path, tr_id, dict(params), kwargs))
+            return page("output1", [{
+                "ovrs_pdno": "AAPL", "ovrs_cblc_qty": "4.0000",
+                "ord_psbl_qty": "4.0000", "ovrs_excg_cd": row_venue,
+            }])
+        if path.endswith("inquire-balance"):
+            calls.append((path, tr_id, dict(params), kwargs))
+            return page("output1", [])
+        return original(path, tr_id, params, **kwargs)
+
+    trader._request = inconsistent_exchange
+    with pytest.raises(module().EvidenceUnavailable, match="venue|exchange|conflict"):
+        gateway.snapshot(policy)
+    assert not any(path.endswith("inquire-nccs") for path, *_ in calls)
