@@ -1,10 +1,7 @@
 {
-  "run_id": "prism-auto-20261122T1815KST-11",
-  "status": "RELEASED",
+  "run_id": "prism-auto-20261122T1915KST-08",
+  "status": "ACTIVE",
   "owner": "scheduled-automation",
-  "acquired_expected_state_parent": "9cb5ee7f9e9c21fc6e4ad2692936a77a46bb66e3",
-  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "release_expected_state_parent": "61b667e51aa4d6c48295f99d3ce8fb51a68a84b8",
-  "final_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "release_reason": "No new RED reproduced; cross-layer recovery reader failure code and existing tests mapped."
+  "acquired_expected_state_parent": "5fc40312c1e2f7d52eb4ead74f642debab81672e",
+  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354"
 }
