@@ -1,0 +1,93 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T1515KST-08",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "8865339f44e6929f36c87ebf01e958a5f64b7fbe",
+  "state_acquired_lock_commit": "ab1a87022c9d6a07897311ed6a823364f3feeaa4",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "checks": [
+      "Full pytest suite:success",
+      "Windows runtime smoke:success"
+    ],
+    "historical": true
+  },
+  "state_ci": {
+    "run_id": 44988935510,
+    "head_sha": "8865339f44e6929f36c87ebf01e958a5f64b7fbe",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "success on exact PR HEAD",
+    "qlty": "UNKNOWN; excluded by user request",
+    "human_reviews": 0,
+    "branch_protection": "403 FORBIDDEN"
+  },
+  "new_evidence": [
+    {
+      "transition": "CLAIMED/SUBMITTING restart and abort proof",
+      "paths": [
+        {
+          "path": "tests/test_managed_position_state.py",
+          "sha": "b6f4f85c38140e7ef8bb352d6a7531fa5dd61e7c",
+          "test_ids": [
+            "test_unresolved_attempt_survives_flat_balance_and_blocks_restart_retry",
+            "test_only_proven_pre_submit_claim_can_be_aborted",
+            "test_persistence_failure_blocks_pre_submit_transition"
+          ]
+        },
+        {
+          "path": "trading/managed_position_state.py",
+          "sha": "69f5817b69d507ded8c80dafe28228aad53b9922",
+          "functions": [
+            "mark_submitting",
+            "release_unsubmitted",
+            "abort_before_gateway",
+            "record_submission"
+          ]
+        },
+        {
+          "path": "trading/managed_positions.py",
+          "sha": "140340547940c934848b50dd83950d0eb0e3eaea",
+          "functions": [
+            "_cycle_locked"
+          ]
+        }
+      ],
+      "finding": "Exact PR HEAD tests already cover recovered SUBMITTING fence, CLAIMED abort, persistence failure; no distinct uncovered RED justified by this transition. No tests newly executed."
+    }
+  ],
+  "historic_mock_evidence_not_new": "187 offline Mock cases and BUY4/manual SELL4/manual BUY4/restart/SELL4 once",
+  "unverified_transitions": [
+    "cross-channel authoritative open/reserved orders",
+    "broker order/fill/venue attribution",
+    "lost response stable recovery",
+    "broker atomic cross-channel exclusion"
+  ],
+  "evidence_delta": "Closed proposed test gap by exact test-ID comparison; found existing coverage, avoided duplicate RED. No product code changes or complete audit.",
+  "exact_blocker": "Real KIS atomicity not proven; branch protection 403; reviews 0; Qlty UNKNOWN",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch_file({\"repository_full_name\":\"tkgo11/prism-insight-light\",\"path\":\"tests/test_managed_broker_real_atomic_gate.py\",\"ref\":\"cd36647adf4665bfff1a5f26516b12d45b022354\"}) — compare verified no-invocation abort and live gateway exception paths against existing tests; choose a genuinely uncovered transition."
+}

@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-auto-20261122T1419KST-15",
+  "run_id": "prism-auto-20261122T1515KST-08",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-auto-20261122T1419KST-15.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-auto-20261122T1515KST-08.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "mcp__GitHub__fetch_file({\"repository_full_name\":\"tkgo11/prism-insight-light\",\"path\":\"tests/test_managed_position_state.py\",\"ref\":\"cd36647adf4665bfff1a5f26516b12d45b022354\"}) — if 404, enumerate tests/ at exact PR HEAD and identify existing CLAIMED/SUBMITTING crash coverage before designing distinct RED."
+  "next_exact_action": "mcp__GitHub__fetch_file({\"repository_full_name\":\"tkgo11/prism-insight-light\",\"path\":\"tests/test_managed_broker_real_atomic_gate.py\",\"ref\":\"cd36647adf4665bfff1a5f26516b12d45b022354\"}) — compare verified no-invocation abort and live gateway exception paths against existing tests; choose a genuinely uncovered transition."
 }
