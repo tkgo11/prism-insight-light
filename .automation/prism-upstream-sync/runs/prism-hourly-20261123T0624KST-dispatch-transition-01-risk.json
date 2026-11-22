@@ -1,0 +1,18 @@
+{
+  "run_id": "prism-hourly-20261123T0624KST-dispatch-transition-01",
+  "status": "UNVERIFIED_EXTERNAL_BROKER_CONTRACT",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "unverified": [
+    "MTS/HTS/PRISM authoritative pending/reserved order snapshots and sellable quantities",
+    "KR/US venue/date/execution ID/cancellation completeness",
+    "UNKNOWN lost-response restart recovery",
+    "Atomic cross-channel broker conditional order/reservation",
+    "Non-dispatch durable BUY claim writer versus in-flight stop SELL"
+  ],
+  "new_local_audit": "trading/dispatch.py",
+  "local_related_complete": 4,
+  "local_full_complete": 4,
+  "independent_related_passes": 0,
+  "independent_full_passes": 0
+}

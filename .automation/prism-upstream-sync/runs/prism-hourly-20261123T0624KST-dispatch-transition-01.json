@@ -1,0 +1,165 @@
+{
+  "run_id": "prism-hourly-20261123T0624KST-dispatch-transition-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_draft": true,
+  "pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "43ff378324880ba7575043eb1bf17be38d2c7004",
+  "new_red": 0,
+  "new_mock_executed": 0,
+  "new_defects_reproduced": 0,
+  "new_product_fixes": 0,
+  "code_commits_this_run": [],
+  "candidate_verified": 1,
+  "candidate_deferred": 1,
+  "related_complete": 4,
+  "related_total": 244,
+  "full_complete": 4,
+  "full_total": 279,
+  "independent_related_passes": 0,
+  "independent_full_passes": 0,
+  "ci": {
+    "run_id": 45043733208,
+    "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "status": "completed",
+    "conclusion": "success",
+    "existing_not_new": true
+  },
+  "review_count": 0,
+  "snyk": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success"
+    }
+  ],
+  "branch_protection": "403; required checks unconfirmed",
+  "observed_checks": [
+    "Full pytest suite: success",
+    "Windows runtime smoke: success"
+  ],
+  "cas_acquired_active_sha": "1828ffa102b32b0f8fa90d0c5386aa741d0df209",
+  "merge": false,
+  "merge_blockers": [
+    "Independent 2+2 not met",
+    "No review approval",
+    "Branch protection required checks 403",
+    "Real KIS atomic cross-channel contract unverified"
+  ],
+  "audit": {
+    "path": "trading/dispatch.py",
+    "blob_sha": "84b52d94e925df13edf3f15629b6b5c8a8c9043f",
+    "head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "source_lines": 1620,
+    "review_kind": "complete_local_dispatch_source_and_cross_process_pending_buy_race",
+    "functions": [
+      "BrokerWorkflowBusyError",
+      "_serialized_broker_workflow",
+      "_complete_broker_workflow",
+      "_is_stop_loss_sell",
+      "_untrusted_reserved_watcher_id",
+      "_buy_stop_loss_intent",
+      "_durable_buy_receipt",
+      "MultiAccountTradeDispatcher.dispatch",
+      "TradeDispatcher._stop_sell_unresolved_buy_block",
+      "TradeDispatcher.check_managed_positions",
+      "TradeDispatcher.dispatch",
+      "TradeDispatcher._dispatch_locked",
+      "TradeDispatcher._dispatch_serialized",
+      "TradeDispatcher.execute_queued_signal",
+      "TradeDispatcher._execute_queued_multi_account_locked",
+      "TradeDispatcher._update_stop_loss_tracking",
+      "TradeDispatcher.drain_due_orders",
+      "TradeDispatcher._resolve_single_account",
+      "TradeDispatcher._validated_buy_account_key",
+      "TradeDispatcher._sell_scope",
+      "TradeDispatcher._execute_legacy_trade"
+    ],
+    "contracts": [
+      "All public immediate and queued paths serialize local broker workflow under in-process and cross-process FileLock; caller cancellation is drained before lock release",
+      "Stop-loss SELL checks durable unresolved BUY under workflow lock; failure or unresolved status returns deferred before broker call",
+      "BUY claim is persisted before broker submission inside same workflow lock, preventing normal sibling dispatcher BUY from interleaving between SELL guard and submit",
+      "Multi-account and queued replay share stop SELL guard; BUY per-account claim uses canonical account key and durable provenance",
+      "UNKNOWN/executed broker order receipt is not evidence of fill; claims retain ambiguous outcomes and stop-loss tracker records remain pending until verified",
+      "Corrupt tracker prevents new BUY before submission; accepted SELL never automatically removes protection",
+      "Managed real SELL remains fail-closed without cross-channel broker atomic contract"
+    ],
+    "failure_paths": [
+      "Cross-process sibling BUY arrives after watcher guard but before SELL dispatch: broker lock serializes normal dispatcher claims; SELL checks ledger after acquiring lock",
+      "BUY in same instrument arrives after SELL guard: other normal dispatch cannot persist BUY claim until workflow lock releases",
+      "Legacy or direct ledger.claim outside workflow lock can race after guard: unresolved external writer contract remains unproven; no automatic real managed SELL permission",
+      "Queued multi-account replay bypasses main dispatch but repeats unresolved BUY guard",
+      "Cancellation during async broker order cannot release workflow lock early",
+      "Unknown order receipt and post-order tracking write failure cannot authorize replay",
+      "Multi-account partial success/UNKNOWN remains quarantined or deferred rather than retried blindly"
+    ],
+    "tests": [
+      {
+        "path": "tests/test_dispatch.py",
+        "sha": "bd4b50a02c5ff96ad57bac94af37eea51cee6f25",
+        "ids": [
+          "test_broker_workflows_are_serialized_across_dispatchers",
+          "test_ambiguous_broker_result_is_unknown_and_not_retried",
+          "test_exception_during_automatic_execution_is_claimed_unknown",
+          "test_stop_loss_tracker_failure_after_order_does_not_make_order_retryable"
+        ]
+      },
+      {
+        "path": "tests/test_dispatch_cancellation_safety.py",
+        "sha": "4064f0c775f8dd76f5567fde1452ea5b5c1b15b7",
+        "ids": [
+          "test_cancelled_dispatch_keeps_broker_lock_until_worker_and_tracking_finish"
+        ]
+      },
+      {
+        "path": "tests/test_managed_dispatch.py",
+        "sha": "6d891bb0932433a6a09ddbfa7c09e91dad647ae9",
+        "ids": [
+          "test_another_dispatcher_only_defers_enrolled_account_sell",
+          "test_real_dispatcher_custom_gateway_cannot_bypass_atomic_broker_gate"
+        ]
+      },
+      {
+        "path": "tests/test_pending_buy_stop_loss_safety.py",
+        "sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+        "ids": [
+          "test_unreconciled_pending_buy_must_not_sell_preexisting_holdings",
+          "test_direct_trigger_cannot_bypass_pending_buy_reconciliation"
+        ]
+      },
+      {
+        "path": "tests/test_multi_account_dispatch.py",
+        "sha": "f62a91164f46ce7a103e419b10fdc60be611ac3f",
+        "ids": [
+          "test_multi_account_duplicate_signal_is_suppressed_per_account",
+          "test_queued_multi_account_invalid_targets_never_submit_orders"
+        ]
+      }
+    ],
+    "cross_transition": [
+      {
+        "path": "trading/execution_ledger.py",
+        "sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8",
+        "lines": "654-709"
+      },
+      {
+        "path": "trading/stop_loss_watcher.py",
+        "sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c",
+        "lines": "850-1030"
+      }
+    ],
+    "finding": "No demonstrable uncovered local dispatch race: ordinary sibling dispatchers share broker workflow lock, while guard checks ledger under that lock. Direct uncoordinated ledger writes and external KIS manual transactions remain outside proven atomicity. No speculative code patch.",
+    "tests_executed_this_run": 0,
+    "complete_local_file_audit": true,
+    "independent_related_pass": false,
+    "independent_full_pass": false
+  },
+  "evidence_delta": "Reviewed full 1620-line dispatch source; mapped ordinary sibling BUY claims vs stop SELL workflow lock, queued multi-account bypass guard, cancellation and ambiguous outcome to existing immutable-SHA tests. Uncoordinated ledger writer/external KIS races remain unverified.",
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'trading/execution_ledger.py',ref:'9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5'}) then inspect claim() lines 967-1042 and tests/test_pending_buy_stop_loss_safety.py; determine whether non-dispatch ledger writers can persist a new unresolved BUY while stop SELL is in-flight; design offline deterministic concurrency RED only if an executable bypass exists.",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0624KST-dispatch-transition-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0624KST-dispatch-transition-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0624KST-dispatch-transition-01-risk.json"
+}
