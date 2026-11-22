@@ -1,10 +1,7 @@
 {
-  "run_id": "prism-auto-20261122T1020KST-11",
-  "status": "RELEASED",
+  "run_id": "prism-auto-20261122T1117KST-12",
+  "status": "ACTIVE",
   "owner": "scheduled-automation",
-  "acquired_expected_state_parent": "1fe9f8ba1adccf876214a36cdde89cd113b52e47",
-  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "release_expected_state_parent": "adad963d035171586f42c1cf51f145528d6a3de9",
-  "final_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "release_reason": "source-only reconciliation audit; no code changes"
+  "acquired_expected_state_parent": "f078fdd9d262a0b748ed7c232c75636700c25d9d",
+  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354"
 }
