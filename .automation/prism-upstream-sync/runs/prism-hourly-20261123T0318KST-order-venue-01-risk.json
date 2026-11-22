@@ -1,0 +1,16 @@
+{
+  "run_id": "prism-hourly-20261123T0318KST-order-venue-01",
+  "status": "UNVERIFIED_EXTERNAL_BROKER_CONTRACT",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "unverified": [
+    "All-channel external reservation and sellable quantity",
+    "KR/US broker identity and pagination completeness",
+    "UNKNOWN lost response recovery",
+    "Atomic cross-channel reservation"
+  ],
+  "native_order_venue_candidate": "Not reproduced as unsafe; native reader unconditionally fail closed",
+  "audit_blob": "8abca0f6c3b773a67e8143840991dd9863cc059c",
+  "independent_related_passes": 0,
+  "independent_full_passes": 0
+}

@@ -1,0 +1,136 @@
+{
+  "run_id": "prism-hourly-20261123T0318KST-order-venue-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_draft": true,
+  "pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "ef411375635265c2ebeb96b4366357be19fe8974",
+  "product_defects_reproduced_this_run": 0,
+  "red_executed_this_run": 0,
+  "mock_executed_this_run": 0,
+  "code_commits_this_run": [],
+  "product_fixes_this_run": 0,
+  "ci": {
+    "run_id": 45043733208,
+    "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "status": "completed",
+    "conclusion": "success",
+    "existing_not_new": true
+  },
+  "candidate_verified": 1,
+  "candidate_deferred": 1,
+  "related_complete": 1,
+  "related_total": 244,
+  "full_complete": 1,
+  "full_total": 279,
+  "independent_related_passes": 0,
+  "independent_full_passes": 0,
+  "review_count": 0,
+  "snyk": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success"
+    }
+  ],
+  "branch_protection": "403; unknown",
+  "required_checks": "not established",
+  "merge": false,
+  "merge_blockers": [
+    "2+2 absent",
+    "No PR review",
+    "Branch protection 403",
+    "Unverified KIS broker-atomic contract"
+  ],
+  "evidence_delta": "Full local file audit at immutable blob SHA with 19 definitions and mapped negative tests; falsified prior unsafe hypothesis: fixed NASD native query cannot settle any order because unconditional EvidenceUnavailable; no speculative fix.",
+  "audit": {
+    "path": "trading/managed_broker.py",
+    "blob_sha": "8abca0f6c3b773a67e8143840991dd9863cc059c",
+    "head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "source_lines": 493,
+    "functions": [
+      "EvidenceUnavailable",
+      "SubmissionNotStarted",
+      "_value",
+      "_count",
+      "_date",
+      "_order_no",
+      "_time",
+      "ManagedBrokerGateway.__init__",
+      "_identity",
+      "_clock",
+      "_fresh",
+      "snapshot",
+      "notify_hint",
+      "submit_exact_sell",
+      "reconcile_order",
+      "_pages",
+      "_row_account",
+      "_native_snapshot",
+      "_native_order"
+    ],
+    "review_kind": "full_source_review_and_existing_offline_test_crosscheck",
+    "contracts": [
+      "Authenticated scope and KR/US identity pinning before and after broker reads",
+      "Timestamp, holding, sellable, quote, venue and complete open-order checks fail closed",
+      "Demo-only exact SELL with durable token and re-preflight; real mode atomic gate blocks before broker call",
+      "Broker exceptions and invalid receipts never imply a confirmed fill or retry",
+      "Reconciliation requires matching account, date, order ID, venue, execution IDs and conserved quantities",
+      "Native KR/US pages reject malformed business statuses, cursors, account rows, and incomplete pagination",
+      "Native broker order history always rejects execution-ID/cancellation proof unsupported"
+    ],
+    "negative_paths": [
+      "US balance venue mismatch both directions",
+      "Incomplete external reservation coverage",
+      "Unsupported real broker atomic cross-channel submission",
+      "Lost order response and restart",
+      "Wrong account, stale timestamp, ambiguous US holding venues",
+      "Partial fill or cancellation lacking execution identity",
+      "Pagination repeated cursor, missing page, business status error",
+      "Native order history absence and even present rows do not release unresolved attempt"
+    ],
+    "tests": [
+      {
+        "path": "tests/test_managed_broker.py",
+        "sha": "dc40c8c2b3f7db0248ec540599fd8d7f2258c93b",
+        "ids": [
+          "test_native_us_holding_row_venue_must_match_queried_exchange[NASD-NYSE]",
+          "test_native_us_holding_row_venue_must_match_queried_exchange[NYSE-NASD]",
+          "test_native_cumulative_status_without_execution_ids_remains_fenced",
+          "test_real_gateway_inquiry_timeout_keeps_durable_exit_fenced_after_restart",
+          "test_native_query_failure_never_returns_partial_or_invented_complete_snapshot",
+          "test_missing_or_conflicting_order_evidence_remains_unknown"
+        ]
+      },
+      {
+        "path": "tests/test_managed_broker_real_atomic_gate.py",
+        "sha": "83ec3a7d41d6a45825ce2b176feb49ccaf06f053",
+        "ids": [
+          "test_real_mode_self_attested_complete_snapshot_cannot_authorize_sell"
+        ]
+      }
+    ],
+    "finding": "_native_order uses NASD fixed in real US history inquiry, but even valid rows unconditionally raise EvidenceUnavailable because execution IDs and explicit cancellation proofs are unavailable. Thus no unsafe fill authorization or observable RED established. Changing query without authoritative KIS contract would be speculative; defer.",
+    "external_unverified": [
+      "KIS real order venue query semantics",
+      "Atomic MTS/HTS/PRISM reservation",
+      "Authoritative complete cross-channel order coverage"
+    ],
+    "ci": {
+      "run_id": 45043733208,
+      "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+      "conclusion": "success",
+      "existing_not_new": true
+    },
+    "complete_local_file_audit": true,
+    "independent_related_pass": false,
+    "independent_full_pass": false
+  },
+  "next_exact_action": "GitHub fetch_file trading/order_reconciliation.py and trading/stop_loss_watcher.py at 9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5; trace a new KR/US order history -> execution_ledger UNKNOWN recovery transition against existing test IDs, add offline RED only on uncovered observable unsafe transition.",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0318KST-order-venue-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0318KST-order-venue-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0318KST-order-venue-01-risk.json"
+}

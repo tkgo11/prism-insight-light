@@ -1,19 +1,19 @@
 {
   "schema_version": 4,
-  "run_id": "prism-hourly-20261123T0225KST-ci-verification-01",
+  "run_id": "prism-hourly-20261123T0318KST-order-venue-01",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0225KST-ci-verification-01.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0225KST-ci-verification-01.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0225KST-ci-verification-01-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0318KST-order-venue-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0318KST-order-venue-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0318KST-order-venue-01-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "related_complete": 0,
-  "full_complete": 0,
+  "related_complete": 1,
+  "full_complete": 1,
   "ci_run_id": 45043733208,
   "ci_head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
   "ci_status": "success",
-  "next_exact_action": "GitHub fetch_file trading/managed_broker.py at 9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5, examine _native_order US OVRS_EXCG_CD hardcoded NASD versus receipt order_venue NYSE/AMEX; compare existing tests, add read-only RED only if missing, verify exact HEAD CI before fix."
+  "next_exact_action": "GitHub fetch_file trading/order_reconciliation.py and trading/stop_loss_watcher.py at 9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5; trace a new KR/US order history -> execution_ledger UNKNOWN recovery transition against existing test IDs, add offline RED only on uncovered observable unsafe transition."
 }
