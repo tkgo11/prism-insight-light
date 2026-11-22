@@ -1,0 +1,78 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T2016KST-09",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "384c3e4f9493d6bb1494b153a7475ede2f616c08",
+  "state_acquired_lock_commit": "f27ab1cdb562025258dd5b44660881410ecddc1b",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 1,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "run_id": 44915195653,
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "checks": [
+      "Full pytest suite:success",
+      "Windows runtime smoke:success"
+    ],
+    "historical": true
+  },
+  "security": {
+    "snyk": "not independently checked",
+    "qlty": "UNKNOWN; excluded from analysis",
+    "human_reviews": 0,
+    "branch_protection": "403 FORBIDDEN"
+  },
+  "new_evidence": [
+    {
+      "path": "trading/managed_broker.py",
+      "sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+      "lines": "270-321",
+      "finding": "reconcile_order requires dated receipt and wraps order_reader exceptions as EvidenceUnavailable; validates complete, order identity, executions, and venue"
+    },
+    {
+      "path": "trading/managed_positions.py",
+      "sha": "140340547940c934848b50dd83950d0eb0e3eaea",
+      "lines": "129-152",
+      "finding": "active SUBMITTING/ACCEPTED/UNKNOWN attempt catches reconciliation exceptions and returns PENDING EXIT_EVIDENCE_UNAVAILABLE without submitting again"
+    },
+    {
+      "path": "tests/test_full_position_managed_integration.py",
+      "sha": "dd67739dad6dd63791809c88efeca1f5c17425a3",
+      "lines": "30-74",
+      "finding": "OfflineGateway.reconcile_order returns configured evidence, does not raise; cross-layer ManagedBrokerGateway reader exception+restart not directly covered here"
+    },
+    {
+      "path": "tests/test_managed_broker.py",
+      "sha": "c06c0ba2a3604407984d83f85ef3aa453ccd6510",
+      "finding": "24 existing test functions checked for names; no explicit gateway reader exception + controller restart scenario in this file"
+    }
+  ],
+  "evidence_delta": "Confirmed prior cross-layer gap candidate across gateway/controller/integration tests with exact file SHAs; not a reproduced product defect; no duplicate test committed.",
+  "unverified_transitions": [
+    "cross-layer injected order_reader exception after accepted receipt and restart with persisted UNKNOWN fence",
+    "all-channel KIS authoritative orders",
+    "broker atomic cross-channel sell exclusion"
+  ],
+  "exact_blocker": "No new RED or test execution; real KIS contract unverified; reviews 0; branch protection 403; Qlty excluded",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'tests/test_managed_positions.py',ref:'cd36647adf4665bfff1a5f26516b12d45b022354'}) to check equivalent cross-layer exception/restart test before adding any nonduplicate offline RED."
+}
