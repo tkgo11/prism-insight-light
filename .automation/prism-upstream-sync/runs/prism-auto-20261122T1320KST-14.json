@@ -1,0 +1,98 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T1320KST-14",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "11c694733661087f3acc30fcd510313967b7970e",
+  "state_acquired_lock_commit": "1bdbad4123b7450457ae33de7aa8ed2152092acc",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "run_id": 44915195653,
+    "checks": [
+      "Full pytest suite: success",
+      "Windows runtime smoke: success"
+    ],
+    "historical": true
+  },
+  "state_ci": {
+    "run_id": 44980247020,
+    "head_sha": "11c694733661087f3acc30fcd510313967b7970e",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "success",
+    "qlty": "success status; 87 blocking issues",
+    "human_reviews": 0,
+    "branch_protection": "unverified (prior 403)",
+    "rulesets": []
+  },
+  "new_evidence": [
+    {
+      "path": "trading/stop_loss_watcher.py",
+      "blob_sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c",
+      "functions": [
+        "check_stop_loss_once",
+        "_trigger_sell"
+      ],
+      "validation": "function inventory at exact PR HEAD, source only"
+    },
+    {
+      "path": "trading/dispatch.py",
+      "blob_sha": "84b52d94e925df13edf3f15629b6b5c8a8c9043f",
+      "functions": [
+        "_stop_sell_unresolved_buy_block",
+        "_dispatch_locked",
+        "execute_queued_signal"
+      ],
+      "validation": "source-only inventory"
+    },
+    {
+      "path": "trading/execution_ledger.py",
+      "blob_sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8",
+      "functions": [
+        "guard_unresolved_buy",
+        "inspect_unresolved_buy_history",
+        "record_reconciled_buy_evidence"
+      ],
+      "validation": "source-only inventory"
+    },
+    {
+      "path": "tests/test_full_position_managed_integration.py",
+      "blob_sha": "dd67739dad6dd63791809c88efeca1f5c17425a3",
+      "validation": "14 existing test functions mapped, not executed"
+    }
+  ],
+  "read_error": "trading/strategy_execution.py returned 404; file path not established, not counted as product defect",
+  "historic_mock_evidence_not_new": "187 offline Mock cases; BUY4/manual SELL4/manual BUY4/restart/SELL4 once",
+  "unverified_transitions": [
+    "all-channel authoritative pending/reserved orders",
+    "order/fill ID and venue attribution",
+    "lost response stable recovery",
+    "broker atomic cross-channel sell reservation"
+  ],
+  "evidence_delta": "New source function inventory for watcher/dispatch and exact prior state CI verified; no new RED, no new code, no complete audit.",
+  "exact_blocker": "Broker atomicity not verified; Qlty 87; zero reviews; branch protection not verified",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch({\"url\":\"https://api.github.com/repos/tkgo11/prism-insight-light/git/ref/heads/automation/prism-insight-sync-state\"})"
+}
