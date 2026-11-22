@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-auto-20261122T1723KST-10",
+  "run_id": "prism-auto-20261122T1815KST-11",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-auto-20261122T1723KST-10.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-auto-20261122T1815KST-11.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'tests/test_managed_broker.py',ref:'cd36647adf4665bfff1a5f26516b12d45b022354',start_line:130,end_line:155}) then compare demo UNKNOWN recovery after order-reader failure to managed_positions controller tests."
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'tests/test_full_position_managed_integration.py',ref:'cd36647adf4665bfff1a5f26516b12d45b022354'}) and determine whether a real ManagedBrokerGateway order_reader raising EvidenceUnavailable is integrated with controller restart reservation test before adding a nonduplicate Mock."
 }

@@ -1,0 +1,91 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T1815KST-11",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "9cb5ee7f9e9c21fc6e4ad2692936a77a46bb66e3",
+  "state_acquired_lock_commit": "61b667e51aa4d6c48295f99d3ce8fb51a68a84b8",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "run_id": 44915195653,
+    "checks": [
+      "Full pytest suite:success",
+      "Windows runtime smoke:success"
+    ],
+    "historical": true
+  },
+  "state_ci": {
+    "run_id": 45002705937,
+    "head_sha": "9cb5ee7f9e9c21fc6e4ad2692936a77a46bb66e3",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "not independently verified this run",
+    "qlty": "UNKNOWN; user-excluded",
+    "human_reviews": 0,
+    "branch_protection": "403 FORBIDDEN"
+  },
+  "new_evidence": [
+    {
+      "path": "trading/managed_broker.py",
+      "sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+      "function": "reconcile_order",
+      "finding": "reader exceptions converted to EvidenceUnavailable; missing or conflicting order receipt/proof cannot settle; no confirmed terminal proof without full quantities and unique execution IDs"
+    },
+    {
+      "path": "trading/managed_positions.py",
+      "sha": "140340547940c934848b50dd83950d0eb0e3eaea",
+      "function": "_cycle_locked",
+      "finding": "active SUBMITTING/UNKNOWN attempt with failed reconciliation returns PENDING EXIT_EVIDENCE_UNAVAILABLE; no new sell; preflight CLAIMED is distinct"
+    },
+    {
+      "path": "tests/test_managed_broker.py",
+      "sha": "c06c0ba2a3604407984d83f85ef3aa453ccd6510",
+      "test_ids": [
+        "test_missing_or_conflicting_order_evidence_remains_unknown",
+        "test_stale_missing_or_future_order_proof_cannot_release_reservation",
+        "test_uncertain_submission_never_becomes_execution_or_retry_permission"
+      ],
+      "finding": "existing gateway negative evidence tests; no separate cross-layer reader-raises controller test found in reviewed test files"
+    },
+    {
+      "path": "tests/test_managed_positions.py",
+      "sha": "3a557f8ce00abcf0a036b27a6a77a7f0ea593239",
+      "test_ids": [
+        "test_unknown_exit_remains_reserved_at_zero_and_reentry_after_restart"
+      ],
+      "finding": "existing controller restart fence; no new execution"
+    }
+  ],
+  "unverified_transitions": [
+    "authoritative all-channel KIS open orders",
+    "lost response broker recovery",
+    "atomic cross-channel sell exclusion",
+    "explicit controller+real-gateway order_reader raises regression not independently run"
+  ],
+  "evidence_delta": "Compared recovery-reader failure path across gateway/controller with exact PR HEAD and existing tests; no new RED or product defect demonstrated; no code or tests executed.",
+  "exact_blocker": "No newly reproduced product defect; real KIS contract unverified; branch protection 403; Qlty UNKNOWN; reviews 0",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'tests/test_full_position_managed_integration.py',ref:'cd36647adf4665bfff1a5f26516b12d45b022354'}) and determine whether a real ManagedBrokerGateway order_reader raising EvidenceUnavailable is integrated with controller restart reservation test before adding a nonduplicate Mock."
+}
