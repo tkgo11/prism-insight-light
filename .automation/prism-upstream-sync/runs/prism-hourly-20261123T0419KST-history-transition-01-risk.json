@@ -1,0 +1,18 @@
+{
+  "run_id": "prism-hourly-20261123T0419KST-history-transition-01",
+  "status": "UNVERIFIED_EXTERNAL_BROKER_CONTRACT",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "unverified": [
+    "MTS/HTS/PRISM authoritative complete pending/reserved orders and sellable quantity",
+    "KR/US order venue/date/execution IDs/cancellation completeness",
+    "UNKNOWN lost-response restart recovery",
+    "Atomic cross-channel conditional broker order/reservation"
+  ],
+  "new_local_audit": "trading/order_reconciliation.py",
+  "new_transition": "Read-only KR/US broker history or candidate discovery -> durable UNKNOWN BUY triage -> zero-holdings cleanup and stop-loss watcher SELL block; no historical receipt alone can clear fence",
+  "local_related_complete": 2,
+  "local_full_complete": 2,
+  "independent_related_passes": 0,
+  "independent_full_passes": 0
+}

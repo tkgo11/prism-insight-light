@@ -1,0 +1,173 @@
+{
+  "run_id": "prism-hourly-20261123T0419KST-history-transition-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_draft": true,
+  "pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "43ff378324880ba7575043eb1bf17be38d2c7004",
+  "new_red": 0,
+  "new_mock_executed": 0,
+  "new_defects_reproduced": 0,
+  "new_product_fixes": 0,
+  "code_commits_this_run": [],
+  "candidate_verified": 1,
+  "candidate_deferred": 1,
+  "related_complete": 2,
+  "related_total": 244,
+  "full_complete": 2,
+  "full_total": 279,
+  "independent_related_passes": 0,
+  "independent_full_passes": 0,
+  "ci": {
+    "run_id": 45043733208,
+    "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "status": "completed",
+    "conclusion": "success",
+    "existing_not_new": true
+  },
+  "review_count": 0,
+  "snyk": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success"
+    }
+  ],
+  "branch_protection": "403; required checks unconfirmed",
+  "cas_acquired_active_sha": "3a81eb011197fb677b24cf0d2d88844ce33ada8f",
+  "merge": false,
+  "merge_blockers": [
+    "Independent 2+2 not met",
+    "No review approval",
+    "Branch protection required checks 403",
+    "Real KIS atomic cross-channel contract unverified"
+  ],
+  "audit": {
+    "path": "trading/order_reconciliation.py",
+    "blob_sha": "492b3cb72cd772033fae2fa6136ca49e8bf8d2a2",
+    "head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "source_lines": 790,
+    "review_kind": "complete_local_source_review_cross_transition_test_mapping",
+    "functions": [
+      "_account_provenance",
+      "_get",
+      "_cursor_component",
+      "_history_output",
+      "_first",
+      "_us_venue",
+      "_qty",
+      "_exceeds_known_order_bound",
+      "_has_missing_anchored_execution",
+      "summarize_buy_fill_evidence",
+      "_matched",
+      "read_order_history",
+      "discover_buy_order_candidates"
+    ],
+    "contracts": [
+      "Canonical account key and authenticated account/product scope before/after each read-only page",
+      "KR/US exact dated order matching, ticker/side and venue identity, explicit execution-ID validation",
+      "Bounded pagination, cursor alias consistency, SDK and business success, row/alias integrity",
+      "Cumulative and per-execution quantity conservation, duplicate and missing fill ID detection",
+      "History returns EVIDENCE_ONLY/CANDIDATES_ONLY with can_activate_stop=false, never fill/holdings authority",
+      "UNKNOWN BUY receipt/history is read-only triage and cannot clear execution ledger fence or trigger stop-loss watcher",
+      "A single candidate, partial cancel, missing execution, and matching receipt never establish current owned quantity"
+    ],
+    "failure_paths": [
+      "Account switch during pagination",
+      "Missing/malformed/reused broker date and all-zero order number",
+      "Cross-venue US row contradiction",
+      "Duplicate and conflicting execution IDs across pages",
+      "Missing execution anchor and contradictory fill/cancel/remaining totals",
+      "Truncated, repeated or contradictory pagination cursor",
+      "Transport or business status failure on later page",
+      "Receipt-less UNKNOWN candidate and duplicate receipt across accounts",
+      "Persisted evidence survives restart without clearing pending BUY"
+    ],
+    "tests": [
+      {
+        "path": "tests/test_kis_read_only_order_history.py",
+        "sha": "5f3b049c5204117f261482929287f25288ea0314",
+        "ids": [
+          "test_read_only_pagination_and_exact_local_order_match",
+          "test_repeated_pagination_cursor_is_incomplete",
+          "test_partial_fill_and_cancel_are_evidence_only",
+          "test_restart_requery_remains_non_actionable"
+        ]
+      },
+      {
+        "path": "tests/test_unknown_buy_three_page_reconciliation_readonly.py",
+        "sha": "eae366b7e46f0a44281b8de43d2d280cb05e8c67",
+        "ids": [
+          "test_three_page_date_reuse_duplicate_and_late_cancel_never_authorizes_stop"
+        ]
+      },
+      {
+        "path": "tests/test_order_history_response_integrity.py",
+        "sha": "3ae9bd04b7b35597a55be1c92f4050e067379472",
+        "ids": [
+          "test_later_page_body_failure_discards_earlier_fill_evidence",
+          "test_missing_broker_business_status_on_later_page_discards_fill_evidence"
+        ]
+      },
+      {
+        "path": "tests/test_unknown_buy_durable_history_correlation_readonly.py",
+        "sha": "cb0166ef05bcbd27e04e9e38fd5beb55938f4267",
+        "ids": [
+          "test_single_matching_receipt_is_only_a_possible_nonactionable_match",
+          "test_same_account_duplicate_receipt_never_selects_arbitrary_unknown_buy"
+        ]
+      },
+      {
+        "path": "tests/test_readonly_buy_history_evidence_durability.py",
+        "sha": "3d96c5f35c95294c06016a5d3938dc26589d63ef",
+        "ids": [
+          "test_readonly_evidence_persists_across_restart_without_fill_authority",
+          "test_evidence_persistence_failure_does_not_clear_unknown"
+        ]
+      },
+      {
+        "path": "tests/test_reconciled_buy_never_authorizes_stop.py",
+        "sha": "e989de2a59ad1df1c3d8f369f5e12c81b0f6be94",
+        "ids": [
+          "test_two_accounts_filled_history_cannot_authorize_aggregate_stop_after_restart"
+        ]
+      }
+    ],
+    "cross_transition_sources": [
+      {
+        "path": "trading/execution_ledger.py",
+        "sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8",
+        "lines": "654-797"
+      },
+      {
+        "path": "trading/stop_loss_watcher.py",
+        "sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c",
+        "lines": "763-918"
+      }
+    ],
+    "new_transition": "Read-only KR/US broker history or candidate discovery -> durable UNKNOWN BUY triage -> zero-holdings cleanup and stop-loss watcher SELL block; no historical receipt alone can clear fence",
+    "finding": "Source shows EVIDENCE_ONLY and CANDIDATES_ONLY always can_activate_stop=false; ledger inspect returns only non-actionable possible match; watcher preserves pending_buy at zero and blocks positive holdings sell. Existing negative test IDs cover observed path. No observable RED demonstrated, no speculative patch.",
+    "existing_ci": {
+      "run_id": 45043733208,
+      "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+      "conclusion": "success"
+    },
+    "tests_executed_this_run": 0,
+    "complete_local_file_audit": true,
+    "independent_related_pass": false,
+    "independent_full_pass": false,
+    "limitations": [
+      "No new CI or offline mock executed",
+      "Real KIS broker-authoritative all-channel coverage and atomic order reservation not verified",
+      "Review mapping does not constitute independent 2+2 pass"
+    ]
+  },
+  "evidence_delta": "New complete local 790-line source audit of trading/order_reconciliation.py; cross-transition trace read-only broker history -> UNKNOWN ledger -> watcher pending-buy SELL fence, mapped to existing tests; no new runtime RED or patch.",
+  "next_exact_action": "GitHub fetch_file trading/stop_loss_watcher.py at HEAD 9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5, review all 1127 lines plus tests/test_stop_loss_watcher.py and tests/test_pending_buy_stop_loss_safety.py at exact blob SHAs; focus on concurrent manual BUY/SELL vs pending_buy reset and zero-holdings removal, add RED only on a demonstrable uncovered unsafe transition.",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0419KST-history-transition-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0419KST-history-transition-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0419KST-history-transition-01-risk.json"
+}

@@ -1,19 +1,19 @@
 {
   "schema_version": 4,
-  "run_id": "prism-hourly-20261123T0318KST-order-venue-01",
+  "run_id": "prism-hourly-20261123T0419KST-history-transition-01",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0318KST-order-venue-01.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0318KST-order-venue-01.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0318KST-order-venue-01-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0419KST-history-transition-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0419KST-history-transition-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0419KST-history-transition-01-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "related_complete": 1,
-  "full_complete": 1,
+  "related_complete": 2,
+  "full_complete": 2,
   "ci_run_id": 45043733208,
   "ci_head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
   "ci_status": "success",
-  "next_exact_action": "GitHub fetch_file trading/order_reconciliation.py and trading/stop_loss_watcher.py at 9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5; trace a new KR/US order history -> execution_ledger UNKNOWN recovery transition against existing test IDs, add offline RED only on uncovered observable unsafe transition."
+  "next_exact_action": "GitHub fetch_file trading/stop_loss_watcher.py at HEAD 9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5, review all 1127 lines plus tests/test_stop_loss_watcher.py and tests/test_pending_buy_stop_loss_safety.py at exact blob SHAs; focus on concurrent manual BUY/SELL vs pending_buy reset and zero-holdings removal, add RED only on a demonstrable uncovered unsafe transition."
 }
