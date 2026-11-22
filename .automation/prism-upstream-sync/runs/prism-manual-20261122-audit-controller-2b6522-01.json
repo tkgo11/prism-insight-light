@@ -1,0 +1,89 @@
+{
+  "run_id": "prism-manual-20261122-audit-controller-2b6522-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr_number": 43,
+  "pr_draft": true,
+  "code_head": "2b652234f58270aef73ffeef132b52e99368f534",
+  "code_changed_this_run": false,
+  "regression_tests_added_this_run": 0,
+  "tests_executed_this_run": 0,
+  "product_defects_reproduced_this_run": 0,
+  "product_fixes_this_run": 0,
+  "code_commits_this_run": [],
+  "existing_head_ci": {
+    "run_id": 45028659994,
+    "head_sha": "2b652234f58270aef73ffeef132b52e99368f534",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "verified_new_evidence": [
+    {
+      "kind": "full_local_file_audit",
+      "path": "trading/managed_positions.py",
+      "sha": "140340547940c934848b50dd83950d0eb0e3eaea",
+      "functions": [
+        "ManagedPositionController.__init__",
+        "_result",
+        "_assert_fresh",
+        "_snapshot",
+        "_receipt",
+        "cycle",
+        "_cycle_locked",
+        "cycle_all"
+      ],
+      "negative_paths": [
+        "Unenrolled/mismatched policy",
+        "Unknown persisted states/overlapping attempts",
+        "Corrupt durable book or lock errors",
+        "Stale/future/unscoped snapshot, impossible inventory, manual open orders, market closure",
+        "Snapshot changes at reserve, mark_submitting, after market preflight",
+        "Ambiguous broker exception, typed exception spoofing, lost response, missing receipt/order date",
+        "Reconcile inquiry timeout, missing evidence, conflicting proof, state-write failures",
+        "Restart after SUBMITTING/UNKNOWN with zero holdings followed by manual repurchase"
+      ],
+      "test_ids": [
+        "test_durable_write_latency_cannot_submit_stale_snapshot",
+        "test_custom_gateway_cannot_release_an_attempt_with_a_typed_exception",
+        "test_receipt_cannot_be_overridden_by_contradictory_rejection_label",
+        "test_unknown_exit_remains_reserved_at_zero_and_reentry_after_restart",
+        "test_real_gateway_inquiry_timeout_keeps_durable_exit_fenced_after_restart[KR]",
+        "test_real_gateway_inquiry_timeout_keeps_durable_exit_fenced_after_restart[US]",
+        "test_real_dispatcher_custom_gateway_cannot_bypass_atomic_broker_gate",
+        "test_receipt_write_failure_after_submission_stays_reserved_after_restart",
+        "test_concurrent_controllers_share_durable_reservation"
+      ]
+    }
+  ],
+  "counts": {
+    "new_candidate_count_verified": 0,
+    "deferred_candidate_count": 1,
+    "local_related_complete": 1,
+    "local_related_total": 244,
+    "local_full_complete": 1,
+    "local_full_total": 279,
+    "independent_related_passes": 0,
+    "independent_full_passes": 0
+  },
+  "pr_head": "2b652234f58270aef73ffeef132b52e99368f534",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "review_count": 0,
+  "snyk": "success",
+  "branch_protection": "403; unknown",
+  "merge_performed": false,
+  "merge_blockers": [
+    "Related/full independent 2+2 not met",
+    "PR #43 Draft, no reviews",
+    "Branch protection 403; required policies unconfirmed",
+    "Real KIS atomic multi-channel SELL contract unproven"
+  ],
+  "externals": "KIS API, live account, trading, or credentials were never used",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-manual-20261122-audit-controller-2b6522-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-manual-20261122-audit-controller-2b6522-01-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-manual-20261122-audit-controller-2b6522-01.json",
+  "evidence_delta": "Fully mapped all eight managed controller functions to 9 existing negative/regression tests at immutable code HEAD, catalogued failure paths and real-broker safety boundary. No speculative code patch or duplicate tests.",
+  "next_exact_action": "GitHub Connector fetch_file(tkgo11/prism-insight-light, trading/managed_broker.py, ref=2b652234f58270aef73ffeef132b52e99368f534) and trace complete KR/US native snapshot/reconcile failure paths; collect blob SHA + matching tests and only code-change on observed RED."
+}

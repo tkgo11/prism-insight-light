@@ -1,0 +1,17 @@
+{
+  "run_id": "prism-manual-20261122-audit-controller-2b6522-01",
+  "status": "UNVERIFIED_EXTERNAL_BROKER_CONTRACT",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "known_broker_gaps": [
+    "MTS/HTS/PRISM all-channel authoritative pending/reservation and sellable positions",
+    "KR/US exchange/date/orderID/fillID completeness",
+    "lost response/UNKNOWN identification after restart",
+    "broker-atomic conditional order/reservation to prevent external order race"
+  ],
+  "code_local_controller_audit": "trading/managed_positions.py",
+  "complete_local_source_files": 1,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "requires_fail_closed_fence": true
+}

@@ -1,17 +1,19 @@
 {
   "schema_version": 4,
-  "run_id": "prism-manual-20261122T2235KST-ci-fix-fd6791-01",
+  "run_id": "prism-manual-20261122-audit-controller-2b6522-01",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "2b652234f58270aef73ffeef132b52e99368f534",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-manual-20261122T2235KST-ci-fix-fd6791-01.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-manual-20261122T2235KST-ci-fix-fd6791-01.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-manual-20261122T2235KST-ci-fix-fd6791-01-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-manual-20261122-audit-controller-2b6522-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-manual-20261122-audit-controller-2b6522-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-manual-20261122-audit-controller-2b6522-01-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
   "ci_run_id": 45028659994,
-  "ci_status": "in_progress",
+  "ci_status": "success",
   "ci_head_sha": "2b652234f58270aef73ffeef132b52e99368f534",
-  "next_exact_action": "GET https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/45028659994 for 2b652234f58270aef73ffeef132b52e99368f534; inspect failing jobs if any; never enable live auto SELL"
+  "related_complete": 1,
+  "full_complete": 1,
+  "next_exact_action": "GitHub Connector fetch_file(tkgo11/prism-insight-light, trading/managed_broker.py, ref=2b652234f58270aef73ffeef132b52e99368f534) and trace complete KR/US native snapshot/reconcile failure paths; collect blob SHA + matching tests and only code-change on observed RED."
 }
