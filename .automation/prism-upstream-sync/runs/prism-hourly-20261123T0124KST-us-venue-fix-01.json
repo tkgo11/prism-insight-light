@@ -1,0 +1,68 @@
+{
+  "run_id": "prism-hourly-20261123T0124KST-us-venue-fix-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_draft": true,
+  "previous_head": "9b17ac78febea4e0c63aa19f71ae80f4ef715b84",
+  "code_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "baseline_red": {
+    "run_id": 45037664104,
+    "head_sha": "9b17ac78febea4e0c63aa19f71ae80f4ef715b84",
+    "conclusion": "failure",
+    "failed_tests": [
+      "test_native_us_holding_row_venue_must_match_queried_exchange[NASD-NYSE]",
+      "test_native_us_holding_row_venue_must_match_queried_exchange[NYSE-NASD]"
+    ],
+    "summary": "2 failed, 3377 passed; both DID NOT RAISE EvidenceUnavailable; confirmed product RED, not environment failure"
+  },
+  "product_defects_reproduced_this_run": 1,
+  "red_observed_this_run": 2,
+  "mock_executed_this_run": 0,
+  "product_code_fixes_this_run": 1,
+  "code_commits": [
+    {
+      "sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+      "subject": "fix(orders): reject cross-exchange US holding evidence",
+      "path": "trading/managed_broker.py",
+      "blob_sha": "8abca0f6c3b773a67e8143840991dd9863cc059c",
+      "root_cause": "US balance row ovrs_excg_cd was not checked against the exchange requested in OVRS_EXCG_CD",
+      "scope": "Require exact venue match before using target holding row; mismatches raise EvidenceUnavailable; no KIS API or order submission"
+    }
+  ],
+  "ci": {
+    "run_id": 45043733208,
+    "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "status": "queued",
+    "conclusion": null
+  },
+  "independent_related_passes": 0,
+  "independent_full_passes": 0,
+  "related_local_complete": 0,
+  "related_total": 244,
+  "full_local_complete": 0,
+  "full_total": 279,
+  "candidates_verified": 1,
+  "candidates_deferred": 0,
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "reviews": 0,
+  "snyk": "success on baseline test-only HEAD; new HEAD not yet verified",
+  "branch_protection": "403; not PASS",
+  "required_checks": "unknown",
+  "merge": false,
+  "merge_blockers": [
+    "New code HEAD CI pending",
+    "Independent 2+2 incomplete",
+    "Draft and zero reviews",
+    "Branch protection/required checks 403",
+    "Real KIS cross-channel broker-atomic SELL contract unverified"
+  ],
+  "evidence_delta": "Observed exact-HEAD RED for both NASD↔NYSE mismatch cases in Linux full pytest; applied one-line guard in production US balance query; exact new HEAD CI queued; no KIS access.",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0124KST-us-venue-fix-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0124KST-us-venue-fix-01-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0124KST-us-venue-fix-01.json",
+  "next_exact_action": "GET https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/45043733208 and jobs for HEAD 9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5; confirm both venue regression cases GREEN and full suite, inspect failures if any."
+}

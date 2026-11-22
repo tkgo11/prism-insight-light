@@ -1,0 +1,16 @@
+{
+  "run_id": "prism-hourly-20261123T0124KST-us-venue-fix-01",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "status": "PARTIAL_BLOCKED",
+  "live_auto_sell_authorized": false,
+  "baseline_red_verified": true,
+  "venue_mismatch_fix_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "unverified": [
+    "All-channel MTS/HTS/PRISM reservation coverage",
+    "KR/US authoritative order and execution identities and pages",
+    "UNKNOWN restart recovery with lost responses",
+    "Broker-atomic cross-channel exclusion"
+  ],
+  "independent_related_passes": 0,
+  "independent_full_passes": 0
+}
