@@ -1,0 +1,129 @@
+{
+  "run_id": "prism-hourly-20261123T0225KST-ci-verification-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_draft": true,
+  "previous_head": "9b17ac78febea4e0c63aa19f71ae80f4ef715b84",
+  "code_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "baseline_red": {
+    "run_id": 45037664104,
+    "head_sha": "9b17ac78febea4e0c63aa19f71ae80f4ef715b84",
+    "conclusion": "failure",
+    "failed_tests": [
+      "test_native_us_holding_row_venue_must_match_queried_exchange[NASD-NYSE]",
+      "test_native_us_holding_row_venue_must_match_queried_exchange[NYSE-NASD]"
+    ],
+    "summary": "2 failed, 3377 passed; both DID NOT RAISE EvidenceUnavailable; confirmed product RED, not environment failure"
+  },
+  "product_defects_reproduced_this_run": 0,
+  "red_observed_this_run": 2,
+  "mock_executed_this_run": 0,
+  "product_code_fixes_this_run": 1,
+  "code_commits": [
+    {
+      "sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+      "subject": "fix(orders): reject cross-exchange US holding evidence",
+      "path": "trading/managed_broker.py",
+      "blob_sha": "8abca0f6c3b773a67e8143840991dd9863cc059c",
+      "root_cause": "US balance row ovrs_excg_cd was not checked against the exchange requested in OVRS_EXCG_CD",
+      "scope": "Require exact venue match before using target holding row; mismatches raise EvidenceUnavailable; no KIS API or order submission"
+    }
+  ],
+  "ci": {
+    "run_id": 45043733208,
+    "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "status": "queued",
+    "conclusion": null
+  },
+  "independent_related_passes": 0,
+  "independent_full_passes": 0,
+  "related_local_complete": 0,
+  "related_total": 244,
+  "full_local_complete": 0,
+  "full_total": 279,
+  "candidates_verified": 1,
+  "candidates_deferred": 0,
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "reviews": 0,
+  "snyk": "success on baseline test-only HEAD; new HEAD not yet verified",
+  "branch_protection": "403; not PASS",
+  "required_checks": "unknown",
+  "merge": false,
+  "merge_blockers": [
+    "independent 2+2 absent",
+    "Draft PR and zero approvals",
+    "branch protection 403",
+    "real broker atomic cross-channel contract unverified"
+  ],
+  "evidence_delta": "Observed exact-HEAD RED for both NASD↔NYSE mismatch cases in Linux full pytest; applied one-line guard in production US balance query; exact new HEAD CI queued; no KIS access.",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0225KST-ci-verification-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0225KST-ci-verification-01-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0225KST-ci-verification-01.json",
+  "next_exact_action": "GitHub fetch_file trading/managed_broker.py at 9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5, examine _native_order US OVRS_EXCG_CD hardcoded NASD versus receipt order_venue NYSE/AMEX; compare existing tests, add read-only RED only if missing, verify exact HEAD CI before fix.",
+  "pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "code_changed_this_run": false,
+  "product_fixes_this_run": 0,
+  "regression_tests_added_this_run": 0,
+  "tests_executed_this_run": 0,
+  "code_commits_this_run": [],
+  "existing_head_ci": {
+    "run_id": 45043733208,
+    "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Windows runtime smoke",
+        "conclusion": "success",
+        "id": 137273615167
+      },
+      {
+        "name": "Full pytest suite",
+        "conclusion": "success",
+        "id": 137273615467
+      }
+    ]
+  },
+  "verified_new_evidence": [
+    {
+      "kind": "new_exact_head_ci_result",
+      "run_id": 45043733208,
+      "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Windows runtime smoke",
+          "conclusion": "success"
+        },
+        {
+          "name": "Full pytest suite",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "kind": "new_transition_review",
+      "path": "trading/managed_broker.py",
+      "blob_sha": "8abca0f6c3b773a67e8143840991dd9863cc059c",
+      "lines": "470-477",
+      "finding": "US order reconciliation query uses OVRS_EXCG_CD NASD for real mode regardless of receipt venue; not yet proven defective, because live gateway atomic sell blocked; candidate for targeted offline fail-closed test",
+      "not_counted_as_complete_file_audit": true
+    }
+  ],
+  "counts": {
+    "new_candidate_count_verified": 0,
+    "deferred_candidate_count": 1,
+    "local_related_complete": 0,
+    "local_related_total": 244,
+    "local_full_complete": 0,
+    "local_full_total": 279,
+    "independent_related_passes": 0,
+    "independent_full_passes": 0
+  },
+  "merge_performed": false
+}
