@@ -1,7 +1,10 @@
 {
   "run_id": "prism-auto-20261122T2215KST-11",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "scheduled-automation",
   "acquired_expected_state_parent": "a9a84a458385742355583de233b7e900b92a94d3",
-  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354"
+  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_expected_state_parent": "3e486c7cfda0ea16dc491075b1497272c85e8ce3",
+  "final_pr_head": "fd6791c8b6aeb3ca0912f237aa79d24d82214a31",
+  "release_reason": "Added cross-layer offline regression test; CI pending; no real trading"
 }

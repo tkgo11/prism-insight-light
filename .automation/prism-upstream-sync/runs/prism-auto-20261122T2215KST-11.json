@@ -1,0 +1,39 @@
+{
+  "run_id": "prism-auto-20261122T2215KST-11",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "head_sha": "fd6791c8b6aeb3ca0912f237aa79d24d82214a31",
+  "previous_head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "baseline_red_observed": false,
+  "mock_tests_executed": 0,
+  "product_defects_reproduced": 0,
+  "code_fixes": 0,
+  "regression_tests_added": 1,
+  "added_test": "tests/test_managed_broker.py::test_real_gateway_inquiry_timeout_keeps_durable_exit_fenced_after_restart[KR,US]",
+  "test_blob_sha": "9030b2811d30bcd84dd59606ce38fe7e588bfc79",
+  "code_commit": "fd6791c8b6aeb3ca0912f237aa79d24d82214a31",
+  "ci_run_id": 45026635419,
+  "ci_head_sha": "fd6791c8b6aeb3ca0912f237aa79d24d82214a31",
+  "ci_status": "in_progress at final check; not PASS",
+  "related_complete": 0,
+  "related_total": 244,
+  "full_complete": 0,
+  "full_total": 279,
+  "related_passes": 0,
+  "full_passes": 0,
+  "prior_stalled_count": null,
+  "candidate": {
+    "id": "CROSS_LAYER_RECONCILE_EXCEPTION_RESTART",
+    "status": "TEST_ADDED_AWAITING_CI",
+    "detail": "Offline real ManagedBrokerGateway with injected order_reader TimeoutError and durable controller restart for KR/US. Existing fake-only tests did not bridge this path; no RED observed, so no product defect claimed."
+  },
+  "unverified": [
+    "KIS authoritative all-channel orders",
+    "broker atomic cross-channel order exclusion",
+    "lost-response real-broker reconciliation",
+    "branch protection 403",
+    "Qlty skipped"
+  ],
+  "next_exact_action": "Inspect Actions run 45026635419 at head fd6791c8; if failed distinguish test fixture error from product defect, repair and re-run; if green record coverage-only improvement. Do not activate live SELL."
+}

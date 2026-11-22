@@ -1,13 +1,13 @@
 {
   "schema_version": 4,
-  "run_id": "prism-auto-20261122T2122KST-10",
+  "run_id": "prism-auto-20261122T2215KST-11",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
-  "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-auto-20261122T2122KST-10.json",
+  "head_sha": "fd6791c8b6aeb3ca0912f237aa79d24d82214a31",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-auto-20261122T2215KST-11.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "next_exact_action": "At exact PR HEAD inspect controller _cycle_locked active-attempt reconciliation and instantiate ManagedBrokerGateway with offline injected order_reader raising TimeoutError, verifying persisted UNKNOWN across restart without any actual broker invocation; first check equivalent test IDs."
+  "next_exact_action": "Inspect Actions run 45026635419 at head fd6791c8; if failed distinguish test fixture error from product defect, repair and re-run; if green record coverage-only improvement. Do not activate live SELL."
 }
