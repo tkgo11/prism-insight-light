@@ -1,0 +1,60 @@
+{
+  "run_id": "prism-hourly-20261123T0018KST-venue-red-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_draft": true,
+  "previous_head": "2b652234f58270aef73ffeef132b52e99368f534",
+  "code_head": "9b17ac78febea4e0c63aa19f71ae80f4ef715b84",
+  "code_commits": [
+    {
+      "sha": "9b17ac78febea4e0c63aa19f71ae80f4ef715b84",
+      "subject": "test(orders): reject mismatched US holding query venue",
+      "path": "tests/test_managed_broker.py",
+      "blob_sha": "dc40c8c2b3f7db0248ec540599fd8d7f2258c93b",
+      "reason": "US holding response venue is not checked against queried OVRS_EXCG_CD",
+      "test_ids": [
+        "test_native_us_holding_row_venue_must_match_queried_exchange[NASD-NYSE]",
+        "test_native_us_holding_row_venue_must_match_queried_exchange[NYSE-NASD]"
+      ]
+    }
+  ],
+  "red_observed_this_run": 0,
+  "red_expected_but_not_yet_confirmed": true,
+  "mock_executed_this_run": 0,
+  "product_code_fixes_this_run": 0,
+  "tests_executed_this_run": 0,
+  "ci": {
+    "run_id": 45037664104,
+    "head_sha": "9b17ac78febea4e0c63aa19f71ae80f4ef715b84",
+    "status": "in_progress",
+    "conclusion": null
+  },
+  "independent_related_passes": 0,
+  "independent_full_passes": 0,
+  "related_local_complete": 0,
+  "related_total": 244,
+  "full_local_complete": 0,
+  "full_total": 279,
+  "candidates_verified": 0,
+  "candidates_deferred": 1,
+  "pr_base_sha": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "reviews": 0,
+  "branch_protection": "403, not verified",
+  "required_checks": "not verified",
+  "snyk": "not verified on new HEAD",
+  "merge": false,
+  "merge_blockers": [
+    "RED not yet observed on test-only HEAD",
+    "No fix yet",
+    "Independent 2+2 incomplete",
+    "Draft/no review",
+    "Required protection unknown",
+    "Broker atomic exclusion unverified"
+  ],
+  "evidence_delta": "New synthetic read-only test-only commit added on PR branch for US holding venue mismatch, two parameterized cases; exact HEAD CI queued. No KIS use.",
+  "next_exact_action": "GET https://api.github.com/repos/tkgo11/prism-insight-light/actions/runs/45037664104 and jobs; verify exact HEAD 9b17ac78 baseline RED for two US venue cases. If RED is product failure, add minimal validation in trading/managed_broker.py _native_snapshot before accepting holding row; verify new HEAD CI."
+}

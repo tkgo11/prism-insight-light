@@ -1,0 +1,16 @@
+{
+  "run_id": "prism-hourly-20261123T0018KST-venue-red-01",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "status": "PARTIAL_BLOCKED",
+  "live_auto_sell_authorized": false,
+  "unverified": [
+    "MTS/HTS/PRISM all-channel reservation coverage",
+    "KR/US broker-authoritative fills and cancellation",
+    "UNKNOWN durable recovery",
+    "Broker-atomic external order exclusion"
+  ],
+  "new_risk": "US holding row exchange can disagree with requested OVRS_EXCG_CD",
+  "baseline_red": "pending",
+  "independent_related_passes": 0,
+  "independent_full_passes": 0
+}
