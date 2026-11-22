@@ -1,0 +1,18 @@
+{
+  "run_id": "prism-hourly-20261123T0723KST-ledger-claim-audit-01",
+  "status": "UNVERIFIED_EXTERNAL_BROKER_CONTRACT",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "unverified": [
+    "MTS/HTS/PRISM complete pending orders and sellable position",
+    "KR/US venue/date/fill/cancel completeness",
+    "UNKNOWN response-loss recovery",
+    "Broker-atomic conditional order/reservation",
+    "Non-dispatch ledger writer racing stop SELL: no proven production caller"
+  ],
+  "new_local_audit": "trading/execution_ledger.py",
+  "local_related_complete": 5,
+  "local_full_complete": 5,
+  "independent_related_passes": 0,
+  "independent_full_passes": 0
+}

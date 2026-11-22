@@ -1,19 +1,19 @@
 {
   "schema_version": 4,
-  "run_id": "prism-hourly-20261123T0624KST-dispatch-transition-01",
+  "run_id": "prism-hourly-20261123T0723KST-ledger-claim-audit-01",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0624KST-dispatch-transition-01.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0624KST-dispatch-transition-01.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0624KST-dispatch-transition-01-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0723KST-ledger-claim-audit-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0723KST-ledger-claim-audit-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0723KST-ledger-claim-audit-01-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
-  "related_complete": 4,
-  "full_complete": 4,
+  "related_complete": 5,
+  "full_complete": 5,
   "ci_run_id": 45043733208,
   "ci_head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
   "ci_status": "success",
-  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'trading/execution_ledger.py',ref:'9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5'}) then inspect claim() lines 967-1042 and tests/test_pending_buy_stop_loss_safety.py; determine whether non-dispatch ledger writers can persist a new unresolved BUY while stop SELL is in-flight; design offline deterministic concurrency RED only if an executable bypass exists."
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'trading/dispatch.py',ref:'9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5',start_line:700,end_line:1060}) plus GitHub code search for 'execution_ledger.claim(' in repo; enumerate actual non-dispatch production writers before designing deterministic race RED."
 }
