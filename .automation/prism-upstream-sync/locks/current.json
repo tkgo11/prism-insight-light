@@ -1,11 +1,8 @@
 {
-  "run_id": "prism-hourly-20261122T2321KST-broker-audit-01",
-  "status": "RELEASED",
+  "run_id": "prism-hourly-20261123T0018KST-venue-red-01",
+  "status": "ACTIVE",
   "owner": "scheduled-hourly-run",
-  "acquired_expected_state_parent": "2eeea742c5ecf9fe25f0b1628477ed32a859b59f",
-  "acquired_active_state_head": "29a30fbc900e84b18d585baa124c8d9e1081626c",
+  "acquired_expected_state_parent": "d7d62cd71bc7cec85a27be69123e3a99113c11bd",
   "expected_pr_head": "2b652234f58270aef73ffeef132b52e99368f534",
-  "final_pr_head": "2b652234f58270aef73ffeef132b52e99368f534",
-  "release_expected_state_parent": "29a30fbc900e84b18d585baa124c8d9e1081626c",
-  "release_reason": "Completed native KR/US broker pagination-to-reconciliation source/test audit; no KIS access or trading"
+  "mission": "US exchange query/holding row mismatch offline RED"
 }
