@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
-  "run_id": "prism-auto-20261122T1020KST-11",
+  "run_id": "prism-auto-20261122T1117KST-12",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-auto-20261122T1020KST-11.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-auto-20261122T1117KST-12.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/codex-20261120-full-position.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,

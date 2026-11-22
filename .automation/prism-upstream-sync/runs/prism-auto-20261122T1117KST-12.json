@@ -1,0 +1,89 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T1117KST-12",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "f078fdd9d262a0b748ed7c232c75636700c25d9d",
+  "state_acquired_lock_commit": "d4b8ba43820fa9bd4050b88f3bae6951e8cc37f5",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "run_id": 44915195653,
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "checks": [
+      "Full pytest suite SUCCESS",
+      "Windows runtime smoke SUCCESS"
+    ],
+    "historical": true
+  },
+  "state_ci": {
+    "run_id": 44970868186,
+    "head_sha": "f078fdd9d262a0b748ed7c232c75636700c25d9d",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "success",
+    "qlty": "success status; 87 blocking issues",
+    "human_reviews": 0,
+    "branch_protection": "403, not PASS"
+  },
+  "new_evidence": [
+    {
+      "path": "tests/test_full_position_managed_integration.py",
+      "blob_sha": "dd67739dad6dd63791809c88efeca1f5c17425a3",
+      "existing_test_ids": [
+        "test_prism_buy_manual_sell_repurchase_restart_exits_current_four_once",
+        "test_acceptance_unknown_and_missing_order_id_never_release_reservation",
+        "test_reservation_write_failure_prevents_broker_submission",
+        "test_receipt_write_failure_after_submission_stays_reserved_after_restart",
+        "test_partial_fill_then_confirmed_cancel_requires_new_snapshot_and_exits_only_current_residual",
+        "test_inconsistent_cancel_fill_evidence_does_not_release_pending_exit",
+        "test_same_ticker_two_accounts_have_independent_quantity_threshold_and_reservation",
+        "test_concurrent_controllers_share_durable_reservation"
+      ],
+      "validation": "existing source read, no new execution"
+    },
+    {
+      "path": "tests/test_managed_broker_real_atomic_gate.py",
+      "blob_sha": "83ec3a7d41d6a45825ce2b176feb49ccaf06f053",
+      "existing_test_id": "test_real_mode_self_attested_complete_snapshot_cannot_authorize_sell",
+      "validation": "existing source read, no new execution"
+    },
+    {
+      "path": "trading/managed_broker.py",
+      "blob_sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+      "contract": "native queries cannot establish arbitrary external reservations; real-mode atomic external serialization unavailable",
+      "validation": "source read"
+    }
+  ],
+  "historic_mock_evidence_not_new": "187 Mock cases and BUY4/manual SELL4/manual BUY4/restart/SELL4 once",
+  "unverified_transitions": [
+    "all-channel authoritative pending/reserved order coverage",
+    "order/fill identity and venue from broker authority",
+    "lost-response stable recovery",
+    "broker-side atomic cross-channel sell reservation"
+  ],
+  "evidence_delta": "Mapped 8 existing integration test IDs and one real atomic gate ID; no uncovered distinct transition proved; no new RED or audit PASS",
+  "exact_blocker": "broker atomicity unverified, Qlty 87 blocking issues, zero reviews, branch protection 403",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch({\"url\":\"https://api.github.com/repos/tkgo11/prism-insight-light/git/ref/heads/automation/prism-insight-sync-state\"})"
+}
