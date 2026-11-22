@@ -1,0 +1,48 @@
+{
+  "run_id": "prism-auto-20261122T2122KST-10",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "pr": 43,
+  "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "baseline_red_observed": false,
+  "mock_tests_executed": 0,
+  "product_defects_reproduced": 0,
+  "code_fixes": 0,
+  "related_complete": 0,
+  "related_total": 244,
+  "full_complete": 0,
+  "full_total": 279,
+  "related_passes": 0,
+  "full_passes": 0,
+  "prior_stalled_count": null,
+  "candidate": {
+    "id": "CROSS_LAYER_RECONCILE_EXCEPTION_RESTART",
+    "status": "COVERAGE_GAP_UNCONFIRMED",
+    "evidence": [
+      {
+        "path": "tests/test_managed_positions.py",
+        "blob": "3a557f8ce00abcf0a036b27a6a77a7f0ea593239",
+        "detail": "Gateway.reconcile_order lines 51-52 always returns None; test_unknown_exit_remains_reserved_at_zero_and_reentry_after_restart lines 121-137 checks restart but not inquiry exception"
+      },
+      {
+        "path": "tests/test_managed_broker.py",
+        "blob": "c06c0ba2a3604407984d83f85ef3aa453ccd6510",
+        "detail": "Broker inquiry errors tested separately, no confirmed real ManagedBrokerGateway→controller→restart integration"
+      },
+      {
+        "path": "trading/managed_positions.py",
+        "blob": "140340547940c934848b50dd83950d0eb0e3eaea",
+        "detail": "Controller submit exception lines 218-228 persists UNKNOWN; source contract not execution proof"
+      }
+    ],
+    "decision": "Do not add speculative duplicate test until cross-layer search is complete; audit evidence added, no independent PASS"
+  },
+  "unverified": [
+    "KIS authoritative all-channel orders",
+    "broker atomic cross-channel order exclusion",
+    "lost-response reconciliation",
+    "branch protection 403",
+    "Qlty skipped"
+  ],
+  "next_exact_action": "At exact PR HEAD inspect controller _cycle_locked active-attempt reconciliation and instantiate ManagedBrokerGateway with offline injected order_reader raising TimeoutError, verifying persisted UNKNOWN across restart without any actual broker invocation; first check equivalent test IDs."
+}
