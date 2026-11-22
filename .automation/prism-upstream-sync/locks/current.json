@@ -1,7 +1,10 @@
 {
   "run_id": "prism-auto-20261122T1619KST-09",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "scheduled-automation",
   "acquired_expected_state_parent": "96bfb382e6f92ac324bc04ef7a495e2202bb30a5",
-  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354"
+  "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_expected_state_parent": "79113f41dfa3fe417b06e981070e9db6a8a48eeb",
+  "final_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "release_reason": "no uncovered defect proven; exact gateway exception-path contract audited"
 }

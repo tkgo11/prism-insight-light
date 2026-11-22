@@ -1,0 +1,76 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T1619KST-09",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "96bfb382e6f92ac324bc04ef7a495e2202bb30a5",
+  "state_acquired_lock_commit": "79113f41dfa3fe417b06e981070e9db6a8a48eeb",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "checks": [
+      "Full pytest suite:success",
+      "Windows runtime smoke:success"
+    ],
+    "historical": true
+  },
+  "state_ci": {
+    "run_id": 44992982736,
+    "head_sha": "96bfb382e6f92ac324bc04ef7a495e2202bb30a5",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "not independently checked this run",
+    "qlty": "UNKNOWN; excluded by user request",
+    "human_reviews": 0,
+    "branch_protection": "403 FORBIDDEN"
+  },
+  "new_evidence": [
+    {
+      "path": "tests/test_managed_broker_real_atomic_gate.py",
+      "sha": "83ec3a7d41d6a45825ce2b176feb49ccaf06f053",
+      "test_id": "test_real_mode_self_attested_complete_snapshot_cannot_authorize_sell",
+      "finding": "Existing KR/US real-mode self-attested snapshot test already rejects before sell method; not a new RED."
+    },
+    {
+      "path": "trading/managed_broker.py",
+      "sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+      "finding": "Gateway submit_exact_sell catches broker transport exceptions as UNKNOWN and only raises SubmissionNotStarted during pre-invocation EvidenceUnavailable; controller distinguishes exact gateway typed preflight from other errors."
+    },
+    {
+      "path": "trading/managed_positions.py",
+      "sha": "140340547940c934848b50dd83950d0eb0e3eaea",
+      "finding": "Controller abort_before_gateway only for trusted preflight; unknown submission stays fenced. Need locate existing tests for exception after actual gateway invocation, not assume gap."
+    }
+  ],
+  "unverified_transitions": [
+    "cross-channel authoritative open/reserved orders",
+    "broker order/fill/venue attribution",
+    "lost response stable recovery",
+    "broker atomic cross-channel exclusion"
+  ],
+  "evidence_delta": "Verified exact PR HEAD gateway exception path and existing real-mode no-call test; no new RED or full audit pass.",
+  "exact_blocker": "Real KIS atomicity unproven; branch protection 403; reviews 0; Qlty UNKNOWN",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch({url:\"https://api.github.com/search/code?q=repo%3Atkgo11%2Fprism-insight-light+SubmissionNotStarted+in%3Afile\"}) — locate existing exception-path tests and compare real post-invocation transport failure → UNKNOWN fence."
+}
