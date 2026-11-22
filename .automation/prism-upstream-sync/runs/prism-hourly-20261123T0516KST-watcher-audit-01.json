@@ -1,0 +1,151 @@
+{
+  "run_id": "prism-hourly-20261123T0516KST-watcher-audit-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_draft": true,
+  "pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "main_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_sha": "43ff378324880ba7575043eb1bf17be38d2c7004",
+  "new_red": 0,
+  "new_mock_executed": 0,
+  "new_defects_reproduced": 0,
+  "new_product_fixes": 0,
+  "code_commits_this_run": [],
+  "candidate_verified": 1,
+  "candidate_deferred": 1,
+  "related_complete": 3,
+  "related_total": 244,
+  "full_complete": 3,
+  "full_total": 279,
+  "independent_related_passes": 0,
+  "independent_full_passes": 0,
+  "ci": {
+    "run_id": 45043733208,
+    "head_sha": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "status": "completed",
+    "conclusion": "success",
+    "existing_not_new": true
+  },
+  "review_count": 0,
+  "snyk": [
+    {
+      "context": "security/snyk (tkgo11)",
+      "state": "success"
+    }
+  ],
+  "branch_protection": "403; required checks unconfirmed",
+  "observed_checks": [
+    "Full pytest suite: success",
+    "Windows runtime smoke: success"
+  ],
+  "cas_acquired_active_sha": "c8afa41a76bfaf54620c97b4d9faaf54f25b6100",
+  "merge": false,
+  "merge_blockers": [
+    "Independent 2+2 not met",
+    "No review approval",
+    "Branch protection required checks 403",
+    "Real KIS atomic cross-channel contract unverified"
+  ],
+  "audit": {
+    "path": "trading/stop_loss_watcher.py",
+    "blob_sha": "c8dc853d369bd59c69b53b6e2c1fe399d682983c",
+    "head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+    "source_lines": 1127,
+    "review_kind": "full_local_source_review_and_manual_trade_pending_buy_zero_holdings_transition",
+    "functions": [
+      "StopLossWatcherConfig",
+      "TrackedPosition",
+      "StopLossTracker._load",
+      "_save",
+      "_assert_rearmable",
+      "assert_registration_safe",
+      "record_position",
+      "remove_position",
+      "get_positions",
+      "get_position",
+      "clear",
+      "StopLossWatcher.start",
+      "_run",
+      "_get_trader",
+      "_get_cached_trader",
+      "_holding_check_due",
+      "_remove_if_verified_flat",
+      "check_stop_loss_once",
+      "_is_no_position_result",
+      "_validated_holding_quantity",
+      "_trigger_sell"
+    ],
+    "contracts": [
+      "Unreconciled accepted BUY pending_buy=True persists through zero holdings, restart and price edits; positive aggregate holdings cannot authorize SELL",
+      "Existing confirmed protection remains intact when new pending BUY arrives; separate durable BUY intent fence blocks SELL",
+      "Zero-holdings tracker cleanup requires exact record compare-and-swap and, for production ExecutionLedger, guard_unresolved_buy",
+      "Concurrent tracker rearm, stop threshold edit, legacy missing updated_at and quarantine invalidate stale in-flight SELL",
+      "Direct _trigger_sell rechecks tracker snapshot and durable BUY intent; dispatcher additionally checks unresolved BUY under serialized broker lock",
+      "Post-SELL acceptance/partial success alone cannot erase tracker; confirmed zero holdings and unresolved BUY check required",
+      "Malformed/corrupt ledger, ticker, price, missing provenance, duplicate keys, legacy case variants fail closed",
+      "Stable legacy stop signal ID persists across edits and dedupes repeated stop-loss attempts"
+    ],
+    "failure_paths": [
+      "BUY accepted then zero balance then late fill after restart",
+      "Manual BUY while confirmed tracker exists and stop is hit",
+      "Manual SELL and manual BUY racing with zero-holdings cleanup",
+      "Concurrent rearm during holdings query and after SELL",
+      "Legacy records lacking updated_at, corrupted pending_buy, duplicate instrument variants",
+      "Unknown balance and quote, partial success with uncertain remaining quantity",
+      "Unresolved durable BUY with preexisting positive holdings",
+      "Ledger unavailable or unverified before cleanup/SELL",
+      "Post-order zero balance with pending BUY or changed tracker snapshot"
+    ],
+    "tests": [
+      {
+        "path": "tests/test_pending_buy_stop_loss_safety.py",
+        "sha": "68c7020f316826cb5bdf9803c3ec1d2f510f15e2",
+        "ids": [
+          "test_accepted_buy_zero_balance_does_not_erase_pending_stop",
+          "test_pending_buy_survives_restart_and_repeated_zero_inquiries",
+          "test_unreconciled_pending_buy_must_not_sell_preexisting_holdings",
+          "test_unfilled_buy_must_not_replace_existing_confirmed_position_protection",
+          "test_direct_trigger_cannot_bypass_pending_buy_reconciliation"
+        ]
+      },
+      {
+        "path": "tests/test_stop_loss_watcher.py",
+        "sha": "4a01653810a0e5758da7a925dadc30e06652347f",
+        "ids": [
+          "test_stop_loss_watcher_does_not_sell_against_replaced_stop_level",
+          "test_legacy_zero_holding_rearm_cannot_erase_new_stop",
+          "test_legacy_post_sell_rearm_cannot_erase_new_stop",
+          "test_remove_record_cas_detects_edit_even_with_same_timestamp",
+          "test_legacy_inflight_record_edit_blocks_stale_stop_loss_sell",
+          "test_stop_loss_watcher_requires_valid_post_order_flat_balance"
+        ]
+      }
+    ],
+    "cross_transition_sources": [
+      {
+        "path": "trading/execution_ledger.py",
+        "sha": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8",
+        "lines": "654-709"
+      },
+      {
+        "path": "trading/dispatch.py",
+        "sha": "84b52d94e925df13edf3f15629b6b5c8a8c9043f",
+        "lines": "720-880"
+      }
+    ],
+    "new_transition": "Confirmed legacy tracker + newly accepted UNKNOWN BUY + manual zero holdings/rebuy during watcher balance inquiry -> CAS-preserved tracker and durable unresolved BUY fence -> dispatcher serialized stop SELL block",
+    "finding": "All 1127 lines inspected and two test files (1103+208 lines) cross-checked. Exact-record CAS prevents stale cleanup/rearm; pending BUY provenance and durable guard block unknown BUY sell; direct trigger and dispatcher revalidate. No uncovered demonstrable RED on inspected path. External manual broker-order atomicity remains unverified.",
+    "tests_executed_this_run": 0,
+    "complete_local_file_audit": true,
+    "independent_related_pass": false,
+    "independent_full_pass": false
+  },
+  "evidence_delta": "Full 1127-line watcher source + 1311 lines of two existing test modules reviewed; newly mapped confirmed tracker + UNKNOWN BUY + manual zero/rebuy -> CAS cleanup and durable dispatcher SELL fence; no new test execution or speculative fix.",
+  "next_exact_action": "GitHub Connector fetch_file trading/dispatch.py at HEAD 9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5 and tests/test_managed_dispatch.py plus tests/test_pending_buy_stop_loss_safety.py; isolate cross-process unresolved BUY creation between watcher guard release and _dispatch_locked guard, verify locked dispatch prevents SELL, add offline RED only if uncovered.",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0516KST-watcher-audit-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0516KST-watcher-audit-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-hourly-20261123T0516KST-watcher-audit-01-risk.json"
+}

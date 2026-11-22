@@ -1,0 +1,18 @@
+{
+  "run_id": "prism-hourly-20261123T0516KST-watcher-audit-01",
+  "status": "UNVERIFIED_EXTERNAL_BROKER_CONTRACT",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "unverified": [
+    "MTS/HTS/PRISM authoritative complete pending/reserved orders and sellable quantity",
+    "KR/US order venue/date/execution IDs/cancellation completeness",
+    "UNKNOWN lost-response restart recovery",
+    "Atomic cross-channel conditional broker order/reservation"
+  ],
+  "new_local_audit": "trading/stop_loss_watcher.py",
+  "new_transition": "Confirmed legacy tracker + newly accepted UNKNOWN BUY + manual zero holdings/rebuy during watcher balance inquiry -> CAS-preserved tracker and durable unresolved BUY fence -> dispatcher serialized stop SELL block",
+  "local_related_complete": 3,
+  "local_full_complete": 3,
+  "independent_related_passes": 0,
+  "independent_full_passes": 0
+}
