@@ -1,11 +1,8 @@
 {
-  "run_id": "prism-hourly-20261123T0124KST-us-venue-fix-01",
-  "status": "RELEASED",
+  "run_id": "prism-hourly-20261123T0225KST-ci-verification-01",
+  "status": "ACTIVE",
   "owner": "scheduled-hourly-run",
-  "acquired_expected_state_parent": "a875e07355f7f6d9b637d8b69dc4ec0817e6f016",
-  "acquired_active_state_head": "0b5f9155b459ad4d623b182ee59781896a2234a9",
-  "expected_pr_head": "9b17ac78febea4e0c63aa19f71ae80f4ef715b84",
-  "final_pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
-  "release_expected_state_parent": "0b5f9155b459ad4d623b182ee59781896a2234a9",
-  "release_reason": "Confirmed two exact-head RED venue regressions; minimal US holding row validation fix committed; CI queued; no KIS/trading"
+  "acquired_expected_state_parent": "b8559ba9b77b67b1afd5dd97c2341dcc71bdea86",
+  "expected_pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "mission": "verify new code-head CI and inspect unverified overseas recovery transition"
 }
