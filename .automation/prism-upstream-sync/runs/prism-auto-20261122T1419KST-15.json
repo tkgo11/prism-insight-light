@@ -1,0 +1,94 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T1419KST-15",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "e54a9a95f29641fc5d6445b0f73e8228386c3c3f",
+  "state_acquired_lock_commit": "861a7427e8f37f30ebcf95e1c7ab6a78b401e681",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 0,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "checks": [
+      "Full pytest suite:success",
+      "Windows runtime smoke:success"
+    ],
+    "historical": true
+  },
+  "state_ci": {
+    "run_id": 44984580847,
+    "head_sha": "e54a9a95f29641fc5d6445b0f73e8228386c3c3f",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "not independently checked this run",
+    "qlty": "UNKNOWN; excluded by user request",
+    "human_reviews": 0,
+    "branch_protection": "403 FORBIDDEN"
+  },
+  "new_evidence": [
+    {
+      "transition": "CLAIMED crash vs SUBMITTING crash; no-invocation proof boundary",
+      "paths": [
+        {
+          "path": "trading/managed_positions.py",
+          "sha": "140340547940c934848b50dd83950d0eb0e3eaea",
+          "functions": [
+            "_cycle_locked"
+          ]
+        },
+        {
+          "path": "trading/managed_position_state.py",
+          "sha": "69f5817b69d507ded8c80dafe28228aad53b9922",
+          "functions": [
+            "release_unsubmitted",
+            "mark_submitting",
+            "abort_before_gateway",
+            "record_submission",
+            "reconcile_sell"
+          ]
+        },
+        {
+          "path": "tests/test_full_position_managed_integration.py",
+          "sha": "dd67739dad6dd63791809c88efeca1f5c17425a3",
+          "test_ids": [
+            "test_receipt_write_failure_after_submission_stays_reserved_after_restart",
+            "test_reservation_write_failure_prevents_broker_submission",
+            "test_reserved_exit_is_not_resubmitted_by_a_new_process"
+          ]
+        }
+      ],
+      "finding": "CLAIMED release only before SUBMITTING; live-only local capability permits no-invocation abort; recovered SUBMITTING remains fenced. Source-only coverage mapping, not newly executed; cannot claim complete audit."
+    }
+  ],
+  "historic_mock_evidence_not_new": "187 offline Mock cases and BUY4/manual SELL4/manual BUY4/restart/SELL4 once",
+  "unverified_transitions": [
+    "cross-channel authoritative open/reserved order coverage",
+    "order/fill/venue attribution",
+    "lost response stable recovery",
+    "broker atomic cross-channel exclusion"
+  ],
+  "evidence_delta": "Mapped previously unreported CLAIMED/SUBMITTING crash and no-invocation proof contract to exact HEAD source and existing tests; no new RED, code fix or complete audit.",
+  "exact_blocker": "Real KIS broker atomicity undocumented/unverified; branch protection 403; reviews 0; Qlty UNKNOWN",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch_file({\"repository_full_name\":\"tkgo11/prism-insight-light\",\"path\":\"tests/test_managed_position_state.py\",\"ref\":\"cd36647adf4665bfff1a5f26516b12d45b022354\"}) — if 404, enumerate tests/ at exact PR HEAD and identify existing CLAIMED/SUBMITTING crash coverage before designing distinct RED."
+}
