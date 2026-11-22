@@ -1,10 +1,8 @@
 {
-  "run_id": "prism-auto-20261122T2016KST-09",
-  "status": "RELEASED",
+  "run_id": "prism-auto-20261122T2122KST-10",
+  "status": "ACTIVE",
   "owner": "scheduled-automation",
-  "acquired_expected_state_parent": "384c3e4f9493d6bb1494b153a7475ede2f616c08",
+  "acquired_expected_state_parent": "53a6038a4b4418b078d77b519417d9248884955e",
   "expected_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "release_expected_state_parent": "f27ab1cdb562025258dd5b44660881410ecddc1b",
-  "final_pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
-  "release_reason": "Cross-layer exception/restart audit evidence only; no reproduced defect."
+  "purpose": "cross-layer recovery inquiry exception RED"
 }
