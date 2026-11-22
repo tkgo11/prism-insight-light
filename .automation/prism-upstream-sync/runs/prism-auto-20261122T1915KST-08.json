@@ -1,0 +1,75 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-auto-20261122T1915KST-08",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "pr": 43,
+  "pr_head": "cd36647adf4665bfff1a5f26516b12d45b022354",
+  "pr_base": "4a5c3c6c7e782ac9bf4cff135a93d85c08f823fb",
+  "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+  "upstream_main": "01ca63ee015e256ad842a4ef10b2cb44721a9869",
+  "state_before_lock": "5fc40312c1e2f7d52eb4ead74f642debab81672e",
+  "state_acquired_lock_commit": "1ab991b3177d0abcced80f8a23e1a954b62f0f63",
+  "baseline_fail_observed": false,
+  "attempted_reproductions": 0,
+  "reproduced_defects": 0,
+  "actual_code_fixes": 0,
+  "regression_tests_added_and_run": 0,
+  "candidate_count_verified_new": 0,
+  "candidate_count_deferred_new": 1,
+  "complete_related_files": 0,
+  "total_related_files": 244,
+  "complete_all_files": 0,
+  "total_all_files": 279,
+  "related_independent_passes": 0,
+  "full_independent_passes": 0,
+  "pr_ci": {
+    "run_id": 44915195653,
+    "head_sha": "cd36647adf4665bfff1a5f26516b12d45b022354",
+    "checks": [
+      "Full pytest suite:success",
+      "Windows runtime smoke:success"
+    ],
+    "historical": true
+  },
+  "state_ci": {
+    "run_id": 45006765449,
+    "head_sha": "5fc40312c1e2f7d52eb4ead74f642debab81672e",
+    "conclusion": "success"
+  },
+  "security": {
+    "snyk": "success on PR head",
+    "qlty": "UNKNOWN; excluded from analysis",
+    "human_reviews": 0,
+    "branch_protection": "403 FORBIDDEN"
+  },
+  "new_evidence": [
+    {
+      "path": "tests/test_full_position_managed_integration.py",
+      "sha": "dd67739dad6dd63791809c88efeca1f5c17425a3",
+      "finding": "OfflineGateway.reconcile_order simply returns evidence; integration tests do not instantiate ManagedBrokerGateway with a raising order_reader. Thus cross-layer reader exception+restart behavior is not directly demonstrated by this integration file."
+    },
+    {
+      "path": "trading/managed_broker.py",
+      "sha": "50ffd4125a7525a4136b5c49de1e767446ff92d4",
+      "finding": "Gateway reconciliation can raise EvidenceUnavailable; production controller catches reconciliation exceptions."
+    },
+    {
+      "path": "trading/managed_positions.py",
+      "sha": "140340547940c934848b50dd83950d0eb0e3eaea",
+      "finding": "_cycle_locked catches reconcile_order exceptions and returns PENDING EXIT_EVIDENCE_UNAVAILABLE before any new sell."
+    }
+  ],
+  "evidence_delta": "New cross-layer test coverage gap candidate identified (not reproduced defect); no RED or code change; precise source paths and SHAs recorded.",
+  "unverified_transitions": [
+    "cross-layer ManagedBrokerGateway order_reader exception + controller restart fence in one offline test",
+    "all-channel KIS authoritative orders",
+    "broker atomic cross-channel sell exclusion"
+  ],
+  "exact_blocker": "Cross-layer scenario not run; broker contract unknown; reviews 0; branch protection 403; Qlty not analyzed",
+  "draft_retained": true,
+  "merge_performed": false,
+  "real_kis_used": false,
+  "next_exact_action": "mcp__GitHub__fetch_file({repository_full_name:'tkgo11/prism-insight-light',path:'tests/test_managed_broker.py',ref:'cd36647adf4665bfff1a5f26516b12d45b022354'}) then add nonduplicate offline cross-layer order_reader raises + restart reservation RED test if not present."
+}
