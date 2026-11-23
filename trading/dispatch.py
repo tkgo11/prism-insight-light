@@ -1394,7 +1394,12 @@ class TradeDispatcher:
                         result.signal_type, result.market, result.message,
                     )
                     return QueueExecutionResult("failed", result.message)
-                # Other skips retain their existing non-retryable disposition.
+                # A live IN_PROGRESS ledger claim is not a terminal order.
+                # Keep the queued signal pending for later reconciliation;
+                # the ledger still suppresses duplicate broker submissions.
+                if result.previous_status == "in_progress":
+                    return QueueExecutionResult("deferred", result.message)
+                # Terminal dedupe skips retain their non-retryable disposition.
                 return QueueExecutionResult("processed", f"Skipped: {result.message}")
             if result.status == "partial_success":
                 # Some account legs executed and some did not. Legs that are
