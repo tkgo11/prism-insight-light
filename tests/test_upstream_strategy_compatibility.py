@@ -30,7 +30,11 @@ def make_signal(kind, market="US", **fields):
 
 
 @pytest.mark.asyncio
-async def test_trailing_stop_retains_record_after_upstream_partial_sell(tmp_path, monkeypatch):
+@pytest.mark.parametrize("fields,expected", [
+    ({"sell_denominator": 2}, 0.5),
+    ({"sell_denominator": 2, "sell_fraction": 0.6}, 0.6),
+])
+async def test_trailing_stop_retains_record_after_upstream_partial_sell(tmp_path, monkeypatch, fields, expected):
     calls = []
 
     class FakeUS:
@@ -62,10 +66,10 @@ async def test_trailing_stop_retains_record_after_upstream_partial_sell(tmp_path
         accepted[0].pop(field, None)
     cfg.runtime_path.write_text(json.dumps(accepted), encoding="utf-8")
     partial = await strategy.execute(
-        make_signal("SELL", price=80, sell_denominator=2), trading_mode="demo"
+        make_signal("SELL", price=80, **fields), trading_mode="demo"
     )
     assert partial.status == "executed"
-    assert calls[-1][1]["sell_fraction"] == 0.5
+    assert calls[-1][1]["sell_fraction"] == expected
     # 50% liquidation must not drop the remaining 50%'s protection.
     state = json.loads(cfg.runtime_path.read_text(encoding="utf-8"))
     assert len(state) == 1 and state[0]["exit_pending"] is True

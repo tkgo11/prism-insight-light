@@ -7,6 +7,7 @@ This supplements any root `AGENTS.md` with repo-local guidance for `prism-insigh
 - Codex-facing skill: `.agents/skills/prism-insight-light/SKILL.md`
 - Claude-facing companion skill: `.claude/skills/prism-insight-light/SKILL.md`
 - The skill is the canonical agent summary for architecture, safety defaults, testing, and collaboration patterns.
+- Repository maintenance dependency: `.agents/skills/autonomous-maintainer/` is a pinned Git Submodule; `.agents/skills/autonomous-maintainer-standalone/SKILL.md` loads the submodule's standalone variant. Initialize via `git submodule update --init --recursive`, invoke only after explicit authorization, and see `docs/AUTONOMOUS_MAINTAINER.md`.
 
 ## Safety Baseline
 

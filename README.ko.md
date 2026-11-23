@@ -418,6 +418,13 @@ WebUI는 Pub/Sub subscriber와 함께 실행할 수 있는 로컬 운영 콘솔�
 
 명시적으로 허용한 비루프백 바인딩은 진단용 읽기 전용입니다. 호스트 허용 목록은 인증이 아니므로 브로커 주문과 설정 변경이 거부됩니다. 변경 가능한 매매 제어는 신뢰할 수 있는 로컬 장비에 두세요.
 
+외부 바인딩에는 `WEBUI_AUTH_USERNAME`과 16자 이상의 임의 비밀번호인
+`WEBUI_AUTH_PASSWORD`가 필수입니다. 없으면 WebUI 시작을 거부합니다.
+HTTP Basic 인증은 모든 화면·API·정적 파일에 적용되며, 루프백에서도 선택적으로
+설정할 수 있습니다. HTTPS 프록시 또는 SSH 터널 안에서 사용하세요. 인증을
+설정해도 외부 접속의 주문·설정 변경은 계속 차단됩니다. 실제 비밀번호는 `.env`에만
+보관하고 Git에 올리지 마세요.
+
 
 ### 운영 콘솔 기능
 
@@ -436,6 +443,11 @@ pip install -r requirements.txt
 python subscriber.py --web-ui
 ```
 
+호스팅 패널에서 실행 인수를 바꿀 수 없다면 `.env`에 `WEBUI_ENABLED=true`를
+설정하고 구독자를 재시작하세요. 기본값은 비활성화입니다.
+`WEBUI_ALLOWED_HOSTS`에는 URL 스킴이나 포트 없이 `node.example.com` 같은
+호스트 이름을 입력합니다. 외부 바인딩에서는 읽기 전용으로 동작합니다.
+
 고급 사용자는 `python -m webui` 직접 실행도 사용할 수 있습니다.
 
 기본값은 로컬 전용입니다. 원격 노출은 별도 보안 검토 전까지 사용하지 마세요.
@@ -445,6 +457,8 @@ WEBUI_HOST=127.0.0.1
 WEBUI_PORT=8765
 WEBUI_ALLOW_NON_LOOPBACK=false
 WEBUI_ALLOWED_HOSTS=
+WEBUI_AUTH_USERNAME=
+WEBUI_AUTH_PASSWORD=
 WEBUI_ENABLE_LIVE_TRADING=false
 # 내장 WebUI는 subscriber의 --dry-run 및 --queue-path 설정을 이어받습니다.
 WEBUI_FORCE_DRY_RUN=false

@@ -1,7 +1,0 @@
-.DS_Store
-Thumbs.db
-__pycache__/
-*.py[cod]
-*.backup-*
-.omx/
-.autonomous-maintainer/

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
 import ipaddress
 import os
 import secrets
@@ -19,6 +22,46 @@ from trading.config_paths import runtime_file_path
 
 MAX_REQUEST_BODY_BYTES = 64 * 1024
 DEFAULT_QUEUE_PATH = Path("runtime") / "off_hours_queue.json"
+
+
+class BasicAuthenticationMiddleware:
+    """Require configured credentials before any HTTP route or static asset."""
+
+    def __init__(self, app, *, credential_digest: bytes):
+        self.app = app
+        self._credential_digest = credential_digest
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] not in {"http", "websocket"}:
+            await self.app(scope, receive, send)
+            return
+        headers = [
+            value for key, value in scope.get("headers", [])
+            if key.lower() == b"authorization"
+        ]
+        supplied = None
+        if len(headers) == 1 and len(headers[0]) <= 4096:
+            scheme, separator, encoded = headers[0].partition(b" ")
+            if separator and scheme.lower() == b"basic":
+                try:
+                    supplied = base64.b64decode(encoded, validate=True)
+                except (binascii.Error, ValueError):
+                    pass
+        valid = secrets.compare_digest(
+            hashlib.sha256(supplied if supplied is not None else b"").digest(),
+            self._credential_digest,
+        ) and supplied is not None
+        if not valid:
+            if scope["type"] == "websocket":
+                await send({"type": "websocket.close", "code": 1008})
+                return
+            await PlainTextResponse(
+                "Authentication required",
+                status_code=401,
+                headers={"WWW-Authenticate": 'Basic realm="PRISM WebUI", charset="UTF-8"'},
+            )(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
 
 
 class RequestBodyLimitMiddleware:
@@ -127,6 +170,8 @@ class WebUISettings:
     force_dry_run: bool = False
     queue_path: Path = field(default_factory=lambda: runtime_file_path(DEFAULT_QUEUE_PATH))
     csrf_token: str = field(default_factory=lambda: secrets.token_urlsafe(32))
+    auth_username: str = field(default="", repr=False)
+    auth_password: str = field(default="", repr=False)
 
 
 def _to_bool(value: str | None) -> bool:
@@ -154,6 +199,8 @@ def load_settings(env: dict[str, str] | None = None) -> WebUISettings:
         else runtime_file_path(DEFAULT_QUEUE_PATH),
         csrf_token=(source.get("WEBUI_CSRF_TOKEN") or "").strip()
         or secrets.token_urlsafe(32),
+        auth_username=source.get("WEBUI_AUTH_USERNAME") or "",
+        auth_password=source.get("WEBUI_AUTH_PASSWORD") or "",
     )
 
 
@@ -213,6 +260,22 @@ def create_app(settings: WebUISettings | None = None, *, work_tracker=None) -> F
         raise ValueError(
             "Mutable loopback WebUI allows only loopback WEBUI_ALLOWED_HOSTS values"
         )
+    auth_configured = bool(selected.auth_username or selected.auth_password)
+    if auth_configured or not is_loopback_host(selected.host):
+        if (
+            not selected.auth_username.strip()
+            or ":" in selected.auth_username
+            or any(ord(char) < 32 or ord(char) == 127 for char in selected.auth_username)
+            or len(selected.auth_password) < 16
+            or not selected.auth_password.strip()
+            or any(ord(char) < 32 or ord(char) == 127 for char in selected.auth_password)
+            or len(f"{selected.auth_username}:{selected.auth_password}".encode("utf-8")) > 3000
+        ):
+            raise ValueError(
+                "WebUI authentication requires WEBUI_AUTH_USERNAME and "
+                "WEBUI_AUTH_PASSWORD (at least 16 characters); "
+                "credentials are mandatory for non-loopback binding"
+            )
 
     allowed_hosts = selected.allowed_hosts
     if is_loopback_host(selected.host) and not allowed_hosts:
@@ -221,6 +284,13 @@ def create_app(settings: WebUISettings | None = None, *, work_tracker=None) -> F
         )
 
     app = FastAPI(debug=False, title="PRISM-INSIGHT Light WebUI")
+    if auth_configured:
+        app.add_middleware(
+            BasicAuthenticationMiddleware,
+            credential_digest=hashlib.sha256(
+                f"{selected.auth_username}:{selected.auth_password}".encode("utf-8")
+            ).digest(),
+        )
     app.add_middleware(TrustedAuthorityMiddleware, allowed_hosts=allowed_hosts)
     app.add_middleware(RequestBodyLimitMiddleware, max_bytes=MAX_REQUEST_BODY_BYTES)
     app.state.settings = selected

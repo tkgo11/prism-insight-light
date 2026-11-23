@@ -472,7 +472,7 @@ class DomesticStockTrading:
 
             if res.isOK():
                 output = res.getBody().output
-                order_no = output.get('odno', '')
+                order_no = output.get('ODNO', output.get('odno', ''))
 
                 logger.info(f"[{stock_code}] Market buy order successful: {buy_quantity} shares, order no: {order_no}")
 
@@ -619,7 +619,7 @@ class DomesticStockTrading:
 
             if res.isOK():
                 output = res.getBody().output
-                order_no = output.get('odno', '')
+                order_no = output.get('ODNO', output.get('odno', ''))
 
                 logger.info(f"[{stock_code}] Limit buy order successful: {buy_quantity} shares x {effective_limit_price:,} KRW, order no: {order_no}")
 
@@ -781,7 +781,7 @@ class DomesticStockTrading:
 
             if res.isOK():
                 output = res.getBody().output
-                order_no = output.get('odno', '')
+                order_no = output.get('ODNO', output.get('odno', ''))
 
                 logger.info(f"[{stock_code}] After-hours closing price buy order successful: {buy_quantity} shares, order no: {order_no}")
 
@@ -1032,7 +1032,7 @@ class DomesticStockTrading:
 
             if res.isOK():
                 output = res.getBody().output
-                order_no = output.get('odno', '')
+                order_no = output.get('ODNO', output.get('odno', ''))
 
                 order_kind = "Limit" if use_limit else "Market"
                 logger.info(f"[{stock_code}] {order_kind} sell all order successful: {buy_quantity} shares, order no: {order_no}")
@@ -1188,7 +1188,7 @@ class DomesticStockTrading:
 
             if res.isOK():
                 output = res.getBody().output
-                order_no = output.get('odno', '')
+                order_no = output.get('ODNO', output.get('odno', ''))
 
                 logger.info(f"[{stock_code}] After-hours closing price sell order successful: {buy_quantity} shares, order no: {order_no}")
 

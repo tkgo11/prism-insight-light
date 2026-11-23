@@ -21,3 +21,14 @@ def test_parse_signal_text_json_path():
     result = parse_signal_text('{"type":"SELL","ticker":"AAPL","company_name":"Apple","market":"US","price":190.5}')
     assert result["ok"] is True
     assert result["signal"]["market"] == "US"
+
+
+def test_exact_sell_fraction_survives_validated_dto():
+    result = parse_signal_input({
+        "type": "SELL", "ticker": "005930", "price": 100,
+        "sell_fraction": 0.6, "sell_denominator": 2,
+    })
+    assert result["ok"] is True
+    assert result["signal"]["sell_fraction"] == 0.6
+    legacy = parse_signal_input({"type": "SELL", "ticker": "005930", "price": 100})
+    assert "sell_fraction" not in legacy["signal"]

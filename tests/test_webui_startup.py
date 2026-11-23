@@ -102,6 +102,8 @@ def test_trusted_authority_rejects_malformed_host_headers(host_header):
             host="0.0.0.0",
             allow_non_loopback=True,
             allowed_hosts=("example.com",),
+            auth_username="test-operator",
+            auth_password="test-network-password-1234",
         )
     )
     response = TestClient(app, base_url="http://example.com").get(
@@ -120,6 +122,8 @@ def test_trusted_authority_wildcard_still_rejects_missing_or_malformed_host(host
             host="0.0.0.0",
             allow_non_loopback=True,
             allowed_hosts=("*",),
+            auth_username="test-operator",
+            auth_password="test-network-password-1234",
         )
     )
     response = TestClient(app, base_url="http://example.com").get(

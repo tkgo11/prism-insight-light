@@ -262,6 +262,17 @@ def test_parse_args_web_ui_flag():
     assert args.web_ui is True
 
 
+@pytest.mark.parametrize("value,expected", [("true", True), ("1", True), (" YES ", True), ("on", True), ("false", False), ("", False), ("invalid", False)])
+def test_parse_args_web_ui_from_env(monkeypatch, value, expected):
+    monkeypatch.setenv("WEBUI_ENABLED", value)
+    assert subscriber.parse_args([]).web_ui is expected
+
+
+def test_parse_args_web_ui_disabled_by_default(monkeypatch):
+    monkeypatch.delenv("WEBUI_ENABLED", raising=False)
+    assert subscriber.parse_args([]).web_ui is False
+
+
 def test_parse_args_rejects_nonpositive_queue_poll_interval():
     with pytest.raises(SystemExit):
         subscriber.parse_args(["--queue-poll-seconds", "0"])
