@@ -1,0 +1,23 @@
+{
+  "run_id": "prism-hourly-20261123T2223KST-inprogress-red-10",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "previous_head": "5fa89ff636921e5f69fb793654d3a470e90e42c9",
+  "head_sha": "182d7b3741bd41e8e0ca6b749e8b3e28bac1d729",
+  "new_test": "tests/test_queue_inprogress_dedupe_visibility.py::test_queued_in_progress_buy_dedupe_remains_pending",
+  "test_commit": "182d7b3741bd41e8e0ca6b749e8b3e28bac1d729",
+  "baseline_red": "PENDING_CI",
+  "ci_run_id": 45183554324,
+  "ci_head_sha": "182d7b3741bd41e8e0ca6b749e8b3e28bac1d729",
+  "ci_status": "IN_PROGRESS",
+  "risk": "IN_PROGRESS queued BUY dedupe currently maps skipped to processed; pending item can be deleted",
+  "related_complete": 5,
+  "related_total": 244,
+  "full_complete": 5,
+  "full_total": 279,
+  "related_passes": 0,
+  "full_passes": 0,
+  "merge": false,
+  "next_exact_action": "Inspect GitHub Actions run 45183554324 exact HEAD 182d7b3 for baseline RED; if assertion fails as expected, fix only in_progress skipped to deferred, preserve executed and unknown handling, rerun exact HEAD CI."
+}

@@ -1,0 +1,11 @@
+{
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "queue_in_progress_visibility": "RED_TEST_COMMITTED_CI_PENDING",
+  "unverified": [
+    "All-channel authoritative pending orders",
+    "KR/US fills and residual quantities",
+    "UNKNOWN restart recovery",
+    "Broker-atomic cross-channel reservation"
+  ]
+}
