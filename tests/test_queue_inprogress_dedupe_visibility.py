@@ -40,4 +40,8 @@ def test_queued_in_progress_buy_dedupe_remains_pending(tmp_path, monkeypatch):
     assert len(calls) == 1
     assert queue.pending_count() == 1
     assert queue.failed_count() == 0
-    assert '"status": "pending"' in queue.storage_path.read_text(encoding="utf-8")
+    # Persistence uses an implicit default for pending; a fresh process must
+    # still recover the entry as retryable rather than deleted or failed.
+    reloaded = OffHoursOrderQueue(queue.storage_path)
+    assert reloaded.pending_count() == 1
+    assert reloaded.failed_count() == 0
