@@ -29,7 +29,7 @@ def test_queued_unknown_buy_dedupe_remains_operator_visible(tmp_path, monkeypatc
         return DispatchResult(
             "skipped",
             "Duplicate automatic execution suppressed (previous status: unknown)",
-            "BUY", "KR",
+            "BUY", "KR", previous_status="unknown",
         )
 
     monkeypatch.setattr(dispatcher, "execute_queued_signal", fake_execute)

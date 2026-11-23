@@ -315,6 +315,8 @@ class DispatchResult:
     order_kind: str | None = None
     order_quantity: int | None = None
     order_venue: str | None = None
+    # Prior durable claim status when a single-account execution was skipped.
+    previous_status: str | None = None
 
 
 def _durable_buy_receipt(signal: SignalMessage, result: DispatchResult) -> dict[str, Any] | None:
@@ -1151,6 +1153,7 @@ class TradeDispatcher:
                     f"Duplicate automatic execution suppressed (previous status: {previous_status})",
                     signal.signal_type,
                     signal.market,
+                    previous_status=previous_status,
                 )
 
         try:
@@ -1382,8 +1385,16 @@ class TradeDispatcher:
                 )
                 return QueueExecutionResult("failed", result.message)
             if result.status == "skipped":
-                # Skipped work (dedupe suppression, disabled/unconfigured
-                # targets) needs no retry — drop it without a failure label.
+                # A prior UNKNOWN claim is not a fill or a safe terminal
+                # disposition. Quarantine it for operator reconciliation;
+                # never re-submit an ambiguous order automatically.
+                if result.previous_status == "unknown":
+                    logger.error(
+                        "Quarantining queued %s order on %s after UNKNOWN dedupe: %s",
+                        result.signal_type, result.market, result.message,
+                    )
+                    return QueueExecutionResult("failed", result.message)
+                # Other skips retain their existing non-retryable disposition.
                 return QueueExecutionResult("processed", f"Skipped: {result.message}")
             if result.status == "partial_success":
                 # Some account legs executed and some did not. Legs that are
