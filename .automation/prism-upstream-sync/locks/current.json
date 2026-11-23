@@ -1,11 +1,7 @@
 {
-  "run_id": "prism-hourly-20261123T0723KST-ledger-claim-audit-01",
-  "status": "RELEASED",
+  "run_id": "prism-hourly-20261123T1617KST-queue-unknown-red-01",
+  "status": "ACTIVE",
   "owner": "scheduled-hourly-run",
-  "acquired_expected_state_parent": "d1831af9a7035b7e64987d94eb3c77b06fb54ba8",
-  "acquired_active_state_head": "e8e17d1e0f0ddbe2fa349b9891ea2f9fc740cca9",
-  "expected_pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
-  "final_pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
-  "release_expected_state_parent": "e8e17d1e0f0ddbe2fa349b9891ea2f9fc740cca9",
-  "release_reason": "Complete local execution ledger source audit and identify unproven direct writer boundary; no RED or code change"
+  "acquired_expected_state_parent": "a06fc13111848367821b2ddaba0dcc8dd97c912f",
+  "expected_pr_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5"
 }
