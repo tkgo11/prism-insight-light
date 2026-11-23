@@ -44,7 +44,7 @@ def test_contradictory_full_fraction_cannot_sell_other_pyramid_rows():
 def test_old_denominator_and_final_full_sell_remain_compatible():
     assert adjusted_sell_fraction(_signal(sell_denominator=3)) == 1 / 3
     assert adjusted_sell_fraction(_signal(sell_denominator=1)) is None
-    assert adjusted_sell_fraction(_signal(sell_denominator=1, sell_fraction=1.0)) is None
+    assert adjusted_sell_fraction(_signal(sell_denominator=1, sell_fraction=1.0)) == 1.0
 
 
 def test_pyramid_add_remains_explicitly_unsupported_not_a_new_buy():

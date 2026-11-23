@@ -88,7 +88,9 @@ def adjusted_sell_fraction(
             raise SignalSizingError("Invalid publisher sell_fraction") from exc
     if strategy_fraction is None:
         if publisher is not None:
-            return None if publisher == 1 else float(publisher)
+            # An explicit full exit stays explicit; only the legacy implicit
+            # full-exit adapter contract uses None for the absent fraction.
+            return float(publisher)
         return None if signal.sell_denominator == 1 else 1.0 / signal.sell_denominator
     # Reject invalid local strategy parameters *before* broker submission.
     # Raw float()/comparisons used to raise ValueError/TypeError/OverflowError,
