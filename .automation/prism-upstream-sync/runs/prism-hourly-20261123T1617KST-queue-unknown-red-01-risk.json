@@ -1,0 +1,14 @@
+{
+  "run_id": "prism-hourly-20261123T1617KST-queue-unknown-red-01",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "queue_unknown_visibility": "STATIC_RISK_NEW_TEST_COMMITTED_CI_RED_UNVERIFIED",
+  "unverified": [
+    "MTS/HTS/PRISM authoritative pending orders",
+    "KR/US fill/cancel/remaining quantities",
+    "UNKNOWN restart recovery",
+    "Broker-atomic cross-channel reservation"
+  ],
+  "related_passes": 0,
+  "full_passes": 0
+}

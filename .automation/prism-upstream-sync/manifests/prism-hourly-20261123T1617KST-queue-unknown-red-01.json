@@ -1,0 +1,11 @@
+{
+  "head": "69040b39f42b56331cbdd6a6b0e6ecc93e62b333",
+  "previous_head": "9f99ce4c7051e9d1fc2151cdbb991e5e849b4df5",
+  "previous_manifest_path": ".automation/prism-upstream-sync/manifests/prism-hourly-20261123T0723KST-ledger-claim-audit-01.json",
+  "scope": "Previous immutable 279/244 inventory invalidated by code HEAD change; new test path added; independent 2+2 reset 0/2.",
+  "changed_files": [
+    "tests/test_queue_unknown_dedupe_visibility.py"
+  ],
+  "related_passes": 0,
+  "full_passes": 0
+}
