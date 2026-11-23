@@ -1,0 +1,25 @@
+{
+  "run_id": "prism-hourly-20261123T1722KST-queue-unknown-fix-11",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "baseline_red": {
+    "run_id": 45130068504,
+    "head_sha": "69040b39f42b56331cbdd6a6b0e6ecc93e62b333",
+    "failed_test": "tests/test_queue_unknown_dedupe_visibility.py::test_queued_unknown_buy_dedupe_remains_operator_visible",
+    "result": "1 failed, 3379 passed"
+  },
+  "fix_commit": "5fa89ff636921e5f69fb793654d3a470e90e42c9",
+  "fix_title": "fix(queue): quarantine skipped UNKNOWN BUY for reconciliation",
+  "new_head_ci": "NOT_OBSERVED",
+  "pr": 43,
+  "pr_draft": true,
+  "related_complete": 5,
+  "related_total": 244,
+  "full_complete": 5,
+  "full_total": 279,
+  "related_passes": 0,
+  "full_passes": 0,
+  "merge": false,
+  "next_exact_action": "GitHub Connector fetch_commit_workflow_runs for 5fa89ff and inspect full pytest + Snyk exact HEAD; if green, audit new HEAD independently."
+}

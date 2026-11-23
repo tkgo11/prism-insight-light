@@ -1,7 +1,10 @@
 {
   "run_id": "prism-hourly-20261123T1722KST-queue-unknown-fix-11",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "scheduled-hourly-run",
   "acquired_expected_state_parent": "2878fa85a062024bd78cdea9c5b30c39e5e68f91",
-  "expected_pr_head": "69040b39f42b56331cbdd6a6b0e6ecc93e62b333"
+  "expected_pr_head": "69040b39f42b56331cbdd6a6b0e6ecc93e62b333",
+  "final_pr_head": "5fa89ff636921e5f69fb793654d3a470e90e42c9",
+  "release_expected_state_parent": "d8665970249698dc50fc8d019cb79f472e722fb6",
+  "release_reason": "Baseline RED confirmed and focused fix committed; new HEAD CI not observed"
 }

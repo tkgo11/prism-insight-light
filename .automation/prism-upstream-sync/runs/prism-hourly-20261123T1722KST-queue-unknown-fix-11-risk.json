@@ -1,0 +1,11 @@
+{
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "queue_unknown_visibility": "BASELINE_RED_CONFIRMED_FIX_COMMITTED_HEAD_CI_PENDING",
+  "unverified": [
+    "Authoritative all-channel pending orders",
+    "KR/US fills and remaining quantities",
+    "UNKNOWN restart recovery",
+    "Broker-atomic cross-channel reservation"
+  ]
+}
