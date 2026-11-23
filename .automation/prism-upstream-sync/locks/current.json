@@ -1,9 +1,10 @@
 {
-  "run_id": "prism-hourly-20261123T2223KST-inprogress-red-10",
-  "status": "RELEASED",
-  "owner": "scheduled-hourly-run",
-  "acquired_expected_state_parent": "b20e00b26c473964b07b21670ea724b28f914c8d",
-  "release_expected_state_parent": "9f3127b036770159c010161aba10682e0df625d1",
-  "final_pr_head": "182d7b3741bd41e8e0ca6b749e8b3e28bac1d729",
-  "release_reason": "In-progress dedupe RED test committed; exact HEAD CI pending"
+  "schema_version": 1,
+  "status": "ACTIVE",
+  "run_id": "prism-manual-20261123T2237KST-pr43-finish-01",
+  "owner": "manual-user-request",
+  "acquired_expected_state_parent": "a29492ee3c5d3d340af3f1ac2b924e7f55e6d3b7",
+  "expected_pr_head": "182d7b3741bd41e8e0ca6b749e8b3e28bac1d729",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "purpose": "Confirm RED and correct in_progress queue disposition; audit PR conflicts"
 }
