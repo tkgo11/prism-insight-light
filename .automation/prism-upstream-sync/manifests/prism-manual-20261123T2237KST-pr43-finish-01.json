@@ -1,0 +1,51 @@
+{
+  "schema_version": 4,
+  "head_sha": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
+  "run_id": "prism-manual-20261123T2237KST-pr43-finish-01",
+  "observed_file_blob_sha": {
+    "trading/dispatch.py": "76de96808b9748dfccaeb97c262db2fb80b688d2",
+    "trading/off_hours_queue.py": "df7091f091dc47b2b8140cd7239b0e4e79df9bc5",
+    "trading/execution_ledger.py": "f3726f22644df18a3092aa0c094e0a63f0ec5eb8",
+    "tests/test_queue_inprogress_dedupe_visibility.py": "8babdb71252ec41a9b28a99b0f0181ae948c8255",
+    "trading/signal_sizing.py": "f0d516866fb046f42f6559f123300e537a635aa1",
+    "tests/test_upstream_exact_sell_fraction.py": "3624813e1060c35a5f9b4bcb5641e20afa29565a",
+    ".github/workflows/tests.yml": "f577930bdb67ab487d1ee6a4b37784413a231c72",
+    "subscriber.py": "c2548bf9ec75157da3fd89e4fb0de12a19018163",
+    "trading/domestic.py": "f38ac1c7a1f759c3c3e2816db3361e612484191d"
+  },
+  "inspection": "partial branch/contract review; NOT independently complete audit",
+  "related_total": 244,
+  "full_total": 279,
+  "related_complete": 0,
+  "full_complete": 0,
+  "related_passes": 0,
+  "full_passes": 0,
+  "previous_head_partial_audit_count": {
+    "related": 5,
+    "full": 5
+  },
+  "test_evidence": {
+    "baseline_red": 45183554324,
+    "integrated_red": 45187132268,
+    "green_pr": 45187627689,
+    "green_push": 45187615705
+  },
+  "code_commits": [
+    {
+      "sha": "89185e8a348ed49b28428d0bd6a5f5a869c00c57",
+      "subject": "fix(queue): retain in-progress BUY dedupe for reconciliation"
+    },
+    {
+      "sha": "8d75337ee9cc208e99e62a016d5c87cabc523720",
+      "subject": "test(queue): check reloaded in-progress dedupe instead of raw JSON"
+    },
+    {
+      "sha": "eebf557612561fca3ff1b2bedfb197cf6e57d793",
+      "subject": "chore(sync): integrate fork main into PR #43 without rewriting history"
+    },
+    {
+      "sha": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
+      "subject": "fix(sizing): preserve explicit full-exit fraction during main integration"
+    }
+  ]
+}

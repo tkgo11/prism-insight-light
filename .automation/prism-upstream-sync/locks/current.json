@@ -1,10 +1,11 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-manual-20261123T2237KST-pr43-finish-01",
   "owner": "manual-user-request",
   "acquired_expected_state_parent": "a29492ee3c5d3d340af3f1ac2b924e7f55e6d3b7",
-  "expected_pr_head": "182d7b3741bd41e8e0ca6b749e8b3e28bac1d729",
-  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
-  "purpose": "Confirm RED and correct in_progress queue disposition; audit PR conflicts"
+  "active_state_sha": "4ff989d1b628bb895b0116030f6a6d7540a0614e",
+  "release_expected_state_parent": "4ff989d1b628bb895b0116030f6a6d7540a0614e",
+  "final_pr_head": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
+  "release_reason": "Resolved queue and sizing regressions, integrated fork main, exact HEAD 3524 tests + Windows + Snyk green. Remain Draft: independent audits/reviews/KIS contract blocked."
 }

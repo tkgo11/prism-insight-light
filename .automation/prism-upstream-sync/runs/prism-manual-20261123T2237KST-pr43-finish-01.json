@@ -1,0 +1,100 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-manual-20261123T2237KST-pr43-finish-01",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": null,
+  "prior_state_sha": "a29492ee3c5d3d340af3f1ac2b924e7f55e6d3b7",
+  "active_state_sha": "4ff989d1b628bb895b0116030f6a6d7540a0614e",
+  "previous_code_head": "182d7b3741bd41e8e0ca6b749e8b3e28bac1d729",
+  "head_sha": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
+  "baseline_red": {
+    "run_id": 45183554324,
+    "head_sha": "182d7b3741bd41e8e0ca6b749e8b3e28bac1d729",
+    "failed_id": "tests/test_queue_inprogress_dedupe_visibility.py::test_queued_in_progress_buy_dedupe_remains_pending",
+    "result": "1 failed, 3380 passed",
+    "failure": "queue item incorrectly processed instead of pending"
+  },
+  "code_changes": [
+    {
+      "sha": "89185e8a348ed49b28428d0bd6a5f5a869c00c57",
+      "subject": "fix(queue): retain in-progress BUY dedupe for reconciliation",
+      "files": [
+        "trading/dispatch.py"
+      ],
+      "evidence": "RED Actions 45183554324; initially CI 45186120352 failed only raw JSON test expectation"
+    },
+    {
+      "sha": "8d75337ee9cc208e99e62a016d5c87cabc523720",
+      "subject": "test(queue): check reloaded in-progress dedupe instead of raw JSON",
+      "files": [
+        "tests/test_queue_inprogress_dedupe_visibility.py"
+      ],
+      "rationale": "pending serialized as an implicit default; assert fresh queue load instead"
+    },
+    {
+      "sha": "eebf557612561fca3ff1b2bedfb197cf6e57d793",
+      "subject": "chore(sync): integrate fork main into PR #43 without rewriting history",
+      "parents": [
+        "8d75337ee9cc208e99e62a016d5c87cabc523720",
+        "d0a4d420bdd199a576a447788c704053b6550067"
+      ],
+      "rationale": "resolve GitHub dirty merge; integrate 46 main-only and 10 overlap paths; retain finance PR changes at conflict regions"
+    },
+    {
+      "sha": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
+      "subject": "fix(sizing): preserve explicit full-exit fraction during main integration",
+      "files": [
+        "trading/signal_sizing.py",
+        "tests/test_upstream_exact_sell_fraction.py"
+      ],
+      "evidence": "Integration RED 45187132268 three failures; explicit fraction 1.0 now distinguished from absent legacy fraction; safe pyramid rejection remains"
+    }
+  ],
+  "ci": {
+    "head_sha": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
+    "pr_run_id": 45187627689,
+    "push_run_id": 45187615705,
+    "pr_conclusion": "SUCCESS",
+    "push_conclusion": "SUCCESS",
+    "pytest_passed": 3524,
+    "windows_runtime_smoke": "SUCCESS",
+    "snyk": "SUCCESS"
+  },
+  "repository": {
+    "pr": 43,
+    "draft": true,
+    "mergeable": true,
+    "mergeable_state": "clean",
+    "pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+    "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+    "upstream_main": "f3da411abfccf543bc4ab58ca754ad5ed3f58867",
+    "upstream_delta": "latest upstream commit modifies only docs/RESEARCH_LESSONS_ko.md; this upstream-only document is absent from fork"
+  },
+  "audits": {
+    "related_complete_current_head": 0,
+    "related_total": 244,
+    "full_complete_current_head": 0,
+    "full_total": 279,
+    "previous_head_related_count": 5,
+    "previous_head_full_count": 5,
+    "related_independent_passes": 0,
+    "full_independent_passes": 0
+  },
+  "candidate": {
+    "previous_verified_of_10": 1,
+    "pending": 2,
+    "new_complete_gate_passes": 0
+  },
+  "merge": {
+    "performed": false,
+    "reason": [
+      "independent related full-file audits 0/2",
+      "independent whole-tree full-file audits 0/2",
+      "review approvals 0",
+      "branch protection verification 403",
+      "real KIS cross-channel atomic reservation contract unproven"
+    ]
+  },
+  "next_exact_action": "At exact PR HEAD 4b6d8ebb, independently audit all 244 related files (per-file SHA, contract, negative paths and test evidence), then on two further separate reserved runs audit 279 tracked files; investigate broker-authoritative cross-channel reconciliation using read-only documentation, not actual KIS API. Acquire new CAS run before any code writes."
+}
