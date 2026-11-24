@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261124T143006398Z-red2",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261124T143419973Z-fix2",
   "owner": "codex",
-  "acquired_expected_state_parent": "b310fb2ad957c10fd9a23cf0de0c43c2360f96eb",
-  "active_state_sha": "f63b98c80e3e91db99bfc9b9b52ce4ffe0ced816",
-  "release_expected_state_parent": "f63b98c80e3e91db99bfc9b9b52ce4ffe0ced816",
-  "final_pr_head": "92c87157a0420b5c8676d925ae8165e706165d06",
-  "release_reason": "Regression-only follow-up for explicit account disablement, real stop SELL, retained queue age, KIS response trust and test runtime isolation."
+  "acquired_expected_state_parent": "038a5e0ac66b23248ea9afcbdf9c270e6b9ff115",
+  "observed_state_sha": "038a5e0ac66b23248ea9afcbdf9c270e6b9ff115",
+  "observed_pr_head": "92c87157a0420b5c8676d925ae8165e706165d06",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43,
+  "acquired_at": "2026-11-24T14:34:20.573Z"
 }
