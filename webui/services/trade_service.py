@@ -50,6 +50,7 @@ async def dispatch_manual_order(
     trading_mode: str | None = None,
     arm_phrase: str = "",
     account_name: str = "",
+    restrict_to_primary: bool = False,
     force_dry_run: bool = False,
     queue_path: Path | None = None,
     work_tracker: Any | None = None,
@@ -110,6 +111,7 @@ async def dispatch_manual_order(
                 trading_mode=trading_mode or None,
                 strategy_config={"name": ""},
                 account_name=account_name or None,
+                restrict_to_primary=restrict_to_primary,
                 # Persist BUY intent before submission (even for manual tickets).
                 # Unique per-ticket IDs preserve intentional manual repeat orders.
                 execution_dedupe=True,
@@ -123,6 +125,10 @@ async def dispatch_manual_order(
                 work_tracker.end()
         safe_result = asdict(result)
         safe_result["message"] = mask_text(safe_result.get("message"), os.environ)
+        for account_result in safe_result["accounts"]:
+            for key in ("message", "error"):
+                if account_result.get(key) is not None:
+                    account_result[key] = mask_text(account_result[key], os.environ)
         accepted_statuses = {"executed", "queued", "acknowledged", "dry-run"}
         return {
             "ok": result.status in accepted_statuses,

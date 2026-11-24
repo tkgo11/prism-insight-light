@@ -33,6 +33,7 @@ from trading.schema import SignalValidationError, parse_signal_bytes  # noqa: E4
 from trading.signal_safety import (  # noqa: E402 - config env must load first
     REASON_MALFORMED_PAYLOAD,
     SignalSafetyGate,
+    parse_temporal_value,
 )
 from trading.stop_loss_watcher import StopLossWatcher, StopLossWatcherConfig  # noqa: E402
 
@@ -524,7 +525,6 @@ class TelegramSignalWorker:
                 break
 
     def poll_once(self) -> int:
-        from trading.signal_safety import parse_temporal_value
         from trading.telegram_fetch import TelegramFetchError, fetch_signal_messages
 
         if not self.channel_url:
@@ -567,6 +567,8 @@ class TelegramSignalWorker:
             }
             context = f"telegram_post={post_id or item.post.url}"
             publish_time = parse_temporal_value(item.post.published_at)
+            signal.transport_published_at = publish_time
+            signal.from_telegram = True
             decision = self.safety_gate.evaluate_received(
                 signal,
                 publish_time=publish_time,
@@ -681,9 +683,11 @@ def _handle_message(
         # A transient outcome nacks so Pub/Sub can retry after the condition
         # clears; nothing has been submitted to the broker at this point.
         publish_time = getattr(message, "publish_time", None)
+        if isinstance(publish_time, datetime.datetime):
+            signal.transport_published_at = parse_temporal_value(publish_time)
         decision = gate.evaluate_received(
             signal,
-            publish_time=publish_time if isinstance(publish_time, datetime.datetime) else None,
+            publish_time=signal.transport_published_at,
             context=metadata,
         )
         if decision.outcome == "reject":

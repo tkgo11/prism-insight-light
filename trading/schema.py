@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from dataclasses import dataclass, field
 from typing import Any
@@ -207,6 +208,8 @@ class SignalMessage:
     # Trusted runtime-only provenance: never populated from inbound JSON/raw.
     # The watcher sets this after its persisted-position preflight.
     internal_watcher_stop: bool = field(default=False, repr=False, compare=False, init=False)
+    transport_published_at: datetime | None = field(default=None, repr=False, compare=False, init=False)
+    from_telegram: bool = field(default=False, repr=False, compare=False, init=False)
 
     @property
     def is_trade(self) -> bool:

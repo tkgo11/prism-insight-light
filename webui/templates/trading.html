@@ -48,7 +48,8 @@
   {% if trade_result.ok %}
   <div class="panel-head"><div><p class="eyebrow">Order response</p><h2>{{ 'Dry-run completed' if trade_result.result and trade_result.result.status == 'dry-run' else 'Order accepted' }}</h2><p>{{ 'Dry-run completed; no order sent.' if trade_result.result and trade_result.result.status == 'dry-run' else 'Review the returned dispatch result below.' }}</p></div><span class="status-badge success">{{ trade_result.result.status if trade_result.result else 'Accepted' }}</span></div>
   {% else %}
-  <div class="panel-head"><div><p class="eyebrow">Order not completed</p><h2>{{ 'Order not sent' if trade_result.blocked else 'Order failed or outcome uncertain' }}</h2><p>{{ trade_result.error or 'Review the returned details before creating a new ticket.' }}</p></div><span class="status-badge danger">No new order</span></div>
+  {% set uncertain = trade_result.result and trade_result.result.status in ['unknown', 'partial_success'] %}
+  <div class="panel-head"><div><p class="eyebrow">Order not completed</p><h2>{{ 'Order not sent' if trade_result.blocked else 'Order failed or outcome uncertain' }}</h2><p>{{ trade_result.error or 'Review the returned details before creating a new ticket.' }}</p></div><span class="status-badge danger">{{ 'Reconciliation required' if uncertain else 'Review result' }}</span></div>
   {% endif %}
   {% if trade_result.signal %}<details class="result-details"><summary>Normalized signal</summary><pre>{{ trade_result.signal }}</pre></details>{% endif %}
   {% if trade_result.result %}<details class="result-details"><summary>Dispatch result</summary><pre>{{ trade_result.result }}</pre></details>{% endif %}

@@ -76,11 +76,16 @@ class QueuedSignal:
     ) -> "QueuedSignal":
         execute_at = next_market_open(signal.market).isoformat()
         created_at = datetime.now(timezone.utc).isoformat()
+        context = dict(execution_context or {})
+        if signal.transport_published_at is not None:
+            context["transport_published_at"] = signal.transport_published_at.isoformat()
+        if signal.from_telegram:
+            context["from_telegram"] = True
         return cls(
             signal=dict(signal.raw),
             execute_at=execute_at,
             created_at=created_at,
-            execution_context=dict(execution_context or {}),
+            execution_context=context,
         )
 
 

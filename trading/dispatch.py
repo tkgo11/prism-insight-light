@@ -11,8 +11,10 @@ import threading
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Awaitable, TypeVar
+from urllib.parse import urlsplit
 
 from . import kis_auth as ka
 from . import yaml_compat as yaml
@@ -162,6 +164,18 @@ def _is_stop_loss_sell(signal: SignalMessage) -> bool:
         and isinstance(signal.sell_reason, str)
         and signal.sell_reason.strip().casefold() == "stop_loss"
     )
+
+
+def _is_telegram_signal(signal: SignalMessage) -> bool:
+    if signal.from_telegram:
+        return True
+    source = signal.raw.get("source")
+    if not isinstance(source, str):
+        return False
+    try:
+        return urlsplit(source).hostname in {"t.me", "telegram.me", "www.telegram.me"}
+    except ValueError:
+        return False
 
 
 def _untrusted_reserved_watcher_id(signal: SignalMessage) -> bool:
@@ -628,6 +642,7 @@ class TradeDispatcher:
         quote_provider: Any | None = None,
         fresh_quote_enabled: bool | None = None,
         managed_gateway: Any | None = None,
+        restrict_to_primary: bool = False,
     ):
         self.dry_run = dry_run
         if managed_gateway is not None and (not execution_dedupe or execution_ledger_path is not None):
@@ -664,6 +679,7 @@ class TradeDispatcher:
         self.stop_loss_tracker = StopLossTracker(self.stop_loss_watcher_config.storage_path)
         self.account_name = account_name
         self.account_index = account_index
+        self.restrict_to_primary = restrict_to_primary
         setting = self._runtime_config.get("multi_account_trading") or {}
         self.multi_account_enabled = (
             not self.account_name
@@ -750,6 +766,16 @@ class TradeDispatcher:
             return DispatchResult(
                 "deferred",
                 "Unresolved BUY; broker-authoritative fill reconciliation required",
+                signal.signal_type, signal.market,
+            )
+        return None
+
+    def _submission_source_block(self, signal: SignalMessage) -> DispatchResult | None:
+        if (self.trading_mode == "real" and not self.dry_run and signal.signal_type == "SELL"
+                and signal.sell_fraction is None and "sell_denominator" not in signal.raw
+                and _is_telegram_signal(signal)):
+            return DispatchResult(
+                "rejected", "Real Telegram orders require an explicit SELL size",
                 signal.signal_type, signal.market,
             )
         return None
@@ -869,13 +895,26 @@ class TradeDispatcher:
             )
         # Check under the cross-process broker lock before any KR/US
         # single-account or multi-account stop-loss SELL submission.
+        source_block = self._submission_source_block(signal)
+        if source_block is not None:
+            return source_block
         stop_block = await self._stop_sell_unresolved_buy_block(signal)
         if stop_block is not None:
             return stop_block
         if self.multi_account_enabled:
+            requested_ids = None
+            if self.restrict_to_primary and signal.is_trade:
+                try:
+                    requested_ids = [await asyncio.to_thread(self._resolved_single_account_id, signal)]
+                except (OSError, RuntimeError, TypeError, ValueError, KeyError):
+                    return DispatchResult(
+                        "rejected", "Primary account could not be verified before submission",
+                        signal.signal_type, signal.market,
+                    )
             result = await self.multi_account_dispatcher.dispatch(
                 signal,
                 allow_queue=allow_queue,
+                requested_ids=requested_ids,
                 queued_context=queued_context,
             )
         elif self.dry_run:
@@ -1228,6 +1267,22 @@ class TradeDispatcher:
         # are safe only while single-account mode remains active.
         if queue_context is not None and not isinstance(queue_context, dict):
             return DispatchResult("failed", "Queued execution context is malformed; operator reconciliation required", signal.signal_type, signal.market)
+        if queued_context is not None:
+            signal.from_telegram = queued_context.get("from_telegram") is True
+            if "transport_published_at" in queued_context:
+                try:
+                    published_at = datetime.fromisoformat(queued_context["transport_published_at"])
+                    if published_at.utcoffset() is None:
+                        raise ValueError("Transport timestamp is timezone-less")
+                except (TypeError, ValueError, OverflowError):
+                    return DispatchResult(
+                        "failed", "Queued transport timestamp is invalid; operator reconciliation required",
+                        signal.signal_type, signal.market,
+                    )
+                signal.transport_published_at = published_at
+        source_block = self._submission_source_block(signal)
+        if source_block is not None:
+            return source_block
         # The original trading environment is an authorization boundary.
         # A demo order must never become a real order after a configuration
         # switch; similarly a single-account order cannot silently move to

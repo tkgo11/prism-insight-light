@@ -107,6 +107,7 @@ async def manual_order(request: Request):
             trading_mode=form.get("trading_mode") or None,
             arm_phrase=form.get("arm_phrase", ""),
             account_name=form.get("account_name", ""),
+            restrict_to_primary=True,
             force_dry_run=request.app.state.settings.force_dry_run,
             queue_path=request.app.state.settings.queue_path,
             work_tracker=request.app.state.work_tracker,

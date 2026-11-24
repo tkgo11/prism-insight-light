@@ -647,7 +647,7 @@ class SignalSafetyGate:
                 signal_timestamp=times.timestamp,
             )
 
-        baseline = _min_datetime([times.timestamp, enqueued_at])
+        baseline = _min_datetime([times.timestamp, _aware(signal.transport_published_at), enqueued_at])
         if baseline is not None:
             limit = (
                 self.config.queued_max_age_seconds
