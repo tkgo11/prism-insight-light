@@ -5,10 +5,13 @@ All broker calls are mocked; never access a real or demo KIS account.
 from __future__ import annotations
 
 import hashlib
+import json
+from datetime import datetime, timezone
 
 import pytest
 
 from trading.dispatch import DispatchResult, TradeDispatcher
+from trading.off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue
 from trading.schema import parse_signal_payload
 
 
@@ -16,6 +19,55 @@ def signal():
     return parse_signal_payload({
         "type": "BUY", "ticker": "005930", "market": "KR", "price": 82000,
     })
+
+
+@pytest.mark.parametrize("created_at", ["2026-11-18T00:00:00+00:00", "invalid", "2026-11-18T00:00:00"])
+def test_queue_drain_preserves_creation_time_and_quarantines_invalid_values(tmp_path, created_at):
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    queue.storage_path.write_text(json.dumps([{
+        "signal": signal().raw,
+        "execute_at": "2026-11-23T08:59:00+00:00",
+        "created_at": created_at,
+        "execution_context": {"enqueued_at": "2026-11-23T08:58:00+00:00"},
+    }]), encoding="utf-8")
+    calls = []
+
+    def collect(payload):
+        calls.append(payload[QUEUE_CONTEXT_KEY]["enqueued_at"])
+        return True
+
+    queue.drain_due(collect, now=datetime(2026, 11, 23, 9, tzinfo=timezone.utc))
+    if created_at.endswith("+00:00"):
+        assert calls == [created_at]
+        assert queue.failed_count() == 0
+    else:
+        assert calls == []
+        assert queue.failed_count() == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+async def test_real_stop_sell_never_submits_without_broker_atomic_preflight(
+    monkeypatch, tmp_path, market, ticker,
+):
+    replay = dispatcher(monkeypatch, tmp_path, mode="real")
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    calls = []
+
+    async def mock_trade(self, order, *, account=None):
+        calls.append(order)
+        return DispatchResult("acknowledged", "mock acceptance", order.signal_type, order.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_trade)
+    stop = parse_signal_payload({
+        "type": "SELL", "ticker": ticker, "market": market, "price": 100,
+        "sell_reason": "stop_loss",
+    })
+
+    result = await replay.dispatch(stop)
+    assert result.status == "rejected"
+    assert "broker-atomic" in result.message.lower()
+    assert calls == []
 
 
 def dispatcher(monkeypatch, tmp_path, *, mode="demo", account_name=None, multi=False):

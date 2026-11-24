@@ -109,6 +109,23 @@ def test_get_configured_accounts_does_not_cross_market_fallback(monkeypatch):
     assert ka.get_configured_accounts(svr="demo", market="us") == []
 
 
+@pytest.mark.parametrize("market", ["kr", "us"])
+def test_disabled_explicit_accounts_cannot_reactivate_legacy_account(monkeypatch, market):
+    cfg = _base_cfg()
+    cfg.update({
+        "my_paper_stock": "12345678",
+        "accounts": [{"name": "disabled", "mode": "demo", "account": "11112222",
+                      "market": "all", "primary": True, "enabled": False}],
+    })
+    _patch_cfg(monkeypatch, cfg)
+
+    assert ka.get_configured_accounts(svr="demo", market=market, primary_only=True) == []
+    assert ka.get_configured_accounts(svr="demo", market=market) == []
+    assert [a["name"] for a in ka.get_configured_accounts(include_disabled=True)] == ["disabled"]
+    with pytest.raises(ValueError):
+        ka.resolve_account("demo", market=market)
+
+
 def test_get_configured_accounts_supports_legacy_fallback(monkeypatch):
     cfg = _base_cfg()
     cfg.update(
@@ -843,6 +860,38 @@ def test_api_resp_tolerates_body_without_error_fields():
     assert response.isOK() is True
     assert response.getErrorCode() == ""
     assert response.getErrorMessage() == ""
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        ka.APIRespError(422, '{"code":"APBK0918","message":"upstream error"}'),
+        ka.APIResp(_FakeResponse(200, {"msg_cd": "APBK0918", "msg1": "invalid order"})),
+        ka.APIResp(_FakeResponse(200, {
+            "rt_cd": "1", "msg_cd": "APBK0918", "msg1": "invalid order",
+            "output": {"ODNO": "00001234"},
+        })),
+    ],
+)
+def test_kis_order_rejection_requires_consistent_broker_envelope(response):
+    assert rejection_is_ambiguous(response)
+
+
+def test_kis_order_rejection_preserves_proven_business_failure():
+    response = ka.APIResp(_FakeResponse(200, {
+        "rt_cd": "1", "msg_cd": "APBK0918", "msg1": "invalid order", "output": {},
+    }))
+    assert not rejection_is_ambiguous(response)
+
+
+def test_api_response_normalizes_pagination_headers_and_tolerates_content_type():
+    raw = _FakeResponse(200, {"rt_cd": "0"})
+    raw.headers = {"content-type": "application/json", "Tr_Cont": "F"}
+
+    response = ka.APIResp(raw)
+
+    assert response.isOK() is True
+    assert response.getHeader().tr_cont == "F"
 
 
 def test_resolve_account_rejects_unmatched_product(monkeypatch):
