@@ -1,0 +1,200 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-codex-20261124T142249905Z-red1",
+  "status": "WAIT_RED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": 0,
+  "prior_state_sha": "1cf2ee64af4a1f4daeae9fa2f098e195731c5e91",
+  "active_state_sha": "e108d00d6e237cb4f905d22ea1bf87f545369523",
+  "previous_code_head": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
+  "head_sha": "8a89c1be37535038f384b4cd8dad5f90fe250acc",
+  "baseline_red": {
+    "local": {
+      "baseline_head": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
+      "source_verified": true,
+      "failed": 14,
+      "passed": 111,
+      "network_and_external_writes_denied": true
+    },
+    "remote": {
+      "head_sha": "8a89c1be37535038f384b4cd8dad5f90fe250acc",
+      "run_id": 45413464567,
+      "status": "in_progress"
+    }
+  },
+  "code_changes": [
+    {
+      "sha": "8a89c1be37535038f384b4cd8dad5f90fe250acc",
+      "subject": "test(trading): reproduce unsafe recovery and order handling",
+      "files": [
+        "tests/test_kis_read_only_order_history.py",
+        "tests/test_multi_account_kis_auth.py",
+        "tests/test_queue_unknown_dedupe_visibility.py",
+        "tests/test_upstream_exact_sell_fraction.py"
+      ]
+    }
+  ],
+  "ci": {
+    "head_sha": "8a89c1be37535038f384b4cd8dad5f90fe250acc",
+    "run_id": 45413464567,
+    "status": "PENDING"
+  },
+  "repository": {
+    "pr": 43,
+    "draft": true,
+    "pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+    "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+    "upstream_main": "290ad35417d76fab89c9c34b7ea7a2ef4bb17147"
+  },
+  "audits": {
+    "related_complete_current_head": 0,
+    "related_total": null,
+    "full_complete_current_head": 0,
+    "full_total": 274,
+    "related_independent_passes": 0,
+    "full_independent_passes": 0
+  },
+  "candidate": {},
+  "merge": {
+    "performed": false,
+    "reason": [
+      "independent scheduled audits",
+      "approval",
+      "protection verification",
+      "KIS reconciliation gate"
+    ]
+  },
+  "next_exact_action": "Verify exact test HEAD Actions push checkout and all 14 expected test failures, then apply the locally verified queue, transport, pagination and sizing fixes.",
+  "owner": "codex",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "summary": "Submitted regression-only HEAD; 14 expected failures reproduced offline.",
+  "historical_report_path": ".automation/prism-upstream-sync/runs/prism-manual-20261123T2237KST-pr43-finish-01.json",
+  "worker_v5": {
+    "phase": "WAIT_RED",
+    "work_id": "trading-recovery-batch-1",
+    "pr": 43,
+    "head_sha": "8a89c1be37535038f384b4cd8dad5f90fe250acc",
+    "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+    "expected_ci": {
+      "head_sha": "8a89c1be37535038f384b4cd8dad5f90fe250acc",
+      "run_id": 45413464567
+    },
+    "audit_round": null,
+    "prior_stalled_count": 0,
+    "blocker": null,
+    "next_exact_action": "Verify exact test HEAD Actions push checkout and all 14 expected test failures, then apply the locally verified queue, transport, pagination and sizing fixes.",
+    "queue": [
+      {
+        "work_id": "ledger-canonical-routing",
+        "priority": "P0",
+        "status": "candidate-reproduced",
+        "files": [
+          "trading/dispatch.py",
+          "trading/execution_ledger.py"
+        ],
+        "evidence": "At initial HEAD a persistent single-primary UNKNOWN is re-claimable by multi-account, name, and index routes for the same canonical account. Keep selector/remap fences while persisting account identity."
+      },
+      {
+        "work_id": "legacy-real-stop-sell",
+        "priority": "P0",
+        "status": "candidate",
+        "files": [
+          "trading/dispatch.py",
+          "trading/stop_loss_watcher.py"
+        ],
+        "evidence": "Inspect whether legacy watcher can route real stop-loss after holdings-only preflight. Broker-atomic cross-channel exclusion is unproven for all modes."
+      },
+      {
+        "work_id": "watcher-snapshot-lock-race",
+        "priority": "P0",
+        "status": "candidate",
+        "files": [
+          "trading/stop_loss_watcher.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Tracker may be removed or rearmed after preflight while awaiting shared broker workflow lock."
+      },
+      {
+        "work_id": "webui-primary-account-fanout",
+        "priority": "P0",
+        "status": "candidate",
+        "files": [
+          "webui/templates/trading.html",
+          "webui/services/trade_service.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Blank UI account labeled primary is converted to None; configured dispatcher may fan out manual SELL ALL. UNKNOWN/mixed badge also misleading."
+      },
+      {
+        "work_id": "disabled-explicit-account-fallback",
+        "priority": "P0",
+        "status": "candidate",
+        "files": [
+          "trading/kis_auth.py"
+        ],
+        "evidence": "Filtering all disabled explicit accounts before choosing source can re-enable legacy configuration via single-account resolution."
+      },
+      {
+        "work_id": "strict-kis-rejection-envelope",
+        "priority": "P0",
+        "status": "candidate-reproduced",
+        "files": [
+          "trading/kis_auth.py",
+          "trading/execution_outcome.py"
+        ],
+        "evidence": "Generic code, missing rt_cd, contradictory nonempty ODNO can be treated as definitive rejection. Also check header normalization and reservation IDs."
+      },
+      {
+        "work_id": "trusted-transport-timestamp",
+        "priority": "P1",
+        "status": "candidate",
+        "files": [
+          "subscriber.py",
+          "trading/telegram_fetch.py",
+          "trading/signal_safety.py",
+          "trading/off_hours_queue.py"
+        ],
+        "evidence": "Pub/Sub publish_time only bounds receipt, not the stricter execution decision; Telegram payload can overshadow post time. Preserve through queue without changing identity."
+      },
+      {
+        "work_id": "queue-persisted-age",
+        "priority": "P1",
+        "status": "candidate",
+        "files": [
+          "trading/off_hours_queue.py",
+          "trading/signal_safety.py"
+        ],
+        "evidence": "Nested enqueue time can overshadow authoritative created_at; invalid persisted created_at may bypass queue age."
+      },
+      {
+        "work_id": "live-partial-account-deferral",
+        "priority": "P1",
+        "status": "candidate",
+        "files": [
+          "subscriber.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Pub/Sub and Telegram acknowledge partial_success including pre-submission deferred legs. Preserve pinned recipients and dedupe."
+      },
+      {
+        "work_id": "read-only-buy-receipt-provenance",
+        "priority": "P1",
+        "status": "candidate-reproduced",
+        "files": [
+          "trading/execution_ledger.py"
+        ],
+        "evidence": "Read-only history can persist POSSIBLE_RECEIPT_MATCH despite reservation namespace, quantity or US venue conflict; UNKNOWN remains fenced."
+      },
+      {
+        "work_id": "offline-test-bootstrap",
+        "priority": "P1",
+        "status": "candidate-reproduced",
+        "files": [
+          "tests/conftest.py",
+          ".github/workflows/tests.yml"
+        ],
+        "evidence": "Collection can write/chmod inherited runtime config before fixtures. Windows workflow lacks executable offline OS guard."
+      }
+    ]
+  }
+}
