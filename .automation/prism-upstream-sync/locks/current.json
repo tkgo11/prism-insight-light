@@ -1,12 +1,11 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-codex-20261124T142615002Z-fix1",
   "owner": "codex",
   "acquired_expected_state_parent": "927f9e10d64da62563fd660d4a8884cf960dc197",
-  "observed_state_sha": "927f9e10d64da62563fd660d4a8884cf960dc197",
-  "observed_pr_head": "8a89c1be37535038f384b4cd8dad5f90fe250acc",
-  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
-  "pr": 43,
-  "acquired_at": "2026-11-24T14:26:15.673Z"
+  "active_state_sha": "04481d49a7f625e40fd7a936876e7704d74be3eb",
+  "release_expected_state_parent": "04481d49a7f625e40fd7a936876e7704d74be3eb",
+  "final_pr_head": "87a6479b5106ce151983c2c0f5cad2037b3be960",
+  "release_reason": "Preserve ambiguous POST, forward history continuation, retain deduped queue legs, and restore legacy SELL fraction compatibility."
 }
