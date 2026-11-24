@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261124T143419973Z-fix2",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261124T143833497Z-red3",
   "owner": "codex",
-  "acquired_expected_state_parent": "038a5e0ac66b23248ea9afcbdf9c270e6b9ff115",
-  "active_state_sha": "914d1acd0f1f5f694739cc5b52c889e278ca6c7a",
-  "release_expected_state_parent": "914d1acd0f1f5f694739cc5b52c889e278ca6c7a",
-  "final_pr_head": "00306c47fc2f933b82a1f576921197709638cca1",
-  "release_reason": "Block unproven real automatic stop SELL, honor disabled configured accounts, preserve queue age, require consistent KIS rejection evidence, and isolate test bootstrap."
+  "acquired_expected_state_parent": "28126bd9dd743ee1a6fd7dfb28142de1c7907875",
+  "observed_state_sha": "28126bd9dd743ee1a6fd7dfb28142de1c7907875",
+  "observed_pr_head": "00306c47fc2f933b82a1f576921197709638cca1",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43,
+  "acquired_at": "2026-11-24T14:38:34.117Z"
 }
