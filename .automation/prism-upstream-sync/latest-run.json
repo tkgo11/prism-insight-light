@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261124T142615002Z-fix1",
-  "status": "WAIT_GREEN",
+  "run_id": "prism-codex-20261124T143006398Z-red2",
+  "status": "WAIT_RED",
   "pr": 43,
-  "head_sha": "87a6479b5106ce151983c2c0f5cad2037b3be960",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T142615002Z-fix1.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261124T142615002Z-fix1.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T142615002Z-fix1-risk.json",
+  "head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T143006398Z-red2.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261124T143006398Z-red2.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T143006398Z-red2-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,25 +15,51 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "87a6479b5106ce151983c2c0f5cad2037b3be960",
+  "ci_head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify exact fix HEAD push Actions checkout and PR merge tree, then advance priority ledger restart and configuration regressions from the queue.",
+  "next_exact_action": "Verify exact second regression HEAD and its 12 expected failures in push Actions, then publish the locally verified safety fixes. Continue ledger canonical routing and producer safety evidence.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_GREEN",
-    "work_id": "fix1",
+    "phase": "WAIT_RED",
+    "work_id": "red2",
     "pr": 43,
-    "head_sha": "87a6479b5106ce151983c2c0f5cad2037b3be960",
+    "head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "87a6479b5106ce151983c2c0f5cad2037b3be960",
+      "head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
     "blocker": null,
-    "next_exact_action": "Verify exact fix HEAD push Actions checkout and PR merge tree, then advance priority ledger restart and configuration regressions from the queue.",
+    "next_exact_action": "Verify exact second regression HEAD and its 12 expected failures in push Actions, then publish the locally verified safety fixes. Continue ledger canonical routing and producer safety evidence.",
     "queue": [
+      {
+        "work_id": "fix1",
+        "priority": "P0",
+        "status": "verified",
+        "evidence": {
+          "head_sha": "87a6479b5106ce151983c2c0f5cad2037b3be960",
+          "local_full_passed": 3538,
+          "push_run_id": 45414121304,
+          "pr_run_id": 45414131460,
+          "remote_linux_passed": 3538,
+          "remote_windows_passed": 196,
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "batch2",
+        "priority": "P0",
+        "status": "WAIT_RED",
+        "scope": [
+          "real legacy stop SELL",
+          "disabled explicit account fallback",
+          "broker failure envelope and headers",
+          "queue persisted timestamps",
+          "offline test bootstrap"
+        ]
+      },
       {
         "work_id": "ledger-canonical-routing",
         "priority": "P0",
@@ -45,16 +71,6 @@
         "evidence": "At initial HEAD a persistent single-primary UNKNOWN is re-claimable by multi-account, name, and index routes for the same canonical account. Keep selector/remap fences while persisting account identity."
       },
       {
-        "work_id": "legacy-real-stop-sell",
-        "priority": "P0",
-        "status": "candidate",
-        "files": [
-          "trading/dispatch.py",
-          "trading/stop_loss_watcher.py"
-        ],
-        "evidence": "Inspect whether legacy watcher can route real stop-loss after holdings-only preflight. Broker-atomic cross-channel exclusion is unproven for all modes."
-      },
-      {
         "work_id": "watcher-snapshot-lock-race",
         "priority": "P0",
         "status": "candidate",
@@ -63,6 +79,17 @@
           "trading/dispatch.py"
         ],
         "evidence": "Tracker may be removed or rearmed after preflight while awaiting shared broker workflow lock."
+      },
+      {
+        "work_id": "telegram-unbounded-sell",
+        "priority": "P0",
+        "status": "candidate-reproduced",
+        "files": [
+          "subscriber.py",
+          "trading/telegram_fetch.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Official upstream fractional exits emit human Telegram notices without order sizes; exact fork parses and dispatches labeled KR/US traffic as full SELL. Guard real execution and legacy queued replay while preserving read-only rendering."
       },
       {
         "work_id": "webui-primary-account-fanout",
@@ -76,25 +103,6 @@
         "evidence": "Blank UI account labeled primary is converted to None; configured dispatcher may fan out manual SELL ALL. UNKNOWN/mixed badge also misleading."
       },
       {
-        "work_id": "disabled-explicit-account-fallback",
-        "priority": "P0",
-        "status": "candidate",
-        "files": [
-          "trading/kis_auth.py"
-        ],
-        "evidence": "Filtering all disabled explicit accounts before choosing source can re-enable legacy configuration via single-account resolution."
-      },
-      {
-        "work_id": "strict-kis-rejection-envelope",
-        "priority": "P0",
-        "status": "candidate-reproduced",
-        "files": [
-          "trading/kis_auth.py",
-          "trading/execution_outcome.py"
-        ],
-        "evidence": "Generic code, missing rt_cd, contradictory nonempty ODNO can be treated as definitive rejection. Also check header normalization and reservation IDs."
-      },
-      {
         "work_id": "trusted-transport-timestamp",
         "priority": "P1",
         "status": "candidate",
@@ -105,16 +113,6 @@
           "trading/off_hours_queue.py"
         ],
         "evidence": "Pub/Sub publish_time only bounds receipt, not the stricter execution decision; Telegram payload can overshadow post time. Preserve through queue without changing identity."
-      },
-      {
-        "work_id": "queue-persisted-age",
-        "priority": "P1",
-        "status": "candidate",
-        "files": [
-          "trading/off_hours_queue.py",
-          "trading/signal_safety.py"
-        ],
-        "evidence": "Nested enqueue time can overshadow authoritative created_at; invalid persisted created_at may bypass queue age."
       },
       {
         "work_id": "live-partial-account-deferral",
@@ -136,14 +134,22 @@
         "evidence": "Read-only history can persist POSSIBLE_RECEIPT_MATCH despite reservation namespace, quantity or US venue conflict; UNKNOWN remains fenced."
       },
       {
-        "work_id": "offline-test-bootstrap",
+        "work_id": "runtime-config-trading-disable",
         "priority": "P1",
         "status": "candidate-reproduced",
         "files": [
-          "tests/conftest.py",
-          ".github/workflows/tests.yml"
+          "webui/services/account_service.py",
+          "trading/dispatch.py",
+          "trading/domestic.py",
+          "trading/us.py"
         ],
-        "evidence": "Collection can write/chmod inherited runtime config before fixtures. Windows workflow lacks executable offline OS guard."
+        "evidence": "WebUI updates auto_trading=false on disk while imported adapter defaults stay True. Verify standard, queued and strategy order paths."
+      },
+      {
+        "work_id": "windows-offline-egress",
+        "priority": "P2",
+        "status": "candidate",
+        "evidence": "Windows smoke currently uses explicit broker mocks but does not enforce an OS-level network guard."
       }
     ]
   }
