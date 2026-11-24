@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261124T143833497Z-red3",
-  "status": "WAIT_RED",
+  "run_id": "prism-codex-20261124T144113303Z-fix3",
+  "status": "WAIT_GREEN",
   "pr": 43,
-  "head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T143833497Z-red3.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261124T143833497Z-red3.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T143833497Z-red3-risk.json",
+  "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T144113303Z-fix3.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261124T144113303Z-fix3.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T144113303Z-fix3-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,24 +15,24 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+  "ci_head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify 11 intended failures at exact test HEAD, then publish the offline-green ingress and WebUI fixes. Continue exact ledger routing and watcher regressions.",
+  "next_exact_action": "Verify exact third fix HEAD Actions checkout and tree. Then submit ledger/watcher/receipt test-only HEAD for exact restart and lock regression RED.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_RED",
-    "work_id": "red3",
+    "phase": "WAIT_GREEN",
+    "work_id": "fix3",
     "pr": 43,
-    "head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+    "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+      "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
     "blocker": null,
-    "next_exact_action": "Verify 11 intended failures at exact test HEAD, then publish the offline-green ingress and WebUI fixes. Continue exact ledger routing and watcher regressions.",
+    "next_exact_action": "Verify exact third fix HEAD Actions checkout and tree. Then submit ledger/watcher/receipt test-only HEAD for exact restart and lock regression RED.",
     "queue": [
       {
         "work_id": "fix1",
@@ -95,36 +95,51 @@
       {
         "work_id": "telegram-unbounded-sell",
         "priority": "P0",
-        "status": "WAIT_RED",
+        "status": "WAIT_GREEN",
         "files": [
           "subscriber.py",
           "trading/telegram_fetch.py",
           "trading/dispatch.py"
         ],
-        "evidence": "Official upstream fractional exits emit human Telegram notices without order sizes; exact fork parses and dispatches labeled KR/US traffic as full SELL. Guard real execution and legacy queued replay while preserving read-only rendering."
+        "evidence": "Official upstream fractional exits emit human Telegram notices without order sizes; exact fork parses and dispatches labeled KR/US traffic as full SELL. Guard real execution and legacy queued replay while preserving read-only rendering.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562
+        }
       },
       {
         "work_id": "webui-primary-account-fanout",
         "priority": "P0",
-        "status": "WAIT_RED",
+        "status": "WAIT_GREEN",
         "files": [
           "webui/templates/trading.html",
           "webui/services/trade_service.py",
           "trading/dispatch.py"
         ],
-        "evidence": "Blank UI account labeled primary is converted to None; configured dispatcher may fan out manual SELL ALL. UNKNOWN/mixed badge also misleading."
+        "evidence": "Blank UI account labeled primary is converted to None; configured dispatcher may fan out manual SELL ALL. UNKNOWN/mixed badge also misleading.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562
+        }
       },
       {
         "work_id": "trusted-transport-timestamp",
         "priority": "P1",
-        "status": "WAIT_RED",
+        "status": "WAIT_GREEN",
         "files": [
           "subscriber.py",
           "trading/telegram_fetch.py",
           "trading/signal_safety.py",
           "trading/off_hours_queue.py"
         ],
-        "evidence": "Pub/Sub publish_time only bounds receipt, not the stricter execution decision; Telegram payload can overshadow post time. Preserve through queue without changing identity."
+        "evidence": "Pub/Sub publish_time only bounds receipt, not the stricter execution decision; Telegram payload can overshadow post time. Preserve through queue without changing identity.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562
+        }
       },
       {
         "work_id": "live-partial-account-deferral",

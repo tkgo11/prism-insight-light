@@ -1,12 +1,11 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-codex-20261124T144113303Z-fix3",
   "owner": "codex",
   "acquired_expected_state_parent": "203d0cd32c5c44802b8cc1580dcbd1a023c14a0e",
-  "observed_state_sha": "203d0cd32c5c44802b8cc1580dcbd1a023c14a0e",
-  "observed_pr_head": "d5144b953892677bf0a7deba7e87b5599c85419b",
-  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
-  "pr": 43,
-  "acquired_at": "2026-11-24T14:41:13.834Z"
+  "active_state_sha": "3c7a241d259d3e8cadbd1765bb9b7235f8095f2f",
+  "release_expected_state_parent": "3c7a241d259d3e8cadbd1765bb9b7235f8095f2f",
+  "final_pr_head": "644abe24457309b80c6516aea9bf19dd6e03984a",
+  "release_reason": "Persist trusted publication time separately from signal identity, reject unsized Telegram real SELL, pin browser primary account, and mask uncertain account results."
 }
