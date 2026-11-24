@@ -165,6 +165,13 @@ def rejection_is_ambiguous(res: Any) -> bool:
     # This is a conservative syntax gate, not proof of an actual broker fill.
     if re.fullmatch(r"[A-Z]{2,8}[0-9]{3,8}", error_code) is None:
         return True
+    prove_rejection = getattr(res, "has_proven_rejection", None)
+    if prove_rejection is not None:
+        try:
+            if prove_rejection() is not True:
+                return True
+        except Exception:
+            return True
     # A syntactically valid KIS-looking business code cannot prove a clean
     # rejection if the response also reports a transport-layer exception.
     # This protects direct KR/US wrapper consumers before any downstream

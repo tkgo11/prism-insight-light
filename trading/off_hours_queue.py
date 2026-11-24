@@ -283,15 +283,22 @@ class OffHoursOrderQueue:
                         execute_at = datetime.fromisoformat(item.execute_at)
                     except (TypeError, ValueError):
                         execute_at = None
+                    try:
+                        created_at = datetime.fromisoformat(item.created_at)
+                    except (TypeError, ValueError):
+                        created_at = None
+                    invalid_field = None
                     if execute_at is None or execute_at.tzinfo is None:
-                        # A malformed or timezone-less execute_at can never be
-                        # ordered against an aware "now". Quarantine it instead
-                        # of letting it stall every future drain.
+                        invalid_field = "execute_at"
+                    elif created_at is None or created_at.tzinfo is None:
+                        invalid_field = "created_at"
+                    if invalid_field is not None:
+                        # An invalid persisted time cannot authorize execution.
                         loaded_items[index] = replace(
                             item,
                             status="failed",
                             failure_message=_safe_failure_message(
-                                f"Malformed execute_at timestamp: {item.execute_at!r}"
+                                f"Malformed {invalid_field} timestamp: {getattr(item, invalid_field)!r}"
                             ),
                             failed_at=current.isoformat(),
                         )
@@ -310,7 +317,7 @@ class OffHoursOrderQueue:
                     # safety revalidation can expire queued signals even when
                     # the stored payload carries no execution context.
                     context = dict(item.execution_context or {})
-                    context.setdefault("enqueued_at", item.created_at)
+                    context["enqueued_at"] = item.created_at
                     payload[QUEUE_CONTEXT_KEY] = context
                     outcome = executor(payload)
                 except Exception as exc:  # noqa: BLE001 - isolate poison queue items

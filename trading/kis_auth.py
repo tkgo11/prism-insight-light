@@ -7,6 +7,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import keyword
 import logging
 import math
 import os
@@ -418,7 +419,7 @@ def get_configured_accounts(
     if isinstance(raw_accounts, list):
         for index, item in enumerate(raw_accounts):
             normalized = _build_normalized_account(
-                index, item, include_disabled=include_disabled
+                index, item, include_disabled=True
             )
             if normalized:
                 normalized_accounts.append(normalized)
@@ -436,6 +437,9 @@ def get_configured_accounts(
         raise ValueError(
             f"Too many accounts configured ({len(normalized_accounts)}). Maximum supported accounts: {MAX_CONFIGURED_ACCOUNTS}."
         )
+
+    if not include_disabled:
+        normalized_accounts = [account for account in normalized_accounts if account["enabled"]]
 
     filtered_accounts = []
     for account in normalized_accounts:
@@ -1494,6 +1498,18 @@ def getTREnv():
     return _TRENV
 
 
+def _has_proven_order_rejection(payload: dict[str, Any]) -> bool:
+    if payload.get("rt_cd") != "1" or not isinstance(payload.get("msg_cd"), str):
+        return False
+    receipt_fields = {"odno", "order_no", "order_id", "rsvn_ord_seq"}
+    return not any(
+        key.casefold() in receipt_fields and value not in (None, "")
+        for row in (payload, payload.get("output"))
+        if isinstance(row, dict)
+        for key, value in row.items()
+    )
+
+
 # Common function for processing API call responses
 class APIResp:
     def __init__(self, resp):
@@ -1503,15 +1519,20 @@ class APIResp:
         self._body = self._setBody()
         self._err_code = getattr(self._body, "msg_cd", "")
         self._err_message = getattr(self._body, "msg1", "")
+        self._proven_rejection = _has_proven_order_rejection(self._body._asdict())
+
+    def has_proven_rejection(self) -> bool:
+        return self._proven_rejection
 
     def getResCode(self):
         return self._rescode
 
     def _setHeader(self):
-        fld = dict()
-        for x in self._resp.headers.keys():
-            if x.islower():
-                fld[x] = self._resp.headers.get(x)
+        fld = {}
+        for name, value in self._resp.headers.items():
+            key = name.lower()
+            if key.isidentifier() and not key.startswith("_") and not keyword.iskeyword(key):
+                fld[key] = value if key not in fld or fld[key] == value else None
         _th_ = namedtuple("header", fld.keys())
 
         return _th_(**fld)
@@ -1578,9 +1599,11 @@ class APIRespError(APIResp):
             payload = json.loads(error_text) if isinstance(error_text, str) else {}
         except json.JSONDecodeError:
             payload = {}
+        self._proven_rejection = False
         if isinstance(payload, dict):
             self._error_code = str(payload.get("msg_cd") or payload.get("code") or status_code)
             self._error_message = str(payload.get("msg1") or payload.get("message") or error_text)
+            self._proven_rejection = _has_proven_order_rejection(payload)
 
     def isOK(self):
         return False

@@ -717,6 +717,12 @@ class TradeDispatcher:
         """
         if not _is_stop_loss_sell(signal) or self.dry_run:
             return None
+        if self.trading_mode != "demo":
+            return DispatchResult(
+                "rejected",
+                "Automatic stop SELL requires proven broker-atomic cross-channel reconciliation",
+                signal.signal_type, signal.market,
+            )
 
         def unresolved_buy_before_stop_sell() -> bool:
             with self.execution_ledger.guard_unresolved_buy(
