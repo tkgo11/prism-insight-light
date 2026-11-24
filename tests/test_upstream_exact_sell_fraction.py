@@ -10,7 +10,7 @@ import pytest
 
 from trading import domestic, us
 from trading.dispatch import TradeDispatcher
-from trading.schema import SignalValidationError, parse_signal_payload, parse_signal_bytes, load_signal_json
+from trading.schema import SignalMessage, SignalValidationError, parse_signal_payload, parse_signal_bytes, load_signal_json
 from trading.signal_sizing import SignalSizingError, adjusted_sell_fraction, floor_sell_quantity
 from trading.signal_safety import SignalSafetyGate
 
@@ -45,6 +45,21 @@ def test_old_denominator_and_final_full_sell_remain_compatible():
     assert adjusted_sell_fraction(_signal(sell_denominator=3)) == 1 / 3
     assert adjusted_sell_fraction(_signal(sell_denominator=1)) is None
     assert adjusted_sell_fraction(_signal(sell_denominator=1, sell_fraction=1.0)) == 1.0
+
+
+def test_legacy_positional_sell_fraction_keeps_explicit_exit_size():
+    signal = SignalMessage(
+        "SELL", "005930", "", "KR", 10000, None, None, None, "", None, "", None,
+        1.0, 1, "", "", "", {}, 0.25,
+    )
+
+    assert signal.internal_watcher_stop is False
+    assert adjusted_sell_fraction(signal) == 0.25
+
+
+def test_legacy_denominator_rejects_strategy_fraction_underflow():
+    with pytest.raises(SignalSizingError):
+        adjusted_sell_fraction(_signal(sell_denominator=2), 5e-324)
 
 
 def test_pyramid_add_remains_explicitly_unsupported_not_a_new_buy():

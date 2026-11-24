@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from trading import kis_auth as ka
+from trading.execution_outcome import rejection_is_ambiguous
 
 
 def _patch_cfg(monkeypatch, cfg):
@@ -323,7 +324,7 @@ class _FakeResponse:
         return self._payload
 
 
-def test_url_fetch_retries_kis_rate_limit_then_succeeds(monkeypatch):
+def test_url_fetch_retries_kis_query_rate_limit_then_succeeds(monkeypatch):
     calls = []
     sleeps = []
 
@@ -338,8 +339,8 @@ def test_url_fetch_retries_kis_rate_limit_then_succeeds(monkeypatch):
     monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_MAX_SECONDS", 1.0)
     monkeypatch.setattr(ka.time, "sleep", lambda seconds: sleeps.append(seconds))
 
-    def fake_post(url, headers, data, **kwargs):
-        calls.append((url, headers, data))
+    def fake_get(url, headers, params, **kwargs):
+        calls.append((url, headers, params))
         if len(calls) == 1:
             return _FakeResponse(
                 500,
@@ -351,18 +352,31 @@ def test_url_fetch_retries_kis_rate_limit_then_succeeds(monkeypatch):
             )
         return _FakeResponse(200, {"rt_cd": "0", "msg_cd": "0", "msg1": "OK", "output": {}})
 
-    monkeypatch.setattr(ka.requests, "post", fake_post)
+    monkeypatch.setattr(ka.requests, "get", fake_get)
 
-    response = ka._url_fetch("/uapi/test", "TTTC0012U", "", {"PDNO": "085620"}, postFlag=True)
+    response = ka._url_fetch("/uapi/test", "TTTC8434R", "", {"PDNO": "085620"})
 
     assert response.isOK()
     assert len(calls) == 2
     assert sleeps == [0.25]
 
 
-def test_url_fetch_retries_kis_ledger_rate_limit_then_succeeds(monkeypatch):
+@pytest.mark.parametrize(
+    ("status_code", "error_code", "message"),
+    [
+        (500, "EGW00201", "request rate limit exceeded"),
+        (500, "EGW00215", "ledger request rate limit exceeded"),
+        (429, "EGW00201", "gateway timeout"),
+        (503, "EGW00123", "expired"),
+        (200, "EGW00201", "gateway timeout"),
+    ],
+)
+def test_url_fetch_preserves_ambiguous_order_response_without_replaying(
+    monkeypatch, status_code, error_code, message,
+):
     calls = []
     sleeps = []
+    refreshes = []
 
     class Env:
         my_url = "https://example.com"
@@ -374,16 +388,17 @@ def test_url_fetch_retries_kis_ledger_rate_limit_then_succeeds(monkeypatch):
     monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_BASE_SECONDS", 0.25)
     monkeypatch.setattr(ka, "KIS_RATE_LIMIT_RETRY_MAX_SECONDS", 1.0)
     monkeypatch.setattr(ka.time, "sleep", lambda seconds: sleeps.append(seconds))
+    monkeypatch.setattr(ka, "_refresh_after_expired_token_response", lambda: refreshes.append(True))
 
     def fake_post(url, headers, data, **kwargs):
         calls.append((url, headers, data))
         if len(calls) == 1:
             return _FakeResponse(
-                500,
+                status_code,
                 {
                     "rt_cd": "1",
-                    "msg_cd": "EGW00215",
-                    "msg1": "ledger request rate limit exceeded",
+                    "msg_cd": error_code,
+                    "msg1": message,
                 },
             )
         return _FakeResponse(200, {"rt_cd": "0", "msg_cd": "0", "msg1": "OK", "output": {}})
@@ -392,9 +407,24 @@ def test_url_fetch_retries_kis_ledger_rate_limit_then_succeeds(monkeypatch):
 
     response = ka._url_fetch("/uapi/test", "TTTC0012U", "", {"PDNO": "085620"}, postFlag=True)
 
-    assert response.isOK()
-    assert len(calls) == 2
-    assert sleeps == [0.25]
+    assert rejection_is_ambiguous(response)
+    assert len(calls) == 1
+    assert sleeps == []
+    assert refreshes == []
+
+
+def test_order_post_does_not_follow_redirects(monkeypatch):
+    options = []
+
+    def fake_post(_url, **kwargs):
+        options.append(kwargs)
+        return _FakeResponse(307, "redirect")
+
+    monkeypatch.setattr(ka.requests, "post", fake_post)
+    response = ka._request_once("https://example.com/order", {}, {}, postFlag=True)
+
+    assert response.status_code == 307
+    assert options[0].get("allow_redirects") is False
 
 
 def test_url_fetch_stops_after_configured_rate_limit_retries(monkeypatch):

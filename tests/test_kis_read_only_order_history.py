@@ -8,7 +8,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from trading import kis_auth as ka
 from trading.domestic import DomesticStockTrading
+from trading.order_reconciliation import discover_buy_order_candidates
 from trading.us import USStockTrading
 
 
@@ -96,6 +98,39 @@ def test_read_only_pagination_and_exact_local_order_match(market):
     assert calls[1][2]["CTX_AREA_NK100" if market == "KR" else "CTX_AREA_NK200"] == "next"
     assert calls[0][1] == ("VTTC0081R" if market == "KR" else "VTTS3035R")
     assert calls[0][0].endswith("/inquire-daily-ccld" if market == "KR" else "/inquire-ccnl")
+
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("discovery", [False, True])
+def test_read_only_pagination_through_trader_transport(monkeypatch, market, discovery):
+    trader, _ = _trader(market, [])
+    del trader._request  # Exercise the real account-scoped trader adapter.
+    monkeypatch.setattr(trader, "_activate_account", lambda: None)
+    monkeypatch.setattr(ka, "getTREnv", lambda: trader.trenv)
+    pages = iter([
+        MockHistoryResponse([], more=True, market=market),
+        MockHistoryResponse([_row(market)], market=market),
+    ])
+    continuations = []
+
+    def fake_fetch(api_url, ptr_id, tr_cont, params, appendHeaders=None, postFlag=False, hashFlag=True):
+        assert "/inquire-" in api_url and not postFlag
+        assert params["CANO"] == "12345678"
+        continuations.append(tr_cont)
+        return next(pages)
+
+    monkeypatch.setattr(ka, "_url_fetch", fake_fetch)
+    if discovery:
+        result = discover_buy_order_candidates(
+            trader, market=market, ticker="005930" if market == "KR" else "AAPL",
+            start_date="20261103", end_date="20261103",
+        )
+    else:
+        result = _read(trader, market)
+
+    assert result["status"] == ("CANDIDATES_ONLY" if discovery else "EVIDENCE_ONLY")
+    assert continuations == ["", "N"]
+    assert result["can_activate_stop"] is False
 
 
 @pytest.mark.parametrize("market", ["KR", "US"])
