@@ -104,12 +104,13 @@ def adjusted_sell_fraction(
     if not math.isfinite(fraction) or not 0 < fraction <= 1:
         raise SignalSizingError("Strategy sell fraction must be within (0, 1]")
     if publisher is None:
-        return fraction / signal.sell_denominator
-    combined = Fraction(str(fraction)) * publisher
-    effective = float(combined)
-    # A conversion rounded upward must not enlarge the requested exit.
-    if Fraction(str(effective)) > combined:
-        effective = math.nextafter(effective, 0.0)
+        effective = fraction / signal.sell_denominator
+    else:
+        combined = Fraction(str(fraction)) * publisher
+        effective = float(combined)
+        # A conversion rounded upward must not enlarge the requested exit.
+        if Fraction(str(effective)) > combined:
+            effective = math.nextafter(effective, 0.0)
     if effective <= 0:
         raise SignalSizingError("Combined sell fraction is below numeric precision")
     return effective

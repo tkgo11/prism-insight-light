@@ -288,10 +288,10 @@ class DomesticStockTrading:
             account_key=self.account_key,
         )
 
-    def _request(self, api_url: str, tr_id: str, params: Dict[str, Any], **kwargs):
+    def _request(self, api_url: str, tr_id: str, params: Dict[str, Any], *, tr_cont: str = "", **kwargs):
         with ka.get_trading_env_lock():
             self._activate_account()
-            response = ka._url_fetch(api_url, tr_id, "", params, **kwargs)
+            response = ka._url_fetch(api_url, tr_id, tr_cont, params, **kwargs)
             try:
                 self.trenv = ka.getTREnv()
             except RuntimeError:

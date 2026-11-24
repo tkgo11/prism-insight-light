@@ -27,6 +27,7 @@ from typing import Any, Optional, Tuple
 
 from .buy_sizing import normalize_amount, normalize_percent
 from .config_paths import active_kis_config_path, runtime_file_path
+from .execution_outcome import rejection_is_ambiguous
 from .file_lock import FileLock
 
 tenacity_spec = importlib.util.find_spec("tenacity")
@@ -1658,6 +1659,7 @@ def _request_once(url: str, headers: dict[str, Any], params: dict[str, Any], *, 
             headers=headers,
             data=json.dumps(params),
             timeout=KIS_HTTP_TIMEOUT,
+            allow_redirects=False,
         )
     return requests.get(url, headers=headers, params=params, timeout=KIS_HTTP_TIMEOUT)
 
@@ -1716,8 +1718,17 @@ def _url_fetch(
                 response.printAll()
             return response
 
-        # KIS business failures are conveyed in the JSON response body. Handle
-        # them consistently whether the HTTP transport returned 200 or an error.
+        # A mutating request may already have reached the order engine. Keep
+        # the first ambiguous response for reconciliation, even if its body
+        # contains a rate-limit or expired-token code.
+        if postFlag and rejection_is_ambiguous(response):
+            logging.warning(
+                "KIS POST outcome is ambiguous for %s (TR %s, HTTP %s)",
+                api_url, tr_id, res.status_code,
+            )
+            return response
+
+        # Read-only requests can retry transport errors carrying KIS codes.
         if _is_kis_expired_token_response(response) and not expired_token_retry_used:
             expired_token_retry_used = True
             logging.warning(

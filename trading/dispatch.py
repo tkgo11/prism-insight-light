@@ -1385,19 +1385,21 @@ class TradeDispatcher:
                 )
                 return QueueExecutionResult("failed", result.message)
             if result.status == "skipped":
+                prior_statuses = {result.previous_status}
+                prior_statuses.update(leg.previous_status for leg in result.accounts)
                 # A prior UNKNOWN claim is not a fill or a safe terminal
                 # disposition. Quarantine it for operator reconciliation;
                 # never re-submit an ambiguous order automatically.
-                if result.previous_status == "unknown":
+                if "unknown" in prior_statuses:
                     logger.error(
                         "Quarantining queued %s order on %s after UNKNOWN dedupe: %s",
                         result.signal_type, result.market, result.message,
                     )
-                    return QueueExecutionResult("failed", result.message)
+                    return QueueExecutionResult("failed", f"UNKNOWN dedupe: {result.message}")
                 # A live IN_PROGRESS ledger claim is not a terminal order.
                 # Keep the queued signal pending for later reconciliation;
                 # the ledger still suppresses duplicate broker submissions.
-                if result.previous_status == "in_progress":
+                if "in_progress" in prior_statuses:
                     return QueueExecutionResult("deferred", result.message)
                 # Terminal dedupe skips retain their non-retryable disposition.
                 return QueueExecutionResult("processed", f"Skipped: {result.message}")
