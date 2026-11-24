@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261124T142249905Z-red1",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261124T142615002Z-fix1",
   "owner": "codex",
-  "acquired_expected_state_parent": "1cf2ee64af4a1f4daeae9fa2f098e195731c5e91",
-  "active_state_sha": "e108d00d6e237cb4f905d22ea1bf87f545369523",
-  "release_expected_state_parent": "e108d00d6e237cb4f905d22ea1bf87f545369523",
-  "final_pr_head": "8a89c1be37535038f384b4cd8dad5f90fe250acc",
-  "release_reason": "Submitted regression-only HEAD; 14 expected failures reproduced offline."
+  "acquired_expected_state_parent": "927f9e10d64da62563fd660d4a8884cf960dc197",
+  "observed_state_sha": "927f9e10d64da62563fd660d4a8884cf960dc197",
+  "observed_pr_head": "8a89c1be37535038f384b4cd8dad5f90fe250acc",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43,
+  "acquired_at": "2026-11-24T14:26:15.673Z"
 }
