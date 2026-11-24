@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261124T143833497Z-red3",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261124T144113303Z-fix3",
   "owner": "codex",
-  "acquired_expected_state_parent": "28126bd9dd743ee1a6fd7dfb28142de1c7907875",
-  "active_state_sha": "b326f0ea7fea086522ed96cc5a5c049692941aa1",
-  "release_expected_state_parent": "b326f0ea7fea086522ed96cc5a5c049692941aa1",
-  "final_pr_head": "d5144b953892677bf0a7deba7e87b5599c85419b",
-  "release_reason": "Test Telegram SELL sizing, Pub/Sub publication ages across queue replay, and browser primary-only manual order intent and output."
+  "acquired_expected_state_parent": "203d0cd32c5c44802b8cc1580dcbd1a023c14a0e",
+  "observed_state_sha": "203d0cd32c5c44802b8cc1580dcbd1a023c14a0e",
+  "observed_pr_head": "d5144b953892677bf0a7deba7e87b5599c85419b",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43,
+  "acquired_at": "2026-11-24T14:41:13.834Z"
 }
