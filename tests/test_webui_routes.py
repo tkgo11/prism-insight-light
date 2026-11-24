@@ -4,6 +4,7 @@ import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+import pytest
 from fastapi.testclient import TestClient
 
 from webui.app import WebUISettings, create_app
@@ -679,6 +680,72 @@ def test_dispatch_result_message_is_masked(monkeypatch):
 
     assert secret not in response.text
     assert "Order failed or outcome uncertain" in response.text
+
+
+def test_manual_sell_all_with_default_account_targets_only_primary(monkeypatch):
+    from trading.dispatch import DispatchResult, TradeDispatcher
+    from webui.services import trade_service
+
+    accounts = [
+        {"name": name, "account_key": f"vps:{i:08d}:01", "product": "01",
+         "account": f"{i:08d}", "market": "us", "svr": "vps", "enabled": True}
+        for i, name in enumerate(("primary", "secondary"), start=1)
+    ]
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(
+        lambda: {"multi_account_trading": {"enabled": True}},
+    ))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: accounts)
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: accounts[0])
+    attempts = []
+
+    async def mock_broker(self, signal, *, account=None):
+        selected = account or self._resolve_single_account(signal)
+        attempts.append(selected["name"])
+        return DispatchResult("unknown", "mock submission uncertain", signal.signal_type, signal.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_broker)
+    c = client()
+    response = c.post("/trading/order", data={
+        "x_webui_csrf": "local-webui", "order_nonce": issue_order_nonce(c), "action": "SELL",
+        "ticker": "AAPL", "price": "190.5", "market": "US", "trading_mode": "demo",
+        "arm_phrase": trade_service.SELL_ALL_PHRASE,
+    })
+
+    assert response.status_code == 200
+    assert attempts == ["primary"]
+
+
+@pytest.mark.parametrize("status", ["unknown", "partial_success"])
+def test_uncertain_manual_order_masks_account_errors_and_prompts_reconciliation(monkeypatch, status):
+    from trading.dispatch import AccountDispatchResult, DispatchResult
+    from webui.services import trade_service
+
+    secret = "example-nested-broker-secret-12345"
+
+    class FakeDispatcher:
+        def __init__(self, **kwargs):
+            pass
+
+        async def dispatch(self, signal):
+            return DispatchResult(status, "Mock broker outcome", signal.signal_type, signal.market, [
+                AccountDispatchResult("demo", "opaque", "unknown", f"Bearer {secret}",
+                                      error=f"KIS_APP_SECRET={secret}"),
+            ])
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    monkeypatch.setenv("KIS_APP_SECRET", secret)
+    monkeypatch.setattr(trade_service, "TradeDispatcher", FakeDispatcher)
+    c = client()
+    response = c.post("/trading/order", data={
+        "x_webui_csrf": "local-webui", "order_nonce": issue_order_nonce(c), "action": "BUY",
+        "ticker": "AAPL", "price": "190.5", "market": "US", "arm_phrase": trade_service.ARM_PHRASE,
+    })
+
+    assert secret not in response.text
+    assert "Reconciliation required" in response.text
+    assert "No new order" not in response.text
 
 
 def test_oversized_form_body_is_rejected():

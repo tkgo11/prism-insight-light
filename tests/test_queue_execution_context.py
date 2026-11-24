@@ -13,6 +13,7 @@ import pytest
 from trading.dispatch import DispatchResult, TradeDispatcher
 from trading.off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue
 from trading.schema import parse_signal_payload
+from trading.telegram_fetch import TelegramChannelPost, parse_signal_post
 
 
 def signal():
@@ -67,6 +68,42 @@ async def test_real_stop_sell_never_submits_without_broker_atomic_preflight(
     result = await replay.dispatch(stop)
     assert result.status == "rejected"
     assert "broker-atomic" in result.message.lower()
+    assert calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("queued", [False, True])
+async def test_labeled_telegram_sell_without_fraction_cannot_submit_in_real_mode(
+    monkeypatch, tmp_path, market, ticker, queued,
+):
+    replay = dispatcher(monkeypatch, tmp_path, mode="real")
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    calls = []
+
+    async def mock_trade(self, order, *, account=None):
+        calls.append(order)
+        return DispatchResult("unknown", "mock submission outcome", order.signal_type, order.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_trade)
+    text = f"📉 Sell: Example ({ticker})\nBuy Price: 90\nSell Price: 100\nSell Reason: Take Profit"
+    post = TelegramChannelPost("publisher", "12", "https://t.me/publisher/12", None, text)
+    parsed = parse_signal_post(post)
+    assert parsed is not None and parsed.signal.market == market
+    assert "sell_fraction" not in parsed.payload and "sell_denominator" not in parsed.payload
+    if queued:
+        context = {
+            "multi_account": False, "trading_mode": "real",
+            "account_scope": hashlib.sha256(
+                replay._single_account_execution_selector(parsed.signal).encode()
+            ).hexdigest(),
+            "account_id": replay._resolved_single_account_id(parsed.signal),
+        }
+        result = await replay.execute_queued_signal(parsed.payload | {QUEUE_CONTEXT_KEY: context})
+    else:
+        result = await replay.dispatch(parsed.signal)
+    assert result.status == "rejected"
+    assert "explicit sell size" in result.message.lower()
     assert calls == []
 
 
