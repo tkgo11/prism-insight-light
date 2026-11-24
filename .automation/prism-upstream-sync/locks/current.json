@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-manual-20261123T2237KST-pr43-finish-01",
-  "owner": "manual-user-request",
-  "acquired_expected_state_parent": "a29492ee3c5d3d340af3f1ac2b924e7f55e6d3b7",
-  "active_state_sha": "4ff989d1b628bb895b0116030f6a6d7540a0614e",
-  "release_expected_state_parent": "4ff989d1b628bb895b0116030f6a6d7540a0614e",
-  "final_pr_head": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
-  "release_reason": "Resolved queue and sizing regressions, integrated fork main, exact HEAD 3524 tests + Windows + Snyk green. Remain Draft: independent audits/reviews/KIS contract blocked."
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261124T142249905Z-red1",
+  "owner": "codex",
+  "acquired_expected_state_parent": "1cf2ee64af4a1f4daeae9fa2f098e195731c5e91",
+  "observed_state_sha": "1cf2ee64af4a1f4daeae9fa2f098e195731c5e91",
+  "observed_pr_head": "4b6d8ebb2f32af290e09bc979a8220db6160eb1c",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43,
+  "acquired_at": "2026-11-24T14:22:51.887Z"
 }
