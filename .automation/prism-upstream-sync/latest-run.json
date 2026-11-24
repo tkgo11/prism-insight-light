@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261124T143006398Z-red2",
-  "status": "WAIT_RED",
+  "run_id": "prism-codex-20261124T143419973Z-fix2",
+  "status": "WAIT_GREEN",
   "pr": 43,
-  "head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T143006398Z-red2.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261124T143006398Z-red2.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T143006398Z-red2-risk.json",
+  "head_sha": "00306c47fc2f933b82a1f576921197709638cca1",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T143419973Z-fix2.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261124T143419973Z-fix2.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T143419973Z-fix2-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,24 +15,24 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
+  "ci_head_sha": "00306c47fc2f933b82a1f576921197709638cca1",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify exact second regression HEAD and its 12 expected failures in push Actions, then publish the locally verified safety fixes. Continue ledger canonical routing and producer safety evidence.",
+  "next_exact_action": "Verify exact second fix HEAD Actions then submit the locally RED-verified Telegram, timestamp and WebUI regression suite. Continue account-routing ledger recovery.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_RED",
-    "work_id": "red2",
+    "phase": "WAIT_GREEN",
+    "work_id": "fix2",
     "pr": 43,
-    "head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
+    "head_sha": "00306c47fc2f933b82a1f576921197709638cca1",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
+      "head_sha": "00306c47fc2f933b82a1f576921197709638cca1",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
     "blocker": null,
-    "next_exact_action": "Verify exact second regression HEAD and its 12 expected failures in push Actions, then publish the locally verified safety fixes. Continue ledger canonical routing and producer safety evidence.",
+    "next_exact_action": "Verify exact second fix HEAD Actions then submit the locally RED-verified Telegram, timestamp and WebUI regression suite. Continue account-routing ledger recovery.",
     "queue": [
       {
         "work_id": "fix1",
@@ -51,14 +51,20 @@
       {
         "work_id": "batch2",
         "priority": "P0",
-        "status": "WAIT_RED",
+        "status": "WAIT_GREEN",
         "scope": [
           "real legacy stop SELL",
           "disabled explicit account fallback",
           "broker failure envelope and headers",
           "queue persisted timestamps",
           "offline test bootstrap"
-        ]
+        ],
+        "evidence": {
+          "red_head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
+          "red_run_id": 45414818143,
+          "red_failures": 12,
+          "local_fixed_full": 3551
+        }
       },
       {
         "work_id": "ledger-canonical-routing",
