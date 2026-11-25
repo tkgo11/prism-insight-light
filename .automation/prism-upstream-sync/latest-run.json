@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T031531723Z-manual-ticket-expanded-red",
+  "run_id": "prism-scheduled-20261125T042020Z-red-verified",
   "status": "WAIT_RED",
   "pr": 43,
   "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T031531723Z-manual-ticket-expanded-red.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T031531723Z-manual-ticket-expanded-red.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T031531723Z-manual-ticket-expanded-red-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261125T042020Z-red-verified.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-scheduled-20261125T042020Z-red-verified.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261125T042020Z-red-verified-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -14,29 +14,29 @@
   "full_complete": 0,
   "prior_related_complete": 5,
   "prior_full_complete": 5,
-  "ci_run_id": null,
+  "ci_run_id": 45538741102,
   "ci_head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
-  "ci_status": "PENDING",
-  "next_exact_action": "Verify nine intended failures at exact Push HEAD, then apply the locally validated manual ticket and explicit broker price safeguards.",
+  "ci_status": "FAILURE",
+  "next_exact_action": "FIX nine verified regressions in tests/test_webui_manual_buy_durable_intent.py: preserve manual named account/price/size across queue replay and bypass automated strategy; validate canonical account and representable limit before submission; ensure KR/US explicit manual SELL adapter never replaces limit with closing/current quote. Inspect exact source and apply minimal fix, run offline CI; preserve all fences.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_RED",
+    "phase": "FIX",
     "work_id": "manual-ticket-expanded-red",
     "pr": 43,
     "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
       "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
-      "run_id": null
+      "run_id": 45538741102
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "Verify nine intended failures at exact Push HEAD, then apply the locally validated manual ticket and explicit broker price safeguards.",
+    "next_exact_action": "FIX nine verified regressions in tests/test_webui_manual_buy_durable_intent.py: preserve manual named account/price/size across queue replay and bypass automated strategy; validate canonical account and representable limit before submission; ensure KR/US explicit manual SELL adapter never replaces limit with closing/current quote. Inspect exact source and apply minimal fix, run offline CI; preserve all fences.",
     "queue": [
       {
         "work_id": "manual-ticket-execution-provenance",
         "priority": "P0",
-        "status": "WAIT_RED",
+        "status": "FIX",
         "files": [
           "trading/schema.py",
           "trading/off_hours_queue.py",
@@ -84,7 +84,29 @@
               ]
             ]
           },
-          "additional_local_red": 9
+          "additional_local_red": 9,
+          "expanded_red": {
+            "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
+            "run_id": 45538741102,
+            "pr_run_id": 45538745970,
+            "job_id": 138951723468,
+            "checkout_verified": true,
+            "offline_seccomp": true,
+            "failed": 9,
+            "passed": 3620,
+            "windows": "success",
+            "failures": [
+              "test_named_queued_manual_sell_keeps_operator_limit_after_restart[False-False]",
+              "test_named_queued_manual_sell_keeps_operator_limit_after_restart[True-False]",
+              "test_named_queued_manual_sell_keeps_operator_limit_after_restart[True-True]",
+              "test_named_manual_stock_buy_rejects_invalid_canonical_account_before_submission",
+              "test_manual_limit_rejects_unrepresentable_price_before_broker[KR-005930-0.5]",
+              "test_manual_limit_rejects_unrepresentable_price_before_broker[KR-005930-82001]",
+              "test_manual_limit_rejects_unrepresentable_price_before_broker[US-AAPL-100.001]",
+              "test_manual_sell_adapter_does_not_change_limit_after_quote_or_window_shift[KR-005930-82000-83000]",
+              "test_manual_sell_adapter_does_not_change_limit_after_quote_or_window_shift[US-AAPL-100-105]"
+            ]
+          }
         }
       },
       {

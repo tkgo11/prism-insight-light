@@ -1,8 +1,12 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-scheduled-20261125T042020Z-red-verified",
   "owner": "scheduled",
   "acquired_expected_state_parent": "a1b39a13e9e59ff8159c1a850a08f909b678c24b",
-  "observed_pr_head": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe"
+  "observed_pr_head": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
+  "active_state_sha": "91cf07cbfc46c6ac6d943c54bae8dca157e6face",
+  "release_expected_state_parent": "91cf07cbfc46c6ac6d943c54bae8dca157e6face",
+  "final_pr_head": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
+  "release_reason": "Nine exact-head offline assertion failures verified; transition WAIT_RED to FIX."
 }
