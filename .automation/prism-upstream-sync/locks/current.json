@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-manual-20261125T1130KST-unblock-01",
-  "owner": "manual-user-request",
-  "acquired_expected_state_parent": "c440000d34562f31b3bc4f27727a539f1fd02b66",
-  "active_state_sha": "99aed0675fe16fa211e93beab8f0502310e3f2af",
-  "release_expected_state_parent": "99aed0675fe16fa211e93beab8f0502310e3f2af",
-  "final_pr_head": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
-  "release_reason": "Verified prior CI run and submitted mock-only selector restart regression; exact new HEAD CI not observed yet."
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261125T024101695Z-ledger-canonical-routing",
+  "owner": "codex",
+  "acquired_expected_state_parent": "12b72f3556b9a0287d2682c11dcebb6655008979",
+  "observed_state_sha": "12b72f3556b9a0287d2682c11dcebb6655008979",
+  "observed_pr_head": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43
 }
