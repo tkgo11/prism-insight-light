@@ -1,11 +1,8 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261125T031531723Z-manual-ticket-expanded-red",
-  "owner": "codex",
-  "acquired_expected_state_parent": "6399ca86b9ad42dccc47d3e12436d5dabfe28d15",
-  "active_state_sha": "072457956e46ad1c8510fe57037189fd967f52ce",
-  "release_expected_state_parent": "072457956e46ad1c8510fe57037189fd967f52ce",
-  "final_pr_head": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
-  "release_reason": "Extend exact RED coverage to default single-account workers, no-provenance legacy tickets, invalid price increments and concrete broker adapter limits."
+  "status": "ACTIVE",
+  "run_id": "prism-scheduled-20261125T042020Z-red-verified",
+  "owner": "scheduled",
+  "acquired_expected_state_parent": "a1b39a13e9e59ff8159c1a850a08f909b678c24b",
+  "observed_pr_head": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe"
 }
