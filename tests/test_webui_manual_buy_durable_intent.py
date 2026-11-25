@@ -324,3 +324,68 @@ async def test_manual_sell_adapter_does_not_change_limit_after_quote_or_window_s
     )
     assert result["result"]["status"] == "executed"
     assert placed == [(limit, 7)]
+
+
+@pytest.mark.asyncio
+async def test_real_manual_ticket_stays_fenced_when_webui_live_is_disabled_at_restart(tmp_path, monkeypatch):
+    import asyncio
+    from datetime import datetime, timezone
+
+    path = tmp_path / "ledger.json"
+    queue = tmp_path / "queue.json"
+    orders = []
+
+    async def mock_broker(self, signal, *, account=None):
+        orders.append(account["name"])
+        return DispatchResult("acknowledged", "mock accepted", "SELL", "US")
+
+    _install_mock_manual_dispatcher(monkeypatch, path, mock_broker)
+    selected = {"name": "synthetic", "account_key": "prod:12345678:01", "svr": "prod",
+                "market": "us", "product": "01", "account": "12345678"}
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: [selected])
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: selected)
+    opened = False
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: opened)
+    monkeypatch.setattr("trading.dispatch.is_off_hours_order_available", lambda _: False)
+    monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda _: datetime.now(timezone.utc))
+    armed = await trade_service.dispatch_manual_order(
+        action="SELL", ticker="AAPL", market="US", price=100, account_name="synthetic",
+        arm_phrase=trade_service.SELL_ALL_PHRASE, trading_mode="real", queue_path=queue,
+        restrict_to_primary=True,
+    )
+    assert armed["result"]["status"] == "queued"
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "false")
+    opened = True
+    worker = TradeDispatcher(
+        trading_mode="real", fresh_quote_enabled=False, queue_path=queue,
+        execution_ledger_path=path, strategy_config={"name": ""},
+    )
+    assert await asyncio.to_thread(worker.drain_due_orders) == 0
+    assert worker.queue.failed_count() == 1
+    assert orders == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("multi_account", [False, True])
+async def test_manual_sell_rejects_invalid_stock_account_before_broker(tmp_path, monkeypatch, multi_account):
+    orders = []
+
+    async def mock_broker(self, signal, **_):
+        orders.append(signal.ticker)
+        return DispatchResult("unknown", "mock outcome", "SELL", "US")
+
+    _install_mock_manual_dispatcher(monkeypatch, tmp_path / "ledger.json", mock_broker)
+    malformed = {"name": "synthetic", "account_key": "vps:1234567:01", "svr": "vps",
+                 "market": "us", "product": "01", "account": "1234567"}
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: [malformed])
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: malformed)
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(
+        lambda: {"multi_account_trading": {"enabled": multi_account}},
+    ))
+    result = await trade_service.dispatch_manual_order(
+        action="SELL", ticker="AAPL", market="US", price=100, account_name="synthetic",
+        arm_phrase=trade_service.SELL_ALL_PHRASE, trading_mode="demo", restrict_to_primary=True,
+    )
+    assert result["result"]["status"] == "rejected"
+    assert orders == []
