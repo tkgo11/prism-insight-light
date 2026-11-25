@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-codex-20261125T030453102Z-multi-account-replay-fix",
   "owner": "codex",
   "acquired_expected_state_parent": "28e8a35edee208c3bf094ca8b0acbb52b117ed4d",
-  "observed_state_sha": "28e8a35edee208c3bf094ca8b0acbb52b117ed4d",
-  "observed_pr_head": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
-  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
-  "pr": 43
+  "active_state_sha": "abe0f8b821d55fe83b2f714037e6a167f37dbd7c",
+  "release_expected_state_parent": "abe0f8b821d55fe83b2f714037e6a167f37dbd7c",
+  "final_pr_head": "101f4b644a7604a4c647011b6e7b3f446ad17fd9",
+  "release_reason": "Require durable replay dedupe for queued multi-account submissions, retain exact selected named accounts, and quarantine permanent mixed rejections."
 }

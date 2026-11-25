@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T030248053Z-multi-account-replay-red",
-  "status": "WAIT_RED",
+  "run_id": "prism-codex-20261125T030453102Z-multi-account-replay-fix",
+  "status": "WAIT_GREEN",
   "pr": 43,
-  "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T030248053Z-multi-account-replay-red.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T030248053Z-multi-account-replay-red.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T030248053Z-multi-account-replay-red-risk.json",
+  "head_sha": "101f4b644a7604a4c647011b6e7b3f446ad17fd9",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T030453102Z-multi-account-replay-fix.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T030453102Z-multi-account-replay-fix.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T030453102Z-multi-account-replay-fix-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,33 +15,39 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+  "ci_head_sha": "101f4b644a7604a4c647011b6e7b3f446ad17fd9",
   "ci_status": "PENDING",
-  "next_exact_action": "Confirm the four reproduced assertions on exact push checkout, then apply the multi-account safeguards.",
+  "next_exact_action": "Verify exact fix Push and PR checkout trees, Linux tests, guarded Windows tests, and Snyk. Freeze the branch and prepare separate scheduled R1 evidence if the final gap scan has no actionable findings.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_RED",
-    "work_id": "multi-account-replay-red",
+    "phase": "WAIT_GREEN",
+    "work_id": "multi-account-replay-fix",
     "pr": 43,
-    "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+    "head_sha": "101f4b644a7604a4c647011b6e7b3f446ad17fd9",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+      "head_sha": "101f4b644a7604a4c647011b6e7b3f446ad17fd9",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "Confirm the four reproduced assertions on exact push checkout, then apply the multi-account safeguards.",
+    "next_exact_action": "Verify exact fix Push and PR checkout trees, Linux tests, guarded Windows tests, and Snyk. Freeze the branch and prepare separate scheduled R1 evidence if the final gap scan has no actionable findings.",
     "queue": [
       {
         "work_id": "multi-account-replay-and-named-ticket",
         "priority": "P0",
-        "status": "WAIT_RED",
+        "status": "WAIT_GREEN",
         "files": [
           "trading/dispatch.py",
           "tests/test_multi_account_dispatch.py"
         ],
-        "evidence": "Fresh independent review reproduced duplicate replay without dedupe, named WebUI scope loss on restart, and permanent rejection stuck pending after another accepted leg."
+        "evidence": "Fresh independent review reproduced duplicate replay without dedupe, named WebUI scope loss on restart, and permanent rejection stuck pending after another accepted leg.",
+        "verification": {
+          "red_head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+          "red_run_id": 45537217592,
+          "local_full_passed": 3619,
+          "independent_focused_passed": 123
+        }
       },
       {
         "work_id": "fix1",
