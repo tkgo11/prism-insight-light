@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "codex",
   "run_id": "prism-codex-20261125T102909996Z-wait_green",
   "acquired_expected_state_parent": "eaa5f7e87a98b0e49d3936cc081a9773931fe81b",
-  "observed_state_sha": "eaa5f7e87a98b0e49d3936cc081a9773931fe81b",
+  "active_state_sha": "da4f4fdae5fb236179856ff12beb813456b027b3",
+  "release_expected_state_parent": "da4f4fdae5fb236179856ff12beb813456b027b3",
   "observed_pr_head": "b06e84c5a8155e2617dc619bbfa410c06f296d78",
-  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
-  "pr": 43
+  "final_pr_head": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+  "release_reason": "Reuse WebUI live opt-in parser on real queued manual execution; reject invalid canonical stock SELL accounts before single or fanout submission."
 }
