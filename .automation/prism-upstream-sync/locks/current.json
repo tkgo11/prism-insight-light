@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261125T025131249Z-deferral-config-fix",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261125T025539674Z-windows-offline-egress",
   "owner": "codex",
-  "acquired_expected_state_parent": "285389a4398fcf8982c2e5552809dc8747531dcd",
-  "active_state_sha": "e7d642d52d3bc530add901e518e709f4a1f735c8",
-  "release_expected_state_parent": "e7d642d52d3bc530add901e518e709f4a1f735c8",
-  "final_pr_head": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
-  "release_reason": "Persist pre-submission deferrals for pinned accounts under durable dedupe, preserve live age limits, refresh the trade switch, and retain direct canonical fences."
+  "acquired_expected_state_parent": "2667e164c92b9696bb4f5c21bfaf75597504438c",
+  "observed_state_sha": "2667e164c92b9696bb4f5c21bfaf75597504438c",
+  "observed_pr_head": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43
 }
