@@ -298,11 +298,13 @@ async def test_queued_multi_account_cannot_switch_demo_to_real(monkeypatch, tmp_
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
     monkeypatch.setattr("trading.dispatch.is_off_hours_order_available", lambda market: False)
     first = dispatcher(monkeypatch, tmp_path, multi=True)
+    first.execution_dedupe = True
     assert (await first.dispatch(signal())).status == "queued"
     persisted = first.queue._load()[0]
     assert persisted.execution_context["account_ids"] == [_account_id(accounts[0]["account_key"])]
     assert persisted.execution_context["trading_mode"] == "demo"
     replay = dispatcher(monkeypatch, tmp_path, mode="real", multi=True)
+    replay.execution_dedupe = True
     calls = []
     async def fake_trade(self, order, *, account=None):
         calls.append(1)

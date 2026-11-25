@@ -51,7 +51,7 @@ async def test_cancelled_dispatch_keeps_broker_lock_until_worker_and_tracking_fi
     dispatcher.trading_mode = "demo"
     dispatcher.account_name = None
     dispatcher.account_index = None
-    dispatcher.execution_dedupe = False
+    dispatcher.execution_dedupe = queued
     dispatcher._stop_sell_unresolved_buy_block = no_stop_block
     dispatcher._resolve_event_strategy = lambda signal: None
     dispatcher._resolve_strategy = lambda signal: Strategy()

@@ -519,6 +519,11 @@ class MultiAccountTradeDispatcher:
         )
         if not market_open and not can_submit_off_hours:
             if allow_queue:
+                if not self.dispatcher.execution_dedupe:
+                    return DispatchResult(
+                        "rejected", "Multi-account queue admission requires durable dedupe",
+                        signal.signal_type, signal.market,
+                    )
                 context = {
                     "version": 2,
                     "multi_account": True,
@@ -736,8 +741,7 @@ class TradeDispatcher:
         self.restrict_to_primary = restrict_to_primary
         setting = self._runtime_config.get("multi_account_trading") or {}
         self.multi_account_enabled = (
-            not self.account_name
-            and self.account_index is None
+            (self.restrict_to_primary or (not self.account_name and self.account_index is None))
             and _as_enabled(setting.get("enabled") if isinstance(setting, dict) else setting)
         )
         self.execution_ledger = ExecutionLedger(execution_ledger_path)
@@ -1366,9 +1370,9 @@ class TradeDispatcher:
         if queue_context is not None and not isinstance(queue_context, dict):
             return DispatchResult("failed", "Queued execution context is malformed; operator reconciliation required", signal.signal_type, signal.market)
         if queued_context is not None:
-            if queued_context.get("live_retry") is True and not self.execution_dedupe:
+            if queued_context.get("multi_account") is True and not self.execution_dedupe:
                 return DispatchResult(
-                    "failed", "Deferred account replay requires durable dedupe; reconciliation required",
+                    "failed", "Multi-account queue replay requires durable dedupe; reconciliation required",
                     signal.signal_type, signal.market,
                 )
             signal.from_telegram = queued_context.get("from_telegram") is True
@@ -1568,18 +1572,15 @@ class TradeDispatcher:
                 # Terminal dedupe skips retain their non-retryable disposition.
                 return QueueExecutionResult("processed", f"Skipped: {result.message}")
             if result.status == "partial_success":
-                # Some account legs executed and some did not. Legs that are
-                # still retryable (deferred/failed/rejected/dry-run, or skipped
-                # behind a live claim) keep the item queued; executed legs and
-                # legs skipped by an earlier EXECUTED claim suppress safely on
-                # retry. An "unknown" leg must neither be retried nor silently
-                # dropped — quarantine for operator reconciliation.
+                # The queue tracks submission, not fills. Preserve outstanding
+                # work and quarantine any leg with an unknown broker outcome.
+                submitted = {"executed", "acknowledged"}
                 unresolved = [
                     leg
                     for leg in result.accounts
-                    if leg.status != "executed"
+                    if leg.status not in submitted
                     and not (
-                        leg.status == "skipped" and leg.previous_status == "executed"
+                        leg.status == "skipped" and leg.previous_status in submitted
                     )
                 ]
                 if not unresolved:
@@ -1595,6 +1596,12 @@ class TradeDispatcher:
                         result.signal_type, result.market, result.message,
                     )
                     return QueueExecutionResult("failed", result.message)
+                if any(leg.status == "rejected" for leg in unresolved) and all(
+                    leg.status == "rejected"
+                    or (leg.status == "skipped" and leg.previous_status is None)
+                    for leg in unresolved
+                ):
+                    return QueueExecutionResult("failed", f"Queued account rejected: {result.message}")
                 return QueueExecutionResult("deferred", result.message)
             if result.status in {"failed", "unknown"}:
                 logger.error(
