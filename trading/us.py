@@ -1760,7 +1760,7 @@ class USStockTrading:
     async def async_sell_stock(self, ticker: str, exchange: str = None,
                                timeout: float = 30.0, limit_price: Optional[float] = None,
                                use_moo: bool = False,
-                               sell_fraction: Optional[float] = None) -> Dict[str, Any]:
+                               sell_fraction: Optional[float] = None, *, preserve_limit: bool = False) -> Dict[str, Any]:
         """
         Async sell API with timeout
 
@@ -1774,13 +1774,15 @@ class USStockTrading:
         Returns:
             Order result dict
         """
-        return await self._execute_sell_stock(
-            ticker, exchange, limit_price, use_moo, sell_fraction
-        )
+        if preserve_limit:
+            return await self._execute_sell_stock(
+                ticker, exchange, limit_price, use_moo, sell_fraction, preserve_limit=True,
+            )
+        return await self._execute_sell_stock(ticker, exchange, limit_price, use_moo, sell_fraction)
 
     async def _execute_sell_stock(self, ticker: str, exchange: str = None,
                                   limit_price: float = None, use_moo: bool = False,
-                                  sell_fraction: Optional[float] = None) -> Dict[str, Any]:
+                                  sell_fraction: Optional[float] = None, *, preserve_limit: bool = False) -> Dict[str, Any]:
         """Execute sell stock logic with portfolio verification"""
         result = {
             'success': False,
@@ -1792,6 +1794,9 @@ class USStockTrading:
             'message': '',
             'timestamp': datetime.datetime.now().isoformat()
         }
+
+        if preserve_limit and (not limit_price or limit_price < 0 or limit_price != round(limit_price, 2)):
+            return {**result, "outcome_unknown": False, "message": "Invalid explicit US limit price"}
 
         stock_lock = await self._get_stock_lock(ticker)
 
@@ -1887,7 +1892,7 @@ class USStockTrading:
                         # If sell limit price is lower than current market price, elevate to current price
                         # to secure better execution; otherwise use requested limit price.
                         if limit_price and limit_price > 0:
-                            if current_price > 0 and limit_price < current_price:
+                            if not preserve_limit and current_price > 0 and limit_price < current_price:
                                 logger.info(
                                     f"[Async Sell] {ticker} signal limit price (${limit_price:.2f}) is lower than current market price (${current_price:.2f}); elevating limit to current price"
                                 )

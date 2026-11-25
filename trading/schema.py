@@ -213,6 +213,7 @@ class SignalMessage:
     )
     transport_published_at: datetime | None = field(default=None, repr=False, compare=False, init=False)
     from_telegram: bool = field(default=False, repr=False, compare=False, init=False)
+    manual_ticket: bool = field(default=False, repr=False, compare=False, init=False)
 
     @property
     def is_trade(self) -> bool:

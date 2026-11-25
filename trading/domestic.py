@@ -1356,7 +1356,8 @@ class DomesticStockTrading:
             self._stock_locks[stock_code] = asyncio.Lock()
         return self._stock_locks[stock_code]
 
-    async def async_buy_stock(self, stock_code: str, buy_amount: Optional[int] = None, timeout: float = 30.0, limit_price: Optional[int] = None) -> Dict[str, Any]:
+    async def async_buy_stock(self, stock_code: str, buy_amount: Optional[int] = None, timeout: float = 30.0, limit_price: Optional[int] = None,
+                              *, preserve_limit: bool = False) -> Dict[str, Any]:
         """
         Async buy API (with timeout)
         Get current price → Calculate buyable quantity → Market buy
@@ -1382,9 +1383,12 @@ class DomesticStockTrading:
         # Keep awaiting the worker until the bounded HTTP transport returns.
         # Cancelling an outer coroutine cannot stop an in-flight broker thread
         # and can otherwise make the order outcome ambiguous.
+        if preserve_limit:
+            return await self._execute_buy_stock(stock_code, buy_amount, limit_price, preserve_limit=True)
         return await self._execute_buy_stock(stock_code, buy_amount, limit_price)
 
-    async def _execute_buy_stock(self, stock_code: str, buy_amount: int = None, limit_price: int = None) -> Dict[str, Any]:
+    async def _execute_buy_stock(self, stock_code: str, buy_amount: int = None, limit_price: int = None,
+                                 *, preserve_limit: bool = False) -> Dict[str, Any]:
         # Use class default if buy_amount is None
         amount = self._resolve_buy_amount(buy_amount)
 
@@ -1400,6 +1404,9 @@ class DomesticStockTrading:
         }
 
         # 3-level protection: per-stock lock + semaphore + global lock
+        if preserve_limit and (not limit_price or limit_price != align_krx_tick_price(limit_price)):
+            return {**result, "outcome_unknown": False, "message": "Invalid explicit KR limit price"}
+
         stock_lock = await self._get_stock_lock(stock_code)
 
         async with stock_lock:  # Level 1: Prevent concurrent trading per stock
@@ -1449,9 +1456,14 @@ class DomesticStockTrading:
                         else:
                             logger.info(f"[Async Buy API] {stock_code} executing market/reserved-market buy for an estimated {buy_quantity} shares")
                         submission_attempted = True
-                        buy_result = await asyncio.to_thread(
-                            self.smart_buy, stock_code, amount, requested_limit_price
-                        )
+                        if preserve_limit:
+                            buy_result = await asyncio.to_thread(
+                                self.buy_limit_price, stock_code, requested_limit_price, amount,
+                            )
+                        else:
+                            buy_result = await asyncio.to_thread(
+                                self.smart_buy, stock_code, amount, requested_limit_price,
+                            )
 
                         result.update(broker_receipt_metadata(buy_result))
                         result['order_date'] = broker_order_date(buy_result)
@@ -1484,7 +1496,7 @@ class DomesticStockTrading:
         return result
 
     async def async_sell_stock(self, stock_code: str, timeout: float = 30.0, limit_price: Optional[int] = None,
-                               sell_fraction: Optional[float] = None) -> Dict[str, Any]:
+                               sell_fraction: Optional[float] = None, *, preserve_limit: bool = False) -> Dict[str, Any]:
         """
         Async sell API (with timeout)
         Sell all holding quantity at market price
@@ -1506,10 +1518,12 @@ class DomesticStockTrading:
                 'timestamp': Execution time
             }
         """
+        if preserve_limit:
+            return await self._execute_sell_stock(stock_code, limit_price, sell_fraction, preserve_limit=True)
         return await self._execute_sell_stock(stock_code, limit_price, sell_fraction)
 
     async def _execute_sell_stock(self, stock_code: str, limit_price: int = None,
-                                  sell_fraction: Optional[float] = None) -> Dict[str, Any]:
+                                  sell_fraction: Optional[float] = None, *, preserve_limit: bool = False) -> Dict[str, Any]:
         """Actual sell execution logic (includes portfolio verification defensive logic)"""
         result = {
             'success': False,
@@ -1523,6 +1537,9 @@ class DomesticStockTrading:
         }
 
         # 3-level protection: per-stock lock + semaphore + global lock
+        if preserve_limit and (not limit_price or limit_price != align_krx_tick_price(limit_price)):
+            return {**result, "outcome_unknown": False, "message": "Invalid explicit KR limit price"}
+
         stock_lock = await self._get_stock_lock(stock_code)
 
         async with stock_lock:  # Level 1: Prevent concurrent trading per stock
@@ -1593,7 +1610,7 @@ class DomesticStockTrading:
                         # to secure better execution; otherwise use the requested limit price.
                         target_price = None
                         if limit_price and limit_price > 0:
-                            if current_price > 0 and limit_price < current_price:
+                            if not preserve_limit and current_price > 0 and limit_price < current_price:
                                 logger.info(
                                     f"[Async Sell API] {stock_code} signal limit price ({limit_price:,} KRW) is lower than current market price ({current_price:,} KRW); elevating limit to current price"
                                 )
@@ -1612,9 +1629,14 @@ class DomesticStockTrading:
                         else:
                             logger.info(f"[Async Sell API] {stock_code} executing sell all (holding: {holding_quantity} shares, market)")
                         submission_attempted = True
-                        all_sell_result = await asyncio.to_thread(
-                            self.smart_sell_all, stock_code, effective_limit_price, holding_quantity
-                        )
+                        if preserve_limit:
+                            all_sell_result = await asyncio.to_thread(
+                                self.sell_all_market_price, stock_code, holding_quantity, effective_limit_price,
+                            )
+                        else:
+                            all_sell_result = await asyncio.to_thread(
+                                self.smart_sell_all, stock_code, effective_limit_price, holding_quantity,
+                            )
 
                         result.update(broker_receipt_metadata(all_sell_result))
                         result['order_date'] = broker_order_date(all_sell_result)

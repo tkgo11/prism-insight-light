@@ -83,6 +83,8 @@ class QueuedSignal:
             context["transport_published_at"] = signal.transport_published_at.isoformat()
         if signal.from_telegram:
             context["from_telegram"] = True
+        if signal.manual_ticket:
+            context["manual_ticket"] = True
         return cls(
             signal=dict(signal.raw),
             execute_at=execute_at,

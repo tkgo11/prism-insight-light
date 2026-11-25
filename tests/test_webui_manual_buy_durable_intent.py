@@ -12,8 +12,17 @@ import pytest
 
 from trading.dispatch import DispatchResult, TradeDispatcher
 from trading.execution_ledger import ExecutionLedger
+from trading.schema import parse_signal_payload
 from trading.signal_safety import SignalSafetyGate
 from webui.services import trade_service
+
+
+def test_publisher_payload_cannot_grant_manual_ticket_provenance():
+    signal = parse_signal_payload({
+        "type": "SELL", "ticker": "AAPL", "market": "US", "price": 100,
+        "manual_ticket": True, "signal_id": "manual-" + "a" * 32,
+    })
+    assert signal.manual_ticket is False
 
 
 def _install_mock_manual_dispatcher(monkeypatch, ledger_path, broker):

@@ -68,6 +68,7 @@ async def dispatch_manual_order(
         # prior identical ticker/price. Durable ledger fencing remains mandatory.
         signal_payload["signal_id"] = "manual-" + secrets.token_hex(16)
         signal = parse_signal_payload(signal_payload)
+        signal.manual_ticket = True
     except (TypeError, ValueError) as exc:
         raise ValueError(str(exc)) from exc
     if not force_dry_run and not live_trading_enabled():

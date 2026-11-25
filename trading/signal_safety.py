@@ -721,7 +721,7 @@ class SignalSafetyGate:
         submitted, so the caller may safely retry via Pub/Sub redelivery or
         the next queue drain cycle.
         """
-        if not self.config.fresh_quote_enabled:
+        if signal.manual_ticket or not self.config.fresh_quote_enabled:
             return None
         reference_price = signal.price
         if reference_price is None or reference_price <= 0:

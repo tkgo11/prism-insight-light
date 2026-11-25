@@ -19,7 +19,7 @@ from urllib.parse import urlsplit
 from . import kis_auth as ka
 from . import yaml_compat as yaml
 from .config_paths import active_kis_config_path, runtime_file_path
-from .domestic import AsyncTradingContext, DomesticStockTrading
+from .domestic import AsyncTradingContext, DomesticStockTrading, align_krx_tick_price
 from .execution_ledger import ExecutionLedger, execution_identities
 from .execution_outcome import broker_order_date, broker_receipt_metadata, classify_broker_result
 from .file_lock import FileLock
@@ -492,8 +492,34 @@ class MultiAccountTradeDispatcher:
             return await self.dispatcher._dispatch_serialized(signal, **event_kwargs)
 
         accounts, results = self._eligible_accounts(signal, requested_ids)
+        if signal.manual_ticket and (queued_context or {}).get("multi_account") is False:
+            pinned_scope = queued_context["account_scope"]
+            accounts = [account for account in accounts if hashlib.sha256(
+                account["account_key"].encode("utf-8"),
+            ).hexdigest() == pinned_scope]
         if not accounts:
+            if signal.manual_ticket and queued_context is not None:
+                return DispatchResult(
+                    "failed", "Pinned manual order account is unavailable; reconciliation required",
+                    signal.signal_type, signal.market,
+                )
             return self._aggregate(signal, results)
+
+        if signal.manual_ticket and signal.signal_type == "BUY" and not self.dispatcher.dry_run:
+            verified = []
+            for account in accounts:
+                try:
+                    self.dispatcher._validated_buy_account_key(account, signal)
+                except (KeyError, TypeError, ValueError):
+                    results.append(AccountDispatchResult(
+                        account["name"], _account_id(account["account_key"]), "rejected",
+                        "Named BUY account configuration could not be verified",
+                    ))
+                else:
+                    verified.append(account)
+            accounts = verified
+            if not accounts:
+                return self._aggregate(signal, results)
 
         if self.dispatcher.dry_run:
             for account in accounts:
@@ -515,6 +541,7 @@ class MultiAccountTradeDispatcher:
         market_open = is_market_open(signal.market)
         can_submit_off_hours = (
             self.dispatcher.trading_mode == "real"
+            and not (signal.manual_ticket and signal.market == "KR")
             and is_off_hours_order_available(signal.market)
         )
         if not market_open and not can_submit_off_hours:
@@ -831,6 +858,15 @@ class TradeDispatcher:
         return None
 
     def _submission_source_block(self, signal: SignalMessage) -> DispatchResult | None:
+        if signal.manual_ticket and signal.is_trade:
+            limit = signal.price
+            if not limit or limit != (
+                align_krx_tick_price(limit) if signal.market == "KR" else round(limit, 2)
+            ):
+                return DispatchResult(
+                    "rejected", "Manual price must match a supported broker price increment",
+                    signal.signal_type, signal.market,
+                )
         if (self.trading_mode == "real" and not self.dry_run and signal.signal_type == "SELL"
                 and signal.sell_fraction is None and "sell_denominator" not in signal.raw
                 and _is_telegram_signal(signal)):
@@ -1040,11 +1076,14 @@ class TradeDispatcher:
             logger.info("Ignoring EVENT signal for %s(%s)", signal.company_name, signal.ticker)
             return DispatchResult("acknowledged", "Event signal acknowledged", signal.signal_type, signal.market)
 
-        strategy = self._resolve_strategy(signal)
+        # The browser ticket authorizes the operator's limit and sizing.
+        strategy = None if signal.manual_ticket else self._resolve_strategy(signal)
         market_open = is_market_open(signal.market)
         if not market_open:
             can_submit_off_hours = (
-                self.trading_mode == "real" and is_off_hours_order_available(signal.market)
+                self.trading_mode == "real"
+                and not (signal.manual_ticket and signal.market == "KR")
+                and is_off_hours_order_available(signal.market)
             )
             if can_submit_off_hours:
                 logger.info(
@@ -1052,6 +1091,14 @@ class TradeDispatcher:
                     signal.signal_type, signal.company_name, signal.ticker, signal.market,
                 )
             elif allow_queue:
+                selector = self._single_account_execution_selector(signal)
+                if signal.manual_ticket:
+                    selection = self._resolve_single_account(signal)["account_key"]
+                    account_id = _account_id(selection)
+                    scope = hashlib.sha256(selection.encode("utf-8")).hexdigest()
+                else:
+                    account_id = self._resolved_single_account_id(signal)
+                    scope = hashlib.sha256(selector.encode("utf-8")).hexdigest()
                 queued_signal = await asyncio.to_thread(
                     self.queue.enqueue, signal,
                     {
@@ -1059,10 +1106,8 @@ class TradeDispatcher:
                         "multi_account": False,
                         "trading_mode": self.trading_mode,
                         # Never persist the configured account name in plaintext.
-                        "account_scope": hashlib.sha256(
-                            self._single_account_execution_selector(signal).encode("utf-8")
-                        ).hexdigest(),
-                        "account_id": self._resolved_single_account_id(signal),
+                        "account_scope": scope,
+                        "account_id": account_id,
                     },
                 )
                 logger.info(
@@ -1376,6 +1421,14 @@ class TradeDispatcher:
                     signal.signal_type, signal.market,
                 )
             signal.from_telegram = queued_context.get("from_telegram") is True
+            ticket_id = signal.raw.get("signal_id")
+            has_ticket_id = isinstance(ticket_id, str) and re.fullmatch(r"manual-[0-9a-f]{32}", ticket_id) is not None
+            if (queued_context.get("manual_ticket") is True) != has_ticket_id:
+                return DispatchResult(
+                    "failed", "Queued manual order provenance is missing or invalid; reconciliation required",
+                    signal.signal_type, signal.market,
+                )
+            signal.manual_ticket = has_ticket_id
             if "transport_published_at" in queued_context:
                 try:
                     published_at = datetime.fromisoformat(queued_context["transport_published_at"])
@@ -1397,7 +1450,19 @@ class TradeDispatcher:
         # require manual reconciliation instead of guessing their origin.
         if not isinstance(queue_context, dict) or queue_context.get("trading_mode") != self.trading_mode:
             return DispatchResult("failed", "Queued trading mode is missing or changed; operator reconciliation required", signal.signal_type, signal.market)
-        if self.multi_account_enabled:
+        pinned_manual = signal.manual_ticket and queue_context.get("multi_account") is False
+        if pinned_manual:
+            account_id = queue_context.get("account_id")
+            account_scope = queue_context.get("account_scope")
+            if (not self.execution_dedupe or "account_ids" in queue_context
+                    or not isinstance(account_id, str) or re.fullmatch(r"[0-9a-f]{24}", account_id) is None
+                    or not isinstance(account_scope, str) or re.fullmatch(r"[0-9a-f]{64}", account_scope) is None
+                    or account_scope[:24] != account_id):
+                return DispatchResult(
+                    "failed", "Queued manual order has invalid account scope or missing dedupe",
+                    signal.signal_type, signal.market,
+                )
+        elif self.multi_account_enabled:
             if queue_context.get("multi_account") is not True:
                 return DispatchResult("failed", "Queued multi-account targets are missing; operator reconciliation required", signal.signal_type, signal.market)
         else:
@@ -1420,10 +1485,10 @@ class TradeDispatcher:
                 return DispatchResult("failed", "Queued KIS account identity changed; operator reconciliation required", signal.signal_type, signal.market)
         try:
             async with _serialized_broker_workflow():
-                if isinstance(queue_context, dict) and queue_context.get("multi_account") is True:
-                    if not self.multi_account_enabled:
+                if pinned_manual or queue_context.get("multi_account") is True:
+                    if not pinned_manual and not self.multi_account_enabled:
                         return DispatchResult("failed", "Queued account mode changed; operator reconciliation required", signal.signal_type, signal.market)
-                    requested_ids = queue_context.get("account_ids")
+                    requested_ids = [account_id] if pinned_manual else queue_context.get("account_ids")
                     if (
                         not isinstance(requested_ids, list)
                         or not requested_ids
@@ -1450,6 +1515,9 @@ class TradeDispatcher:
         # Queued multi-account replay bypasses dispatch(), so it
         # must perform the same durable pending-BUY preflight
         # before forwarding a stop-loss SELL to any account.
+        switch_block = self._trading_switch_block(signal)
+        if switch_block is not None:
+            return switch_block
         stop_block = await self._stop_sell_unresolved_buy_block(signal)
         if stop_block is not None:
             return stop_block
@@ -1758,6 +1826,8 @@ class TradeDispatcher:
                 trade_result = await trader.async_buy_stock(**buy_kwargs)
             else:
                 sell_kwargs = {"ticker": signal.ticker, "limit_price": limit_price}
+                if signal.manual_ticket:
+                    sell_kwargs["preserve_limit"] = True
                 if sell_fraction is not None:
                     sell_kwargs["sell_fraction"] = sell_fraction
                 trade_result = await trader.async_sell_stock(**sell_kwargs)
@@ -1768,6 +1838,8 @@ class TradeDispatcher:
                         "stock_code": signal.ticker,
                         "limit_price": None if limit_price is None else int(limit_price),
                     }
+                    if signal.manual_ticket:
+                        buy_kwargs["preserve_limit"] = True
                     if signal.position_fraction != 1.0:
                         buy_kwargs["buy_amount"] = scaled_buy_amount(signal, configured_buy_budget(trader, market=signal.market))
                     trade_result = await trader.async_buy_stock(**buy_kwargs)
@@ -1776,6 +1848,8 @@ class TradeDispatcher:
                         "stock_code": signal.ticker,
                         "limit_price": None if limit_price is None else int(limit_price),
                     }
+                    if signal.manual_ticket:
+                        sell_kwargs["preserve_limit"] = True
                     if sell_fraction is not None:
                         sell_kwargs["sell_fraction"] = sell_fraction
                     trade_result = await trader.async_sell_stock(**sell_kwargs)
