@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T103228531Z-audit",
-  "status": "PARTIAL_BLOCKED",
+  "run_id": "prism-manual-20261126T0118KST-recover-v7",
+  "status": "RECOVERED_LOCK",
   "pr": 43,
   "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T103228531Z-audit.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-manual-20261126T0118KST-recover-v7.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T103228531Z-audit.json",
   "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T103228531Z-audit-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
@@ -17,7 +17,7 @@
   "ci_run_id": 45595464677,
   "ci_head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
   "ci_status": "SUCCESS",
-  "next_exact_action": "Scheduled worker R1: recheck frozen HEAD 2453b9ba40906ef63b2cfebd1915f4addbf03843 and base d0a4d420bdd199a576a447788c704053b6550067, open the 255 related paths in this manifest, write unique per-file contract/negative-path/test/CI/review evidence, and certify only after a complete separate run. Then R2, F1 and F2 in separate scheduled runs. No Ready or merge while audit, approval, protection or KIS risk gates are open.",
+  "next_exact_action": "R1: Read immutable frozen HEAD/base, audit one small batch (start with one file), then atomically checkpoint actual evidence using optimistic CAS on the state ref while it is RELEASED. No ACTIVE lock for read-only audit/CI/checkpoint. Never certify from old Codex evidence alone; preserve all gates.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
     "phase": "AUDIT",
@@ -31,7 +31,7 @@
     },
     "audit_round": "R1",
     "prior_stalled_count": 0,
-    "next_exact_action": "Scheduled worker R1: recheck frozen HEAD 2453b9ba40906ef63b2cfebd1915f4addbf03843 and base d0a4d420bdd199a576a447788c704053b6550067, open the 255 related paths in this manifest, write unique per-file contract/negative-path/test/CI/review evidence, and certify only after a complete separate run. Then R2, F1 and F2 in separate scheduled runs. No Ready or merge while audit, approval, protection or KIS risk gates are open.",
+    "next_exact_action": "R1: Read immutable frozen HEAD/base, audit one small batch (start with one file), then atomically checkpoint actual evidence using optimistic CAS on the state ref while it is RELEASED. No ACTIVE lock for read-only audit/CI/checkpoint. Never certify from old Codex evidence alone; preserve all gates.",
     "queue": [
       {
         "work_id": "scheduled-related-R1",
@@ -372,7 +372,7 @@
         "evidence": "Pinned official KIS samples describe separate order/holdings/reservation reads, without broker-atomic cross-channel conditional reservation, complete fill-ID attribution or definitive lost-response restart evidence."
       }
     ],
-    "blocker": "External gates: independent scheduled R1/R2/F1/F2 certifications, latest-head approval, branch-protection/required-check access (403), and authoritative KIS cross-channel atomic reconciliation."
+    "blocker": "Independent R1/R2/F1/F2, latest approval, protection/required checks and authoritative KIS proof remain open."
   },
   "related_total": 255,
   "full_total": 275

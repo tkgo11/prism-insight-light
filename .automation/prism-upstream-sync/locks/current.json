@@ -1,9 +1,21 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
-  "owner": "scheduled",
-  "run_id": "prism-scheduled-20261125T121703Z-R1",
+  "status": "RELEASED",
+  "run_id": "prism-manual-20261126T0118KST-recover-v7",
+  "owner": "manual-user-authorized-recovery",
   "acquired_expected_state_parent": "9f493704c4ea53e36811032256089d1a35b4e48a",
-  "observed_pr_head": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
-  "observed_base_sha": "d0a4d420bdd199a576a447788c704053b6550067"
+  "active_state_sha": "64b11c5357e72cf82ab92659a77fdd1601e0ade2",
+  "release_expected_state_parent": "64b11c5357e72cf82ab92659a77fdd1601e0ade2",
+  "final_pr_head": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+  "release_reason": "Explicit user recovery; automation paused, later run completed, state and PR/base unchanged; abandoned scheduled audit lock. No code ref mutations.",
+  "recovered_lock": {
+    "schema_version": 1,
+    "status": "ACTIVE",
+    "owner": "scheduled",
+    "run_id": "prism-scheduled-20261125T121703Z-R1",
+    "acquired_expected_state_parent": "9f493704c4ea53e36811032256089d1a35b4e48a",
+    "observed_pr_head": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+    "observed_base_sha": "d0a4d420bdd199a576a447788c704053b6550067"
+  },
+  "automation_last_run": "2b82ed83-be1c-8323-872c-ced62190dc6f"
 }
