@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261125T024411213Z-watcher-receipt-red",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261125T024632032Z-watcher-receipt-fix",
   "owner": "codex",
-  "acquired_expected_state_parent": "b41a0c17f48001ae82b82e472bd6302acee200c9",
-  "active_state_sha": "adb483d699640974a54068316d8d0e6a54be084d",
-  "release_expected_state_parent": "adb483d699640974a54068316d8d0e6a54be084d",
-  "final_pr_head": "a8507f7e05a06a85b5152c8f013761e84d57346c",
-  "release_reason": "Regression suite covers KR/US stale watcher snapshots and contradictory read-only BUY history."
+  "acquired_expected_state_parent": "9d4b7ace04de06e241c8ab4c60ceb450868ac487",
+  "observed_state_sha": "9d4b7ace04de06e241c8ab4c60ceb450868ac487",
+  "observed_pr_head": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43
 }
