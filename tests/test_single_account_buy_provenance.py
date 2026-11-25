@@ -313,3 +313,76 @@ async def test_unknown_buy_survives_selector_change_and_restart(
     current = json.loads(path.read_text(encoding="utf-8"))
     assert current[identity]["status"] == "unknown"
     assert restarted.stop_loss_tracker.get_position(market, ticker) is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("first,second,historical", [
+    ("primary", "multi", False), ("multi", "primary", False),
+    ("name", "index", False), ("index", "name", False),
+    ("name", "primary", True), ("index", "multi", True),
+])
+@pytest.mark.parametrize("outcome", ["unknown", "acknowledged"])
+async def test_buy_ledger_blocks_same_account_after_routing_change_and_restart(
+    monkeypatch, tmp_path, market, ticker, first, second, historical, outcome,
+):
+    account = _account(market, "demo", "12345678")
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: account)
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: [account])
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    calls = []
+
+    async def mock_order(self, signal, *, account=None):
+        calls.append((signal.raw["signal_id"], account["account_key"]))
+        return DispatchResult(outcome, "mock outcome", signal.signal_type, signal.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_order)
+
+    def new_dispatcher(route):
+        monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(
+            lambda: {"multi_account_trading": {"enabled": route == "multi"}},
+        ))
+        return TradeDispatcher(
+            trading_mode="demo", fresh_quote_enabled=False, strategy_config={"name": ""},
+            execution_ledger_path=tmp_path / "ledger.json", queue_path=tmp_path / "queue.json",
+            account_name=account["name"] if route == "name" else None,
+            account_index=0 if route == "index" else None,
+        )
+
+    payload = {"signal_id": "restart-replay", "type": "BUY", "market": market,
+               "ticker": ticker, "price": 100}
+    assert (await new_dispatcher(first).dispatch(parse_signal_payload(payload))).status == outcome
+    if historical:
+        path = tmp_path / "ledger.json"
+        entries = json.loads(path.read_text(encoding="utf-8"))
+        for entry in entries.values():
+            entry.pop("canonical_buy_identities", None)
+        path.write_text(json.dumps(entries), encoding="utf-8")
+    elif first == "name":
+        account["name"] = "renamed-after-restart"
+    restarted = new_dispatcher(second)
+    replay = await restarted.dispatch(parse_signal_payload(payload))
+    assert replay.status == "skipped"
+    assert calls == [("restart-replay", account["account_key"])]
+
+    distinct = await restarted.dispatch(parse_signal_payload(payload | {"signal_id": "separate-buy"}))
+    assert distinct.status == outcome
+    assert calls[-1] == ("separate-buy", account["account_key"])
+
+
+def test_distinct_modern_event_ids_can_share_an_old_id(tmp_path):
+    ledger = ExecutionLedger(tmp_path / "ledger.json")
+    account_key = "vps:12345678:01"
+    intent = {"kind": "buy_unresolved", "market": "KR", "ticker": "005930",
+              "stop_loss": None, "account_scope": sha256(account_key.encode()).hexdigest()}
+    for event_id in ("event-one", "event-two"):
+        payload = {"id": "old-id", "event_id": event_id}
+        selector, legacy = execution_identities(payload, "demo:KR:primary")
+        modern, compatibility = execution_identities(payload, account_key)
+        claimed, _, token = ledger.claim(
+            selector, aliases=legacy, with_token=True, order_intent=intent,
+            canonical_buy_identities=(modern,),
+            legacy_buy_identities=dict.fromkeys(compatibility, intent["account_scope"]),
+        )
+        assert claimed
+        ledger.finalize(selector, "unknown", claim_token=token)

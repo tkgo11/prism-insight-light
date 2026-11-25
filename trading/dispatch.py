@@ -207,6 +207,29 @@ def _buy_stop_loss_intent(signal: SignalMessage, account_selector: str) -> dict[
     }
 
 
+def _legacy_buy_route_identities(
+    signal: SignalMessage, mode: str, account_names: list[str],
+) -> dict[str, str]:
+    server = "vps" if mode == "demo" else "prod"
+    try:
+        configured = ka.get_configured_accounts(
+            svr=server, market=signal.market.lower(), include_disabled=True,
+        )
+    except ValueError:
+        configured = []
+    account_names = sorted({*account_names, *(account["name"] for account in configured)})
+    selectors = ["primary", *(f"name:{name}" for name in account_names),
+                 *(f"index:{index}" for index in range(ka.MAX_CONFIGURED_ACCOUNTS))]
+    identities = {}
+    for selector in selectors:
+        route = f"{mode}:{signal.market}:{selector}"
+        scope = hashlib.sha256(route.encode()).hexdigest()
+        identity, aliases = execution_identities(signal.raw, route)
+        for key in (identity, *aliases):
+            identities[key] = scope
+    return identities
+
+
 def _as_enabled(value: Any, default: bool = False) -> bool:
     if value is None:
         return default
@@ -528,6 +551,11 @@ class MultiAccountTradeDispatcher:
                 )
             return self._aggregate(signal, results)
 
+        legacy_buy_identities = None
+        if self.dispatcher.execution_dedupe and signal.signal_type == "BUY":
+            legacy_buy_identities = _legacy_buy_route_identities(
+                signal, self.dispatcher.trading_mode, [a["name"] for a in accounts],
+            )
         for account in accounts:
             account_id = _account_id(account["account_key"])
             identity, aliases = execution_identities(signal.raw, account["account_key"])
@@ -536,6 +564,8 @@ class MultiAccountTradeDispatcher:
                     self.ledger.claim, identity, aliases=aliases, with_token=True,
                     order_intent=_buy_stop_loss_intent(signal, account["account_key"]),
                     order_side="SELL" if signal.signal_type == "SELL" else None,
+                    **({"legacy_buy_identities": legacy_buy_identities}
+                       if legacy_buy_identities is not None and account.get("product") == "01" else {}),
                     **({"sell_scope": self.dispatcher._sell_scope(signal, account)}
                        if signal.signal_type == "SELL" else {}),
                 )
@@ -1144,6 +1174,8 @@ class TradeDispatcher:
         # for dedupe identity (including legacy claims); only the intent scope
         # and broker routing use the pinned account.
         buy_intent = None
+        canonical_buy_identities = ()
+        legacy_buy_identities = None
         if account is None and self.execution_dedupe and signal.signal_type == "BUY":
             try:
                 if order_account is None:
@@ -1155,6 +1187,12 @@ class TradeDispatcher:
                 # before the durable claim or any order submission.
                 key = self._validated_buy_account_key(order_account, signal)
                 buy_intent = _buy_stop_loss_intent(signal, key)
+                canonical_id, canonical_aliases = execution_identities(signal.raw, key)
+                canonical_buy_identities = (canonical_id,)
+                legacy_buy_identities = dict.fromkeys(canonical_aliases, buy_intent["account_scope"])
+                legacy_buy_identities.update(_legacy_buy_route_identities(
+                    signal, self.trading_mode, [order_account["name"]],
+                ))
             except (KeyError, TypeError, ValueError, OSError, RuntimeError):
                 logger.warning(
                     "Deferring BUY %s %s: canonical KIS account unavailable",
@@ -1176,6 +1214,8 @@ class TradeDispatcher:
                 self.execution_ledger.claim, identity, aliases=aliases, with_token=True,
                 order_intent=buy_intent,
                 order_side="SELL" if signal.signal_type == "SELL" else None,
+                **({"canonical_buy_identities": canonical_buy_identities,
+                    "legacy_buy_identities": legacy_buy_identities} if buy_intent is not None else {}),
                 **({"sell_scope": self._sell_scope(signal, order_account)}
                    if signal.signal_type == "SELL" else {}),
             )
