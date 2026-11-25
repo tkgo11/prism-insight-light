@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T102237927Z-wait_green",
-  "status": "WAIT_GREEN",
+  "run_id": "prism-codex-20261125T102657908Z-wait_red",
+  "status": "WAIT_RED",
   "pr": 43,
-  "head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T102237927Z-wait_green.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T102237927Z-wait_green.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T102237927Z-wait_green-risk.json",
+  "head_sha": "b06e84c5a8155e2617dc619bbfa410c06f296d78",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T102657908Z-wait_red.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T102657908Z-wait_red.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T102657908Z-wait_red-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,28 +15,40 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
+  "ci_head_sha": "b06e84c5a8155e2617dc619bbfa410c06f296d78",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify exact Push and PR checkout/tree, offline Linux 3630 tests, guarded Windows, and Snyk; then freeze R1 inventory if the fresh gap scan stays clear.",
+  "next_exact_action": "Verify three exact push assertion failures, then restore shared WebUI authorization and validate manual SELL account scope before submission.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_GREEN",
-    "work_id": "manual-ticket-execution-provenance",
+    "phase": "WAIT_RED",
+    "work_id": "manual-order-arming-and-sell-account",
     "pr": 43,
-    "head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
+    "head_sha": "b06e84c5a8155e2617dc619bbfa410c06f296d78",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
+      "head_sha": "b06e84c5a8155e2617dc619bbfa410c06f296d78",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "Verify exact Push and PR checkout/tree, offline Linux 3630 tests, guarded Windows, and Snyk; then freeze R1 inventory if the fresh gap scan stays clear.",
+    "next_exact_action": "Verify three exact push assertion failures, then restore shared WebUI authorization and validate manual SELL account scope before submission.",
     "queue": [
+      {
+        "work_id": "manual-order-arming-and-sell-account",
+        "priority": "P0",
+        "status": "WAIT_RED",
+        "evidence": "Independent scan reproduced real queued manual execution after WebUI live opt-in was disabled. Single and multi manual SELL passed malformed stock account metadata to the mock adapter.",
+        "files": [
+          "trading/modes.py",
+          "trading/dispatch.py",
+          "webui/services/trade_service.py",
+          "tests/test_webui_manual_buy_durable_intent.py"
+        ]
+      },
       {
         "work_id": "manual-ticket-execution-provenance",
         "priority": "P0",
-        "status": "WAIT_GREEN",
+        "status": "verified",
         "files": [
           "trading/schema.py",
           "trading/off_hours_queue.py",
@@ -49,7 +61,13 @@
           "red_head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
           "red_run_id": 45538741102,
           "red_failures": 9,
-          "local_full_passed": 3630
+          "local_full_passed": 3630,
+          "head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
+          "push_run_id": 45594433783,
+          "pr_run_id": 45594444008,
+          "linux_passed": 3630,
+          "windows_guarded_passed": 203,
+          "snyk": "success"
         }
       },
       {

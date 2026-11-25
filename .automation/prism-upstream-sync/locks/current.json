@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "codex",
   "run_id": "prism-codex-20261125T102657908Z-wait_red",
   "acquired_expected_state_parent": "a987da8a03cd5a25736c0f0ae24d19d779e78f0d",
-  "observed_state_sha": "a987da8a03cd5a25736c0f0ae24d19d779e78f0d",
+  "active_state_sha": "e17069d23202c57e72836571253835bf706a4e84",
+  "release_expected_state_parent": "e17069d23202c57e72836571253835bf706a4e84",
   "observed_pr_head": "7fd6db8aa83538a693e377e852689cf907789185",
-  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
-  "pr": 43
+  "final_pr_head": "b06e84c5a8155e2617dc619bbfa410c06f296d78",
+  "release_reason": "Reproduce revoked real queued ticket authorization and malformed stock account data on single and multi manual SELL."
 }
