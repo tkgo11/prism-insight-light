@@ -72,6 +72,53 @@ async def test_real_stop_sell_never_submits_without_broker_atomic_preflight(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("route", ["live", "strategy", "queue"])
+@pytest.mark.parametrize("disabled_value", ["false", "'false'"])
+async def test_runtime_disable_after_start_blocks_pending_and_new_orders(
+    monkeypatch, tmp_path, route, disabled_value,
+):
+    market_open = route != "queue"
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: market_open)
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: {
+        "account_key": "vps:12345678:01", "name": "synthetic", "account": "12345678",
+        "svr": "vps", "product": "01", "market": "kr",
+    })
+    config = tmp_path / "config.yaml"
+    config.write_text("auto_trading: true\n", encoding="utf-8")
+    monkeypatch.setenv("PRISM_KIS_CONFIG_PATH", str(config))
+    replay = TradeDispatcher(
+        trading_mode="demo", fresh_quote_enabled=False, strategy_config={"name": ""},
+        queue_path=tmp_path / "queue.json", execution_ledger_path=tmp_path / "ledger.json",
+    )
+    calls = []
+
+    async def mock_trade(self, order, *, account=None):
+        calls.append(order)
+        return DispatchResult("acknowledged", "mock acceptance", order.signal_type, order.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_trade)
+    if route == "strategy":
+        class MockStrategy:
+            async def execute(self, order, **_):
+                return await mock_trade(self, order)
+
+        monkeypatch.setattr(replay, "_resolve_strategy", lambda _: MockStrategy())
+    if route == "queue":
+        assert (await replay.dispatch(signal())).status == "queued"
+        queued = replay.queue._load()[0]
+    config.write_text(f"auto_trading: {disabled_value}\n", encoding="utf-8")
+    market_open = True
+
+    if route == "queue":
+        result = await replay.execute_queued_signal(queued.signal | {QUEUE_CONTEXT_KEY: queued.execution_context})
+    else:
+        result = await replay.dispatch(signal())
+    assert result.status == "deferred"
+    assert "disabled" in result.message.lower()
+    assert calls == []
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
 @pytest.mark.parametrize("queued", [False, True])
 async def test_labeled_telegram_sell_without_fraction_cannot_submit_in_real_mode(

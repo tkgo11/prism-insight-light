@@ -386,3 +386,32 @@ def test_distinct_modern_event_ids_can_share_an_old_id(tmp_path):
         )
         assert claimed
         ledger.finalize(selector, "unknown", claim_token=token)
+
+
+@pytest.mark.asyncio
+async def test_legacy_canonical_key_remains_fenced_with_conflicting_scope(monkeypatch, tmp_path):
+    account = _account("KR", "demo", "12345678")
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: account)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    worker = TradeDispatcher(
+        trading_mode="demo", fresh_quote_enabled=False, strategy_config={"name": ""},
+        execution_ledger_path=tmp_path / "ledger.json", queue_path=tmp_path / "queue.json",
+    )
+    order = parse_signal_payload({"event_id": "new-id", "id": "old-id", "type": "BUY",
+                                  "ticker": "005930", "market": "KR", "price": 100})
+    _, (old_key,) = execution_identities(order.raw, account["account_key"])
+    ledger = worker.execution_ledger
+    claimed, _, token = ledger.claim(old_key, with_token=True, order_intent={
+        "kind": "buy_unresolved", "market": "KR", "ticker": "005930", "stop_loss": None,
+        "account_scope": sha256(b"vps:87654321:01").hexdigest(),
+    })
+    assert claimed
+    ledger.finalize(old_key, "unknown", claim_token=token)
+
+    async def mock_broker(self, *args, **kwargs):
+        return DispatchResult("unknown", "must not submit against existing canonical key", "BUY", "KR")
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_broker)
+    result = await worker.dispatch(order)
+    assert result.status == "skipped" and result.previous_status == "unknown"
+    assert len(json.loads(ledger.path.read_text(encoding="utf-8"))) == 1

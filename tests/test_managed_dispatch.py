@@ -46,15 +46,20 @@ def test_older_accepted_sell_blocks_manager_cutover(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_runtime_poll_only_submits_for_enabled_enrolled_account(monkeypatch):
+@pytest.mark.parametrize("disable_during_preflight", [False, True])
+async def test_runtime_poll_only_submits_for_enabled_enrolled_account(monkeypatch, disable_during_preflight):
     from datetime import datetime, timezone
 
     key = "vps:00000000:01"
     matching = sha256(key.encode()).hexdigest()
     mismatched = sha256(b"prod:00000000:01").hexdigest()
     calls = []
+    config = {"auto_trading": True}
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: dict(config)))
 
     def snapshot(entry):
+        if disable_during_preflight:
+            config["auto_trading"] = False
         return {**entry, "complete": True, "as_of": datetime.now(timezone.utc).isoformat(),
                 "holding_quantity": 4, "sellable_quantity": 4, "current_price": 85,
                 "open_orders": []}
@@ -74,6 +79,11 @@ async def test_runtime_poll_only_submits_for_enabled_enrolled_account(monkeypatc
     for scope in (matching, mismatched):
         dispatcher.managed_position_book.enroll(scope, "KR", "005930", 90,
                                                 latch_policy="LATCH_EXIT")
+    if disable_during_preflight:
+        result = await dispatcher.check_managed_positions()
+        assert result[0]["status"] == "PAUSED"
+        assert calls == []
+        return
     assert (await dispatcher.check_managed_positions())[0]["status"] == "PENDING"
     assert (await dispatcher.check_managed_positions())[0]["status"] == "PENDING"
     assert [(scope, qty) for scope, qty, _ in calls] == [(matching, 4)]
