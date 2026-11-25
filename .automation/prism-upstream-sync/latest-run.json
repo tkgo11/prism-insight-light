@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T024632032Z-watcher-receipt-fix",
-  "status": "WAIT_GREEN",
+  "run_id": "prism-codex-20261125T024927039Z-deferral-config-red",
+  "status": "WAIT_RED",
   "pr": 43,
-  "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024632032Z-watcher-receipt-fix.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T024632032Z-watcher-receipt-fix.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024632032Z-watcher-receipt-fix-risk.json",
+  "head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024927039Z-deferral-config-red.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T024927039Z-deferral-config-red.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024927039Z-deferral-config-red-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,23 +15,23 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+  "ci_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify both exact fix Actions checks and checkout trees, then submit partial deferral and runtime kill-switch regressions.",
+  "next_exact_action": "Verify 15 intended failures on the exact push checkout, then publish full-suite-verified dispatch and queue repairs.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_GREEN",
-    "work_id": "watcher-receipt-fix",
+    "phase": "WAIT_RED",
+    "work_id": "deferral-config-red",
     "pr": 43,
-    "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+    "head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+      "head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "Verify both exact fix Actions checks and checkout trees, then submit partial deferral and runtime kill-switch regressions.",
+    "next_exact_action": "Verify 15 intended failures on the exact push checkout, then publish full-suite-verified dispatch and queue repairs.",
     "queue": [
       {
         "work_id": "fix1",
@@ -100,7 +100,7 @@
       {
         "work_id": "watcher-snapshot-lock-race",
         "priority": "P0",
-        "status": "WAIT_GREEN",
+        "status": "verified",
         "files": [
           "trading/stop_loss_watcher.py",
           "trading/dispatch.py"
@@ -109,7 +109,12 @@
         "verification": {
           "red_head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
           "red_run_id": 45535083899,
-          "local_full_passed": 3598
+          "local_full_passed": 3598,
+          "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+          "push_run_id": 45535368714,
+          "pr_run_id": 45535371912,
+          "linux_passed": 3598,
+          "windows": "success"
         }
       },
       {
@@ -173,7 +178,7 @@
       {
         "work_id": "live-partial-account-deferral",
         "priority": "P1",
-        "status": "candidate",
+        "status": "WAIT_RED",
         "files": [
           "subscriber.py",
           "trading/dispatch.py"
@@ -183,7 +188,7 @@
       {
         "work_id": "read-only-buy-receipt-provenance",
         "priority": "P1",
-        "status": "WAIT_GREEN",
+        "status": "verified",
         "files": [
           "trading/execution_ledger.py"
         ],
@@ -191,13 +196,18 @@
         "verification": {
           "red_head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
           "red_run_id": 45535083899,
-          "local_full_passed": 3598
+          "local_full_passed": 3598,
+          "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+          "push_run_id": 45535368714,
+          "pr_run_id": 45535371912,
+          "linux_passed": 3598,
+          "windows": "success"
         }
       },
       {
         "work_id": "runtime-config-trading-disable",
         "priority": "P1",
-        "status": "candidate-reproduced",
+        "status": "WAIT_RED",
         "files": [
           "webui/services/account_service.py",
           "trading/dispatch.py",
