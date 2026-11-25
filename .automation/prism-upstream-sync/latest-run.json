@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T030849991Z-manual-ticket-red",
+  "run_id": "prism-codex-20261125T031531723Z-manual-ticket-expanded-red",
   "status": "WAIT_RED",
   "pr": 43,
-  "head_sha": "ab4239feaf8758cb18f0aeecfc5fb26bb8635b6e",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T030849991Z-manual-ticket-red.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T030849991Z-manual-ticket-red.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T030849991Z-manual-ticket-red-risk.json",
+  "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T031531723Z-manual-ticket-expanded-red.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T031531723Z-manual-ticket-expanded-red.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T031531723Z-manual-ticket-expanded-red-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,23 +15,23 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "ab4239feaf8758cb18f0aeecfc5fb26bb8635b6e",
+  "ci_head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify three exact RED assertions, then restore queue manual provenance and canonical validation.",
+  "next_exact_action": "Verify nine intended failures at exact Push HEAD, then apply the locally validated manual ticket and explicit broker price safeguards.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
     "phase": "WAIT_RED",
-    "work_id": "manual-ticket-red",
+    "work_id": "manual-ticket-expanded-red",
     "pr": 43,
-    "head_sha": "ab4239feaf8758cb18f0aeecfc5fb26bb8635b6e",
+    "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "ab4239feaf8758cb18f0aeecfc5fb26bb8635b6e",
+      "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "Verify three exact RED assertions, then restore queue manual provenance and canonical validation.",
+    "next_exact_action": "Verify nine intended failures at exact Push HEAD, then apply the locally validated manual ticket and explicit broker price safeguards.",
     "queue": [
       {
         "work_id": "manual-ticket-execution-provenance",
@@ -44,7 +44,48 @@
           "trading/signal_safety.py",
           "webui/services/trade_service.py"
         ],
-        "evidence": "Named queued ticket can inherit automatic strategy that changes a limit/size, and malformed named BUY can bypass previous single-account validation."
+        "evidence": "Named queued ticket can inherit automatic strategy that changes a limit/size, and malformed named BUY can bypass previous single-account validation. Further exact-tree review reproduced single-deployment named replay loss and legacy broker conversion of an operator limit to a different limit/closing price.",
+        "verification": {
+          "previous_red": {
+            "runs": [
+              [
+                45537939729,
+                "pull_request",
+                "completed",
+                "failure"
+              ],
+              [
+                45537934402,
+                "push",
+                "completed",
+                "failure"
+              ]
+            ],
+            "ready": true,
+            "run": 45537934402,
+            "job": 138949053269,
+            "checkout": "ab4239feaf8758cb18f0aeecfc5fb26bb8635b6e",
+            "tree": "239a967128559ed5f067f24f4f36b077a61bdf2f",
+            "outcomes": [
+              "2026-11-25T03:09:33.5189613Z OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+              "2026-11-25T03:10:19.3340152Z FAILED tests/test_webui_manual_buy_durable_intent.py::test_named_queued_manual_sell_keeps_operator_limit_after_restart[False] - AssertionError: assert [('automated ...', 90.0, 0.2)] == [('B', 100, None)]",
+              "2026-11-25T03:10:19.3344967Z FAILED tests/test_webui_manual_buy_durable_intent.py::test_named_queued_manual_sell_keeps_operator_limit_after_restart[True] - assert 1 == 0",
+              "2026-11-25T03:10:19.3346411Z FAILED tests/test_webui_manual_buy_durable_intent.py::test_named_manual_stock_buy_rejects_invalid_canonical_account_before_submission - AssertionError: assert 'unknown' in {'deferred', 'rejected'}",
+              "2026-11-25T03:10:19.3347222Z 3 failed, 3619 passed in 44.12s"
+            ],
+            "jobs": [
+              [
+                "Windows runtime smoke",
+                "success"
+              ],
+              [
+                "Full pytest suite",
+                "failure"
+              ]
+            ]
+          },
+          "additional_local_red": 9
+        }
       },
       {
         "work_id": "multi-account-replay-and-named-ticket",
