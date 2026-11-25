@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "owner": "codex",
   "run_id": "prism-codex-20261125T103228531Z-audit",
   "acquired_expected_state_parent": "0ff78027d9c68f76fc1382e076da4b6ca3201cc3",
-  "observed_state_sha": "0ff78027d9c68f76fc1382e076da4b6ca3201cc3",
+  "active_state_sha": "a87c6e934fa5163db6523a66d1d730a1d5410cff",
+  "release_expected_state_parent": "a87c6e934fa5163db6523a66d1d730a1d5410cff",
   "observed_pr_head": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
-  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
-  "pr": 43
+  "final_pr_head": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+  "release_reason": "Exact code CI verified and frozen candidate evidence checkpointed for independent scheduled audits. Draft and live automatic SELL fences retained."
 }

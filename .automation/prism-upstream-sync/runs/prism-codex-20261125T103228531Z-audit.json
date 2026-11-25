@@ -1,0 +1,502 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-codex-20261125T103228531Z-audit",
+  "owner": "codex",
+  "status": "PARTIAL_BLOCKED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": 0,
+  "prior_state_sha": "0ff78027d9c68f76fc1382e076da4b6ca3201cc3",
+  "active_state_sha": "a87c6e934fa5163db6523a66d1d730a1d5410cff",
+  "previous_code_head": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+  "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "historical_report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T102909996Z-wait_green.json",
+  "baseline_red": {
+    "run": 45595112804,
+    "job_id": 139139012757,
+    "conclusion": "failure",
+    "checkout": "b06e84c5a8155e2617dc619bbfa410c06f296d78",
+    "outcomes": [
+      "2026-11-25T10:27:40.5052672Z OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+      "2026-11-25T10:28:23.6775043Z FAILED tests/test_webui_manual_buy_durable_intent.py::test_real_manual_ticket_stays_fenced_when_webui_live_is_disabled_at_restart - assert 1 == 0",
+      "2026-11-25T10:28:23.6776086Z FAILED tests/test_webui_manual_buy_durable_intent.py::test_manual_sell_rejects_invalid_stock_account_before_broker[False] - AssertionError: assert 'unknown' == 'rejected'",
+      "2026-11-25T10:28:23.6777810Z FAILED tests/test_webui_manual_buy_durable_intent.py::test_manual_sell_rejects_invalid_stock_account_before_broker[True] - AssertionError: assert 'unknown' == 'rejected'",
+      "2026-11-25T10:28:23.6779015Z 3 failed, 3630 passed in 41.89s"
+    ],
+    "jobs": [
+      [
+        "Windows runtime smoke",
+        "completed",
+        "success"
+      ],
+      [
+        "Full pytest suite",
+        "completed",
+        "failure"
+      ]
+    ]
+  },
+  "code_changes": [],
+  "ci": {
+    "status": "SUCCESS",
+    "run_id": 45595464677,
+    "pr_run_id": 45595470005,
+    "exact_runs": [
+      {
+        "run_id": 45595470005,
+        "event": "pull_request",
+        "conclusion": "success",
+        "tree": "7ed35ad3b70c65e352635f2df6345292d76370fc",
+        "jobs": [
+          {
+            "job_id": 139140261314,
+            "name": "Windows runtime smoke",
+            "conclusion": "success",
+            "checkout": "84eba898c489e3d9507c4f2ec88eaa65bd6c2580",
+            "outcome": [
+              "2026-11-25T10:30:29.1386528Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+              "2026-11-25T10:30:36.5045435Z 203 passed in 6.48s\r"
+            ]
+          },
+          {
+            "job_id": 139140261783,
+            "name": "Full pytest suite",
+            "conclusion": "success",
+            "checkout": "84eba898c489e3d9507c4f2ec88eaa65bd6c2580",
+            "outcome": [
+              "2026-11-25T10:29:56.5294710Z OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+              "2026-11-25T10:30:39.4363807Z 3633 passed in 41.52s"
+            ]
+          }
+        ]
+      },
+      {
+        "run_id": 45595464677,
+        "event": "push",
+        "conclusion": "success",
+        "tree": "7ed35ad3b70c65e352635f2df6345292d76370fc",
+        "jobs": [
+          {
+            "job_id": 139140243134,
+            "name": "Windows runtime smoke",
+            "conclusion": "success",
+            "checkout": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+            "outcome": [
+              "2026-11-25T10:30:39.7096602Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+              "2026-11-25T10:30:47.5194377Z 203 passed in 6.73s\r"
+            ]
+          },
+          {
+            "job_id": 139140243418,
+            "name": "Full pytest suite",
+            "conclusion": "success",
+            "checkout": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+            "outcome": [
+              "2026-11-25T10:29:58.9672988Z OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+              "2026-11-25T10:30:44.2191645Z 3633 passed in 42.58s"
+            ]
+          }
+        ]
+      }
+    ],
+    "snyk": "success",
+    "linux_passed": 3633,
+    "windows_guarded_passed": 203,
+    "local_fresh_passed": 498,
+    "independent_scope_scan": "Latest implementation delta checked by separate read-only agent; prior defects closed and no new actionable high-priority issue in that delta.",
+    "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843"
+  },
+  "repository": {
+    "pr": 43,
+    "draft": true,
+    "pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+    "fork_main": "d0a4d420bdd199a576a447788c704053b6550067",
+    "upstream_main": "6e1796eff698c24064055585019331ff9ffe253f",
+    "upstream_delta": "Dashboard/export/docs only; no fork execution change to integrate."
+  },
+  "audits": {
+    "related_total": 255,
+    "full_total": 275,
+    "related_complete_current_head": 0,
+    "full_complete_current_head": 0,
+    "related_independent_passes": 0,
+    "full_independent_passes": 0,
+    "candidate_file_count": 12
+  },
+  "merge": {
+    "performed": false,
+    "draft": true,
+    "approval_count": 0,
+    "branch_protection_http_status": 403,
+    "required_checks_verification": "UNVERIFIED",
+    "configured_rulesets_observed": [],
+    "related_independent_passes": 0,
+    "full_independent_passes": 0,
+    "risk_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "broker_atomic": "UNPROVEN",
+    "live_auto_sell_authorized": false,
+    "reason": [
+      "Scheduled independent audits",
+      "Latest-head review approval",
+      "Branch protection and required checks access",
+      "KIS authoritative cross-channel reconciliation"
+    ]
+  },
+  "next_exact_action": "Scheduled worker R1: recheck frozen HEAD 2453b9ba40906ef63b2cfebd1915f4addbf03843 and base d0a4d420bdd199a576a447788c704053b6550067, open the 255 related paths in this manifest, write unique per-file contract/negative-path/test/CI/review evidence, and certify only after a complete separate run. Then R2, F1 and F2 in separate scheduled runs. No Ready or merge while audit, approval, protection or KIS risk gates are open.",
+  "worker_v5": {
+    "phase": "AUDIT",
+    "work_id": "scheduled-related-R1",
+    "pr": 43,
+    "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+    "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+    "expected_ci": {
+      "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+      "run_id": 45595464677
+    },
+    "audit_round": "R1",
+    "prior_stalled_count": 0,
+    "next_exact_action": "Scheduled worker R1: recheck frozen HEAD 2453b9ba40906ef63b2cfebd1915f4addbf03843 and base d0a4d420bdd199a576a447788c704053b6550067, open the 255 related paths in this manifest, write unique per-file contract/negative-path/test/CI/review evidence, and certify only after a complete separate run. Then R2, F1 and F2 in separate scheduled runs. No Ready or merge while audit, approval, protection or KIS risk gates are open.",
+    "queue": [
+      {
+        "work_id": "scheduled-related-R1",
+        "priority": "P0",
+        "status": "SCHEDULED_INDEPENDENT",
+        "evidence": {
+          "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+          "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+          "tree_sha": "7ed35ad3b70c65e352635f2df6345292d76370fc",
+          "related_inventory": 255,
+          "full_inventory": 275,
+          "push_run_id": 45595464677
+        },
+        "next": "Scheduled worker opens the frozen related inventory and records distinct per-file R1 evidence; zero independent passes certified."
+      },
+      {
+        "work_id": "manual-order-arming-and-sell-account",
+        "priority": "P0",
+        "status": "verified",
+        "evidence": "Independent scan reproduced real queued manual execution after WebUI live opt-in was disabled. Single and multi manual SELL passed malformed stock account metadata to the mock adapter.",
+        "files": [
+          "trading/modes.py",
+          "trading/dispatch.py",
+          "webui/services/trade_service.py",
+          "tests/test_webui_manual_buy_durable_intent.py"
+        ],
+        "verification": {
+          "red_head_sha": "b06e84c5a8155e2617dc619bbfa410c06f296d78",
+          "red_run_id": 45595112804,
+          "local_full_passed": 3633,
+          "latest_head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+          "push_run_id": 45595464677,
+          "pr_run_id": 45595470005,
+          "fresh_targeted_passes": 498
+        }
+      },
+      {
+        "work_id": "manual-ticket-execution-provenance",
+        "priority": "P0",
+        "status": "verified",
+        "files": [
+          "trading/schema.py",
+          "trading/off_hours_queue.py",
+          "trading/dispatch.py",
+          "trading/signal_safety.py",
+          "webui/services/trade_service.py"
+        ],
+        "evidence": "Named queued ticket can inherit automatic strategy that changes a limit/size, and malformed named BUY can bypass previous single-account validation. Further exact-tree review reproduced single-deployment named replay loss and legacy broker conversion of an operator limit to a different limit/closing price.",
+        "verification": {
+          "red_head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
+          "red_run_id": 45538741102,
+          "red_failures": 9,
+          "local_full_passed": 3630,
+          "head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
+          "push_run_id": 45594433783,
+          "pr_run_id": 45594444008,
+          "linux_passed": 3630,
+          "windows_guarded_passed": 203,
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "multi-account-replay-and-named-ticket",
+        "priority": "P0",
+        "status": "verified",
+        "files": [
+          "trading/dispatch.py",
+          "tests/test_multi_account_dispatch.py"
+        ],
+        "evidence": "Fresh independent review reproduced duplicate replay without dedupe, named WebUI scope loss on restart, and permanent rejection stuck pending after another accepted leg.",
+        "verification": {
+          "red_head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+          "red_run_id": 45537217592,
+          "local_full_passed": 3619,
+          "independent_focused_passed": 123,
+          "head_sha": "101f4b644a7604a4c647011b6e7b3f446ad17fd9",
+          "push_run_id": 45537468557,
+          "pr_run_id": 45537474140,
+          "linux_passed": 3619
+        }
+      },
+      {
+        "work_id": "fix1",
+        "priority": "P0",
+        "status": "verified",
+        "evidence": {
+          "head_sha": "87a6479b5106ce151983c2c0f5cad2037b3be960",
+          "local_full_passed": 3538,
+          "push_run_id": 45414121304,
+          "pr_run_id": 45414131460,
+          "remote_linux_passed": 3538,
+          "remote_windows_passed": 196,
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "batch2",
+        "priority": "P0",
+        "status": "verified",
+        "scope": [
+          "real legacy stop SELL",
+          "disabled explicit account fallback",
+          "broker failure envelope and headers",
+          "queue persisted timestamps",
+          "offline test bootstrap"
+        ],
+        "evidence": {
+          "red_head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
+          "red_run_id": 45414818143,
+          "red_failures": 12,
+          "local_fixed_full": 3551,
+          "head_sha": "00306c47fc2f933b82a1f576921197709638cca1",
+          "push_run_id": 45415625855,
+          "pr_run_id": 45415637133,
+          "linux_passed": 3551,
+          "windows": "success",
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "ledger-canonical-routing",
+        "priority": "P0",
+        "status": "verified",
+        "files": [
+          "trading/dispatch.py",
+          "trading/execution_ledger.py"
+        ],
+        "evidence": "At initial HEAD a persistent single-primary UNKNOWN is re-claimable by multi-account, name, and index routes for the same canonical account. Keep selector/remap fences while persisting account identity.",
+        "verification": {
+          "test_head_sha": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
+          "test_path": "tests/test_single_account_buy_provenance.py",
+          "test_id": "test_unknown_buy_survives_selector_change_and_restart",
+          "baseline_green_head": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "baseline_green_run_id": 45416938122,
+          "red_push_run_id": 45533799828,
+          "red_failures": 4,
+          "local_full_passed": 3591,
+          "legacy_note": "For names removed from config before a canonical link was persisted, old one-way selector keys cannot be reconstructed.",
+          "head_sha": "db7ae481d0836f58d31cfb57f7e34627b889599e",
+          "push_run_id": 45534726350,
+          "pr_run_id": 45534730906,
+          "linux_passed": 3591,
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "watcher-snapshot-lock-race",
+        "priority": "P0",
+        "status": "verified",
+        "files": [
+          "trading/stop_loss_watcher.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Tracker may be removed or rearmed after preflight while awaiting shared broker workflow lock.",
+        "verification": {
+          "red_head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+          "red_run_id": 45535083899,
+          "local_full_passed": 3598,
+          "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+          "push_run_id": 45535368714,
+          "pr_run_id": 45535371912,
+          "linux_passed": 3598,
+          "windows": "success"
+        }
+      },
+      {
+        "work_id": "telegram-unbounded-sell",
+        "priority": "P0",
+        "status": "verified",
+        "files": [
+          "subscriber.py",
+          "trading/telegram_fetch.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Official upstream fractional exits emit human Telegram notices without order sizes; exact fork parses and dispatches labeled KR/US traffic as full SELL. Guard real execution and legacy queued replay while preserving read-only rendering.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45595470005,
+          "pr_conclusion": "success",
+          "latest_head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+          "push_run_id": 45595464677,
+          "fresh_targeted_passes": 498
+        }
+      },
+      {
+        "work_id": "webui-primary-account-fanout",
+        "priority": "P0",
+        "status": "verified",
+        "files": [
+          "webui/templates/trading.html",
+          "webui/services/trade_service.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Blank UI account labeled primary is converted to None; configured dispatcher may fan out manual SELL ALL. UNKNOWN/mixed badge also misleading.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45595470005,
+          "pr_conclusion": "success",
+          "latest_head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+          "push_run_id": 45595464677,
+          "fresh_targeted_passes": 498
+        }
+      },
+      {
+        "work_id": "trusted-transport-timestamp",
+        "priority": "P1",
+        "status": "verified",
+        "files": [
+          "subscriber.py",
+          "trading/telegram_fetch.py",
+          "trading/signal_safety.py",
+          "trading/off_hours_queue.py"
+        ],
+        "evidence": "Pub/Sub publish_time only bounds receipt, not the stricter execution decision; Telegram payload can overshadow post time. Preserve through queue without changing identity.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45595470005,
+          "pr_conclusion": "success",
+          "latest_head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+          "push_run_id": 45595464677,
+          "fresh_targeted_passes": 498
+        }
+      },
+      {
+        "work_id": "live-partial-account-deferral",
+        "priority": "P1",
+        "status": "verified",
+        "files": [
+          "subscriber.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Pub/Sub and Telegram acknowledge partial_success including pre-submission deferred legs. Preserve pinned recipients and dedupe.",
+        "verification": {
+          "red_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+          "red_run_id": 45535698398,
+          "local_full_passed": 3614,
+          "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+          "push_run_id": 45535931921,
+          "pr_run_id": 45535934779,
+          "linux_passed": 3614,
+          "windows": "success"
+        }
+      },
+      {
+        "work_id": "read-only-buy-receipt-provenance",
+        "priority": "P1",
+        "status": "verified",
+        "files": [
+          "trading/execution_ledger.py"
+        ],
+        "evidence": "Read-only history can persist POSSIBLE_RECEIPT_MATCH despite reservation namespace, quantity or US venue conflict; UNKNOWN remains fenced.",
+        "verification": {
+          "red_head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+          "red_run_id": 45535083899,
+          "local_full_passed": 3598,
+          "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+          "push_run_id": 45535368714,
+          "pr_run_id": 45535371912,
+          "linux_passed": 3598,
+          "windows": "success"
+        }
+      },
+      {
+        "work_id": "runtime-config-trading-disable",
+        "priority": "P1",
+        "status": "verified",
+        "files": [
+          "webui/services/account_service.py",
+          "trading/dispatch.py",
+          "trading/domestic.py",
+          "trading/us.py"
+        ],
+        "evidence": "WebUI updates auto_trading=false on disk while imported adapter defaults stay True. Verify standard, queued and strategy order paths.",
+        "verification": {
+          "red_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+          "red_run_id": 45535698398,
+          "local_full_passed": 3614,
+          "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+          "push_run_id": 45535931921,
+          "pr_run_id": 45535934779,
+          "linux_passed": 3614,
+          "windows": "success"
+        }
+      },
+      {
+        "work_id": "windows-offline-egress",
+        "priority": "P2",
+        "status": "verified",
+        "evidence": "Windows smoke currently uses explicit broker mocks but does not enforce an OS-level network guard.",
+        "files": [
+          ".github/workflows/tests.yml",
+          "scripts/run_windows_offline_smoke.ps1"
+        ],
+        "verification": {
+          "baseline_checkout": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+          "baseline_source": "Windows smoke ran bare python -m pytest without an enforced network boundary.",
+          "local_python_dns_self_check": true,
+          "local_windows_firewall": null,
+          "head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
+          "windows": [
+            {
+              "run": 45536398609,
+              "job": 138943935390,
+              "conclusion": "success",
+              "lines": [
+                "2026-11-25T02:56:02.9188562Z 7500801ebb17e06b385d898aa49f09d776278d9d\r",
+                "2026-11-25T02:56:57.0684137Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+                "2026-11-25T02:57:05.5317975Z 203 passed in 7.49s\r"
+              ]
+            },
+            {
+              "run": 45536403471,
+              "job": 138943950414,
+              "conclusion": "success",
+              "lines": [
+                "2026-11-25T02:56:06.9149458Z e4601c9d9a264f63a0b1dc037214d3ff76e984f7\r",
+                "2026-11-25T02:57:00.0342537Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+                "2026-11-25T02:57:07.2551048Z 203 passed in 6.36s\r"
+              ]
+            }
+          ],
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+        "priority": "P0",
+        "status": "EXTERNAL_PROOF_REQUIRED",
+        "evidence": "Pinned official KIS samples describe separate order/holdings/reservation reads, without broker-atomic cross-channel conditional reservation, complete fill-ID attribution or definitive lost-response restart evidence."
+      }
+    ],
+    "blocker": "External gates: independent scheduled R1/R2/F1/F2 certifications, latest-head approval, branch-protection/required-check access (403), and authoritative KIS cross-channel atomic reconciliation."
+  },
+  "summary": "Exact code CI verified and frozen candidate evidence checkpointed for independent scheduled audits. Draft and live automatic SELL fences retained."
+}
