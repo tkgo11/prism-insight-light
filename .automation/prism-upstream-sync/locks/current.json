@@ -1,12 +1,11 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
+  "status": "ACTIVE",
   "owner": "codex",
-  "run_id": "prism-codex-20261125T102237927Z-wait_green",
-  "acquired_expected_state_parent": "281d0857b118a62b1b79b5574af4598db6f55b2e",
-  "active_state_sha": "eababbd64591d3f49b4f6b2ad9f7bf3f4fab2f69",
-  "release_expected_state_parent": "eababbd64591d3f49b4f6b2ad9f7bf3f4fab2f69",
-  "observed_pr_head": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
-  "final_pr_head": "7fd6db8aa83538a693e377e852689cf907789185",
-  "release_reason": "Restore trusted manual ticket and exact canonical scope after restart, validate stock accounts and preserve explicit KR/US broker limits."
+  "run_id": "prism-codex-20261125T102657908Z-wait_red",
+  "acquired_expected_state_parent": "a987da8a03cd5a25736c0f0ae24d19d779e78f0d",
+  "observed_state_sha": "a987da8a03cd5a25736c0f0ae24d19d779e78f0d",
+  "observed_pr_head": "7fd6db8aa83538a693e377e852689cf907789185",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43
 }
