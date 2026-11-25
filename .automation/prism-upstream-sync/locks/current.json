@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-codex-20261125T030849991Z-manual-ticket-red",
   "owner": "codex",
   "acquired_expected_state_parent": "f3ed87bc1d6de66c88824c3a2d53ab6b9a42bd92",
-  "observed_state_sha": "f3ed87bc1d6de66c88824c3a2d53ab6b9a42bd92",
-  "observed_pr_head": "101f4b644a7604a4c647011b6e7b3f446ad17fd9",
-  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
-  "pr": 43
+  "active_state_sha": "1c49228edc0e0b5e53f7c90225a88d8fdfbfdb48",
+  "release_expected_state_parent": "1c49228edc0e0b5e53f7c90225a88d8fdfbfdb48",
+  "final_pr_head": "ab4239feaf8758cb18f0aeecfc5fb26bb8635b6e",
+  "release_reason": "Verify manual ticket semantics survive restart and canonical stock BUY validation remains enforced."
 }
