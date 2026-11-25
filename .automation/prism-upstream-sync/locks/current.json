@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261125T024101695Z-ledger-canonical-routing",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261125T024411213Z-watcher-receipt-red",
   "owner": "codex",
-  "acquired_expected_state_parent": "12b72f3556b9a0287d2682c11dcebb6655008979",
-  "active_state_sha": "1a6224927243fc0eda7a4d31a6b5e066ec16f572",
-  "release_expected_state_parent": "1a6224927243fc0eda7a4d31a6b5e066ec16f572",
-  "final_pr_head": "db7ae481d0836f58d31cfb57f7e34627b889599e",
-  "release_reason": "Fence UNKNOWN and ACK across equivalent account routes while preserving selector keys and matching recoverable historical aliases."
+  "acquired_expected_state_parent": "b41a0c17f48001ae82b82e472bd6302acee200c9",
+  "observed_state_sha": "b41a0c17f48001ae82b82e472bd6302acee200c9",
+  "observed_pr_head": "db7ae481d0836f58d31cfb57f7e34627b889599e",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43
 }
