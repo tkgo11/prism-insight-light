@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T024101695Z-ledger-canonical-routing",
-  "status": "WAIT_GREEN",
+  "run_id": "prism-codex-20261125T024411213Z-watcher-receipt-red",
+  "status": "WAIT_RED",
   "pr": 43,
-  "head_sha": "db7ae481d0836f58d31cfb57f7e34627b889599e",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024101695Z-ledger-canonical-routing.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T024101695Z-ledger-canonical-routing.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024101695Z-ledger-canonical-routing-risk.json",
+  "head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024411213Z-watcher-receipt-red.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T024411213Z-watcher-receipt-red.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024411213Z-watcher-receipt-red-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -14,24 +14,24 @@
   "full_complete": 0,
   "prior_related_complete": 5,
   "prior_full_complete": 5,
-  "ci_run_id": null,
-  "ci_head_sha": "db7ae481d0836f58d31cfb57f7e34627b889599e",
+  "ci_run_id": 45535083899,
+  "ci_head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify exact fix HEAD Actions and checkout logs, then submit watcher snapshot and receipt conflict regression tests.",
+  "next_exact_action": "Verify seven intended failures at exact push checkout, then publish prepared snapshot and receipt safeguards.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_GREEN",
-    "work_id": "ledger-canonical-routing",
+    "phase": "WAIT_RED",
+    "work_id": "watcher-receipt-red",
     "pr": 43,
-    "head_sha": "db7ae481d0836f58d31cfb57f7e34627b889599e",
+    "head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "db7ae481d0836f58d31cfb57f7e34627b889599e",
-      "run_id": null
+      "head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+      "run_id": 45535083899
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "Verify exact fix HEAD Actions and checkout logs, then submit watcher snapshot and receipt conflict regression tests.",
+    "next_exact_action": "Verify seven intended failures at exact push checkout, then publish prepared snapshot and receipt safeguards.",
     "queue": [
       {
         "work_id": "fix1",
@@ -74,7 +74,7 @@
       {
         "work_id": "ledger-canonical-routing",
         "priority": "P0",
-        "status": "WAIT_GREEN",
+        "status": "verified",
         "files": [
           "trading/dispatch.py",
           "trading/execution_ledger.py"
@@ -89,13 +89,18 @@
           "red_push_run_id": 45533799828,
           "red_failures": 4,
           "local_full_passed": 3591,
-          "legacy_note": "For names removed from config before a canonical link was persisted, old one-way selector keys cannot be reconstructed."
+          "legacy_note": "For names removed from config before a canonical link was persisted, old one-way selector keys cannot be reconstructed.",
+          "head_sha": "db7ae481d0836f58d31cfb57f7e34627b889599e",
+          "push_run_id": 45534726350,
+          "pr_run_id": 45534730906,
+          "linux_passed": 3591,
+          "snyk": "success"
         }
       },
       {
         "work_id": "watcher-snapshot-lock-race",
         "priority": "P0",
-        "status": "candidate",
+        "status": "WAIT_RED",
         "files": [
           "trading/stop_loss_watcher.py",
           "trading/dispatch.py"
@@ -173,7 +178,7 @@
       {
         "work_id": "read-only-buy-receipt-provenance",
         "priority": "P1",
-        "status": "candidate-reproduced",
+        "status": "WAIT_RED",
         "files": [
           "trading/execution_ledger.py"
         ],
