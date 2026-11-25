@@ -158,3 +158,80 @@ async def test_manual_multi_account_unknown_buy_has_separate_durable_intents(
     assert "22222222" not in json.dumps(entries)
     with ExecutionLedger(path).guard_unresolved_buy("US", "AAPL") as unresolved:
         assert unresolved is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("legacy", [False, True])
+async def test_named_queued_manual_sell_keeps_operator_limit_after_restart(tmp_path, monkeypatch, legacy):
+    import asyncio
+    from datetime import datetime, timezone
+
+    path = tmp_path / "ledger.json"
+    queue = tmp_path / "queue.json"
+    orders = []
+
+    async def mock_broker(self, signal, *, account=None):
+        orders.append((account["name"], signal.price, signal.sell_fraction))
+        return DispatchResult("acknowledged", "mock accepted", "SELL", "US")
+
+    _install_mock_manual_dispatcher(monkeypatch, path, mock_broker)
+    selected = {"name": "B", "account_key": "vps:22222222:01", "svr": "vps",
+                "market": "us", "product": "01", "account": "22222222"}
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: [selected])
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: selected)
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(
+        lambda: {"multi_account_trading": {"enabled": True}},
+    ))
+    market_open = False
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: market_open)
+    monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda _: datetime.now(timezone.utc))
+    armed = await trade_service.dispatch_manual_order(
+        action="SELL", ticker="AAPL", market="US", price=100, account_name="B",
+        arm_phrase=trade_service.SELL_ALL_PHRASE, trading_mode="demo", queue_path=queue,
+        restrict_to_primary=True,
+    )
+    assert armed["result"]["status"] == "queued"
+    if legacy:
+        persisted = json.loads(queue.read_text(encoding="utf-8"))
+        persisted[0]["execution_context"].pop("manual_ticket", None)
+        queue.write_text(json.dumps(persisted), encoding="utf-8")
+
+    class ReplayStrategy:
+        async def execute(self, signal, **_):
+            orders.append(("automated strategy", signal.price * 0.9, 0.2))
+            return SimpleNamespace(status="executed", message="mock strategy result")
+
+    worker = TradeDispatcher(
+        trading_mode="demo", fresh_quote_enabled=False, queue_path=queue,
+        execution_ledger_path=path, strategy_config={"name": ""},
+    )
+    monkeypatch.setattr(worker, "_resolve_strategy", lambda *_: ReplayStrategy())
+    market_open = True
+    assert await asyncio.to_thread(worker.drain_due_orders) == int(not legacy)
+    assert worker.queue.failed_count() == int(legacy)
+    assert orders == ([] if legacy else [("B", 100, None)])
+
+
+@pytest.mark.asyncio
+async def test_named_manual_stock_buy_rejects_invalid_canonical_account_before_submission(tmp_path, monkeypatch):
+    orders = []
+
+    async def mock_broker(self, signal, *, account=None):
+        orders.append(account)
+        return DispatchResult("unknown", "mock submission", "BUY", "US")
+
+    _install_mock_manual_dispatcher(monkeypatch, tmp_path / "ledger.json", mock_broker)
+    malformed = {"name": "B", "account_key": "vps:2222222:01", "svr": "vps",
+                 "market": "us", "product": "01", "account": "2222222"}
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: [malformed])
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: malformed)
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(
+        lambda: {"multi_account_trading": {"enabled": True}},
+    ))
+    result = await trade_service.dispatch_manual_order(
+        action="BUY", ticker="AAPL", market="US", price=100, account_name="B",
+        arm_phrase=trade_service.ARM_PHRASE, trading_mode="demo",
+        restrict_to_primary=True,
+    )
+    assert result["result"]["status"] in {"rejected", "deferred"}
+    assert orders == []
