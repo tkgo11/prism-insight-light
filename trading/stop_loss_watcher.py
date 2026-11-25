@@ -11,6 +11,7 @@ import os
 import tempfile
 import threading
 import time
+from contextlib import ExitStack, contextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -552,7 +553,10 @@ class StopLossTracker:
         """Return valid tracked positions without discarding corrupt records on disk."""
         with FileLock(self.lock_path):
             data = self._load()
-            items = list(data.items())
+        return self._valid_positions(data, market)
+
+    def _valid_positions(self, data: dict[str, Any], market: str | None) -> list[dict[str, Any]]:
+        items = list(data.items())
         target_market = market.strip().upper() if market else None
         # Older versions may already have migrated a duplicate list into a
         # dictionary while leaving the first conflicting entry actionable.
@@ -612,6 +616,18 @@ class StopLossTracker:
             if target_market is None or item["market"].strip().upper() == target_market:
                 valid.append(item)
         return valid
+
+    @contextmanager
+    def guard_position_snapshot(self, market: str, ticker: str, expected: dict[str, Any]):
+        """Keep tracker edits out of the local submission boundary."""
+        with ExitStack() as stack:
+            try:
+                stack.enter_context(FileLock(self.lock_path, timeout=0))
+                current = self._valid_positions(self._load(), market)
+            except (OSError, RuntimeError, TypeError, ValueError):
+                yield False
+                return
+            yield any(row == expected and row.get("ticker") == ticker for row in current)
 
     def get_position(self, market: str, ticker: str) -> dict[str, Any] | None:
         with FileLock(self.lock_path):
@@ -1041,6 +1057,10 @@ class StopLossWatcher:
         # Internal-only origin is granted after the durable tracker snapshot
         # and unresolved-BUY preflight, never from publisher-controlled JSON.
         signal.internal_watcher_stop = True
+        expected = dict(pos)
+        signal.watcher_stop_guard = lambda: self.tracker.guard_position_snapshot(
+            market, ticker, expected,
+        )
 
         try:
             result = asyncio.run(self.dispatcher.dispatch(signal, allow_queue=False))

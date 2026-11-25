@@ -7,7 +7,7 @@ import math
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable, ContextManager
 
 
 SUPPORTED_SIGNAL_TYPES = {"BUY", "SELL", "EVENT"}
@@ -208,6 +208,9 @@ class SignalMessage:
     # Trusted runtime-only provenance: never populated from inbound JSON/raw.
     # The watcher sets this after its persisted-position preflight.
     internal_watcher_stop: bool = field(default=False, repr=False, compare=False, init=False)
+    watcher_stop_guard: Callable[[], ContextManager[bool]] | None = field(
+        default=None, repr=False, compare=False, init=False,
+    )
     transport_published_at: datetime | None = field(default=None, repr=False, compare=False, init=False)
     from_telegram: bool = field(default=False, repr=False, compare=False, init=False)
 

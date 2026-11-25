@@ -303,8 +303,24 @@ _MAX_READ_ONLY_HISTORY_SNAPSHOTS = 16
 def _history_evidence_material(snapshot: dict[str, Any]) -> dict[str, Any]:
     """Only approved non-sensitive, NON-ACTIONABLE history facts are hashed."""
     return {key: snapshot[key] for key in (
-        "market", "ticker", "account_scope", "order_no", "order_date", "matches",
-    )}
+        "market", "ticker", "account_scope", "order_no", "order_date", "matches", "order_venue",
+    ) if key in snapshot}
+
+
+def _history_conflicts_with_receipt(receipt: dict[str, Any], history: dict[str, Any]) -> bool:
+    venue = history.get("order_venue")
+    receipt_venue = receipt.get("order_venue")
+    if "order_venue" in history and (
+        not isinstance(venue, str) or re.fullmatch(r"[A-Z0-9]{2,8}", venue) is None
+        or (receipt_venue is not None and venue != receipt_venue)
+    ):
+        return True
+    submitted = receipt.get("order_quantity")
+    return receipt.get("order_kind") == "reservation" or (
+        submitted is not None and any(
+            row.get("order_quantity") not in (None, submitted) for row in history["matches"]
+        )
+    )
 
 
 def _canonical_read_only_history_material(material: dict[str, Any]) -> dict[str, Any]:
@@ -333,7 +349,7 @@ def _validate_read_only_history_snapshot(
         "market", "ticker", "account_scope", "order_no", "order_date",
         "matches", "date_provenance", "captured_at", "fingerprint",
     }
-    if not isinstance(snapshot, dict) or set(snapshot) != expected:
+    if not isinstance(snapshot, dict) or set(snapshot) not in (expected, expected | {"order_venue"}):
         raise ValueError("Malformed read-only history snapshot")
     if (snapshot["market"] != intent["market"]
             or snapshot["ticker"] != intent["ticker"]
@@ -358,6 +374,8 @@ def _validate_read_only_history_snapshot(
         for row in matches
     ) or not _history_matches_consistent_for_triage(matches):
         raise ValueError("Contradictory cached fill/cancel/remaining evidence")
+    if "order_venue" in snapshot and _history_conflicts_with_receipt(receipt, snapshot):
+        raise ValueError("Invalid cached broker receipt provenance")
     captured_at = snapshot["captured_at"]
     if not isinstance(captured_at, str):
         raise ValueError("Invalid history capture timestamp")
@@ -775,6 +793,9 @@ class ExecutionLedger:
             if "order_date" in receipt and receipt["order_date"] != order_date:
                 verdict["reason"] = "BROKER_ORDER_DATE_MISMATCH"
                 return verdict
+            if _history_conflicts_with_receipt(receipt, history):
+                verdict["reason"] = "BROKER_RECEIPT_CONFLICT"
+                return verdict
             try:
                 intent = _validated_order_intent(entry.get("order_intent"))
             except ValueError:
@@ -836,6 +857,8 @@ class ExecutionLedger:
                 allow_nan=False,
             )),
         }
+        if "order_venue" in history:
+            material["order_venue"] = history["order_venue"]
         material = _canonical_read_only_history_material(material)
         encoded = json.dumps(
             material, sort_keys=True, separators=(",", ":"),
@@ -859,6 +882,9 @@ class ExecutionLedger:
                     or intent["market"] != material["market"]
                     or intent["ticker"] != material["ticker"]
                     or intent["account_scope"] != material["account_scope"]):
+                return refused
+            if (("order_date" in receipt and receipt["order_date"] != material["order_date"])
+                    or _history_conflicts_with_receipt(receipt, material)):
                 return refused
             # Repeat the unique-claim check while holding the write lock:
             # a second BUY may have been claimed since initial triage.

@@ -9,7 +9,7 @@ import math
 import re
 import threading
 import time
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass, replace, field
 from datetime import datetime
 from pathlib import Path
@@ -1262,10 +1262,18 @@ class TradeDispatcher:
                     }),
                     **broker_receipt_metadata(strategy_result),
                 )
-            elif order_account is None:
-                result = await self._execute_legacy_trade(signal)
             else:
-                result = await self._execute_legacy_trade(signal, account=order_account)
+                snapshot_guard = signal.watcher_stop_guard
+                with snapshot_guard() if snapshot_guard is not None else nullcontext(True) as valid_snapshot:
+                    if not valid_snapshot:
+                        result = DispatchResult(
+                            "rejected", "Stop-loss snapshot changed or could not be verified before submission",
+                            signal.signal_type, signal.market,
+                        )
+                    elif order_account is None:
+                        result = await self._execute_legacy_trade(signal)
+                    else:
+                        result = await self._execute_legacy_trade(signal, account=order_account)
         except SignalSizingError as exc:
             # Sizing was rejected before broker submission. Never classify it as
             # an ambiguous order (or leave a ledger claim stuck as "unknown").
