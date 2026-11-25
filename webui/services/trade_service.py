@@ -9,17 +9,13 @@ from typing import Any
 from pathlib import Path
 
 from trading.schema import parse_signal_payload
+from trading.modes import webui_live_trading_enabled as live_trading_enabled
 from webui.services.account_service import build_manual_signal
 from webui.services.masking import mask_text
 
 ARM_PHRASE = "EXECUTE LIVE ORDER"
 SELL_ALL_PHRASE = "SELL ALL POSITION"
 TradeDispatcher = None
-
-
-def live_trading_enabled(env: dict[str, str] | None = None) -> bool:
-    source = env if env is not None else os.environ
-    return str(source.get("WEBUI_ENABLE_LIVE_TRADING") or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def trading_guard_status(*, force_dry_run: bool = False) -> dict[str, Any]:

@@ -26,7 +26,7 @@ from .file_lock import FileLock
 from .managed_position_state import ManagedPositionBook
 from .managed_positions import ManagedPositionController
 from .market_hours import get_trading_mode, is_market_open, is_off_hours_order_available
-from .modes import normalize_trading_mode
+from .modes import normalize_trading_mode, webui_live_trading_enabled
 from .off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue, QueueExecutionResult
 from .schema import SignalMessage, parse_signal_payload
 from .signal_sizing import SignalSizingError, adjusted_sell_fraction, configured_buy_budget, scaled_buy_amount
@@ -505,7 +505,7 @@ class MultiAccountTradeDispatcher:
                 )
             return self._aggregate(signal, results)
 
-        if signal.manual_ticket and signal.signal_type == "BUY" and not self.dispatcher.dry_run:
+        if signal.manual_ticket and not self.dispatcher.dry_run:
             verified = []
             for account in accounts:
                 try:
@@ -513,7 +513,7 @@ class MultiAccountTradeDispatcher:
                 except (KeyError, TypeError, ValueError):
                     results.append(AccountDispatchResult(
                         account["name"], _account_id(account["account_key"]), "rejected",
-                        "Named BUY account configuration could not be verified",
+                        "Manual order account configuration could not be verified",
                     ))
                 else:
                     verified.append(account)
@@ -858,6 +858,11 @@ class TradeDispatcher:
         return None
 
     def _submission_source_block(self, signal: SignalMessage) -> DispatchResult | None:
+        if signal.manual_ticket and self.trading_mode == "real" and not self.dry_run and not webui_live_trading_enabled():
+            return DispatchResult(
+                "rejected", "WebUI live trading is disabled; a new armed manual ticket is required",
+                signal.signal_type, signal.market,
+            )
         if signal.manual_ticket and signal.is_trade:
             limit = signal.price
             if not limit or limit != (
@@ -1259,6 +1264,17 @@ class TradeDispatcher:
                 return DispatchResult(
                     "rejected",
                     "Existing stop-loss tracker requires operator reconciliation",
+                    signal.signal_type, signal.market,
+                )
+
+        if signal.manual_ticket and signal.signal_type == "SELL" and account is None:
+            try:
+                if order_account is None:
+                    order_account = await asyncio.to_thread(self._resolve_single_account, signal)
+                self._validated_buy_account_key(order_account, signal)
+            except (KeyError, TypeError, ValueError, OSError, RuntimeError):
+                return DispatchResult(
+                    "rejected", "Manual order account configuration could not be verified",
                     signal.signal_type, signal.market,
                 )
 
