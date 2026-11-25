@@ -256,3 +256,60 @@ async def test_webui_manual_buy_uses_same_pinned_durable_account(tmp_path, monke
     with ExecutionLedger(path).guard_unresolved_buy(market, ticker) as unresolved:
         assert unresolved is True
     assert account["account_key"] not in path.read_text(encoding="utf-8")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("new_selector", ["name", "index"])
+async def test_unknown_buy_survives_selector_change_and_restart(
+    tmp_path, monkeypatch, market, ticker, new_selector,
+):
+    """Same canonical account must not resubmit an unresolved signal."""
+    account = _account(market, "demo", "12345678")
+    path = tmp_path / "selector-ledger.json"
+    calls = []
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    monkeypatch.setattr("trading.dispatch.is_off_hours_order_available", lambda _: False)
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: dict(account))
+    monkeypatch.setattr(SignalSafetyGate, "evaluate_execution",
+                        lambda *a, **k: SimpleNamespace(outcome="allow", fresh_quote=None))
+
+    async def mock_broker(self, signal, *, account=None):
+        assert account is not None
+        calls.append(account["account_key"])
+        return DispatchResult("unknown", "synthetic lost response", "BUY", market,
+                              order_no="00001234")
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_broker)
+
+    def dispatcher(**selection):
+        worker = TradeDispatcher(
+            trading_mode="demo", strategy_config={"name": ""},
+            execution_ledger_path=path, queue_path=tmp_path / "selector-queue.json",
+            fresh_quote_enabled=False, **selection,
+        )
+        worker.stop_loss_tracker = StopLossTracker(tmp_path / "selector-stops.json")
+        return worker
+
+    payload = {"signal_id": "selector-restart-unknown", "type": "BUY",
+               "market": market, "ticker": ticker, "price": 100, "stop_loss": 85}
+    first = dispatcher()
+    result = await first.dispatch(parse_signal_payload(dict(payload)))
+    assert result.status == "unknown"
+    assert calls == [account["account_key"]]
+    original = json.loads(path.read_text(encoding="utf-8"))
+    assert len(original) == 1
+    identity, record = next(iter(original.items()))
+    assert record["status"] == "unknown"
+    assert record["order_intent"]["account_scope"] == sha256(
+        account["account_key"].encode()).hexdigest()
+
+    selection = {"account_name": account["name"]} if new_selector == "name" else {"account_index": 0}
+    restarted = dispatcher(**selection)
+    second = await restarted.dispatch(parse_signal_payload(dict(payload)))
+    assert calls == [account["account_key"]], "UNKNOWN BUY resubmitted after selector change"
+    assert second.status in {"skipped", "deferred", "rejected", "failed"}
+    current = json.loads(path.read_text(encoding="utf-8"))
+    assert current[identity]["status"] == "unknown"
+    assert restarted.stop_loss_tracker.get_position(market, ticker) is None
