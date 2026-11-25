@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-codex-20261125T025539674Z-windows-offline-egress",
   "owner": "codex",
   "acquired_expected_state_parent": "2667e164c92b9696bb4f5c21bfaf75597504438c",
-  "observed_state_sha": "2667e164c92b9696bb4f5c21bfaf75597504438c",
-  "observed_pr_head": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
-  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
-  "pr": 43
+  "active_state_sha": "8198a35dd1f035a8501dfb962a4bbb42f87e3962",
+  "release_expected_state_parent": "8198a35dd1f035a8501dfb962a4bbb42f87e3962",
+  "final_pr_head": "7500801ebb17e06b385d898aa49f09d776278d9d",
+  "release_reason": "Enforce a scoped ephemeral Windows Python outbound rule, remove inherited application environment, and deny DNS before mock runtime tests."
 }

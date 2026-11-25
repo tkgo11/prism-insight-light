@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T025131249Z-deferral-config-fix",
+  "run_id": "prism-codex-20261125T025539674Z-windows-offline-egress",
   "status": "WAIT_GREEN",
   "pr": 43,
-  "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T025131249Z-deferral-config-fix.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T025131249Z-deferral-config-fix.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T025131249Z-deferral-config-fix-risk.json",
+  "head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T025539674Z-windows-offline-egress.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T025539674Z-windows-offline-egress.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T025539674Z-windows-offline-egress-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,23 +15,23 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+  "ci_head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify exact fix Push and PR Actions, then verify latest merge gates and prepare the Windows offline boundary repair or the frozen audit inventory.",
+  "next_exact_action": "Verify exact Push and PR workflow checkout and Windows OFFLINE_WINDOWS_ACTIVE plus all smoke results. If hosted runner setup fails, diagnose and revalidate before freezing audits.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
     "phase": "WAIT_GREEN",
-    "work_id": "deferral-config-fix",
+    "work_id": "windows-offline-egress",
     "pr": 43,
-    "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+    "head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+      "head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "Verify exact fix Push and PR Actions, then verify latest merge gates and prepare the Windows offline boundary repair or the frozen audit inventory.",
+    "next_exact_action": "Verify exact Push and PR workflow checkout and Windows OFFLINE_WINDOWS_ACTIVE plus all smoke results. If hosted runner setup fails, diagnose and revalidate before freezing audits.",
     "queue": [
       {
         "work_id": "fix1",
@@ -178,7 +178,7 @@
       {
         "work_id": "live-partial-account-deferral",
         "priority": "P1",
-        "status": "WAIT_GREEN",
+        "status": "verified",
         "files": [
           "subscriber.py",
           "trading/dispatch.py"
@@ -187,7 +187,12 @@
         "verification": {
           "red_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
           "red_run_id": 45535698398,
-          "local_full_passed": 3614
+          "local_full_passed": 3614,
+          "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+          "push_run_id": 45535931921,
+          "pr_run_id": 45535934779,
+          "linux_passed": 3614,
+          "windows": "success"
         }
       },
       {
@@ -212,7 +217,7 @@
       {
         "work_id": "runtime-config-trading-disable",
         "priority": "P1",
-        "status": "WAIT_GREEN",
+        "status": "verified",
         "files": [
           "webui/services/account_service.py",
           "trading/dispatch.py",
@@ -223,14 +228,29 @@
         "verification": {
           "red_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
           "red_run_id": 45535698398,
-          "local_full_passed": 3614
+          "local_full_passed": 3614,
+          "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+          "push_run_id": 45535931921,
+          "pr_run_id": 45535934779,
+          "linux_passed": 3614,
+          "windows": "success"
         }
       },
       {
         "work_id": "windows-offline-egress",
         "priority": "P2",
-        "status": "candidate",
-        "evidence": "Windows smoke currently uses explicit broker mocks but does not enforce an OS-level network guard."
+        "status": "WAIT_GREEN",
+        "evidence": "Windows smoke currently uses explicit broker mocks but does not enforce an OS-level network guard.",
+        "files": [
+          ".github/workflows/tests.yml",
+          "scripts/run_windows_offline_smoke.ps1"
+        ],
+        "verification": {
+          "baseline_checkout": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+          "baseline_source": "Windows smoke ran bare python -m pytest without an enforced network boundary.",
+          "local_python_dns_self_check": true,
+          "local_windows_firewall": null
+        }
       }
     ]
   }
