@@ -48,6 +48,7 @@ def _queue_identity(signal: dict[str, Any], execution_context: dict[str, Any]) -
             "trading_mode": execution_context.get("trading_mode"),
             "account_scope": execution_context.get("account_scope"),
             "account_id": execution_context.get("account_id"),
+            **({"live_retry": True} if execution_context.get("live_retry") is True else {}),
         },
         ensure_ascii=False,
         sort_keys=True,
@@ -72,9 +73,10 @@ class QueuedSignal:
 
     @classmethod
     def from_signal(
-        cls, signal: SignalMessage, execution_context: dict[str, Any] | None = None
+        cls, signal: SignalMessage, execution_context: dict[str, Any] | None = None,
+        *, ready_at: datetime | None = None,
     ) -> "QueuedSignal":
-        execute_at = next_market_open(signal.market).isoformat()
+        execute_at = (ready_at or next_market_open(signal.market)).isoformat()
         created_at = datetime.now(timezone.utc).isoformat()
         context = dict(execution_context or {})
         if signal.transport_published_at is not None:
@@ -252,11 +254,12 @@ class OffHoursOrderQueue:
                 temporary_path.unlink()
 
     def enqueue(
-        self, signal: SignalMessage, execution_context: dict[str, Any] | None = None
+        self, signal: SignalMessage, execution_context: dict[str, Any] | None = None,
+        *, ready_at: datetime | None = None,
     ) -> QueuedSignal:
         context = dict(execution_context or {})
         context["queue_id"] = _queue_identity(signal.raw, context)
-        queued_signal = QueuedSignal.from_signal(signal, context)
+        queued_signal = QueuedSignal.from_signal(signal, context, ready_at=ready_at)
         with FileLock(self.lock_path):
             items = self._load()
             for item in items:

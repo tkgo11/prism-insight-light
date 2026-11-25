@@ -11,7 +11,7 @@ import threading
 import time
 from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass, replace, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Awaitable, TypeVar
 from urllib.parse import urlsplit
@@ -652,6 +652,30 @@ class MultiAccountTradeDispatcher:
                     "[Account: %s] automatic %s %s(%s) outcome unknown",
                     account["name"], signal.signal_type, signal.company_name, signal.ticker,
                 )
+        deferred = [leg for leg in results if leg.status == "deferred"]
+        if allow_queue and 0 < len(deferred) < len(results):
+            if not self.dispatcher.execution_dedupe:
+                aggregate = self._aggregate(signal, results)
+                aggregate.message += "; deferred accounts require reconciliation because durable dedupe is disabled"
+                logger.error("%s", aggregate.message)
+                return aggregate
+            context = {
+                "version": 2, "multi_account": True,
+                "trading_mode": self.dispatcher.trading_mode,
+                "account_ids": [leg.account_id for leg in deferred],
+                "live_retry": True,
+            }
+            try:
+                queued = await asyncio.to_thread(
+                    self.dispatcher.queue.enqueue, signal, context, ready_at=datetime.now(timezone.utc),
+                )
+            except (OSError, RuntimeError, ValueError):
+                logger.exception("Could not retain deferred account legs after a possible submission")
+                aggregate = self._aggregate(signal, results)
+                aggregate.message += "; deferred accounts could not be saved and require reconciliation"
+                return aggregate
+            for leg in deferred:
+                leg.message = f"Deferred account retained for replay from {queued.execute_at}"
         return self._aggregate(signal, results)
 
 
@@ -720,7 +744,9 @@ class TradeDispatcher:
         self.managed_position_book = ManagedPositionBook()
         self.managed_position_controller = (
             ManagedPositionController(self.managed_position_book, managed_gateway,
-                                      submission_allowed=lambda market: is_market_open(market))
+                                      submission_allowed=lambda market: (
+                                          is_market_open(market) and self._runtime_trading_enabled(default=False)
+                                      ))
             if managed_gateway is not None else None
         )
         self.multi_account_dispatcher = MultiAccountTradeDispatcher(
@@ -810,11 +836,32 @@ class TradeDispatcher:
             )
         return None
 
+    def _runtime_trading_enabled(self, *, default: bool) -> bool:
+        return _as_enabled(self._load_runtime_config().get("auto_trading", default))
+
+    def _trading_switch_block(self, signal: SignalMessage) -> DispatchResult | None:
+        if self.dry_run or not signal.is_trade:
+            return None
+        try:
+            enabled = self._runtime_trading_enabled(default=True)
+        except Exception:
+            logger.exception("Order deferred because trading configuration cannot be verified")
+            return DispatchResult("deferred", "Trading configuration cannot be verified", signal.signal_type, signal.market)
+        if not enabled:
+            return DispatchResult("deferred", "Auto trading is disabled", signal.signal_type, signal.market)
+        return None
+
     async def check_managed_positions(self) -> list[dict[str, Any]]:
         """Run opt-in exits under the same lock as local signal orders."""
         controller = self.managed_position_controller
-        if (controller is None or self.dry_run
-                or self._runtime_config.get("auto_trading") is not True):
+        if controller is None or self.dry_run:
+            return []
+        try:
+            enabled = self._runtime_trading_enabled(default=False)
+        except Exception:
+            logger.exception("Managed exits deferred because trading configuration cannot be verified")
+            return []
+        if not enabled:
             return []
         # A custom injected gateway is not evidence of broker-atomic exclusion
         # of MTS/HTS/other PRISM orders. Block the normal live dispatcher path
@@ -925,7 +972,7 @@ class TradeDispatcher:
             )
         # Check under the cross-process broker lock before any KR/US
         # single-account or multi-account stop-loss SELL submission.
-        source_block = self._submission_source_block(signal)
+        source_block = self._submission_source_block(signal) or self._trading_switch_block(signal)
         if source_block is not None:
             return source_block
         stop_block = await self._stop_sell_unresolved_buy_block(signal)
@@ -1039,7 +1086,7 @@ class TradeDispatcher:
         safety_decision = await asyncio.to_thread(
             self.signal_gate.evaluate_execution,
             signal,
-            queued=queued_context is not None,
+            queued=queued_context is not None and queued_context.get("live_retry") is not True,
             enqueued_at=(queued_context or {}).get("enqueued_at"),
         )
         if safety_decision.outcome == OUTCOME_REJECT:
@@ -1175,6 +1222,7 @@ class TradeDispatcher:
         # and broker routing use the pinned account.
         buy_intent = None
         canonical_buy_identities = ()
+        canonical_aliases = ()
         legacy_buy_identities = None
         if account is None and self.execution_dedupe and signal.signal_type == "BUY":
             try:
@@ -1189,10 +1237,9 @@ class TradeDispatcher:
                 buy_intent = _buy_stop_loss_intent(signal, key)
                 canonical_id, canonical_aliases = execution_identities(signal.raw, key)
                 canonical_buy_identities = (canonical_id,)
-                legacy_buy_identities = dict.fromkeys(canonical_aliases, buy_intent["account_scope"])
-                legacy_buy_identities.update(_legacy_buy_route_identities(
+                legacy_buy_identities = _legacy_buy_route_identities(
                     signal, self.trading_mode, [order_account["name"]],
-                ))
+                )
             except (KeyError, TypeError, ValueError, OSError, RuntimeError):
                 logger.warning(
                     "Deferring BUY %s %s: canonical KIS account unavailable",
@@ -1211,7 +1258,7 @@ class TradeDispatcher:
                 signal.raw, self._single_account_execution_selector(signal)
             )
             claimed, previous_status, claim_token = await asyncio.to_thread(
-                self.execution_ledger.claim, identity, aliases=aliases, with_token=True,
+                self.execution_ledger.claim, identity, aliases=(*aliases, *canonical_aliases), with_token=True,
                 order_intent=buy_intent,
                 order_side="SELL" if signal.signal_type == "SELL" else None,
                 **({"canonical_buy_identities": canonical_buy_identities,
@@ -1242,7 +1289,10 @@ class TradeDispatcher:
                 )
 
         try:
-            if strategy is not None:
+            switch_block = self._trading_switch_block(signal)
+            if switch_block is not None:
+                result = switch_block
+            elif strategy is not None:
                 strategy_result = await asyncio.to_thread(
                     asyncio.run,
                     strategy.execute(
@@ -1316,6 +1366,11 @@ class TradeDispatcher:
         if queue_context is not None and not isinstance(queue_context, dict):
             return DispatchResult("failed", "Queued execution context is malformed; operator reconciliation required", signal.signal_type, signal.market)
         if queued_context is not None:
+            if queued_context.get("live_retry") is True and not self.execution_dedupe:
+                return DispatchResult(
+                    "failed", "Deferred account replay requires durable dedupe; reconciliation required",
+                    signal.signal_type, signal.market,
+                )
             signal.from_telegram = queued_context.get("from_telegram") is True
             if "transport_published_at" in queued_context:
                 try:
@@ -1553,8 +1608,10 @@ class TradeDispatcher:
     @staticmethod
     def _load_runtime_config() -> dict[str, Any]:
         with open(active_kis_config_path(), encoding="utf-8") as fh:
-            payload = yaml.safe_load(fh) or {}
-        return payload if isinstance(payload, dict) else {}
+            payload = yaml.safe_load(fh)
+        if not isinstance(payload, dict):
+            raise ValueError("Trading configuration must be a mapping")
+        return payload
 
     def _resolve_event_strategy(self, signal: SignalMessage) -> EventRiskOffStrategy | None:
         if signal.is_event and self.event_risk_off_config is not None:
