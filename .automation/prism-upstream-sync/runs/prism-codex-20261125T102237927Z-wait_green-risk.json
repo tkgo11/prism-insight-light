@@ -1,0 +1,59 @@
+{
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "real_kis_used": false,
+  "safety_signals": {
+    "queue_in_progress_visibility": "PASS_OFFLINE_3524_PYTEST",
+    "queue_unknown_fence": "PRIOR_OFFLINE_PASS_NOT_REAL_BROKER_PROOF",
+    "merge_conflicts": "RESOLVED",
+    "pr_ci": "PASS",
+    "snyk": "PASS"
+  },
+  "unverified": [
+    "All-channel authoritative order/reservation and available holdings query",
+    "KR/US receipt/execution identifiers, canceled/partial/delayed paginated residuals",
+    "Lost response and UNKNOWN restart broker reconciliation",
+    "Broker-atomic reservation against cross-channel manual orders",
+    "Independent 2+2 full-file audits",
+    "Review approval and protected-branch required-check verification"
+  ],
+  "block_merge": true,
+  "block_live_sell": true,
+  "public_kis_reference": "koreainvestment/open-trading-api@b0a0d33b7e5f863a8f3c6790f50adb840829c806",
+  "public_kis_limit": "Separate holdings, order-history, unexecuted and reservation reads are available. No documented broker-atomic cross-channel conditional reserve/sell, execution-ID completeness or unique lost-response attribution was established.",
+  "current_run": {
+    "run_id": "prism-codex-20261125T102237927Z-wait_green",
+    "head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
+    "ci_run_id": null,
+    "broker_atomic_gate": "UNPROVEN",
+    "review_approval": "not_revalidated",
+    "branch_protection": "not_revalidated",
+    "ci_status": "PENDING"
+  },
+  "new_regression": {
+    "test_id": "test_unknown_buy_survives_selector_change_and_restart",
+    "status": "WAIT_RED"
+  },
+  "expanded_red": {
+    "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
+    "run_id": 45538741102,
+    "pr_run_id": 45538745970,
+    "job_id": 138951723468,
+    "checkout_verified": true,
+    "offline_seccomp": true,
+    "failed": 9,
+    "passed": 3620,
+    "windows": "success",
+    "failures": [
+      "test_named_queued_manual_sell_keeps_operator_limit_after_restart[False-False]",
+      "test_named_queued_manual_sell_keeps_operator_limit_after_restart[True-False]",
+      "test_named_queued_manual_sell_keeps_operator_limit_after_restart[True-True]",
+      "test_named_manual_stock_buy_rejects_invalid_canonical_account_before_submission",
+      "test_manual_limit_rejects_unrepresentable_price_before_broker[KR-005930-0.5]",
+      "test_manual_limit_rejects_unrepresentable_price_before_broker[KR-005930-82001]",
+      "test_manual_limit_rejects_unrepresentable_price_before_broker[US-AAPL-100.001]",
+      "test_manual_sell_adapter_does_not_change_limit_after_quote_or_window_shift[KR-005930-82000-83000]",
+      "test_manual_sell_adapter_does_not_change_limit_after_quote_or_window_shift[US-AAPL-100-105]"
+    ]
+  }
+}

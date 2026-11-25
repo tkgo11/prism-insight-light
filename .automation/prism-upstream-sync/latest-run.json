@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-scheduled-20261125T042020Z-red-verified",
-  "status": "WAIT_RED",
+  "run_id": "prism-codex-20261125T102237927Z-wait_green",
+  "status": "WAIT_GREEN",
   "pr": 43,
-  "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261125T042020Z-red-verified.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-scheduled-20261125T042020Z-red-verified.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261125T042020Z-red-verified-risk.json",
+  "head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T102237927Z-wait_green.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T102237927Z-wait_green.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T102237927Z-wait_green-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -14,29 +14,29 @@
   "full_complete": 0,
   "prior_related_complete": 5,
   "prior_full_complete": 5,
-  "ci_run_id": 45538741102,
-  "ci_head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
-  "ci_status": "FAILURE",
-  "next_exact_action": "FIX nine verified regressions in tests/test_webui_manual_buy_durable_intent.py: preserve manual named account/price/size across queue replay and bypass automated strategy; validate canonical account and representable limit before submission; ensure KR/US explicit manual SELL adapter never replaces limit with closing/current quote. Inspect exact source and apply minimal fix, run offline CI; preserve all fences.",
+  "ci_run_id": null,
+  "ci_head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
+  "ci_status": "PENDING",
+  "next_exact_action": "Verify exact Push and PR checkout/tree, offline Linux 3630 tests, guarded Windows, and Snyk; then freeze R1 inventory if the fresh gap scan stays clear.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "FIX",
-    "work_id": "manual-ticket-expanded-red",
+    "phase": "WAIT_GREEN",
+    "work_id": "manual-ticket-execution-provenance",
     "pr": 43,
-    "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
+    "head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
-      "run_id": 45538741102
+      "head_sha": "7fd6db8aa83538a693e377e852689cf907789185",
+      "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "FIX nine verified regressions in tests/test_webui_manual_buy_durable_intent.py: preserve manual named account/price/size across queue replay and bypass automated strategy; validate canonical account and representable limit before submission; ensure KR/US explicit manual SELL adapter never replaces limit with closing/current quote. Inspect exact source and apply minimal fix, run offline CI; preserve all fences.",
+    "next_exact_action": "Verify exact Push and PR checkout/tree, offline Linux 3630 tests, guarded Windows, and Snyk; then freeze R1 inventory if the fresh gap scan stays clear.",
     "queue": [
       {
         "work_id": "manual-ticket-execution-provenance",
         "priority": "P0",
-        "status": "FIX",
+        "status": "WAIT_GREEN",
         "files": [
           "trading/schema.py",
           "trading/off_hours_queue.py",
@@ -46,67 +46,10 @@
         ],
         "evidence": "Named queued ticket can inherit automatic strategy that changes a limit/size, and malformed named BUY can bypass previous single-account validation. Further exact-tree review reproduced single-deployment named replay loss and legacy broker conversion of an operator limit to a different limit/closing price.",
         "verification": {
-          "previous_red": {
-            "runs": [
-              [
-                45537939729,
-                "pull_request",
-                "completed",
-                "failure"
-              ],
-              [
-                45537934402,
-                "push",
-                "completed",
-                "failure"
-              ]
-            ],
-            "ready": true,
-            "run": 45537934402,
-            "job": 138949053269,
-            "checkout": "ab4239feaf8758cb18f0aeecfc5fb26bb8635b6e",
-            "tree": "239a967128559ed5f067f24f4f36b077a61bdf2f",
-            "outcomes": [
-              "2026-11-25T03:09:33.5189613Z OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
-              "2026-11-25T03:10:19.3340152Z FAILED tests/test_webui_manual_buy_durable_intent.py::test_named_queued_manual_sell_keeps_operator_limit_after_restart[False] - AssertionError: assert [('automated ...', 90.0, 0.2)] == [('B', 100, None)]",
-              "2026-11-25T03:10:19.3344967Z FAILED tests/test_webui_manual_buy_durable_intent.py::test_named_queued_manual_sell_keeps_operator_limit_after_restart[True] - assert 1 == 0",
-              "2026-11-25T03:10:19.3346411Z FAILED tests/test_webui_manual_buy_durable_intent.py::test_named_manual_stock_buy_rejects_invalid_canonical_account_before_submission - AssertionError: assert 'unknown' in {'deferred', 'rejected'}",
-              "2026-11-25T03:10:19.3347222Z 3 failed, 3619 passed in 44.12s"
-            ],
-            "jobs": [
-              [
-                "Windows runtime smoke",
-                "success"
-              ],
-              [
-                "Full pytest suite",
-                "failure"
-              ]
-            ]
-          },
-          "additional_local_red": 9,
-          "expanded_red": {
-            "head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
-            "run_id": 45538741102,
-            "pr_run_id": 45538745970,
-            "job_id": 138951723468,
-            "checkout_verified": true,
-            "offline_seccomp": true,
-            "failed": 9,
-            "passed": 3620,
-            "windows": "success",
-            "failures": [
-              "test_named_queued_manual_sell_keeps_operator_limit_after_restart[False-False]",
-              "test_named_queued_manual_sell_keeps_operator_limit_after_restart[True-False]",
-              "test_named_queued_manual_sell_keeps_operator_limit_after_restart[True-True]",
-              "test_named_manual_stock_buy_rejects_invalid_canonical_account_before_submission",
-              "test_manual_limit_rejects_unrepresentable_price_before_broker[KR-005930-0.5]",
-              "test_manual_limit_rejects_unrepresentable_price_before_broker[KR-005930-82001]",
-              "test_manual_limit_rejects_unrepresentable_price_before_broker[US-AAPL-100.001]",
-              "test_manual_sell_adapter_does_not_change_limit_after_quote_or_window_shift[KR-005930-82000-83000]",
-              "test_manual_sell_adapter_does_not_change_limit_after_quote_or_window_shift[US-AAPL-100-105]"
-            ]
-          }
+          "red_head_sha": "3e4f296fbb1e0e1cea46e1684361b35bec67f4fe",
+          "red_run_id": 45538741102,
+          "red_failures": 9,
+          "local_full_passed": 3630
         }
       },
       {
