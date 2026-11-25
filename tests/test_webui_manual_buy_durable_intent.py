@@ -162,7 +162,8 @@ async def test_manual_multi_account_unknown_buy_has_separate_durable_intents(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("legacy", [False, True])
-async def test_named_queued_manual_sell_keeps_operator_limit_after_restart(tmp_path, monkeypatch, legacy):
+@pytest.mark.parametrize("multi_account", [False, True])
+async def test_named_queued_manual_sell_keeps_operator_limit_after_restart(tmp_path, monkeypatch, legacy, multi_account):
     import asyncio
     from datetime import datetime, timezone
 
@@ -180,7 +181,7 @@ async def test_named_queued_manual_sell_keeps_operator_limit_after_restart(tmp_p
     monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: [selected])
     monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: selected)
     monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(
-        lambda: {"multi_account_trading": {"enabled": True}},
+        lambda: {"multi_account_trading": {"enabled": multi_account}},
     ))
     market_open = False
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: market_open)
@@ -235,3 +236,82 @@ async def test_named_manual_stock_buy_rejects_invalid_canonical_account_before_s
     )
     assert result["result"]["status"] in {"rejected", "deferred"}
     assert orders == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker,price", [("KR", "005930", 0.5), ("KR", "005930", 82001), ("US", "AAPL", 100.001)])
+async def test_manual_limit_rejects_unrepresentable_price_before_broker(tmp_path, monkeypatch, market, ticker, price):
+    calls = []
+
+    async def mock_broker(self, signal, **_):
+        calls.append(signal.price)
+        return DispatchResult("unknown", "mock outcome", signal.signal_type, signal.market)
+
+    _install_mock_manual_dispatcher(monkeypatch, tmp_path / "ledger.json", mock_broker)
+    outcome = await trade_service.dispatch_manual_order(
+        action="SELL", ticker=ticker, market=market, price=price, trading_mode="demo",
+        arm_phrase=trade_service.SELL_ALL_PHRASE,
+    )
+    assert outcome["result"]["status"] == "rejected"
+    assert calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker,limit,quote", [("KR", "005930", 82000, 83000), ("US", "AAPL", 100, 105)])
+async def test_manual_sell_adapter_does_not_change_limit_after_quote_or_window_shift(
+    tmp_path, monkeypatch, market, ticker, limit, quote,
+):
+    import asyncio
+    from datetime import datetime
+
+    from trading import domestic, us
+    from trading.schema import parse_signal_payload
+
+    placed = []
+    cls = domestic.DomesticStockTrading if market == "KR" else us.USStockTrading
+    adapter = object.__new__(cls)
+    adapter.mode = "demo"
+    adapter.auto_trading = True
+    adapter._stock_locks = {}
+    adapter._semaphore = asyncio.Semaphore(1)
+    adapter._global_lock = asyncio.Lock()
+    adapter.get_portfolio = lambda: [{
+        "stock_code": ticker, "ticker": ticker, "quantity": 7,
+        "exchange": "NASD", "avg_price": quote, "profit_amount": 0, "profit_rate": 0,
+    }]
+    adapter.get_current_price = lambda *_: {"current_price": quote, "exchange": "NASD"}
+
+    def capture(order_price, quantity):
+        placed.append((order_price, quantity))
+        return {"success": True, "order_no": "00001234", "quantity": quantity, "message": "mock accepted"}
+
+    class Context:
+        def __init__(self, **_):
+            pass
+
+        async def __aenter__(self):
+            return adapter
+
+        async def __aexit__(self, *_):
+            pass
+
+    if market == "KR":
+        monkeypatch.setattr("trading.dispatch.AsyncTradingContext", Context)
+        monkeypatch.setattr(domestic, "_now_kst", lambda: datetime(2026, 11, 24, 15, 45))
+        adapter.sell_all_market_price = lambda _, holding_quantity=None, limit_price=None: capture(limit_price, holding_quantity)
+        adapter.sell_all_closing_price = lambda _, holding_quantity=None: capture(None, holding_quantity)
+    else:
+        monkeypatch.setattr("trading.dispatch.USStockTrading", lambda **_: adapter)
+        monkeypatch.setattr(us, "get_exchange_code", lambda _: "NASD")
+        monkeypatch.setattr(us, "get_cached_exchange", lambda _: "NASD")
+        adapter.smart_sell_all = lambda _, exchange, limit_price, use_moo, holding_quantity: capture(limit_price, holding_quantity)
+
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    result = await trade_service.dispatch_manual_order(
+        action="SELL", ticker=ticker, market=market, price=limit, trading_mode="demo",
+        arm_phrase=trade_service.SELL_ALL_PHRASE, queue_path=tmp_path / "queue.json",
+    )
+    assert result["result"]["status"] == "executed"
+    assert placed == [(limit, 7)]
