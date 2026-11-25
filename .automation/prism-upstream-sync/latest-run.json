@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T024927039Z-deferral-config-red",
-  "status": "WAIT_RED",
+  "run_id": "prism-codex-20261125T025131249Z-deferral-config-fix",
+  "status": "WAIT_GREEN",
   "pr": 43,
-  "head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024927039Z-deferral-config-red.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T024927039Z-deferral-config-red.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024927039Z-deferral-config-red-risk.json",
+  "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T025131249Z-deferral-config-fix.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T025131249Z-deferral-config-fix.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T025131249Z-deferral-config-fix-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,23 +15,23 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+  "ci_head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify 15 intended failures on the exact push checkout, then publish full-suite-verified dispatch and queue repairs.",
+  "next_exact_action": "Verify exact fix Push and PR Actions, then verify latest merge gates and prepare the Windows offline boundary repair or the frozen audit inventory.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_RED",
-    "work_id": "deferral-config-red",
+    "phase": "WAIT_GREEN",
+    "work_id": "deferral-config-fix",
     "pr": 43,
-    "head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+    "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+      "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "Verify 15 intended failures on the exact push checkout, then publish full-suite-verified dispatch and queue repairs.",
+    "next_exact_action": "Verify exact fix Push and PR Actions, then verify latest merge gates and prepare the Windows offline boundary repair or the frozen audit inventory.",
     "queue": [
       {
         "work_id": "fix1",
@@ -178,12 +178,17 @@
       {
         "work_id": "live-partial-account-deferral",
         "priority": "P1",
-        "status": "WAIT_RED",
+        "status": "WAIT_GREEN",
         "files": [
           "subscriber.py",
           "trading/dispatch.py"
         ],
-        "evidence": "Pub/Sub and Telegram acknowledge partial_success including pre-submission deferred legs. Preserve pinned recipients and dedupe."
+        "evidence": "Pub/Sub and Telegram acknowledge partial_success including pre-submission deferred legs. Preserve pinned recipients and dedupe.",
+        "verification": {
+          "red_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+          "red_run_id": 45535698398,
+          "local_full_passed": 3614
+        }
       },
       {
         "work_id": "read-only-buy-receipt-provenance",
@@ -207,14 +212,19 @@
       {
         "work_id": "runtime-config-trading-disable",
         "priority": "P1",
-        "status": "WAIT_RED",
+        "status": "WAIT_GREEN",
         "files": [
           "webui/services/account_service.py",
           "trading/dispatch.py",
           "trading/domestic.py",
           "trading/us.py"
         ],
-        "evidence": "WebUI updates auto_trading=false on disk while imported adapter defaults stay True. Verify standard, queued and strategy order paths."
+        "evidence": "WebUI updates auto_trading=false on disk while imported adapter defaults stay True. Verify standard, queued and strategy order paths.",
+        "verification": {
+          "red_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+          "red_run_id": 45535698398,
+          "local_full_passed": 3614
+        }
       },
       {
         "work_id": "windows-offline-egress",
