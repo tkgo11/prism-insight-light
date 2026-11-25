@@ -1,10 +1,11 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-manual-20261125T1130KST-unblock-01",
   "owner": "manual-user-request",
   "acquired_expected_state_parent": "c440000d34562f31b3bc4f27727a539f1fd02b66",
-  "observed_state_sha": "c440000d34562f31b3bc4f27727a539f1fd02b66",
-  "observed_pr_head": "644abe24457309b80c6516aea9bf19dd6e03984a",
-  "pr": 43
+  "active_state_sha": "99aed0675fe16fa211e93beab8f0502310e3f2af",
+  "release_expected_state_parent": "99aed0675fe16fa211e93beab8f0502310e3f2af",
+  "final_pr_head": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
+  "release_reason": "Verified prior CI run and submitted mock-only selector restart regression; exact new HEAD CI not observed yet."
 }

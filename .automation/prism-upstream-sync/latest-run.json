@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261124T144113303Z-fix3",
-  "status": "WAIT_GREEN",
+  "run_id": "prism-manual-20261125T1130KST-unblock-01",
+  "status": "PARTIAL_BLOCKED",
   "pr": 43,
-  "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T144113303Z-fix3.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261124T144113303Z-fix3.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261124T144113303Z-fix3-risk.json",
+  "head_sha": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-manual-20261125T1130KST-unblock-01.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-manual-20261125T1130KST-unblock-01.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-manual-20261125T1130KST-unblock-01-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,24 +15,24 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
-  "ci_status": "PENDING",
-  "next_exact_action": "Verify exact third fix HEAD Actions checkout and tree. Then submit ledger/watcher/receipt test-only HEAD for exact restart and lock regression RED.",
+  "ci_head_sha": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
+  "ci_status": "NOT_OBSERVED",
+  "next_exact_action": "Fetch exact Actions run for f7ba9899c0654bf8f9d58a793d92f480b5245253 (push/PR, verify checkout and test logs); verify actual assertion \"UNKNOWN BUY resubmitted after selector change\" in tests/test_single_account_buy_provenance.py::test_unknown_buy_survives_selector_change_and_restart (KR/US x name/index). If RED, fix canonical account routing while retaining selector/remap fences; if GREEN, record no reproduced defect and select next gap. No CI run observed at checkpoint.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_GREEN",
-    "work_id": "fix3",
+    "phase": "WAIT_RED",
+    "work_id": "ledger-canonical-routing",
     "pr": 43,
-    "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+    "head_sha": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+      "head_sha": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
     "blocker": null,
-    "next_exact_action": "Verify exact third fix HEAD Actions checkout and tree. Then submit ledger/watcher/receipt test-only HEAD for exact restart and lock regression RED.",
+    "next_exact_action": "Fetch exact Actions run for f7ba9899c0654bf8f9d58a793d92f480b5245253 (push/PR, verify checkout and test logs); verify actual assertion \"UNKNOWN BUY resubmitted after selector change\" in tests/test_single_account_buy_provenance.py::test_unknown_buy_survives_selector_change_and_restart (KR/US x name/index). If RED, fix canonical account routing while retaining selector/remap fences; if GREEN, record no reproduced defect and select next gap. No CI run observed at checkpoint.",
     "queue": [
       {
         "work_id": "fix1",
@@ -75,12 +75,19 @@
       {
         "work_id": "ledger-canonical-routing",
         "priority": "P0",
-        "status": "candidate-reproduced",
+        "status": "WAIT_RED",
         "files": [
           "trading/dispatch.py",
           "trading/execution_ledger.py"
         ],
-        "evidence": "At initial HEAD a persistent single-primary UNKNOWN is re-claimable by multi-account, name, and index routes for the same canonical account. Keep selector/remap fences while persisting account identity."
+        "evidence": "At initial HEAD a persistent single-primary UNKNOWN is re-claimable by multi-account, name, and index routes for the same canonical account. Keep selector/remap fences while persisting account identity.",
+        "verification": {
+          "test_head_sha": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
+          "test_path": "tests/test_single_account_buy_provenance.py",
+          "test_id": "test_unknown_buy_survives_selector_change_and_restart",
+          "baseline_green_head": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "baseline_green_run_id": 45416938122
+        }
       },
       {
         "work_id": "watcher-snapshot-lock-race",
@@ -95,7 +102,7 @@
       {
         "work_id": "telegram-unbounded-sell",
         "priority": "P0",
-        "status": "WAIT_GREEN",
+        "status": "CI_GREEN_REVIEW_PENDING",
         "files": [
           "subscriber.py",
           "trading/telegram_fetch.py",
@@ -105,13 +112,16 @@
         "verification": {
           "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
           "red_run_id": 45416414614,
-          "local_full_passed": 3562
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45416938122,
+          "pr_conclusion": "success"
         }
       },
       {
         "work_id": "webui-primary-account-fanout",
         "priority": "P0",
-        "status": "WAIT_GREEN",
+        "status": "CI_GREEN_REVIEW_PENDING",
         "files": [
           "webui/templates/trading.html",
           "webui/services/trade_service.py",
@@ -121,13 +131,16 @@
         "verification": {
           "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
           "red_run_id": 45416414614,
-          "local_full_passed": 3562
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45416938122,
+          "pr_conclusion": "success"
         }
       },
       {
         "work_id": "trusted-transport-timestamp",
         "priority": "P1",
-        "status": "WAIT_GREEN",
+        "status": "CI_GREEN_REVIEW_PENDING",
         "files": [
           "subscriber.py",
           "trading/telegram_fetch.py",
@@ -138,7 +151,10 @@
         "verification": {
           "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
           "red_run_id": 45416414614,
-          "local_full_passed": 3562
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45416938122,
+          "pr_conclusion": "success"
         }
       },
       {
