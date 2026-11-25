@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261125T030248053Z-multi-account-replay-red",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261125T030453102Z-multi-account-replay-fix",
   "owner": "codex",
-  "acquired_expected_state_parent": "25653677895520ac240c8c488353ecfa03c317b3",
-  "active_state_sha": "a762cf85a32576f254d77a7b3de20bfea98c1fa9",
-  "release_expected_state_parent": "a762cf85a32576f254d77a7b3de20bfea98c1fa9",
-  "final_pr_head": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
-  "release_reason": "Regression-only tests for dedupe-disabled admission/replay, named ticket restart, and mixed permanent rejection after ACK."
+  "acquired_expected_state_parent": "28e8a35edee208c3bf094ca8b0acbb52b117ed4d",
+  "observed_state_sha": "28e8a35edee208c3bf094ca8b0acbb52b117ed4d",
+  "observed_pr_head": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43
 }
