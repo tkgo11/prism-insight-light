@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261125T025539674Z-windows-offline-egress",
-  "status": "WAIT_GREEN",
+  "run_id": "prism-codex-20261125T030248053Z-multi-account-replay-red",
+  "status": "WAIT_RED",
   "pr": 43,
-  "head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T025539674Z-windows-offline-egress.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T025539674Z-windows-offline-egress.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T025539674Z-windows-offline-egress-risk.json",
+  "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T030248053Z-multi-account-replay-red.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-codex-20261125T030248053Z-multi-account-replay-red.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T030248053Z-multi-account-replay-red-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -15,24 +15,34 @@
   "prior_related_complete": 5,
   "prior_full_complete": 5,
   "ci_run_id": null,
-  "ci_head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
+  "ci_head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
   "ci_status": "PENDING",
-  "next_exact_action": "Verify exact Push and PR workflow checkout and Windows OFFLINE_WINDOWS_ACTIVE plus all smoke results. If hosted runner setup fails, diagnose and revalidate before freezing audits.",
+  "next_exact_action": "Confirm the four reproduced assertions on exact push checkout, then apply the multi-account safeguards.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_GREEN",
-    "work_id": "windows-offline-egress",
+    "phase": "WAIT_RED",
+    "work_id": "multi-account-replay-red",
     "pr": 43,
-    "head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
+    "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
+      "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
       "run_id": null
     },
     "audit_round": null,
     "prior_stalled_count": 0,
-    "next_exact_action": "Verify exact Push and PR workflow checkout and Windows OFFLINE_WINDOWS_ACTIVE plus all smoke results. If hosted runner setup fails, diagnose and revalidate before freezing audits.",
+    "next_exact_action": "Confirm the four reproduced assertions on exact push checkout, then apply the multi-account safeguards.",
     "queue": [
+      {
+        "work_id": "multi-account-replay-and-named-ticket",
+        "priority": "P0",
+        "status": "WAIT_RED",
+        "files": [
+          "trading/dispatch.py",
+          "tests/test_multi_account_dispatch.py"
+        ],
+        "evidence": "Fresh independent review reproduced duplicate replay without dedupe, named WebUI scope loss on restart, and permanent rejection stuck pending after another accepted leg."
+      },
       {
         "work_id": "fix1",
         "priority": "P0",
@@ -239,7 +249,7 @@
       {
         "work_id": "windows-offline-egress",
         "priority": "P2",
-        "status": "WAIT_GREEN",
+        "status": "verified",
         "evidence": "Windows smoke currently uses explicit broker mocks but does not enforce an OS-level network guard.",
         "files": [
           ".github/workflows/tests.yml",
@@ -249,7 +259,31 @@
           "baseline_checkout": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
           "baseline_source": "Windows smoke ran bare python -m pytest without an enforced network boundary.",
           "local_python_dns_self_check": true,
-          "local_windows_firewall": null
+          "local_windows_firewall": null,
+          "head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
+          "windows": [
+            {
+              "run": 45536398609,
+              "job": 138943935390,
+              "conclusion": "success",
+              "lines": [
+                "2026-11-25T02:56:02.9188562Z 7500801ebb17e06b385d898aa49f09d776278d9d\r",
+                "2026-11-25T02:56:57.0684137Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+                "2026-11-25T02:57:05.5317975Z 203 passed in 7.49s\r"
+              ]
+            },
+            {
+              "run": 45536403471,
+              "job": 138943950414,
+              "conclusion": "success",
+              "lines": [
+                "2026-11-25T02:56:06.9149458Z e4601c9d9a264f63a0b1dc037214d3ff76e984f7\r",
+                "2026-11-25T02:57:00.0342537Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+                "2026-11-25T02:57:07.2551048Z 203 passed in 6.36s\r"
+              ]
+            }
+          ],
+          "snyk": "success"
         }
       }
     ]

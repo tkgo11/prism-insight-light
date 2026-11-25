@@ -1,0 +1,419 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-codex-20261125T030248053Z-multi-account-replay-red",
+  "owner": "codex",
+  "status": "WAIT_RED",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": 0,
+  "prior_state_sha": "25653677895520ac240c8c488353ecfa03c317b3",
+  "active_state_sha": "a762cf85a32576f254d77a7b3de20bfea98c1fa9",
+  "previous_code_head": "7500801ebb17e06b385d898aa49f09d776278d9d",
+  "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "historical_report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T025539674Z-windows-offline-egress.json",
+  "baseline_red": {
+    "prior_green": [
+      {
+        "runs": [
+          [
+            45536403471,
+            "pull_request",
+            "completed",
+            "success"
+          ],
+          [
+            45536398609,
+            "push",
+            "completed",
+            "success"
+          ]
+        ],
+        "ready": true,
+        "run": 45536398609,
+        "job": 138943934975,
+        "checkout": "7500801ebb17e06b385d898aa49f09d776278d9d",
+        "tree": "661a94531533cebd5e14b9698688dfb2fee16df7",
+        "outcomes": [
+          "2026-11-25T02:56:25.4882397Z OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+          "2026-11-25T02:57:11.2417657Z 3614 passed in 44.27s"
+        ],
+        "jobs": [
+          [
+            "Full pytest suite",
+            "success"
+          ],
+          [
+            "Windows runtime smoke",
+            "success"
+          ]
+        ]
+      },
+      {
+        "runs": [
+          [
+            45536403471,
+            "pull_request",
+            "completed",
+            "success"
+          ],
+          [
+            45536398609,
+            "push",
+            "completed",
+            "success"
+          ]
+        ],
+        "ready": true,
+        "run": 45536403471,
+        "job": 138943949758,
+        "checkout": "e4601c9d9a264f63a0b1dc037214d3ff76e984f7",
+        "tree": "661a94531533cebd5e14b9698688dfb2fee16df7",
+        "outcomes": [
+          "2026-11-25T02:56:23.1219658Z OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+          "2026-11-25T02:57:01.8947801Z 3614 passed in 37.54s"
+        ],
+        "jobs": [
+          [
+            "Full pytest suite",
+            "success"
+          ],
+          [
+            "Windows runtime smoke",
+            "success"
+          ]
+        ]
+      }
+    ],
+    "windows": [
+      {
+        "run": 45536398609,
+        "job": 138943935390,
+        "conclusion": "success",
+        "lines": [
+          "2026-11-25T02:56:02.9188562Z 7500801ebb17e06b385d898aa49f09d776278d9d\r",
+          "2026-11-25T02:56:57.0684137Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+          "2026-11-25T02:57:05.5317975Z 203 passed in 7.49s\r"
+        ]
+      },
+      {
+        "run": 45536403471,
+        "job": 138943950414,
+        "conclusion": "success",
+        "lines": [
+          "2026-11-25T02:56:06.9149458Z e4601c9d9a264f63a0b1dc037214d3ff76e984f7\r",
+          "2026-11-25T02:57:00.0342537Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+          "2026-11-25T02:57:07.2551048Z 203 passed in 6.36s\r"
+        ]
+      }
+    ],
+    "local_red": {
+      "failed": 4,
+      "passed": 26
+    },
+    "fresh_exact_offline_passed": 473
+  },
+  "code_changes": [
+    {
+      "sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+      "subject": "test(queue): reproduce unsafe multi-account restart outcomes",
+      "files": [
+        "tests/test_multi_account_dispatch.py"
+      ]
+    }
+  ],
+  "ci": {
+    "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+    "run_id": null,
+    "status": "PENDING"
+  },
+  "repository": {
+    "pr": 43,
+    "draft": true,
+    "pr_base": "d0a4d420bdd199a576a447788c704053b6550067"
+  },
+  "audits": {
+    "related_complete_current_head": 0,
+    "full_complete_current_head": 0,
+    "related_independent_passes": 0,
+    "full_independent_passes": 0
+  },
+  "merge": {
+    "performed": false,
+    "reason": [
+      "independent audits incomplete",
+      "broker safety contract unproven",
+      "review/protection checks not verified"
+    ]
+  },
+  "next_exact_action": "Confirm the four reproduced assertions on exact push checkout, then apply the multi-account safeguards.",
+  "worker_v5": {
+    "phase": "WAIT_RED",
+    "work_id": "multi-account-replay-red",
+    "pr": 43,
+    "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+    "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+    "expected_ci": {
+      "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+      "run_id": null
+    },
+    "audit_round": null,
+    "prior_stalled_count": 0,
+    "next_exact_action": "Confirm the four reproduced assertions on exact push checkout, then apply the multi-account safeguards.",
+    "queue": [
+      {
+        "work_id": "multi-account-replay-and-named-ticket",
+        "priority": "P0",
+        "status": "WAIT_RED",
+        "files": [
+          "trading/dispatch.py",
+          "tests/test_multi_account_dispatch.py"
+        ],
+        "evidence": "Fresh independent review reproduced duplicate replay without dedupe, named WebUI scope loss on restart, and permanent rejection stuck pending after another accepted leg."
+      },
+      {
+        "work_id": "fix1",
+        "priority": "P0",
+        "status": "verified",
+        "evidence": {
+          "head_sha": "87a6479b5106ce151983c2c0f5cad2037b3be960",
+          "local_full_passed": 3538,
+          "push_run_id": 45414121304,
+          "pr_run_id": 45414131460,
+          "remote_linux_passed": 3538,
+          "remote_windows_passed": 196,
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "batch2",
+        "priority": "P0",
+        "status": "verified",
+        "scope": [
+          "real legacy stop SELL",
+          "disabled explicit account fallback",
+          "broker failure envelope and headers",
+          "queue persisted timestamps",
+          "offline test bootstrap"
+        ],
+        "evidence": {
+          "red_head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
+          "red_run_id": 45414818143,
+          "red_failures": 12,
+          "local_fixed_full": 3551,
+          "head_sha": "00306c47fc2f933b82a1f576921197709638cca1",
+          "push_run_id": 45415625855,
+          "pr_run_id": 45415637133,
+          "linux_passed": 3551,
+          "windows": "success",
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "ledger-canonical-routing",
+        "priority": "P0",
+        "status": "verified",
+        "files": [
+          "trading/dispatch.py",
+          "trading/execution_ledger.py"
+        ],
+        "evidence": "At initial HEAD a persistent single-primary UNKNOWN is re-claimable by multi-account, name, and index routes for the same canonical account. Keep selector/remap fences while persisting account identity.",
+        "verification": {
+          "test_head_sha": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
+          "test_path": "tests/test_single_account_buy_provenance.py",
+          "test_id": "test_unknown_buy_survives_selector_change_and_restart",
+          "baseline_green_head": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "baseline_green_run_id": 45416938122,
+          "red_push_run_id": 45533799828,
+          "red_failures": 4,
+          "local_full_passed": 3591,
+          "legacy_note": "For names removed from config before a canonical link was persisted, old one-way selector keys cannot be reconstructed.",
+          "head_sha": "db7ae481d0836f58d31cfb57f7e34627b889599e",
+          "push_run_id": 45534726350,
+          "pr_run_id": 45534730906,
+          "linux_passed": 3591,
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "watcher-snapshot-lock-race",
+        "priority": "P0",
+        "status": "verified",
+        "files": [
+          "trading/stop_loss_watcher.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Tracker may be removed or rearmed after preflight while awaiting shared broker workflow lock.",
+        "verification": {
+          "red_head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+          "red_run_id": 45535083899,
+          "local_full_passed": 3598,
+          "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+          "push_run_id": 45535368714,
+          "pr_run_id": 45535371912,
+          "linux_passed": 3598,
+          "windows": "success"
+        }
+      },
+      {
+        "work_id": "telegram-unbounded-sell",
+        "priority": "P0",
+        "status": "CI_GREEN_REVIEW_PENDING",
+        "files": [
+          "subscriber.py",
+          "trading/telegram_fetch.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Official upstream fractional exits emit human Telegram notices without order sizes; exact fork parses and dispatches labeled KR/US traffic as full SELL. Guard real execution and legacy queued replay while preserving read-only rendering.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45416938122,
+          "pr_conclusion": "success"
+        }
+      },
+      {
+        "work_id": "webui-primary-account-fanout",
+        "priority": "P0",
+        "status": "CI_GREEN_REVIEW_PENDING",
+        "files": [
+          "webui/templates/trading.html",
+          "webui/services/trade_service.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Blank UI account labeled primary is converted to None; configured dispatcher may fan out manual SELL ALL. UNKNOWN/mixed badge also misleading.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45416938122,
+          "pr_conclusion": "success"
+        }
+      },
+      {
+        "work_id": "trusted-transport-timestamp",
+        "priority": "P1",
+        "status": "CI_GREEN_REVIEW_PENDING",
+        "files": [
+          "subscriber.py",
+          "trading/telegram_fetch.py",
+          "trading/signal_safety.py",
+          "trading/off_hours_queue.py"
+        ],
+        "evidence": "Pub/Sub publish_time only bounds receipt, not the stricter execution decision; Telegram payload can overshadow post time. Preserve through queue without changing identity.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45416938122,
+          "pr_conclusion": "success"
+        }
+      },
+      {
+        "work_id": "live-partial-account-deferral",
+        "priority": "P1",
+        "status": "verified",
+        "files": [
+          "subscriber.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Pub/Sub and Telegram acknowledge partial_success including pre-submission deferred legs. Preserve pinned recipients and dedupe.",
+        "verification": {
+          "red_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+          "red_run_id": 45535698398,
+          "local_full_passed": 3614,
+          "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+          "push_run_id": 45535931921,
+          "pr_run_id": 45535934779,
+          "linux_passed": 3614,
+          "windows": "success"
+        }
+      },
+      {
+        "work_id": "read-only-buy-receipt-provenance",
+        "priority": "P1",
+        "status": "verified",
+        "files": [
+          "trading/execution_ledger.py"
+        ],
+        "evidence": "Read-only history can persist POSSIBLE_RECEIPT_MATCH despite reservation namespace, quantity or US venue conflict; UNKNOWN remains fenced.",
+        "verification": {
+          "red_head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+          "red_run_id": 45535083899,
+          "local_full_passed": 3598,
+          "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+          "push_run_id": 45535368714,
+          "pr_run_id": 45535371912,
+          "linux_passed": 3598,
+          "windows": "success"
+        }
+      },
+      {
+        "work_id": "runtime-config-trading-disable",
+        "priority": "P1",
+        "status": "verified",
+        "files": [
+          "webui/services/account_service.py",
+          "trading/dispatch.py",
+          "trading/domestic.py",
+          "trading/us.py"
+        ],
+        "evidence": "WebUI updates auto_trading=false on disk while imported adapter defaults stay True. Verify standard, queued and strategy order paths.",
+        "verification": {
+          "red_head_sha": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+          "red_run_id": 45535698398,
+          "local_full_passed": 3614,
+          "head_sha": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+          "push_run_id": 45535931921,
+          "pr_run_id": 45535934779,
+          "linux_passed": 3614,
+          "windows": "success"
+        }
+      },
+      {
+        "work_id": "windows-offline-egress",
+        "priority": "P2",
+        "status": "verified",
+        "evidence": "Windows smoke currently uses explicit broker mocks but does not enforce an OS-level network guard.",
+        "files": [
+          ".github/workflows/tests.yml",
+          "scripts/run_windows_offline_smoke.ps1"
+        ],
+        "verification": {
+          "baseline_checkout": "54bb7711799c99e2547b50c7dc60cc4c6679c1a1",
+          "baseline_source": "Windows smoke ran bare python -m pytest without an enforced network boundary.",
+          "local_python_dns_self_check": true,
+          "local_windows_firewall": null,
+          "head_sha": "7500801ebb17e06b385d898aa49f09d776278d9d",
+          "windows": [
+            {
+              "run": 45536398609,
+              "job": 138943935390,
+              "conclusion": "success",
+              "lines": [
+                "2026-11-25T02:56:02.9188562Z 7500801ebb17e06b385d898aa49f09d776278d9d\r",
+                "2026-11-25T02:56:57.0684137Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+                "2026-11-25T02:57:05.5317975Z 203 passed in 7.49s\r"
+              ]
+            },
+            {
+              "run": 45536403471,
+              "job": 138943950414,
+              "conclusion": "success",
+              "lines": [
+                "2026-11-25T02:56:06.9149458Z e4601c9d9a264f63a0b1dc037214d3ff76e984f7\r",
+                "2026-11-25T02:57:00.0342537Z OFFLINE_WINDOWS_ACTIVE: per-Python non-loopback egress blocked; DNS denied\r",
+                "2026-11-25T02:57:07.2551048Z 203 passed in 6.36s\r"
+              ]
+            }
+          ],
+          "snyk": "success"
+        }
+      }
+    ]
+  },
+  "summary": "Regression-only tests for dedupe-disabled admission/replay, named ticket restart, and mixed permanent rejection after ACK."
+}

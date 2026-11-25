@@ -1,0 +1,36 @@
+{
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "live_auto_sell_authorized": false,
+  "real_kis_used": false,
+  "safety_signals": {
+    "queue_in_progress_visibility": "PASS_OFFLINE_3524_PYTEST",
+    "queue_unknown_fence": "PRIOR_OFFLINE_PASS_NOT_REAL_BROKER_PROOF",
+    "merge_conflicts": "RESOLVED",
+    "pr_ci": "PASS",
+    "snyk": "PASS"
+  },
+  "unverified": [
+    "All-channel authoritative order/reservation and available holdings query",
+    "KR/US receipt/execution identifiers, canceled/partial/delayed paginated residuals",
+    "Lost response and UNKNOWN restart broker reconciliation",
+    "Broker-atomic reservation against cross-channel manual orders",
+    "Independent 2+2 full-file audits",
+    "Review approval and protected-branch required-check verification"
+  ],
+  "block_merge": true,
+  "block_live_sell": true,
+  "public_kis_reference": "koreainvestment/open-trading-api@b0a0d33b7e5f863a8f3c6790f50adb840829c806",
+  "public_kis_limit": "Separate holdings, order-history, unexecuted and reservation reads are available. No documented broker-atomic cross-channel conditional reserve/sell, execution-ID completeness or unique lost-response attribution was established.",
+  "current_run": {
+    "run_id": "prism-codex-20261125T030248053Z-multi-account-replay-red",
+    "head_sha": "ed8d4988cdd78711463fa0ed370d26e5ed32fac5",
+    "ci_run_id": null,
+    "broker_atomic_gate": "UNPROVEN",
+    "review_approval": "not_revalidated",
+    "branch_protection": "not_revalidated"
+  },
+  "new_regression": {
+    "test_id": "test_unknown_buy_survives_selector_change_and_restart",
+    "status": "WAIT_RED"
+  }
+}
