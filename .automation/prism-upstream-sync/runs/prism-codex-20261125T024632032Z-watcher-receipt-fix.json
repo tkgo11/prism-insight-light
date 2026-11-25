@@ -1,0 +1,294 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-codex-20261125T024632032Z-watcher-receipt-fix",
+  "owner": "codex",
+  "status": "WAIT_GREEN",
+  "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
+  "prior_stalled_count": 0,
+  "prior_state_sha": "9d4b7ace04de06e241c8ab4c60ceb450868ac487",
+  "active_state_sha": "847c53ed37695d86d8fabae8670752a8a782b26f",
+  "previous_code_head": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+  "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "historical_report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261125T024411213Z-watcher-receipt-red.json",
+  "baseline_red": {
+    "red": {
+      "runs": [
+        [
+          45535092750,
+          "pull_request",
+          "completed",
+          "failure"
+        ],
+        [
+          45535083899,
+          "push",
+          "completed",
+          "failure"
+        ]
+      ],
+      "ready": true,
+      "run": 45535083899,
+      "job": 138939603591,
+      "checkout": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+      "tree": "bd02106eec72f95853a4ef55c244ccebb763f3d7",
+      "outcomes": [
+        "2026-11-25T02:45:00.4270067Z OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+        "2026-11-25T02:45:32.3108076Z FAILED tests/test_unknown_buy_durable_history_correlation_readonly.py::test_conflicting_modern_receipt_never_becomes_read_only_match[receipt_overrides0-NASD] - AssertionError: assert 'POSSIBLE_RECEIPT_MATCH' == 'UNVERIFIED'",
+        "2026-11-25T02:45:32.3109949Z FAILED tests/test_unknown_buy_durable_history_correlation_readonly.py::test_conflicting_modern_receipt_never_becomes_read_only_match[receipt_overrides1-NASD] - AssertionError: assert 'POSSIBLE_RECEIPT_MATCH' == 'UNVERIFIED'",
+        "2026-11-25T02:45:32.3111757Z FAILED tests/test_unknown_buy_durable_history_correlation_readonly.py::test_conflicting_modern_receipt_never_becomes_read_only_match[receipt_overrides2-NYSE] - AssertionError: assert 'POSSIBLE_RECEIPT_MATCH' == 'UNVERIFIED'",
+        "2026-11-25T02:45:32.3113496Z FAILED tests/test_watcher_buy_sell_interleaving_mock.py::test_removed_stop_snapshot_cannot_submit_after_workflow_lock[False-KR-005930] - AssertionError: assert 'unknown' == 'rejected'",
+        "2026-11-25T02:45:32.3115183Z FAILED tests/test_watcher_buy_sell_interleaving_mock.py::test_removed_stop_snapshot_cannot_submit_after_workflow_lock[False-US-AAPL] - AssertionError: assert 'unknown' == 'rejected'",
+        "2026-11-25T02:45:32.3116882Z FAILED tests/test_watcher_buy_sell_interleaving_mock.py::test_removed_stop_snapshot_cannot_submit_after_workflow_lock[True-KR-005930] - AssertionError: assert 'unknown' == 'rejected'",
+        "2026-11-25T02:45:32.3118356Z FAILED tests/test_watcher_buy_sell_interleaving_mock.py::test_removed_stop_snapshot_cannot_submit_after_workflow_lock[True-US-AAPL] - AssertionError: assert 'unknown' == 'rejected'",
+        "2026-11-25T02:45:32.3119729Z 7 failed, 3591 passed in 30.65s"
+      ],
+      "jobs": [
+        [
+          "Windows runtime smoke",
+          "success"
+        ],
+        [
+          "Full pytest suite",
+          "failure"
+        ]
+      ]
+    },
+    "local_green": {
+      "full_passed": 3598
+    }
+  },
+  "code_changes": [
+    {
+      "sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+      "subject": "fix(recovery): keep stop and order history provenance fenced",
+      "files": [
+        "trading/dispatch.py",
+        "trading/schema.py",
+        "trading/stop_loss_watcher.py",
+        "trading/execution_ledger.py"
+      ]
+    }
+  ],
+  "ci": {
+    "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+    "run_id": null,
+    "status": "PENDING"
+  },
+  "repository": {
+    "pr": 43,
+    "draft": true,
+    "pr_base": "d0a4d420bdd199a576a447788c704053b6550067"
+  },
+  "audits": {
+    "related_complete_current_head": 0,
+    "full_complete_current_head": 0,
+    "related_independent_passes": 0,
+    "full_independent_passes": 0
+  },
+  "merge": {
+    "performed": false,
+    "reason": [
+      "independent audits incomplete",
+      "broker safety contract unproven",
+      "review/protection checks not verified"
+    ]
+  },
+  "next_exact_action": "Verify both exact fix Actions checks and checkout trees, then submit partial deferral and runtime kill-switch regressions.",
+  "worker_v5": {
+    "phase": "WAIT_GREEN",
+    "work_id": "watcher-receipt-fix",
+    "pr": 43,
+    "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+    "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+    "expected_ci": {
+      "head_sha": "7e26b56e026449c20056949909e283ecb0a6660b",
+      "run_id": null
+    },
+    "audit_round": null,
+    "prior_stalled_count": 0,
+    "next_exact_action": "Verify both exact fix Actions checks and checkout trees, then submit partial deferral and runtime kill-switch regressions.",
+    "queue": [
+      {
+        "work_id": "fix1",
+        "priority": "P0",
+        "status": "verified",
+        "evidence": {
+          "head_sha": "87a6479b5106ce151983c2c0f5cad2037b3be960",
+          "local_full_passed": 3538,
+          "push_run_id": 45414121304,
+          "pr_run_id": 45414131460,
+          "remote_linux_passed": 3538,
+          "remote_windows_passed": 196,
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "batch2",
+        "priority": "P0",
+        "status": "verified",
+        "scope": [
+          "real legacy stop SELL",
+          "disabled explicit account fallback",
+          "broker failure envelope and headers",
+          "queue persisted timestamps",
+          "offline test bootstrap"
+        ],
+        "evidence": {
+          "red_head_sha": "92c87157a0420b5c8676d925ae8165e706165d06",
+          "red_run_id": 45414818143,
+          "red_failures": 12,
+          "local_fixed_full": 3551,
+          "head_sha": "00306c47fc2f933b82a1f576921197709638cca1",
+          "push_run_id": 45415625855,
+          "pr_run_id": 45415637133,
+          "linux_passed": 3551,
+          "windows": "success",
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "ledger-canonical-routing",
+        "priority": "P0",
+        "status": "verified",
+        "files": [
+          "trading/dispatch.py",
+          "trading/execution_ledger.py"
+        ],
+        "evidence": "At initial HEAD a persistent single-primary UNKNOWN is re-claimable by multi-account, name, and index routes for the same canonical account. Keep selector/remap fences while persisting account identity.",
+        "verification": {
+          "test_head_sha": "f7ba9899c0654bf8f9d58a793d92f480b5245253",
+          "test_path": "tests/test_single_account_buy_provenance.py",
+          "test_id": "test_unknown_buy_survives_selector_change_and_restart",
+          "baseline_green_head": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "baseline_green_run_id": 45416938122,
+          "red_push_run_id": 45533799828,
+          "red_failures": 4,
+          "local_full_passed": 3591,
+          "legacy_note": "For names removed from config before a canonical link was persisted, old one-way selector keys cannot be reconstructed.",
+          "head_sha": "db7ae481d0836f58d31cfb57f7e34627b889599e",
+          "push_run_id": 45534726350,
+          "pr_run_id": 45534730906,
+          "linux_passed": 3591,
+          "snyk": "success"
+        }
+      },
+      {
+        "work_id": "watcher-snapshot-lock-race",
+        "priority": "P0",
+        "status": "WAIT_GREEN",
+        "files": [
+          "trading/stop_loss_watcher.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Tracker may be removed or rearmed after preflight while awaiting shared broker workflow lock.",
+        "verification": {
+          "red_head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+          "red_run_id": 45535083899,
+          "local_full_passed": 3598
+        }
+      },
+      {
+        "work_id": "telegram-unbounded-sell",
+        "priority": "P0",
+        "status": "CI_GREEN_REVIEW_PENDING",
+        "files": [
+          "subscriber.py",
+          "trading/telegram_fetch.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Official upstream fractional exits emit human Telegram notices without order sizes; exact fork parses and dispatches labeled KR/US traffic as full SELL. Guard real execution and legacy queued replay while preserving read-only rendering.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45416938122,
+          "pr_conclusion": "success"
+        }
+      },
+      {
+        "work_id": "webui-primary-account-fanout",
+        "priority": "P0",
+        "status": "CI_GREEN_REVIEW_PENDING",
+        "files": [
+          "webui/templates/trading.html",
+          "webui/services/trade_service.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Blank UI account labeled primary is converted to None; configured dispatcher may fan out manual SELL ALL. UNKNOWN/mixed badge also misleading.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45416938122,
+          "pr_conclusion": "success"
+        }
+      },
+      {
+        "work_id": "trusted-transport-timestamp",
+        "priority": "P1",
+        "status": "CI_GREEN_REVIEW_PENDING",
+        "files": [
+          "subscriber.py",
+          "trading/telegram_fetch.py",
+          "trading/signal_safety.py",
+          "trading/off_hours_queue.py"
+        ],
+        "evidence": "Pub/Sub publish_time only bounds receipt, not the stricter execution decision; Telegram payload can overshadow post time. Preserve through queue without changing identity.",
+        "verification": {
+          "red_head_sha": "d5144b953892677bf0a7deba7e87b5599c85419b",
+          "red_run_id": 45416414614,
+          "local_full_passed": 3562,
+          "head_sha": "644abe24457309b80c6516aea9bf19dd6e03984a",
+          "pr_run_id": 45416938122,
+          "pr_conclusion": "success"
+        }
+      },
+      {
+        "work_id": "live-partial-account-deferral",
+        "priority": "P1",
+        "status": "candidate",
+        "files": [
+          "subscriber.py",
+          "trading/dispatch.py"
+        ],
+        "evidence": "Pub/Sub and Telegram acknowledge partial_success including pre-submission deferred legs. Preserve pinned recipients and dedupe."
+      },
+      {
+        "work_id": "read-only-buy-receipt-provenance",
+        "priority": "P1",
+        "status": "WAIT_GREEN",
+        "files": [
+          "trading/execution_ledger.py"
+        ],
+        "evidence": "Read-only history can persist POSSIBLE_RECEIPT_MATCH despite reservation namespace, quantity or US venue conflict; UNKNOWN remains fenced.",
+        "verification": {
+          "red_head_sha": "a8507f7e05a06a85b5152c8f013761e84d57346c",
+          "red_run_id": 45535083899,
+          "local_full_passed": 3598
+        }
+      },
+      {
+        "work_id": "runtime-config-trading-disable",
+        "priority": "P1",
+        "status": "candidate-reproduced",
+        "files": [
+          "webui/services/account_service.py",
+          "trading/dispatch.py",
+          "trading/domestic.py",
+          "trading/us.py"
+        ],
+        "evidence": "WebUI updates auto_trading=false on disk while imported adapter defaults stay True. Verify standard, queued and strategy order paths."
+      },
+      {
+        "work_id": "windows-offline-egress",
+        "priority": "P2",
+        "status": "candidate",
+        "evidence": "Windows smoke currently uses explicit broker mocks but does not enforce an OS-level network guard."
+      }
+    ]
+  },
+  "summary": "Verify the tracker snapshot through local submission and quarantine mismatched reservation, quantity, and venue evidence."
+}

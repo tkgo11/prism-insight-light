@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-codex-20261125T024632032Z-watcher-receipt-fix",
   "owner": "codex",
   "acquired_expected_state_parent": "9d4b7ace04de06e241c8ab4c60ceb450868ac487",
-  "observed_state_sha": "9d4b7ace04de06e241c8ab4c60ceb450868ac487",
-  "observed_pr_head": "a8507f7e05a06a85b5152c8f013761e84d57346c",
-  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
-  "pr": 43
+  "active_state_sha": "847c53ed37695d86d8fabae8670752a8a782b26f",
+  "release_expected_state_parent": "847c53ed37695d86d8fabae8670752a8a782b26f",
+  "final_pr_head": "7e26b56e026449c20056949909e283ecb0a6660b",
+  "release_reason": "Verify the tracker snapshot through local submission and quarantine mismatched reservation, quantity, and venue evidence."
 }
