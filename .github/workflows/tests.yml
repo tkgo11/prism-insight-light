@@ -80,7 +80,7 @@ jobs:
 
       - name: Run cross-platform runtime tests
         run: >-
-          python -m pytest -q
+          ./scripts/run_windows_offline_smoke.ps1
           tests/test_signal_schema.py
           tests/test_buy_sizing.py
           tests/test_off_hours_policy.py
