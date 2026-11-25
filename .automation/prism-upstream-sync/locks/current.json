@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261125T024927039Z-deferral-config-red",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261125T025131249Z-deferral-config-fix",
   "owner": "codex",
-  "acquired_expected_state_parent": "a3384dec52bf2fc3be94d5db7d9bd6479d1a90ec",
-  "active_state_sha": "2e45c9f249cdf5f20be4082f632877895711af41",
-  "release_expected_state_parent": "2e45c9f249cdf5f20be4082f632877895711af41",
-  "final_pr_head": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
-  "release_reason": "Regression-only coverage for pinned retries, live TTL, runtime trading disables, and canonical-key conflicts."
+  "acquired_expected_state_parent": "285389a4398fcf8982c2e5552809dc8747531dcd",
+  "observed_state_sha": "285389a4398fcf8982c2e5552809dc8747531dcd",
+  "observed_pr_head": "7f8d16846d3693ba8ab2932581fbc027dc6a2440",
+  "observed_pr_base": "d0a4d420bdd199a576a447788c704053b6550067",
+  "pr": 43
 }
