@@ -4,13 +4,55 @@ This is a regression test for the *real* dispatcher broker-workflow fence.
 An aggregate holding is not a broker-attributed fill. No KIS SDK, demo,
 live account, or broker order is used.
 """
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from types import SimpleNamespace
 
 import pytest
 
-from trading.dispatch import TradeDispatcher
+from trading import dispatch
+from trading.dispatch import DispatchResult, TradeDispatcher
 from trading.stop_loss_watcher import StopLossTracker, StopLossWatcher, StopLossWatcherConfig
+
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("multi_account", [False, True])
+def test_removed_stop_snapshot_cannot_submit_after_workflow_lock(
+    tmp_path, monkeypatch, market, ticker, multi_account,
+):
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(
+        lambda: {"multi_account_trading": {"enabled": multi_account}},
+    ))
+    monkeypatch.setattr(dispatch, "is_market_open", lambda _: True)
+    broker = TradeDispatcher(
+        trading_mode="demo", execution_dedupe=False, fresh_quote_enabled=False,
+        strategy_config={"name": ""}, queue_path=tmp_path / "queue.json",
+        execution_ledger_path=tmp_path / "ledger.json",
+    )
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position(market, ticker, 90, entry_price=100, pending_buy=False)
+    snapshot = tracker.get_position(market, ticker)
+    watcher = StopLossWatcher(
+        broker, StopLossWatcherConfig(enabled=True, storage_path=tracker.path), tracker=tracker,
+    )
+    calls = []
+
+    async def mock_order(signal, *, account=None):
+        calls.append(signal)
+        return DispatchResult("unknown", "mock order outcome", signal.signal_type, signal.market)
+
+    original_workflow = dispatch._serialized_broker_workflow
+
+    @asynccontextmanager
+    async def wait_then_remove_snapshot():
+        async with original_workflow():
+            assert tracker.remove_position(market, ticker, expected_record=snapshot)
+            yield
+
+    monkeypatch.setattr(broker, "_execute_legacy_trade", mock_order)
+    monkeypatch.setattr(dispatch, "_serialized_broker_workflow", wait_then_remove_snapshot)
+    result = watcher._trigger_sell(market, ticker, 85, snapshot)
+    assert result["status"] == "rejected"
+    assert calls == []
 
 
 @pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])

@@ -39,7 +39,7 @@ def _claim(ledger, identity, market, scope, *, ticker=None, receipt=True):
     assert claimed and token
     ledger.finalize(
         identity, "unknown", claim_token=token,
-        order_receipt={"order_no": "00001234"} if receipt else None,
+        order_receipt={"order_no": "00001234"} if receipt is True else receipt or None,
     )
 
 
@@ -73,6 +73,29 @@ def _history(market, scope, *, ticker=None, order_no="00001234", date="20261104"
     assert result["complete"] is True
     assert result["can_activate_stop"] is False
     return result
+
+
+@pytest.mark.parametrize("receipt_overrides,history_venue", [
+    ({"order_kind": "reservation"}, "NASD"),
+    ({"order_quantity": 11}, "NASD"),
+    ({}, "NYSE"),
+])
+def test_conflicting_modern_receipt_never_becomes_read_only_match(
+    tmp_path, receipt_overrides, history_venue,
+):
+    original = ExecutionLedger(tmp_path / "ledger.json")
+    scope = sha256(b"vps:12345678:01").hexdigest()
+    _claim(original, "buy-one", "US", scope, receipt={
+        "order_no": "00001234", "order_kind": "broker_order",
+        "order_quantity": 10, "order_venue": "NASD", **receipt_overrides,
+    })
+    before = original.path.read_bytes()
+    history = _history("US", scope) | {"order_venue": history_venue}
+    restarted = ExecutionLedger(original.path)
+    assert restarted.inspect_unresolved_buy_history("buy-one", history)["status"] == "UNVERIFIED"
+    assert restarted.record_read_only_buy_history("buy-one", history)["status"] == "UNVERIFIED"
+    assert original.path.read_bytes() == before
+    assert restarted.claim("buy-one") == (False, "unknown")
 
 
 @pytest.mark.parametrize("market", ["KR", "US"])
