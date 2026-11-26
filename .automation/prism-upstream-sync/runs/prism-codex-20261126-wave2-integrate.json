@@ -1,0 +1,37 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-codex-20261126-wave2-integrate",
+  "owner": "codex-v7.1",
+  "status": "PARTIAL_BLOCKED",
+  "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+  "previous_head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "tree_sha": "14dd0bfb1646220c1f7c05c28736be01c3ee7491",
+  "local_head": "5dd96802719375a71f94a3088c0968fd5e2d025f",
+  "tests": {
+    "offline": "3811 passed, 148 warnings",
+    "offline_log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-wave2-integrate-pytest.log",
+    "offline_sha256": "a5419f25f049235668a69c684195d509dac920b77f9d3e3d22a2165c4fcbe96b",
+    "isolated": "3811 passed; local bubblewrap namespaces + seccomp",
+    "isolated_log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-wave2-integrate-bwrap.log",
+    "isolated_sha256": "576c08752560cfcd3d2e245acd7301e1435629629a9c09222b55ae92a5b32e56"
+  },
+  "ci": {
+    "status": "PENDING",
+    "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2"
+  },
+  "audits": {
+    "related": 0,
+    "full": 0,
+    "old_freeze": "INVALIDATED_HEAD_CHANGED"
+  },
+  "risks": [
+    "UNKNOWN and accepted SELL remain fenced with no verified recovery; possible long-term hold",
+    "host isolation was locally tested but Actions/Windows equivalent unverified",
+    "RC-STOPLOSS-ORDER-RECONCILIATION unresolved",
+    "required checks/branch protection not verified",
+    "independent audits not certified"
+  ],
+  "merge_performed": false,
+  "next_exact_action": "Observe exact-HEAD Linux and Windows CI, Snyk and actual required checks; checkpoint results; independently audit remaining SELL fencing and risk before freezing."
+}

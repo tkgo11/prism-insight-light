@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "run_id": "prism-codex-20261126-wave2-integrate",
   "owner": "codex-v7.1",
   "acquired_expected_state_parent": "132523e0cd3c58251a809e60f5381f44d57345f2",
-  "observed_pr_head": "967c948691f063170df8ff2ffa025b59dc7cf72e",
-  "observed_base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
-  "candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
-  "candidate_tree": "14dd0bfb1646220c1f7c05c28736be01c3ee7491",
-  "purpose": "Integrate offline-reviewed live stop, unresolved SELL and US session fixes",
-  "operation": "CODE_REF_UPDATE"
+  "active_state_sha": "8b9ec5cbec9be5d5a3641ac77a22646a346ed21f",
+  "release_expected_state_parent": "8b9ec5cbec9be5d5a3641ac77a22646a346ed21f",
+  "original_pr_head": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+  "final_pr_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "release_reason": "Verified code ref and PR head; CI and external broker proof pending."
 }
