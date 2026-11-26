@@ -548,11 +548,16 @@ class ExecutionLedger:
             raise RuntimeError("Automatic-trading execution ledger is unreadable")
         if not isinstance(data, dict) or not all(isinstance(value, dict) for value in data.values()):
             raise RuntimeError("Automatic-trading execution ledger has an invalid format")
-        for entry in data.values():
+        for identity, entry in data.items():
             if "canonical_buy_identities" in entry:
                 if (not _valid_canonical_buy_identities(entry["canonical_buy_identities"])
                         or "order_intent" not in entry or "order_side" in entry):
                     raise RuntimeError("Automatic-trading BUY routing identity is invalid")
+            if "sell_identity_is_canonical" in entry:
+                if (entry["sell_identity_is_canonical"] is not True
+                        or entry.get("order_side") != "SELL" or "sell_scope" not in entry
+                        or _validated_sell_scope(entry["sell_scope"])["account_scope"] is None):
+                    raise RuntimeError("Automatic-trading SELL identity provenance is invalid")
             if "canonical_sell_identities" in entry:
                 if (not _valid_canonical_buy_identities(entry["canonical_sell_identities"])
                         or entry.get("order_side") != "SELL" or "sell_scope" not in entry):
@@ -1014,6 +1019,7 @@ class ExecutionLedger:
         legacy_buy_identities: dict[str, str] | None = None,
         canonical_sell_identities: tuple[str, ...] = (),
         legacy_sell_identities: dict[str, str] | None = None,
+        sell_identity_is_canonical: bool = False,
     ) -> tuple[bool, str | None] | tuple[bool, str | None, str | None]:
         """Claim an identity or return the prior status without exposing account data.
 
@@ -1054,6 +1060,9 @@ class ExecutionLedger:
             raise ValueError("Canonical SELL identities require a valid SELL scope")
         if legacy_sell_identities and sell_scope is None:
             raise ValueError("Legacy SELL identities require a valid SELL scope")
+        if (type(sell_identity_is_canonical) is not bool or
+                (sell_identity_is_canonical and (sell_scope is None or sell_scope["account_scope"] is None))):
+            raise ValueError("Canonical SELL identity requires a valid SELL scope")
         aliases = tuple(aliases)
         now = datetime.now(timezone.utc)
         with FileLock(self.lock_path):
@@ -1072,6 +1081,37 @@ class ExecutionLedger:
                 status = str(existing.get("status") or "in_progress")
                 if status in _RETRYABLE_STATUSES:
                     continue
+                # Unidentifiable historical submissions cannot be excluded by
+                # reconstructing only the selectors currently in configuration.
+                # Do not treat unrelated modern canonical signals as duplicates.
+                identifiable = (existing.get("sell_identity_is_canonical") is True
+                                or bool(existing.get("canonical_sell_identities")))
+                if (sell_scope is not None and key not in matching_keys
+                        and not current_keys.intersection(existing.get("canonical_sell_identities", ()))
+                        and identifiable and existing.get("order_side") == "SELL"):
+                    old_scope = _validated_sell_scope(existing["sell_scope"])
+                    if (old_scope["market"] == sell_scope["market"]
+                            and old_scope["ticker"] == sell_scope["ticker"]
+                            and (old_scope["account_scope"] is None
+                                 or sell_scope["account_scope"] is None
+                                 or old_scope["account_scope"] == sell_scope["account_scope"])):
+                        # Acceptance and UNKNOWN are not proof of a fill or
+                        # of cancellation; another signal can overlap an open
+                        # or reserved order for the same position.
+                        blocking_statuses.add("ambiguous_scope")
+                if (sell_scope is not None and key not in matching_keys
+                        and not identifiable and existing.get("order_intent") is None):
+                    old_scope = existing.get("sell_scope")
+                    if old_scope is None:
+                        blocking_statuses.add("ambiguous_scope")
+                    else:
+                        old_scope = _validated_sell_scope(old_scope)
+                        # Old account scope reflects selection at claim time,
+                        # not necessarily the account used by the broker.
+                        # Do not use it to exclude another account.
+                        if (old_scope["market"] == sell_scope["market"]
+                                and old_scope["ticker"] == sell_scope["ticker"]):
+                            blocking_statuses.add("ambiguous_scope")
                 if current_keys.intersection(existing.get("canonical_buy_identities", ())):
                     blocking_statuses.add(status)
                 elif current_keys.intersection(existing.get("canonical_sell_identities", ())):
@@ -1088,7 +1128,7 @@ class ExecutionLedger:
                             or scope in (current_scope, routes[key])):
                         blocking_statuses.add(status)
             if blocking_statuses:
-                status = next((s for s in ("unknown", "in_progress") if s in blocking_statuses),
+                status = next((s for s in ("unknown", "ambiguous_scope", "in_progress") if s in blocking_statuses),
                               min(blocking_statuses))
                 return (False, status, None) if with_token else (False, status)
             previous_status: str | None = None
@@ -1113,6 +1153,8 @@ class ExecutionLedger:
                 entry["canonical_buy_identities"] = list(canonical_buy_identities)
             if canonical_sell_identities:
                 entry["canonical_sell_identities"] = list(canonical_sell_identities)
+            if sell_identity_is_canonical:
+                entry["sell_identity_is_canonical"] = True
             if order_side == "SELL":
                 # A modern SELL cannot later create an un-attributed BUY fill.
                 # Persist before submission so the legacy quarantine can

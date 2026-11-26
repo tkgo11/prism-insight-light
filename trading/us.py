@@ -1164,18 +1164,8 @@ class USStockTrading:
         Returns:
             True if market is open, False otherwise
         """
-        now_et = datetime.datetime.now(US_EASTERN)
-        current_time = now_et.time()
-
-        # US market hours: 09:30 - 16:00 ET
-        market_open = datetime.time(9, 30)
-        market_close = datetime.time(16, 0)
-
-        # Check if it's a weekday
-        if now_et.weekday() >= 5:  # Saturday = 5, Sunday = 6
-            return False
-
-        return market_open <= current_time <= market_close
+        from .market_hours import is_market_open
+        return is_market_open("US", now=datetime.datetime.now(US_EASTERN))
 
     def is_reserved_order_available(self) -> bool:
         """

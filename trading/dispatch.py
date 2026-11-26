@@ -612,6 +612,7 @@ class MultiAccountTradeDispatcher:
         for account in accounts:
             account_id = _account_id(account["account_key"])
             identity, aliases = execution_identities(signal.raw, account["account_key"])
+            sell_scope = self.dispatcher._sell_scope(signal, account) if signal.signal_type == "SELL" else None
             if self.dispatcher.execution_dedupe:
                 claimed, previous_status, claim_token = await asyncio.to_thread(
                     self.ledger.claim, identity, aliases=aliases, with_token=True,
@@ -621,7 +622,8 @@ class MultiAccountTradeDispatcher:
                        if legacy_buy_identities is not None and account.get("product") == "01" else {}),
                     **({"legacy_sell_identities": legacy_sell_identities}
                        if legacy_sell_identities is not None and account.get("product") == "01" else {}),
-                    **({"sell_scope": self.dispatcher._sell_scope(signal, account)}
+                    **({"sell_scope": sell_scope,
+                        "sell_identity_is_canonical": sell_scope["account_scope"] is not None}
                        if signal.signal_type == "SELL" else {}),
                 )
                 if not claimed:
@@ -841,7 +843,19 @@ class TradeDispatcher:
         The caller holds _serialized_broker_workflow throughout the check and
         subsequent broker dispatch; no fill is inferred from aggregate holdings.
         """
-        if not _is_stop_loss_sell(signal) or self.dry_run:
+        stop_sell = _is_stop_loss_sell(signal)
+        if signal.signal_type == "SELL" and not signal.manual_ticket and not stop_sell:
+            # Strategies can infer a stop from price and configuration without
+            # a sell_reason. Classify the actual selected strategy before any
+            # routing, queueing, or broker work rather than trusting the label.
+            strategy = self._resolve_strategy(signal)
+            if isinstance(strategy, (StopLossSellStrategy, SignalTrailingStopStrategy)):
+                stop_sell = True
+            elif isinstance(strategy, BracketExitStrategy):
+                # Full-exit reasons take precedence inside the strategy, but
+                # they cannot waive the stop fence once its price is crossed.
+                stop_sell = signal.stop_loss is not None and float(signal.price) <= float(signal.stop_loss)
+        if not stop_sell or self.dry_run:
             return None
         if self.trading_mode != "demo":
             return DispatchResult(
@@ -1698,7 +1712,7 @@ class TradeDispatcher:
                 # A prior UNKNOWN claim is not a fill or a safe terminal
                 # disposition. Quarantine it for operator reconciliation;
                 # never re-submit an ambiguous order automatically.
-                if "unknown" in prior_statuses:
+                if prior_statuses.intersection({"unknown", "ambiguous_scope"}):
                     logger.error(
                         "Quarantining queued %s order on %s after UNKNOWN dedupe: %s",
                         result.signal_type, result.market, result.message,
@@ -1727,7 +1741,7 @@ class TradeDispatcher:
                     return QueueExecutionResult("processed", result.message)
                 if any(
                     leg.status == "unknown"
-                    or (leg.status == "skipped" and leg.previous_status == "unknown")
+                    or (leg.status == "skipped" and leg.previous_status in {"unknown", "ambiguous_scope"})
                     for leg in unresolved
                 ):
                     logger.error(
