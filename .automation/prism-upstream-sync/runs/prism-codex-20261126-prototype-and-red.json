@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "owner": "codex",
+  "run_id": "prism-codex-20261126-prototype-and-red",
+  "status": "PARTIAL_BLOCKED",
+  "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "prototype": ".automation/prism-upstream-sync/tools/prototype-v7/",
+  "prototype_source_commit": "36815e470e5f9629c89e17a9a75bf2bd7bd04c70",
+  "tests": "node --test .automation/prism-upstream-sync/tools/prototype-v7/tests/*.test.mjs: 18 passed",
+  "prototype_limits": "inert offline prototype; no operational scheduler, remote CAS adapter, independent execution certification, or complete checkpoint proof; all new PASS rejected",
+  "new_red": {
+    "test": ".automation/prism-upstream-sync/runs/prism-codex-20261126-prototype-and-red-deleted-selector.py",
+    "log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-prototype-and-red-deleted-selector.log",
+    "result": "2 failed",
+    "scope": "ledger-only synthetic same-signal route change; not broker proof"
+  },
+  "independent_audit_certifications": 0,
+  "merge_performed": false
+}

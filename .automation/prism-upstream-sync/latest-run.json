@@ -17,11 +17,11 @@
   "ci_run_id": 45595464677,
   "ci_head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
   "ci_status": "SUCCESS",
-  "next_exact_action": "R1 next exact path: .github/workflows/tests.yml; audit workflow shell syntax multiple-operand regression (already RED_REPRODUCED by Codex), verify relevant scripts/tests and exact CI, checkpoint only new evidence. Codex: prioritize all 5 RED_REPRODUCED items before restarting frozen audit; add .env.example fixture verifying shipped env defaults and fail-closed consumers, and Docker context negative fixture. Re-freeze only after exact-head GREEN.",
+  "next_exact_action": "Resolve deleted-selector SELL UNKNOWN replay without discarding evidence or indefinitely blocking unrelated sells; retain reproduction and independently validate reconciliation; continue other queued offline fixes.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "AUDIT",
-    "work_id": "scheduled-related-R1",
+    "phase": "FIX",
+    "work_id": "legacy-deleted-selector-sell-unknown",
     "pr": 43,
     "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
@@ -31,7 +31,7 @@
     },
     "audit_round": "R1",
     "prior_stalled_count": 0,
-    "next_exact_action": "R1 next exact path: .github/workflows/tests.yml; audit workflow shell syntax multiple-operand regression (already RED_REPRODUCED by Codex), verify relevant scripts/tests and exact CI, checkpoint only new evidence. Codex: prioritize all 5 RED_REPRODUCED items before restarting frozen audit; add .env.example fixture verifying shipped env defaults and fail-closed consumers, and Docker context negative fixture. Re-freeze only after exact-head GREEN.",
+    "next_exact_action": "Resolve deleted-selector SELL UNKNOWN replay without discarding evidence or indefinitely blocking unrelated sells; retain reproduction and independently validate reconciliation; continue other queued offline fixes.",
     "queue": [
       {
         "work_id": "scheduled-related-R1",
@@ -461,6 +461,26 @@
           ".automation/prism-upstream-sync/tools/audit-record-validator.mjs"
         ],
         "evidence": "Pure offline validator stored on state branch; validate inventory/round/SHA/duplicates/PASS and deterministic cursor. Six self-checks executed. Codex: implement/test reusable state CAS checkpoint runner and audit evidence collector in separate safe PR or state tooling; no default branch or deployment changes without gates. Never infer independent PASS from aggregate CI."
+      },
+      {
+        "work_id": "legacy-deleted-selector-sell-unknown",
+        "priority": "P0",
+        "status": "RED_REPRODUCED",
+        "evidence": {
+          "reproducer": ".automation/prism-upstream-sync/runs/prism-codex-20261126-prototype-and-red-deleted-selector.py",
+          "log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-prototype-and-red-deleted-selector.log",
+          "local_candidate_parent": "1a06a75152c0b3e39d436a898073282787e45b07",
+          "red_cases": 2,
+          "limitations": "Opaque deleted selector hashes cannot be reversed; broad fencing can permanently block unrelated sells. No authorized evidence-based UNKNOWN reconciliation is established."
+        },
+        "next": "Resolve deleted-selector SELL UNKNOWN replay without discarding evidence or indefinitely blocking unrelated sells; retain reproduction and independently validate reconciliation; continue other queued offline fixes."
+      },
+      {
+        "work_id": "duplicate-canonical-webui-selector",
+        "priority": "P0",
+        "status": "RED_REPRODUCED",
+        "evidence": "Offline WebUI-to-dispatcher mock demonstrated duplicate canonical key choosing another configured credential; candidate fix in development; remote head unchanged.",
+        "next": "Review and test fail-closed handling for duplicate account identities in immediate and queued paths."
       }
     ],
     "blocker": "Independent R1/R2/F1/F2, latest approval, protection/required checks and authoritative KIS proof remain open."
@@ -469,5 +489,6 @@
   "full_total": 275,
   "local_candidate_evidence": [
     ".automation/prism-upstream-sync/runs/prism-codex-20261126-local-candidate.json"
-  ]
+  ],
+  "audit_engine_prototype": ".automation/prism-upstream-sync/tools/prototype-v7/README.md"
 }

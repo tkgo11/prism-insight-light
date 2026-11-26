@@ -1,0 +1,51 @@
+OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___ test_deleted_historical_selector_unknown_fences_new_sell[opaque_legacy] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-68/test_deleted_historical_select0')
+scope_kind = 'opaque_legacy'
+
+    @pytest.mark.parametrize('scope_kind', ['opaque_legacy', 'scoped'])
+    def test_deleted_historical_selector_unknown_fences_new_sell(tmp_path, scope_kind):
+        ledger = ExecutionLedger(tmp_path / 'ledger.json')
+        payload = {'signal_id': 'same-signal', 'type': 'SELL'}
+        old, _ = execution_identities(payload, 'demo:KR:name:deleted-account')
+        new, _ = execution_identities(payload, 'vps:12345678:01')
+        scope = {'market': 'KR', 'ticker': '005930',
+                 'account_scope': hashlib.sha256(b'vps:12345678:01').hexdigest()}
+        options = {'order_side': 'SELL', 'sell_scope': scope} if scope_kind == 'scoped' else {}
+        claimed, _, token = ledger.claim(old, with_token=True, **options)
+        assert claimed
+        ledger.finalize(old, 'unknown', claim_token=token)
+        claimed, _ = ledger.claim(new, order_side='SELL', sell_scope=scope)
+>       assert not claimed
+E       assert not True
+
+repro/reproduce_deleted_selector_sell_fence.py:27: AssertionError
+_______ test_deleted_historical_selector_unknown_fences_new_sell[scoped] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-68/test_deleted_historical_select1')
+scope_kind = 'scoped'
+
+    @pytest.mark.parametrize('scope_kind', ['opaque_legacy', 'scoped'])
+    def test_deleted_historical_selector_unknown_fences_new_sell(tmp_path, scope_kind):
+        ledger = ExecutionLedger(tmp_path / 'ledger.json')
+        payload = {'signal_id': 'same-signal', 'type': 'SELL'}
+        old, _ = execution_identities(payload, 'demo:KR:name:deleted-account')
+        new, _ = execution_identities(payload, 'vps:12345678:01')
+        scope = {'market': 'KR', 'ticker': '005930',
+                 'account_scope': hashlib.sha256(b'vps:12345678:01').hexdigest()}
+        options = {'order_side': 'SELL', 'sell_scope': scope} if scope_kind == 'scoped' else {}
+        claimed, _, token = ledger.claim(old, with_token=True, **options)
+        assert claimed
+        ledger.finalize(old, 'unknown', claim_token=token)
+        claimed, _ = ledger.claim(new, order_side='SELL', sell_scope=scope)
+>       assert not claimed
+E       assert not True
+
+repro/reproduce_deleted_selector_sell_fence.py:27: AssertionError
+=========================== short test summary info ============================
+FAILED repro/reproduce_deleted_selector_sell_fence.py::test_deleted_historical_selector_unknown_fences_new_sell[opaque_legacy]
+FAILED repro/reproduce_deleted_selector_sell_fence.py::test_deleted_historical_selector_unknown_fences_new_sell[scoped]
+2 failed in 0.02s

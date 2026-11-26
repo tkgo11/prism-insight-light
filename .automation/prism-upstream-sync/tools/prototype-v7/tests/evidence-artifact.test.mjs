@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {validateArtifact,specDigest} from '../evidence-artifact.mjs';
+const sha=x=>createHash('sha256').update(x).digest('hex');
+const h='a'.repeat(40),b='b'.repeat(40);
+const make=(spec,stdout)=>({schema_version:1,spec_id:spec,spec_sha256:specDigest(spec),argv:spec==='git-head-v1'?['git','rev-parse','HEAD']:['node','--test','--test-reporter=tap','.automation/prism-upstream-sync/tools/prototype-v7/tests/maintenance-engine.test.mjs'],head_sha:h,base_sha:b,round:'R1',execution_id:'exec-1',run_id:'run-1',producer:'test-fixture',exit_code:0,stdout,stdout_sha256:sha(stdout)});
+const expected=spec=>({head_sha:h,base_sha:b,round:'R1',spec_sha256:specDigest(spec)});
+test('validates exact head output and refuses certification',()=>{const artifact=make('git-head-v1',h+'\n');assert.equal(validateArtifact(artifact,expected('git-head-v1')).certification,'NOT_GRANTED');for(const x of [{...artifact,stdout:b+'\n'},{...artifact,stdout:b+'\n',stdout_sha256:sha(b+'\n')},{...artifact,argv:['sh','-c','echo ok']},{...artifact,exit_code:1},{...artifact,spec_sha256:'0'.repeat(64)}])assert.throws(()=>validateArtifact(x,expected('git-head-v1')));});
+test('rejects bad scope, unknown spec and execution ID reuse',()=>{const a=make('git-head-v1',h+'\n'), e=expected('git-head-v1');assert.throws(()=>validateArtifact(a,{...e,base_sha:h}));assert.throws(()=>validateArtifact({...a,spec_id:'unknown'},e));assert.throws(()=>validateArtifact(a,e,[{execution_id:a.execution_id,head_sha:h,base_sha:b,round:'R2'}]));});
+test('inspects actual captured TAP lines, summary and digest',()=>{const env={...process.env};delete env.NODE_TEST_CONTEXT;const output=execFileSync(process.execPath,['--test','--test-reporter=tap','.automation/prism-upstream-sync/tools/prototype-v7/tests/maintenance-engine.test.mjs'],{encoding:'utf8',env});const a=make('engine-tests-v1',output),e=expected('engine-tests-v1');assert.equal(validateArtifact(a,e).status,'CONSISTENT_UNTRUSTED');for(const bad of [output.replace('ok 1 -','not ok 1 -'),output.replace('# pass 10','# pass 9'),output.replace('ok 1 -','ok 1 - # SKIP '),output.replace('1..10','1..11')])assert.throws(()=>validateArtifact({...a,stdout:bad,stdout_sha256:sha(bad)},e));});
