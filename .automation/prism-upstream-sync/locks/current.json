@@ -1,14 +1,13 @@
 {
   "schema_version": 1,
-  "status": "RELEASED",
-  "run_id": "prism-codex-20261126T1505-integrate",
+  "status": "ACTIVE",
+  "run_id": "prism-codex-20261126-wave2-integrate",
   "owner": "codex-v7.1",
-  "acquired_expected_state_parent": "f6d85552bd73aa53af1397e758508d46b4a6ffe8",
-  "active_state_sha": "b4ec53ebb5fe6b0c18d8109ee9366813f6afddd9",
-  "release_expected_state_parent": "b4ec53ebb5fe6b0c18d8109ee9366813f6afddd9",
-  "original_pr_head": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
-  "final_pr_head": "967c948691f063170df8ff2ffa025b59dc7cf72e",
-  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
-  "purpose": "Integrate reviewed offline-tested safety fixes",
-  "release_reason": "Code ref verified, evidence checkpoint prepared; CI and unresolved risks remain open."
+  "acquired_expected_state_parent": "132523e0cd3c58251a809e60f5381f44d57345f2",
+  "observed_pr_head": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+  "observed_base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+  "candidate_tree": "14dd0bfb1646220c1f7c05c28736be01c3ee7491",
+  "purpose": "Integrate offline-reviewed live stop, unresolved SELL and US session fixes",
+  "operation": "CODE_REF_UPDATE"
 }
