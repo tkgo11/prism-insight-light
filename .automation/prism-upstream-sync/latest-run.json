@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-codex-20261126-wave2-integrate",
+  "run_id": "prism-scheduled-20261126T181842KST-wave2-ci",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261126-wave2-integrate.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-manual-20261126T1434KST-r1-env-checkpoint.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-manual-20261126T1434KST-r1-env-checkpoint-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261126T181842KST-wave2-ci.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-scheduled-20261126T181842KST-wave2-ci.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261126T181842KST-wave2-ci-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -14,25 +14,25 @@
   "full_complete": 0,
   "prior_related_complete": 5,
   "prior_full_complete": 5,
-  "ci_run_id": null,
+  "ci_run_id": 45787405400,
   "ci_head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
-  "ci_status": "PENDING",
-  "next_exact_action": "Observe exact-HEAD Linux and Windows CI, Snyk and actual required checks; checkpoint results; independently audit remaining SELL fencing and risk before freezing.",
+  "ci_status": "SUCCESS",
+  "next_exact_action": "Independently inspect modern-distinct-sell-after-unknown and strategy-stop-loss-live-gate at exact GREEN HEAD; rebuild frozen inventory before R1, retain historical records only.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "WAIT_GREEN",
+    "phase": "AUDIT",
     "work_id": "wave2-exact-head-ci",
     "pr": 43,
     "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
       "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
-      "status": "PENDING",
-      "run_id": null
+      "status": "SUCCESS",
+      "run_id": 45787405400
     },
     "audit_round": "R1",
     "prior_stalled_count": 0,
-    "next_exact_action": "Observe exact-HEAD Linux and Windows CI, Snyk and actual required checks; checkpoint results; independently audit remaining SELL fencing and risk before freezing.",
+    "next_exact_action": "Independently inspect modern-distinct-sell-after-unknown and strategy-stop-loss-live-gate at exact GREEN HEAD; rebuild frozen inventory before R1, retain historical records only.",
     "queue": [
       {
         "work_id": "scheduled-related-R1",
@@ -474,7 +474,7 @@
       {
         "work_id": "legacy-deleted-selector-sell-unknown",
         "priority": "P0",
-        "status": "LOCAL_GREEN_PENDING_CI",
+        "status": "CI_GREEN_AWAITING_ADVERSARIAL_REVIEW",
         "evidence": {
           "reproducer": ".automation/prism-upstream-sync/runs/prism-codex-20261126-prototype-and-red-deleted-selector.py",
           "log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-prototype-and-red-deleted-selector.log",
@@ -483,7 +483,24 @@
           "limitations": "Opaque deleted selector hashes cannot be reversed; broad fencing can permanently block unrelated sells. No authorized evidence-based UNKNOWN reconciliation is established."
         },
         "next": "Resolve deleted-selector SELL UNKNOWN replay without discarding evidence or indefinitely blocking unrelated sells; retain reproduction and independently validate reconciliation; continue other queued offline fixes.",
-        "local_candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2"
+        "local_candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+        "exact_ci": {
+          "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+          "push_run_id": 45787405400,
+          "pr_run_id": 45787413579,
+          "linux_job": 139797567030,
+          "windows_job": 139797566744,
+          "checkout_verified": true,
+          "linux_offline": true,
+          "windows_offline": true,
+          "windows_passed": 203,
+          "linux_summary": [
+            "2026-11-26T08:57:23.2145275Z 3811 passed, 112 warnings in 34.43s"
+          ],
+          "snyk": "success",
+          "reviews": [],
+          "protection": "403; required checks unknown"
+        }
       },
       {
         "work_id": "duplicate-canonical-webui-selector",
@@ -496,23 +513,57 @@
       {
         "work_id": "strategy-stop-loss-live-gate",
         "priority": "P0",
-        "status": "LOCAL_GREEN_PENDING_CI",
+        "status": "CI_GREEN_AWAITING_ADVERSARIAL_REVIEW",
         "evidence": "Offline seccomp, actual dispatcher and real strategy code with mocked order methods: KR/US stop_loss_sell and bracket_exit price-triggered real SELL executed in four cases despite required live stop-loss gate. Demo controls passed. No live broker calls.",
         "next": "Integrate and review stop-loss strategy gate with KR/US immediate and queued coverage; preserve ordinary bracket take-profit behavior.",
-        "local_candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2"
+        "local_candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+        "exact_ci": {
+          "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+          "push_run_id": 45787405400,
+          "pr_run_id": 45787413579,
+          "linux_job": 139797567030,
+          "windows_job": 139797566744,
+          "checkout_verified": true,
+          "linux_offline": true,
+          "windows_offline": true,
+          "windows_passed": 203,
+          "linux_summary": [
+            "2026-11-26T08:57:23.2145275Z 3811 passed, 112 warnings in 34.43s"
+          ],
+          "snyk": "success",
+          "reviews": [],
+          "protection": "403; required checks unknown"
+        }
       },
       {
         "work_id": "us-smart-session-calendar",
         "priority": "P1",
-        "status": "LOCAL_GREEN_PENDING_CI",
+        "status": "CI_GREEN_AWAITING_ADVERSARIAL_REVIEW",
         "evidence": "On 2026-11-27 14:00 ET early close and 2026-12-25 holiday, US smart SELL selected regular-session path despite NYSE closed; mock broker only.",
         "next": "Review US smart-order calendar fix and test early-close, holiday and legacy reserved-order behavior offline.",
-        "local_candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2"
+        "local_candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+        "exact_ci": {
+          "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+          "push_run_id": 45787405400,
+          "pr_run_id": 45787413579,
+          "linux_job": 139797567030,
+          "windows_job": 139797566744,
+          "checkout_verified": true,
+          "linux_offline": true,
+          "windows_offline": true,
+          "windows_passed": 203,
+          "linux_summary": [
+            "2026-11-26T08:57:23.2145275Z 3811 passed, 112 warnings in 34.43s"
+          ],
+          "snyk": "success",
+          "reviews": [],
+          "protection": "403; required checks unknown"
+        }
       },
       {
         "work_id": "modern-distinct-sell-after-unknown",
         "priority": "P0",
-        "status": "LOCAL_GREEN_PENDING_CI",
+        "status": "CI_GREEN_AWAITING_ADVERSARIAL_REVIEW",
         "evidence": {
           "head_scope": "local candidate tree f3c395682d454bea38b9bca6086736d5dfc3f9ea",
           "reproducer": ".automation/prism-upstream-sync/runs/prism-codex-20261126-modern-unknown-red.py",
@@ -521,7 +572,24 @@
           "broker": "mock only"
         },
         "next": "Prevent a second SELL while same-account/instrument submission remains UNKNOWN, preserve evidence and rejection semantics, and verify queued/multi-account paths.",
-        "local_candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2"
+        "local_candidate_head": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+        "exact_ci": {
+          "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+          "push_run_id": 45787405400,
+          "pr_run_id": 45787413579,
+          "linux_job": 139797567030,
+          "windows_job": 139797566744,
+          "checkout_verified": true,
+          "linux_offline": true,
+          "windows_offline": true,
+          "windows_passed": 203,
+          "linux_summary": [
+            "2026-11-26T08:57:23.2145275Z 3811 passed, 112 warnings in 34.43s"
+          ],
+          "snyk": "success",
+          "reviews": [],
+          "protection": "403; required checks unknown"
+        }
       },
       {
         "work_id": "legacy-sell-reconciliation-protocol",

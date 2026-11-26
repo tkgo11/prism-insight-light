@@ -1,0 +1,27 @@
+{
+  "run_id": "prism-scheduled-20261126T181842KST-wave2-ci",
+  "owner": "scheduled",
+  "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "prior_state_sha": "55ed3f1c03664f1605c212dde1d15ed237bbdc50",
+  "prior_report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261126-wave2-integrate.json",
+  "ci_evidence": {
+    "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+    "push_run_id": 45787405400,
+    "pr_run_id": 45787413579,
+    "linux_job": 139797567030,
+    "windows_job": 139797566744,
+    "checkout_verified": true,
+    "linux_offline": true,
+    "windows_offline": true,
+    "windows_passed": 203,
+    "linux_summary": [
+      "2026-11-26T08:57:23.2145275Z 3811 passed, 112 warnings in 34.43s"
+    ],
+    "snyk": "success",
+    "reviews": [],
+    "protection": "403; required checks unknown"
+  },
+  "next_exact_action": "Independently inspect modern-distinct-sell-after-unknown and strategy-stop-loss-live-gate at exact GREEN HEAD; rebuild frozen inventory before R1, retain historical records only.",
+  "new_audit_records": 0
+}
