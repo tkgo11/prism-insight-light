@@ -1,0 +1,1067 @@
+diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
+index 53aa6e5..383ce5e 100644
+--- a/.github/workflows/tests.yml
++++ b/.github/workflows/tests.yml
+@@ -38,7 +38,9 @@ jobs:
+       - name: Run static smoke checks
+         run: |
+           python -m compileall -q subscriber.py pubsub_readiness.py trading webui tests
+-          bash -n run.sh install_prism_docker.sh setup_subscriber_crontab.sh setup_subscriber_docker_crontab.sh
++          for script in run.sh install_prism_docker.sh setup_subscriber_crontab.sh setup_subscriber_docker_crontab.sh; do
++            bash -n "$script"
++          done
+ 
+       - name: Verify pinned maintenance skill Git Submodule
+         run: python scripts/check_autonomous_maintainer_dependency.py
+diff --git a/tests/test_dispatch.py b/tests/test_dispatch.py
+index bd4b50a..cd9e862 100644
+--- a/tests/test_dispatch.py
++++ b/tests/test_dispatch.py
+@@ -62,7 +62,7 @@ async def test_dispatch_us_sell(monkeypatch):
+     results = {}
+ 
+     class FakeUSTrader:
+-        def __init__(self, mode):
++        def __init__(self, mode, **kwargs):
+             results["mode"] = mode
+ 
+         async def async_sell_stock(self, ticker, limit_price=None):
+@@ -191,9 +191,13 @@ async def test_real_off_hours_without_broker_window_enqueues(monkeypatch):
+ @pytest.mark.asyncio
+ async def test_real_off_hours_uses_supported_reserved_order_window(monkeypatch):
+     results = {}
++    monkeypatch.setattr(TradeDispatcher, "_resolve_single_account", lambda self, signal: {
++        "name": "synthetic", "account": "12345678", "account_key": "prod:12345678:01",
++        "svr": "prod", "product": "01", "market": "us",
++    })
+ 
+     class FakeUSTrader:
+-        def __init__(self, mode):
++        def __init__(self, mode, **kwargs):
+             results["mode"] = mode
+ 
+         async def async_sell_stock(self, ticker, limit_price=None):
+@@ -216,7 +220,7 @@ async def test_real_off_hours_uses_supported_reserved_order_window(monkeypatch):
+ @pytest.mark.asyncio
+ async def test_dispatch_acknowledges_event_without_trader(monkeypatch):
+     class RaisingUSTrader:
+-        def __init__(self, mode):
++        def __init__(self, mode, **kwargs):
+             raise AssertionError("event dispatch should not create a trader")
+ 
+     monkeypatch.setattr("trading.dispatch.USStockTrading", RaisingUSTrader)
+@@ -292,7 +296,7 @@ async def test_stop_loss_sell_strategy_uses_stop_loss_limit_above_signal_price(m
+     results = {}
+ 
+     class FakeUSTrader:
+-        def __init__(self, mode):
++        def __init__(self, mode, **kwargs):
+             results["mode"] = mode
+ 
+         async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
+@@ -317,7 +321,7 @@ async def test_stop_loss_sell_strategy_uses_marketable_signal_price_below_stop_l
+     results = {}
+ 
+     class FakeUSTrader:
+-        def __init__(self, mode):
++        def __init__(self, mode, **kwargs):
+             results["mode"] = mode
+ 
+         async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
+@@ -342,7 +346,7 @@ async def test_stop_loss_sell_strategy_falls_back_to_signal_price(monkeypatch):
+     results = {}
+ 
+     class FakeUSTrader:
+-        def __init__(self, mode):
++        def __init__(self, mode, **kwargs):
+             results["mode"] = mode
+ 
+         async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
+diff --git a/tests/test_docker_context_offline.py b/tests/test_docker_context_offline.py
+new file mode 100644
+index 0000000..fd35640
+--- /dev/null
++++ b/tests/test_docker_context_offline.py
+@@ -0,0 +1,89 @@
++"""Inspect Docker CLI's context tar through a fake local API, never a daemon."""
++import http.server
++import io
++import os
++from pathlib import Path
++import shutil
++import socketserver
++import subprocess
++import tarfile
++import threading
++
++import pytest
++
++ROOT = Path(__file__).resolve().parents[1]
++
++
++class FakeDocker(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
++    daemon_threads = True
++
++
++class Handler(http.server.BaseHTTPRequestHandler):
++    def log_message(self, *args):
++        pass
++
++    def do_HEAD(self):
++        self.send_response(200)
++        self.send_header('API-Version', '1.41')
++        self.end_headers()
++
++    def do_POST(self):
++        # The legacy Docker CLI sends the context as chunked transfer encoding.
++        data = bytearray()
++        while True:
++            size = int(self.rfile.readline().split(b';', 1)[0].strip(), 16)
++            if not size:
++                self.rfile.readline()
++                break
++            data.extend(self.rfile.read(size))
++            assert self.rfile.read(2) == b'\r\n'
++        with tarfile.open(fileobj=io.BytesIO(data)) as archive:
++            self.server.names = set(archive.getnames())
++        self.send_response(200)
++        self.send_header('Content-Type', 'application/json')
++        self.end_headers()
++        self.wfile.write(b'{"stream":"context captured\\n"}\n')
++
++
++@pytest.mark.skipif(os.name == 'nt' or not shutil.which('docker'), reason='requires Docker CLI and Unix sockets')
++@pytest.mark.parametrize('mutation, env_in_context', [('none', False), ('remove', True), ('reinclude', True)])
++def test_actual_docker_client_context_exclusions(tmp_path, mutation, env_in_context):
++    context = tmp_path / 'context'
++    context.mkdir()
++    rules = (ROOT / '.dockerignore').read_text()
++    if mutation == 'remove':
++        rules = rules.replace('\n.env\n', '\n')
++    elif mutation == 'reinclude':
++        rules += '\n!.env\n'
++    (context / '.dockerignore').write_text(rules)
++    # All Dockerfile COPY inputs plus representative secret/state paths.
++    for path in ('Dockerfile', 'requirements.txt', 'subscriber.py', 'pubsub_readiness.py',
++                 'check_pubsub_readiness.py', '.env.example', '.env',
++                 'trading/config/kis_devlp.yaml', 'trading/config/KIS_test.token',
++                 'trading/config/.token_cache', 'trading/config/.tmp_token_test',
++                 'trading/config/kis_devlp.yaml.example', 'trading/__init__.py',
++                 'webui/__init__.py', 'runtime/ledger.json', 'logs/log.txt',
++                 'prism-insight-secret.json'):
++        target = context / path
++        target.parent.mkdir(parents=True, exist_ok=True)
++        target.write_text('FROM scratch\n' if path == 'Dockerfile' else 'fixture\n')
++    socket = str(tmp_path / 'docker.sock')
++    with FakeDocker(socket, Handler) as server:
++        thread = threading.Thread(target=server.serve_forever, daemon=True)
++        thread.start()
++        try:
++            env = {k: v for k, v in os.environ.items() if not k.lower().endswith('_proxy') and k not in {'DOCKER_CONTEXT', 'DOCKER_CONFIG'}}
++            env.update(DOCKER_HOST='unix://' + socket, DOCKER_BUILDKIT='0', DOCKER_API_VERSION='1.41')
++            result = subprocess.run(['docker', 'build', str(context)], env=env, capture_output=True, text=True, timeout=20)
++            assert result.returncode == 0, result.stderr
++            names = server.names
++        finally:
++            server.shutdown()
++            thread.join()
++    assert ('.env' in names) is env_in_context
++    assert {'.env.example', 'requirements.txt', 'subscriber.py', 'pubsub_readiness.py',
++            'check_pubsub_readiness.py', 'trading/config/kis_devlp.yaml.example',
++            'trading/__init__.py', 'webui/__init__.py'} <= names
++    assert not {'trading/config/kis_devlp.yaml', 'trading/config/KIS_test.token',
++                'trading/config/.token_cache', 'trading/config/.tmp_token_test',
++                'runtime/ledger.json', 'logs/log.txt', 'prism-insight-secret.json'} & names
+diff --git a/tests/test_managed_dispatch.py b/tests/test_managed_dispatch.py
+index 3eae1f5..2c5abe5 100644
+--- a/tests/test_managed_dispatch.py
++++ b/tests/test_managed_dispatch.py
+@@ -159,3 +159,82 @@ async def test_real_dispatcher_custom_gateway_cannot_bypass_atomic_broker_gate(m
+                and result["reason"] == "BROKER_ATOMIC_CROSS_CHANNEL_UNVERIFIED"
+                for result in results)
+     assert submissions == []
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "IBM")])
++@pytest.mark.parametrize("named", [False, True])
++@pytest.mark.parametrize("change", ["disabled", "reselected"])
++async def test_managed_exit_revalidates_account_after_final_snapshot(monkeypatch, market, ticker, named, change):
++    from datetime import datetime, timezone
++
++    key = "vps:00000000:01"
++    scope = sha256(key.encode()).hexdigest()
++    account = {"account_key": key, "enabled": True, "product": "01"}
++    selected = {"account_key": key}
++    calls = []
++    count = 0
++    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {"auto_trading": True}))
++    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
++    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **kwargs: [dict(account)])
++    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: dict(selected))
++
++    def snapshot(entry):
++        nonlocal count
++        count += 1
++        if count == 2:
++            if change == "disabled" or not named:
++                account["enabled"] = False
++            else:
++                selected["account_key"] = "vps:11111111:01"
++        result = {**entry, "complete": True, "as_of": datetime.now(timezone.utc).isoformat(),
++                  "holding_quantity": 4, "sellable_quantity": 4, "current_price": 85,
++                  "open_orders": []}
++        if market == "US":
++            result["order_venue"] = "NASD"
++        return result
++
++    gateway = SimpleNamespace(snapshot=snapshot, submit_exact_sell=lambda *a, **k: calls.append(a),
++                              reconcile_order=lambda *a: None)
++    dispatcher = TradeDispatcher(trading_mode="demo", managed_gateway=gateway,
++                                 account_name="fixture" if named else None, fresh_quote_enabled=False)
++    dispatcher.managed_position_book.enroll(scope, market, ticker, 90, latch_policy="LATCH_EXIT")
++    result = await dispatcher.check_managed_positions()
++    assert result[0]["status"] == "PAUSED"
++    assert calls == []
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "IBM")])
++async def test_managed_native_gateway_rechecks_account_after_its_snapshot(monkeypatch, market, ticker):
++    from datetime import datetime, timezone
++    from trading.managed_broker import ManagedBrokerGateway
++
++    key = "vps:00000000:01"
++    scope = sha256(key.encode()).hexdigest()
++    account = {"account_key": key, "enabled": True, "product": "01"}
++    calls = []
++    snapshots = 0
++    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {"auto_trading": True}))
++    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
++    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **kw: [dict(account)])
++
++    def snapshot(entry):
++        nonlocal snapshots
++        snapshots += 1
++        if snapshots == 2:
++            account["enabled"] = False
++        result = {**entry, "complete": True, "as_of": datetime.now(timezone.utc).isoformat(),
++                  "holding_quantity": 4, "sellable_quantity": 4, "current_price": 85, "open_orders": []}
++        if market == "US":
++            result["order_venue"] = "NASD"
++        return result
++
++    trader = SimpleNamespace(mode="demo", account_key=key,
++                             trenv=SimpleNamespace(my_acct="00000000", my_prod="01"),
++                             sell_all_market_price=lambda *a, **kw: calls.append(a))
++    gateway = ManagedBrokerGateway(trader=trader, market=market, snapshot_reader=snapshot,
++                                   order_reader=lambda *a: None)
++    dispatcher = TradeDispatcher(trading_mode="demo", managed_gateway=gateway, fresh_quote_enabled=False)
++    dispatcher.managed_position_book.enroll(scope, market, ticker, 90, latch_policy="LATCH_EXIT")
++    result = await dispatcher.check_managed_positions()
++    assert result[0]["status"] == "PAUSED"
++    assert calls == []
+diff --git a/tests/test_packaging_ci_safety.py b/tests/test_packaging_ci_safety.py
+new file mode 100644
+index 0000000..75e58b2
+--- /dev/null
++++ b/tests/test_packaging_ci_safety.py
+@@ -0,0 +1,98 @@
++"""Offline regressions for shipped examples and CI/package boundaries."""
++from pathlib import Path
++import os
++import shutil
++import subprocess
++
++import pytest
++import yaml
++
++from trading.schema import parse_signal_payload
++from trading.signal_safety import SignalSafetyConfig, SignalSafetyGate, REASON_QUOTE_UNAVAILABLE, OUTCOME_RETRY
++
++ROOT = Path(__file__).resolve().parents[1]
++SCRIPTS = ('run.sh', 'install_prism_docker.sh', 'setup_subscriber_crontab.sh', 'setup_subscriber_docker_crontab.sh')
++
++
++@pytest.mark.skipif(shutil.which('bash') is None, reason='requires bash')
++@pytest.mark.parametrize('bad_script', SCRIPTS)
++def test_ci_checks_each_shell_script(tmp_path, bad_script):
++    workflow = yaml.safe_load((ROOT / '.github/workflows/tests.yml').read_text())
++    step = next(s for s in workflow['jobs']['pytest']['steps'] if s.get('name') == 'Run static smoke checks')
++    for script in SCRIPTS:
++        (tmp_path / script).write_text('if then\n' if script == bad_script else 'true\n')
++    bindir = tmp_path / 'bin'
++    bindir.mkdir()
++    python = bindir / 'python'
++    python.write_text('#!/bin/sh\nexit 0\n')
++    python.chmod(0o755)
++    env = dict(os.environ, PATH=str(bindir) + os.pathsep + os.environ['PATH'])
++    result = subprocess.run(['bash', '-e', '-c', step['run']], cwd=tmp_path, env=env, capture_output=True, text=True)
++    assert result.returncode != 0, f'{bad_script} syntax error escaped CI'
++
++
++def assert_dockerignore_policy(text):
++    # Conservative policy, deliberately not an approximation of Docker matching:
++    # exact exclusions and no overriding re-inclusions must remain present.
++    rules = [line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith('#')]
++    required = {'.git', '.env', 'runtime', 'logs', 'trading/config/kis_devlp.yaml', 'trading/config/KIS*', 'trading/config/.token*', 'trading/config/.tmp_token_*', 'prism-insight-*.json'}
++    assert required.issubset(set(rules)), f'missing exclusions: {required - set(rules)}'
++    assert not any(rule.startswith('!') for rule in rules), 're-inclusions require a Docker matcher review'
++    assert '.env.example' not in rules
++
++
++def test_dockerignore_excludes_sensitive_paths_without_reinclusion():
++    assert_dockerignore_policy((ROOT / '.dockerignore').read_text())
++
++
++@pytest.mark.parametrize('mutation', ['remove_env', 'remove_token', 'reinclude_env', 'exclude_example'])
++def test_dockerignore_policy_rejects_unsafe_mutations(mutation):
++    contents = (ROOT / '.dockerignore').read_text()
++    if mutation == 'remove_env':
++        contents = contents.replace('\n.env\n', '\n')
++    elif mutation == 'remove_token':
++        contents = contents.replace('trading/config/KIS*\n', '')
++    elif mutation == 'reinclude_env':
++        contents += '!*.env\n'
++    else:
++        contents += '.env.example\n'
++    with pytest.raises(AssertionError):
++        assert_dockerignore_policy(contents)
++
++
++def test_shipped_env_defers_when_fresh_quote_is_unavailable():
++    # Resolve the shipped file explicitly: the offline runner overrides the ambient
++    # environment, so using os.environ here would not exercise the shipped values.
++    env = dict(line.split('=', 1) for line in (ROOT / '.env.example').read_text().splitlines() if line and not line.startswith('#'))
++    config = SignalSafetyConfig.resolve(env=env)
++    assert config.enabled and config.fresh_quote_enabled
++    class NoQuote:
++        def get_current_price(self, market, ticker):
++            return None
++    signal = parse_signal_payload({'type': 'BUY', 'ticker': '005930', 'market': 'KR', 'price': 82000})
++    result = SignalSafetyGate(config=config, quote_provider=NoQuote()).evaluate_execution(signal)
++    assert (result.outcome, result.reason) == (OUTCOME_RETRY, REASON_QUOTE_UNAVAILABLE)
++    assert env['WEBUI_ENABLED'] == 'false'
++    assert env['WEBUI_ENABLE_LIVE_TRADING'] == 'false'
++    assert env['WEBUI_HOST'] == '127.0.0.1'
++
++
++def test_shipped_env_does_not_fall_back_from_missing_explicit_config(tmp_path, monkeypatch):
++    from trading import config_paths
++    from trading.config_paths import active_kis_config_path, implicit_example_kis_config_active
++    monkeypatch.setattr(config_paths, "DEFAULT_CONFIG_PATH", tmp_path / "live.yaml")
++    env = dict(line.split('=', 1) for line in (ROOT / '.env.example').read_text().splitlines() if line and not line.startswith('#'))
++    assert implicit_example_kis_config_active(env)
++    missing = tmp_path / 'missing.yaml'
++    env['PRISM_KIS_CONFIG_PATH'] = str(missing)
++    assert active_kis_config_path(env) == missing
++    assert not implicit_example_kis_config_active(env)
++
++
++def test_shipped_env_rejects_public_bind_without_explicit_opt_in():
++    from webui.app import create_app, load_settings
++    env = dict(line.split('=', 1) for line in (ROOT / '.env.example').read_text().splitlines() if line and not line.startswith('#'))
++    env['WEBUI_HOST'] = '0.0.0.0'
++    env['WEBUI_ALLOW_NON_LOOPBACK'] = 'invalid'
++    with pytest.raises(ValueError, match='refuses non-loopback'):
++        create_app(load_settings(env))
+diff --git a/tests/test_security_queued_regressions.py b/tests/test_security_queued_regressions.py
+new file mode 100644
+index 0000000..bfe806d
+--- /dev/null
++++ b/tests/test_security_queued_regressions.py
+@@ -0,0 +1,53 @@
++from types import SimpleNamespace
++
++import pytest
++import requests
++
++from trading import kis_auth as ka
++from trading.dispatch import TradeDispatcher
++
++
++@pytest.mark.parametrize('primary,expected', [([False, False], None), ([True, True], None), ([True, False], 'a'), ([False], 'a')])
++def test_blank_webui_primary_requires_unambiguous_selection(monkeypatch, primary, expected):
++    accounts = [dict(account_key=chr(97+i), primary=p) for i, p in enumerate(primary)]
++    monkeypatch.setattr(ka, 'get_configured_accounts', lambda **kwargs: accounts)
++    monkeypatch.setattr(ka, 'resolve_account', lambda **kwargs: next((a for a in accounts if a['primary']), accounts[0]))
++    dispatcher = object.__new__(TradeDispatcher)
++    dispatcher.trading_mode = 'demo'
++    dispatcher.account_name = None
++    dispatcher.account_index = None
++    dispatcher.restrict_to_primary = True
++    if expected is None:
++        with pytest.raises(ValueError):
++            dispatcher._resolve_single_account(SimpleNamespace(market='KR'))
++    else:
++        assert dispatcher._resolve_single_account(SimpleNamespace(market='KR'))['account_key'] == expected
++
++
++@pytest.mark.parametrize('status', [400, 401, 403, 500])
++def test_token_error_never_exposes_response_body(monkeypatch, caplog, status):
++    secret = 'private-token-and-secret'
++    monkeypatch.setattr(ka.requests, 'post', lambda *a, **k: SimpleNamespace(status_code=status, text=secret))
++    with pytest.raises((ka.TokenRequestError, requests.RequestException)) as caught:
++        ka._request_token_with_retry.__wrapped__('https://example.invalid', {}, {})
++    assert secret not in str(caught.value)
++    assert secret not in repr(caught.value.__dict__)
++    assert secret not in caplog.text
++
++
++def test_token_network_error_never_exposes_exception(monkeypatch, caplog):
++    def fail(*args, **kwargs):
++        raise requests.RequestException('secret-payload')
++    monkeypatch.setattr(ka.requests, 'post', fail)
++    with pytest.raises(requests.RequestException) as caught:
++        ka._request_token_with_retry.__wrapped__('https://example.invalid', {}, {})
++    assert 'secret-payload' not in str(caught.value)
++    assert 'secret-payload' not in caplog.text
++
++
++@pytest.mark.parametrize('token', [12345678901, ['a'] * 12, '          '])
++def test_invalid_token_shape_never_saved(monkeypatch, tmp_path, token):
++    monkeypatch.setattr(ka, 'config_root', str(tmp_path))
++    with pytest.raises(ka.TokenFileError):
++        ka._save_token_inner(token, '2099-01-01 00:00:00')
++    assert not list(tmp_path.glob('*.token'))
+diff --git a/tests/test_sell_routing_provenance.py b/tests/test_sell_routing_provenance.py
+new file mode 100644
+index 0000000..9f1cea3
+--- /dev/null
++++ b/tests/test_sell_routing_provenance.py
+@@ -0,0 +1,179 @@
++import hashlib
++
++import pytest
++
++from trading.execution_ledger import ExecutionLedger, execution_identities
++
++
++@pytest.mark.parametrize('status', ['unknown', 'executed', 'acknowledged'])
++@pytest.mark.parametrize('direction', ['single_to_multi', 'multi_to_single'])
++def test_sell_route_switch_never_replays_possible_submission(tmp_path, status, direction):
++    ledger = ExecutionLedger(tmp_path / 'ledger.json')
++    payload = {'signal_id': 'sell-route-1', 'signal_type': 'SELL'}
++    selector = 'demo:KR:primary'
++    account = 'vps:12345678:01'
++    selected, _ = execution_identities(payload, selector)
++    canonical, _ = execution_identities(payload, account)
++    scope = {'market': 'KR', 'ticker': 'TEST', 'account_scope': hashlib.sha256(account.encode()).hexdigest()}
++    legacy = {selected: hashlib.sha256(selector.encode()).hexdigest()}
++    if direction == 'single_to_multi':
++        first, second = selected, canonical
++        first_opts = {'canonical_sell_identities': (canonical,)}
++        second_opts = {'legacy_sell_identities': legacy}
++    else:
++        first, second = canonical, selected
++        first_opts = {'legacy_sell_identities': legacy}
++        second_opts = {'canonical_sell_identities': (canonical,), 'legacy_sell_identities': legacy}
++    claimed, _, token = ledger.claim(first, with_token=True, order_side='SELL', sell_scope=scope, **first_opts)
++    assert claimed
++    ledger.finalize(first, status, claim_token=token)
++    claimed, previous = ledger.claim(second, order_side='SELL', sell_scope=scope, **second_opts)
++    assert not claimed
++    assert previous == status
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize('market,ticker', [('KR', '005930'), ('US', 'AAPL')])
++async def test_single_sell_pins_account_across_selector_change(tmp_path, monkeypatch, market, ticker):
++    from types import SimpleNamespace
++    from trading.dispatch import TradeDispatcher
++    from trading.schema import parse_signal_payload
++    from trading.signal_safety import SignalSafetyGate
++
++    def account(number):
++        return {'name': 'synthetic', 'account': number, 'account_key': f'vps:{number}:01',
++                'svr': 'vps', 'product': '01', 'market': market.lower()}
++    selected = [account('12345678')]
++    original = selected[0]
++    monkeypatch.setattr(TradeDispatcher, '_load_runtime_config', staticmethod(lambda: {}))
++    monkeypatch.setattr('trading.dispatch.is_market_open', lambda _: True)
++    monkeypatch.setattr(SignalSafetyGate, 'evaluate_execution',
++                        lambda *a, **k: SimpleNamespace(outcome='allow', fresh_quote=None))
++    monkeypatch.setattr(TradeDispatcher, '_resolve_single_account', lambda *a: selected[0])
++    dispatcher = TradeDispatcher(trading_mode='demo', execution_ledger_path=tmp_path / 'ledger.json',
++                                 fresh_quote_enabled=False)
++    original_claim = dispatcher.execution_ledger.claim
++    def change_after_claim(*args, **kwargs):
++        result = original_claim(*args, **kwargs)
++        selected[0] = account('87654321')
++        return result
++    monkeypatch.setattr(dispatcher.execution_ledger, 'claim', change_after_claim)
++    routed = []
++    async def mock_trade(signal, *, account=None):
++        routed.append(account or selected[0])
++        return __import__('trading.dispatch', fromlist=['DispatchResult']).DispatchResult(
++            'unknown', 'mock timeout', signal.signal_type, signal.market)
++    monkeypatch.setattr(dispatcher, '_execute_legacy_trade', mock_trade)
++    signal = parse_signal_payload({'signal_id': 'pin-sell', 'type': 'SELL', 'market': market,
++                                   'ticker': ticker, 'price': 100})
++    assert (await dispatcher.dispatch(signal)).status == 'unknown'
++    assert routed == [original]
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize('market,ticker', [('KR', '005930'), ('US', 'AAPL')])
++@pytest.mark.parametrize('selector', ['primary', 'name', 'index'])
++async def test_unknown_multi_claim_blocks_single_route_after_restart(tmp_path, monkeypatch, market, ticker, selector):
++    from types import SimpleNamespace
++    from trading.dispatch import TradeDispatcher
++    from trading.schema import parse_signal_payload
++    from trading.signal_safety import SignalSafetyGate
++    account = {'name': 'synthetic', 'account': '12345678', 'account_key': 'vps:12345678:01',
++               'svr': 'vps', 'product': '01', 'market': market.lower()}
++    signal = parse_signal_payload({'signal_id': 'route-restart', 'type': 'SELL', 'market': market,
++                                   'ticker': ticker, 'price': 100})
++    path = tmp_path / 'ledger.json'
++    ledger = ExecutionLedger(path)
++    identity, aliases = execution_identities(signal.raw, account['account_key'])
++    scope = {'market': market, 'ticker': ticker, 'account_scope': hashlib.sha256(account['account_key'].encode()).hexdigest()}
++    claimed, _, token = ledger.claim(identity, aliases=aliases, with_token=True, order_side='SELL', sell_scope=scope)
++    assert claimed
++    ledger.finalize(identity, 'unknown', claim_token=token)
++    monkeypatch.setattr(TradeDispatcher, '_load_runtime_config', staticmethod(lambda: {}))
++    monkeypatch.setattr('trading.dispatch.is_market_open', lambda _: True)
++    monkeypatch.setattr(SignalSafetyGate, 'evaluate_execution', lambda *a, **k: SimpleNamespace(outcome='allow', fresh_quote=None))
++    monkeypatch.setattr(TradeDispatcher, '_resolve_single_account', lambda *a: account)
++    selection = {'account_name': 'synthetic'} if selector == 'name' else {'account_index': 0} if selector == 'index' else {}
++    dispatcher = TradeDispatcher(trading_mode='demo', execution_ledger_path=path, fresh_quote_enabled=False, **selection)
++    calls = []
++    async def mock_trade(signal, **kwargs):
++        calls.append(kwargs)
++        return __import__('trading.dispatch', fromlist=['DispatchResult']).DispatchResult('unknown', 'mock', signal.signal_type, signal.market)
++    monkeypatch.setattr(dispatcher, '_execute_legacy_trade', mock_trade)
++    result = await dispatcher.dispatch(signal)
++    assert result.status == 'skipped' and result.previous_status == 'unknown'
++    assert calls == []
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize('market,ticker', [('KR', '005930'), ('US', 'AAPL')])
++@pytest.mark.parametrize('selector', ['primary', 'name', 'index'])
++@pytest.mark.parametrize('legacy', [False, True])
++async def test_single_unknown_blocks_multi_after_restart(tmp_path, monkeypatch, market, ticker, selector, legacy):
++    from types import SimpleNamespace
++    from trading.dispatch import DispatchResult, TradeDispatcher
++    from trading.schema import parse_signal_payload
++    from trading.signal_safety import SignalSafetyGate
++    account = {'name': 'synthetic', 'account': '12345678', 'account_key': 'vps:12345678:01',
++               'svr': 'vps', 'product': '01', 'market': market.lower(), 'enabled': True}
++    signal = parse_signal_payload({'signal_id': 'route-switch', 'type': 'SELL', 'market': market,
++                                   'ticker': ticker, 'price': 100})
++    path = tmp_path / 'ledger.json'
++    monkeypatch.setattr(TradeDispatcher, '_load_runtime_config', staticmethod(lambda: {}))
++    monkeypatch.setattr('trading.dispatch.ka.get_configured_accounts', lambda **_: [account])
++    monkeypatch.setattr('trading.dispatch.is_market_open', lambda _: True)
++    monkeypatch.setattr(SignalSafetyGate, 'evaluate_execution', lambda *a, **k: SimpleNamespace(outcome='allow', fresh_quote=None))
++    monkeypatch.setattr(TradeDispatcher, '_resolve_single_account', lambda *a: account)
++    calls = []
++    async def mock_trade(self, signal, *, account=None):
++        calls.append(account)
++        return DispatchResult('unknown', 'mock timeout', signal.signal_type, signal.market)
++    monkeypatch.setattr(TradeDispatcher, '_execute_legacy_trade', mock_trade)
++    selection = {'account_name': 'synthetic'} if selector == 'name' else {'account_index': 0} if selector == 'index' else {}
++    single = TradeDispatcher(trading_mode='demo', execution_ledger_path=path, fresh_quote_enabled=False, **selection)
++    if legacy:
++        identity, aliases = execution_identities(signal.raw, single._single_account_execution_selector(signal))
++        claimed, _, token = single.execution_ledger.claim(identity, aliases=aliases, with_token=True)
++        assert claimed
++        single.execution_ledger.finalize(identity, 'unknown', claim_token=token)
++    else:
++        assert (await single.dispatch(signal)).status == 'unknown'
++        assert calls == [account]
++    calls.clear()
++    monkeypatch.setattr(TradeDispatcher, '_load_runtime_config', staticmethod(lambda: {'multi_account_trading': {'enabled': True}}))
++    multi = TradeDispatcher(trading_mode='demo', execution_ledger_path=path, fresh_quote_enabled=False)
++    result = await multi.dispatch(signal)
++    assert result.status == 'skipped'
++    assert result.accounts[0].previous_status == 'unknown'
++    assert calls == []
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize('market,ticker', [('KR', '005930'), ('US', 'AAPL')])
++@pytest.mark.parametrize('selector', ['primary', 'name', 'index'])
++async def test_multi_unknown_blocks_single_dispatch_after_restart(tmp_path, monkeypatch, market, ticker, selector):
++    from types import SimpleNamespace
++    from trading.dispatch import DispatchResult, TradeDispatcher
++    from trading.schema import parse_signal_payload
++    from trading.signal_safety import SignalSafetyGate
++    account = {'name': 'synthetic', 'account': '12345678', 'account_key': 'vps:12345678:01',
++               'svr': 'vps', 'product': '01', 'market': market.lower(), 'enabled': True}
++    signal = parse_signal_payload({'signal_id': 'reverse-switch', 'type': 'SELL', 'market': market,
++                                   'ticker': ticker, 'price': 100})
++    path = tmp_path / 'ledger.json'
++    monkeypatch.setattr(TradeDispatcher, '_load_runtime_config', staticmethod(lambda: {'multi_account_trading': {'enabled': True}}))
++    monkeypatch.setattr('trading.dispatch.ka.get_configured_accounts', lambda **_: [account])
++    monkeypatch.setattr(TradeDispatcher, '_resolve_single_account', lambda *a: account)
++    monkeypatch.setattr('trading.dispatch.is_market_open', lambda _: True)
++    monkeypatch.setattr(SignalSafetyGate, 'evaluate_execution', lambda *a, **k: SimpleNamespace(outcome='allow', fresh_quote=None))
++    calls = []
++    async def mock_trade(self, signal, *, account=None):
++        calls.append(account)
++        return DispatchResult('unknown', 'mock timeout', signal.signal_type, signal.market)
++    monkeypatch.setattr(TradeDispatcher, '_execute_legacy_trade', mock_trade)
++    multi = TradeDispatcher(trading_mode='demo', execution_ledger_path=path, fresh_quote_enabled=False)
++    assert (await multi.dispatch(signal)).status == 'unknown'
++    assert calls == [account]
++    calls.clear()
++    monkeypatch.setattr(TradeDispatcher, '_load_runtime_config', staticmethod(lambda: {}))
++    selection = {'account_name': 'synthetic'} if selector == 'name' else {'account_index': 0} if selector == 'index' else {}
++    single = TradeDispatcher(trading_mode='demo', execution_ledger_path=path, fresh_quote_enabled=False, **selection)
++    result = await single.dispatch(signal)
++    assert result.status == 'skipped' and result.previous_status == 'unknown'
++    assert calls == []
+diff --git a/tests/test_wave4_execution_safety.py b/tests/test_wave4_execution_safety.py
+index 38ecc2c..932cebd 100644
+--- a/tests/test_wave4_execution_safety.py
++++ b/tests/test_wave4_execution_safety.py
+@@ -1157,3 +1157,26 @@ def test_nonstandard_2xx_cannot_prove_kis_sell_rejection(market, http_status):
+     assert result["success"] is False
+     assert result["outcome_unknown"] is True
+     assert classify_broker_result(result) == "unknown"
++
++
++@pytest.mark.parametrize("failure", ["missing", "unexpected", "request_error"])
++def test_auth_token_error_does_not_expose_sensitive_response(monkeypatch, tmp_path, caplog, failure):
++    import traceback
++
++    _patch_kis_cfg(monkeypatch, tmp_path)
++    secret = "sensitive-token-response-value"
++    def request(*args, **kwargs):
++        if failure == "missing":
++            return {"access_token": secret}
++        if failure == "request_error":
++            raise ka.TokenRequestError(secret, 401, secret)
++        raise ValueError(secret)
++
++    monkeypatch.setattr(ka, "_request_token_with_retry", request)
++    with pytest.raises(ka.TokenRequestError) as caught:
++        ka.auth(svr="vps", account_name="acct-a")
++    assert secret not in str(caught.value)
++    assert secret not in repr(caught.value.__dict__)
++    assert secret not in ''.join(traceback.format_exception(caught.value))
++    assert secret not in caplog.text
++    assert not list(tmp_path.glob('*.token'))
+diff --git a/tests/test_webui_routes.py b/tests/test_webui_routes.py
+index e8d6ecf..f84a131 100644
+--- a/tests/test_webui_routes.py
++++ b/tests/test_webui_routes.py
+@@ -688,7 +688,8 @@ def test_manual_sell_all_with_default_account_targets_only_primary(monkeypatch):
+ 
+     accounts = [
+         {"name": name, "account_key": f"vps:{i:08d}:01", "product": "01",
+-         "account": f"{i:08d}", "market": "us", "svr": "vps", "enabled": True}
++         "account": f"{i:08d}", "market": "us", "svr": "vps", "enabled": True,
++         "primary": i == 1}
+         for i, name in enumerate(("primary", "secondary"), start=1)
+     ]
+     monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+@@ -1118,3 +1119,41 @@ def test_validation_api_accepts_utf16_json_without_losing_duplicate_protection()
+         )
+         assert response.status_code == 200
+         assert response.json()["ok"] is valid
++
++
++@pytest.mark.parametrize("primary_flags", [(False, False), (True, True)])
++@pytest.mark.parametrize("multi", [False, True])
++@pytest.mark.parametrize("market_open", [False, True])
++@pytest.mark.parametrize("action", ["BUY", "SELL"])
++def test_blank_webui_selector_rejects_ambiguous_primary(
++    monkeypatch, primary_flags, multi, market_open, action,
++):
++    from trading.dispatch import TradeDispatcher
++    from webui.services import trade_service
++
++    accounts = [
++        {"name": f"acct-{i}", "account_key": f"vps:{i:08d}:01", "product": "01",
++         "account": f"{i:08d}", "market": "us", "svr": "vps", "enabled": True,
++         "primary": flag}
++        for i, flag in enumerate(primary_flags, start=1)
++    ]
++    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
++    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(
++        lambda: {"multi_account_trading": {"enabled": multi}},
++    ))
++    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: market_open)
++    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: accounts)
++    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: accounts[0])
++
++    async def forbidden(*args, **kwargs):
++        pytest.fail("ambiguous manual order reached broker")
++
++    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", forbidden)
++    c = client()
++    response = c.post("/trading/order", data={
++        "x_webui_csrf": "local-webui", "order_nonce": issue_order_nonce(c), "action": action,
++        "ticker": "AAPL", "price": "190.5", "market": "US", "trading_mode": "demo",
++        "arm_phrase": trade_service.SELL_ALL_PHRASE if action == "SELL" else trade_service.ARM_PHRASE,
++    })
++    assert response.status_code == 200
++    assert "Primary account could not be verified" in response.text
+diff --git a/trading/dispatch.py b/trading/dispatch.py
+index 91f8c19..70b99d4 100644
+--- a/trading/dispatch.py
++++ b/trading/dispatch.py
+@@ -584,6 +584,11 @@ class MultiAccountTradeDispatcher:
+             return self._aggregate(signal, results)
+ 
+         legacy_buy_identities = None
++        legacy_sell_identities = None
++        if self.dispatcher.execution_dedupe and signal.signal_type == "SELL":
++            legacy_sell_identities = _legacy_buy_route_identities(
++                signal, self.dispatcher.trading_mode, [a["name"] for a in accounts],
++            )
+         if self.dispatcher.execution_dedupe and signal.signal_type == "BUY":
+             legacy_buy_identities = _legacy_buy_route_identities(
+                 signal, self.dispatcher.trading_mode, [a["name"] for a in accounts],
+@@ -598,6 +603,8 @@ class MultiAccountTradeDispatcher:
+                     order_side="SELL" if signal.signal_type == "SELL" else None,
+                     **({"legacy_buy_identities": legacy_buy_identities}
+                        if legacy_buy_identities is not None and account.get("product") == "01" else {}),
++                    **({"legacy_sell_identities": legacy_sell_identities}
++                       if legacy_sell_identities is not None and account.get("product") == "01" else {}),
+                     **({"sell_scope": self.dispatcher._sell_scope(signal, account)}
+                        if signal.signal_type == "SELL" else {}),
+                 )
+@@ -923,37 +930,42 @@ class TradeDispatcher:
+                 for entry in enrolled
+             ]
+ 
+-        def check() -> list[dict[str, Any]]:
+-            results = []
+-            for entry in controller.book.list_enrollments():
+-                market = entry["market"]
+-                if not is_market_open(market):
+-                    continue
++        def account_allowed(entry: dict[str, Any]) -> bool:
++            """Re-read the enabled account set and any explicit selector."""
++            try:
++                market = entry["market"].lower()
+                 server = "vps" if self.trading_mode == "demo" else "prod"
+                 scopes = [
+                     hashlib.sha256(account["account_key"].encode()).hexdigest()
+-                    for account in ka.get_configured_accounts(svr=server, market=market.lower())
++                    for account in ka.get_configured_accounts(svr=server, market=market)
+                     if account.get("enabled") is True and account.get("product") == "01"
+                 ]
++                if scopes.count(entry["account_scope"]) != 1:
++                    return False
+                 if self.account_name or self.account_index is not None:
+-                    try:
+-                        selected = ka.resolve_account(
+-                            svr=server, product="01", market=market.lower(),
+-                            account_name=self.account_name, account_index=self.account_index,
+-                        )
+-                        selected_scope = hashlib.sha256(selected["account_key"].encode()).hexdigest()
+-                    except (KeyError, OSError, RuntimeError, TypeError, ValueError):
+-                        continue
+-                    if entry["account_scope"] != selected_scope:
+-                        continue
+-                if scopes.count(entry["account_scope"]) == 1:
++                    selected = ka.resolve_account(
++                        svr=server, product="01", market=market,
++                        account_name=self.account_name, account_index=self.account_index,
++                    )
++                    return hashlib.sha256(selected["account_key"].encode()).hexdigest() == entry["account_scope"]
++                return True
++            except (KeyError, OSError, RuntimeError, TypeError, ValueError, AttributeError):
++                return False
++
++        def check() -> list[dict[str, Any]]:
++            results = []
++            for entry in controller.book.list_enrollments():
++                market = entry["market"]
++                if not is_market_open(market):
++                    continue
++                if account_allowed(entry):
+                     if self.execution_ledger.has_ambiguous_legacy_submission(
+                         market, entry["ticker"], entry["account_scope"],
+                     ):
+                         results.append({"position_id": entry["position_id"], "status": "PAUSED",
+                                         "reason": "LEGACY_SUBMISSION_UNRESOLVED"})
+                         continue
+-                    results.append(controller.cycle(entry["position_id"]))
++                    results.append(controller.cycle(entry["position_id"], account_allowed=account_allowed))
+             return results
+ 
+         try:
+@@ -1020,6 +1032,14 @@ class TradeDispatcher:
+         source_block = self._submission_source_block(signal) or self._trading_switch_block(signal)
+         if source_block is not None:
+             return source_block
++        if signal.manual_ticket and self.restrict_to_primary and not self.account_name and self.account_index is None:
++            try:
++                await asyncio.to_thread(self._resolve_single_account, signal)
++            except (OSError, RuntimeError, TypeError, ValueError, KeyError):
++                return DispatchResult(
++                    "rejected", "Primary account could not be verified before submission",
++                    signal.signal_type, signal.market,
++                )
+         stop_block = await self._stop_sell_unresolved_buy_block(signal)
+         if stop_block is not None:
+             return stop_block
+@@ -1316,6 +1336,24 @@ class TradeDispatcher:
+                     signal.signal_type, signal.market,
+                 )
+ 
++        canonical_sell_identities = ()
++        legacy_sell_identities = None
++        if account is None and self.execution_dedupe and signal.signal_type == "SELL":
++            try:
++                if order_account is None:
++                    order_account = await asyncio.to_thread(self._resolve_single_account, signal)
++                key = self._validated_buy_account_key(order_account, signal)
++                canonical_id, sell_aliases = execution_identities(signal.raw, key)
++                canonical_sell_identities = (canonical_id,)
++                canonical_aliases = sell_aliases
++                legacy_sell_identities = _legacy_buy_route_identities(signal, self.trading_mode, [order_account["name"]])
++            except (KeyError, TypeError, ValueError, OSError, RuntimeError):
++                return DispatchResult(
++                    "failed" if queued_context is not None else "deferred",
++                    "KIS SELL account could not be pinned before submission; operator reconciliation required",
++                    signal.signal_type, signal.market,
++                )
++
+         identity = None
+         claim_token = None
+         if account is None and self.execution_dedupe:
+@@ -1328,6 +1366,8 @@ class TradeDispatcher:
+                 order_side="SELL" if signal.signal_type == "SELL" else None,
+                 **({"canonical_buy_identities": canonical_buy_identities,
+                     "legacy_buy_identities": legacy_buy_identities} if buy_intent is not None else {}),
++                **({"canonical_sell_identities": canonical_sell_identities,
++                    "legacy_sell_identities": legacy_sell_identities} if canonical_sell_identities else {}),
+                 **({"sell_scope": self._sell_scope(signal, order_account)}
+                    if signal.signal_type == "SELL" else {}),
+             )
+@@ -1751,6 +1791,17 @@ class TradeDispatcher:
+ 
+     def _resolve_single_account(self, signal: SignalMessage) -> dict[str, Any]:
+         """Resolve configuration only; never authenticate or submit an order."""
++        if self.restrict_to_primary and not self.account_name and self.account_index is None:
++            accounts = ka.get_configured_accounts(
++                svr="vps" if self.trading_mode == "demo" else "prod",
++                product="01", market=signal.market.lower(),
++            )
++            primary = [account for account in accounts if account.get("primary") is True]
++            if len(primary) == 1:
++                return primary[0]
++            if not primary and len(accounts) == 1:
++                return accounts[0]
++            raise ValueError("Primary account is ambiguous")
+         return ka.resolve_account(
+             svr="vps" if self.trading_mode == "demo" else "prod",
+             product="01",
+diff --git a/trading/execution_ledger.py b/trading/execution_ledger.py
+index cd7b1a5..51ddaf8 100644
+--- a/trading/execution_ledger.py
++++ b/trading/execution_ledger.py
+@@ -553,6 +553,10 @@ class ExecutionLedger:
+                 if (not _valid_canonical_buy_identities(entry["canonical_buy_identities"])
+                         or "order_intent" not in entry or "order_side" in entry):
+                     raise RuntimeError("Automatic-trading BUY routing identity is invalid")
++            if "canonical_sell_identities" in entry:
++                if (not _valid_canonical_buy_identities(entry["canonical_sell_identities"])
++                        or entry.get("order_side") != "SELL" or "sell_scope" not in entry):
++                    raise RuntimeError("Automatic-trading SELL routing identity is invalid")
+             if "sell_scope" in entry:
+                 try:
+                     if entry.get("order_side") != "SELL" or "order_intent" in entry:
+@@ -1008,6 +1012,8 @@ class ExecutionLedger:
+         sell_scope: dict[str, Any] | None = None,
+         canonical_buy_identities: tuple[str, ...] = (),
+         legacy_buy_identities: dict[str, str] | None = None,
++        canonical_sell_identities: tuple[str, ...] = (),
++        legacy_sell_identities: dict[str, str] | None = None,
+     ) -> tuple[bool, str | None] | tuple[bool, str | None, str | None]:
+         """Claim an identity or return the prior status without exposing account data.
+ 
+@@ -1044,6 +1050,10 @@ class ExecutionLedger:
+             raise ValueError("Canonical BUY identities require a valid BUY intent")
+         if legacy_buy_identities and validated_intent is None:
+             raise ValueError("Legacy BUY identities require a valid BUY intent")
++        if canonical_sell_identities and (sell_scope is None or not _valid_canonical_buy_identities(canonical_sell_identities)):
++            raise ValueError("Canonical SELL identities require a valid SELL scope")
++        if legacy_sell_identities and sell_scope is None:
++            raise ValueError("Legacy SELL identities require a valid SELL scope")
+         aliases = tuple(aliases)
+         now = datetime.now(timezone.utc)
+         with FileLock(self.lock_path):
+@@ -1051,8 +1061,8 @@ class ExecutionLedger:
+             # Keep one record and the original selector key. A canonical account
+             # claim and an alternate single-account selector must both see a
+             # possible submission across restarts, even after a new route is used.
+-            matching_keys = {identity, *aliases, *canonical_buy_identities}
+-            current_keys = {identity, *canonical_buy_identities}
++            matching_keys = {identity, *aliases, *canonical_buy_identities, *canonical_sell_identities}
++            current_keys = {identity, *canonical_buy_identities, *canonical_sell_identities}
+             blocking_statuses = set()
+             for key in matching_keys.intersection(entries):
+                 status = str(entries[key].get("status") or "in_progress")
+@@ -1064,14 +1074,18 @@ class ExecutionLedger:
+                     continue
+                 if current_keys.intersection(existing.get("canonical_buy_identities", ())):
+                     blocking_statuses.add(status)
+-                elif legacy_buy_identities and key in legacy_buy_identities:
++                elif current_keys.intersection(existing.get("canonical_sell_identities", ())):
++                    blocking_statuses.add(status)
++                elif (legacy_buy_identities and key in legacy_buy_identities) or (legacy_sell_identities and key in legacy_sell_identities):
+                     intent = existing.get("order_intent") or existing.get("sell_scope")
+                     scope = intent.get("account_scope") if isinstance(intent, dict) else None
+                     # Legacy entries with no canonical provenance are ambiguous.
+                     # A known foreign account's historical selector cannot block
+                     # this account, and is never folded away as a retry alias.
++                    routes = legacy_buy_identities if legacy_buy_identities and key in legacy_buy_identities else legacy_sell_identities
++                    current_scope = validated_intent["account_scope"] if validated_intent is not None else sell_scope["account_scope"]
+                     if (not isinstance(scope, str) or re.fullmatch(r"[0-9a-f]{64}", scope) is None
+-                            or scope in (validated_intent["account_scope"], legacy_buy_identities[key])):
++                            or scope in (current_scope, routes[key])):
+                         blocking_statuses.add(status)
+             if blocking_statuses:
+                 status = next((s for s in ("unknown", "in_progress") if s in blocking_statuses),
+@@ -1097,6 +1111,8 @@ class ExecutionLedger:
+                 entry["order_intent"] = validated_intent
+             if canonical_buy_identities:
+                 entry["canonical_buy_identities"] = list(canonical_buy_identities)
++            if canonical_sell_identities:
++                entry["canonical_sell_identities"] = list(canonical_sell_identities)
+             if order_side == "SELL":
+                 # A modern SELL cannot later create an un-attributed BUY fill.
+                 # Persist before submission so the legacy quarantine can
+diff --git a/trading/kis_auth.py b/trading/kis_auth.py
+index c8962a8..7a01980 100644
+--- a/trading/kis_auth.py
++++ b/trading/kis_auth.py
+@@ -664,7 +664,7 @@ def save_token(my_token: str, my_expired: str, account_key: Optional[str] = None
+ def _save_token_inner(my_token: str, my_expired: str, account_key: Optional[str] = None):
+     """save_token body without locking; callers may already hold the lock."""
+     # Validate token data BEFORE any file operations
+-    if not my_token or len(my_token) < 10:
++    if not isinstance(my_token, str) or len(my_token) < 10 or any(c.isspace() for c in my_token):
+         raise TokenFileError("Cannot save empty or invalid token")
+ 
+     if not my_expired:
+@@ -672,8 +672,8 @@ def _save_token_inner(my_token: str, my_expired: str, account_key: Optional[str]
+ 
+     try:
+         valid_date = datetime.strptime(my_expired, "%Y-%m-%d %H:%M:%S")
+-    except ValueError as e:
+-        raise TokenFileError(f"Invalid expiry date format: {my_expired}") from e
++    except (ValueError, TypeError):
++        raise TokenFileError("Invalid expiry date format") from None
+ 
+     # Prepare token data
+     token_data = {
+@@ -1053,9 +1053,9 @@ def _request_token_with_retry(url: str, params: dict, headers: dict) -> dict:
+             headers=headers,
+             timeout=KIS_HTTP_TIMEOUT,
+         )
+-    except requests.RequestException as e:
+-        logging.warning(f"Token request network error (will retry): {e}")
+-        raise
++    except requests.RequestException:
++        logging.warning("Token request network error (will retry)")
++        raise requests.RequestException("Token request network error") from None
+ 
+     if res.status_code == 200:
+         return res.json()
+@@ -1063,20 +1063,20 @@ def _request_token_with_retry(url: str, params: dict, headers: dict) -> dict:
+     # Non-retryable authentication errors
+     if res.status_code in (401, 403):
+         error_msg = f"Authentication failed: HTTP {res.status_code}"
+-        logging.error(f"{error_msg} - {res.text}")
+-        raise TokenRequestError(error_msg, res.status_code, res.text)
++        logging.error(error_msg)
++        raise TokenRequestError(error_msg, res.status_code)
+ 
+     # Retryable server errors (500, 502, 503, 504)
+     if res.status_code >= 500:
+         error_msg = f"Server error: HTTP {res.status_code}"
+-        logging.warning(f"{error_msg} (will retry) - {res.text}")
++        logging.warning(f"{error_msg} (will retry)")
+         # Raise requests exception to trigger retry
+         raise requests.RequestException(error_msg)
+ 
+     # Other client errors - don't retry
+     error_msg = f"Token request failed: HTTP {res.status_code}"
+-    logging.error(f"{error_msg} - {res.text}")
+-    raise TokenRequestError(error_msg, res.status_code, res.text)
++    logging.error(error_msg)
++    raise TokenRequestError(error_msg, res.status_code)
+ 
+ 
+ # ============== Safe File Delete (Windows compatible) ==============
+@@ -1426,7 +1426,6 @@ def auth(
+                             raise TokenRequestError(
+                                 "Invalid response from KIS API: missing token or expiry",
+                                 status_code=200,
+-                                response_text=str(result)
+                             )
+ 
+                         # Save the new token (per-account, keyed by resolved account)
+@@ -1435,20 +1434,17 @@ def auth(
+                         logging.info(f"✅ New token obtained and saved (expires: {my_expired})")
+ 
+                     except TokenRequestError as e:
+-                        logging.error(f"❌ Token request failed: {e}")
+-                        logging.error(f"   Status Code: {e.status_code}")
+-                        logging.error(f"   Response: {e.response_text}")
+-                        # Re-raise with clear error message
+-                        raise
++                        logging.error("Token request failed")
++                        raise TokenRequestError("Token request failed", e.status_code) from None
+ 
+                     except TokenFileError:
+                         # Token persistence failures keep their dedicated contract so
+                         # callers can distinguish disk problems from KIS API failures.
+                         raise
+ 
+-                    except Exception as e:
+-                        logging.error(f"❌ Unexpected error during token request: {e}")
+-                        raise TokenRequestError(f"Unexpected error: {e}")
++                    except Exception:
++                        logging.error("Unexpected error during token request")
++                        raise TokenRequestError("Unexpected error during token request") from None
+         except TimeoutError as lock_timeout:
+             # The lock holder may have minted a token while we waited; prefer a
+             # fresh on-disk token over failing with a raw lock timeout.
+diff --git a/trading/managed_positions.py b/trading/managed_positions.py
+index 1403405..d85b6e7 100644
+--- a/trading/managed_positions.py
++++ b/trading/managed_positions.py
+@@ -109,15 +109,15 @@ class ManagedPositionController:
+             return None
+         return dict(value)
+ 
+-    def cycle(self, position_id: str) -> dict[str, Any]:
++    def cycle(self, position_id: str, *, account_allowed=None) -> dict[str, Any]:
+         """Reconcile once under the durable cycle lock; never retry ambiguity."""
+         try:
+             with self.book.cycle_lock():
+-                return self._cycle_locked(position_id)
++                return self._cycle_locked(position_id, account_allowed=account_allowed)
+         except (OSError, RuntimeError, ValueError, TypeError, KeyError):
+             return self._result(position_id, "PAUSED", "DURABLE_STATE_UNAVAILABLE_OR_CONFLICTING")
+ 
+-    def _cycle_locked(self, position_id: str) -> dict[str, Any]:
++    def _cycle_locked(self, position_id: str, *, account_allowed=None) -> dict[str, Any]:
+         entry = self.book.get(position_id)
+         if entry is None:
+             return self._result(position_id, "UNENROLLED", "EXPLICIT_ENROLLMENT_REQUIRED")
+@@ -204,6 +204,8 @@ class ManagedPositionController:
+                     raise ValueError("Managed inventory changed before submission")
+             if self.submission_allowed is not None and self.submission_allowed(entry["market"]) is not True:
+                 raise ValueError("Market is unavailable for submission")
++            if account_allowed is not None and account_allowed(entry) is not True:
++                raise ValueError("Managed account is no longer authorized")
+             self._assert_fresh(latest)
+         except Exception:
+             self.book.abort_before_gateway(position_id, token)
+@@ -212,7 +214,10 @@ class ManagedPositionController:
+             response = self.gateway.submit_exact_sell(
+                 {**entry, "decision_as_of": snapshot["as_of"],
+                  "decision_venue": snapshot.get("order_venue"),
+-                 "decision_can_submit": self.submission_allowed},
++                 "decision_can_submit": lambda market: (
++                     (self.submission_allowed is None or self.submission_allowed(market) is True)
++                     and (account_allowed is None or account_allowed(entry) is True)
++                 )},
+                 quantity, reservation_id=token,
+             )
+         except SubmissionNotStarted as exc:

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "run_id": "prism-codex-20261126-local-candidate",
+  "owner": "codex",
+  "status": "LOCAL_CANDIDATE_NOT_DEPLOYED",
+  "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "candidate_head": "c23d6e56bcdd085435b491625b1bfe446aac3694",
+  "candidate_tree": "194f53730ba92434bab00e266adcd5f18b553061",
+  "candidate_patch": ".automation/prism-upstream-sync/runs/prism-codex-20261126-local-candidate.patch",
+  "patch_sha256": "2fa05d21c87403466019180fe119d552d5c2cb8406e51ea2fe84705312d2d3b8",
+  "test_log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-local-candidate-pytest.log",
+  "test_log_sha256": "ddfbc228a522c0d788736d7dff32461e0b2357462c07278eeea5b9bf4c72fd9a",
+  "test_command": "/workspace/.venv-prism/bin/python scripts/run_offline_pytest.py -q",
+  "test_result": "3721 passed, 26 warnings",
+  "isolation": "Linux seccomp blocks IP/packet sockets; AF_UNIX remains available. No claim of comprehensive egress or external-write isolation.",
+  "certification": "NONE; local evidence only",
+  "current_queue": "Known RED defects remain open on the remote PR. Subsequent local investigation identified additional failures and work is ongoing.",
+  "merge_performed": false
+}

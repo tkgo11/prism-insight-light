@@ -466,5 +466,8 @@
     "blocker": "Independent R1/R2/F1/F2, latest approval, protection/required checks and authoritative KIS proof remain open."
   },
   "related_total": 255,
-  "full_total": 275
+  "full_total": 275,
+  "local_candidate_evidence": [
+    ".automation/prism-upstream-sync/runs/prism-codex-20261126-local-candidate.json"
+  ]
 }
