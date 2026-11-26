@@ -526,7 +526,8 @@
   "related_total": 255,
   "full_total": 275,
   "local_candidate_evidence": [
-    ".automation/prism-upstream-sync/runs/prism-codex-20261126-local-candidate.json"
+    ".automation/prism-upstream-sync/runs/prism-codex-20261126-local-candidate.json",
+    ".automation/prism-upstream-sync/runs/prism-codex-20261126-wave2-candidate.json"
   ],
   "audit_engine_prototype": ".automation/prism-upstream-sync/tools/prototype-v7/README.md",
   "previous_report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261126T1510-green.json",

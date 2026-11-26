@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "run_id": "prism-codex-20261126-wave2-candidate",
+  "status": "LOCAL_CANDIDATE_NOT_DEPLOYED",
+  "remote_head": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "candidate_local_head": "a30c359d1577caf571d913befa2efd64846d147e",
+  "candidate_tree": "f3c395682d454bea38b9bca6086736d5dfc3f9ea",
+  "patch": ".automation/prism-upstream-sync/runs/prism-codex-20261126-wave2-candidate.patch",
+  "patch_sha256": "00c47539bbec00a8bea20dd34cf9feae02c622563f35df1238b0a0655d8a5b12",
+  "offline_log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-wave2-candidate-pytest.log",
+  "offline_log_sha256": "48a301ed199085331043a370999d62f49505be31dabc5976252d939fba49c9ed",
+  "sandbox_log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-wave2-candidate-bwrap.log",
+  "sandbox_log_sha256": "7efd5c105ba13d97475515cfc8e4ff58e5fb1412d7147ab6e057be5249854324",
+  "result": "3797 passed; separate deleted-selector repro 2 passed",
+  "limitations": "candidate has confirmed modern distinct-signal UNKNOWN SELL regression; broad historical fence may indefinitely block valid exits; sandbox CI compatibility and broker proof unverified",
+  "certification": "none"
+}
