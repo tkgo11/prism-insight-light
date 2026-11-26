@@ -1,0 +1,69 @@
+OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_________ test_distinct_signal_after_unknown_submits_again[KR-005930] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-118/test_distinct_signal_after_unk0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ff44182d0f0>
+market = 'KR', ticker = '005930'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('market,ticker', [('KR','005930'),('US','AAPL')])
+    async def test_distinct_signal_after_unknown_submits_again(tmp_path, monkeypatch, market, ticker):
+        account={'name':'synthetic','account':'12345678','account_key':'vps:12345678:01','svr':'vps','product':'01','market':market.lower()}
+        monkeypatch.setattr(TradeDispatcher,'_load_runtime_config',staticmethod(lambda: {}))
+        monkeypatch.setattr('trading.dispatch.is_market_open',lambda _:True)
+        monkeypatch.setattr(SignalSafetyGate,'evaluate_execution',lambda *a,**k: SimpleNamespace(outcome='allow',fresh_quote=None))
+        monkeypatch.setattr(TradeDispatcher,'_resolve_single_account',lambda *a:account)
+        calls=[]
+        async def fake(self, signal, **kwargs):
+            calls.append(signal.raw['signal_id'])
+            return DispatchResult('unknown','mock lost response',signal.signal_type,signal.market)
+        monkeypatch.setattr(TradeDispatcher,'_execute_legacy_trade',fake)
+        for signal_id in ['first','second']:
+            d=TradeDispatcher(trading_mode='demo',execution_ledger_path=tmp_path/'ledger.json',fresh_quote_enabled=False)
+            s=parse_signal_payload({'signal_id':signal_id,'type':'SELL','market':market,'ticker':ticker,'price':100})
+            await d.dispatch(s)
+>       assert calls == ['first'], 'a different signal must not submit while prior SELL is UNKNOWN'
+E       AssertionError: a different signal must not submit while prior SELL is UNKNOWN
+E       assert ['first', 'second'] == ['first']
+E         
+E         Left contains one more item: 'second'
+E         Use -v to get more diff
+
+tests/test_modern_unknown_review.py:24: AssertionError
+__________ test_distinct_signal_after_unknown_submits_again[US-AAPL] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-118/test_distinct_signal_after_unk1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ff44f5bfa80>
+market = 'US', ticker = 'AAPL'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('market,ticker', [('KR','005930'),('US','AAPL')])
+    async def test_distinct_signal_after_unknown_submits_again(tmp_path, monkeypatch, market, ticker):
+        account={'name':'synthetic','account':'12345678','account_key':'vps:12345678:01','svr':'vps','product':'01','market':market.lower()}
+        monkeypatch.setattr(TradeDispatcher,'_load_runtime_config',staticmethod(lambda: {}))
+        monkeypatch.setattr('trading.dispatch.is_market_open',lambda _:True)
+        monkeypatch.setattr(SignalSafetyGate,'evaluate_execution',lambda *a,**k: SimpleNamespace(outcome='allow',fresh_quote=None))
+        monkeypatch.setattr(TradeDispatcher,'_resolve_single_account',lambda *a:account)
+        calls=[]
+        async def fake(self, signal, **kwargs):
+            calls.append(signal.raw['signal_id'])
+            return DispatchResult('unknown','mock lost response',signal.signal_type,signal.market)
+        monkeypatch.setattr(TradeDispatcher,'_execute_legacy_trade',fake)
+        for signal_id in ['first','second']:
+            d=TradeDispatcher(trading_mode='demo',execution_ledger_path=tmp_path/'ledger.json',fresh_quote_enabled=False)
+            s=parse_signal_payload({'signal_id':signal_id,'type':'SELL','market':market,'ticker':ticker,'price':100})
+            await d.dispatch(s)
+>       assert calls == ['first'], 'a different signal must not submit while prior SELL is UNKNOWN'
+E       AssertionError: a different signal must not submit while prior SELL is UNKNOWN
+E       assert ['first', 'second'] == ['first']
+E         
+E         Left contains one more item: 'second'
+E         Use -v to get more diff
+
+tests/test_modern_unknown_review.py:24: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_modern_unknown_review.py::test_distinct_signal_after_unknown_submits_again[KR-005930]
+FAILED tests/test_modern_unknown_review.py::test_distinct_signal_after_unknown_submits_again[US-AAPL]
+2 failed in 0.49s

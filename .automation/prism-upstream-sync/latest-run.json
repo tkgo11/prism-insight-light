@@ -506,6 +506,19 @@
         "status": "RED_REPRODUCED",
         "evidence": "On 2026-11-27 14:00 ET early close and 2026-12-25 holiday, US smart SELL selected regular-session path despite NYSE closed; mock broker only.",
         "next": "Review US smart-order calendar fix and test early-close, holiday and legacy reserved-order behavior offline."
+      },
+      {
+        "work_id": "modern-distinct-sell-after-unknown",
+        "priority": "P0",
+        "status": "RED_REPRODUCED",
+        "evidence": {
+          "head_scope": "local candidate tree f3c395682d454bea38b9bca6086736d5dfc3f9ea",
+          "reproducer": ".automation/prism-upstream-sync/runs/prism-codex-20261126-modern-unknown-red.py",
+          "log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-modern-unknown-red.log",
+          "cases": "KR/US: first UNKNOWN after lost response; second distinct signal reaches mock broker after dispatcher restart",
+          "broker": "mock only"
+        },
+        "next": "Prevent a second SELL while same-account/instrument submission remains UNKNOWN, preserve evidence and rejection semantics, and verify queued/multi-account paths."
       }
     ],
     "blocker": "Independent R1/R2/F1/F2, latest approval, protection/required checks and authoritative KIS proof remain open."

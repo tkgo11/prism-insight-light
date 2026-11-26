@@ -1,0 +1,15 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-codex-20261126-modern-unknown-red",
+  "status": "PARTIAL_BLOCKED",
+  "head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "local_candidate": "a30c359d1577caf571d913befa2efd64846d147e",
+  "local_tree": "f3c395682d454bea38b9bca6086736d5dfc3f9ea",
+  "reproducer": ".automation/prism-upstream-sync/runs/prism-codex-20261126-modern-unknown-red.py",
+  "log": ".automation/prism-upstream-sync/runs/prism-codex-20261126-modern-unknown-red.log",
+  "result": "2 failed: KR and US",
+  "ci_status": "SUCCESS",
+  "note": "Local candidate regression; not independent audit certification; do not infer fills.",
+  "merge_performed": false
+}
