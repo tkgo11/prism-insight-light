@@ -1,0 +1,25 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-codex-20261126-strategy-live-stop-red",
+  "status": "PARTIAL_BLOCKED",
+  "head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "ci_status": "SUCCESS",
+  "ci_run_id": 45766183216,
+  "red": {
+    "strategy_stop_loss": {
+      "status": "RED_REPRODUCED",
+      "count": 4,
+      "owner": "codex",
+      "method": "actual dispatcher and strategy with mocked brokers, seccomp enforced",
+      "limitations": "offline fixture; no real API"
+    },
+    "us_smart_session": {
+      "status": "RED_REPRODUCED",
+      "count": 2,
+      "method": "mock broker, NYSE holiday and early close"
+    }
+  },
+  "merge_performed": false,
+  "next_exact_action": "Integrate and review stop-loss strategy gate with KR/US immediate and queued coverage; preserve ordinary bracket take-profit behavior."
+}
