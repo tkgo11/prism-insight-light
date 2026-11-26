@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
-  "run_id": "prism-manual-20261126T1434KST-r1-env-checkpoint",
+  "run_id": "prism-codex-20261126T1505-integrate",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
-  "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-manual-20261126T1434KST-r1-env-checkpoint.json",
+  "head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261126T1505-integrate.json",
   "manifest_path": ".automation/prism-upstream-sync/manifests/prism-manual-20261126T1434KST-r1-env-checkpoint.json",
   "risk_register_path": ".automation/prism-upstream-sync/runs/prism-manual-20261126T1434KST-r1-env-checkpoint-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
@@ -14,20 +14,21 @@
   "full_complete": 0,
   "prior_related_complete": 5,
   "prior_full_complete": 5,
-  "ci_run_id": 45595464677,
-  "ci_head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
-  "ci_status": "SUCCESS",
+  "ci_run_id": null,
+  "ci_head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+  "ci_status": "PENDING",
   "next_exact_action": "Resolve deleted-selector SELL UNKNOWN replay without discarding evidence or indefinitely blocking unrelated sells; retain reproduction and independently validate reconciliation; continue other queued offline fixes.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
     "phase": "FIX",
     "work_id": "legacy-deleted-selector-sell-unknown",
     "pr": 43,
-    "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+    "head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
     "expected_ci": {
-      "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
-      "run_id": 45595464677
+      "head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+      "status": "PENDING",
+      "run_id": null
     },
     "audit_round": "R1",
     "prior_stalled_count": 0,
@@ -36,7 +37,7 @@
       {
         "work_id": "scheduled-related-R1",
         "priority": "P0",
-        "status": "SCHEDULED_INDEPENDENT",
+        "status": "INVALIDATED_HEAD_CHANGED",
         "evidence": {
           "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
           "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
@@ -45,7 +46,7 @@
           "full_inventory": 275,
           "push_run_id": 45595464677
         },
-        "next": "R1 next exact path: .github/workflows/tests.yml; audit workflow shell syntax multiple-operand regression (already RED_REPRODUCED by Codex), verify relevant scripts/tests and exact CI, checkpoint only new evidence. Codex: prioritize all 5 RED_REPRODUCED items before restarting frozen audit; add .env.example fixture verifying shipped env defaults and fail-closed consumers, and Docker context negative fixture. Re-freeze only after exact-head GREEN.",
+        "next": "Wait for exact-HEAD GREEN, rebuild inventory and request fresh independent audit.",
         "scheduled_reviewed": 3,
         "scheduled_pass": 0
       },
@@ -376,82 +377,90 @@
       {
         "work_id": "sell-route-unknown-replay",
         "priority": "P0",
-        "status": "RED_REPRODUCED",
+        "status": "LOCAL_GREEN_PENDING_CI",
         "next": "Integrate reviewed candidate, preserving legacy fences and canonical account pinning.",
         "evidence": {
           "test_path": "tests/test_sell_routing_provenance.py",
           "baseline_failed": 26,
           "baseline_passed": 4,
           "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843"
-        }
+        },
+        "local_candidate_head": "967c948691f063170df8ff2ffa025b59dc7cf72e"
       },
       {
         "work_id": "ambiguous-webui-primary-account",
         "priority": "P0",
-        "status": "RED_REPRODUCED",
+        "status": "LOCAL_GREEN_PENDING_CI",
         "next": "Reject ambiguous blank browser-primary selectors for immediate and queued orders.",
         "evidence": {
           "test_id": "test_blank_webui_selector_rejects_ambiguous_primary",
           "baseline_failed": 16,
           "positive_control_passed": 6,
           "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843"
-        }
+        },
+        "local_candidate_head": "967c948691f063170df8ff2ffa025b59dc7cf72e"
       },
       {
         "work_id": "kis-token-error-redaction",
         "priority": "P0",
-        "status": "RED_REPRODUCED",
+        "status": "LOCAL_GREEN_PENDING_CI",
         "next": "Remove broker error payload and exception text from diagnostic channels, verify invalid token shape cannot be cached.",
         "evidence": {
           "test_path": "tests/test_kis_auth_token_paths.py",
           "baseline_failed": 10,
           "baseline_passed": 1,
           "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843"
-        }
+        },
+        "local_candidate_head": "967c948691f063170df8ff2ffa025b59dc7cf72e"
       },
       {
         "work_id": "managed-demo-account-revocation-interleaving",
         "priority": "P1",
-        "status": "RED_REPRODUCED",
+        "status": "PARTIAL_LOCAL_GREEN_PENDING_CI",
         "next": "Verify final enabled account scope and selected account immediately before demo SELL.",
         "evidence": {
           "test_id": "test_managed_exit_revalidates_account_after_final_snapshot",
           "baseline_failed": 8,
           "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843"
-        }
+        },
+        "local_candidate_head": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+        "remaining": "Account and mode rechecked after snapshots/callback; change-to-submit is not atomic."
       },
       {
         "work_id": "ci-shell-syntax-multiple-operands",
         "priority": "P2",
-        "status": "RED_REPRODUCED",
+        "status": "LOCAL_GREEN_PENDING_CI",
         "next": "Check all four scripts independently when next code wave invalidates freeze.",
         "evidence": {
           "reproducer": "bash -n valid.sh invalid.sh returned 0; bash -n invalid.sh returned 2",
           "all_existing_scripts_parse": true
-        }
+        },
+        "local_candidate_head": "967c948691f063170df8ff2ffa025b59dc7cf72e"
       },
       {
         "work_id": "docker-context-negative-evidence",
         "priority": "P1",
-        "status": "EVIDENCE_REQUIRED",
+        "status": "LOCAL_GREEN_PENDING_CI",
         "files": [
           ".dockerignore",
           "Dockerfile",
           "tests/test_docker_installer_smoke.py"
         ],
-        "next": "Offline context fixture; verify actual exclusion semantics and required COPY inputs."
+        "next": "Offline context fixture; verify actual exclusion semantics and required COPY inputs.",
+        "local_candidate_head": "967c948691f063170df8ff2ffa025b59dc7cf72e"
       },
       {
         "work_id": "env-example-negative-evidence",
         "priority": "P1",
-        "status": "EVIDENCE_REQUIRED",
+        "status": "LOCAL_GREEN_PENDING_CI",
         "files": [
           ".env.example",
           "webui/app.py",
           "trading/config_paths.py",
           "trading/signal_safety.py"
         ],
-        "evidence": "Shipped example values and consumers compared; no example-loaded negative fixture confirmed. Add mock/offline env fixture validating safe defaults, invalid values and explicit config handling."
+        "evidence": "Shipped example values and consumers compared; no example-loaded negative fixture confirmed. Add mock/offline env fixture validating safe defaults, invalid values and explicit config handling.",
+        "local_candidate_head": "967c948691f063170df8ff2ffa025b59dc7cf72e"
       },
       {
         "work_id": "audit-engine-deterministic-checkpoint",
@@ -478,9 +487,10 @@
       {
         "work_id": "duplicate-canonical-webui-selector",
         "priority": "P0",
-        "status": "RED_REPRODUCED",
+        "status": "LOCAL_GREEN_PENDING_CI",
         "evidence": "Offline WebUI-to-dispatcher mock demonstrated duplicate canonical key choosing another configured credential; candidate fix in development; remote head unchanged.",
-        "next": "Review and test fail-closed handling for duplicate account identities in immediate and queued paths."
+        "next": "Review and test fail-closed handling for duplicate account identities in immediate and queued paths.",
+        "local_candidate_head": "967c948691f063170df8ff2ffa025b59dc7cf72e"
       }
     ],
     "blocker": "Independent R1/R2/F1/F2, latest approval, protection/required checks and authoritative KIS proof remain open."
@@ -490,5 +500,11 @@
   "local_candidate_evidence": [
     ".automation/prism-upstream-sync/runs/prism-codex-20261126-local-candidate.json"
   ],
-  "audit_engine_prototype": ".automation/prism-upstream-sync/tools/prototype-v7/README.md"
+  "audit_engine_prototype": ".automation/prism-upstream-sync/tools/prototype-v7/README.md",
+  "previous_report_path": ".automation/prism-upstream-sync/runs/prism-manual-20261126T1434KST-r1-env-checkpoint.json",
+  "prior_ci": {
+    "head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+    "run_id": 45595464677,
+    "status": "SUCCESS"
+  }
 }

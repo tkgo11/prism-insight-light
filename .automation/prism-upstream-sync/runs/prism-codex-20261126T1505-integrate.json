@@ -1,0 +1,37 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-codex-20261126T1505-integrate",
+  "owner": "codex-v7.1",
+  "status": "PARTIAL_BLOCKED",
+  "head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
+  "prior_head_sha": "2453b9ba40906ef63b2cfebd1915f4addbf03843",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "tree_sha": "1acfea15a213f9173a481396c1745e97ed38517a",
+  "local_evidence": {
+    "original_local_head": "3ed2deae8e0300a115b1e89d19023b4b6427e364",
+    "tree_match": true,
+    "command": "/workspace/.venv-prism/bin/python scripts/run_offline_pytest.py -q",
+    "result": "3740 passed, 26 warnings",
+    "log": ".automation/prism-upstream-sync/runs/prism-codex-20261126T1505-integrate-pytest.log",
+    "sha256": "8acc69c03e56b059801cb95862dbd5db6285ea09c2a06612662ad40c43d75062",
+    "isolation": "seccomp denies IPv4/IPv6/packet sockets; AF_UNIX permitted; comprehensive external-write and Windows isolation not proven"
+  },
+  "ci": {
+    "status": "PENDING",
+    "head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e"
+  },
+  "audits": {
+    "related_passes": 0,
+    "full_passes": 0,
+    "previous_freeze": "invalidated by HEAD change"
+  },
+  "unresolved": [
+    "legacy-deleted-selector-sell-unknown",
+    "RC-STOPLOSS-ORDER-RECONCILIATION",
+    "complete offline external-write isolation",
+    "independent R1/R2/F1/F2",
+    "approval and branch-protection visibility"
+  ],
+  "merge_performed": false,
+  "next_exact_action": "Resolve deleted-selector SELL UNKNOWN replay without discarding evidence or indefinitely blocking unrelated sells; retain reproduction and independently validate reconciliation; continue other queued offline fixes."
+}
