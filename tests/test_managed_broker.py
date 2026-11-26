@@ -489,3 +489,20 @@ def test_native_us_holding_row_venue_must_match_queried_exchange(query_venue, ro
     with pytest.raises(module().EvidenceUnavailable, match="venue|exchange|conflict"):
         gateway.snapshot(policy)
     assert not any(path.endswith("inquire-nccs") for path, *_ in calls)
+
+@pytest.mark.parametrize("market", ["KR", "US"])
+@pytest.mark.parametrize("change", ["real_mode", "other_account"])
+def test_pre_submit_authorization_cannot_switch_demo_gateway_to_real(market, change):
+    gateway, trader, calls = fixture(market)
+    def change_mode(_market):
+        if change == "real_mode":
+            trader.mode = "real"
+            trader.account_key = "prod:00000000:01"
+        else:
+            trader.trenv.my_acct = "11111111"
+            trader.account_key = "vps:11111111:01"
+        return True
+    policy = {**entry(market), "decision_can_submit": change_mode}
+    with pytest.raises(module().SubmissionNotStarted):
+        gateway.submit_exact_sell(policy, 4, reservation_id="token1")
+    assert calls == []

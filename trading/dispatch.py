@@ -399,6 +399,13 @@ class MultiAccountTradeDispatcher:
             svr=server, market=signal.market.lower(), include_disabled=True
         )
         available = {_account_id(account["account_key"]): account for account in accounts}
+        ambiguous_ids: set[str] = set()
+        seen_ids: set[str] = set()
+        for account in accounts:
+            account_id = _account_id(account["account_key"])
+            if account_id in seen_ids:
+                ambiguous_ids.add(account_id)
+            seen_ids.add(account_id)
         eligible: list[dict[str, Any]] = []
         skipped: list[AccountDispatchResult] = []
         # An explicitly empty target set is not permission to fan out to every
@@ -406,7 +413,16 @@ class MultiAccountTradeDispatcher:
         target_ids = list(available) if requested_ids is None else requested_ids
         for account_id in target_ids:
             account = available.get(account_id)
-            if account is None:
+            if account_id in ambiguous_ids:
+                skipped.append(
+                    AccountDispatchResult(
+                        account="configured account",
+                        account_id=account_id,
+                        status="rejected",
+                        message="Account identity is ambiguous in configuration",
+                    )
+                )
+            elif account is None:
                 skipped.append(
                     AccountDispatchResult(
                         account="configured account",
@@ -584,6 +600,11 @@ class MultiAccountTradeDispatcher:
             return self._aggregate(signal, results)
 
         legacy_buy_identities = None
+        legacy_sell_identities = None
+        if self.dispatcher.execution_dedupe and signal.signal_type == "SELL":
+            legacy_sell_identities = _legacy_buy_route_identities(
+                signal, self.dispatcher.trading_mode, [a["name"] for a in accounts],
+            )
         if self.dispatcher.execution_dedupe and signal.signal_type == "BUY":
             legacy_buy_identities = _legacy_buy_route_identities(
                 signal, self.dispatcher.trading_mode, [a["name"] for a in accounts],
@@ -598,6 +619,8 @@ class MultiAccountTradeDispatcher:
                     order_side="SELL" if signal.signal_type == "SELL" else None,
                     **({"legacy_buy_identities": legacy_buy_identities}
                        if legacy_buy_identities is not None and account.get("product") == "01" else {}),
+                    **({"legacy_sell_identities": legacy_sell_identities}
+                       if legacy_sell_identities is not None and account.get("product") == "01" else {}),
                     **({"sell_scope": self.dispatcher._sell_scope(signal, account)}
                        if signal.signal_type == "SELL" else {}),
                 )
@@ -923,37 +946,42 @@ class TradeDispatcher:
                 for entry in enrolled
             ]
 
+        def account_allowed(entry: dict[str, Any]) -> bool:
+            """Re-read the enabled account set and any explicit selector."""
+            try:
+                market = entry["market"].lower()
+                server = "vps" if self.trading_mode == "demo" else "prod"
+                scopes = [
+                    hashlib.sha256(account["account_key"].encode()).hexdigest()
+                    for account in ka.get_configured_accounts(svr=server, market=market)
+                    if account.get("enabled") is True and account.get("product") == "01"
+                ]
+                if scopes.count(entry["account_scope"]) != 1:
+                    return False
+                if self.account_name or self.account_index is not None:
+                    selected = ka.resolve_account(
+                        svr=server, product="01", market=market,
+                        account_name=self.account_name, account_index=self.account_index,
+                    )
+                    return hashlib.sha256(selected["account_key"].encode()).hexdigest() == entry["account_scope"]
+                return True
+            except (KeyError, OSError, RuntimeError, TypeError, ValueError, AttributeError):
+                return False
+
         def check() -> list[dict[str, Any]]:
             results = []
             for entry in controller.book.list_enrollments():
                 market = entry["market"]
                 if not is_market_open(market):
                     continue
-                server = "vps" if self.trading_mode == "demo" else "prod"
-                scopes = [
-                    hashlib.sha256(account["account_key"].encode()).hexdigest()
-                    for account in ka.get_configured_accounts(svr=server, market=market.lower())
-                    if account.get("enabled") is True and account.get("product") == "01"
-                ]
-                if self.account_name or self.account_index is not None:
-                    try:
-                        selected = ka.resolve_account(
-                            svr=server, product="01", market=market.lower(),
-                            account_name=self.account_name, account_index=self.account_index,
-                        )
-                        selected_scope = hashlib.sha256(selected["account_key"].encode()).hexdigest()
-                    except (KeyError, OSError, RuntimeError, TypeError, ValueError):
-                        continue
-                    if entry["account_scope"] != selected_scope:
-                        continue
-                if scopes.count(entry["account_scope"]) == 1:
+                if account_allowed(entry):
                     if self.execution_ledger.has_ambiguous_legacy_submission(
                         market, entry["ticker"], entry["account_scope"],
                     ):
                         results.append({"position_id": entry["position_id"], "status": "PAUSED",
                                         "reason": "LEGACY_SUBMISSION_UNRESOLVED"})
                         continue
-                    results.append(controller.cycle(entry["position_id"]))
+                    results.append(controller.cycle(entry["position_id"], account_allowed=account_allowed))
             return results
 
         try:
@@ -1020,6 +1048,14 @@ class TradeDispatcher:
         source_block = self._submission_source_block(signal) or self._trading_switch_block(signal)
         if source_block is not None:
             return source_block
+        if signal.manual_ticket and self.restrict_to_primary and not self.account_name and self.account_index is None:
+            try:
+                await asyncio.to_thread(self._resolve_single_account, signal)
+            except (OSError, RuntimeError, TypeError, ValueError, KeyError):
+                return DispatchResult(
+                    "rejected", "Primary account could not be verified before submission",
+                    signal.signal_type, signal.market,
+                )
         stop_block = await self._stop_sell_unresolved_buy_block(signal)
         if stop_block is not None:
             return stop_block
@@ -1316,6 +1352,24 @@ class TradeDispatcher:
                     signal.signal_type, signal.market,
                 )
 
+        canonical_sell_identities = ()
+        legacy_sell_identities = None
+        if account is None and self.execution_dedupe and signal.signal_type == "SELL":
+            try:
+                if order_account is None:
+                    order_account = await asyncio.to_thread(self._resolve_single_account, signal)
+                key = self._validated_buy_account_key(order_account, signal)
+                canonical_id, sell_aliases = execution_identities(signal.raw, key)
+                canonical_sell_identities = (canonical_id,)
+                canonical_aliases = sell_aliases
+                legacy_sell_identities = _legacy_buy_route_identities(signal, self.trading_mode, [order_account["name"]])
+            except (KeyError, TypeError, ValueError, OSError, RuntimeError):
+                return DispatchResult(
+                    "failed" if queued_context is not None else "deferred",
+                    "KIS SELL account could not be pinned before submission; operator reconciliation required",
+                    signal.signal_type, signal.market,
+                )
+
         identity = None
         claim_token = None
         if account is None and self.execution_dedupe:
@@ -1328,6 +1382,8 @@ class TradeDispatcher:
                 order_side="SELL" if signal.signal_type == "SELL" else None,
                 **({"canonical_buy_identities": canonical_buy_identities,
                     "legacy_buy_identities": legacy_buy_identities} if buy_intent is not None else {}),
+                **({"canonical_sell_identities": canonical_sell_identities,
+                    "legacy_sell_identities": legacy_sell_identities} if canonical_sell_identities else {}),
                 **({"sell_scope": self._sell_scope(signal, order_account)}
                    if signal.signal_type == "SELL" else {}),
             )
@@ -1751,6 +1807,21 @@ class TradeDispatcher:
 
     def _resolve_single_account(self, signal: SignalMessage) -> dict[str, Any]:
         """Resolve configuration only; never authenticate or submit an order."""
+        if self.restrict_to_primary and not self.account_name and self.account_index is None:
+            accounts = ka.get_configured_accounts(
+                svr="vps" if self.trading_mode == "demo" else "prod",
+                product="01", market=signal.market.lower(),
+            )
+            primary = [account for account in accounts if account.get("primary") is True]
+            if len(primary) == 1:
+                selected = primary[0]
+            elif not primary and len(accounts) == 1:
+                selected = accounts[0]
+            else:
+                raise ValueError("Primary account is ambiguous")
+            if sum(account["account_key"] == selected["account_key"] for account in accounts) != 1:
+                raise ValueError("Primary account identity is ambiguous")
+            return selected
         return ka.resolve_account(
             svr="vps" if self.trading_mode == "demo" else "prod",
             product="01",

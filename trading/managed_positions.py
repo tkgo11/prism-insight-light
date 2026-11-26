@@ -109,15 +109,15 @@ class ManagedPositionController:
             return None
         return dict(value)
 
-    def cycle(self, position_id: str) -> dict[str, Any]:
+    def cycle(self, position_id: str, *, account_allowed=None) -> dict[str, Any]:
         """Reconcile once under the durable cycle lock; never retry ambiguity."""
         try:
             with self.book.cycle_lock():
-                return self._cycle_locked(position_id)
+                return self._cycle_locked(position_id, account_allowed=account_allowed)
         except (OSError, RuntimeError, ValueError, TypeError, KeyError):
             return self._result(position_id, "PAUSED", "DURABLE_STATE_UNAVAILABLE_OR_CONFLICTING")
 
-    def _cycle_locked(self, position_id: str) -> dict[str, Any]:
+    def _cycle_locked(self, position_id: str, *, account_allowed=None) -> dict[str, Any]:
         entry = self.book.get(position_id)
         if entry is None:
             return self._result(position_id, "UNENROLLED", "EXPLICIT_ENROLLMENT_REQUIRED")
@@ -204,6 +204,8 @@ class ManagedPositionController:
                     raise ValueError("Managed inventory changed before submission")
             if self.submission_allowed is not None and self.submission_allowed(entry["market"]) is not True:
                 raise ValueError("Market is unavailable for submission")
+            if account_allowed is not None and account_allowed(entry) is not True:
+                raise ValueError("Managed account is no longer authorized")
             self._assert_fresh(latest)
         except Exception:
             self.book.abort_before_gateway(position_id, token)
@@ -212,7 +214,10 @@ class ManagedPositionController:
             response = self.gateway.submit_exact_sell(
                 {**entry, "decision_as_of": snapshot["as_of"],
                  "decision_venue": snapshot.get("order_venue"),
-                 "decision_can_submit": self.submission_allowed},
+                 "decision_can_submit": lambda market: (
+                     (self.submission_allowed is None or self.submission_allowed(market) is True)
+                     and (account_allowed is None or account_allowed(entry) is True)
+                 )},
                 quantity, reservation_id=token,
             )
         except SubmissionNotStarted as exc:

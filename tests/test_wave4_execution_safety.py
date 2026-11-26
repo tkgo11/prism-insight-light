@@ -1157,3 +1157,41 @@ def test_nonstandard_2xx_cannot_prove_kis_sell_rejection(market, http_status):
     assert result["success"] is False
     assert result["outcome_unknown"] is True
     assert classify_broker_result(result) == "unknown"
+
+
+@pytest.mark.parametrize("failure", ["missing", "unexpected", "request_error"])
+def test_auth_token_error_does_not_expose_sensitive_response(monkeypatch, tmp_path, caplog, failure):
+    import traceback
+
+    _patch_kis_cfg(monkeypatch, tmp_path)
+    secret = "sensitive-token-response-value"
+    def request(*args, **kwargs):
+        if failure == "missing":
+            return {"access_token": secret}
+        if failure == "request_error":
+            raise ka.TokenRequestError(secret, 401, secret)
+        raise ValueError(secret)
+
+    monkeypatch.setattr(ka, "_request_token_with_retry", request)
+    with pytest.raises(ka.TokenRequestError) as caught:
+        ka.auth(svr="vps", account_name="acct-a")
+    assert secret not in str(caught.value)
+    assert secret not in repr(caught.value.__dict__)
+    assert secret not in ''.join(traceback.format_exception(caught.value))
+    assert secret not in caplog.text
+    assert not list(tmp_path.glob('*.token'))
+
+
+def test_auth_token_storage_error_does_not_expose_sensitive_exception(monkeypatch, tmp_path):
+    import traceback
+    _patch_kis_cfg(monkeypatch, tmp_path)
+    monkeypatch.setattr(ka, '_request_token_with_retry', lambda *a, **kw: {
+        'access_token': 'valid-token-value',
+        'access_token_token_expired': '2099-01-01 00:00:00',
+    })
+    def fail(*args, **kwargs):
+        raise ka.TokenFileError('sensitive-storage-secret')
+    monkeypatch.setattr(ka, '_save_token_inner', fail)
+    with pytest.raises(ka.TokenFileError) as caught:
+        ka.auth(svr='vps', account_name='acct-a')
+    assert 'sensitive-storage-secret' not in ''.join(traceback.format_exception(caught.value))

@@ -688,7 +688,8 @@ def test_manual_sell_all_with_default_account_targets_only_primary(monkeypatch):
 
     accounts = [
         {"name": name, "account_key": f"vps:{i:08d}:01", "product": "01",
-         "account": f"{i:08d}", "market": "us", "svr": "vps", "enabled": True}
+         "account": f"{i:08d}", "market": "us", "svr": "vps", "enabled": True,
+         "primary": i == 1}
         for i, name in enumerate(("primary", "secondary"), start=1)
     ]
     monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
@@ -1118,3 +1119,78 @@ def test_validation_api_accepts_utf16_json_without_losing_duplicate_protection()
         )
         assert response.status_code == 200
         assert response.json()["ok"] is valid
+
+
+@pytest.mark.parametrize("primary_flags", [(False, False), (True, True)])
+@pytest.mark.parametrize("multi", [False, True])
+@pytest.mark.parametrize("market_open", [False, True])
+@pytest.mark.parametrize("action", ["BUY", "SELL"])
+def test_blank_webui_selector_rejects_ambiguous_primary(
+    monkeypatch, primary_flags, multi, market_open, action,
+):
+    from trading.dispatch import TradeDispatcher
+    from webui.services import trade_service
+
+    accounts = [
+        {"name": f"acct-{i}", "account_key": f"vps:{i:08d}:01", "product": "01",
+         "account": f"{i:08d}", "market": "us", "svr": "vps", "enabled": True,
+         "primary": flag}
+        for i, flag in enumerate(primary_flags, start=1)
+    ]
+    monkeypatch.setenv("WEBUI_ENABLE_LIVE_TRADING", "true")
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(
+        lambda: {"multi_account_trading": {"enabled": multi}},
+    ))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: market_open)
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: accounts)
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: accounts[0])
+
+    async def forbidden(*args, **kwargs):
+        pytest.fail("ambiguous manual order reached broker")
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", forbidden)
+    c = client()
+    response = c.post("/trading/order", data={
+        "x_webui_csrf": "local-webui", "order_nonce": issue_order_nonce(c), "action": action,
+        "ticker": "AAPL", "price": "190.5", "market": "US", "trading_mode": "demo",
+        "arm_phrase": trade_service.SELL_ALL_PHRASE if action == "SELL" else trade_service.ARM_PHRASE,
+    })
+    assert response.status_code == 200
+    assert "Primary account could not be verified" in response.text
+
+
+@pytest.mark.parametrize('multi', [False, True])
+@pytest.mark.parametrize('market_open', [False, True])
+@pytest.mark.parametrize('action', ['BUY', 'SELL'])
+def test_manual_primary_rejects_duplicate_canonical_identity(monkeypatch, multi, market_open, action):
+    from trading.dispatch import TradeDispatcher
+    from webui.services import trade_service
+
+    accounts = [
+        {'name': name, 'account_key': 'vps:00000001:01', 'product': '01',
+         'account': '00000001', 'market': 'us', 'svr': 'vps', 'enabled': True,
+         'primary': primary}
+        for name, primary in [('selected-primary', True), ('other-credentials', False)]
+    ]
+    monkeypatch.setenv('WEBUI_ENABLE_LIVE_TRADING', 'true')
+    monkeypatch.setattr(TradeDispatcher, '_load_runtime_config', staticmethod(
+        lambda: {'multi_account_trading': {'enabled': multi}},
+    ))
+    monkeypatch.setattr('trading.dispatch.is_market_open', lambda _: market_open)
+    monkeypatch.setattr('trading.dispatch.ka.get_configured_accounts', lambda **_: accounts)
+    monkeypatch.setattr('trading.dispatch.ka.resolve_account', lambda **_: accounts[0])
+    attempts = []
+    async def mock_broker(self, signal, *, account=None):
+        from trading.dispatch import DispatchResult
+        attempts.append(account['name'] if account else 'single')
+        return DispatchResult('unknown', 'mock submission uncertain', signal.signal_type, signal.market)
+    monkeypatch.setattr(TradeDispatcher, '_execute_legacy_trade', mock_broker)
+    c = client()
+    response = c.post('/trading/order', data={
+        'x_webui_csrf': 'local-webui', 'order_nonce': issue_order_nonce(c), 'action': action,
+        'ticker': 'AAPL', 'price': '190.5', 'market': 'US', 'trading_mode': 'demo',
+        'arm_phrase': trade_service.SELL_ALL_PHRASE if action == 'SELL' else trade_service.ARM_PHRASE,
+    })
+    assert response.status_code == 200
+    assert attempts == []
+    assert 'Primary account could not be verified' in response.text

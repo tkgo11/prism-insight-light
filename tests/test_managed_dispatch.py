@@ -159,3 +159,82 @@ async def test_real_dispatcher_custom_gateway_cannot_bypass_atomic_broker_gate(m
                and result["reason"] == "BROKER_ATOMIC_CROSS_CHANNEL_UNVERIFIED"
                for result in results)
     assert submissions == []
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "IBM")])
+@pytest.mark.parametrize("named", [False, True])
+@pytest.mark.parametrize("change", ["disabled", "reselected"])
+async def test_managed_exit_revalidates_account_after_final_snapshot(monkeypatch, market, ticker, named, change):
+    from datetime import datetime, timezone
+
+    key = "vps:00000000:01"
+    scope = sha256(key.encode()).hexdigest()
+    account = {"account_key": key, "enabled": True, "product": "01"}
+    selected = {"account_key": key}
+    calls = []
+    count = 0
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {"auto_trading": True}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **kwargs: [dict(account)])
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: dict(selected))
+
+    def snapshot(entry):
+        nonlocal count
+        count += 1
+        if count == 2:
+            if change == "disabled" or not named:
+                account["enabled"] = False
+            else:
+                selected["account_key"] = "vps:11111111:01"
+        result = {**entry, "complete": True, "as_of": datetime.now(timezone.utc).isoformat(),
+                  "holding_quantity": 4, "sellable_quantity": 4, "current_price": 85,
+                  "open_orders": []}
+        if market == "US":
+            result["order_venue"] = "NASD"
+        return result
+
+    gateway = SimpleNamespace(snapshot=snapshot, submit_exact_sell=lambda *a, **k: calls.append(a),
+                              reconcile_order=lambda *a: None)
+    dispatcher = TradeDispatcher(trading_mode="demo", managed_gateway=gateway,
+                                 account_name="fixture" if named else None, fresh_quote_enabled=False)
+    dispatcher.managed_position_book.enroll(scope, market, ticker, 90, latch_policy="LATCH_EXIT")
+    result = await dispatcher.check_managed_positions()
+    assert result[0]["status"] == "PAUSED"
+    assert calls == []
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "IBM")])
+async def test_managed_native_gateway_rechecks_account_after_its_snapshot(monkeypatch, market, ticker):
+    from datetime import datetime, timezone
+    from trading.managed_broker import ManagedBrokerGateway
+
+    key = "vps:00000000:01"
+    scope = sha256(key.encode()).hexdigest()
+    account = {"account_key": key, "enabled": True, "product": "01"}
+    calls = []
+    snapshots = 0
+    monkeypatch.setattr(TradeDispatcher, "_load_runtime_config", staticmethod(lambda: {"auto_trading": True}))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **kw: [dict(account)])
+
+    def snapshot(entry):
+        nonlocal snapshots
+        snapshots += 1
+        if snapshots == 2:
+            account["enabled"] = False
+        result = {**entry, "complete": True, "as_of": datetime.now(timezone.utc).isoformat(),
+                  "holding_quantity": 4, "sellable_quantity": 4, "current_price": 85, "open_orders": []}
+        if market == "US":
+            result["order_venue"] = "NASD"
+        return result
+
+    trader = SimpleNamespace(mode="demo", account_key=key,
+                             trenv=SimpleNamespace(my_acct="00000000", my_prod="01"),
+                             sell_all_market_price=lambda *a, **kw: calls.append(a))
+    gateway = ManagedBrokerGateway(trader=trader, market=market, snapshot_reader=snapshot,
+                                   order_reader=lambda *a: None)
+    dispatcher = TradeDispatcher(trading_mode="demo", managed_gateway=gateway, fresh_quote_enabled=False)
+    dispatcher.managed_position_book.enroll(scope, market, ticker, 90, latch_policy="LATCH_EXIT")
+    result = await dispatcher.check_managed_positions()
+    assert result[0]["status"] == "PAUSED"
+    assert calls == []

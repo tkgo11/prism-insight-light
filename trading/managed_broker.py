@@ -220,6 +220,12 @@ class ManagedBrokerGateway:
                 if can_submit is not None and can_submit(self.market) is not True:
                     raise EvidenceUnavailable("market closed during exit preflight")
                 self._fresh(current["as_of"])
+                # The authorization callback may run configuration readers or
+                # other code. Recheck provenance and the demo-only gate after
+                # it returns, before invoking the cash adapter.
+                if getattr(self.trader, "mode", None) != "demo":
+                    raise EvidenceUnavailable("broker mode changed during exit preflight")
+                self._identity(entry)
             except EvidenceUnavailable as exc:
                 # This is the only location producing a known-no-submission
                 # result. Never wrap a broker/transport exception in this type.

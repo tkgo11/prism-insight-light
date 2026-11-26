@@ -553,6 +553,10 @@ class ExecutionLedger:
                 if (not _valid_canonical_buy_identities(entry["canonical_buy_identities"])
                         or "order_intent" not in entry or "order_side" in entry):
                     raise RuntimeError("Automatic-trading BUY routing identity is invalid")
+            if "canonical_sell_identities" in entry:
+                if (not _valid_canonical_buy_identities(entry["canonical_sell_identities"])
+                        or entry.get("order_side") != "SELL" or "sell_scope" not in entry):
+                    raise RuntimeError("Automatic-trading SELL routing identity is invalid")
             if "sell_scope" in entry:
                 try:
                     if entry.get("order_side") != "SELL" or "order_intent" in entry:
@@ -1008,6 +1012,8 @@ class ExecutionLedger:
         sell_scope: dict[str, Any] | None = None,
         canonical_buy_identities: tuple[str, ...] = (),
         legacy_buy_identities: dict[str, str] | None = None,
+        canonical_sell_identities: tuple[str, ...] = (),
+        legacy_sell_identities: dict[str, str] | None = None,
     ) -> tuple[bool, str | None] | tuple[bool, str | None, str | None]:
         """Claim an identity or return the prior status without exposing account data.
 
@@ -1044,6 +1050,10 @@ class ExecutionLedger:
             raise ValueError("Canonical BUY identities require a valid BUY intent")
         if legacy_buy_identities and validated_intent is None:
             raise ValueError("Legacy BUY identities require a valid BUY intent")
+        if canonical_sell_identities and (sell_scope is None or not _valid_canonical_buy_identities(canonical_sell_identities)):
+            raise ValueError("Canonical SELL identities require a valid SELL scope")
+        if legacy_sell_identities and sell_scope is None:
+            raise ValueError("Legacy SELL identities require a valid SELL scope")
         aliases = tuple(aliases)
         now = datetime.now(timezone.utc)
         with FileLock(self.lock_path):
@@ -1051,8 +1061,8 @@ class ExecutionLedger:
             # Keep one record and the original selector key. A canonical account
             # claim and an alternate single-account selector must both see a
             # possible submission across restarts, even after a new route is used.
-            matching_keys = {identity, *aliases, *canonical_buy_identities}
-            current_keys = {identity, *canonical_buy_identities}
+            matching_keys = {identity, *aliases, *canonical_buy_identities, *canonical_sell_identities}
+            current_keys = {identity, *canonical_buy_identities, *canonical_sell_identities}
             blocking_statuses = set()
             for key in matching_keys.intersection(entries):
                 status = str(entries[key].get("status") or "in_progress")
@@ -1064,14 +1074,18 @@ class ExecutionLedger:
                     continue
                 if current_keys.intersection(existing.get("canonical_buy_identities", ())):
                     blocking_statuses.add(status)
-                elif legacy_buy_identities and key in legacy_buy_identities:
+                elif current_keys.intersection(existing.get("canonical_sell_identities", ())):
+                    blocking_statuses.add(status)
+                elif (legacy_buy_identities and key in legacy_buy_identities) or (legacy_sell_identities and key in legacy_sell_identities):
                     intent = existing.get("order_intent") or existing.get("sell_scope")
                     scope = intent.get("account_scope") if isinstance(intent, dict) else None
                     # Legacy entries with no canonical provenance are ambiguous.
                     # A known foreign account's historical selector cannot block
                     # this account, and is never folded away as a retry alias.
+                    routes = legacy_buy_identities if legacy_buy_identities and key in legacy_buy_identities else legacy_sell_identities
+                    current_scope = validated_intent["account_scope"] if validated_intent is not None else sell_scope["account_scope"]
                     if (not isinstance(scope, str) or re.fullmatch(r"[0-9a-f]{64}", scope) is None
-                            or scope in (validated_intent["account_scope"], legacy_buy_identities[key])):
+                            or scope in (current_scope, routes[key])):
                         blocking_statuses.add(status)
             if blocking_statuses:
                 status = next((s for s in ("unknown", "in_progress") if s in blocking_statuses),
@@ -1097,6 +1111,8 @@ class ExecutionLedger:
                 entry["order_intent"] = validated_intent
             if canonical_buy_identities:
                 entry["canonical_buy_identities"] = list(canonical_buy_identities)
+            if canonical_sell_identities:
+                entry["canonical_sell_identities"] = list(canonical_sell_identities)
             if order_side == "SELL":
                 # A modern SELL cannot later create an un-attributed BUY fill.
                 # Persist before submission so the legacy quarantine can
