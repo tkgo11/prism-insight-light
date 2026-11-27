@@ -1,0 +1,14 @@
+{
+  "schema_version": 4,
+  "run_id": "prism-codex-20261127-gitlink-managed-red",
+  "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "status": "PARTIAL_BLOCKED",
+  "report_kind": "codex_noncertifying_defect_evidence",
+  "ci_status": "SUCCESS",
+  "audit_freeze": "SUSPENDED_PENDING_REPRODUCED_DEFECTS",
+  "gitlink_red": "1 failed,10 passed; modified skill and manifest accepted",
+  "managed_red": "KR/US ledger fixture 2 failed; actual managed exit reproduction in progress",
+  "merge_performed": false,
+  "next_exact_action": "Fix pinned submodule integrity validation and managed demo legacy SELL scope using reproducible offline negative tests; preserve broker gates and audit history."
+}

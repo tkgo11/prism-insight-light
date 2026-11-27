@@ -17,11 +17,11 @@
   "ci_run_id": 45787405400,
   "ci_head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
   "ci_status": "SUCCESS",
-  "next_exact_action": "R1 inspect .agents/skills/autonomous-maintainer at frozen exact HEAD; HELD records require independent supersession.",
+  "next_exact_action": "Fix pinned submodule integrity validation and managed demo legacy SELL scope using reproducible offline negative tests; preserve broker gates and audit history.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
-    "phase": "AUDIT",
-    "work_id": "wave2-exact-head-ci",
+    "phase": "FIX",
+    "work_id": "gitlink-mutable-checksum-bypass",
     "pr": 43,
     "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
     "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
@@ -32,7 +32,7 @@
     },
     "audit_round": "R1",
     "prior_stalled_count": 0,
-    "next_exact_action": "R1 inspect .agents/skills/autonomous-maintainer at frozen exact HEAD; HELD records require independent supersession.",
+    "next_exact_action": "Fix pinned submodule integrity validation and managed demo legacy SELL scope using reproducible offline negative tests; preserve broker gates and audit history.",
     "queue": [
       {
         "work_id": "scheduled-related-R1",
@@ -597,6 +597,39 @@
         "status": "EXTERNAL_PROOF_REQUIRED",
         "evidence": "Unresolved and legacy SELL claims are fenced; no verified cross-channel proof or safe authoritative manual/automatic release exists. Normal exits can remain held indefinitely.",
         "next": "Design evidence-backed reconciliation; never clear UNKNOWN or infer fills from ACK."
+      },
+      {
+        "work_id": "gitlink-mutable-checksum-bypass",
+        "priority": "P1",
+        "status": "RED_REPRODUCED",
+        "evidence": {
+          "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+          "test_id": "tests/test_autonomous_maintainer_dependency.py::test_dependency_rejects_matching_tamper_in_skill_and_manifest",
+          "result": "1 failed, 10 passed",
+          "details": "Changing both checked-out SKILL.md and mutable CHECKSUMS.txt while submodule HEAD remains pinned makes checker accept tampered skill.",
+          "no_actual_compromise_claimed": true
+        },
+        "next": "Anchor manifest and required assets to pinned gitlink tree; reject coordinated tampering."
+      },
+      {
+        "work_id": "managed-demo-legacy-cross-account-unknown",
+        "priority": "P1",
+        "status": "RED_REPRODUCED",
+        "evidence": {
+          "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+          "test_id": "tests/test_managed_legacy_scope_review.py::test_legacy_sell_scope_does_not_prove_actual_broker_account",
+          "result": "2 failed",
+          "details": "Legacy selector account_scope is not proof of actual broker account, but managed demo check can exclude a different-scoped unresolved SELL.",
+          "broker": "mock only"
+        },
+        "next": "Conservatively fence unproven legacy SELL by market and instrument across accounts before managed demo exit."
+      },
+      {
+        "work_id": "krx-special-session-hours",
+        "priority": "P1",
+        "status": "INVESTIGATING",
+        "evidence": "Upstream release notes describe KRX special session; fork has fixed KR session. Verify official exchange schedule and offline reproduction before classifying.",
+        "next": "Research official KRX schedule and validate fail-closed market-session handling with fixtures."
       }
     ],
     "blocker": "Independent R1/R2/F1/F2, latest approval, protection/required checks and authoritative KIS proof remain open."
@@ -613,5 +646,6 @@
     "head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
     "run_id": 45766183216,
     "status": "SUCCESS"
-  }
+  },
+  "audit_freeze_status": "SUSPENDED_PENDING_REPRODUCED_DEFECTS"
 }
