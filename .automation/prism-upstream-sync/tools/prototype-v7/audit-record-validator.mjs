@@ -31,6 +31,28 @@ export function currentRecords(records, head, base, round) {
   return latest;
 }
 
+// Existing history is untrusted input too. Validate same-scope chains before
+// selecting a cursor; historical PASS is visible but never a certified pass.
+export function summarizeRound(manifest,head,base,round) {
+  const {byPath,paths}=inventory(manifest,head,base,round), records=manifest.scheduled_audit_records??[];
+  if(!Array.isArray(records)) throw Error('malformed evidence history');
+  const latest=new Map();
+  for(const r of records) {
+    if(!r||typeof r!=='object') throw Error('malformed evidence record');
+    if(r.head_sha!==head||r.base_sha!==base||r.round!==round) continue;
+    const item=byPath.get(r.path);
+    if(!item||!paths.includes(r.path)||r.blob_sha!==item.blob_sha||(item.type!=='blob'&&(r.object_sha!==item.object_sha||r.type!==item.type||r.mode!==item.mode))) throw Error('evidence outside inventory or SHA mismatch');
+    if(!['HELD','DEFECT','PASS'].includes(r.verdict)||!['scheduled','manual-user-request'].includes(r.owner)||!text(r.run_id)||!text(r.contract)||!Array.isArray(r.negative_paths)||!r.negative_paths.length||r.negative_paths.some(x=>!text(x))||!Array.isArray(r.test_ids)||!r.review_evidence||!r.ci_evidence) throw Error('incomplete audit record');
+    const prior=latest.get(r.path);
+    if(prior) {
+      if(!['HELD','DEFECT'].includes(prior.verdict)||r.supersedes!==recordId(prior)||r.run_id===prior.run_id||(JSON.stringify(r.review_evidence)===JSON.stringify(prior.review_evidence)&&JSON.stringify(r.ci_evidence)===JSON.stringify(prior.ci_evidence))) throw Error('duplicate record or invalid supersession');
+    } else if(r.supersedes) throw Error('unknown supersession');
+    latest.set(r.path,r);
+  }
+  const values=[...latest.values()];
+  return {paths,latest,reviewed:latest.size,passed:0,held:values.filter(r=>r.verdict==='HELD').length,defective:values.filter(r=>r.verdict==='DEFECT').length,unverified_pass:values.filter(r=>r.verdict==='PASS').length};
+}
+
 export function applyAuditRecord(manifest, record, head, base, round) {
   const {byPath, paths} = inventory(manifest,head,base,round);
   if (record.head_sha !== head || record.base_sha !== base || record.round !== round) throw Error('record scope mismatch');
@@ -38,7 +60,7 @@ export function applyAuditRecord(manifest, record, head, base, round) {
   if (!item || !paths.includes(record.path) || record.blob_sha !== item.blob_sha || (item.type !== 'blob' && (record.object_sha !== item.object_sha || record.type !== item.type || record.mode !== item.mode))) throw Error('record outside inventory or SHA mismatch');
   if (!['HELD','DEFECT','PASS'].includes(record.verdict) || !['scheduled','manual-user-request'].includes(record.owner) || !text(record.run_id) || !text(record.contract) || !Array.isArray(record.negative_paths) || !record.negative_paths.length || record.negative_paths.some(x=>!text(x)) || !Array.isArray(record.test_ids) || !record.review_evidence || !record.ci_evidence) throw Error('incomplete audit record');
   const records = manifest.scheduled_audit_records ?? [];
-  if (!Array.isArray(records)) throw Error('malformed evidence history');
+  summarizeRound(manifest,head,base,round);
   const prior = records.filter(x=>scope(x)===scope(record));
   if (prior.length) {
     const last = prior.at(-1);

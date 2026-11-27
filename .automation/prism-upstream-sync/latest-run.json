@@ -465,11 +465,11 @@
       {
         "work_id": "audit-engine-deterministic-checkpoint",
         "priority": "P1",
-        "status": "DESIGN_READY",
+        "status": "PROTOTYPE_INCOMPLETE",
         "files": [
           ".automation/prism-upstream-sync/tools/audit-record-validator.mjs"
         ],
-        "evidence": "Pure offline validator stored on state branch; validate inventory/round/SHA/duplicates/PASS and deterministic cursor. Six self-checks executed. Codex: implement/test reusable state CAS checkpoint runner and audit evidence collector in separate safe PR or state tooling; no default branch or deployment changes without gates. Never infer independent PASS from aggregate CI."
+        "evidence": "Inert prototype-v7 updated: local evidence parsing, candidate tree and mock CAS/intent, cursor/supersession. 34 offline tests pass; independent execution authentication, real remote CAS execution, and enabled Actions adapter not implemented."
       },
       {
         "work_id": "legacy-deleted-selector-sell-unknown",
