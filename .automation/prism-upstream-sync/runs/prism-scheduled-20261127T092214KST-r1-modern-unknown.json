@@ -1,0 +1,50 @@
+{
+  "run_id": "prism-scheduled-20261127T092214KST-r1-modern-unknown",
+  "record": {
+    "path": "tests/test_modern_unknown_review.py",
+    "blob_sha": "fcfeb574146b81f9e7595449eee5c9c3a6d74851",
+    "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+    "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+    "round": "R1",
+    "contract": "Distinct SELL signal after UNKNOWN must not resubmit for same account/instrument across restart.",
+    "negative_paths": [
+      "KR lost response then distinct signal",
+      "US lost response then distinct signal",
+      "queued/multi-account coverage not established"
+    ],
+    "test_ids": [
+      "test_distinct_signal_after_unknown_does_not_submit_again"
+    ],
+    "ci_evidence": {
+      "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+      "run_id": 45787405400,
+      "job_id": 139797567030,
+      "checkout_verified": true,
+      "negative_execution_verified": false,
+      "log": [
+        "OFFLINE_SECCOMP_ACTIVE: IPv4/IPv6/packet sockets denied, inherited by subprocesses",
+        "3811 passed, 112 warnings in 34.43s"
+      ]
+    },
+    "review_evidence": {
+      "test_blob": "fcfeb574146b81f9e7595449eee5c9c3a6d74851",
+      "dispatch_blob": "cbd257ad6a8c8f0b149a0da18fadfcb1c2d3e3d2",
+      "ledger_blob": "bd83677783353bdb3c118cc76be71c5560ba6080",
+      "finding": "Test mocks legacy execution and safety/account resolution, recreates dispatcher with same ledger, asserts only first call. Aggregate CI does not establish fresh independent negative execution; implementation contract not fully traced."
+    },
+    "verdict": "HELD",
+    "run_id": "prism-scheduled-20261127T092214KST-r1-modern-unknown",
+    "owner": "scheduled"
+  },
+  "review_cursor": {
+    "round": "R1",
+    "reviewed": 1,
+    "pass_count": 0,
+    "held": 1,
+    "defect": 0,
+    "next_path": ".agents/skills/autonomous-maintainer"
+  },
+  "prior_report_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261126T181842KST-wave2-ci.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-scheduled-20261127T092214KST-r1-modern-unknown.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261127T092214KST-r1-modern-unknown-risk.json"
+}

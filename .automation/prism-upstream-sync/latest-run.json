@@ -1,12 +1,12 @@
 {
   "schema_version": 4,
-  "run_id": "prism-scheduled-20261126T181842KST-wave2-ci",
+  "run_id": "prism-scheduled-20261127T092214KST-r1-modern-unknown",
   "status": "PARTIAL_BLOCKED",
   "pr": 43,
   "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
-  "report_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261126T181842KST-wave2-ci.json",
-  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-scheduled-20261126T181842KST-wave2-ci.json",
-  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261126T181842KST-wave2-ci-risk.json",
+  "report_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261127T092214KST-r1-modern-unknown.json",
+  "manifest_path": ".automation/prism-upstream-sync/manifests/prism-scheduled-20261127T092214KST-r1-modern-unknown.json",
+  "risk_register_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261127T092214KST-r1-modern-unknown-risk.json",
   "carry_forward_id": "RC-STOPLOSS-ORDER-RECONCILIATION",
   "related_passes": 0,
   "full_passes": 0,
@@ -17,7 +17,7 @@
   "ci_run_id": 45787405400,
   "ci_head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
   "ci_status": "SUCCESS",
-  "next_exact_action": "Independently inspect modern-distinct-sell-after-unknown and strategy-stop-loss-live-gate at exact GREEN HEAD; rebuild frozen inventory before R1, retain historical records only.",
+  "next_exact_action": "R1 inspect .agents/skills/autonomous-maintainer at frozen exact HEAD; HELD records require independent supersession.",
   "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
   "worker_v5": {
     "phase": "AUDIT",
@@ -32,7 +32,7 @@
     },
     "audit_round": "R1",
     "prior_stalled_count": 0,
-    "next_exact_action": "Independently inspect modern-distinct-sell-after-unknown and strategy-stop-loss-live-gate at exact GREEN HEAD; rebuild frozen inventory before R1, retain historical records only.",
+    "next_exact_action": "R1 inspect .agents/skills/autonomous-maintainer at frozen exact HEAD; HELD records require independent supersession.",
     "queue": [
       {
         "work_id": "scheduled-related-R1",
@@ -601,14 +601,14 @@
     ],
     "blocker": "Independent R1/R2/F1/F2, latest approval, protection/required checks and authoritative KIS proof remain open."
   },
-  "related_total": 255,
-  "full_total": 275,
+  "related_total": 265,
+  "full_total": 285,
   "local_candidate_evidence": [
     ".automation/prism-upstream-sync/runs/prism-codex-20261126-local-candidate.json",
     ".automation/prism-upstream-sync/runs/prism-codex-20261126-wave2-candidate.json"
   ],
   "audit_engine_prototype": ".automation/prism-upstream-sync/tools/prototype-v7/README.md",
-  "previous_report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261126-strategy-live-stop-red.json",
+  "previous_report_path": ".automation/prism-upstream-sync/runs/prism-scheduled-20261126T181842KST-wave2-ci.json",
   "prior_ci": {
     "head_sha": "967c948691f063170df8ff2ffa025b59dc7cf72e",
     "run_id": 45766183216,
