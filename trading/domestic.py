@@ -37,7 +37,7 @@ from .execution_outcome import (
     broker_receipt_metadata,
     rejection_is_ambiguous,
 )
-from .market_hours import KST
+from .market_hours import KST, kr_smart_order_kind
 
 # Logging setup
 def _kst_log_time(*args: Any) -> time.struct_time:
@@ -687,11 +687,15 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute buy order. (AUTO_TRADING=False)'
             }
 
-        now = _now_kst()
-        current_time = now.time()
+        order_kind = kr_smart_order_kind(_now_kst())
+        if order_kind is None:
+            return {
+                'success': False, 'order_no': None, 'stock_code': stock_code,
+                'quantity': 0, 'outcome_unknown': False,
+                'message': 'No verified KRX order window. No order submitted.',
+            }
 
-        # Branch by time period
-        if datetime.time(9, 0) <= current_time <= datetime.time(15, 30):
+        if order_kind == "regular":
             # Regular trading hours
             if limit_price and limit_price > 0:
                 effective_limit_price = align_krx_tick_price(limit_price, method="floor")
@@ -703,7 +707,7 @@ class DomesticStockTrading:
             logger.info(f"[{stock_code}] Regular trading hours - executing market buy")
             return self.buy_market_price(stock_code, buy_amount)
 
-        elif datetime.time(15, 40) <= current_time <= datetime.time(16, 0):
+        elif order_kind == "closing":
             # After-hours closing price trading
             logger.info(f"[{stock_code}] After-hours closing price time - executing closing price buy")
             return self.buy_closing_price(stock_code, buy_amount)
@@ -1098,11 +1102,15 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute sell order. (AUTO_TRADING=False)'
             }
 
-        now = _now_kst()
-        current_time = now.time()
+        order_kind = kr_smart_order_kind(_now_kst())
+        if order_kind is None:
+            return {
+                'success': False, 'order_no': None, 'stock_code': stock_code,
+                'quantity': 0, 'outcome_unknown': False,
+                'message': 'No verified KRX order window. No order submitted.',
+            }
 
-        # Branch by time period
-        if datetime.time(9, 0) <= current_time <= datetime.time(15, 30):
+        if order_kind == "regular":
             if limit_price and limit_price > 0:
                 effective_limit_price = align_krx_tick_price(limit_price, method="round")
                 logger.info(
@@ -1118,7 +1126,7 @@ class DomesticStockTrading:
                 limit_price=effective_limit_price,
             )
 
-        elif datetime.time(15, 40) <= current_time <= datetime.time(16, 0):
+        elif order_kind == "closing":
             # After-hours closing price trading
             logger.info(f"[{stock_code}] After-hours closing price time - executing closing price sell")
             return self.sell_all_closing_price(stock_code, holding_quantity=holding_quantity)
