@@ -36,7 +36,7 @@ async def test_dispatch_kr_buy(monkeypatch):
             return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-buy"}
 
     class FakeContext:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             self.mode = mode
 
         async def __aenter__(self):
@@ -62,7 +62,7 @@ async def test_dispatch_us_sell(monkeypatch):
     results = {}
 
     class FakeUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             results["mode"] = mode
 
         async def async_sell_stock(self, ticker, limit_price=None):
@@ -191,9 +191,13 @@ async def test_real_off_hours_without_broker_window_enqueues(monkeypatch):
 @pytest.mark.asyncio
 async def test_real_off_hours_uses_supported_reserved_order_window(monkeypatch):
     results = {}
+    monkeypatch.setattr(TradeDispatcher, "_resolve_single_account", lambda self, signal: {
+        "name": "synthetic", "account": "12345678", "account_key": "prod:12345678:01",
+        "svr": "prod", "product": "01", "market": "us",
+    })
 
     class FakeUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             results["mode"] = mode
 
         async def async_sell_stock(self, ticker, limit_price=None):
@@ -216,7 +220,7 @@ async def test_real_off_hours_uses_supported_reserved_order_window(monkeypatch):
 @pytest.mark.asyncio
 async def test_dispatch_acknowledges_event_without_trader(monkeypatch):
     class RaisingUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             raise AssertionError("event dispatch should not create a trader")
 
     monkeypatch.setattr("trading.dispatch.USStockTrading", RaisingUSTrader)
@@ -233,7 +237,7 @@ async def test_balance_split_buy_routes_with_fractional_buy_amount(monkeypatch, 
     results = {}
 
     class FakeUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             results["mode"] = mode
 
         def get_account_summary(self):
@@ -268,7 +272,7 @@ async def test_disabled_strategy_buy_uses_legacy_path(monkeypatch):
     results = {}
 
     class FakeUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             results["mode"] = mode
 
         async def async_buy_stock(self, ticker, limit_price=None):
@@ -292,7 +296,7 @@ async def test_stop_loss_sell_strategy_uses_stop_loss_limit_above_signal_price(m
     results = {}
 
     class FakeUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             results["mode"] = mode
 
         async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
@@ -317,7 +321,7 @@ async def test_stop_loss_sell_strategy_uses_marketable_signal_price_below_stop_l
     results = {}
 
     class FakeUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             results["mode"] = mode
 
         async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
@@ -342,7 +346,7 @@ async def test_stop_loss_sell_strategy_falls_back_to_signal_price(monkeypatch):
     results = {}
 
     class FakeUSTrader:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             results["mode"] = mode
 
         async def async_sell_stock(self, ticker, limit_price=None, sell_fraction=None):
@@ -369,7 +373,7 @@ async def test_broker_workflows_are_serialized_across_dispatchers(monkeypatch):
     active = 0
     max_active = 0
 
-    async def fake_execute(self, signal):
+    async def fake_execute(self, signal, *, account=None):
         nonlocal active, max_active
         active += 1
         max_active = max(max_active, active)

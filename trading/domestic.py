@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any
 
 from . import yaml_compat as yaml
-from .config_paths import active_kis_config_path
+from .config_paths import active_kis_config_path, implicit_example_kis_config_active
 
 # Path to directory where current file is located
 TRADING_DIR = Path(__file__).parent
@@ -28,12 +28,16 @@ from .kis_auth import (
     TokenRequestError
 )
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
+from .signal_sizing import floor_sell_quantity
+from .portfolio_pagination import next_balance_cursor, validated_balance_row
 from .execution_outcome import (
     PortfolioInquiryError,
     classify_broker_result,
+    broker_order_date,
+    broker_receipt_metadata,
     rejection_is_ambiguous,
 )
-from .market_hours import KST
+from .market_hours import KST, kr_smart_order_kind
 
 # Logging setup
 def _kst_log_time(*args: Any) -> time.struct_time:
@@ -145,7 +149,7 @@ class DomesticStockTrading:
     # Auto trading enabled flag
     AUTO_TRADING = _cfg.get("auto_trading", True)
     # Default trading environment
-    DEFAULT_MODE = _cfg.get("default_mode", "demo")
+    DEFAULT_MODE = "demo" if implicit_example_kis_config_active() else _cfg.get("default_mode", "demo")
 
     def __init__(
         self,
@@ -284,15 +288,20 @@ class DomesticStockTrading:
             account_key=self.account_key,
         )
 
-    def _request(self, api_url: str, tr_id: str, params: Dict[str, Any], **kwargs):
+    def _request(self, api_url: str, tr_id: str, params: Dict[str, Any], *, tr_cont: str = "", **kwargs):
         with ka.get_trading_env_lock():
             self._activate_account()
-            response = ka._url_fetch(api_url, tr_id, "", params, **kwargs)
+            response = ka._url_fetch(api_url, tr_id, tr_cont, params, **kwargs)
             try:
                 self.trenv = ka.getTREnv()
             except RuntimeError:
                 logger.debug("KIS trading environment unavailable after request; keeping existing trader environment")
             return response
+
+    def get_order_history_for_reconciliation(self, *, order_no: str, order_date: str, ticker: str, max_pages: int = 5) -> dict[str, Any]:
+        """Read-only KIS history evidence; NEVER fill proof or stop-loss authority."""
+        from .order_reconciliation import read_order_history
+        return read_order_history(self, market="KR", order_no=order_no, order_date=order_date, ticker=ticker, max_pages=max_pages)
 
     def get_current_price(self, stock_code: str) -> Optional[Dict[str, Any]]:
         """
@@ -454,6 +463,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -464,8 +477,10 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] Market buy order successful: {buy_quantity} shares, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'message': f'Market buy order completed ({buy_quantity} shares)'
@@ -475,6 +490,7 @@ class DomesticStockTrading:
                 logger.error(f"Buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -486,6 +502,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -593,6 +610,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -603,8 +624,10 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] Limit buy order successful: {buy_quantity} shares x {effective_limit_price:,} KRW, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'limit_price': effective_limit_price,
@@ -615,6 +638,7 @@ class DomesticStockTrading:
                 logger.error(f"Limit buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -627,6 +651,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during limit buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -662,11 +687,15 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute buy order. (AUTO_TRADING=False)'
             }
 
-        now = _now_kst()
-        current_time = now.time()
+        order_kind = kr_smart_order_kind(_now_kst())
+        if order_kind is None:
+            return {
+                'success': False, 'order_no': None, 'stock_code': stock_code,
+                'quantity': 0, 'outcome_unknown': False,
+                'message': 'No verified KRX order window. No order submitted.',
+            }
 
-        # Branch by time period
-        if datetime.time(9, 0) <= current_time <= datetime.time(15, 30):
+        if order_kind == "regular":
             # Regular trading hours
             if limit_price and limit_price > 0:
                 effective_limit_price = align_krx_tick_price(limit_price, method="floor")
@@ -678,7 +707,7 @@ class DomesticStockTrading:
             logger.info(f"[{stock_code}] Regular trading hours - executing market buy")
             return self.buy_market_price(stock_code, buy_amount)
 
-        elif datetime.time(15, 40) <= current_time <= datetime.time(16, 0):
+        elif order_kind == "closing":
             # After-hours closing price trading
             logger.info(f"[{stock_code}] After-hours closing price time - executing closing price buy")
             return self.buy_closing_price(stock_code, buy_amount)
@@ -747,6 +776,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -757,8 +790,10 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] After-hours closing price buy order successful: {buy_quantity} shares, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'message': f'After-hours closing price buy order completed ({buy_quantity} shares)'
@@ -768,6 +803,7 @@ class DomesticStockTrading:
                 logger.error(f"After-hours closing price buy failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -779,6 +815,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during after-hours closing price buy: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -859,6 +896,10 @@ class DomesticStockTrading:
         else:
             params["RSVN_ORD_END_DT"] = ""
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "reservation", "order_quantity": int(buy_quantity),
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -877,8 +918,10 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] Reserved buy order successful: {buy_quantity} shares, {order_type_str}, {period_str}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'order_type': order_type_str,
@@ -891,6 +934,7 @@ class DomesticStockTrading:
                 error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
                 logger.error(f"Reserved buy order failed: {error_msg}")
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -902,6 +946,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during reserved buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -982,6 +1027,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -993,8 +1042,10 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] {order_kind} sell all order successful: {buy_quantity} shares, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'limit_price': int(effective_limit_price) if use_limit else None,
@@ -1005,6 +1056,7 @@ class DomesticStockTrading:
                 logger.error(f"Sell order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -1016,6 +1068,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during sell order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -1049,11 +1102,15 @@ class DomesticStockTrading:
                 'message': 'Auto trading is disabled. Cannot execute sell order. (AUTO_TRADING=False)'
             }
 
-        now = _now_kst()
-        current_time = now.time()
+        order_kind = kr_smart_order_kind(_now_kst())
+        if order_kind is None:
+            return {
+                'success': False, 'order_no': None, 'stock_code': stock_code,
+                'quantity': 0, 'outcome_unknown': False,
+                'message': 'No verified KRX order window. No order submitted.',
+            }
 
-        # Branch by time period
-        if datetime.time(9, 0) <= current_time <= datetime.time(15, 30):
+        if order_kind == "regular":
             if limit_price and limit_price > 0:
                 effective_limit_price = align_krx_tick_price(limit_price, method="round")
                 logger.info(
@@ -1069,7 +1126,7 @@ class DomesticStockTrading:
                 limit_price=effective_limit_price,
             )
 
-        elif datetime.time(15, 40) <= current_time <= datetime.time(16, 0):
+        elif order_kind == "closing":
             # After-hours closing price trading
             logger.info(f"[{stock_code}] After-hours closing price time - executing closing price sell")
             return self.sell_all_closing_price(stock_code, holding_quantity=holding_quantity)
@@ -1130,6 +1187,10 @@ class DomesticStockTrading:
             "CNDT_PRIC": ""
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1140,8 +1201,10 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] After-hours closing price sell order successful: {buy_quantity} shares, order no: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'message': f'After-hours closing price sell completed ({buy_quantity} shares)'
@@ -1149,6 +1212,7 @@ class DomesticStockTrading:
             else:
                 error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -1159,6 +1223,7 @@ class DomesticStockTrading:
 
         except Exception as e:
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -1234,6 +1299,10 @@ class DomesticStockTrading:
         else:
             params["RSVN_ORD_END_DT"] = ""
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "reservation", "order_quantity": int(buy_quantity),
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1252,8 +1321,10 @@ class DomesticStockTrading:
                 logger.info(f"[{stock_code}] Reserved sell order successful: {buy_quantity} shares, {order_type_str}, {period_str}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'stock_code': stock_code,
                     'quantity': buy_quantity,
                     'order_type': order_type_str,
@@ -1266,6 +1337,7 @@ class DomesticStockTrading:
                 error_msg = f"{res.getErrorCode()} - {res.getErrorMessage()}"
                 logger.error(f"Reserved sell order failed: {error_msg}")
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'stock_code': stock_code,
@@ -1277,6 +1349,7 @@ class DomesticStockTrading:
         except Exception as e:
             logger.error(f"Error during reserved sell order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'stock_code': stock_code,
@@ -1291,7 +1364,8 @@ class DomesticStockTrading:
             self._stock_locks[stock_code] = asyncio.Lock()
         return self._stock_locks[stock_code]
 
-    async def async_buy_stock(self, stock_code: str, buy_amount: Optional[int] = None, timeout: float = 30.0, limit_price: Optional[int] = None) -> Dict[str, Any]:
+    async def async_buy_stock(self, stock_code: str, buy_amount: Optional[int] = None, timeout: float = 30.0, limit_price: Optional[int] = None,
+                              *, preserve_limit: bool = False) -> Dict[str, Any]:
         """
         Async buy API (with timeout)
         Get current price → Calculate buyable quantity → Market buy
@@ -1317,9 +1391,12 @@ class DomesticStockTrading:
         # Keep awaiting the worker until the bounded HTTP transport returns.
         # Cancelling an outer coroutine cannot stop an in-flight broker thread
         # and can otherwise make the order outcome ambiguous.
+        if preserve_limit:
+            return await self._execute_buy_stock(stock_code, buy_amount, limit_price, preserve_limit=True)
         return await self._execute_buy_stock(stock_code, buy_amount, limit_price)
 
-    async def _execute_buy_stock(self, stock_code: str, buy_amount: int = None, limit_price: int = None) -> Dict[str, Any]:
+    async def _execute_buy_stock(self, stock_code: str, buy_amount: int = None, limit_price: int = None,
+                                 *, preserve_limit: bool = False) -> Dict[str, Any]:
         # Use class default if buy_amount is None
         amount = self._resolve_buy_amount(buy_amount)
 
@@ -1335,6 +1412,9 @@ class DomesticStockTrading:
         }
 
         # 3-level protection: per-stock lock + semaphore + global lock
+        if preserve_limit and (not limit_price or limit_price != align_krx_tick_price(limit_price)):
+            return {**result, "outcome_unknown": False, "message": "Invalid explicit KR limit price"}
+
         stock_lock = await self._get_stock_lock(stock_code)
 
         async with stock_lock:  # Level 1: Prevent concurrent trading per stock
@@ -1384,10 +1464,17 @@ class DomesticStockTrading:
                         else:
                             logger.info(f"[Async Buy API] {stock_code} executing market/reserved-market buy for an estimated {buy_quantity} shares")
                         submission_attempted = True
-                        buy_result = await asyncio.to_thread(
-                            self.smart_buy, stock_code, amount, requested_limit_price
-                        )
+                        if preserve_limit:
+                            buy_result = await asyncio.to_thread(
+                                self.buy_limit_price, stock_code, requested_limit_price, amount,
+                            )
+                        else:
+                            buy_result = await asyncio.to_thread(
+                                self.smart_buy, stock_code, amount, requested_limit_price,
+                            )
 
+                        result.update(broker_receipt_metadata(buy_result))
+                        result['order_date'] = broker_order_date(buy_result)
                         submission_status = classify_broker_result(buy_result)
                         if submission_status == "executed":
                             result['quantity'] = int(
@@ -1417,7 +1504,7 @@ class DomesticStockTrading:
         return result
 
     async def async_sell_stock(self, stock_code: str, timeout: float = 30.0, limit_price: Optional[int] = None,
-                               sell_fraction: Optional[float] = None) -> Dict[str, Any]:
+                               sell_fraction: Optional[float] = None, *, preserve_limit: bool = False) -> Dict[str, Any]:
         """
         Async sell API (with timeout)
         Sell all holding quantity at market price
@@ -1439,10 +1526,12 @@ class DomesticStockTrading:
                 'timestamp': Execution time
             }
         """
+        if preserve_limit:
+            return await self._execute_sell_stock(stock_code, limit_price, sell_fraction, preserve_limit=True)
         return await self._execute_sell_stock(stock_code, limit_price, sell_fraction)
 
     async def _execute_sell_stock(self, stock_code: str, limit_price: int = None,
-                                  sell_fraction: Optional[float] = None) -> Dict[str, Any]:
+                                  sell_fraction: Optional[float] = None, *, preserve_limit: bool = False) -> Dict[str, Any]:
         """Actual sell execution logic (includes portfolio verification defensive logic)"""
         result = {
             'success': False,
@@ -1456,6 +1545,9 @@ class DomesticStockTrading:
         }
 
         # 3-level protection: per-stock lock + semaphore + global lock
+        if preserve_limit and (not limit_price or limit_price != align_krx_tick_price(limit_price)):
+            return {**result, "outcome_unknown": False, "message": "Invalid explicit KR limit price"}
+
         stock_lock = await self._get_stock_lock(stock_code)
 
         async with stock_lock:  # Level 1: Prevent concurrent trading per stock
@@ -1517,7 +1609,7 @@ class DomesticStockTrading:
                             if not 0 < sell_fraction <= 1:
                                 result['message'] = 'sell_fraction must be greater than 0 and at most 1'
                                 return result
-                            holding_quantity = math.floor(holding_quantity * sell_fraction)
+                            holding_quantity = floor_sell_quantity(holding_quantity, sell_fraction)
                             if holding_quantity <= 0:
                                 result['message'] = 'Partial sell quantity rounds down to 0 shares'
                                 return result
@@ -1526,7 +1618,7 @@ class DomesticStockTrading:
                         # to secure better execution; otherwise use the requested limit price.
                         target_price = None
                         if limit_price and limit_price > 0:
-                            if current_price > 0 and limit_price < current_price:
+                            if not preserve_limit and current_price > 0 and limit_price < current_price:
                                 logger.info(
                                     f"[Async Sell API] {stock_code} signal limit price ({limit_price:,} KRW) is lower than current market price ({current_price:,} KRW); elevating limit to current price"
                                 )
@@ -1545,10 +1637,17 @@ class DomesticStockTrading:
                         else:
                             logger.info(f"[Async Sell API] {stock_code} executing sell all (holding: {holding_quantity} shares, market)")
                         submission_attempted = True
-                        all_sell_result = await asyncio.to_thread(
-                            self.smart_sell_all, stock_code, effective_limit_price, holding_quantity
-                        )
+                        if preserve_limit:
+                            all_sell_result = await asyncio.to_thread(
+                                self.sell_all_market_price, stock_code, holding_quantity, effective_limit_price,
+                            )
+                        else:
+                            all_sell_result = await asyncio.to_thread(
+                                self.smart_sell_all, stock_code, effective_limit_price, holding_quantity,
+                            )
 
+                        result.update(broker_receipt_metadata(all_sell_result))
+                        result['order_date'] = broker_order_date(all_sell_result)
                         submission_status = classify_broker_result(all_sell_result)
                         if submission_status == "executed":
                             result['success'] = True
@@ -1587,32 +1686,14 @@ class DomesticStockTrading:
         return result
 
     def get_portfolio(self, *, raise_on_error: bool = False) -> List[Dict[str, Any]]:
-        """
-        Get current account portfolio.
+        """Read every KIS KR balance page before declaring any holding absent.
 
-        When ``raise_on_error`` is true, propagate a temporary KIS inquiry failure
-        instead of treating it as a genuinely empty portfolio.
-
-        Returns:
-            [{
-                'stock_code': 'stock code',
-                'stock_name': 'stock name',
-                'quantity': holding quantity,
-                'avg_price': average price,
-                'current_price': current price,
-                'eval_amount': evaluation amount,
-                'profit_amount': profit/loss amount,
-                'profit_rate': return rate (%)
-            }, ...]
+        A first-page-only result can falsely report a later-page holding as
+        zero and cause an automated stop-loss tracker to be removed. A broken
+        continuation fails closed instead of exposing partial balances.
         """
         api_url = "/uapi/domestic-stock/v1/trading/inquire-balance"
-
-        # Set TR ID (real/demo distinction)
-        if self.mode == "real":
-            tr_id = "TTTC8434R"
-        else:
-            tr_id = "VTTC8434R"
-
+        tr_id = "TTTC8434R" if self.mode == "real" else "VTTC8434R"
         params = {
             "CANO": self.trenv.my_acct,
             "ACNT_PRDT_CD": self.trenv.my_prod,
@@ -1624,63 +1705,74 @@ class DomesticStockTrading:
             "FNCG_AMT_AUTO_RDPT_YN": "N",
             "PRCS_DVSN": "00",
             "CTX_AREA_FK100": "",
-            "CTX_AREA_NK100": ""
+            "CTX_AREA_NK100": "",
         }
-
         self._last_portfolio_inquiry_error = None
         try:
-            res = self._request(api_url, tr_id, params)
-
-            if res.isOK():
-                current_portfolio = []
-                output1 = res.getBody().output1  # Holdings list
-                output2 = res.getBody().output2[0]  # Account summary
-
-                # Handle case when output1 is not a list
+            portfolio: List[Dict[str, Any]] = []
+            seen_cursors: set[tuple[str, str]] = set()
+            continuation = False
+            while True:
+                if continuation:
+                    res = self._request(
+                        api_url, tr_id, params, appendHeaders={"tr_cont": "N"}
+                    )
+                else:
+                    res = self._request(api_url, tr_id, params)
+                if not res.isOK():
+                    raise PortfolioInquiryError(
+                        f"Balance inquiry failed: {res.getErrorCode()} - {res.getErrorMessage()}"
+                    )
+                body = res.getBody()
+                output1 = body.output1
                 if not isinstance(output1, list):
                     output1 = [output1] if output1 else []
-
                 for item in output1:
-                    # Only add stocks with quantity > 0
-                    quantity = int(item.get('hldg_qty', 0))
+                    instrument, quantity = validated_balance_row(
+                        item, instrument_key="pdno", quantity_key="hldg_qty"
+                    )
                     if quantity > 0:
-                        stock_info = {
-                            'stock_code': item.get('pdno', ''),
-                            'stock_name': item.get('prdt_name', ''),
-                            'quantity': quantity,
-                            'avg_price': float(item.get('pchs_avg_pric', 0)),
-                            'current_price': float(item.get('prpr', 0)),
-                            'eval_amount': float(item.get('evlu_amt', 0)),
-                            'profit_amount': float(item.get('evlu_pfls_amt', 0)),
-                            'profit_rate': float(item.get('evlu_pfls_rt', 0))
-                        }
-                        current_portfolio.append(stock_info)
+                        portfolio.append({
+                            "stock_code": instrument,
+                            "stock_name": item.get("prdt_name", ""),
+                            "quantity": quantity,
+                            "avg_price": float(item.get("pchs_avg_pric", 0)),
+                            "current_price": float(item.get("prpr", 0)),
+                            "eval_amount": float(item.get("evlu_amt", 0)),
+                            "profit_amount": float(item.get("evlu_pfls_amt", 0)),
+                            "profit_rate": float(item.get("evlu_pfls_rt", 0)),
+                        })
+                cursor = next_balance_cursor(res, 100, seen_cursors)
+                if cursor is None:
+                    break
+                params["CTX_AREA_FK100"], params["CTX_AREA_NK100"] = cursor
+                continuation = True
+                time.sleep(0.1)
 
-                # Log account summary
-                if output2:
-                    total_eval = float(output2.get('tot_evlu_amt', 0))
-                    total_profit = float(output2.get('evlu_pfls_smtl_amt', 0))
-                    logger.info(f"Account total evaluation: {total_eval:,.0f} KRW, total profit/loss: {total_profit:+,.0f} KRW")
-
-                logger.info(f"Portfolio: {len(current_portfolio)} holdings")
-                return current_portfolio
-
-            else:
-                message = f"Balance inquiry failed: {res.getErrorCode()} - {res.getErrorMessage()}"
-                logger.error(message)
-                self._last_portfolio_inquiry_error = message
-                if raise_on_error:
-                    raise PortfolioInquiryError(message)
-                return []
-
-        except PortfolioInquiryError:
-            raise
-        except Exception as e:
-            message = f"Error during balance inquiry: {str(e)}"
-            logger.error(message)
-            self._last_portfolio_inquiry_error = message
+            output2 = getattr(body, "output2", None)
+            summary = output2[0] if isinstance(output2, list) and output2 else (
+                output2 if isinstance(output2, dict) else None
+            )
+            if summary:
+                logger.info(
+                    "Account total evaluation: %s KRW, total profit/loss: %s KRW",
+                    float(summary.get("tot_evlu_amt", 0)),
+                    float(summary.get("evlu_pfls_smtl_amt", 0)),
+                )
+            logger.info("Portfolio: %s holdings (complete KIS balance)", len(portfolio))
+            return portfolio
+        except PortfolioInquiryError as exc:
+            self._last_portfolio_inquiry_error = str(exc)
+            logger.error("Incomplete KR balance inquiry: %s", exc)
             if raise_on_error:
-                raise PortfolioInquiryError(message) from e
+                raise
+            return []
+        except Exception as exc:
+            message = f"Error during balance inquiry: {exc}"
+            self._last_portfolio_inquiry_error = message
+            logger.error(message)
+            if raise_on_error:
+                raise PortfolioInquiryError(message) from exc
             return []
 
     def get_account_summary(self) -> None | dict[Any, Any] | dict[str, float]:
@@ -1993,7 +2085,7 @@ class AsyncTradingContext:
     # Auto trading operation status
     AUTO_TRADING = _cfg.get("auto_trading", True)
     # Default trading environment
-    DEFAULT_MODE = _cfg.get("default_mode", "demo")
+    DEFAULT_MODE = "demo" if implicit_example_kis_config_active() else _cfg.get("default_mode", "demo")
 
     def __init__(
         self,

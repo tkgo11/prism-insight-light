@@ -533,7 +533,7 @@ def _fake_kr_context(results):
             return {"success": True, "order_no": "MOCK-ORDER", "message": "kr-sell"}
 
     class FakeContext:
-        def __init__(self, mode):
+        def __init__(self, mode, **kwargs):
             self.mode = mode
 
         async def __aenter__(self):
@@ -707,7 +707,7 @@ def test_queued_signal_expiring_before_execution_is_quarantined(monkeypatch, tmp
          "timestamp": old_timestamp}
     )
     queue = dispatcher.queue
-    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:fixture:01"})
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:12345678:01", "name": "fixture", "account": "12345678", "svr": "vps", "product": "01", "market": "kr"})
     item = queue.enqueue(signal, {"version": 2, "multi_account": False, "trading_mode": "demo", "account_scope": __import__("hashlib").sha256(dispatcher._single_account_execution_selector(signal).encode("utf-8")).hexdigest(), "account_id": dispatcher._resolved_single_account_id(signal)})
     assert queue.pending_count() == 1
 
@@ -751,7 +751,7 @@ def test_fresh_queued_signal_still_executes(monkeypatch, tmp_path):
         {"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000}
     )
     queue = dispatcher.queue
-    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:fixture:01"})
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: {"account_key": "vps:12345678:01", "name": "fixture", "account": "12345678", "svr": "vps", "product": "01", "market": "kr"})
     queue.enqueue(signal, {"version": 2, "multi_account": False, "trading_mode": "demo", "account_scope": __import__("hashlib").sha256(dispatcher._single_account_execution_selector(signal).encode("utf-8")).hexdigest(), "account_id": dispatcher._resolved_single_account_id(signal)})
 
     broker_calls = []
@@ -901,6 +901,54 @@ class FakeDispatcher:
     async def dispatch(self, signal):
         self.signals.append(signal)
         return self.result
+
+
+@pytest.mark.parametrize("include_payload_time", [False, True])
+@pytest.mark.parametrize("queued", [False, True])
+def test_pubsub_publish_time_bounds_execution_and_queue_replay(
+    monkeypatch, tmp_path, include_payload_time, queued,
+):
+    now = datetime.now(UTC)
+    market_open = not queued
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: market_open)
+    monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda _: now)
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: {
+        "account_key": "vps:12345678:01", "name": "synthetic", "account": "12345678",
+        "svr": "vps", "product": "01", "market": "kr",
+    })
+    broker_calls = []
+
+    async def mock_broker(self, signal, *, account=None):
+        broker_calls.append(signal)
+        return DispatchResult("unknown", "mock submission outcome", "BUY", "KR")
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_broker)
+
+    def new_dispatcher(queued_max_age):
+        return TradeDispatcher(
+            trading_mode="demo", strategy_config={"name": ""},
+            queue_path=tmp_path / "queue.json", execution_ledger_path=tmp_path / "ledger.json",
+            signal_gate=SignalSafetyGate(config=SignalSafetyConfig(
+                audit_enabled=False, fresh_quote_enabled=False, max_age_buy_seconds=900,
+                queued_max_age_seconds=queued_max_age,
+            )),
+        )
+
+    receiver = new_dispatcher(3 * 3600)
+    payload = {"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000}
+    if include_payload_time:
+        payload["timestamp"] = now.isoformat()
+    message = FakeMessage(json.dumps(payload).encode(), publish_time=now - timedelta(hours=2))
+    subscriber._handle_message(message, receiver)
+    assert message.acked and not message.nacked
+    if queued:
+        assert receiver.queue.pending_count() == 1
+        market_open = True
+        restarted = new_dispatcher(3600)
+        assert restarted.drain_due_orders() == 0
+        assert restarted.queue.failed_count() == 1
+        assert REASON_EXPIRED_QUEUED in restarted.queue._load()[0].failure_message
+    assert broker_calls == []
 
 
 def test_subscriber_acks_stale_signal_without_dispatch(tmp_path):

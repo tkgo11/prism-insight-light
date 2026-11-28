@@ -3,22 +3,19 @@
 from __future__ import annotations
 
 import os
+import secrets
 from dataclasses import asdict
 from typing import Any
 from pathlib import Path
 
 from trading.schema import parse_signal_payload
+from trading.modes import webui_live_trading_enabled as live_trading_enabled
 from webui.services.account_service import build_manual_signal
 from webui.services.masking import mask_text
 
 ARM_PHRASE = "EXECUTE LIVE ORDER"
 SELL_ALL_PHRASE = "SELL ALL POSITION"
 TradeDispatcher = None
-
-
-def live_trading_enabled(env: dict[str, str] | None = None) -> bool:
-    source = env if env is not None else os.environ
-    return str(source.get("WEBUI_ENABLE_LIVE_TRADING") or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def trading_guard_status(*, force_dry_run: bool = False) -> dict[str, Any]:
@@ -49,6 +46,7 @@ async def dispatch_manual_order(
     trading_mode: str | None = None,
     arm_phrase: str = "",
     account_name: str = "",
+    restrict_to_primary: bool = False,
     force_dry_run: bool = False,
     queue_path: Path | None = None,
     work_tracker: Any | None = None,
@@ -62,7 +60,11 @@ async def dispatch_manual_order(
             company_name=company_name,
             market=market,
         )
+        # A newly armed manual ticket is a distinct order, not a replay of a
+        # prior identical ticker/price. Durable ledger fencing remains mandatory.
+        signal_payload["signal_id"] = "manual-" + secrets.token_hex(16)
         signal = parse_signal_payload(signal_payload)
+        signal.manual_ticket = True
     except (TypeError, ValueError) as exc:
         raise ValueError(str(exc)) from exc
     if not force_dry_run and not live_trading_enabled():
@@ -106,7 +108,10 @@ async def dispatch_manual_order(
                 trading_mode=trading_mode or None,
                 strategy_config={"name": ""},
                 account_name=account_name or None,
-                execution_dedupe=False,
+                restrict_to_primary=restrict_to_primary,
+                # Persist BUY intent before submission (even for manual tickets).
+                # Unique per-ticket IDs preserve intentional manual repeat orders.
+                execution_dedupe=True,
                 # The operator types the limit price deliberately, so the
                 # fresh-quote deviation check does not apply to manual orders.
                 fresh_quote_enabled=False,
@@ -117,6 +122,10 @@ async def dispatch_manual_order(
                 work_tracker.end()
         safe_result = asdict(result)
         safe_result["message"] = mask_text(safe_result.get("message"), os.environ)
+        for account_result in safe_result["accounts"]:
+            for key in ("message", "error"):
+                if account_result.get(key) is not None:
+                    account_result[key] = mask_text(account_result[key], os.environ)
         accepted_statuses = {"executed", "queued", "acknowledged", "dry-run"}
         return {
             "ok": result.status in accepted_statuses,

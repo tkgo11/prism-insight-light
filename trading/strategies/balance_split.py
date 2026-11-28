@@ -14,7 +14,7 @@ from typing import Any, Protocol
 
 from ..config_paths import runtime_file_path
 from ..domestic import AsyncTradingContext
-from ..execution_outcome import classify_broker_result
+from ..execution_outcome import broker_order_date, broker_receipt_metadata, classify_broker_result
 from ..file_lock import FileLock
 from ..schema import SignalMessage
 from ..signal_sizing import SignalSizingError, scaled_buy_amount
@@ -56,6 +56,11 @@ class BalanceSplitExecution:
     buy_amount: float
     split_count: int
     cash_source: str = "available_amount"
+    order_no: str | None = None
+    order_date: str | None = None
+    order_kind: str | None = None
+    order_quantity: int | None = None
+    order_venue: str | None = None
 
 
 class _BuyTrader(Protocol):
@@ -658,4 +663,7 @@ class BalanceSplitStrategy:
             buy_amount=buy_amount,
             split_count=self.config.split_count,
             cash_source=cash_source,
+            order_no=(result.get("order_no") if isinstance(result.get("order_no"), str) else None),
+            order_date=broker_order_date(result),
+            **broker_receipt_metadata(result),
         )

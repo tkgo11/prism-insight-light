@@ -267,3 +267,76 @@ def test_stop_loss_failed_atomic_replace_preserves_original_bytes(tmp_path, monk
         tracker.record_position("US", "MSFT", 80, entry_price=95)
     assert path.read_bytes() == original
     assert not list(tmp_path.glob(".positions.json.*.tmp"))
+
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("corruption", [
+    "non_mapping", "missing_identity", "mismatched_ticker",
+    "nan_stop", "missing_stop", "nonfinite_entry",
+])
+def test_corrupt_canonical_tracker_cannot_be_overwritten_on_new_registration(
+    tmp_path, market, ticker, corruption
+):
+    """A later BUY must not erase quarantined stop evidence under the same key."""
+    path = tmp_path / "stops.json"
+    tracker = StopLossTracker(path)
+    tracker.record_position(market, ticker, 90, entry_price=100)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    key = f"{market}:{ticker}"
+    if corruption == "non_mapping":
+        data[key] = None
+    elif corruption == "missing_identity":
+        data[key].pop("market")
+    elif corruption == "mismatched_ticker":
+        data[key]["ticker"] = "000660" if market == "KR" else "MSFT"
+    elif corruption == "nan_stop":
+        data[key]["stop_loss"] = "NaN"
+    elif corruption == "missing_stop":
+        data[key].pop("stop_loss")
+    elif corruption == "nonfinite_entry":
+        data[key]["entry_price"] = "Infinity"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    original = path.read_bytes()
+    assert tracker.get_positions(market) == []
+    with pytest.raises(ValueError, match="operator reconciliation"):
+        tracker.record_position(market, ticker, 80, entry_price=110)
+    assert path.read_bytes() == original
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+async def test_corrupt_stop_tracker_blocks_buy_before_mock_broker(
+    tmp_path, monkeypatch, market, ticker
+):
+    """Preserving corrupt evidence after a BUY is too late: preflight must block it."""
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+    from trading.dispatch import DispatchResult, TradeDispatcher
+    from trading.schema import parse_signal_payload
+
+    tracker = StopLossTracker(tmp_path / "stops.json")
+    tracker.record_position(market, ticker, 90, entry_price=100)
+    original_data = json.loads(tracker.path.read_text(encoding="utf-8"))
+    original_data[f"{market}:{ticker}"] = None
+    tracker.path.write_text(json.dumps(original_data), encoding="utf-8")
+    original = tracker.path.read_bytes()
+
+    dispatcher = TradeDispatcher(
+        trading_mode="demo", strategy_config={"name": ""},
+        execution_ledger_path=tmp_path / "ledger.json",
+    )
+    dispatcher.stop_loss_tracker = tracker
+    dispatcher.signal_gate.evaluate_execution = lambda *a, **kw: SimpleNamespace(
+        outcome="accept", fresh_quote=None,
+    )
+    dispatcher._execute_legacy_trade = AsyncMock(return_value=DispatchResult(
+        "executed", "MOCK broker accepted", "BUY", market,
+    ))
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda m: True)
+    signal = parse_signal_payload({
+        "signal_id": "corrupt-preflight-" + market,
+        "type": "BUY", "market": market, "ticker": ticker,
+        "price": 100, "stop_loss": 90,
+    })
+    result = await dispatcher.dispatch(signal)
+    assert result.status == "rejected"
+    dispatcher._execute_legacy_trade.assert_not_awaited()
+    assert tracker.path.read_bytes() == original

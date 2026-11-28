@@ -18,7 +18,7 @@ from trading.strategies.signal_trailing_stop import (
 class FakeUSTrader:
     calls = []
 
-    def __init__(self, mode, account_name=None, account_index=None):
+    def __init__(self, mode, account_name=None, account_index=None, account_key=None, product_code="01"):
         self.mode = mode
         self.account_name = account_name
         self.account_index = account_index

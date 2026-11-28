@@ -48,7 +48,7 @@ class CooldownStrategy:
                 or not isinstance(side, str) or side not in {"BUY", "SELL"}
                 or not isinstance(key, str) or key != expected_key
                 or key in seen
-                or ("pending" in item and not isinstance(item["pending"], bool))
+                or not isinstance(item.get("pending"), bool)
             ):
                 raise RuntimeError(
                     "Cooldown state has an ambiguous instrument or pending fence; "

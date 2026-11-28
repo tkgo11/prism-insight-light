@@ -95,7 +95,9 @@ async def require_csrf_token(request: Request, x_webui_csrf: str | None = Header
     if supplied is None and content_type == "application/x-www-form-urlencoded":
         form = await get_urlencoded_form(request)
         supplied = form.get("x_webui_csrf")
-    if supplied is None or not secrets.compare_digest(supplied, expected):
+    if supplied is None or not secrets.compare_digest(
+        supplied.encode("utf-8"), expected.encode("utf-8")
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Missing or invalid WebUI CSRF token",

@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
+from trading.schema import SignalValidationError, load_signal_json
 from webui.routes.guards import get_urlencoded_form, require_csrf_token
 from webui.services.dry_run_service import simulate_dispatch
 
@@ -52,13 +53,13 @@ async def simulate_form(request: Request):
         }
     else:
         try:
-            decoded_payload = json.loads(payload)
-        except json.JSONDecodeError as exc:
+            decoded_payload = load_signal_json(payload)
+        except (json.JSONDecodeError, SignalValidationError) as exc:
             simulation_result = {
                 "ok": False,
                 "result": None,
                 "signal": None,
-                "error": f"Invalid JSON: {exc.msg}",
+                "error": f"Invalid JSON: {exc}",
             }
         else:
             simulation_result = simulate_dispatch(decoded_payload)
@@ -74,7 +75,11 @@ async def simulate_form(request: Request):
 
 
 @router.post("/simulate", dependencies=[Depends(require_csrf_token)])
-def simulate(body: DryRunRequest):
+async def simulate(request: Request, body: DryRunRequest):
     """Retain the JSON simulator endpoint for automated tooling."""
 
+    try:
+        load_signal_json(await request.body())
+    except (json.JSONDecodeError, SignalValidationError) as exc:
+        return {"ok": False, "result": None, "signal": None, "error": str(exc)}
     return simulate_dispatch(body.payload)

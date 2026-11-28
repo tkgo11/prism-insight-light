@@ -38,6 +38,23 @@ def git(*args: str, cwd: Path = ROOT) -> str:
     return result.stdout.strip()
 
 
+def pinned_file(directory: Path, commit: str, relative_path: str) -> bytes:
+    path = directory / relative_path
+    if path.is_symlink() or not path.is_file():
+        raise DependencyError(f"missing or symlinked upstream file: {relative_path}")
+    result = subprocess.run(
+        ["git", "-C", str(directory), "--no-replace-objects", "cat-file",
+         "blob", f"{commit}:{relative_path}"],
+        capture_output=True, check=False,
+    )
+    if result.returncode:
+        raise DependencyError(f"unable to read pinned upstream file: {relative_path}")
+    if path.read_bytes() != result.stdout:
+        label = "checksum manifest" if relative_path == "CHECKSUMS.txt" else relative_path
+        raise DependencyError(f"{label} differs from pinned commit")
+    return result.stdout
+
+
 def parse_gitlink(text: str) -> str:
     match = re.fullmatch(
         r"160000 commit ([0-9a-f]{40})\t\.agents/skills/autonomous-maintainer",
@@ -68,31 +85,30 @@ def verify() -> str:
             parser.get(section, "branch", fallback="") != "main"):
         raise DependencyError("untrusted submodule path, URL or branch")
 
-    pinned = parse_gitlink(git("ls-tree", "HEAD", "--", SUBMODULE))
+    pinned = parse_gitlink(git("--no-replace-objects", "ls-tree", "HEAD", "--", SUBMODULE))
     directory = ROOT / SUBMODULE
     if directory.is_symlink() or not directory.is_dir():
         raise DependencyError("submodule not initialized as a real directory")
     if git("rev-parse", "HEAD", cwd=directory) != pinned:
         raise DependencyError("checked-out submodule differs from pinned commit")
 
-    manifest_path = directory / "CHECKSUMS.txt"
-    if manifest_path.is_symlink() or not manifest_path.is_file():
-        raise DependencyError("missing upstream checksum manifest")
+    manifest_bytes = pinned_file(directory, pinned, "CHECKSUMS.txt")
     manifest: dict[str, str] = {}
-    for line in manifest_path.read_text(encoding="utf-8").splitlines():
+    for line in manifest_bytes.decode("utf-8").splitlines():
         match = re.fullmatch(r"([0-9a-f]{64})  \./([^\r\n]+)", line)
         if not match or match.group(2) in manifest:
             raise DependencyError("invalid or duplicate upstream checksum entry")
         manifest[match.group(2)] = match.group(1)
-    for relative_path in (*[name for name, _ in REQUIRED], *ASSETS):
+    skill_names = dict(REQUIRED)
+    for relative_path in (*skill_names, *ASSETS):
         path = directory / relative_path
         if path.is_symlink() or not path.is_file():
             raise DependencyError(f"missing or symlinked upstream asset: {relative_path}")
         content = path.read_bytes()
         if hashlib.sha256(content).hexdigest() != manifest.get(relative_path):
             raise DependencyError(f"upstream checksum mismatch: {relative_path}")
-    for relative_path, name in REQUIRED:
-        check_header((directory / relative_path).read_bytes(), name)
+        if relative_path in skill_names:
+            check_header(content, skill_names[relative_path])
 
     adapter = ROOT / ".agents/skills/autonomous-maintainer-standalone/SKILL.md"
     if adapter.is_symlink() or not adapter.is_file():
@@ -101,7 +117,7 @@ def verify() -> str:
     check_header(content, "autonomous-maintainer-standalone")
     if "../autonomous-maintainer/standalone/SKILL.md" not in content.decode("utf-8"):
         raise DependencyError("standalone adapter does not reference the submodule")
-    version = (directory / "VERSION").read_text(encoding="utf-8").strip()
+    version = pinned_file(directory, pinned, "VERSION").decode("utf-8").strip()
     if not re.fullmatch(r"\d+\.\d+\.\d+", version):
         raise DependencyError("invalid upstream version")
     print(f"Verified autonomous-maintainer {version} at pinned commit {pinned}")

@@ -5,11 +5,15 @@ All broker calls are mocked; never access a real or demo KIS account.
 from __future__ import annotations
 
 import hashlib
+import json
+from datetime import datetime, timezone
 
 import pytest
 
 from trading.dispatch import DispatchResult, TradeDispatcher
+from trading.off_hours_queue import QUEUE_CONTEXT_KEY, OffHoursOrderQueue
 from trading.schema import parse_signal_payload
+from trading.telegram_fetch import TelegramChannelPost, parse_signal_post
 
 
 def signal():
@@ -18,11 +22,146 @@ def signal():
     })
 
 
-def dispatcher(monkeypatch, tmp_path, *, mode="demo", account_name=None, multi=False):
-    monkeypatch.setattr(
-        "trading.dispatch.ka.resolve_account",
-        lambda **kwargs: {"account_key": f"{kwargs['svr']}:{kwargs.get('account_name') or ('index-' + str(kwargs['account_index']) if kwargs.get('account_index') is not None else 'primary')}:01"},
+@pytest.mark.parametrize("created_at", ["2026-11-18T00:00:00+00:00", "invalid", "2026-11-18T00:00:00"])
+def test_queue_drain_preserves_creation_time_and_quarantines_invalid_values(tmp_path, created_at):
+    queue = OffHoursOrderQueue(tmp_path / "queue.json")
+    queue.storage_path.write_text(json.dumps([{
+        "signal": signal().raw,
+        "execute_at": "2026-11-23T08:59:00+00:00",
+        "created_at": created_at,
+        "execution_context": {"enqueued_at": "2026-11-23T08:58:00+00:00"},
+    }]), encoding="utf-8")
+    calls = []
+
+    def collect(payload):
+        calls.append(payload[QUEUE_CONTEXT_KEY]["enqueued_at"])
+        return True
+
+    queue.drain_due(collect, now=datetime(2026, 11, 23, 9, tzinfo=timezone.utc))
+    if created_at.endswith("+00:00"):
+        assert calls == [created_at]
+        assert queue.failed_count() == 0
+    else:
+        assert calls == []
+        assert queue.failed_count() == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+async def test_real_stop_sell_never_submits_without_broker_atomic_preflight(
+    monkeypatch, tmp_path, market, ticker,
+):
+    replay = dispatcher(monkeypatch, tmp_path, mode="real")
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    calls = []
+
+    async def mock_trade(self, order, *, account=None):
+        calls.append(order)
+        return DispatchResult("acknowledged", "mock acceptance", order.signal_type, order.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_trade)
+    stop = parse_signal_payload({
+        "type": "SELL", "ticker": ticker, "market": market, "price": 100,
+        "sell_reason": "stop_loss",
+    })
+
+    result = await replay.dispatch(stop)
+    assert result.status == "rejected"
+    assert "broker-atomic" in result.message.lower()
+    assert calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("route", ["live", "strategy", "queue"])
+@pytest.mark.parametrize("disabled_value", ["false", "'false'"])
+async def test_runtime_disable_after_start_blocks_pending_and_new_orders(
+    monkeypatch, tmp_path, route, disabled_value,
+):
+    market_open = route != "queue"
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: market_open)
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **_: {
+        "account_key": "vps:12345678:01", "name": "synthetic", "account": "12345678",
+        "svr": "vps", "product": "01", "market": "kr",
+    })
+    config = tmp_path / "config.yaml"
+    config.write_text("auto_trading: true\n", encoding="utf-8")
+    monkeypatch.setenv("PRISM_KIS_CONFIG_PATH", str(config))
+    replay = TradeDispatcher(
+        trading_mode="demo", fresh_quote_enabled=False, strategy_config={"name": ""},
+        queue_path=tmp_path / "queue.json", execution_ledger_path=tmp_path / "ledger.json",
     )
+    calls = []
+
+    async def mock_trade(self, order, *, account=None):
+        calls.append(order)
+        return DispatchResult("acknowledged", "mock acceptance", order.signal_type, order.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_trade)
+    if route == "strategy":
+        class MockStrategy:
+            async def execute(self, order, **_):
+                return await mock_trade(self, order)
+
+        monkeypatch.setattr(replay, "_resolve_strategy", lambda _: MockStrategy())
+    if route == "queue":
+        assert (await replay.dispatch(signal())).status == "queued"
+        queued = replay.queue._load()[0]
+    config.write_text(f"auto_trading: {disabled_value}\n", encoding="utf-8")
+    market_open = True
+
+    if route == "queue":
+        result = await replay.execute_queued_signal(queued.signal | {QUEUE_CONTEXT_KEY: queued.execution_context})
+    else:
+        result = await replay.dispatch(signal())
+    assert result.status == "deferred"
+    assert "disabled" in result.message.lower()
+    assert calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("market,ticker", [("KR", "005930"), ("US", "AAPL")])
+@pytest.mark.parametrize("queued", [False, True])
+async def test_labeled_telegram_sell_without_fraction_cannot_submit_in_real_mode(
+    monkeypatch, tmp_path, market, ticker, queued,
+):
+    replay = dispatcher(monkeypatch, tmp_path, mode="real")
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    calls = []
+
+    async def mock_trade(self, order, *, account=None):
+        calls.append(order)
+        return DispatchResult("unknown", "mock submission outcome", order.signal_type, order.market)
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_trade)
+    text = f"📉 Sell: Example ({ticker})\nBuy Price: 90\nSell Price: 100\nSell Reason: Take Profit"
+    post = TelegramChannelPost("publisher", "12", "https://t.me/publisher/12", None, text)
+    parsed = parse_signal_post(post)
+    assert parsed is not None and parsed.signal.market == market
+    assert "sell_fraction" not in parsed.payload and "sell_denominator" not in parsed.payload
+    if queued:
+        context = {
+            "multi_account": False, "trading_mode": "real",
+            "account_scope": hashlib.sha256(
+                replay._single_account_execution_selector(parsed.signal).encode()
+            ).hexdigest(),
+            "account_id": replay._resolved_single_account_id(parsed.signal),
+        }
+        result = await replay.execute_queued_signal(parsed.payload | {QUEUE_CONTEXT_KEY: context})
+    else:
+        result = await replay.dispatch(parsed.signal)
+    assert result.status == "rejected"
+    assert "explicit sell size" in result.message.lower()
+    assert calls == []
+
+
+def dispatcher(monkeypatch, tmp_path, *, mode="demo", account_name=None, multi=False):
+    def resolve(**kwargs):
+        name = kwargs.get("account_name") or "primary"
+        number = {"account-A": "11111111", "account-B": "22222222"}.get(name, "12345678")
+        return {"account_key": f"{kwargs['svr']}:{number}:01", "name": name,
+                "account": number, "svr": kwargs["svr"], "product": "01",
+                "market": kwargs.get("market") or "kr"}
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account", resolve)
     monkeypatch.setattr(
         TradeDispatcher, "_load_runtime_config",
         staticmethod(lambda: {"multi_account_trading": {"enabled": multi}}),
@@ -159,11 +298,13 @@ async def test_queued_multi_account_cannot_switch_demo_to_real(monkeypatch, tmp_
     monkeypatch.setattr("trading.dispatch.is_market_open", lambda market: False)
     monkeypatch.setattr("trading.dispatch.is_off_hours_order_available", lambda market: False)
     first = dispatcher(monkeypatch, tmp_path, multi=True)
+    first.execution_dedupe = True
     assert (await first.dispatch(signal())).status == "queued"
     persisted = first.queue._load()[0]
     assert persisted.execution_context["account_ids"] == [_account_id(accounts[0]["account_key"])]
     assert persisted.execution_context["trading_mode"] == "demo"
     replay = dispatcher(monkeypatch, tmp_path, mode="real", multi=True)
+    replay.execution_dedupe = True
     calls = []
     async def fake_trade(self, order, *, account=None):
         calls.append(1)
@@ -225,8 +366,8 @@ async def test_queued_single_account_rechecks_identity_after_scope_check(
     assert (await replay.dispatch(signal())).status == "queued"
     persisted = replay.queue._load()[0]
     calls = []
-    original = {"account_key": "vps:primary:01", "name": "primary", "product": "01"}
-    changed = {"account_key": "vps:other:01", "name": "other", "product": "01"}
+    original = {"account_key": "vps:12345678:01", "name": "primary", "product": "01", "account": "12345678", "svr": "vps", "market": "kr"}
+    changed = {"account_key": "vps:87654321:01", "name": "other", "product": "01", "account": "87654321", "svr": "vps", "market": "kr"}
     resolutions = iter([original, changed])
     monkeypatch.setattr(
         "trading.dispatch.ka.resolve_account", lambda **kwargs: next(resolutions),
@@ -252,7 +393,7 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     replay = dispatcher(monkeypatch, tmp_path)
     assert (await replay.dispatch(signal())).status == "queued"
     persisted = replay.queue._load()[0]
-    resolved = {"account_key": "vps:primary:01", "name": "primary", "product": "01"}
+    resolved = {"account_key": "vps:12345678:01", "name": "primary", "product": "01", "account": "12345678", "svr": "vps", "market": "kr"}
     monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: resolved)
     calls = []
     claims = []
@@ -260,11 +401,16 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     replay.execution_dedupe = True
     monkeypatch.setattr(
         replay.execution_ledger, "claim",
-        lambda identity, *, aliases=(): (claims.append(identity) or True, None),
+        lambda identity, *, aliases=(), with_token=False, order_intent=None, order_side=None,
+        canonical_buy_identities=(), legacy_buy_identities=None: (
+            claims.append((identity, order_side, order_intent)) or True, None, "mock-claim-token"
+        ) if with_token else (True, None),
     )
     monkeypatch.setattr(
         replay.execution_ledger, "finalize",
-        lambda identity, status: finals.append((identity, status)),
+        lambda identity, status, *, claim_token=None: finals.append(
+            (identity, status, claim_token)
+        ),
     )
     async def fake_trade(self, order, *, account=None):
         calls.append(account)
@@ -277,7 +423,9 @@ async def test_queued_single_account_pins_broker_account_without_losing_dedupe(
     assert result.status == "executed"
     assert calls == [resolved]
     assert len(claims) == 1
-    assert finals == [(claims[0], "executed")]
+    assert claims[0][1] is None  # BUY must carry intent, never SELL-only provenance
+    assert claims[0][2]["kind"] == "buy_unresolved"
+    assert finals == [(claims[0][0], "executed", "mock-claim-token")]
 
 
 @pytest.mark.asyncio
@@ -291,7 +439,7 @@ async def test_queued_single_account_strategy_uses_pinned_account(
     replay = dispatcher(monkeypatch, tmp_path)
     assert (await replay.dispatch(signal())).status == "queued"
     persisted = replay.queue._load()[0]
-    resolved = {"account_key": "vps:primary:01", "name": "primary", "product": "01"}
+    resolved = {"account_key": "vps:12345678:01", "name": "primary", "product": "01", "account": "12345678", "svr": "vps", "market": "kr"}
     monkeypatch.setattr("trading.dispatch.ka.resolve_account", lambda **kwargs: resolved)
     captured = []
     class FakeStrategy:

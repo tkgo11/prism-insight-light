@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import math
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable, ContextManager
 
 
 SUPPORTED_SIGNAL_TYPES = {"BUY", "SELL", "EVENT"}
@@ -113,8 +114,56 @@ def _as_positive_float(value: Any, *, field_name: str) -> float | None:
     return number
 
 
+def _as_exact_sell_fraction(value: Any) -> float:
+    """Validate the publisher's four-decimal exact SELL fraction.
+
+    Never let a malformed explicit fraction silently fall back to the legacy
+    denominator (which can mean a full liquidation). Check the original
+    decimal token before JSON's float conversion can round it to 0 or 1.
+    """
+    error = "'sell_fraction' must be within (0, 1] with at most four decimal places"
+    if isinstance(value, bool) or not isinstance(value, (str, int, float, Decimal)):
+        raise SignalValidationError(error)
+    try:
+        exact = Decimal(str(value).strip())
+        if not exact.is_finite() or not 0 < exact <= 1:
+            raise SignalValidationError(error)
+        # Do not construct an integer denominator from an untrusted decimal
+        # exponent (e.g. 1e-1000000000). Inspect the existing digit tuple;
+        # only trailing zeroes may extend the four-decimal representation.
+        parts = exact.as_tuple()
+        if parts.exponent < -4:
+            excess = -4 - parts.exponent
+            if excess >= len(parts.digits) or any(parts.digits[-excess:]):
+                raise SignalValidationError(error)
+    except (InvalidOperation, ValueError, TypeError, OverflowError) as exc:
+        raise SignalValidationError(error) from exc
+    return float(exact)
+
+
+def validate_signal_numeric_tokens(value: Any) -> None:
+    """Check exact JSON tokens before converting them to ordinary floats."""
+    if isinstance(value, dict):
+        # Use precisely the parser's type normalization, including control
+        # characters, and cover nested WebUI/queue signal objects.
+        kind = value.get("type")
+        if (
+            isinstance(kind, str)
+            and _as_text(kind, field_name="type").upper() == "SELL"
+            and "sell_fraction" in value
+        ):
+            _as_exact_sell_fraction(value["sell_fraction"])
+        for key, item in value.items():
+            if key in {"buy_score", "sell_denominator"} and isinstance(item, Decimal):
+                _as_int(item, field_name=key)
+            validate_signal_numeric_tokens(item)
+    elif isinstance(value, list):
+        for item in value:
+            validate_signal_numeric_tokens(item)
+
+
 def load_signal_json(text: str | bytes) -> Any:
-    """Decode signal JSON without losing integer-field precision.
+    """Decode signal JSON without losing integer or exact SELL precision.
 
     json.loads normally rounds 8.0000000000000001 to 8.0 *before* the
     integer validator sees it. Inspect Decimal tokens first, then return
@@ -128,17 +177,7 @@ def load_signal_json(text: str | bytes) -> Any:
     except InvalidOperation as exc:
         raise SignalValidationError("Invalid JSON numeric literal") from exc
 
-    def check_integer_tokens(value: Any) -> None:
-        if isinstance(value, dict):
-            for key, item in value.items():
-                if key in {"buy_score", "sell_denominator"} and isinstance(item, Decimal):
-                    _as_int(item, field_name=key)
-                check_integer_tokens(item)
-        elif isinstance(value, list):
-            for item in value:
-                check_integer_tokens(item)
-
-    check_integer_tokens(exact)
+    validate_signal_numeric_tokens(exact)
     return json.loads(text, object_pairs_hook=reject_duplicate_signal_keys)
 
 
@@ -164,7 +203,17 @@ class SignalMessage:
     event_source: str = ""
     event_description: str = ""
     raw: dict[str, Any] = field(default_factory=dict)
+    # Appended to preserve positional construction of older SignalMessage callers.
     sell_fraction: float | None = None
+    # Trusted runtime-only provenance: never populated from inbound JSON/raw.
+    # The watcher sets this after its persisted-position preflight.
+    internal_watcher_stop: bool = field(default=False, repr=False, compare=False, init=False)
+    watcher_stop_guard: Callable[[], ContextManager[bool]] | None = field(
+        default=None, repr=False, compare=False, init=False,
+    )
+    transport_published_at: datetime | None = field(default=None, repr=False, compare=False, init=False)
+    from_telegram: bool = field(default=False, repr=False, compare=False, init=False)
+    manual_ticket: bool = field(default=False, repr=False, compare=False, init=False)
 
     @property
     def is_trade(self) -> bool:
@@ -212,10 +261,10 @@ def parse_signal_payload(payload: dict[str, Any]) -> SignalMessage:
     if sell_denominator is None or sell_denominator < 1:
         raise SignalValidationError("'sell_denominator' must be a positive integer")
     sell_fraction = None
-    if "sell_fraction" in payload:
-        sell_fraction = _as_float(payload["sell_fraction"], field_name="sell_fraction")
-        if sell_fraction is None or not 0 < sell_fraction <= 1:
-            raise SignalValidationError("'sell_fraction' must be greater than 0 and at most 1")
+    if signal_type == "SELL" and "sell_fraction" in payload:
+        sell_fraction = _as_exact_sell_fraction(payload["sell_fraction"])
+        if sell_denominator > 1 and sell_fraction == 1.0:
+            raise SignalValidationError("'sell_fraction' cannot be full when other pyramid rows remain")
 
     return SignalMessage(
         signal_type=signal_type,

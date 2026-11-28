@@ -59,6 +59,19 @@ def build_buy_sizing(*, fixed_amount: Any = None, asset_percent: Any = None) -> 
     )
 
 
+def _finite_nonnegative_amount(value: Any, *, field_name: str) -> float:
+    """Reject unverified financial values before quantity or broker sizing."""
+    if isinstance(value, bool):
+        raise ValueError(f"{field_name} must be finite and nonnegative")
+    try:
+        amount = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError(f"{field_name} must be finite and nonnegative") from exc
+    if not math.isfinite(amount) or amount < 0:
+        raise ValueError(f"{field_name} must be finite and nonnegative")
+    return amount
+
+
 def resolve_buy_amount(
     config: BuySizingConfig,
     *,
@@ -66,31 +79,39 @@ def resolve_buy_amount(
     fallback_amount: float,
     currency: str,
 ) -> float:
-    """Resolve an order amount from fixed or percent-based configuration.
+    """Resolve a finite BUY budget from fixed or verified asset-percent sizing.
 
-    Percent sizing intentionally uses ``total_eval_amount`` so the base includes
-    held stocks plus cash. The result is capped by available cash to avoid
-    submitting an order larger than the current orderable balance.
+    A percentage-based order requires a complete, finite KIS asset/cash
+    snapshot; an absent or corrupt summary must not silently become a fixed
+    default order. Positive available cash caps the budget. Zero USD cash is
+    not itself proof that KIS auto-exchange is unavailable, so the downstream
+    broker orderability check remains authoritative for that case.
     """
-
     if not config.uses_asset_percent:
-        return float(config.fixed_amount if config.fixed_amount is not None else fallback_amount)
+        fixed = config.fixed_amount if config.fixed_amount is not None else fallback_amount
+        return _finite_nonnegative_amount(fixed, field_name="BUY fallback amount")
 
-    percent = config.asset_percent or 0
-    summary = account_summary or {}
-    total_assets = float(summary.get("total_eval_amount") or 0)
-    available_amount = float(summary.get("available_amount") or 0)
-    percent_amount = total_assets * percent / 100
+    if not isinstance(account_summary, dict) or not {
+        "total_eval_amount", "available_amount"
+    }.issubset(account_summary):
+        raise ValueError("Asset-percent BUY requires a verified account summary")
 
-    if percent_amount <= 0:
-        logger.warning(
-            "Cannot resolve %.4g%% buy amount: total account assets are unavailable for %s; using configured fallback %.2f",
-            percent,
-            currency,
-            fallback_amount,
-        )
-        return float(fallback_amount)
+    total_assets = _finite_nonnegative_amount(
+        account_summary["total_eval_amount"], field_name="KIS total assets"
+    )
+    available_amount = _finite_nonnegative_amount(
+        account_summary["available_amount"], field_name="KIS available cash"
+    )
+    if total_assets <= 0:
+        raise ValueError("Asset-percent BUY requires positive verified total assets")
+    percent = _finite_nonnegative_amount(
+        config.asset_percent, field_name="Asset-percent BUY percentage"
+    )
+    if percent <= 0 or percent > 100:
+        raise ValueError("Asset-percent BUY percentage must be within (0, 100]")
 
+    # Divide before multiplying to avoid overflowing a finite asset value.
+    percent_amount = total_assets * (percent / 100)
     if available_amount > 0 and percent_amount > available_amount:
         logger.info(
             "Capping %.4g%% buy amount %.2f %s to available balance %.2f %s",
@@ -101,5 +122,4 @@ def resolve_buy_amount(
             currency,
         )
         return available_amount
-
     return percent_amount

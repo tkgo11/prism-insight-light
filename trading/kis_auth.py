@@ -7,6 +7,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import keyword
 import logging
 import math
 import os
@@ -27,6 +28,7 @@ from typing import Any, Optional, Tuple
 
 from .buy_sizing import normalize_amount, normalize_percent
 from .config_paths import active_kis_config_path, runtime_file_path
+from .execution_outcome import rejection_is_ambiguous
 from .file_lock import FileLock
 
 tenacity_spec = importlib.util.find_spec("tenacity")
@@ -417,7 +419,7 @@ def get_configured_accounts(
     if isinstance(raw_accounts, list):
         for index, item in enumerate(raw_accounts):
             normalized = _build_normalized_account(
-                index, item, include_disabled=include_disabled
+                index, item, include_disabled=True
             )
             if normalized:
                 normalized_accounts.append(normalized)
@@ -435,6 +437,9 @@ def get_configured_accounts(
         raise ValueError(
             f"Too many accounts configured ({len(normalized_accounts)}). Maximum supported accounts: {MAX_CONFIGURED_ACCOUNTS}."
         )
+
+    if not include_disabled:
+        normalized_accounts = [account for account in normalized_accounts if account["enabled"]]
 
     filtered_accounts = []
     for account in normalized_accounts:
@@ -656,10 +661,14 @@ def save_token(my_token: str, my_expired: str, account_key: Optional[str] = None
         ) from lock_timeout
 
 
+def _valid_token_shape(token: Any) -> bool:
+    return isinstance(token, str) and len(token) >= 10 and not any(c.isspace() for c in token)
+
+
 def _save_token_inner(my_token: str, my_expired: str, account_key: Optional[str] = None):
     """save_token body without locking; callers may already hold the lock."""
     # Validate token data BEFORE any file operations
-    if not my_token or len(my_token) < 10:
+    if not _valid_token_shape(my_token):
         raise TokenFileError("Cannot save empty or invalid token")
 
     if not my_expired:
@@ -667,8 +676,8 @@ def _save_token_inner(my_token: str, my_expired: str, account_key: Optional[str]
 
     try:
         valid_date = datetime.strptime(my_expired, "%Y-%m-%d %H:%M:%S")
-    except ValueError as e:
-        raise TokenFileError(f"Invalid expiry date format: {my_expired}") from e
+    except (ValueError, TypeError):
+        raise TokenFileError("Invalid expiry date format") from None
 
     # Prepare token data
     token_data = {
@@ -703,10 +712,8 @@ def _save_token_inner(my_token: str, my_expired: str, account_key: Optional[str]
 
         logging.info(f"✅ Encrypted token saved atomically: {target_token_file}")
 
-    except TokenFileError:
-        raise
-    except Exception as e:
-        raise TokenFileError(f"Failed to save token: {e}") from e
+    except Exception:
+        raise TokenFileError("Failed to save token") from None
 
 
 
@@ -786,9 +793,9 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
                         valid_date_str = token_data['valid_date']
                         token = token_data['token']
 
-                except Exception as decrypt_error:
+                except Exception:
                     # Try legacy JSON format
-                    logging.debug(f"Trying legacy format for {token_file}: {decrypt_error}")
+                    logging.debug(f"Trying legacy format for {token_file}")
                     try:
                         with open(token_file, 'r', encoding='utf-8') as f:
                             content = f.read().strip()
@@ -815,15 +822,15 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
                                 if tkg_tmp and 'valid-date' in tkg_tmp and 'token' in tkg_tmp:
                                     valid_date_str = datetime.strftime(tkg_tmp['valid-date'], "%Y-%m-%d %H:%M:%S")
                                     token = tkg_tmp['token']
-                        except Exception as yaml_error:
+                        except Exception:
                             # AUTO-RECOVERY: Delete corrupted files
-                            logging.warning(f"⚠️  Corrupted token file, deleting: {token_file} ({yaml_error})")
+                            logging.warning(f"⚠️  Corrupted token file, deleting: {token_file}")
                             _delete_token_if_unchanged(token_file, signature)
                             continue
 
                 # Validate token data
-                if not valid_date_str or not token:
-                    logging.warning(f"⚠️  Invalid token data (missing fields), deleting: {token_file}")
+                if not valid_date_str or not _valid_token_shape(token):
+                    logging.warning(f"⚠️  Invalid token data, deleting: {token_file}")
                     _delete_token_if_unchanged(token_file, signature)
                     continue
 
@@ -844,9 +851,9 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
                     _delete_token_if_unchanged(token_file, signature)
                     continue
 
-            except Exception as file_error:
+            except Exception:
                 # AUTO-RECOVERY: Delete unreadable files
-                logging.warning(f"⚠️  Error reading token file, deleting: {token_file} ({file_error})")
+                logging.warning(f"⚠️  Error reading token file, deleting: {token_file}")
                 _delete_token_if_unchanged(token_file, signature)
                 continue
 
@@ -854,8 +861,8 @@ def read_token(account_key: Optional[str] = None) -> Optional[str]:
         logging.info("No valid token found after checking all files")
         return None
 
-    except Exception as e:
-        logging.error(f"Error in read_token: {e}")
+    except Exception:
+        logging.error("Error in read_token")
         return None
 
 
@@ -1048,9 +1055,9 @@ def _request_token_with_retry(url: str, params: dict, headers: dict) -> dict:
             headers=headers,
             timeout=KIS_HTTP_TIMEOUT,
         )
-    except requests.RequestException as e:
-        logging.warning(f"Token request network error (will retry): {e}")
-        raise
+    except requests.RequestException:
+        logging.warning("Token request network error (will retry)")
+        raise requests.RequestException("Token request network error") from None
 
     if res.status_code == 200:
         return res.json()
@@ -1058,20 +1065,20 @@ def _request_token_with_retry(url: str, params: dict, headers: dict) -> dict:
     # Non-retryable authentication errors
     if res.status_code in (401, 403):
         error_msg = f"Authentication failed: HTTP {res.status_code}"
-        logging.error(f"{error_msg} - {res.text}")
-        raise TokenRequestError(error_msg, res.status_code, res.text)
+        logging.error(error_msg)
+        raise TokenRequestError(error_msg, res.status_code)
 
     # Retryable server errors (500, 502, 503, 504)
     if res.status_code >= 500:
         error_msg = f"Server error: HTTP {res.status_code}"
-        logging.warning(f"{error_msg} (will retry) - {res.text}")
+        logging.warning(f"{error_msg} (will retry)")
         # Raise requests exception to trigger retry
         raise requests.RequestException(error_msg)
 
     # Other client errors - don't retry
     error_msg = f"Token request failed: HTTP {res.status_code}"
-    logging.error(f"{error_msg} - {res.text}")
-    raise TokenRequestError(error_msg, res.status_code, res.text)
+    logging.error(error_msg)
+    raise TokenRequestError(error_msg, res.status_code)
 
 
 # ============== Safe File Delete (Windows compatible) ==============
@@ -1421,7 +1428,6 @@ def auth(
                             raise TokenRequestError(
                                 "Invalid response from KIS API: missing token or expiry",
                                 status_code=200,
-                                response_text=str(result)
                             )
 
                         # Save the new token (per-account, keyed by resolved account)
@@ -1430,20 +1436,17 @@ def auth(
                         logging.info(f"✅ New token obtained and saved (expires: {my_expired})")
 
                     except TokenRequestError as e:
-                        logging.error(f"❌ Token request failed: {e}")
-                        logging.error(f"   Status Code: {e.status_code}")
-                        logging.error(f"   Response: {e.response_text}")
-                        # Re-raise with clear error message
-                        raise
+                        logging.error("Token request failed")
+                        raise TokenRequestError("Token request failed", e.status_code) from None
 
                     except TokenFileError:
                         # Token persistence failures keep their dedicated contract so
                         # callers can distinguish disk problems from KIS API failures.
-                        raise
+                        raise TokenFileError("Token persistence failed") from None
 
-                    except Exception as e:
-                        logging.error(f"❌ Unexpected error during token request: {e}")
-                        raise TokenRequestError(f"Unexpected error: {e}")
+                    except Exception:
+                        logging.error("Unexpected error during token request")
+                        raise TokenRequestError("Unexpected error during token request") from None
         except TimeoutError as lock_timeout:
             # The lock holder may have minted a token while we waited; prefer a
             # fresh on-disk token over failing with a raw lock timeout.
@@ -1493,6 +1496,18 @@ def getTREnv():
     return _TRENV
 
 
+def _has_proven_order_rejection(payload: dict[str, Any]) -> bool:
+    if payload.get("rt_cd") != "1" or not isinstance(payload.get("msg_cd"), str):
+        return False
+    receipt_fields = {"odno", "order_no", "order_id", "rsvn_ord_seq"}
+    return not any(
+        key.casefold() in receipt_fields and value not in (None, "")
+        for row in (payload, payload.get("output"))
+        if isinstance(row, dict)
+        for key, value in row.items()
+    )
+
+
 # Common function for processing API call responses
 class APIResp:
     def __init__(self, resp):
@@ -1502,15 +1517,20 @@ class APIResp:
         self._body = self._setBody()
         self._err_code = getattr(self._body, "msg_cd", "")
         self._err_message = getattr(self._body, "msg1", "")
+        self._proven_rejection = _has_proven_order_rejection(self._body._asdict())
+
+    def has_proven_rejection(self) -> bool:
+        return self._proven_rejection
 
     def getResCode(self):
         return self._rescode
 
     def _setHeader(self):
-        fld = dict()
-        for x in self._resp.headers.keys():
-            if x.islower():
-                fld[x] = self._resp.headers.get(x)
+        fld = {}
+        for name, value in self._resp.headers.items():
+            key = name.lower()
+            if key.isidentifier() and not key.startswith("_") and not keyword.iskeyword(key):
+                fld[key] = value if key not in fld or fld[key] == value else None
         _th_ = namedtuple("header", fld.keys())
 
         return _th_(**fld)
@@ -1577,9 +1597,11 @@ class APIRespError(APIResp):
             payload = json.loads(error_text) if isinstance(error_text, str) else {}
         except json.JSONDecodeError:
             payload = {}
+        self._proven_rejection = False
         if isinstance(payload, dict):
             self._error_code = str(payload.get("msg_cd") or payload.get("code") or status_code)
             self._error_message = str(payload.get("msg1") or payload.get("message") or error_text)
+            self._proven_rejection = _has_proven_order_rejection(payload)
 
     def isOK(self):
         return False
@@ -1658,6 +1680,7 @@ def _request_once(url: str, headers: dict[str, Any], params: dict[str, Any], *, 
             headers=headers,
             data=json.dumps(params),
             timeout=KIS_HTTP_TIMEOUT,
+            allow_redirects=False,
         )
     return requests.get(url, headers=headers, params=params, timeout=KIS_HTTP_TIMEOUT)
 
@@ -1716,8 +1739,17 @@ def _url_fetch(
                 response.printAll()
             return response
 
-        # KIS business failures are conveyed in the JSON response body. Handle
-        # them consistently whether the HTTP transport returned 200 or an error.
+        # A mutating request may already have reached the order engine. Keep
+        # the first ambiguous response for reconciliation, even if its body
+        # contains a rate-limit or expired-token code.
+        if postFlag and rejection_is_ambiguous(response):
+            logging.warning(
+                "KIS POST outcome is ambiguous for %s (TR %s, HTTP %s)",
+                api_url, tr_id, res.status_code,
+            )
+            return response
+
+        # Read-only requests can retry transport errors carrying KIS codes.
         if _is_kis_expired_token_response(response) and not expired_token_retry_used:
             expired_token_retry_used = True
             logging.warning(

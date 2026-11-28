@@ -647,7 +647,7 @@ class SignalSafetyGate:
                 signal_timestamp=times.timestamp,
             )
 
-        baseline = _min_datetime([times.timestamp, enqueued_at])
+        baseline = _min_datetime([times.timestamp, _aware(signal.transport_published_at), enqueued_at])
         if baseline is not None:
             limit = (
                 self.config.queued_max_age_seconds
@@ -721,7 +721,7 @@ class SignalSafetyGate:
         submitted, so the caller may safely retry via Pub/Sub redelivery or
         the next queue drain cycle.
         """
-        if not self.config.fresh_quote_enabled:
+        if signal.manual_ticket or not self.config.fresh_quote_enabled:
             return None
         reference_price = signal.price
         if reference_price is None or reference_price <= 0:

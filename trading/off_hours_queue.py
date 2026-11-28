@@ -8,13 +8,14 @@ import os
 import tempfile
 from dataclasses import dataclass, field, fields, replace
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from .config_paths import runtime_file_path
 from .file_lock import FileLock, fsync_parent_directory
 from .market_hours import next_market_open
-from .schema import SignalMessage
+from .schema import SignalMessage, validate_signal_numeric_tokens
 
 DEFAULT_QUEUE_PATH = Path("runtime") / "off_hours_queue.json"
 MAX_QUEUE_BYTES = 16 * 1024 * 1024
@@ -47,6 +48,7 @@ def _queue_identity(signal: dict[str, Any], execution_context: dict[str, Any]) -
             "trading_mode": execution_context.get("trading_mode"),
             "account_scope": execution_context.get("account_scope"),
             "account_id": execution_context.get("account_id"),
+            **({"live_retry": True} if execution_context.get("live_retry") is True else {}),
         },
         ensure_ascii=False,
         sort_keys=True,
@@ -71,15 +73,23 @@ class QueuedSignal:
 
     @classmethod
     def from_signal(
-        cls, signal: SignalMessage, execution_context: dict[str, Any] | None = None
+        cls, signal: SignalMessage, execution_context: dict[str, Any] | None = None,
+        *, ready_at: datetime | None = None,
     ) -> "QueuedSignal":
-        execute_at = next_market_open(signal.market).isoformat()
+        execute_at = (ready_at or next_market_open(signal.market)).isoformat()
         created_at = datetime.now(timezone.utc).isoformat()
+        context = dict(execution_context or {})
+        if signal.transport_published_at is not None:
+            context["transport_published_at"] = signal.transport_published_at.isoformat()
+        if signal.from_telegram:
+            context["from_telegram"] = True
+        if signal.manual_ticket:
+            context["manual_ticket"] = True
         return cls(
             signal=dict(signal.raw),
             execute_at=execute_at,
             created_at=created_at,
-            execution_context=dict(execution_context or {}),
+            execution_context=context,
         )
 
 
@@ -133,7 +143,18 @@ class OffHoursOrderQueue:
                 obj[key] = value
             return obj
 
-        data = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_object_pairs)
+        # Recovered/hand-edited queue bytes are a new trust boundary. Check
+        # exact decimal tokens before float conversion can turn a malformed
+        # fraction/denominator into a valid (possibly full) SELL. Like a
+        # duplicate key, numeric ambiguity blocks the queue without rewriting
+        # the original evidence; an operator must reconcile it explicitly.
+        text = raw.decode("utf-8")
+        try:
+            exact = json.loads(text, object_pairs_hook=unique_object_pairs, parse_float=Decimal)
+        except InvalidOperation as exc:
+            raise ValueError("Invalid numeric literal in off-hours queue JSON") from exc
+        validate_signal_numeric_tokens(exact)
+        data = json.loads(text, object_pairs_hook=unique_object_pairs)
         if not isinstance(data, list):
             raise ValueError("Off-hours queue must contain a JSON list")
         # Tolerate unknown keys: a queue file written by a different version or
@@ -154,9 +175,26 @@ class OffHoursOrderQueue:
                     )
                 )
                 continue
-            items.append(
-                QueuedSignal(**{k: v for k, v in item.items() if k in known_fields})
+            record = {k: v for k, v in item.items() if k in known_fields}
+            malformed = (
+                not isinstance(record.get("signal"), dict)
+                or not isinstance(record.get("execute_at"), str)
+                or not isinstance(record.get("created_at"), str)
+                or not isinstance(record.get("execution_context", {}), dict)
+                or record.get("status", "pending") not in ("pending", "failed")
             )
+            if malformed:
+                # Never let a corrupt entry block valid orders, or repair its
+                # missing execution provenance into an actionable order.
+                items.append(QueuedSignal(
+                    signal=record.get("signal", {}),
+                    execute_at=record.get("execute_at", ""),
+                    created_at=record.get("created_at", ""),
+                    status="failed",
+                    failure_message="Malformed queue entry (missing or invalid fields)",
+                ))
+                continue
+            items.append(QueuedSignal(**record))
         return items
 
     def _save(
@@ -218,11 +256,12 @@ class OffHoursOrderQueue:
                 temporary_path.unlink()
 
     def enqueue(
-        self, signal: SignalMessage, execution_context: dict[str, Any] | None = None
+        self, signal: SignalMessage, execution_context: dict[str, Any] | None = None,
+        *, ready_at: datetime | None = None,
     ) -> QueuedSignal:
         context = dict(execution_context or {})
         context["queue_id"] = _queue_identity(signal.raw, context)
-        queued_signal = QueuedSignal.from_signal(signal, context)
+        queued_signal = QueuedSignal.from_signal(signal, context, ready_at=ready_at)
         with FileLock(self.lock_path):
             items = self._load()
             for item in items:
@@ -254,15 +293,22 @@ class OffHoursOrderQueue:
                         execute_at = datetime.fromisoformat(item.execute_at)
                     except (TypeError, ValueError):
                         execute_at = None
+                    try:
+                        created_at = datetime.fromisoformat(item.created_at)
+                    except (TypeError, ValueError):
+                        created_at = None
+                    invalid_field = None
                     if execute_at is None or execute_at.tzinfo is None:
-                        # A malformed or timezone-less execute_at can never be
-                        # ordered against an aware "now". Quarantine it instead
-                        # of letting it stall every future drain.
+                        invalid_field = "execute_at"
+                    elif created_at is None or created_at.tzinfo is None:
+                        invalid_field = "created_at"
+                    if invalid_field is not None:
+                        # An invalid persisted time cannot authorize execution.
                         loaded_items[index] = replace(
                             item,
                             status="failed",
                             failure_message=_safe_failure_message(
-                                f"Malformed execute_at timestamp: {item.execute_at!r}"
+                                f"Malformed {invalid_field} timestamp: {getattr(item, invalid_field)!r}"
                             ),
                             failed_at=current.isoformat(),
                         )
@@ -281,7 +327,7 @@ class OffHoursOrderQueue:
                     # safety revalidation can expire queued signals even when
                     # the stored payload carries no execution context.
                     context = dict(item.execution_context or {})
-                    context.setdefault("enqueued_at", item.created_at)
+                    context["enqueued_at"] = item.created_at
                     payload[QUEUE_CONTEXT_KEY] = context
                     outcome = executor(payload)
                 except Exception as exc:  # noqa: BLE001 - isolate poison queue items

@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any
 
 from . import yaml_compat as yaml
-from .config_paths import active_kis_config_path
+from .config_paths import active_kis_config_path, implicit_example_kis_config_active
 pytz_spec = importlib.util.find_spec("pytz")
 if pytz_spec is not None:
     pytz = importlib.import_module("pytz")
@@ -64,8 +64,12 @@ PROJECT_ROOT = TRADING_DIR.parent
 
 from . import kis_auth as ka
 from .buy_sizing import build_buy_sizing, resolve_buy_amount
+from .signal_sizing import floor_sell_quantity
+from .portfolio_pagination import next_balance_cursor, validated_balance_row
 from .execution_outcome import (
     PortfolioInquiryError,
+    broker_order_date,
+    broker_receipt_metadata,
     classify_broker_result,
     rejection_is_ambiguous,
 )
@@ -293,7 +297,7 @@ class USStockTrading:
     # Auto trading enabled flag
     AUTO_TRADING = _cfg.get("auto_trading", True)
     # Default trading environment
-    DEFAULT_MODE = _cfg.get("default_mode", "demo")
+    DEFAULT_MODE = "demo" if implicit_example_kis_config_active() else _cfg.get("default_mode", "demo")
 
     def __init__(
         self,
@@ -373,10 +377,10 @@ class USStockTrading:
             account_key=self.account_key,
         )
 
-    def _request(self, api_url: str, tr_id: str, params: Dict[str, Any], **kwargs):
+    def _request(self, api_url: str, tr_id: str, params: Dict[str, Any], *, tr_cont: str = "", **kwargs):
         with ka.get_trading_env_lock():
             self._activate_account()
-            response = ka._url_fetch(api_url, tr_id, "", params, **kwargs)
+            response = ka._url_fetch(api_url, tr_id, tr_cont, params, **kwargs)
             try:
                 self.trenv = ka.getTREnv()
             except RuntimeError:
@@ -443,6 +447,11 @@ class USStockTrading:
             "quantity": 0,
             "message": "KIS could not validate a supported US exchange for this ticker",
         }
+
+    def get_order_history_for_reconciliation(self, *, order_no: str, order_date: str, ticker: str, max_pages: int = 5) -> dict[str, Any]:
+        """Read-only KIS history evidence; NEVER fill proof or stop-loss authority."""
+        from .order_reconciliation import read_order_history
+        return read_order_history(self, market="US", order_no=order_no, order_date=order_date, ticker=ticker, max_pages=max_pages)
 
     def get_current_price(self, ticker: str, exchange: str = None) -> Optional[Dict[str, Any]]:
         """Return a KIS-validated US quote and its corresponding trading exchange.
@@ -815,6 +824,11 @@ class USStockTrading:
             "ORD_DVSN": "01"   # Market order (시장가)
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -825,8 +839,10 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Market buy order success: {buy_quantity} shares, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'auto_exchange_used': buy_info.get('auto_exchange_used', False),
@@ -837,6 +853,7 @@ class USStockTrading:
                 logger.error(f"Buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -849,6 +866,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -935,6 +953,11 @@ class USStockTrading:
             "ORD_DVSN": "00"  # Limit order
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": buy_quantity,
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -945,8 +968,10 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Limit buy order success: {buy_quantity} shares x ${limit_price:.2f}, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
@@ -958,6 +983,7 @@ class USStockTrading:
                 logger.error(f"Limit buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -971,6 +997,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during limit buy: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -1081,6 +1108,11 @@ class USStockTrading:
             "ORD_DVSN": "00"   # Limit order (지정가) — TTTT1006U does not support "01"
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "broker_order", "order_quantity": quantity,
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1091,8 +1123,10 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Market sell order success: {quantity} shares, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': quantity,
                     'message': f'Market sell order completed ({quantity} shares)'
@@ -1102,6 +1136,7 @@ class USStockTrading:
                 logger.error(f"Sell order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -1113,6 +1148,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during sell order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -1128,18 +1164,8 @@ class USStockTrading:
         Returns:
             True if market is open, False otherwise
         """
-        now_et = datetime.datetime.now(US_EASTERN)
-        current_time = now_et.time()
-
-        # US market hours: 09:30 - 16:00 ET
-        market_open = datetime.time(9, 30)
-        market_close = datetime.time(16, 0)
-
-        # Check if it's a weekday
-        if now_et.weekday() >= 5:  # Saturday = 5, Sunday = 6
-            return False
-
-        return market_open <= current_time <= market_close
+        from .market_hours import is_market_open
+        return is_market_open("US", now=datetime.datetime.now(US_EASTERN))
 
     def is_reserved_order_available(self) -> bool:
         """
@@ -1260,6 +1286,11 @@ class USStockTrading:
             "ORD_SVR_DVSN_CD": "0"
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "reservation", "order_quantity": int(buy_quantity),
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1270,8 +1301,10 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Reserved buy order success: {buy_quantity} shares x ${limit_price:.2f}, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': buy_quantity,
                     'limit_price': limit_price,
@@ -1285,6 +1318,7 @@ class USStockTrading:
                 logger.error(f"Reserved buy order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -1297,6 +1331,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during reserved buy order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -1388,6 +1423,11 @@ class USStockTrading:
             "ORD_SVR_DVSN_CD": "0"
         }
 
+        submitted_metadata = broker_receipt_metadata({
+            "order_kind": "reservation", "order_quantity": int(quantity),
+            "order_venue": exchange,
+        })
+
         try:
             res = self._request(api_url, tr_id, params, postFlag=True)
 
@@ -1398,8 +1438,10 @@ class USStockTrading:
                 logger.info(f"[{ticker}] Reserved sell order success: {quantity} shares, {order_type_str}, Order#: {order_no}")
 
                 return {
+                    **submitted_metadata,
                     'success': True,
                     'order_no': order_no,
+                    'order_date': broker_order_date(output),
                     'ticker': ticker,
                     'quantity': quantity,
                     'limit_price': limit_price if not use_moo else None,
@@ -1411,6 +1453,7 @@ class USStockTrading:
                 logger.error(f"Reserved sell order failed: {error_msg}")
 
                 return {
+                    **submitted_metadata,
                     'success': False,
                     'order_no': None,
                     'ticker': ticker,
@@ -1422,6 +1465,7 @@ class USStockTrading:
         except Exception as e:
             logger.error(f"Error during reserved sell order: {str(e)}")
             return {
+                **submitted_metadata,
                 'success': False,
                 'order_no': None,
                 'ticker': ticker,
@@ -1680,6 +1724,8 @@ class USStockTrading:
                             self.smart_buy, ticker, resolved_amount, resolved_exchange, effective_limit_price
                         )
 
+                        result["order_date"] = broker_order_date(buy_result)
+                        result.update(broker_receipt_metadata(buy_result))
                         submission_status = classify_broker_result(buy_result)
                         if submission_status == "executed":
                             result['quantity'] = int(buy_result.get('quantity') or buy_quantity)
@@ -1704,7 +1750,7 @@ class USStockTrading:
     async def async_sell_stock(self, ticker: str, exchange: str = None,
                                timeout: float = 30.0, limit_price: Optional[float] = None,
                                use_moo: bool = False,
-                               sell_fraction: Optional[float] = None) -> Dict[str, Any]:
+                               sell_fraction: Optional[float] = None, *, preserve_limit: bool = False) -> Dict[str, Any]:
         """
         Async sell API with timeout
 
@@ -1718,13 +1764,15 @@ class USStockTrading:
         Returns:
             Order result dict
         """
-        return await self._execute_sell_stock(
-            ticker, exchange, limit_price, use_moo, sell_fraction
-        )
+        if preserve_limit:
+            return await self._execute_sell_stock(
+                ticker, exchange, limit_price, use_moo, sell_fraction, preserve_limit=True,
+            )
+        return await self._execute_sell_stock(ticker, exchange, limit_price, use_moo, sell_fraction)
 
     async def _execute_sell_stock(self, ticker: str, exchange: str = None,
                                   limit_price: float = None, use_moo: bool = False,
-                                  sell_fraction: Optional[float] = None) -> Dict[str, Any]:
+                                  sell_fraction: Optional[float] = None, *, preserve_limit: bool = False) -> Dict[str, Any]:
         """Execute sell stock logic with portfolio verification"""
         result = {
             'success': False,
@@ -1736,6 +1784,9 @@ class USStockTrading:
             'message': '',
             'timestamp': datetime.datetime.now().isoformat()
         }
+
+        if preserve_limit and (not limit_price or limit_price < 0 or limit_price != round(limit_price, 2)):
+            return {**result, "outcome_unknown": False, "message": "Invalid explicit US limit price"}
 
         stock_lock = await self._get_stock_lock(ticker)
 
@@ -1773,7 +1824,7 @@ class USStockTrading:
                             if not 0 < sell_fraction <= 1:
                                 result['message'] = 'sell_fraction must be greater than 0 and at most 1'
                                 return result
-                            holding_quantity = math.floor(holding_quantity * sell_fraction)
+                            holding_quantity = floor_sell_quantity(holding_quantity, sell_fraction)
                             if holding_quantity <= 0:
                                 result['message'] = 'Partial sell quantity rounds down to 0 shares'
                                 return result
@@ -1831,7 +1882,7 @@ class USStockTrading:
                         # If sell limit price is lower than current market price, elevate to current price
                         # to secure better execution; otherwise use requested limit price.
                         if limit_price and limit_price > 0:
-                            if current_price > 0 and limit_price < current_price:
+                            if not preserve_limit and current_price > 0 and limit_price < current_price:
                                 logger.info(
                                     f"[Async Sell] {ticker} signal limit price (${limit_price:.2f}) is lower than current market price (${current_price:.2f}); elevating limit to current price"
                                 )
@@ -1860,6 +1911,8 @@ class USStockTrading:
                             holding_quantity,
                         )
 
+                        result["order_date"] = broker_order_date(sell_result)
+                        result.update(broker_receipt_metadata(sell_result))
                         submission_status = classify_broker_result(sell_result)
                         if submission_status == "executed":
                             result['success'] = True
@@ -1892,133 +1945,113 @@ class USStockTrading:
         return result
 
     def get_portfolio(self, *, raise_on_error: bool = False) -> List[Dict[str, Any]]:
-        """
-        Get current US stock portfolio
+        """Read every KIS US balance page for each exchange or fail closed.
 
-        When ``raise_on_error`` is true, propagate a temporary KIS inquiry
-        failure as ``PortfolioInquiryError`` instead of returning a partial
-        list that callers could mistake for an empty portfolio.
-
-        Returns:
-            [{
-                'ticker': 'AAPL',
-                'stock_name': 'APPLE INC',
-                'quantity': 10,
-                'avg_price': 150.00,
-                'current_price': 185.50,
-                'eval_amount': 1855.00,
-                'profit_amount': 355.00,
-                'profit_rate': 23.67,
-                'exchange': 'NASD'
-            }, ...]
+        Partial exchange/page data must not masquerade as an empty holding or
+        authorize a stop-loss cleanup / repeated SELL.
         """
         api_url = "/uapi/overseas-stock/v1/trading/inquire-balance"
-
-        if self.mode == "real":
-            tr_id = "TTTS3012R"  # Real overseas balance
-        else:
-            tr_id = "VTTS3012R"  # Demo overseas balance
-
-        params = {
-            "CANO": self.trenv.my_acct,
-            "ACNT_PRDT_CD": self.trenv.my_prod,
-            "OVRS_EXCG_CD": "NASD",  # Default to NASDAQ, loop through others
-            "TR_CRCY_CD": "USD",
-            "CTX_AREA_FK200": "",
-            "CTX_AREA_NK200": ""
-        }
-
-        portfolio = []
+        tr_id = "TTTS3012R" if self.mode == "real" else "VTTS3012R"
         self._last_portfolio_inquiry_error = None
-
-        # Query each exchange
-        for exchange in ["NASD", "NYSE", "AMEX"]:
-            params["OVRS_EXCG_CD"] = exchange
-
-            try:
-                res = self._request(api_url, tr_id, params)
-
-                if res.isOK():
+        portfolio: List[Dict[str, Any]] = []
+        try:
+            for exchange in ("NASD", "NYSE", "AMEX"):
+                params = {
+                    "CANO": self.trenv.my_acct,
+                    "ACNT_PRDT_CD": self.trenv.my_prod,
+                    "OVRS_EXCG_CD": exchange,
+                    "TR_CRCY_CD": "USD",
+                    "CTX_AREA_FK200": "",
+                    "CTX_AREA_NK200": "",
+                }
+                seen_cursors: set[tuple[str, str]] = set()
+                continuation = False
+                while True:
+                    if continuation:
+                        res = self._request(
+                            api_url, tr_id, params, appendHeaders={"tr_cont": "N"}
+                        )
+                    else:
+                        res = self._request(api_url, tr_id, params)
+                    if not res.isOK():
+                        raise PortfolioInquiryError(
+                            f"Balance inquiry failed for {exchange}: "
+                            f"{res.getErrorCode()} - {res.getErrorMessage()}"
+                        )
                     output1 = res.getBody().output1
-
                     if not isinstance(output1, list):
                         output1 = [output1] if output1 else []
-
                     for item in output1:
-                        # Use safe conversion to handle empty strings
-                        quantity = _safe_int(item.get('ovrs_cblc_qty'))
+                        ticker, quantity = validated_balance_row(
+                            item, instrument_key="ovrs_pdno",
+                            quantity_key="ovrs_cblc_qty",
+                        )
                         if quantity > 0:
-                            item_ticker = item.get('ovrs_pdno', '')
                             item_exchange = (
-                                normalize_exchange_code(item.get('ovrs_excg_cd'))
-                                or normalize_exchange_code(item.get('ovrs_excg_cd_name'))
-                                or normalize_exchange_code(item.get('ovrs_pdno_excg_cd'))
-                                or get_cached_exchange(item_ticker)
+                                normalize_exchange_code(item.get("ovrs_excg_cd"))
+                                or normalize_exchange_code(item.get("ovrs_excg_cd_name"))
+                                or normalize_exchange_code(item.get("ovrs_pdno_excg_cd"))
+                                or get_cached_exchange(ticker)
                             )
                             if item_exchange:
-                                cache_exchange_code(item_ticker, item_exchange)
+                                cache_exchange_code(ticker, item_exchange)
                             else:
                                 item_exchange = exchange
+                            portfolio.append({
+                                "ticker": ticker,
+                                "stock_name": item.get("ovrs_item_name", ""),
+                                "quantity": quantity,
+                                "avg_price": _safe_float(item.get("pchs_avg_pric")),
+                                "current_price": _safe_float(item.get("now_pric2")),
+                                "eval_amount": _safe_float(item.get("ovrs_stck_evlu_amt")),
+                                "profit_amount": _safe_float(item.get("frcr_evlu_pfls_amt")),
+                                "profit_rate": _safe_float(item.get("evlu_pfls_rt")),
+                                "exchange": item_exchange,
+                            })
+                    cursor = next_balance_cursor(res, 200, seen_cursors)
+                    if cursor is None:
+                        break
+                    params["CTX_AREA_FK200"], params["CTX_AREA_NK200"] = cursor
+                    continuation = True
+                    time.sleep(0.1)
+                time.sleep(0.1)
 
-                            stock_info = {
-                                'ticker': item_ticker,
-                                'stock_name': item.get('ovrs_item_name', ''),
-                                'quantity': quantity,
-                                'avg_price': _safe_float(item.get('pchs_avg_pric')),
-                                'current_price': _safe_float(item.get('now_pric2')),
-                                'eval_amount': _safe_float(item.get('ovrs_stck_evlu_amt')),
-                                'profit_amount': _safe_float(item.get('frcr_evlu_pfls_amt')),
-                                'profit_rate': _safe_float(item.get('evlu_pfls_rt')),
-                                'exchange': item_exchange
-                            }
-                            portfolio.append(stock_info)
+            # A stock can be returned for more than one exchange. Preserve
+            # the prior preferred-exchange dedupe behavior after ALL pages
+            # have been retrieved; do not dedupe incomplete page results.
+            seen_tickers = {}
+            for stock in portfolio:
+                ticker = stock.get("ticker")
+                if not ticker:
+                    continue
+                ticker_key = ticker.upper()
+                if ticker_key not in seen_tickers:
+                    seen_tickers[ticker_key] = stock
                 else:
-                    # A rejected exchange query leaves the portfolio partial;
-                    # holdings on that exchange become invisible to callers.
-                    message = (
-                        f"Balance inquiry failed for {exchange}: "
-                        f"{res.getErrorCode()} - {res.getErrorMessage()}"
-                    )
-                    logger.error(message)
-                    self._last_portfolio_inquiry_error = message
-                    if raise_on_error:
-                        raise PortfolioInquiryError(message)
-
-                time.sleep(0.1)  # Rate limit
-
-            except PortfolioInquiryError:
+                    existing = seen_tickers[ticker_key]
+                    existing_exchange = existing.get("exchange")
+                    current_exchange = stock.get("exchange")
+                    cached_exchange = get_cached_exchange(ticker_key)
+                    if cached_exchange and current_exchange == cached_exchange:
+                        seen_tickers[ticker_key] = stock
+                    elif not existing_exchange and current_exchange:
+                        seen_tickers[ticker_key] = stock
+            unique_portfolio = list(seen_tickers.values())
+            logger.info("Portfolio: %s US stocks held (complete KIS balance)", len(unique_portfolio))
+            return unique_portfolio
+        except PortfolioInquiryError as exc:
+            self._last_portfolio_inquiry_error = str(exc)
+            logger.error("Incomplete US balance inquiry: %s", exc)
+            if raise_on_error:
                 raise
-            except Exception as e:
-                message = f"Error getting portfolio for {exchange}: {str(e)}"
-                logger.error(message)
-                self._last_portfolio_inquiry_error = message
-                if raise_on_error:
-                    raise PortfolioInquiryError(message) from e
-                continue
-
-        # Deduplicate by ticker (KIS API may return same stock from multiple exchanges)
-        seen_tickers = {}
-        for stock in portfolio:
-            ticker = stock.get('ticker')
-            if not ticker:
-                continue
-            ticker_key = ticker.upper()
-            if ticker_key not in seen_tickers:
-                seen_tickers[ticker_key] = stock
-            else:
-                existing = seen_tickers[ticker_key]
-                existing_exchange = existing.get('exchange')
-                current_exchange = stock.get('exchange')
-                cached_exchange = get_cached_exchange(ticker_key)
-
-                if cached_exchange and current_exchange == cached_exchange:
-                    seen_tickers[ticker_key] = stock
-                elif not existing_exchange and current_exchange:
-                    seen_tickers[ticker_key] = stock
-
-        unique_portfolio = list(seen_tickers.values())
-        logger.info(f"Portfolio: {len(unique_portfolio)} US stocks held")
-        return unique_portfolio
+            return []
+        except Exception as exc:
+            message = f"Error during US balance inquiry: {exc}"
+            self._last_portfolio_inquiry_error = message
+            logger.error(message)
+            if raise_on_error:
+                raise PortfolioInquiryError(message) from exc
+            return []
 
     def get_account_summary(self) -> Optional[Dict[str, Any]]:
         """
@@ -2331,7 +2364,7 @@ class AsyncUSTradingContext:
 
     DEFAULT_BUY_AMOUNT = _cfg.get("default_unit_amount_usd", 2000)
     AUTO_TRADING = _cfg.get("auto_trading", True)
-    DEFAULT_MODE = _cfg.get("default_mode", "demo")
+    DEFAULT_MODE = "demo" if implicit_example_kis_config_active() else _cfg.get("default_mode", "demo")
 
     def __init__(
         self,

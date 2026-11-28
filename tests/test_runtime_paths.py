@@ -5,6 +5,8 @@ read-only deployments never read or mutate the repository ``runtime/`` dir.
 """
 
 import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -19,6 +21,28 @@ from trading.strategies.balance_split import (
     BalanceSplitStrategyConfig,
 )
 from trading.strategies.cooldown import CooldownStrategyConfig
+
+
+def test_pytest_collection_does_not_touch_inherited_runtime(tmp_path):
+    simulated_runtime = tmp_path / "simulated-operator-runtime"
+    result = subprocess.run(
+        [sys.executable, "-c", """
+import runpy
+from pathlib import Path
+
+bootstrap = runpy.run_path('tests/conftest.py')
+from trading import kis_auth
+
+root = bootstrap['CONFIG_FILE'].parent
+assert Path(kis_auth.config_root).is_relative_to(root)
+assert Path(kis_auth.token_tmp).is_relative_to(root)
+"""],
+        cwd=Path(__file__).resolve().parents[1],
+        env=os.environ | {"PRISM_RUNTIME_DIR": str(simulated_runtime)},
+        capture_output=True, text=True, timeout=15,
+    )
+    assert not simulated_runtime.exists()
+    assert result.returncode == 0, result.stderr
 
 
 def test_configured_runtime_dir_defaults_to_none(monkeypatch):

@@ -7,7 +7,7 @@ import importlib
 import importlib.util
 from pathlib import Path
 
-from .config_paths import active_kis_config_path
+from .config_paths import active_kis_config_path, implicit_example_kis_config_active
 
 holidays_spec = importlib.util.find_spec("holidays")
 if holidays_spec is not None:
@@ -71,8 +71,17 @@ from . import yaml_compat as yaml
 KST = pytz.timezone("Asia/Seoul")
 US_EASTERN = pytz.timezone("US/Eastern")
 KR_MARKET_OPEN = time(9, 0)
+KR_MARKET_CLOSE = time(15, 30)
 KR_NEXT_OPEN = time(9, 5)
 US_NEXT_OPEN = time(9, 35)
+
+# KRX notice for the 2026 CSAT session.
+# https://kind.krx.co.kr/external/2026/11/05/000141/20261105000216/99303.htm
+KR_SPECIAL_SESSIONS = {date(2026, 11, 19): (time(10, 0), time(16, 30))}
+KR_YEAR_END_CLOSE = date(2026, 12, 31)
+# Hold the first candidate session and reservations into it pending KRX hours.
+KR_UNCONFIRMED_SESSION = date(2027, 1, 4)
+KR_LAST_CONFIRMED_SESSION = date(2026, 12, 30)
 
 # Broker-supported order windows while the regular market is closed.
 # KR supports after-hours closing-price orders followed by reserved orders.
@@ -95,12 +104,21 @@ def _config_path() -> Path:
 
 
 def get_trading_mode() -> str:
+    # A bundled example is not an operator's consent to live trading.
+    # It may be used by import-time test fixtures, but never selects real.
+    if implicit_example_kis_config_active():
+        return "demo"
     try:
         with open(_config_path(), encoding="utf-8") as handle:
             config = yaml.safe_load(handle) or {}
-    except FileNotFoundError:
-        return "real"
-    return str(config.get("default_mode", "real")).strip().lower() or "real"
+    except FileNotFoundError as exc:
+        # An explicitly configured but missing file must not silently arm
+        # production trading (nor silently fall back to another account).
+        raise RuntimeError("KIS config file is missing; operator reconciliation required") from exc
+    if not isinstance(config, dict):
+        raise ValueError("KIS config must be a YAML mapping")
+    # Missing/blank mode is never implicit consent to real orders.
+    return str(config.get("default_mode") or "demo").strip().lower() or "demo"
 
 
 def _coerce_now(now: datetime | None, tz: pytz.BaseTzInfo) -> datetime:
@@ -112,7 +130,31 @@ def _coerce_now(now: datetime | None, tz: pytz.BaseTzInfo) -> datetime:
 
 
 def _is_kr_trading_day(day: date) -> bool:
-    return day.weekday() < 5 and day not in holidays.country_holidays("KR")
+    return (
+        day.weekday() < 5
+        and day not in (KR_YEAR_END_CLOSE, KR_UNCONFIRMED_SESSION)
+        and day not in holidays.country_holidays("KR")
+    )
+
+
+def _kr_queue_open(day: date) -> time:
+    if day in KR_SPECIAL_SESSIONS:
+        opening, _ = KR_SPECIAL_SESSIONS[day]
+        return (datetime.combine(day, opening) + timedelta(minutes=5)).time()
+    return KR_NEXT_OPEN
+
+
+def _kr_off_hours_halted(current: datetime) -> bool:
+    day = current.date()
+    if day == KR_LAST_CONFIRMED_SESSION:
+        at = current.time()
+        # Permit regular orders, same-day morning reservations and closing-price orders.
+        return not (
+            KR_RESERVED_MORNING_START <= at <= KR_RESERVED_MORNING_END
+            or KR_MARKET_OPEN <= at <= KR_MARKET_CLOSE
+            or KR_CLOSING_ORDER_START <= at <= KR_CLOSING_ORDER_END
+        )
+    return day in KR_SPECIAL_SESSIONS or KR_LAST_CONFIRMED_SESSION < day <= KR_UNCONFIRMED_SESSION
 
 
 def _next_kr_trading_day(day: date) -> date:
@@ -141,7 +183,8 @@ def is_market_open(market: str, *, now: datetime | None = None) -> bool:
         if not _is_kr_trading_day(current.date()):
             return False
         current_time = current.time()
-        return KR_MARKET_OPEN <= current_time <= time(15, 30)
+        opening, closing = KR_SPECIAL_SESSIONS.get(current.date(), (KR_MARKET_OPEN, KR_MARKET_CLOSE))
+        return opening <= current_time <= closing
 
     if market == "US":
         current = _coerce_now(now, US_EASTERN)
@@ -171,6 +214,8 @@ def is_off_hours_order_available(market: str, *, now: datetime | None = None) ->
     current_time = current.time()
 
     if market == "KR":
+        if _kr_off_hours_halted(current):
+            return False
         return (
             KR_CLOSING_ORDER_START <= current_time <= KR_CLOSING_ORDER_END
             or KR_RESERVED_EVENING_START < current_time <= KR_RESERVED_EVENING_END
@@ -185,16 +230,29 @@ def is_off_hours_order_available(market: str, *, now: datetime | None = None) ->
     raise ValueError(f"Unsupported market '{market}'")
 
 
+def kr_smart_order_kind(now: datetime) -> str | None:
+    """Select a domestic smart-order route, holding unverified special windows."""
+    current = _coerce_now(now, KST)
+    current_time = current.time()
+    if _kr_off_hours_halted(current):
+        return "regular" if is_market_open("KR", now=current) else None
+    if KR_MARKET_OPEN <= current_time <= KR_MARKET_CLOSE:
+        return "regular"
+    if KR_CLOSING_ORDER_START <= current_time <= KR_CLOSING_ORDER_END:
+        return "closing"
+    return "reserved"
+
+
 def next_market_open(market: str, *, now: datetime | None = None) -> datetime:
     market = market.upper()
     if market == "KR":
         current = _coerce_now(now, KST)
         base_day = current.date()
-        if _is_kr_trading_day(base_day) and current.time() < KR_NEXT_OPEN:
+        if _is_kr_trading_day(base_day) and current.time() < _kr_queue_open(base_day):
             next_day = base_day
         else:
             next_day = _next_kr_trading_day(base_day + timedelta(days=1))
-        return KST.localize(datetime.combine(next_day, KR_NEXT_OPEN)).astimezone(timezone.utc)
+        return KST.localize(datetime.combine(next_day, _kr_queue_open(next_day))).astimezone(timezone.utc)
 
     if market == "US":
         current = _coerce_now(now, US_EASTERN)

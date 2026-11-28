@@ -155,6 +155,7 @@ When a SELL signal arrives with `stop_loss: 180`, the bot sends the sell order w
 
 - It only handles **SELL** signals.
 - It prefers `stop_loss` over `price` for the sell limit price.
+- **Automated watcher exception:** a stop-loss SELL with the watcher-generated stable `stop_loss_{market}_{ticker}_{20-hex}` identity and `stop_loss` reason is submitted as a **market order** through the broker market-order path (bypassing optional signal strategies). This avoids leaving an emergency exit as an unfilled limit. Ordinary publisher SELLs retain their configured limit semantics; the ID format is not an authentication mechanism.
 - For US stop-loss SELL signals where `price` has already moved below `stop_loss`, it uses the lower signal `price` so the KIS limit order is marketable instead of waiting for a recovery.
 - If `stop_loss` is missing and `fallback_to_signal_price` is `true`, it uses the signal `price` instead.
 - If neither usable price exists, it rejects the strategy execution instead of sending an unpriced sell.
@@ -472,7 +473,8 @@ That waiting time is the cooldown.
 - `apply_to_signal_types` is empty by default, so every signal passes.
 - It checks whether the same key traded recently.
 - If the key is still cooling down, it rejects the trade.
-- If enough time has passed, it lets the trade happen and records it.
+- If enough time has passed, a **verified resolved** entry may permit a new trade. Accepted/unknown orders remain pending regardless of age until broker-authoritative reconciliation.
+- Existing state records that lack a boolean `pending` field are ambiguous legacy evidence. They block new protected orders and require operator reconciliation; do not delete or mark them resolved solely because the cooldown expired.
 
 ### Main settings
 
@@ -525,11 +527,11 @@ Use this when news, market stress, or another event should temporarily stop new 
 ### What it does
 
 - Tracks positions purchased with a positive `stop_loss` in `runtime/stop_loss_positions.json`.
-- Automatically clears tracked positions when any SELL signal for that ticker is executed.
+- Does **not** clear protection when a SELL order is merely accepted. A fresh confirmed zero holding and no unresolved BUY attribution are required before cleanup.
 - Polls current market prices via KIS API during market hours (KR & US).
 - Protects KIS API rate limits by enforcing an interval delay (`request_interval_seconds: 0.2`) between ticker price queries.
 - Reuses one trader per market across poll cycles and only queries the account balance (`inquire-balance`) when a stop is hit or every `holding_check_interval_seconds` (default: 60) to reconcile already-sold positions, instead of on every 5-second poll.
-- When `current_price <= stop_loss`, automatically generates an internal `SELL` signal with `sell_reason="stop_loss"` and dispatches it through the configured trading pipeline.
+- When `current_price <= stop_loss`, the watcher may generate an internal `SELL` signal with `sell_reason="stop_loss"` only for an explicitly confirmed tracker and only when the durable ledger contains no unresolved or un-attributable BUY risk. A broker receipt is not a fill.
 
 ### Configuration
 
@@ -547,3 +549,49 @@ When developers add a new strategy in `trading/strategies`, they must also updat
 Users should be able to open this guide and understand every available strategy without reading Python code.
 
 
+
+
+### Watcher-origin stop SELL trust boundary
+
+An inbound signal's `signal_id` and `sell_reason` are **not** proof that it came from the internal stop-loss watcher. Only a runtime-only marker set by `StopLossWatcher` after its persisted-position checks may bypass configured signal strategies for an emergency market SELL. The JSON parser deliberately ignores any publisher-supplied `internal_watcher_stop` field. Broker order acceptance still does not prove a fill; unresolved BUY attribution remains blocked pending authoritative reconciliation.
+
+The watcher `stop_loss_<market>_<ticker>_<20-hex>` signal-ID namespace is reserved across `signal_id`, `event_id`, and legacy `id`. Inbound BUY/SELL/EVENT payloads cannot reserve or replay this namespace; the internal watcher must supply the trusted runtime marker. This also prevents a publisher from poisoning a future watcher's durable deduplication claim.
+
+
+### Legacy opaque execution-ledger quarantine (broker fill safety)
+
+Historical ledger entries created before per-order BUY intent provenance may contain
+only an opaque execution identity and a protected status (`in_progress`,
+`unknown`, `executed`, etc.). Such a record cannot establish whether an old
+BUY will fill later, which instrument it affected, or which account owns it.
+**Do not infer that an absent `order_intent` means no pending BUY.** The
+stop-loss watcher and its dispatch preflight conservatively block automatic
+stop SELL and zero-holdings tracker deletion for *all* instruments while any
+protected opaque legacy record remains. This is an availability limitation,
+not automatic fill reconciliation or proof of protected exposure.
+
+New SELL attempts persist `order_side="SELL"` in the same atomic pre-submit
+claim so that their protected ledger entries do not trigger this global
+legacy-BUY quarantine. New BUY attempts continue to persist non-actionable
+`order_intent` with hashed account scope. No legacy record is silently
+migrated to SELL, cleared, or treated as broker-authoritatively filled.
+
+Before enabling automated trading on an upgraded installation, an operator
+must reconcile each historical opaque protected order with broker order IDs,
+fills, cancellations, remaining quantities and account-specific holdings,
+then follow a separately reviewed recovery procedure. Never delete ledger
+claims or re-enable automatic stops solely because a timeout has elapsed.
+No real/demo KIS broker integration is established by mock-only tests.
+
+### WebUI manual-order durable intent (mock-tested only)
+
+An explicitly armed WebUI order receives a server-generated, per-ticket signal ID
+so a second intentional manual ticket is not suppressed as a replay of the first.
+The WebUI uses the same durable execution claim and per-account BUY intent
+fencing as the automatic dispatcher; disabling automatic signal deduplication
+must never bypass the pre-submit BUY provenance write. A failed ledger write
+blocks broker submission. A timeout or accepted order remains unresolved even
+if aggregate holdings are zero or positive; no automatic stop SELL is justified
+without broker-authoritative fill attribution. Manual re-arming is a new order
+and may duplicate an unresolved broker order: reconcile first. These rules do
+not constitute real or demo KIS fill verification or permission for live trading.

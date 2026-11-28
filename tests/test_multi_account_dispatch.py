@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
-from trading.dispatch import DispatchResult, TradeDispatcher
+from trading.dispatch import DispatchResult, TradeDispatcher, _account_id
 from trading.off_hours_queue import OffHoursOrderQueue
 from trading.schema import parse_signal_payload
 
@@ -32,6 +34,71 @@ def make_dispatcher(monkeypatch, tmp_path: Path, *, strategy_config: dict | None
         execution_ledger_path=tmp_path / "ledger.json",
         strategy_config=strategy_config or {"name": ""},
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("first_outcome", ["acknowledged", "unknown", "rejected"])
+@pytest.mark.parametrize("retry_dedupe", [True, False])
+async def test_partial_live_deferral_persists_only_original_account(tmp_path, monkeypatch, first_outcome, retry_dedupe):
+    first = account("first", "11111111")
+    waiting = account("waiting", "22222222")
+    added_later = account("added-later", "33333333")
+    active = [first, waiting]
+    retry_ready = False
+    calls = []
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: active)
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+
+    async def mock_attempt(self, signal, *, allow_queue, account=None, queued_context=None):
+        if account is waiting and not retry_ready:
+            return DispatchResult("deferred", "mock pre-submission quote unavailable", "BUY", "KR")
+        calls.append(account["name"])
+        return DispatchResult(first_outcome if account is first else "executed", "mock outcome", "BUY", "KR")
+
+    monkeypatch.setattr(TradeDispatcher, "_dispatch_serialized", mock_attempt)
+    dispatcher = make_dispatcher(monkeypatch, tmp_path)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+    result = await dispatcher.dispatch(signal)
+    assert result.status == "partial_success"
+    assert calls == ["first"]
+    persisted = dispatcher.queue._load()
+    assert len(persisted) == 1
+    assert persisted[0].execution_context["account_ids"] == [_account_id(waiting["account_key"])]
+
+    active.append(added_later)
+    retry_ready = True
+    restarted = make_dispatcher(monkeypatch, tmp_path)
+    restarted.execution_dedupe = retry_dedupe
+    assert await asyncio.to_thread(restarted.drain_due_orders) == int(retry_dedupe)
+    assert calls == (["first", "waiting"] if retry_dedupe else ["first"])
+    assert restarted.queue.pending_count() == 0
+    assert restarted.queue.failed_count() == int(not retry_dedupe)
+
+
+@pytest.mark.parametrize("age", [60, 3600])
+def test_pinned_live_retry_keeps_live_signal_age_bound(tmp_path, monkeypatch, age):
+    target = account("original", "11111111")
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: [target])
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: True)
+    dispatcher = make_dispatcher(monkeypatch, tmp_path)
+    now = datetime.now(timezone.utc)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000,
+                                   "timestamp": (now - timedelta(seconds=age)).isoformat()})
+    monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda _: now)
+    dispatcher.queue.enqueue(signal, {
+        "version": 2, "trading_mode": "demo", "multi_account": True,
+        "account_ids": [_account_id(target["account_key"])], "live_retry": True,
+    })
+    calls = []
+
+    async def mock_broker(self, signal, *, account=None):
+        calls.append(account["name"])
+        return DispatchResult("executed", "mock accepted", "BUY", "KR")
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_broker)
+    assert dispatcher.drain_due_orders() == int(age < 900)
+    assert calls == (["original"] if age < 900 else [])
+    assert dispatcher.queue.failed_count() == int(age >= 900)
 
 
 @pytest.mark.asyncio
@@ -344,3 +411,101 @@ def test_explicitly_empty_multi_account_target_set_stays_empty(monkeypatch, tmp_
     eligible, skipped = dispatcher.multi_account_dispatcher._eligible_accounts(signal, [])
     assert eligible == []
     assert skipped == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("persisted", [False, True])
+async def test_multi_account_off_hours_queue_requires_durable_replay_dedupe(
+    tmp_path, monkeypatch, persisted,
+):
+    target = account("original", "11111111")
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: [target])
+    market_open = False
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: market_open)
+    monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda _: datetime.now(timezone.utc))
+    broker = make_dispatcher(monkeypatch, tmp_path)
+    signal = parse_signal_payload({"type": "BUY", "ticker": "005930", "market": "KR", "price": 82000})
+    calls = []
+
+    async def mock_order(self, signal, *, account=None):
+        calls.append(account["name"])
+        return DispatchResult("acknowledged", "mock acknowledgement", "BUY", "KR")
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_order)
+    if persisted:
+        assert (await broker.dispatch(signal)).status == "queued"
+        broker = make_dispatcher(monkeypatch, tmp_path)
+        broker.execution_dedupe = False
+        market_open = True
+        assert await asyncio.to_thread(broker.drain_due_orders) == 0
+        assert broker.queue.failed_count() == 1
+    else:
+        broker.execution_dedupe = False
+        result = await broker.dispatch(signal)
+        assert result.status == "rejected"
+        assert "durable dedupe" in result.message.lower()
+    assert broker.queue.pending_count() == 0
+    assert calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("queued", [False, True])
+async def test_named_browser_ticket_keeps_exact_account_for_immediate_and_restart(
+    monkeypatch, tmp_path, queued,
+):
+    active = [account("primary", "11111111"), account("secondary", "22222222")]
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: active)
+    monkeypatch.setattr("trading.dispatch.ka.resolve_account",
+                        lambda **kw: active[1] if kw.get("account_name") == "secondary" else active[0])
+    opened = not queued
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: opened)
+    monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda _: datetime.now(timezone.utc))
+    worker = make_dispatcher(monkeypatch, tmp_path)
+    ticket = TradeDispatcher(
+        account_name="secondary", restrict_to_primary=True, trading_mode="demo",
+        fresh_quote_enabled=False, strategy_config={"name": ""},
+        queue_path=worker.queue.storage_path, execution_ledger_path=worker.execution_ledger.path,
+    )
+    calls = []
+
+    async def mock_order(self, signal, *, account=None):
+        calls.append((account or self._resolve_single_account(signal))["name"])
+        return DispatchResult("executed", "mock accepted", "SELL", "KR")
+
+    monkeypatch.setattr(TradeDispatcher, "_execute_legacy_trade", mock_order)
+    result = await ticket.dispatch(parse_signal_payload({
+        "type": "SELL", "ticker": "005930", "market": "KR", "price": 82000,
+    }))
+    if queued:
+        assert result.status == "queued"
+        opened = True
+        assert await asyncio.to_thread(worker.drain_due_orders) == 1
+    assert calls == ["secondary"]
+
+
+@pytest.mark.asyncio
+async def test_queued_rejection_after_other_leg_ack_is_quarantined(monkeypatch, tmp_path):
+    active = [account("accepted", "11111111"), account("rejected", "22222222")]
+    monkeypatch.setattr("trading.dispatch.ka.get_configured_accounts", lambda **_: active)
+    opened = False
+    monkeypatch.setattr("trading.dispatch.is_market_open", lambda _: opened)
+    monkeypatch.setattr("trading.off_hours_queue.next_market_open", lambda _: datetime.now(timezone.utc))
+    calls = []
+
+    async def mock_attempt(self, signal, *, allow_queue, account=None, queued_context=None):
+        calls.append(account["name"])
+        if account["name"] == "rejected":
+            return DispatchResult("rejected", "mock permanent gate rejection", "SELL", "KR")
+        return DispatchResult("acknowledged", "mock broker receipt", "SELL", "KR")
+
+    monkeypatch.setattr(TradeDispatcher, "_dispatch_serialized", mock_attempt)
+    worker = make_dispatcher(monkeypatch, tmp_path)
+    signal = parse_signal_payload({"type": "SELL", "ticker": "005930", "market": "KR", "price": 82000})
+    assert (await worker.dispatch(signal)).status == "queued"
+    opened = True
+    assert await asyncio.to_thread(worker.drain_due_orders) == 0
+    assert worker.queue.pending_count() == 0
+    assert worker.queue.failed_count() == 1
+    assert calls == ["accepted", "rejected"]
+    assert await asyncio.to_thread(worker.drain_due_orders) == 0
+    assert calls == ["accepted", "rejected"]

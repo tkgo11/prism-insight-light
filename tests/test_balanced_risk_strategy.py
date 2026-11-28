@@ -21,7 +21,7 @@ from trading.strategies.score_risk import ScoreRiskStrategy, ScoreRiskStrategyCo
 class FakeUSTrader:
     calls = []
 
-    def __init__(self, mode, account_name=None, account_index=None):
+    def __init__(self, mode, account_name=None, account_index=None, account_key=None, product_code="01"):
         self.mode = mode
         self.account_name = account_name
         self.account_index = account_index
@@ -321,7 +321,8 @@ def test_example_config_uses_requested_execution_defaults():
         Path("trading/config/kis_devlp.yaml.example").read_text(encoding="utf-8")
     )
 
-    assert payload["default_mode"] == "real"
+    # The shipped example must never select a production account implicitly.
+    assert payload["default_mode"] == "demo"
     assert payload["auto_trading"] is True
     assert payload["multi_account_trading"] == {"enabled": False}
     assert payload["default_unit_amount"] == 1_000_000
