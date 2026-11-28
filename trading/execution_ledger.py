@@ -480,6 +480,10 @@ def _validated_sell_scope(value: Any) -> dict[str, Any]:
     return dict(value)
 
 
+def _has_canonical_sell_identity(entry: dict[str, Any]) -> bool:
+    return entry.get("sell_identity_is_canonical") is True or bool(entry.get("canonical_sell_identities"))
+
+
 class ExecutionLedger:
     """Atomically claim and finalize automatic signal/account executions."""
 
@@ -496,8 +500,11 @@ class ExecutionLedger:
                 if intent is None:
                     if "sell_scope" in entry:
                         sell = _validated_sell_scope(entry["sell_scope"])
-                        if (sell["market"] != market or sell["ticker"] != ticker
-                                or sell["account_scope"] not in (None, account_scope)):
+                        if sell["market"] != market or sell["ticker"] != ticker:
+                            continue
+                        # A legacy selector cannot establish the broker account.
+                        if (_has_canonical_sell_identity(entry)
+                                and sell["account_scope"] not in (None, account_scope)):
                             continue
                     return True  # Older opaque SELLs cannot be assigned to an account.
                 if status == "executed":
@@ -1084,8 +1091,7 @@ class ExecutionLedger:
                 # Unidentifiable historical submissions cannot be excluded by
                 # reconstructing only the selectors currently in configuration.
                 # Do not treat unrelated modern canonical signals as duplicates.
-                identifiable = (existing.get("sell_identity_is_canonical") is True
-                                or bool(existing.get("canonical_sell_identities")))
+                identifiable = _has_canonical_sell_identity(existing)
                 if (sell_scope is not None and key not in matching_keys
                         and not current_keys.intersection(existing.get("canonical_sell_identities", ()))
                         and identifiable and existing.get("order_side") == "SELL"):

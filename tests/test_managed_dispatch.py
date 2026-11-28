@@ -92,16 +92,26 @@ async def test_runtime_poll_only_submits_for_enabled_enrolled_account(monkeypatc
     assert await dispatcher.check_managed_positions() == []
 
 
-def test_scoped_submission_does_not_fence_unrelated_managed_position(tmp_path):
+@pytest.mark.parametrize(("identity_provenance", "blocks_other_account"), [
+    ({}, True),
+    ({"sell_identity_is_canonical": True}, False),
+    ({"canonical_sell_identities": ("3" * 64,)}, False),
+])
+def test_scoped_submission_fences_managed_positions_by_provenance(
+    tmp_path, identity_provenance, blocks_other_account,
+):
     from trading.execution_ledger import ExecutionLedger
 
     ledger = ExecutionLedger(tmp_path / "execution.json")
-    _, _, token = ledger.claim("scoped-sell", with_token=True, order_side="SELL",
-                               sell_scope={"market": "KR", "ticker": "005930", "account_scope": "1" * 64})
+    _, _, token = ledger.claim(
+        "scoped-sell", with_token=True, order_side="SELL",
+        sell_scope={"market": "KR", "ticker": "005930", "account_scope": "1" * 64},
+        **identity_provenance,
+    )
     ledger.finalize("scoped-sell", "executed", claim_token=token)
     restarted = ExecutionLedger(ledger.path)
     assert restarted.has_ambiguous_legacy_submission("KR", "005930", "1" * 64)
-    assert not restarted.has_ambiguous_legacy_submission("KR", "005930", "2" * 64)
+    assert restarted.has_ambiguous_legacy_submission("KR", "005930", "2" * 64) is blocks_other_account
     assert not restarted.has_ambiguous_legacy_submission("KR", "000660", "1" * 64)
 
 
@@ -237,4 +247,41 @@ async def test_managed_native_gateway_rechecks_account_after_its_snapshot(monkey
     dispatcher.managed_position_book.enroll(scope, market, ticker, 90, latch_policy="LATCH_EXIT")
     result = await dispatcher.check_managed_positions()
     assert result[0]["status"] == "PAUSED"
+    assert calls == []
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('market,ticker', [('KR', '005930'), ('US', 'IBM')])
+@pytest.mark.parametrize('status', ['unknown', 'executed'])
+async def test_unverified_legacy_sell_scope_cannot_exclude_other_account(monkeypatch, market, ticker, status):
+    from datetime import datetime, timezone
+
+    key = 'vps:00000000:01'
+    scope = sha256(key.encode()).hexdigest()
+    calls = []
+    monkeypatch.setattr(TradeDispatcher, '_load_runtime_config', staticmethod(lambda: {'auto_trading': True}))
+    monkeypatch.setattr('trading.dispatch.is_market_open', lambda _: True)
+    monkeypatch.setattr('trading.dispatch.ka.get_configured_accounts', lambda **kw: [
+        {'account_key': key, 'enabled': True, 'product': '01'}])
+
+    def snapshot(entry):
+        value = {**entry, 'complete': True, 'as_of': datetime.now(timezone.utc).isoformat(),
+                 'holding_quantity': 4, 'sellable_quantity': 4, 'current_price': 85, 'open_orders': []}
+        if market == 'US':
+            value['order_venue'] = 'NASD'
+        return value
+
+    def submit(*args, **kwargs):
+        calls.append(args)
+        return {'outcome': 'UNKNOWN', 'receipt': None}
+
+    gateway = SimpleNamespace(snapshot=snapshot, submit_exact_sell=submit, reconcile_order=lambda *a: None)
+    dispatcher = TradeDispatcher(trading_mode='demo', managed_gateway=gateway, fresh_quote_enabled=False)
+    dispatcher.managed_position_book.enroll(scope, market, ticker, 90, latch_policy='LATCH_EXIT')
+    _, _, token = dispatcher.execution_ledger.claim(
+        'old-sell', with_token=True, order_side='SELL',
+        sell_scope={'market': market, 'ticker': ticker, 'account_scope': 'f' * 64})
+    dispatcher.execution_ledger.finalize('old-sell', status, claim_token=token)
+    result = await dispatcher.check_managed_positions()
+    assert result[0]['status'] == 'PAUSED'
+    assert result[0]['reason'] == 'LEGACY_SUBMISSION_UNRESOLVED'
     assert calls == []
