@@ -647,5 +647,11 @@
     "run_id": 45766183216,
     "status": "SUCCESS"
   },
-  "audit_freeze_status": "SUSPENDED_PENDING_REPRODUCED_DEFECTS"
+  "audit_freeze_status": "SUSPENDED_PENDING_REPRODUCED_DEFECTS",
+  "continuation_checkpoint_20261128": {
+    "report_path": ".automation/prism-upstream-sync/runs/prism-codex-20261128-nonsecurity-continuation.json",
+    "candidate_patch_path": ".automation/prism-upstream-sync/runs/prism-codex-20261128-nonsecurity-candidate.patch",
+    "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+    "status": "CANDIDATE_ONLY_KRX_REVIEW_BLOCKED"
+  }
 }

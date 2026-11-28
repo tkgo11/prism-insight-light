@@ -1,0 +1,170 @@
+diff --git a/tests/test_krx_special_session_recovery.py b/tests/test_krx_special_session_recovery.py
+new file mode 100644
+index 0000000..a876a32
+--- /dev/null
++++ b/tests/test_krx_special_session_recovery.py
+@@ -0,0 +1,27 @@
++from datetime import datetime, timezone
++
++import pytest
++
++from trading.market_hours import is_market_open, is_off_hours_order_available, next_market_open
++
++
++@pytest.mark.parametrize(('hour', 'minute', 'expected'), [
++    (8, 59, False), (9, 0, False), (9, 5, False), (9, 59, False),
++    (10, 0, True), (15, 30, True), (15, 31, True), (15, 50, True),
++    (16, 0, True), (16, 29, True), (16, 30, True), (16, 31, False),
++])
++def test_krx_csats_special_session(hour, minute, expected):
++    assert is_market_open('KR', now=datetime(2026, 11, 19, hour, minute)) is expected
++
++
++def test_krx_next_open_uses_special_session():
++    assert next_market_open('KR', now=datetime(2026, 11, 19, 9, 30)) == datetime(2026, 11, 19, 1, 5, tzinfo=timezone.utc)
++
++
++def test_krx_no_inferred_kis_after_hours_on_special_day():
++    assert is_off_hours_order_available('KR', now=datetime(2026, 11, 19, 16, 50)) is False
++
++
++def test_krx_exchange_year_end_closure():
++    assert not is_market_open('KR', now=datetime(2026, 12, 31, 10, 0))
++    assert next_market_open('KR', now=datetime(2026, 12, 30, 16, 0)) > datetime(2026, 12, 31, 6, 30, tzinfo=timezone.utc)
+diff --git a/tests/test_managed_dispatch.py b/tests/test_managed_dispatch.py
+index 2c5abe5..1997fe4 100644
+--- a/tests/test_managed_dispatch.py
++++ b/tests/test_managed_dispatch.py
+@@ -101,7 +101,7 @@ def test_scoped_submission_does_not_fence_unrelated_managed_position(tmp_path):
+     ledger.finalize("scoped-sell", "executed", claim_token=token)
+     restarted = ExecutionLedger(ledger.path)
+     assert restarted.has_ambiguous_legacy_submission("KR", "005930", "1" * 64)
+-    assert not restarted.has_ambiguous_legacy_submission("KR", "005930", "2" * 64)
++    assert restarted.has_ambiguous_legacy_submission("KR", "005930", "2" * 64)
+     assert not restarted.has_ambiguous_legacy_submission("KR", "000660", "1" * 64)
+ 
+ 
+@@ -238,3 +238,40 @@ async def test_managed_native_gateway_rechecks_account_after_its_snapshot(monkey
+     result = await dispatcher.check_managed_positions()
+     assert result[0]["status"] == "PAUSED"
+     assert calls == []
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize('market,ticker', [('KR', '005930'), ('US', 'IBM')])
++@pytest.mark.parametrize('status', ['unknown', 'executed'])
++async def test_unverified_legacy_sell_scope_cannot_exclude_other_account(monkeypatch, market, ticker, status):
++    from datetime import datetime, timezone
++
++    key = 'vps:00000000:01'
++    scope = sha256(key.encode()).hexdigest()
++    calls = []
++    monkeypatch.setattr(TradeDispatcher, '_load_runtime_config', staticmethod(lambda: {'auto_trading': True}))
++    monkeypatch.setattr('trading.dispatch.is_market_open', lambda _: True)
++    monkeypatch.setattr('trading.dispatch.ka.get_configured_accounts', lambda **kw: [
++        {'account_key': key, 'enabled': True, 'product': '01'}])
++
++    def snapshot(entry):
++        value = {**entry, 'complete': True, 'as_of': datetime.now(timezone.utc).isoformat(),
++                 'holding_quantity': 4, 'sellable_quantity': 4, 'current_price': 85, 'open_orders': []}
++        if market == 'US':
++            value['order_venue'] = 'NASD'
++        return value
++
++    def submit(*args, **kwargs):
++        calls.append(args)
++        return {'outcome': 'UNKNOWN', 'receipt': None}
++
++    gateway = SimpleNamespace(snapshot=snapshot, submit_exact_sell=submit, reconcile_order=lambda *a: None)
++    dispatcher = TradeDispatcher(trading_mode='demo', managed_gateway=gateway, fresh_quote_enabled=False)
++    dispatcher.managed_position_book.enroll(scope, market, ticker, 90, latch_policy='LATCH_EXIT')
++    _, _, token = dispatcher.execution_ledger.claim(
++        'old-sell', with_token=True, order_side='SELL',
++        sell_scope={'market': market, 'ticker': ticker, 'account_scope': 'f' * 64})
++    dispatcher.execution_ledger.finalize('old-sell', status, claim_token=token)
++    result = await dispatcher.check_managed_positions()
++    assert result[0]['status'] == 'PAUSED'
++    assert result[0]['reason'] == 'LEGACY_SUBMISSION_UNRESOLVED'
++    assert calls == []
+diff --git a/trading/execution_ledger.py b/trading/execution_ledger.py
+index bd83677..bb5c45f 100644
+--- a/trading/execution_ledger.py
++++ b/trading/execution_ledger.py
+@@ -496,8 +496,10 @@ class ExecutionLedger:
+                 if intent is None:
+                     if "sell_scope" in entry:
+                         sell = _validated_sell_scope(entry["sell_scope"])
+-                        if (sell["market"] != market or sell["ticker"] != ticker
+-                                or sell["account_scope"] not in (None, account_scope)):
++                        # The scope records routing intent, not verified broker
++                        # account identity. A different scope cannot exclude a
++                        # potentially unresolved sell of this instrument.
++                        if sell["market"] != market or sell["ticker"] != ticker:
+                             continue
+                     return True  # Older opaque SELLs cannot be assigned to an account.
+                 if status == "executed":
+diff --git a/trading/market_hours.py b/trading/market_hours.py
+index 931a568..de60c78 100644
+--- a/trading/market_hours.py
++++ b/trading/market_hours.py
+@@ -74,6 +74,14 @@ KR_MARKET_OPEN = time(9, 0)
+ KR_NEXT_OPEN = time(9, 5)
+ US_NEXT_OPEN = time(9, 35)
+ 
++# Exchange announcement applies to this date only; it does not establish KIS
++# after-hours or reservation API availability.
++# https://kind.krx.co.kr/external/2026/11/05/000141/20261105000216/99303.htm
++KR_SPECIAL_SESSIONS = {date(2026, 11, 19): (time(10, 0), time(16, 30))}
++# KRX KOSDAQ disclosure calendar lists 2026-12-31 as the year-end closure.
++# https://kind.krx.co.kr/external/dst/reference/11625/2026%20%EC%BD%94%EC%8A%A4%EB%8B%A5%EC%8B%9C%EC%9E%A5%20%EA%B3%B5%EC%8B%9C%EC%9D%BC%EC%A0%95%20%EC%BA%98%EB%A6%B0%EB%8D%94_vF.pdf
++KR_EXCHANGE_CLOSURES = {date(2026, 12, 31)}
++
+ # Broker-supported order windows while the regular market is closed.
+ # KR supports after-hours closing-price orders followed by reserved orders.
+ KR_CLOSING_ORDER_START = time(15, 40)
+@@ -121,7 +129,7 @@ def _coerce_now(now: datetime | None, tz: pytz.BaseTzInfo) -> datetime:
+ 
+ 
+ def _is_kr_trading_day(day: date) -> bool:
+-    return day.weekday() < 5 and day not in holidays.country_holidays("KR")
++    return day.weekday() < 5 and day not in KR_EXCHANGE_CLOSURES and day not in holidays.country_holidays("KR")
+ 
+ 
+ def _next_kr_trading_day(day: date) -> date:
+@@ -150,7 +158,8 @@ def is_market_open(market: str, *, now: datetime | None = None) -> bool:
+         if not _is_kr_trading_day(current.date()):
+             return False
+         current_time = current.time()
+-        return KR_MARKET_OPEN <= current_time <= time(15, 30)
++        opening, closing = KR_SPECIAL_SESSIONS.get(current.date(), (KR_MARKET_OPEN, time(15, 30)))
++        return opening <= current_time <= closing
+ 
+     if market == "US":
+         current = _coerce_now(now, US_EASTERN)
+@@ -180,6 +189,9 @@ def is_off_hours_order_available(market: str, *, now: datetime | None = None) ->
+     current_time = current.time()
+ 
+     if market == "KR":
++        # Do not infer broker API windows from exchange session times.
++        if current.date() in KR_SPECIAL_SESSIONS or current.date() in KR_EXCHANGE_CLOSURES:
++            return False
+         return (
+             KR_CLOSING_ORDER_START <= current_time <= KR_CLOSING_ORDER_END
+             or KR_RESERVED_EVENING_START < current_time <= KR_RESERVED_EVENING_END
+@@ -199,11 +211,15 @@ def next_market_open(market: str, *, now: datetime | None = None) -> datetime:
+     if market == "KR":
+         current = _coerce_now(now, KST)
+         base_day = current.date()
+-        if _is_kr_trading_day(base_day) and current.time() < KR_NEXT_OPEN:
++        opening = KR_SPECIAL_SESSIONS.get(base_day, (KR_MARKET_OPEN, time(15, 30)))[0]
++        next_open = (datetime.combine(base_day, opening) + timedelta(minutes=5)).time()
++        if _is_kr_trading_day(base_day) and current.time() < next_open:
+             next_day = base_day
+         else:
+             next_day = _next_kr_trading_day(base_day + timedelta(days=1))
+-        return KST.localize(datetime.combine(next_day, KR_NEXT_OPEN)).astimezone(timezone.utc)
++        opening = KR_SPECIAL_SESSIONS.get(next_day, (KR_MARKET_OPEN, time(15, 30)))[0]
++        next_open = datetime.combine(next_day, opening) + timedelta(minutes=5)
++        return KST.localize(next_open).astimezone(timezone.utc)
+ 
+     if market == "US":
+         current = _coerce_now(now, US_EASTERN)

@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "run_id": "prism-codex-20261128-nonsecurity-continuation",
+  "status": "CANDIDATE_ONLY_KRX_REVIEW_BLOCKED",
+  "pr": 43,
+  "head_sha": "bec6228cc2b6f03248b02505dd8d508f8d0865c2",
+  "base_sha": "d0a4d420bdd199a576a447788c704053b6550067",
+  "state_parent": "5baeefd650e98004a6cccb664e1e66307ac73bd5",
+  "lock": "RELEASED",
+  "audit_freeze_status": "SUSPENDED_PENDING_REPRODUCED_DEFECTS",
+  "independent_audit_passes": {
+    "related": "0/2",
+    "full": "0/2"
+  },
+  "ci": {
+    "push": 45787405400,
+    "pr": 45787413579,
+    "status": "SUCCESS",
+    "snyk": "success",
+    "qlty_description": "87 blocking issues; uninspected",
+    "reviews": [],
+    "branch_protection": "403"
+  },
+  "candidates": {
+    "managed_demo": {
+      "red": "KR/US x unknown/executed, 4 failures with mock gateway",
+      "fix_commit": "1c61791906151f8973926a2ea6bc81e4821f6eaf",
+      "targeted": "104 passed",
+      "full_guarded": "3815 passed",
+      "limitation": "Not proof of broker atomicity or reconciliation."
+    },
+    "krx": {
+      "red": "11 failed, 4 passed with offline guard",
+      "fix_commit": "2b21622ebf084f6772efa3f9e09f5bf021162cb4",
+      "targeted": "37 passed",
+      "full_guarded": "3826 passed",
+      "sources": [
+        "https://kind.krx.co.kr/external/2026/11/05/000141/20261105000216/99303.htm",
+        "https://kind.krx.co.kr/external/2026/11/05/000145/20261104001218/70780.htm"
+      ],
+      "review_blocker": "Unconfirmed 2027 first trading day is still assumed to open at ordinary hours. Establish an authoritative schedule or implement a reviewed fail-closed unknown-calendar behavior before publishing."
+    },
+    "combined": {
+      "local_head": "513e282",
+      "guarded_full": "3830 passed",
+      "patch": "prism-codex-20261128-nonsecurity-candidate.patch",
+      "remote_code_changed": false
+    }
+  },
+  "blockers": [
+    "RC-STOPLOSS-ORDER-RECONCILIATION: broker atomicity, all-channel orders/fills and authoritative release unproven; normal exit may remain held.",
+    "Independent R1/R2/F1/F2 certification, required CI, review approval and branch protection must be established for any future HEAD.",
+    "KRX 2027 first trading session not officially verified."
+  ],
+  "next_action": "Review and correct unknown future session handling; rerun offline guarded tests; separately review managed demo candidate; prepare lock/release checkpoint and verify refs immediately before any authorized remote code change.",
+  "notes": "The patch is an unmerged local candidate, not audit certification. No real KIS API or credentials were accessed. Preserve existing worker progress and successful current-head CI."
+}
